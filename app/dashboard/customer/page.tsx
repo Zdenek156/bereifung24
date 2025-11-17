@@ -66,7 +66,10 @@ export default function CustomerDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Neue Anfrage</h3>
             <p className="text-sm text-gray-600 mb-4">Reifenanfrage erstellen und Angebote erhalten</p>
-            <button className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <button
+              onClick={() => router.push('/dashboard/customer/create-request')}
+              className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
               Anfrage erstellen
             </button>
           </div>
@@ -79,7 +82,10 @@ export default function CustomerDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Meine Anfragen</h3>
             <p className="text-sm text-gray-600 mb-4">Offene und abgeschlossene Anfragen anzeigen</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <button
+              onClick={() => router.push('/dashboard/customer/requests')}
+              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
               Anfragen ansehen
             </button>
           </div>

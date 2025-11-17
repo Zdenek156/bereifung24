@@ -46,23 +46,27 @@
 
 ---
 
-## 👤 Phase 4: Kunden-Bereich
-- [ ] **Startseite** (einladend, Marketing-fokussiert)
-- [ ] **Reifenanfrage erstellen:**
-  - [ ] Reifentyp (Sommer/Winter/Allwetter)
-  - [ ] Dimensionen (Breite/Querschnitt/Zoll)
-  - [ ] Indices (Tragfähigkeit/Geschwindigkeit)
-  - [ ] Runflat-Option
-  - [ ] Hersteller-Präferenzen
-  - [ ] Benötigt-bis Datum (mind. 7 Tage)
-  - [ ] Umkreis-Slider (km)
+## 👤 Phase 4: Kunden-Bereich (IN ARBEIT)
+- [x] **Startseite** (einladend, Marketing-fokussiert)
+- [x] **Reifenanfrage erstellen:**
+  - [x] Reifentyp (Sommer/Winter/Allwetter)
+  - [x] Dimensionen (Breite/Querschnitt/Zoll)
+  - [x] Indices (Tragfähigkeit/Geschwindigkeit)
+  - [x] Runflat-Option
+  - [x] Hersteller-Präferenzen
+  - [x] Benötigt-bis Datum (mind. 7 Tage)
+  - [x] Umkreis-Slider (km)
+- [x] **Anfragen-Übersicht:**
+  - [x] Alle Anfragen anzeigen
+  - [x] Status-Badges
+  - [x] Detail-Ansicht mit Angeboten
+- [x] **Angebots-Übersicht:**
+  - [x] Erhaltene Angebote anzeigen
+  - [x] Angebote vergleichen (nach Preis sortiert)
+  - [x] Angebot annehmen
 - [ ] **Fahrzeug-Verwaltung:**
   - [ ] Fahrzeuge anlegen
   - [ ] Reifenhistorie je Fahrzeug
-- [ ] **Angebots-Übersicht:**
-  - [ ] Erhaltene Angebote anzeigen
-  - [ ] Angebote vergleichen
-  - [ ] Angebot annehmen
 - [ ] **Termin-Buchung:**
   - [ ] Kalender mit freien Slots
   - [ ] Google Calendar Integration
@@ -73,7 +77,7 @@
   - [ ] Vor-Ort-Zahlung
 - [ ] **Bewertungen abgeben**
 
-**Status:** ⚪ Ausstehend
+**Status:** 🟡 In Arbeit (Kernfunktionen fertig)
 
 ---
 
@@ -242,6 +246,6 @@
 
 ---
 
-**Letzte Aktualisierung:** 18.11.2025, 23:30 Uhr
-**Version:** 0.3.0 - Authentication System vollständig implementiert (Login, Registrierung, Dashboards)
-**Fortschritt:** 25% abgeschlossen (Phase 1, 2, 3 fertig)
+**Letzte Aktualisierung:** 17.11.2025, 23:55 Uhr
+**Version:** 0.4.0 - Kunden-Bereich: Reifenanfrage-System implementiert
+**Fortschritt:** 35% abgeschlossen (Phase 1-3 fertig, Phase 4 in Arbeit)

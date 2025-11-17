@@ -5,27 +5,29 @@
 
 ---
 
-## ✅ Phase 1: Projekt-Setup & Grundlagen (AKTUELL)
+## ✅ Phase 1: Projekt-Setup & Grundlagen (ABGESCHLOSSEN)
 - [x] Repository eingerichtet
-- [ ] Next.js 14 Projekt erstellen
-- [ ] TailwindCSS Design-System
-- [ ] Prisma ORM Setup
-- [ ] Environment-Konfiguration
+- [x] Next.js 14 Projekt erstellen
+- [x] TailwindCSS Design-System
+- [x] Prisma ORM Setup
+- [x] Environment-Konfiguration
+- [x] Einladende Startseite erstellt
+- [x] Code zu GitHub gepusht
 
-**Status:** 🟡 In Arbeit
+**Status:** ✅ Abgeschlossen
 
 ---
 
-## 📦 Phase 2: Datenbank-Architektur
-- [ ] User-Management (Kunde/Werkstatt/Admin)
-- [ ] Reifenanfragen-Schema
-- [ ] Angebots-Schema
-- [ ] Fahrzeug-Verwaltung
-- [ ] Termin-Schema
-- [ ] Bewertungs-Schema
-- [ ] Provisions-Abrechnungen
+## ✅ Phase 2: Datenbank-Architektur (ABGESCHLOSSEN)
+- [x] User-Management (Kunde/Werkstatt/Admin)
+- [x] Reifenanfragen-Schema
+- [x] Angebots-Schema
+- [x] Fahrzeug-Verwaltung
+- [x] Termin-Schema
+- [x] Bewertungs-Schema
+- [x] Provisions-Abrechnungen
 
-**Status:** ⚪ Ausstehend
+**Status:** ✅ Abgeschlossen
 
 ---
 
@@ -218,10 +220,10 @@
 
 ## 📊 Aktueller Fortschritt
 
-**Gesamt-Fortschritt:** 5% ███░░░░░░░░░░░░░░░░░░░
+**Gesamt-Fortschritt:** 15% ███░░░░░░░░░░░░░░░░░
 
-**Aktuelle Phase:** Phase 1 - Projekt-Setup
-**Nächste Schritte:** Next.js Installation & Basis-Konfiguration
+**Aktuelle Phase:** Phase 3 - Authentication & Rollen-System
+**Nächste Schritte:** Login/Registrierung für Kunden und Werkstätten
 
 ---
 
@@ -236,5 +238,5 @@
 
 ---
 
-**Letzte Aktualisierung:** 17.11.2025, 21:52 Uhr
-**Version:** 0.1.0
+**Letzte Aktualisierung:** 17.11.2025, 22:05 Uhr
+**Version:** 0.2.0 - Basis-Setup abgeschlossen, Datenbank-Schema fertig, Startseite live

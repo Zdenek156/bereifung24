@@ -31,14 +31,18 @@
 
 ---
 
-## 🔐 Phase 3: Authentication & Rollen-System
-- [ ] NextAuth.js Integration
-- [ ] Registrierung (Kunde/Werkstatt)
-- [ ] Login mit Rollen-Erkennung
-- [ ] Profil-Verwaltung
-- [ ] SEPA-Mandats-Authentifizierung (Werkstatt)
+## 🔐 Phase 3: Authentication & Rollen-System (ABGESCHLOSSEN)
+- [x] NextAuth.js Integration
+- [x] Registrierung (Kunde/Werkstatt)
+- [x] Login mit Rollen-Erkennung
+- [x] Dashboard-Routing (Customer/Workshop/Admin)
+- [x] Profil-Verwaltung Grundlagen
+- [x] SEPA-Mandats-Authentifizierung (Werkstatt)
+- [x] API Routes für Registration
+- [x] Client-Side Authentication Pages
+- [x] Role-based Dashboards
 
-**Status:** ⚪ Ausstehend
+**Status:** ✅ Abgeschlossen
 
 ---
 
@@ -223,7 +227,7 @@
 **Gesamt-Fortschritt:** 15% ███░░░░░░░░░░░░░░░░░
 
 **Aktuelle Phase:** Phase 3 - Authentication & Rollen-System
-**Nächste Schritte:** Login/Registrierung für Kunden und Werkstätten
+**Nächste Schritte:** Kunden-Bereich: Reifenanfrage-Formular entwickeln
 
 ---
 
@@ -231,12 +235,13 @@
 
 | Meilenstein | Ziel | Status |
 |-------------|------|--------|
-| M1: MVP - Basis-Funktionen | Anfrage erstellen, Angebot abgeben, Annahme | ⚪ Ausstehend |
+| M1: MVP - Basis-Funktionen | Anfrage erstellen, Angebot abgeben, Annahme | 🟡 In Arbeit |
 | M2: Zahlungen & Termine | Terminbuchung, Zahlungsoptionen | ⚪ Ausstehend |
 | M3: Provisionen & Admin | Admin-Dashboard, Abrechnungen | ⚪ Ausstehend |
 | M4: Launch | Go-Live auf Subdomain | ⚪ Ausstehend |
 
 ---
 
-**Letzte Aktualisierung:** 17.11.2025, 22:05 Uhr
-**Version:** 0.2.0 - Basis-Setup abgeschlossen, Datenbank-Schema fertig, Startseite live
+**Letzte Aktualisierung:** 18.11.2025, 23:30 Uhr
+**Version:** 0.3.0 - Authentication System vollständig implementiert (Login, Registrierung, Dashboards)
+**Fortschritt:** 25% abgeschlossen (Phase 1, 2, 3 fertig)

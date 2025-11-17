@@ -157,8 +157,14 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Bereifung24. Alle Rechte vorbehalten.</p>
+          <div className="border-t border-gray-800 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center text-gray-400">
+              <p>&copy; 2025 Bereifung24. Alle Rechte vorbehalten.</p>
+              <div className="flex gap-6 mt-4 md:mt-0">
+                <Link href="/impressum" className="hover:text-white">Impressum</Link>
+                <Link href="/datenschutz" className="hover:text-white">Datenschutz</Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
@@ -194,7 +200,7 @@ const features = [
   },
   {
     title: 'Schnell',
-    description: 'Erhalte Angebote innerhalb von 24 Stunden.',
+    description: 'Erhalte zeitnah passende Angebote von Werkstätten in deiner Nähe.',
     icon: 'M13 10V3L4 14h7v7l9-11h-7z',
   },
   {

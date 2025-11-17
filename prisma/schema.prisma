@@ -1,0 +1,463 @@
+// This is your Prisma schema file
+// Bereifung24 Platform - Kunden-Werkstatt-Vermittlung
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  role          UserRole @default(CUSTOMER)
+  
+  // Profile
+  firstName     String
+  lastName      String
+  phone         String?
+  street        String?
+  zipCode       String?
+  city          String?
+  
+  // Verification
+  emailVerified DateTime?
+  isActive      Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations based on role
+  customer      Customer?
+  workshop      Workshop?
+  
+  @@map("users")
+}
+
+enum UserRole {
+  CUSTOMER
+  WORKSHOP
+  ADMIN
+}
+
+// ============================================
+// CUSTOMER
+// ============================================
+
+model Customer {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  vehicles      Vehicle[]
+  tireRequests  TireRequest[]
+  bookings      Booking[]
+  reviews       Review[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("customers")
+}
+
+// ============================================
+// VEHICLE MANAGEMENT
+// ============================================
+
+model Vehicle {
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Vehicle Info
+  brand         String
+  model         String
+  year          Int?
+  licensePlate  String?
+  
+  // Current Tires
+  currentTires  VehicleTire?
+  
+  // History
+  tireHistory   TireHistory[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("vehicles")
+}
+
+model VehicleTire {
+  id            String   @id @default(cuid())
+  vehicleId     String   @unique
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  // Tire Specifications
+  width         Int      // z.B. 205
+  aspectRatio   Int      // Querschnitt z.B. 55
+  diameter      Int      // Zoll z.B. 16
+  loadIndex     String   // Tragfähigkeitsindex z.B. "91"
+  speedRating   String   // Geschwindigkeitsindex z.B. "V"
+  season        TireSeason
+  isRunflat     Boolean  @default(false)
+  brand         String?
+  model         String?
+  
+  installedAt   DateTime @default(now())
+  
+  @@map("vehicle_tires")
+}
+
+model TireHistory {
+  id            String     @id @default(cuid())
+  vehicleId     String
+  vehicle       Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  // Tire Info
+  width         Int
+  aspectRatio   Int
+  diameter      Int
+  loadIndex     String
+  speedRating   String
+  season        TireSeason
+  isRunflat     Boolean
+  brand         String?
+  model         String?
+  
+  installedAt   DateTime
+  removedAt     DateTime?
+  
+  createdAt     DateTime   @default(now())
+  
+  @@map("tire_history")
+}
+
+enum TireSeason {
+  SUMMER
+  WINTER
+  ALL_SEASON
+}
+
+// ============================================
+// TIRE REQUEST (Kundenanfrage)
+// ============================================
+
+model TireRequest {
+  id                String   @id @default(cuid())
+  customerId        String
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Tire Specifications
+  width             Int
+  aspectRatio       Int
+  diameter          Int
+  loadIndex         String
+  speedRating       String
+  season            TireSeason
+  isRunflat         Boolean  @default(false)
+  quantity          Int      @default(4)
+  
+  // Preferences
+  preferredBrands   String[] // Array von Herstellern
+  specificBrand     String?  // Spezifischer Hersteller wenn gewünscht
+  
+  // Requirements
+  neededBy          DateTime // Bis wann benötigt (mind. 7 Tage)
+  radiusKm          Int      // Umkreis in km
+  
+  // Location (aus User-Profil kopiert)
+  zipCode           String
+  city              String
+  
+  // Status
+  status            RequestStatus @default(OPEN)
+  
+  // Relations
+  offers            Offer[]
+  acceptedOffer     Offer? @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
+  acceptedOfferId   String? @unique
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  expiresAt         DateTime // Auto-berechnet: neededBy
+  
+  @@map("tire_requests")
+  @@index([status])
+  @@index([zipCode])
+  @@index([neededBy])
+}
+
+enum RequestStatus {
+  OPEN            // Offen, Werkstätten können Angebote abgeben
+  OFFER_ACCEPTED  // Angebot wurde angenommen
+  COMPLETED       // Termin durchgeführt
+  EXPIRED         // Abgelaufen
+  CANCELLED       // Storniert
+}
+
+// ============================================
+// WORKSHOP
+// ============================================
+
+model Workshop {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Workshop Info
+  companyName       String
+  street            String
+  zipCode           String
+  city              String
+  phone             String
+  website           String?
+  description       String?  @db.Text
+  
+  // Opening Hours (JSON String)
+  openingHours      String?  @db.Text // JSON: {"monday": "09:00-18:00", ...}
+  
+  // Payment Info
+  paypalEmail       String?
+  iban              String?
+  bic               String?
+  accountHolder     String?
+  
+  // SEPA Mandate
+  sepaMandate       Boolean  @default(false)
+  sepaMandateDate   DateTime?
+  sepaMandateRef    String?  @unique
+  
+  // Google Calendar
+  googleCalendarId  String?
+  googleAccessToken String?
+  googleRefreshToken String?
+  
+  // Statistics
+  totalOffers       Int      @default(0)
+  acceptedOffers    Int      @default(0)
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
+  
+  // Status
+  isVerified        Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  
+  // Relations
+  offers            Offer[]
+  bookings          Booking[]
+  reviews           Review[]
+  commissions       Commission[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("workshops")
+  @@index([zipCode])
+  @@index([isActive, isVerified])
+}
+
+// ============================================
+// OFFER (Werkstatt-Angebot)
+// ============================================
+
+model Offer {
+  id                String      @id @default(cuid())
+  workshopId        String
+  workshop          Workshop    @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  requestId         String
+  request           TireRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  // Offer Details
+  tireBrand         String
+  tireModel         String
+  pricePerTire      Float
+  totalPrice        Float      // Inkl. Montage
+  montagePrice      Float?     // Separate Montagekosten
+  
+  // Validity
+  validUntil        DateTime
+  isValid           Boolean    @default(true)
+  
+  // Status
+  status            OfferStatus @default(PENDING)
+  
+  // If accepted
+  acceptedRequest   TireRequest? @relation("AcceptedOffer")
+  booking           Booking?
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  @@map("offers")
+  @@index([requestId])
+  @@index([workshopId])
+  @@index([status])
+}
+
+enum OfferStatus {
+  PENDING     // Warten auf Kundenentscheidung
+  ACCEPTED    // Angenommen
+  DECLINED    // Abgelehnt
+  EXPIRED     // Abgelaufen
+}
+
+// ============================================
+// BOOKING (Terminbuchung)
+// ============================================
+
+model Booking {
+  id                String      @id @default(cuid())
+  
+  customerId        String
+  customer          Customer    @relation(fields: [customerId], references: [id])
+  
+  workshopId        String
+  workshop          Workshop    @relation(fields: [workshopId], references: [id])
+  
+  offerId           String      @unique
+  offer             Offer       @relation(fields: [offerId], references: [id])
+  
+  // Appointment
+  appointmentDate   DateTime
+  appointmentTime   String     // z.B. "10:00"
+  duration          Int        @default(60) // Minuten
+  
+  // Google Calendar
+  googleEventId     String?
+  
+  // Payment
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(PENDING)
+  paidAt            DateTime?
+  
+  // Status
+  status            BookingStatus @default(CONFIRMED)
+  
+  // Review
+  review            Review?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@map("bookings")
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([appointmentDate])
+}
+
+enum PaymentMethod {
+  PAYPAL
+  BANK_TRANSFER
+  CREDIT_CARD
+  ON_SITE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ============================================
+// REVIEW (Bewertungen)
+// ============================================
+
+model Review {
+  id            String   @id @default(cuid())
+  
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  
+  workshopId    String
+  workshop      Workshop @relation(fields: [workshopId], references: [id])
+  
+  bookingId     String   @unique
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  
+  // Rating
+  rating        Int      // 1-5 Sterne
+  comment       String?  @db.Text
+  
+  // Response
+  workshopResponse String? @db.Text
+  respondedAt      DateTime?
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("reviews")
+  @@index([workshopId])
+}
+
+// ============================================
+// COMMISSION (Provisionen)
+// ============================================
+
+model Commission {
+  id            String   @id @default(cuid())
+  
+  workshopId    String
+  workshop      Workshop @relation(fields: [workshopId], references: [id])
+  
+  offerId       String
+  
+  // Commission Details
+  offerAmount   Float    // Angebotspreis
+  commissionRate Float   @default(5.0) // 5%
+  commissionAmount Float // Berechnete Provision
+  
+  // Billing
+  billingMonth  Int      // Monat
+  billingYear   Int      // Jahr
+  status        CommissionStatus @default(PENDING)
+  
+  // SEPA
+  sepaCollectedAt DateTime?
+  sepaReference   String?
+  
+  createdAt     DateTime @default(now())
+  paidAt        DateTime?
+  
+  @@map("commissions")
+  @@index([workshopId])
+  @@index([billingMonth, billingYear])
+  @@index([status])
+}
+
+enum CommissionStatus {
+  PENDING      // Noch nicht abgerechnet
+  BILLED       // Abgerechnet
+  COLLECTED    // Eingezogen
+  FAILED       // Fehlgeschlagen
+}
+
+// ============================================
+// ADMIN LOGS
+// ============================================
+
+model AdminLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  action        String
+  details       String?  @db.Text
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+  
+  @@map("admin_logs")
+}

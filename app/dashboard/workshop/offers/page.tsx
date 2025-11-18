@@ -1,0 +1,307 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+
+interface Offer {
+  id: string
+  tireBrand: string
+  tireModel: string
+  description: string | null
+  price: number
+  pricePerTire: number | null
+  installationFee: number | null
+  validUntil: string
+  status: string
+  acceptedAt: string | null
+  createdAt: string
+  tireRequest: {
+    id: string
+    season: string
+    width: number
+    aspectRatio: number
+    diameter: number
+    quantity: number
+    zipCode: string
+    needByDate: string
+    customer: {
+      user: {
+        firstName: string
+        lastName: string
+        email: string
+        phone: string | null
+        city: string | null
+        zipCode: string | null
+      }
+    }
+  }
+  booking: any | null
+}
+
+export default function WorkshopOffers() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [offers, setOffers] = useState<Offer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all')
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    if (session.user.role !== 'WORKSHOP') {
+      router.push('/dashboard')
+      return
+    }
+
+    fetchOffers()
+  }, [session, status, router])
+
+  const fetchOffers = async () => {
+    try {
+      const response = await fetch('/api/workshop/offers')
+      if (response.ok) {
+        const data = await response.json()
+        setOffers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching offers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      ACCEPTED: 'bg-green-100 text-green-800',
+      DECLINED: 'bg-red-100 text-red-800',
+      EXPIRED: 'bg-gray-100 text-gray-800',
+    }
+    const labels = {
+      PENDING: 'Ausstehend',
+      ACCEPTED: 'Angenommen',
+      DECLINED: 'Abgelehnt',
+      EXPIRED: 'Abgelaufen',
+    }
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles]}`}>
+        {labels[status as keyof typeof labels]}
+      </span>
+    )
+  }
+
+  const filteredOffers = offers.filter(offer => {
+    if (filter === 'all') return true
+    return offer.status === filter.toUpperCase()
+  })
+
+  const stats = {
+    total: offers.length,
+    pending: offers.filter(o => o.status === 'PENDING').length,
+    accepted: offers.filter(o => o.status === 'ACCEPTED').length,
+    declined: offers.filter(o => o.status === 'DECLINED').length,
+  }
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard/workshop"
+              className="text-gray-600 hover:text-gray-900"
+            >
+              ← Zurück zum Dashboard
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Meine Angebote</h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Übersicht aller gesendeten Angebote
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-600">Gesamt</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-600">Ausstehend</p>
+            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-600">Angenommen</p>
+            <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-600">Abgelehnt</p>
+            <p className="text-2xl font-bold text-red-600">{stats.declined}</p>
+          </div>
+        </div>
+
+        {/* Filter */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-2 rounded-lg ${
+                filter === 'all'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Alle
+            </button>
+            <button
+              onClick={() => setFilter('pending')}
+              className={`px-4 py-2 rounded-lg ${
+                filter === 'pending'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Ausstehend
+            </button>
+            <button
+              onClick={() => setFilter('accepted')}
+              className={`px-4 py-2 rounded-lg ${
+                filter === 'accepted'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Angenommen
+            </button>
+            <button
+              onClick={() => setFilter('declined')}
+              className={`px-4 py-2 rounded-lg ${
+                filter === 'declined'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Abgelehnt
+            </button>
+          </div>
+        </div>
+
+        {/* Offers List */}
+        {filteredOffers.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Keine Angebote</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {filter === 'all' 
+                ? 'Sie haben noch keine Angebote versendet.'
+                : `Keine ${filter === 'pending' ? 'ausstehenden' : filter === 'accepted' ? 'angenommenen' : 'abgelehnten'} Angebote.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredOffers.map((offer) => (
+              <div key={offer.id} className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {offer.tireBrand} {offer.tireModel}
+                      </h3>
+                      {getStatusBadge(offer.status)}
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {offer.tireRequest.width}/{offer.tireRequest.aspectRatio} R{offer.tireRequest.diameter} • 
+                      {offer.tireRequest.season === 'SUMMER' ? ' Sommerreifen' : 
+                       offer.tireRequest.season === 'WINTER' ? ' Winterreifen' : ' Ganzjahresreifen'} • 
+                      {offer.tireRequest.quantity} Stück
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary-600">
+                      {offer.price.toFixed(2)} €
+                    </p>
+                    {offer.pricePerTire && (
+                      <p className="text-sm text-gray-500">
+                        {offer.pricePerTire.toFixed(2)} € pro Reifen
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {offer.description && (
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-700">{offer.description}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Kunde</h4>
+                    <p className="text-sm text-gray-900">
+                      {offer.tireRequest.customer.user.firstName} {offer.tireRequest.customer.user.lastName}
+                    </p>
+                    <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.email}</p>
+                    {offer.tireRequest.customer.user.phone && (
+                      <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.phone}</p>
+                    )}
+                    <p className="text-sm text-gray-600">
+                      {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Details</h4>
+                    <p className="text-sm text-gray-600">
+                      Erstellt: {new Date(offer.createdAt).toLocaleDateString('de-DE')}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Gültig bis: {new Date(offer.validUntil).toLocaleDateString('de-DE')}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Benötigt bis: {new Date(offer.tireRequest.needByDate).toLocaleDateString('de-DE')}
+                    </p>
+                    {offer.acceptedAt && (
+                      <p className="text-sm text-green-600 font-medium">
+                        Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {offer.booking && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm font-medium text-green-900">
+                      ✓ Termin gebucht: {new Date(offer.booking.appointmentDate).toLocaleDateString('de-DE')} um {offer.booking.appointmentTime}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}

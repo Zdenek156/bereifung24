@@ -28,10 +28,14 @@ export async function GET(
             workshop: {
               select: {
                 companyName: true,
-                street: true,
-                zipCode: true,
-                city: true,
-                phone: true,
+                user: {
+                  select: {
+                    street: true,
+                    zipCode: true,
+                    city: true,
+                    phone: true,
+                  }
+                }
               },
             },
           },

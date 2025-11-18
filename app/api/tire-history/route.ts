@@ -56,7 +56,9 @@ export async function GET(req: NextRequest) {
         },
         offer: {
           select: {
-            totalPrice: true
+            price: true,
+            tireBrand: true,
+            tireModel: true
           }
         },
         tireRating: {
@@ -86,6 +88,8 @@ export async function GET(req: NextRequest) {
       },
       tireDetails: {
         season: booking.tireRequest.season,
+        brand: booking.offer?.tireBrand || null,
+        model: booking.offer?.tireModel || null,
         width: booking.tireRequest.width,
         aspectRatio: booking.tireRequest.aspectRatio,
         diameter: booking.tireRequest.diameter,
@@ -94,7 +98,7 @@ export async function GET(req: NextRequest) {
         quantity: booking.tireRequest.quantity
       },
       vehicle: null, // TireRequest hat kein vehicleId
-      price: booking.offer?.totalPrice || null,
+      price: booking.offer?.price || null,
       status: booking.status,
       tireRating: booking.tireRating ? {
         id: booking.tireRating.id,

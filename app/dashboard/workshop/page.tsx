@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import Link from 'next/link'
 
 export default function WorkshopDashboard() {
   const { data: session, status } = useSession()
@@ -132,9 +133,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Einstellungen</h3>
             <p className="text-sm text-gray-600 mb-4">Werkstatt-Profil und Einstellungen</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <Link
+              href="/dashboard/workshop/settings"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
               Profil bearbeiten
-            </button>
+            </Link>
           </div>
         </div>
 

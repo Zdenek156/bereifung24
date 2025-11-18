@@ -50,6 +50,26 @@ export default function WorkshopSettings() {
     accountHolder: '',
   })
 
+  const [openingHoursData, setOpeningHoursData] = useState({
+    monday: { from: '08:00', to: '18:00', closed: false },
+    tuesday: { from: '08:00', to: '18:00', closed: false },
+    wednesday: { from: '08:00', to: '18:00', closed: false },
+    thursday: { from: '08:00', to: '18:00', closed: false },
+    friday: { from: '08:00', to: '18:00', closed: false },
+    saturday: { from: '09:00', to: '13:00', closed: false },
+    sunday: { from: '09:00', to: '13:00', closed: true },
+  })
+
+  const dayLabels: { [key: string]: string } = {
+    monday: 'Montag',
+    tuesday: 'Dienstag',
+    wednesday: 'Mittwoch',
+    thursday: 'Donnerstag',
+    friday: 'Freitag',
+    saturday: 'Samstag',
+    sunday: 'Sonntag',
+  }
+
   useEffect(() => {
     if (status === 'loading') return
 
@@ -87,6 +107,16 @@ export default function WorkshopSettings() {
           iban: data.iban || '',
           accountHolder: data.accountHolder || '',
         })
+
+        // Parse opening hours JSON if available
+        if (data.openingHours) {
+          try {
+            const parsed = JSON.parse(data.openingHours)
+            setOpeningHoursData(parsed)
+          } catch (e) {
+            console.log('Could not parse opening hours:', e)
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -101,11 +131,15 @@ export default function WorkshopSettings() {
     setMessage(null)
 
     try {
+      // Convert opening hours to JSON string
+      const openingHoursJson = JSON.stringify(openingHoursData)
+
       const response = await fetch('/api/workshop/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          openingHours: openingHoursJson,
           oldIban: profile?.iban, // For SEPA mandate date update
         }),
       })
@@ -212,7 +246,7 @@ export default function WorkshopSettings() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Persönliche Daten</h2>
+            <h2 className="text-xl font-semibold mb-4">Ansprechpartner</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -329,16 +363,62 @@ export default function WorkshopSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Öffnungszeiten
                 </label>
-                <textarea
-                  value={formData.openingHours}
-                  onChange={(e) => setFormData({ ...formData, openingHours: e.target.value })}
-                  rows={3}
-                  placeholder="z.B. Mo-Fr: 08:00-18:00, Sa: 09:00-13:00"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+                <div className="space-y-3">
+                  {Object.entries(openingHoursData).map(([day, hours]) => (
+                    <div key={day} className="flex items-center gap-3">
+                      <label className="w-28 text-sm text-gray-700">{dayLabels[day]}</label>
+                      <input
+                        type="checkbox"
+                        checked={!hours.closed}
+                        onChange={(e) => {
+                          setOpeningHoursData({
+                            ...openingHoursData,
+                            [day]: { ...hours, closed: !e.target.checked }
+                          })
+                        }}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      {!hours.closed ? (
+                        <>
+                          <select
+                            value={hours.from}
+                            onChange={(e) => {
+                              setOpeningHoursData({
+                                ...openingHoursData,
+                                [day]: { ...hours, from: e.target.value }
+                              })
+                            }}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                          >
+                            {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'].map(time => (
+                              <option key={time} value={time}>{time}</option>
+                            ))}
+                          </select>
+                          <span className="text-gray-500">bis</span>
+                          <select
+                            value={hours.to}
+                            onChange={(e) => {
+                              setOpeningHoursData({
+                                ...openingHoursData,
+                                [day]: { ...hours, to: e.target.value }
+                              })
+                            }}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                          >
+                            {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map(time => (
+                              <option key={time} value={time}>{time}</option>
+                            ))}
+                          </select>
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-500 italic">Geschlossen</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -429,7 +509,7 @@ export default function WorkshopSettings() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Für die Auszahlung Ihrer Provisionen (5% pro Buchung)
+                  Für die Auszahlung Ihrer Provisionen (5% pro Auftrag)
                 </p>
               </div>
 
@@ -451,7 +531,7 @@ export default function WorkshopSettings() {
                 <p className="text-sm text-gray-600">
                   Mit der Angabe Ihrer Bankverbindung erteilen Sie Bereifung24 (Zdenek Kyzlink, 
                   Jahnstraße 2, 71706 Markgröningen) ein SEPA-Lastschriftmandat für die Einziehung 
-                  der Plattformgebühr (5% pro Buchung). Sie werden vor jedem Lastschrifteinzug 
+                  der Plattformgebühr (5% pro Auftrag). Sie werden vor jedem Lastschrifteinzug 
                   per E-Mail informiert.
                 </p>
                 {formData.iban !== profile?.iban && formData.iban && (

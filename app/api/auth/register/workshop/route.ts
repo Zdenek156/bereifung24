@@ -61,7 +61,6 @@ export async function POST(request: Request) {
             description: validatedData.description,
             sepaMandateRef: sepaMandateRef,
             isVerified: false, // Admin muss verifizieren
-            isActive: true,
           }
         }
       },

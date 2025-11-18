@@ -482,8 +482,6 @@ export default function TireHistory() {
                     
                     return getSeasonLabel(mostBoughtSeason).split('reifen')[0] + 'reifen'
                   })()}
-                    : '-'
-                  }
                 </p>
               </div>
               <div>

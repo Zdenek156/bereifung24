@@ -57,10 +57,6 @@ export async function POST(request: Request) {
         workshop: {
           create: {
             companyName: validatedData.companyName,
-            street: validatedData.street,
-            zipCode: validatedData.zipCode,
-            city: validatedData.city,
-            phone: validatedData.phone,
             website: validatedData.website,
             description: validatedData.description,
             sepaMandateRef: sepaMandateRef,

@@ -21,6 +21,7 @@ export default function WorkshopRegisterPage() {
     accountHolder: '',
     description: '',
   })
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -36,6 +37,11 @@ export default function WorkshopRegisterPage() {
     setError('')
 
     // Validation
+    if (!termsAccepted) {
+      setError('Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwörter stimmen nicht überein')
       return
@@ -357,11 +363,12 @@ export default function WorkshopRegisterPage() {
                 id="terms"
                 name="terms"
                 type="checkbox"
-                required
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                Ich akzeptiere die <Link href="/agb" className="text-primary-600 hover:text-primary-500">AGB</Link> und <Link href="/datenschutz" className="text-primary-600 hover:text-primary-500">Datenschutzbestimmungen</Link>. 
+                Ich akzeptiere die <Link href="/agb" target="_blank" className="text-primary-600 hover:text-primary-500">AGB</Link> und <Link href="/datenschutz" target="_blank" className="text-primary-600 hover:text-primary-500">Datenschutzbestimmungen</Link>. 
                 Ich stimme der Provisionszahlung von 5% pro erfolgreich vermitteltem Auftrag zu.
               </label>
             </div>

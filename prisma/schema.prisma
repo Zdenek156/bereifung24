@@ -1,13 +1,13 @@
 // This is your Prisma schema file
 // Bereifung24 Platform - Kunden-Werkstatt-Vermittlung
-// SQLite Version (for local development)
+// PostgreSQL Version (for production)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

@@ -468,26 +468,20 @@ export default function TireHistory() {
               <div>
                 <p className="text-sm text-gray-600">Meistgekauft</p>
                 <p className="mt-1 text-lg font-bold text-gray-900">
-                  {history.length > 0 
-                    ? getSeasonLabel(
-                        history.reduce((acc, item) => {
-                          acc[item.tireDetails.season] = (acc[item.tireDetails.season] || 0) + 1
-                          return acc
-                        }, {} as Record<string, number>)[
-                          Object.keys(history.reduce((acc, item) => {
-                            acc[item.tireDetails.season] = (acc[item.tireDetails.season] || 0) + 1
-                            return acc
-                          }, {} as Record<string, number>)).reduce((a, b) => 
-                            history.reduce((acc, item) => {
-                              acc[item.tireDetails.season] = (acc[item.tireDetails.season] || 0) + 1
-                              return acc
-                            }, {} as Record<string, number>)[a] > history.reduce((acc, item) => {
-                              acc[item.tireDetails.season] = (acc[item.tireDetails.season] || 0) + 1
-                              return acc
-                            }, {} as Record<string, number>)[b] ? a : b
-                          )
-                        ]
-                      ).split('reifen')[0] + 'reifen'
+                  {(() => {
+                    if (history.length === 0) return '-'
+                    
+                    const seasonCounts = history.reduce((acc, item) => {
+                      acc[item.tireDetails.season] = (acc[item.tireDetails.season] || 0) + 1
+                      return acc
+                    }, {} as Record<string, number>)
+                    
+                    const mostBoughtSeason = Object.keys(seasonCounts).reduce((a, b) => 
+                      seasonCounts[a] > seasonCounts[b] ? a : b
+                    )
+                    
+                    return getSeasonLabel(mostBoughtSeason).split('reifen')[0] + 'reifen'
+                  })()}
                     : '-'
                   }
                 </p>

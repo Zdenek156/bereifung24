@@ -80,9 +80,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Meine Angebote</h3>
             <p className="text-sm text-gray-600 mb-4">Gesendete Angebote verwalten</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <Link
+              href="/dashboard/workshop/offers"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
               Angebote ansehen
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
@@ -93,9 +96,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Termine</h3>
             <p className="text-sm text-gray-600 mb-4">Gebuchte Termine verwalten</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <Link
+              href="/dashboard/workshop/appointments"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
               Kalender öffnen
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
@@ -106,9 +112,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Bewertungen</h3>
             <p className="text-sm text-gray-600 mb-4">Kundenbewertungen ansehen</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <Link
+              href="/dashboard/workshop/reviews"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
               Bewertungen ansehen
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
@@ -119,9 +128,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Provisionen</h3>
             <p className="text-sm text-gray-600 mb-4">Offene und bezahlte Provisionen</p>
-            <button className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+            <Link
+              href="/dashboard/workshop/commissions"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
               Übersicht ansehen
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">

@@ -15,7 +15,8 @@ export default function AGBPage() {
               Bereifung24 (nachfolgend "Plattform"), die unter der Domain reifen.bereifung24.de erreichbar ist.
             </p>
             <p className="mb-3">
-              Die Plattform wird betrieben von [Betreiberangaben einfügen] (nachfolgend "Betreiber").
+              Die Plattform wird betrieben von Bereifung24, Zdenek Kyzlink, Jahnstraße 2, 71706 Markgröningen 
+              (nachfolgend "Betreiber").
             </p>
             <p>
               Die Plattform vermittelt zwischen Kunden, die Reifen und Montagedienstleistungen suchen (nachfolgend "Kunden"), 
@@ -295,7 +296,7 @@ export default function AGBPage() {
 
             <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-4">12.2 Gerichtsstand</h3>
             <p className="mb-3">
-              Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesen AGB ist [Stadt einfügen], 
+              Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesen AGB ist Ludwigsburg, 
               sofern der Nutzer Kaufmann, juristische Person des öffentlichen Rechts oder öffentlich-rechtliches 
               Sondervermögen ist.
             </p>
@@ -315,7 +316,11 @@ export default function AGBPage() {
               <strong>Stand:</strong> November 2025
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              <strong>Betreiber:</strong> [Firmenname, Anschrift, Kontaktdaten einfügen]
+              <strong>Betreiber:</strong><br />
+              Bereifung24<br />
+              Zdenek Kyzlink<br />
+              Jahnstraße 2<br />
+              71706 Markgröningen
             </p>
           </section>
         </div>

@@ -67,9 +67,12 @@ export default function WorkshopDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Anfragen durchsuchen</h3>
             <p className="text-sm text-gray-600 mb-4">Neue Kundenanfragen in Ihrer Nähe finden</p>
-            <button className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <Link
+              href="/dashboard/workshop/browse-requests"
+              className="block w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center"
+            >
               Anfragen ansehen
-            </button>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">

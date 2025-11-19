@@ -36,7 +36,11 @@ export async function POST(
       include: {
         tireRequest: {
           include: {
-            customer: true
+            customer: {
+              include: {
+                user: true
+              }
+            }
           }
         },
         workshop: {

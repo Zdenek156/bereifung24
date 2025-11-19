@@ -531,7 +531,7 @@ export default function WorkshopSettings() {
                 <p className="text-sm text-gray-600">
                   Mit der Angabe Ihrer Bankverbindung erteilen Sie Bereifung24 (Zdenek Kyzlink, 
                   Jahnstraße 2, 71706 Markgröningen) ein SEPA-Lastschriftmandat für die Einziehung 
-                  der Plattformgebühr (5% pro Auftrag). Sie werden vor jedem Lastschrifteinzug 
+                  der Plattformgebühr (4,9% pro Auftrag, monatlich abgerechnet). Sie werden vor jedem Lastschrifteinzug 
                   per E-Mail informiert.
                 </p>
                 {formData.iban !== profile?.iban && formData.iban && (

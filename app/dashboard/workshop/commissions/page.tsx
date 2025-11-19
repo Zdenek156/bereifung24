@@ -129,7 +129,7 @@ export default function WorkshopCommissions() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Provisionen</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Übersicht der Plattformgebühren (5% pro Auftrag)
+                Übersicht der Plattformgebühren
               </p>
             </div>
           </div>

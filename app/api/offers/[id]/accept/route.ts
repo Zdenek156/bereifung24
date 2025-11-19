@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, offerAcceptedEmailTemplate } from '@/lib/email'
 
 // POST - Kunde nimmt Angebot an
 export async function POST(
@@ -125,13 +126,28 @@ export async function POST(
       return acceptedOffer
     })
 
-    // TODO: Email an Werkstatt senden
-    // sendEmail({
-    //   to: offer.workshop.user.email,
-    //   subject: 'Ihr Angebot wurde angenommen!',
-    //   template: 'offer-accepted',
-    //   data: { offer, customer: session.user }
-    // })
+    // Email an Werkstatt senden
+    try {
+      const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+      const emailTemplate = offerAcceptedEmailTemplate({
+        workshopName: offer.workshop.companyName,
+        customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+        tireBrand: offer.tireBrand,
+        tireModel: offer.tireModel,
+        tireSpecs: tireSpecs,
+        price: offer.price,
+        customerPhone: offer.tireRequest.customer.user.phone || undefined,
+        customerEmail: offer.tireRequest.customer.user.email
+      })
+
+      await sendEmail({
+        to: offer.workshop.user.email,
+        ...emailTemplate
+      })
+    } catch (emailError) {
+      console.error('Email konnte nicht gesendet werden:', emailError)
+      // Weiter ausführen, auch wenn Email fehlschlägt
+    }
 
     return NextResponse.json({
       message: 'Angebot erfolgreich angenommen',

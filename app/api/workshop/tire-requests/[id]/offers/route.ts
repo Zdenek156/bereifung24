@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { sendEmail, newOfferEmailTemplate } from '@/lib/email'
 
 const offerSchema = z.object({
   tireBrand: z.string().min(1, 'Reifenmarke erforderlich'),
@@ -115,13 +116,27 @@ export async function POST(
       })
     }
 
-    // TODO: Email an Kunde senden
-    // sendEmail({
-    //   to: offer.tireRequest.customer.user.email,
-    //   subject: 'Neues Angebot für Ihre Reifenafrage',
-    //   template: 'new-offer',
-    //   data: { offer }
-    // })
+    // Email an Kunde senden
+    try {
+      const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+      const emailTemplate = newOfferEmailTemplate({
+        customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+        workshopName: offer.workshop.companyName,
+        tireBrand: offer.tireBrand,
+        tireModel: offer.tireModel,
+        tireSpecs: tireSpecs,
+        price: offer.price,
+        requestId: offer.tireRequestId
+      })
+
+      await sendEmail({
+        to: offer.tireRequest.customer.user.email,
+        ...emailTemplate
+      })
+    } catch (emailError) {
+      console.error('Email konnte nicht gesendet werden:', emailError)
+      // Weiter ausführen, auch wenn Email fehlschlägt
+    }
 
     return NextResponse.json({ 
       message: 'Angebot erfolgreich erstellt',

@@ -13,17 +13,35 @@ export default function HomePage() {
           }}></div>
         </div>
 
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="mb-6">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-3 tracking-tight">
-                Bereifung24
-              </h1>
-              <p className="text-xl md:text-2xl text-primary-100 font-medium">
-                Die Online Plattform für Ihren Reifenservice
-              </p>
+        {/* Logo & Navigation Bar */}
+        <div className="relative border-b border-white/10">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between py-4">
+              <div>
+                <h1 className="text-2xl font-bold">Bereifung24</h1>
+                <p className="text-xs text-primary-100">Die Online Plattform für Ihren Reifenservice</p>
+              </div>
+              <div className="flex gap-3">
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  Anmelden
+                </Link>
+                <Link
+                  href="/register/customer"
+                  className="px-4 py-2 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+                >
+                  Registrieren
+                </Link>
+              </div>
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 mt-8">
+          </div>
+        </div>
+
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
               Neue Reifen benötigt?
             </h2>
             <p className="text-xl md:text-2xl mb-4 text-primary-100">

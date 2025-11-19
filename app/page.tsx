@@ -15,9 +15,17 @@ export default function HomePage() {
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <div className="mb-6">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-3 tracking-tight">
+                Bereifung24
+              </h1>
+              <p className="text-xl md:text-2xl text-primary-100 font-medium">
+                Die Online Plattform für Ihren Reifenservice
+              </p>
+            </div>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 mt-8">
               Neue Reifen benötigt?
-            </h1>
+            </h2>
             <p className="text-xl md:text-2xl mb-4 text-primary-100">
               Anfrage stellen • Angebote vergleichen • Termin buchen
             </p>

@@ -50,21 +50,6 @@ export default function HomePage() {
             <p className="text-lg mb-10 text-primary-50 max-w-2xl mx-auto">
               Verbinde dich mit geprüften Werkstätten in deiner Nähe. Transparente Preise, schnelle Buchung, faire Konditionen.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/register/customer"
-                className="inline-block bg-white text-primary-600 px-10 py-5 rounded-lg font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-2xl"
-              >
-                Jetzt Reifen anfragen
-              </Link>
-              <Link
-                href="/login"
-                className="inline-block bg-primary-500 text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-primary-400 transition-all border-2 border-white"
-              >
-                Anmelden
-              </Link>
-            </div>
           </div>
         </div>
 

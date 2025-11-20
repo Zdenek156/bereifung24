@@ -57,6 +57,9 @@ model Customer {
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Email Notifications
+  emailNotifyOffers Boolean  @default(true) // Benachrichtigung bei neuen Angeboten
+  
   // Relations
   tireRequests    TireRequest[]
   bookings        Booking[]
@@ -100,6 +103,9 @@ model Workshop {
   
   // PayPal
   paypalEmail     String?
+  
+  // Email Notifications
+  emailNotifyRequests Boolean  @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
   
   // Relations
   offers          Offer[]

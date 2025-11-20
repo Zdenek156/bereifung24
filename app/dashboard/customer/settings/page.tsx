@@ -16,6 +16,7 @@ interface UserProfile {
   customerType: 'PRIVATE' | 'BUSINESS'
   companyName: string
   taxId: string
+  emailNotifyOffers: boolean
 }
 
 export default function CustomerSettings() {
@@ -35,7 +36,8 @@ export default function CustomerSettings() {
     city: '',
     customerType: 'PRIVATE',
     companyName: '',
-    taxId: ''
+    taxId: '',
+    emailNotifyOffers: true
   })
 
   useEffect(() => {
@@ -69,7 +71,8 @@ export default function CustomerSettings() {
           city: data.city || '',
           customerType: data.customerType || 'PRIVATE',
           companyName: data.companyName || '',
-          taxId: data.taxId || ''
+          taxId: data.taxId || '',
+          emailNotifyOffers: data.customer?.emailNotifyOffers ?? true
         })
       }
     } catch (error) {
@@ -333,6 +336,27 @@ export default function CustomerSettings() {
                     placeholder="Musterstadt"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Email Notifications */}
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">E-Mail-Benachrichtigungen</h3>
+              <div className="space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.emailNotifyOffers}
+                    onChange={(e) => setFormData({ ...formData, emailNotifyOffers: e.target.checked })}
+                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Angebots-Benachrichtigungen</div>
+                    <div className="text-sm text-gray-600">
+                      Ich möchte per E-Mail benachrichtigt werden, wenn ich ein neues Angebot für meine Reifenafrage erhalte
+                    </div>
+                  </div>
+                </label>
               </div>
             </div>
 

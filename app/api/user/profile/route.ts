@@ -15,6 +15,7 @@ const profileUpdateSchema = z.object({
   customerType: z.enum(['PRIVATE', 'BUSINESS']),
   companyName: z.string().optional(),
   taxId: z.string().optional(),
+  emailNotifyOffers: z.boolean().optional(),
 })
 
 // GET /api/user/profile - Get current user profile
@@ -43,6 +44,11 @@ export async function GET(req: NextRequest) {
         customerType: true,
         companyName: true,
         taxId: true,
+        customer: {
+          select: {
+            emailNotifyOffers: true
+          }
+        }
       }
     })
 
@@ -114,8 +120,23 @@ export async function PUT(req: NextRequest) {
         customerType: true,
         companyName: true,
         taxId: true,
+        customer: {
+          select: {
+            emailNotifyOffers: true
+          }
+        }
       }
     })
+
+    // Update customer notification preferences if provided
+    if (validatedData.emailNotifyOffers !== undefined) {
+      await prisma.customer.updateMany({
+        where: { userId: session.user.id },
+        data: {
+          emailNotifyOffers: validatedData.emailNotifyOffers
+        }
+      })
+    }
 
     return NextResponse.json(updatedUser)
   } catch (error) {

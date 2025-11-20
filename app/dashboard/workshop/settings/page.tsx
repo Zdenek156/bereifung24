@@ -25,6 +25,15 @@ interface WorkshopProfile {
   sepaMandateRef: string | null
   sepaMandateDate: string | null
   emailNotifyRequests: boolean
+  paymentMethods?: {
+    cash: boolean
+    ecCard: boolean
+    creditCard: boolean
+    bankTransfer: boolean
+    bankTransferIban?: string
+    paypal: boolean
+    paypalEmail?: string
+  }
 }
 
 export default function WorkshopSettings() {
@@ -34,7 +43,7 @@ export default function WorkshopSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'banking' | 'notifications'>('contact')
+  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications'>('contact')
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -51,6 +60,16 @@ export default function WorkshopSettings() {
     iban: '',
     accountHolder: '',
     emailNotifyRequests: true,
+  })
+
+  const [paymentMethods, setPaymentMethods] = useState({
+    cash: true,
+    ecCard: false,
+    creditCard: false,
+    bankTransfer: false,
+    bankTransferIban: '',
+    paypal: false,
+    paypalEmail: '',
   })
 
   const [openingHoursData, setOpeningHoursData] = useState({
@@ -121,6 +140,26 @@ export default function WorkshopSettings() {
             console.log('Could not parse opening hours:', e)
           }
         }
+
+        // Parse payment methods JSON if available
+        if (data.paymentMethods) {
+          try {
+            const parsed = typeof data.paymentMethods === 'string' 
+              ? JSON.parse(data.paymentMethods) 
+              : data.paymentMethods
+            setPaymentMethods({
+              cash: parsed.cash ?? true,
+              ecCard: parsed.ecCard ?? false,
+              creditCard: parsed.creditCard ?? false,
+              bankTransfer: parsed.bankTransfer ?? false,
+              bankTransferIban: parsed.bankTransferIban || '',
+              paypal: parsed.paypal ?? false,
+              paypalEmail: parsed.paypalEmail || '',
+            })
+          } catch (e) {
+            console.log('Could not parse payment methods:', e)
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -137,6 +176,8 @@ export default function WorkshopSettings() {
     try {
       // Convert opening hours to JSON string
       const openingHoursJson = JSON.stringify(openingHoursData)
+      // Convert payment methods to JSON string
+      const paymentMethodsJson = JSON.stringify(paymentMethods)
 
       const response = await fetch('/api/workshop/profile', {
         method: 'PATCH',
@@ -144,6 +185,7 @@ export default function WorkshopSettings() {
         body: JSON.stringify({
           ...formData,
           openingHours: openingHoursJson,
+          paymentMethods: paymentMethodsJson,
           oldIban: profile?.iban, // For SEPA mandate date update
         }),
       })
@@ -275,14 +317,25 @@ export default function WorkshopSettings() {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('banking')}
+                onClick={() => setActiveTab('payment')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'banking'
+                  activeTab === 'payment'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Bankverbindung
+                Zahlungsmöglichkeiten
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('sepa')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'sepa'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Bankverbindung & SEPA
               </button>
               <button
                 type="button"
@@ -535,13 +588,157 @@ export default function WorkshopSettings() {
             </div>
           )}
 
-          {/* Tab: Bankverbindung */}
-          {activeTab === 'banking' && (
+          {/* Tab: Zahlungsmöglichkeiten */}
+          {activeTab === 'payment' && (
             <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Bankverbindung & SEPA-Mandat</h2>
+            <h2 className="text-xl font-semibold mb-6">Zahlungsmöglichkeiten für Kunden</h2>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              Wählen Sie aus, welche Zahlungsmethoden Sie Ihren Kunden anbieten möchten. Die Kunden sehen diese Optionen bei der Buchung.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              {/* Barzahlung */}
+              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  checked={paymentMethods.cash}
+                  onChange={(e) => setPaymentMethods({ ...paymentMethods, cash: e.target.checked })}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                    💵 Barzahlung vor Ort
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Der Kunde zahlt direkt bei Abholung oder nach Fertigstellung in bar
+                  </p>
+                </div>
+              </div>
+
+              {/* Banküberweisung */}
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start gap-3 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.bankTransfer}
+                    onChange={(e) => setPaymentMethods({ ...paymentMethods, bankTransfer: e.target.checked })}
+                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                      🏦 Banküberweisung
+                    </label>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Der Kunde überweist den Betrag auf Ihr Bankkonto
+                    </p>
+                  </div>
+                </div>
+                {paymentMethods.bankTransfer && (
+                  <div className="ml-7 mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      IBAN für Überweisungen
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bankTransferIban}
+                      onChange={(e) => setPaymentMethods({ ...paymentMethods, bankTransferIban: e.target.value.toUpperCase() })}
+                      placeholder="DE89 3704 0044 0532 0130 00"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Diese IBAN wird dem Kunden für Überweisungen angezeigt
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* EC-Karte */}
+              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  checked={paymentMethods.ecCard}
+                  onChange={(e) => setPaymentMethods({ ...paymentMethods, ecCard: e.target.checked })}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                    💳 EC-Karte vor Ort
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Der Kunde zahlt mit EC-Karte direkt vor Ort bei Abholung
+                  </p>
+                </div>
+              </div>
+
+              {/* Kreditkarte */}
+              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  checked={paymentMethods.creditCard}
+                  onChange={(e) => setPaymentMethods({ ...paymentMethods, creditCard: e.target.checked })}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                    💳 Kreditkarte vor Ort
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Der Kunde zahlt mit Kreditkarte (Visa, Mastercard, etc.) direkt vor Ort bei Abholung
+                  </p>
+                </div>
+              </div>
+
+              {/* PayPal */}
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start gap-3 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.paypal}
+                    onChange={(e) => setPaymentMethods({ ...paymentMethods, paypal: e.target.checked })}
+                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                      💳 PayPal
+                    </label>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Der Kunde zahlt per PayPal
+                    </p>
+                  </div>
+                </div>
+                {paymentMethods.paypal && (
+                  <div className="ml-7 mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      PayPal E-Mail-Adresse
+                    </label>
+                    <input
+                      type="email"
+                      value={paymentMethods.paypalEmail}
+                      onChange={(e) => setPaymentMethods({ ...paymentMethods, paypalEmail: e.target.value })}
+                      placeholder="ihre-werkstatt@paypal.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Diese E-Mail wird dem Kunden für PayPal-Zahlungen angezeigt
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            </div>
+          )}
+
+          {/* Tab: Bankverbindung & SEPA */}
+          {activeTab === 'sepa' && (
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Bankverbindung & SEPA-Mandat</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Für die Auszahlung Ihrer Provisionen (4,9% pro Auftrag)
+            </p>
             
             {profile?.sepaMandateRef && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-start gap-2">
                   <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -572,7 +769,7 @@ export default function WorkshopSettings() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Für die Auszahlung Ihrer Provisionen (5% pro Auftrag)
+                  Für die Auszahlung Ihrer Provisionen (4,9% pro Auftrag)
                 </p>
               </div>
 

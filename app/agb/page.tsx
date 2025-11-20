@@ -132,7 +132,7 @@ export default function AGBPage() {
               Werkstatt eine Provision an den Betreiber.
             </p>
             <p className="mb-3">
-              Die Provision beträgt <strong>5% des Bruttoauftragswertes</strong> (Gesamtpreis für Reifen und 
+              Die Provision beträgt <strong>4,9% des Bruttoauftragswertes</strong> (Gesamtpreis für Reifen und 
               Montagedienstleistung inklusive Mehrwertsteuer).
             </p>
 

@@ -153,7 +153,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
             <button
-              onClick={() => router.push('/dashboard/customer/create-request')}
+              onClick={() => router.push('/dashboard/customer/select-service')}
               className="px-8 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center gap-2"
             >
               Anfrage erstellen

@@ -55,6 +55,9 @@ export async function GET() {
       sepaMandateRef: user.workshop.sepaMandateRef,
       sepaMandateDate: user.workshop.sepaMandateDate,
       
+      // Payment Methods
+      paymentMethods: user.workshop.paymentMethods,
+      
       // Notifications
       emailNotifyRequests: user.workshop.emailNotifyRequests,
       
@@ -106,6 +109,9 @@ export async function PATCH(request: Request) {
       iban,
       accountHolder,
       
+      // Payment Methods
+      paymentMethods,
+      
       // Notifications
       emailNotifyRequests,
     } = body
@@ -134,6 +140,7 @@ export async function PATCH(request: Request) {
         openingHours,
         iban,
         accountHolder,
+        paymentMethods,
         emailNotifyRequests,
         // Update SEPA mandate date if IBAN changed
         ...(iban && iban !== body.oldIban ? { sepaMandateDate: new Date() } : {}),

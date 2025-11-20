@@ -24,6 +24,7 @@ interface WorkshopProfile {
   accountHolder: string | null
   sepaMandateRef: string | null
   sepaMandateDate: string | null
+  emailNotifyRequests: boolean
 }
 
 export default function WorkshopSettings() {
@@ -48,6 +49,7 @@ export default function WorkshopSettings() {
     openingHours: '',
     iban: '',
     accountHolder: '',
+    emailNotifyRequests: true,
   })
 
   const [openingHoursData, setOpeningHoursData] = useState({
@@ -106,6 +108,7 @@ export default function WorkshopSettings() {
           openingHours: data.openingHours || '',
           iban: data.iban || '',
           accountHolder: data.accountHolder || '',
+          emailNotifyRequests: data.emailNotifyRequests ?? true,
         })
 
         // Parse opening hours JSON if available
@@ -540,6 +543,30 @@ export default function WorkshopSettings() {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Email Notifications Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail-Benachrichtigungen</h2>
+            
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.emailNotifyRequests}
+                  onChange={(e) => setFormData({ ...formData, emailNotifyRequests: e.target.checked })}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div>
+                  <span className="block text-sm font-medium text-gray-900">
+                    Anfragen-Benachrichtigungen
+                  </span>
+                  <span className="block text-sm text-gray-600">
+                    Ich möchte per E-Mail benachrichtigt werden, wenn ein Kunde eine neue Reifenafrage in meinem Umkreis erstellt
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 

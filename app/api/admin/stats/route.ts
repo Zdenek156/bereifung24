@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     })
 
     const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + booking.offer.price, 0)
-    const monthlyCommission = monthlyRevenue * 0.05 // 5% commission
+    const monthlyCommission = monthlyRevenue * 0.049 // 4,9% commission
 
     return NextResponse.json({
       totalCustomers,

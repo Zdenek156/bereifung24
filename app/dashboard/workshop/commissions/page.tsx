@@ -179,7 +179,7 @@ export default function WorkshopCommissions() {
             <div className="text-sm text-blue-900">
               <p className="font-medium mb-1">Wie funktioniert die Provision?</p>
               <p>
-                Für jeden abgeschlossenen Auftrag berechnen wir eine Plattformgebühr von 5% des Gesamtbetrags. 
+                Für jeden abgeschlossenen Auftrag berechnen wir eine Plattformgebühr von 4,9% des Gesamtbetrags. 
                 Die Gebühr wird automatisch per SEPA-Lastschrift von Ihrem hinterlegten Konto eingezogen. 
                 Sie werden vor jedem Einzug per E-Mail informiert.
               </p>
@@ -261,7 +261,7 @@ export default function WorkshopCommissions() {
                     Auftragswert
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Provision (5%)
+                    Provision (4,9%)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status

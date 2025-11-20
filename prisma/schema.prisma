@@ -104,6 +104,9 @@ model Workshop {
   // PayPal
   paypalEmail     String?
   
+  // Payment Methods (JSON String)
+  paymentMethods  String?   @db.Text // JSON: {"cash": true, "bankTransfer": true, ...}
+  
   // Email Notifications
   emailNotifyRequests Boolean  @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
   

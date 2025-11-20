@@ -407,7 +407,7 @@ export default function WorkshopRegisterPage() {
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 Ich akzeptiere die <Link href="/agb" target="_blank" className="text-primary-600 hover:text-primary-500">AGB</Link> und <Link href="/datenschutz" target="_blank" className="text-primary-600 hover:text-primary-500">Datenschutzbestimmungen</Link>. 
-                Ich stimme der Provisionszahlung von 5% pro erfolgreich vermitteltem Auftrag zu.
+                Ich stimme der Provisionszahlung von 4,9% pro erfolgreich vermitteltem Auftrag zu.
               </label>
             </div>
 

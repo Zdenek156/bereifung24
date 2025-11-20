@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { geocodeAddress } from '@/lib/geocoding'
 
 const tireRequestSchema = z.object({
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
@@ -46,6 +47,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get customer's address for geocoding
+    const customer = await prisma.customer.findUnique({
+      where: { id: session.user.customerId! },
+      include: { user: true }
+    })
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Kunde nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Geocode customer address if available
+    let latitude: number | null = null
+    let longitude: number | null = null
+
+    if (customer.user.street && customer.user.city) {
+      const geocodeResult = await geocodeAddress(
+        customer.user.street,
+        validatedData.zipCode,
+        customer.user.city
+      )
+      
+      if (geocodeResult) {
+        latitude = geocodeResult.latitude
+        longitude = geocodeResult.longitude
+      } else {
+        console.warn(`Failed to geocode address for customer ${customer.id}`)
+      }
+    }
+
     // Create tire request
     const tireRequest = await prisma.tireRequest.create({
       data: {
@@ -63,6 +96,8 @@ export async function POST(request: NextRequest) {
         needByDate: needByDate,
         zipCode: validatedData.zipCode,
         radiusKm: validatedData.radiusKm,
+        latitude: latitude,
+        longitude: longitude,
         status: 'PENDING',
       },
     })

@@ -46,6 +46,14 @@ export default function SelectServicePage() {
       icon: '⚙️',
       route: '/dashboard/customer/create-request/alignment',
       available: true
+    },
+    {
+      id: 'other-services',
+      title: 'Sonstige Reifendienste',
+      description: 'RDKS anlernen, Ventile tauschen, Räderwäsche, Reifen einlagern',
+      icon: '🛠️',
+      route: '/dashboard/customer/create-request/other-services',
+      available: true
     }
   ]
 

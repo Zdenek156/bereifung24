@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 // Motorrad-spezifische Dimensionen
-const MOTO_WIDTHS = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 240]
-const MOTO_ASPECT_RATIOS = [40, 45, 50, 55, 60, 65, 70, 75, 80, 90]
+const MOTO_WIDTHS = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 240, 260, 280, 300]
+const MOTO_ASPECT_RATIOS = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
 const MOTO_DIAMETERS = [10, 12, 14, 16, 17, 18, 19, 21]
 
 // Load Index für Motorräder
@@ -433,7 +433,7 @@ export default function MotorcycleTiresPage() {
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
                 <p className="font-semibold text-gray-900">🏁 Sport</p>
-                <p className="text-xs text-gray-600 text-center">Rennstrecke</p>
+                <p className="text-xs text-gray-600 text-center">Straße</p>
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${

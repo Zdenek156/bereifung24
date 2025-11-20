@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
+import { geocodeAddress } from '@/lib/geocoding'
 
 const workshopSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -39,6 +40,23 @@ export async function POST(request: Request) {
     // Passwort hashen
     const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 
+    // Geocode workshop address
+    let latitude: number | null = null
+    let longitude: number | null = null
+
+    const geocodeResult = await geocodeAddress(
+      validatedData.street,
+      validatedData.zipCode,
+      validatedData.city
+    )
+    
+    if (geocodeResult) {
+      latitude = geocodeResult.latitude
+      longitude = geocodeResult.longitude
+    } else {
+      console.warn('Failed to geocode workshop address during registration')
+    }
+
     // SEPA-Mandatsreferenz generieren
     const sepaMandateRef = `B24-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
 
@@ -53,6 +71,8 @@ export async function POST(request: Request) {
         street: validatedData.street,
         zipCode: validatedData.zipCode,
         city: validatedData.city,
+        latitude: latitude,
+        longitude: longitude,
         role: 'WORKSHOP',
         workshop: {
           create: {

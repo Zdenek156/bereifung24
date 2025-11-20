@@ -34,6 +34,7 @@ export default function WorkshopSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'banking' | 'notifications'>('contact')
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -246,10 +247,65 @@ export default function WorkshopSettings() {
           </div>
         )}
 
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px">
+              <button
+                type="button"
+                onClick={() => setActiveTab('contact')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'contact'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Kontakt & Unternehmen
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('hours')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'hours'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Öffnungszeiten
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('banking')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'banking'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Bankverbindung
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('notifications')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'notifications'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Benachrichtigungen
+              </button>
+            </nav>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Ansprechpartner</h2>
+          {/* Tab: Kontakt & Unternehmen */}
+          {activeTab === 'contact' && (
+            <>
+              {/* Personal Information */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Ansprechpartner</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,65 +420,6 @@ export default function WorkshopSettings() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Öffnungszeiten
-                </label>
-                <div className="space-y-3">
-                  {Object.entries(openingHoursData).map(([day, hours]) => (
-                    <div key={day} className="flex items-center gap-3">
-                      <label className="w-28 text-sm text-gray-700">{dayLabels[day]}</label>
-                      <input
-                        type="checkbox"
-                        checked={!hours.closed}
-                        onChange={(e) => {
-                          setOpeningHoursData({
-                            ...openingHoursData,
-                            [day]: { ...hours, closed: !e.target.checked }
-                          })
-                        }}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      {!hours.closed ? (
-                        <>
-                          <select
-                            value={hours.from}
-                            onChange={(e) => {
-                              setOpeningHoursData({
-                                ...openingHoursData,
-                                [day]: { ...hours, from: e.target.value }
-                              })
-                            }}
-                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                          >
-                            {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'].map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                          <span className="text-gray-500">bis</span>
-                          <select
-                            value={hours.to}
-                            onChange={(e) => {
-                              setOpeningHoursData({
-                                ...openingHoursData,
-                                [day]: { ...hours, to: e.target.value }
-                              })
-                            }}
-                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                          >
-                            {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-500 italic">Geschlossen</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -475,9 +472,72 @@ export default function WorkshopSettings() {
               </div>
             </div>
           </div>
+            </>
+          )}
 
-          {/* Banking Information */}
-          <div className="bg-white rounded-lg shadow p-6">
+          {/* Tab: Öffnungszeiten */}
+          {activeTab === 'hours' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Öffnungszeiten</h2>
+              <div className="space-y-3">
+                {Object.entries(openingHoursData).map(([day, hours]) => (
+                  <div key={day} className="flex items-center gap-3">
+                    <label className="w-28 text-sm text-gray-700">{dayLabels[day]}</label>
+                    <input
+                      type="checkbox"
+                      checked={!hours.closed}
+                      onChange={(e) => {
+                        setOpeningHoursData({
+                          ...openingHoursData,
+                          [day]: { ...hours, closed: !e.target.checked }
+                        })
+                      }}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    {!hours.closed ? (
+                      <>
+                        <select
+                          value={hours.from}
+                          onChange={(e) => {
+                            setOpeningHoursData({
+                              ...openingHoursData,
+                              [day]: { ...hours, from: e.target.value }
+                            })
+                          }}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        >
+                          {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'].map(time => (
+                            <option key={time} value={time}>{time}</option>
+                          ))}
+                        </select>
+                        <span className="text-gray-500">bis</span>
+                        <select
+                          value={hours.to}
+                          onChange={(e) => {
+                            setOpeningHoursData({
+                              ...openingHoursData,
+                              [day]: { ...hours, to: e.target.value }
+                            })
+                          }}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                        >
+                          {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map(time => (
+                            <option key={time} value={time}>{time}</option>
+                          ))}
+                        </select>
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-500 italic">Geschlossen</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tab: Bankverbindung */}
+          {activeTab === 'banking' && (
+            <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Bankverbindung & SEPA-Mandat</h2>
             
             {profile?.sepaMandateRef && (
@@ -544,10 +604,12 @@ export default function WorkshopSettings() {
                 )}
               </div>
             </div>
-          </div>
+            </div>
+          )}
 
-          {/* Email Notifications Section */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          {/* Tab: Benachrichtigungen */}
+          {activeTab === 'notifications' && (
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail-Benachrichtigungen</h2>
             
             <div>
@@ -568,7 +630,8 @@ export default function WorkshopSettings() {
                 </div>
               </label>
             </div>
-          </div>
+            </div>
+          )}
 
           {/* Submit Button */}
           <div className="flex justify-end gap-4">

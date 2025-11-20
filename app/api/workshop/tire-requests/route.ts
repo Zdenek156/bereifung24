@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { calculateDistance } from '@/lib/geocoding'
 
 // GET - Workshop holt verfügbare Anfragen in ihrer Nähe
 export async function GET() {
@@ -18,7 +19,15 @@ export async function GET() {
     // Hole Workshop-Profil
     const workshop = await prisma.workshop.findUnique({
       where: { userId: session.user.id },
-      include: { user: true }
+      include: { 
+        user: {
+          select: {
+            id: true,
+            latitude: true,
+            longitude: true
+          }
+        }
+      }
     })
 
     if (!workshop) {
@@ -29,14 +38,31 @@ export async function GET() {
     }
 
     // Hole alle offenen Anfragen
-    // TODO: Filter nach Entfernung basierend auf zipCode
-    const tireRequests = await prisma.tireRequest.findMany({
+    const allRequests = await prisma.tireRequest.findMany({
       where: {
         status: {
           in: ['PENDING', 'QUOTED'] // Anfragen die noch offen sind oder bereits Angebote haben
         }
       },
-      include: {
+      select: {
+        id: true,
+        season: true,
+        width: true,
+        aspectRatio: true,
+        diameter: true,
+        loadIndex: true,
+        speedRating: true,
+        isRunflat: true,
+        quantity: true,
+        preferredBrands: true,
+        additionalNotes: true,
+        needByDate: true,
+        zipCode: true,
+        radiusKm: true,
+        latitude: true,
+        longitude: true,
+        status: true,
+        createdAt: true,
         customer: {
           include: {
             user: {
@@ -70,7 +96,44 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ requests: tireRequests })
+    // Filter nach Umkreis wenn Workshop-Koordinaten vorhanden
+    let filteredRequests = allRequests
+
+    if (workshop.user.latitude !== null && workshop.user.longitude !== null) {
+      filteredRequests = allRequests
+        .filter(request => {
+          // Zeige Anfragen ohne Koordinaten nicht
+          if (request.latitude === null || request.longitude === null) {
+            return false
+          }
+
+          // Berechne Distanz
+          const distance = calculateDistance(
+            workshop.user.latitude!,
+            workshop.user.longitude!,
+            request.latitude,
+            request.longitude
+          )
+
+          // Filter nach radiusKm der Anfrage
+          return distance <= request.radiusKm
+        })
+        .map(request => ({
+          ...request,
+          distance: calculateDistance(
+            workshop.user.latitude!,
+            workshop.user.longitude!,
+            request.latitude!,
+            request.longitude!
+          )
+        }))
+        .sort((a, b) => a.distance - b.distance)
+    } else {
+      // Wenn Workshop keine Koordinaten hat, zeige alle Anfragen
+      console.warn(`Workshop ${workshop.id} has no coordinates - showing all requests`)
+    }
+
+    return NextResponse.json({ requests: filteredRequests })
   } catch (error) {
     console.error('Tire requests fetch error:', error)
     return NextResponse.json(

@@ -1,6 +1,6 @@
 // This is your Prisma schema file
 // Bereifung24 Platform - Kunden-Werkstatt-Vermittlung
-// PostgreSQL Version (for production)
+// PostgreSQL for production
 
 generator client {
   provider = "prisma-client-js"
@@ -28,6 +28,8 @@ model User {
   street        String?
   zipCode       String?
   city          String?
+  latitude      Float?
+  longitude     Float?
   
   // Customer Type (for billing)
   customerType  String?   @default("PRIVATE") // PRIVATE, BUSINESS
@@ -105,7 +107,7 @@ model Workshop {
   paypalEmail     String?
   
   // Payment Methods (JSON String)
-  paymentMethods  String?   @db.Text // JSON: {"cash": true, "bankTransfer": true, ...}
+  paymentMethods  String? // JSON: {"cash": true, "bankTransfer": true, ...}
   
   // Email Notifications
   emailNotifyRequests Boolean  @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
@@ -149,6 +151,8 @@ model TireRequest {
   // Location
   zipCode           String
   radiusKm          Int      @default(25)
+  latitude          Float?
+  longitude         Float?
   
   // Timing
   needByDate        DateTime

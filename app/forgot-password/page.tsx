@@ -12,12 +12,23 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
 
-    // TODO: Implement password reset logic
-    // For now, just show success message
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      // Immer Erfolg anzeigen aus Sicherheitsgründen
       setSubmitted(true)
       setLoading(false)
-    }, 1000)
+    } catch (err) {
+      // Auch bei Fehler Erfolg anzeigen
+      setSubmitted(true)
+      setLoading(false)
+    }
   }
 
   if (submitted) {

@@ -172,6 +172,7 @@ export function customerVerificationEmailTemplate(data: {
 
 export function welcomeWorkshopEmailTemplate(data: {
   firstName: string
+  lastName: string
   companyName: string
   email: string
 }) {
@@ -198,7 +199,7 @@ export function welcomeWorkshopEmailTemplate(data: {
           <h1>Willkommen bei Bereifung24!</h1>
         </div>
         <div class="content">
-          <p><strong>Hallo ${data.firstName},</strong></p>
+          <p><strong>Hallo Herr ${data.lastName},</strong></p>
           <p>Herzlichen Glückwunsch! Ihre Werkstatt <strong>${data.companyName}</strong> wurde erfolgreich bei Bereifung24 registriert.</p>
           
           <div class="alert">
@@ -232,6 +233,7 @@ export function welcomeWorkshopEmailTemplate(data: {
 
 export function workshopVerifiedEmailTemplate(data: {
   firstName: string
+  lastName: string
   companyName: string
 }) {
   return `
@@ -255,7 +257,7 @@ export function workshopVerifiedEmailTemplate(data: {
           <h1>Account freigeschaltet!</h1>
         </div>
         <div class="content">
-          <p><strong>Hallo ${data.firstName},</strong></p>
+          <p><strong>Hallo Herr ${data.lastName},</strong></p>
           
           <div class="success">
             <strong>Großartige Neuigkeiten!</strong><br>

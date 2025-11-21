@@ -44,6 +44,7 @@ export async function PATCH(
           subject: 'Deine Werkstatt wurde freigeschaltet!',
           html: workshopVerifiedEmailTemplate({
             firstName: workshop.user.firstName,
+            lastName: workshop.user.lastName,
             companyName: workshop.companyName
           })
         })

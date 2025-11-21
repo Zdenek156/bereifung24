@@ -91,10 +91,12 @@ export default function RequestDetailPage() {
       })
 
       if (response.ok) {
-        alert('Angebot erfolgreich angenommen! Sie können nun einen Termin buchen.')
-        fetchRequestDetail()
+        const data = await response.json()
+        alert('Angebot erfolgreich angenommen! Sie werden zur Terminbuchung weitergeleitet.')
+        router.push(`/dashboard/customer/requests/${requestId}/book?offerId=${offerId}`)
       } else {
-        alert('Fehler beim Annehmen des Angebots')
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Annehmen des Angebots')
       }
     } catch (error) {
       console.error('Error accepting offer:', error)

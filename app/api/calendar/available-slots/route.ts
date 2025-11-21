@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       // Get employee working hours for the specific day
       if (employee.workingHours) {
         const hours = JSON.parse(employee.workingHours)
-        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'lowercase' })
+        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
         workingHours = hours[dayOfWeek]
       }
     }

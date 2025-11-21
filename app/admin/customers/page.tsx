@@ -9,6 +9,7 @@ interface Customer {
   firstName: string
   lastName: string
   phone: string | null
+  street: string | null
   city: string | null
   zipCode: string | null
   distance: number | null
@@ -107,7 +108,7 @@ export default function AdminCustomersPage() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters and Download */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -130,6 +131,28 @@ export default function AdminCustomersPage() {
                 <option value="requests">Anzahl Anfragen</option>
                 <option value="revenue">Umsatz</option>
               </select>
+            </div>
+            <div className="flex gap-2">
+              <a
+                href="/api/admin/customers/download?format=csv"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                download
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                CSV
+              </a>
+              <a
+                href="/api/admin/customers/download?format=txt"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                download
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                TXT
+              </a>
             </div>
           </div>
         </div>
@@ -191,8 +214,9 @@ export default function AdminCustomersPage() {
                         <div className="text-sm text-gray-900">{customer.email}</div>
                         <div className="text-sm text-gray-500">{customer.phone || '-'}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
+                          {customer.street && <div>{customer.street}</div>}
                           {customer.city ? `${customer.zipCode} ${customer.city}` : '-'}
                         </div>
                       </td>

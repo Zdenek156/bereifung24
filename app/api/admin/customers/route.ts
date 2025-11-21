@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
+        street: user.street,
         city: user.city,
         zipCode: user.zipCode,
         distance,

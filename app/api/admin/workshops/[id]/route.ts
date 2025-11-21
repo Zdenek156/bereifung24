@@ -60,3 +60,38 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update workshop' }, { status: 500 })
   }
 }
+
+// DELETE - Delete workshop and associated user
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Hole die Werkstatt mit User ID
+    const workshop = await prisma.workshop.findUnique({
+      where: { id: params.id },
+      select: { userId: true }
+    })
+
+    if (!workshop) {
+      return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
+    }
+
+    // Lösche den User (Werkstatt wird durch Cascade gelöscht)
+    await prisma.user.delete({
+      where: { id: workshop.userId }
+    })
+
+    return NextResponse.json({ success: true, message: 'Werkstatt erfolgreich gelöscht' })
+
+  } catch (error) {
+    console.error('Workshop delete error:', error)
+    return NextResponse.json({ error: 'Fehler beim Löschen der Werkstatt' }, { status: 500 })
+  }
+}

@@ -89,6 +89,32 @@ export default function WorkshopManagementPage() {
     }
   }
 
+  const deleteWorkshop = async (workshopId: string, workshopName: string) => {
+    const confirmed = window.confirm(
+      `Möchtest du die Werkstatt "${workshopName}" wirklich endgültig löschen?\n\n` +
+      `Alle zugehörigen Daten (Angebote, Termine, Bewertungen etc.) werden ebenfalls gelöscht.\n\n` +
+      `Diese Aktion kann nicht rückgängig gemacht werden!`
+    )
+    
+    if (!confirmed) return
+
+    try {
+      const response = await fetch(`/api/admin/workshops/${workshopId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        alert('Werkstatt erfolgreich gelöscht')
+        fetchWorkshops()
+      } else {
+        alert('Fehler beim Löschen der Werkstatt')
+      }
+    } catch (error) {
+      console.error('Error deleting workshop:', error)
+      alert('Fehler beim Löschen der Werkstatt')
+    }
+  }
+
   const filteredWorkshops = workshops
     .filter(workshop => {
       if (filter === 'verified') return workshop.isVerified
@@ -322,16 +348,22 @@ export default function WorkshopManagementPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="ml-4">
+                    <div className="ml-4 flex flex-col gap-2">
                       <button
                         onClick={() => toggleVerification(workshop.id, workshop.isVerified)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                           workshop.isVerified
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                             : 'bg-green-500 text-white hover:bg-green-600'
                         }`}
                       >
                         {workshop.isVerified ? 'Sperren' : 'Freischalten'}
+                      </button>
+                      <button
+                        onClick={() => deleteWorkshop(workshop.id, workshop.companyName)}
+                        className="px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      >
+                        Löschen
                       </button>
                     </div>
                   </div>

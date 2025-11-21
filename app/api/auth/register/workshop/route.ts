@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { geocodeAddress } from '@/lib/geocoding'
+import { sendEmail, welcomeWorkshopEmailTemplate } from '@/lib/email'
 
 const workshopSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -89,11 +90,26 @@ export async function POST(request: Request) {
       }
     })
 
+    // Willkommens-E-Mail senden
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Willkommen bei Bereifung24 - Verifizierung ausstehend',
+        html: welcomeWorkshopEmailTemplate({
+          firstName: user.firstName,
+          companyName: validatedData.companyName,
+          email: user.email
+        })
+      })
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError)
+      // Fehler beim E-Mail-Versand nicht nach außen weitergeben
+    }
+
     return NextResponse.json(
       { 
         message: 'Werkstatt erfolgreich registriert! Dein Account wird in Kürze verifiziert.',
-        userId: user.id,
-        workshopId: user.workshop?.id
+        userId: user.id
       },
       { status: 201 }
     )

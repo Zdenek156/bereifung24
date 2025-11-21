@@ -29,8 +29,28 @@ export async function PATCH(
       data: {
         isVerified,
         verifiedAt: isVerified ? new Date() : null
+      },
+      include: {
+        user: true
       }
     })
+
+    // Wenn Workshop verifiziert wurde, E-Mail senden
+    if (isVerified) {
+      try {
+        await sendEmail({
+          to: workshop.user.email,
+          subject: 'Deine Werkstatt wurde freigeschaltet!',
+          html: workshopVerifiedEmailTemplate({
+            firstName: workshop.user.firstName,
+            companyName: workshop.companyName
+          })
+        })
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError)
+        // E-Mail-Fehler nicht nach außen weitergeben
+      }
+    }
 
     return NextResponse.json(workshop)
 

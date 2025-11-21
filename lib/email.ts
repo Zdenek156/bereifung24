@@ -47,6 +47,184 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
 
 // Email-Templates
 
+export function welcomeCustomerEmailTemplate(data: {
+  firstName: string
+  email: string
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; }
+        .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+        .features { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .feature { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+        .feature:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Willkommen bei Bereifung24!</h1>
+        </div>
+        <div class="content">
+          <p><strong>Hallo ${data.firstName},</strong></p>
+          <p>Vielen Dank für deine Registrierung bei Bereifung24! Wir freuen uns, dich in unserer Community begrüßen zu dürfen.</p>
+          
+          <div class="features">
+            <h3>Das kannst du jetzt tun:</h3>
+            <div class="feature">✓ Reifenpreise von Werkstätten in deiner Nähe vergleichen</div>
+            <div class="feature">✓ Direkt online Angebote anfordern</div>
+            <div class="feature">✓ Termine bequem vereinbaren</div>
+            <div class="feature">✓ Bewertungen lesen und schreiben</div>
+            <div class="feature">✓ Deine Reifen-Historie verwalten</div>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXTAUTH_URL || 'https://bereifung24.de'}/login" class="button">
+              Jetzt anmelden
+            </a>
+          </div>
+
+          <p>Deine Login-Daten:</p>
+          <ul>
+            <li><strong>E-Mail:</strong> ${data.email}</li>
+            <li><strong>Passwort:</strong> Das von dir gewählte Passwort</li>
+          </ul>
+
+          <p>Bei Fragen stehen wir dir gerne zur Verfügung!</p>
+          <p>Viel Erfolg beim Finden der besten Reifen!</p>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Deine Plattform für Reifenwechsel und mehr</p>
+          <p style="margin-top: 10px;">
+            <a href="${process.env.NEXTAUTH_URL || 'https://bereifung24.de'}" style="color: #667eea;">bereifung24.de</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+export function welcomeWorkshopEmailTemplate(data: {
+  firstName: string
+  companyName: string
+  email: string
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; }
+        .alert { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .features { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .feature { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+        .feature:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Willkommen bei Bereifung24!</h1>
+        </div>
+        <div class="content">
+          <p><strong>Hallo ${data.firstName},</strong></p>
+          <p>Herzlichen Glückwunsch! Deine Werkstatt <strong>${data.companyName}</strong> wurde erfolgreich bei Bereifung24 registriert.</p>
+          
+          <div class="alert">
+            <strong>⏳ Verifizierung erforderlich</strong><br>
+            Dein Account wird derzeit von unserem Team geprüft. Du erhältst eine weitere E-Mail, sobald dein Account freigeschaltet wurde.
+          </div>
+
+          <div class="features">
+            <h3>Nach der Freischaltung kannst du:</h3>
+            <div class="feature">✓ Anfragen von Kunden in deiner Nähe erhalten</div>
+            <div class="feature">✓ Angebote direkt über die Plattform erstellen</div>
+            <div class="feature">✓ Termine online verwalten</div>
+            <div class="feature">✓ Bewertungen sammeln</div>
+          </div>
+
+          <p>Deine Login-Daten:</p>
+          <ul>
+            <li><strong>E-Mail:</strong> ${data.email}</li>
+            <li><strong>Passwort:</strong> Das von dir gewählte Passwort</li>
+          </ul>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Partner-Plattform für Werkstätten</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+export function workshopVerifiedEmailTemplate(data: {
+  firstName: string
+  companyName: string
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; }
+        .button { display: inline-block; padding: 15px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+        .success { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✅ Account freigeschaltet!</h1>
+        </div>
+        <div class="content">
+          <p><strong>Hallo ${data.firstName},</strong></p>
+          
+          <div class="success">
+            <strong>🎉 Großartige Neuigkeiten!</strong><br>
+            Deine Werkstatt <strong>${data.companyName}</strong> wurde erfolgreich verifiziert!
+          </div>
+
+          <p>Ab sofort kannst du Kundenanfragen empfangen und Angebote erstellen.</p>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXTAUTH_URL || 'https://bereifung24.de'}/login" class="button">
+              Zum Dashboard
+            </a>
+          </div>
+
+          <p>Viel Erfolg mit Bereifung24!</p>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
 export function newOfferEmailTemplate(data: {
   customerName: string
   workshopName: string

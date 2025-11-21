@@ -104,12 +104,7 @@ export async function DELETE(
       where: { workshopId: workshop.id }
     })
 
-    // 5. Lösche alle WorkshopEmployees
-    await prisma.workshopEmployee.deleteMany({
-      where: { workshopId: workshop.id }
-    })
-
-    // 6. Lösche die Werkstatt
+    // 5. Lösche die Werkstatt
     await prisma.workshop.delete({
       where: { id: workshop.id }
     })

@@ -19,10 +19,12 @@ interface TireRequest {
   specificBrand: string | null
   additionalNotes: string | null
   zipCode: string
+  city: string | null
   radiusKm: number
   needByDate: string
   status: string
   createdAt: string
+  distance: number
   vehicleInfo?: string
   customer: {
     user: {

@@ -140,11 +140,19 @@ export async function GET(request: NextRequest) {
       timeMax.toISOString()
     )
     
+    // Filter and convert busy slots to required format
+    const validBusySlots = busySlots
+      .filter(slot => slot.start && slot.end)
+      .map(slot => ({
+        start: slot.start as string,
+        end: slot.end as string
+      }))
+    
     // Generate available slots
     const availableSlots = generateAvailableSlots(
       dateObj,
       workingHours,
-      busySlots,
+      validBusySlots,
       duration
     )
     

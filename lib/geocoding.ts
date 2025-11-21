@@ -5,6 +5,7 @@ interface GeocodeResult {
   latitude: number
   longitude: number
   formattedAddress?: string
+  city?: string
 }
 
 /**
@@ -35,10 +36,22 @@ export async function geocodeAddress(
 
     if (data.status === 'OK' && data.results.length > 0) {
       const location = data.results[0].geometry.location
+      const addressComponents = data.results[0].address_components
+      
+      // Extract city from address components
+      let city: string | undefined
+      for (const component of addressComponents) {
+        if (component.types.includes('locality')) {
+          city = component.long_name
+          break
+        }
+      }
+      
       return {
         latitude: location.lat,
         longitude: location.lng,
-        formattedAddress: data.results[0].formatted_address
+        formattedAddress: data.results[0].formatted_address,
+        city: city
       }
     }
 

@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     // Geocode customer address if available
     let latitude: number | null = null
     let longitude: number | null = null
+    let city: string | null = null
 
     if (customer.user.street && customer.user.city) {
       const geocodeResult = await geocodeAddress(
@@ -101,9 +102,13 @@ export async function POST(request: NextRequest) {
       if (geocodeResult) {
         latitude = geocodeResult.latitude
         longitude = geocodeResult.longitude
+        city = geocodeResult.city || customer.user.city
       } else {
         console.warn(`Failed to geocode address for customer ${customer.id}`)
+        city = customer.user.city
       }
+    } else {
+      city = customer.user.city
     }
 
     // Create tire request
@@ -123,6 +128,7 @@ export async function POST(request: NextRequest) {
         additionalNotes: validatedData.additionalNotes,
         needByDate: needByDate,
         zipCode: validatedData.zipCode,
+        city: city,
         radiusKm: validatedData.radiusKm,
         latitude: latitude,
         longitude: longitude,
@@ -195,7 +201,7 @@ export async function POST(request: NextRequest) {
                 distance: `${distance.toFixed(1)} km`,
                 preferredBrands: validatedData.preferredBrands,
                 additionalNotes: validatedData.additionalNotes,
-                customerCity: customer.user.city || undefined,
+                customerCity: city || undefined,
                 vehicleInfo: vehicleInfo,
               })
             })

@@ -665,24 +665,24 @@ export function newTireRequestEmailTemplate(data: {
             
             ${data.vehicleInfo ? `
             <div class="detail-row">
-              <span class="detail-label">Fahrzeug:</span>
+              <span class="detail-label">Fahrzeug: </span>
               <span class="detail-value">${data.vehicleInfo}</span>
             </div>
             ` : ''}
             
             <div class="detail-row">
-              <span class="detail-label">Saison:</span>
+              <span class="detail-label">Saison: </span>
               <span class="detail-value">${seasonText}</span>
             </div>
             
             <div class="detail-row">
-              <span class="detail-label">Reifengröße:</span>
+              <span class="detail-label">Reifengröße: </span>
               <span class="detail-value">${data.tireSize}</span>
             </div>
             
             <div class="detail-row">
-              <span class="detail-label">Anzahl:</span>
-              <span class="detail-value">${data.quantity} Stück</span>
+              <span class="detail-label">Menge: </span>
+              <span class="detail-value">${data.quantity} Reifen</span>
             </div>
             
             ${data.preferredBrands ? `

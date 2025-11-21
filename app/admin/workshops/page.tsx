@@ -10,6 +10,9 @@ interface Workshop {
   companyName: string
   isVerified: boolean
   createdAt: string
+  distance: number | null
+  offersCount: number
+  revenue: number
   user: {
     email: string
     firstName: string
@@ -19,8 +22,9 @@ interface Workshop {
     zipCode: string
     city: string
   }
-  revenue?: number
 }
+
+type SortOption = 'recent' | 'distance' | 'offers' | 'revenue'
 
 export default function WorkshopManagementPage() {
   const { data: session, status } = useSession()
@@ -29,6 +33,7 @@ export default function WorkshopManagementPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'verified' | 'pending'>('all')
+  const [sortBy, setSortBy] = useState<SortOption>('recent')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -44,11 +49,11 @@ export default function WorkshopManagementPage() {
     }
 
     fetchWorkshops()
-  }, [session, status, router])
+  }, [session, status, router, sortBy])
 
   const fetchWorkshops = async () => {
     try {
-      const response = await fetch('/api/admin/workshops')
+      const response = await fetch(`/api/admin/workshops?sortBy=${sortBy}`)
       if (response.ok) {
         const data = await response.json()
         setWorkshops(data)
@@ -133,7 +138,7 @@ export default function WorkshopManagementPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -163,11 +168,28 @@ export default function WorkshopManagementPage() {
                 <option value="pending">Wartend</option>
               </select>
             </div>
+
+            {/* Sort */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sortierung
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="recent">Zuletzt registriert</option>
+                <option value="distance">Entfernung</option>
+                <option value="offers">Anzahl Angebote</option>
+                <option value="revenue">Umsatz</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600">Gesamt</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{workshops.length}</p>
@@ -182,6 +204,15 @@ export default function WorkshopManagementPage() {
             <p className="text-sm text-gray-600">Wartend</p>
             <p className="mt-2 text-3xl font-bold text-yellow-600">
               {workshops.filter(w => !w.isVerified).length}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <p className="text-sm text-gray-600">Gesamt Umsatz</p>
+            <p className="mt-2 text-3xl font-bold text-purple-600">
+              {workshops.reduce((sum, w) => sum + w.revenue, 0).toLocaleString('de-DE', {
+                style: 'currency',
+                currency: 'EUR'
+              })}
             </p>
           </div>
         </div>
@@ -238,22 +269,26 @@ export default function WorkshopManagementPage() {
                         </div>
                       </div>
 
-                      <div className="mt-3 text-sm text-gray-500">
+                      <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-500">
                         <p>
-                          <strong>Registriert am:</strong>{' '}
-                          {new Date(workshop.createdAt).toLocaleDateString('de-DE', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
+                          <strong>Registriert:</strong><br />
+                          {new Date(workshop.createdAt).toLocaleDateString('de-DE')}
+                        </p>
+                        <p>
+                          <strong>Entfernung:</strong><br />
+                          {workshop.distance ? `${workshop.distance} km` : '-'}
+                        </p>
+                        <p>
+                          <strong>Angebote:</strong><br />
+                          {workshop.offersCount}
+                        </p>
+                        <p>
+                          <strong>Umsatz:</strong><br />
+                          {workshop.revenue.toLocaleString('de-DE', {
+                            style: 'currency',
+                            currency: 'EUR'
                           })}
                         </p>
-                        {workshop.revenue !== undefined && (
-                          <p>
-                            <strong>Umsatz:</strong> {workshop.revenue.toFixed(2)} €
-                          </p>
-                        )}
                       </div>
                     </div>
 

@@ -133,7 +133,14 @@ export default function RequestDetailPage() {
     })
   }
 
-  const sortedOffers = [...request.offers].sort((a, b) => a.price - b.price)
+  // Filter out expired offers
+  const now = new Date()
+  const validOffers = request.offers.filter(offer => {
+    const validUntil = new Date(offer.validUntil)
+    return validUntil > now && offer.status === 'PENDING'
+  })
+
+  const sortedOffers = [...validOffers].sort((a, b) => a.price - b.price)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

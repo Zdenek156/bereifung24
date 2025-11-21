@@ -47,7 +47,72 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Lösche den Benutzer und alle zugehörigen Daten (durch Cascade in Prisma Schema)
+    // Hole den Customer mit User ID
+    const customer = await prisma.customer.findUnique({
+      where: { userId: params.id }
+    })
+
+    if (!customer) {
+      return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
+    }
+
+    // Lösche alle abhängigen Daten manuell
+    // 1. Lösche alle Angebote zu den TireRequests des Kunden
+    await prisma.offer.deleteMany({
+      where: {
+        tireRequest: {
+          customerId: customer.id
+        }
+      }
+    })
+
+    // 2. Lösche alle TireRequests
+    await prisma.tireRequest.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 3. Lösche alle Bookings
+    await prisma.booking.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 4. Lösche alle Reviews
+    await prisma.review.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 5. Lösche alle TireRatings
+    await prisma.tireRating.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 6. Lösche TireHistory Einträge (über Vehicle)
+    const customerVehicles = await prisma.vehicle.findMany({
+      where: { customerId: customer.id },
+      select: { id: true }
+    })
+    
+    if (customerVehicles.length > 0) {
+      await prisma.tireHistory.deleteMany({
+        where: {
+          vehicleId: {
+            in: customerVehicles.map(v => v.id)
+          }
+        }
+      })
+    }
+
+    // 7. Lösche alle Vehicles
+    await prisma.vehicle.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 8. Lösche den Customer
+    await prisma.customer.delete({
+      where: { id: customer.id }
+    })
+
+    // 9. Lösche den User
     await prisma.user.delete({
       where: { id: params.id }
     })

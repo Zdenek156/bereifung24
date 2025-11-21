@@ -76,14 +76,45 @@ export async function DELETE(
     // Hole die Werkstatt mit User ID
     const workshop = await prisma.workshop.findUnique({
       where: { id: params.id },
-      select: { userId: true }
+      select: { userId: true, id: true }
     })
 
     if (!workshop) {
       return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
     }
 
-    // Lösche den User (Werkstatt wird durch Cascade gelöscht)
+    // Lösche alle abhängigen Daten manuell
+    // 1. Lösche alle Offers
+    await prisma.offer.deleteMany({
+      where: { workshopId: workshop.id }
+    })
+
+    // 2. Lösche alle Bookings
+    await prisma.booking.deleteMany({
+      where: { workshopId: workshop.id }
+    })
+
+    // 3. Lösche alle Reviews
+    await prisma.review.deleteMany({
+      where: { workshopId: workshop.id }
+    })
+
+    // 4. Lösche alle Commissions
+    await prisma.commission.deleteMany({
+      where: { workshopId: workshop.id }
+    })
+
+    // 5. Lösche alle WorkshopEmployees
+    await prisma.workshopEmployee.deleteMany({
+      where: { workshopId: workshop.id }
+    })
+
+    // 6. Lösche die Werkstatt
+    await prisma.workshop.delete({
+      where: { id: workshop.id }
+    })
+
+    // 7. Lösche den User
     await prisma.user.delete({
       where: { id: workshop.userId }
     })

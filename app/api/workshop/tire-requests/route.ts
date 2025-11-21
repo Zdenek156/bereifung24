@@ -125,17 +125,30 @@ export async function GET() {
           // Filter nach radiusKm der Anfrage
           return distance <= request.radiusKm
         })
-        .map(request => ({
-          ...request,
-          vehicleInfo: request.vehicle ? `${request.vehicle.make} ${request.vehicle.model} (${request.vehicle.year})` : undefined,
-          vehicle: undefined, // Remove vehicle object after formatting
-          distance: calculateDistance(
-            workshop.user.latitude!,
-            workshop.user.longitude!,
-            request.latitude!,
-            request.longitude!
-          )
-        }))
+        .map(request => {
+          const requestWithVehicle = request as typeof request & { 
+            vehicle: { make: string; model: string; year: number } | null 
+          }
+          
+          const vehicleInfo = requestWithVehicle.vehicle 
+            ? `${requestWithVehicle.vehicle.make} ${requestWithVehicle.vehicle.model} (${requestWithVehicle.vehicle.year})`
+            : undefined
+          
+          // Remove vehicle object and add formatted string
+          const { vehicle, ...requestWithoutVehicle } = requestWithVehicle
+          
+          return {
+            ...requestWithoutVehicle,
+            vehicle: null,
+            vehicleInfo,
+            distance: calculateDistance(
+              workshop.user.latitude!,
+              workshop.user.longitude!,
+              request.latitude!,
+              request.longitude!
+            )
+          }
+        })
         .sort((a, b) => a.distance - b.distance)
     } else {
       // Wenn Workshop keine Koordinaten hat, zeige alle Anfragen

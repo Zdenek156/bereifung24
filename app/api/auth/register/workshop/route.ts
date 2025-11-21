@@ -115,30 +115,35 @@ export async function POST(request: Request) {
         where: {
           notifyWorkshopRegistration: true
         }
+      }).catch(err => {
+        console.error('Admin notification settings table not found:', err)
+        return [] // Return empty array if table doesn't exist
       })
 
-      const registrationDate = new Date().toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      if (adminSettings && adminSettings.length > 0) {
+        const registrationDate = new Date().toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
 
-      for (const admin of adminSettings) {
-        await sendEmail({
-          to: admin.email,
-          subject: 'Neue Werkstatt-Registrierung - Freischaltung erforderlich',
-          html: adminWorkshopRegistrationEmailTemplate({
-            workshopName: `${user.firstName} ${user.lastName}`,
-            companyName: validatedData.companyName,
-            email: user.email,
-            phone: user.phone || undefined,
-            city: user.city || undefined,
-            registrationDate: registrationDate,
-            workshopId: user.workshop?.id || ''
-          })
-        }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+        for (const admin of adminSettings) {
+          await sendEmail({
+            to: admin.email,
+            subject: 'Neue Werkstatt-Registrierung - Freischaltung erforderlich',
+            html: adminWorkshopRegistrationEmailTemplate({
+              workshopName: `${user.firstName} ${user.lastName}`,
+              companyName: validatedData.companyName,
+              email: user.email,
+              phone: user.phone || undefined,
+              city: user.city || undefined,
+              registrationDate: registrationDate,
+              workshopId: user.workshop?.id || ''
+            })
+          }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+        }
       }
     } catch (adminEmailError) {
       console.error('Failed to send admin notifications:', adminEmailError)

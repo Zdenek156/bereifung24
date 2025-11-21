@@ -97,12 +97,14 @@ export async function POST(request: Request) {
         subject: 'Willkommen bei Bereifung24 - Verifizierung ausstehend',
         html: welcomeWorkshopEmailTemplate({
           firstName: user.firstName,
+          lastName: user.lastName,
           companyName: validatedData.companyName,
           email: user.email
         })
       })
+      console.log('📧 Werkstatt-Willkommens-Email gesendet an:', user.email)
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError)
+      console.error('❌ Failed to send welcome email:', emailError)
       // Fehler beim E-Mail-Versand nicht nach außen weitergeben
     }
 

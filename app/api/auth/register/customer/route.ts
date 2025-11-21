@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { geocodeAddress } from '@/lib/geocoding'
+import { sendEmail, welcomeCustomerEmailTemplate } from '@/lib/email'
 
 const customerSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -76,6 +77,21 @@ export async function POST(request: Request) {
         customer: true
       }
     })
+
+    // Willkommens-E-Mail senden
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Willkommen bei Bereifung24!',
+        html: welcomeCustomerEmailTemplate({
+          firstName: user.firstName,
+          email: user.email
+        })
+      })
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError)
+      // Fehler beim E-Mail-Versand nicht nach außen weitergeben
+    }
 
     return NextResponse.json(
       { 

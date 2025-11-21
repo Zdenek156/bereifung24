@@ -603,3 +603,117 @@ export function adminWorkshopRegistrationEmailTemplate(data: {
     </html>
   `
 }
+
+export function newTireRequestEmailTemplate(data: {
+  workshopName: string
+  requestId: string
+  season: string
+  tireSize: string
+  quantity: number
+  needByDate: string
+  distance: string
+  preferredBrands?: string
+  additionalNotes?: string
+  customerCity?: string
+}) {
+  const seasonText = data.season === 'SUMMER' ? 'Sommerreifen' : 
+                     data.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; }
+        .highlight { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .tire-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #667eea; }
+        .detail-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: bold; color: #4b5563; }
+        .detail-value { color: #1f2937; }
+        .button { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .button:hover { box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+        .urgency { background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px; margin: 15px 0; border-radius: 4px; color: #991b1b; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔔 Neue Reifenanfrage in Ihrer Nähe!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px;">Ein Kunde sucht Reifen in Ihrem Umkreis</p>
+        </div>
+        <div class="content">
+          <p><strong>Hallo Herr ${data.workshopName},</strong></p>
+          
+          <p>Es gibt eine neue Reifenanfrage in Ihrer Nähe! Ein Kunde sucht ${seasonText} und Sie haben die Möglichkeit, ein Angebot zu erstellen.</p>
+          
+          <div class="highlight">
+            <strong>📍 Entfernung:</strong> Ca. ${data.distance} von Ihrem Standort<br>
+            ${data.customerCity ? `<strong>🏙️ Stadt:</strong> ${data.customerCity}<br>` : ''}
+            <strong>📅 Benötigt bis:</strong> ${data.needByDate}
+          </div>
+
+          <div class="tire-details">
+            <h2 style="margin-top: 0; color: #667eea;">Reifen-Details</h2>
+            
+            <div class="detail-row">
+              <span class="detail-label">Saison:</span>
+              <span class="detail-value">${seasonText}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Reifengröße:</span>
+              <span class="detail-value">${data.tireSize}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Anzahl:</span>
+              <span class="detail-value">${data.quantity} Stück</span>
+            </div>
+            
+            ${data.preferredBrands ? `
+            <div class="detail-row">
+              <span class="detail-label">Bevorzugte Marken:</span>
+              <span class="detail-value">${data.preferredBrands}</span>
+            </div>
+            ` : ''}
+            
+            ${data.additionalNotes ? `
+            <div class="detail-row">
+              <span class="detail-label">Zusätzliche Hinweise:</span>
+              <span class="detail-value">${data.additionalNotes}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="urgency">
+            <strong>⏰ Jetzt reagieren und Angebot erstellen!</strong><br>
+            Je schneller Sie reagieren, desto höher sind Ihre Chancen, den Auftrag zu erhalten.
+          </div>
+
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/workshop/browse-requests" class="button">
+              Jetzt Angebot erstellen
+            </a>
+          </center>
+
+          <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+            <strong>Hinweis:</strong> Sie können Ihr Angebot direkt in Ihrem Dashboard erstellen. 
+            Der Kunde wird über alle eingegangenen Angebote informiert und kann dann das beste Angebot auswählen.
+          </p>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Ihre Plattform für Reifenwechsel und mehr</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}

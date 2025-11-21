@@ -18,21 +18,33 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      console.log('Attempting login with:', email)
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
+      console.log('SignIn result:', result)
+
       if (result?.error) {
+        console.error('Login error:', result.error)
         setError('Ungültige E-Mail oder Passwort')
         setLoading(false)
         return
       }
 
-      // Redirect based on role (will be handled by middleware later)
-      window.location.href = '/dashboard'
+      if (result?.ok) {
+        console.log('Login successful, redirecting...')
+        // Redirect based on role (will be handled by middleware later)
+        router.push('/dashboard')
+      } else {
+        console.error('Unexpected result:', result)
+        setError('Ein unerwarteter Fehler ist aufgetreten')
+        setLoading(false)
+      }
     } catch (err) {
+      console.error('Login exception:', err)
       setError('Ein Fehler ist aufgetreten')
       setLoading(false)
     }

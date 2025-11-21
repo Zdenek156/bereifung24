@@ -153,6 +153,27 @@ export async function GET() {
     } else {
       // Wenn Workshop keine Koordinaten hat, zeige alle Anfragen
       console.warn(`Workshop ${workshop.id} has no coordinates - showing all requests`)
+      
+      // Format vehicle info auch für Anfragen ohne Koordinaten-Filter
+      filteredRequests = allRequests.map(request => {
+        const requestWithVehicle = request as typeof request & { 
+          vehicle: { make: string; model: string; year: number } | null 
+        }
+        
+        const vehicleInfo = requestWithVehicle.vehicle 
+          ? `${requestWithVehicle.vehicle.make} ${requestWithVehicle.vehicle.model} (${requestWithVehicle.vehicle.year})`
+          : undefined
+        
+        // Remove vehicle object and add formatted string
+        const { vehicle, ...requestWithoutVehicle } = requestWithVehicle
+        
+        return {
+          ...requestWithoutVehicle,
+          vehicle: null,
+          vehicleInfo,
+          distance: 0 // Keine Distanz wenn Workshop keine Koordinaten hat
+        }
+      })
     }
 
     return NextResponse.json({ requests: filteredRequests })

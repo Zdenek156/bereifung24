@@ -28,7 +28,7 @@ export default function LoginPage() {
 
       console.log('SignIn result:', result)
 
-      if (result?.error) {
+      if (result?.error && result.error !== 'undefined') {
         console.error('Login error:', result.error)
         setError('Ungültige E-Mail oder Passwort')
         setLoading(false)
@@ -37,8 +37,8 @@ export default function LoginPage() {
 
       if (result?.ok) {
         console.log('Login successful, redirecting...')
-        // Redirect based on role (will be handled by middleware later)
-        router.push('/dashboard')
+        // Force a full page reload to ensure session is properly loaded
+        window.location.href = '/dashboard'
       } else {
         console.error('Unexpected result:', result)
         setError('Ein unerwarteter Fehler ist aufgetreten')

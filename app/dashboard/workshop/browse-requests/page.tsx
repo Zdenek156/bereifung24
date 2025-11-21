@@ -312,7 +312,7 @@ export default function BrowseRequestsPage() {
                           {request.customer.user.firstName} {request.customer.user.lastName}
                         </p>
                         <p className="text-sm text-gray-600">
-                          PLZ: {request.zipCode}{request.customer.user.city ? ` - ${request.customer.user.city}` : ''}
+                          PLZ: {request.zipCode}{request.city ? ` - ${request.city}` : ''}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                           Umkreis: {request.radiusKm} km

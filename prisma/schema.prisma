@@ -212,6 +212,7 @@ model TireRequest {
   
   // Location
   zipCode           String
+  city              String?
   radiusKm          Int      @default(25)
   latitude          Float?
   longitude         Float?

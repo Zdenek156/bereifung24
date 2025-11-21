@@ -58,6 +58,7 @@ export async function GET() {
         additionalNotes: true,
         needByDate: true,
         zipCode: true,
+        city: true,
         radiusKm: true,
         latitude: true,
         longitude: true,

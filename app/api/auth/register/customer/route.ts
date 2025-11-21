@@ -108,28 +108,33 @@ export async function POST(request: Request) {
         where: {
           notifyCustomerRegistration: true
         }
+      }).catch(() => {
+        console.log('Admin notification settings table not found - skipping admin notifications')
+        return [] // Return empty array if table doesn't exist
       })
 
-      const registrationDate = new Date().toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      if (adminSettings && adminSettings.length > 0) {
+        const registrationDate = new Date().toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
 
-      for (const admin of adminSettings) {
-        await sendEmail({
-          to: admin.email,
-          subject: 'Neue Kunden-Registrierung - Bereifung24',
-          html: adminCustomerRegistrationEmailTemplate({
-            customerName: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            phone: user.phone || undefined,
-            city: user.city || undefined,
-            registrationDate: registrationDate
-          })
-        }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+        for (const admin of adminSettings) {
+          await sendEmail({
+            to: admin.email,
+            subject: 'Neue Kunden-Registrierung - Bereifung24',
+            html: adminCustomerRegistrationEmailTemplate({
+              customerName: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+              phone: user.phone || undefined,
+              city: user.city || undefined,
+              registrationDate: registrationDate
+            })
+          }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+        }
       }
     } catch (adminEmailError) {
       console.error('Failed to send admin notifications:', adminEmailError)

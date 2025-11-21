@@ -15,9 +15,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const sortBy = searchParams.get('sortBy') || 'recent'
 
-    // Basis-Referenzpunkt für Entfernungsberechnung
-    const baseLatitude = 51.1657
-    const baseLongitude = 10.4515
+    // Basis-Referenzpunkt für Entfernungsberechnung (Bereifung24 Standort: Markgröningen)
+    const baseLatitude = 48.9074
+    const baseLongitude = 9.0803
 
     const workshops = await prisma.workshop.findMany({
       include: {

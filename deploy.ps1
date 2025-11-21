@@ -3,8 +3,8 @@
 
 Write-Host "🚀 Starte Deployment..." -ForegroundColor Green
 
-$sshKey = "$env:USERPROFILE\.ssh\bereifung24_hetzner"
-$server = "root@167.235.24.110"
+# Verwende den SSH-Config Host-Alias
+$server = "bereifung24"
 
 # Deployment-Befehle als Array (mit NVM laden)
 $commands = @(
@@ -20,7 +20,7 @@ $commands = @(
 
 # Mit ; verbunden ausführen
 $commandString = $commands -join "; "
-ssh -i $sshKey $server $commandString
+ssh $server $commandString
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n✅ Deployment erfolgreich abgeschlossen!" -ForegroundColor Green

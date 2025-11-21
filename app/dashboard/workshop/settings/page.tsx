@@ -43,7 +43,28 @@ export default function WorkshopSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications'>('contact')
+  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications' | 'scheduling'>('contact')
+  
+  // Scheduling state
+  const [calendarMode, setCalendarMode] = useState<'workshop' | 'employees'>('workshop')
+  const [workshopCalendarConnected, setWorkshopCalendarConnected] = useState(false)
+  const [employees, setEmployees] = useState<Array<{
+    id: string
+    name: string
+    email: string
+    calendarConnected: boolean
+    workingHours: {
+      monday: { from: string, to: string, working: boolean }
+      tuesday: { from: string, to: string, working: boolean }
+      wednesday: { from: string, to: string, working: boolean }
+      thursday: { from: string, to: string, working: boolean }
+      friday: { from: string, to: string, working: boolean }
+      saturday: { from: string, to: string, working: boolean }
+      sunday: { from: string, to: string, working: boolean }
+    }
+  }>>([])
+  const [showAddEmployee, setShowAddEmployee] = useState(false)
+  const [newEmployee, setNewEmployee] = useState({ name: '', email: '' })
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -205,6 +226,44 @@ export default function WorkshopSettings() {
     }
   }
 
+  const handleConnectCalendar = async (type: 'workshop' | 'employee', employeeId?: string) => {
+    try {
+      const response = await fetch('/api/calendar/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, employeeId })
+      })
+      
+      const data = await response.json()
+      
+      if (data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl
+      } else {
+        setMessage({ type: 'error', text: 'Fehler beim Starten der Verbindung' })
+      }
+    } catch (error) {
+      console.error('Calendar connect error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Verbinden des Kalenders' })
+    }
+  }
+
+  const handleDisconnectCalendar = async (type: 'workshop' | 'employee', employeeId?: string) => {
+    if (!confirm('Möchten Sie die Kalenderverbindung wirklich trennen?')) {
+      return
+    }
+    
+    // TODO: Implement disconnect API endpoint
+    if (type === 'workshop') {
+      setWorkshopCalendarConnected(false)
+    } else if (employeeId) {
+      const updated = employees.map(emp => 
+        emp.id === employeeId ? { ...emp, calendarConnected: false } : emp
+      )
+      setEmployees(updated)
+    }
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -347,6 +406,17 @@ export default function WorkshopSettings() {
                 }`}
               >
                 Benachrichtigungen
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('scheduling')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'scheduling'
+                    ? 'border-primary-600 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Terminplanung
               </button>
             </nav>
           </div>
@@ -827,6 +897,289 @@ export default function WorkshopSettings() {
                 </div>
               </label>
             </div>
+            </div>
+          )}
+
+          {/* Tab: Terminplanung */}
+          {activeTab === 'scheduling' && (
+            <div className="space-y-6">
+              {/* Calendar Mode Selection */}
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Google Kalender Integration</h2>
+                <p className="text-sm text-gray-600 mb-6">
+                  Verbinden Sie Ihre Google Kalender, um Termine automatisch zu synchronisieren und Doppelbuchungen zu vermeiden.
+                </p>
+
+                <div className="space-y-4">
+                  <label className="block">
+                    <div className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
+                         style={{ borderColor: calendarMode === 'workshop' ? '#2563eb' : '#e5e7eb' }}>
+                      <input
+                        type="radio"
+                        name="calendarMode"
+                        value="workshop"
+                        checked={calendarMode === 'workshop'}
+                        onChange={(e) => setCalendarMode(e.target.value as 'workshop' | 'employees')}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">🏢 Werkstatt-Kalender</div>
+                        <div className="text-sm text-gray-600">
+                          Ein gemeinsamer Kalender für die gesamte Werkstatt
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <div className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
+                         style={{ borderColor: calendarMode === 'employees' ? '#2563eb' : '#e5e7eb' }}>
+                      <input
+                        type="radio"
+                        name="calendarMode"
+                        value="employees"
+                        checked={calendarMode === 'employees'}
+                        onChange={(e) => setCalendarMode(e.target.value as 'workshop' | 'employees')}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">👥 Mitarbeiter-Kalender</div>
+                        <div className="text-sm text-gray-600">
+                          Separate Kalender für jeden Mitarbeiter mit individuellen Arbeitszeiten
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Workshop Calendar Mode */}
+              {calendarMode === 'workshop' && (
+                <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Werkstatt-Kalender verbinden</h3>
+                  
+                  {workshopCalendarConnected ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <div className="font-medium text-green-900">Kalender verbunden</div>
+                          <div className="text-sm text-green-700">werkstatt@ihre-werkstatt.de</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDisconnectCalendar('workshop')}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Verbindung trennen
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleConnectCalendar('workshop')}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+                    >
+                      <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                      <span className="font-medium text-gray-700">Mit Google Kalender verbinden</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Employee Calendar Mode */}
+              {calendarMode === 'employees' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Mitarbeiter verwalten</h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddEmployee(true)}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                      >
+                        + Mitarbeiter hinzufügen
+                      </button>
+                    </div>
+
+                    {/* Add Employee Form */}
+                    {showAddEmployee && (
+                      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-3">Neuen Mitarbeiter hinzufügen</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <input
+                            type="text"
+                            placeholder="Name"
+                            value={newEmployee.name}
+                            onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
+                          <input
+                            type="email"
+                            placeholder="E-Mail"
+                            value={newEmployee.email}
+                            onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newEmployee.name && newEmployee.email) {
+                                setEmployees([...employees, {
+                                  id: Date.now().toString(),
+                                  name: newEmployee.name,
+                                  email: newEmployee.email,
+                                  calendarConnected: false,
+                                  workingHours: {
+                                    monday: { from: '08:00', to: '17:00', working: true },
+                                    tuesday: { from: '08:00', to: '17:00', working: true },
+                                    wednesday: { from: '08:00', to: '17:00', working: true },
+                                    thursday: { from: '08:00', to: '17:00', working: true },
+                                    friday: { from: '08:00', to: '17:00', working: true },
+                                    saturday: { from: '09:00', to: '13:00', working: false },
+                                    sunday: { from: '09:00', to: '13:00', working: false },
+                                  }
+                                }])
+                                setNewEmployee({ name: '', email: '' })
+                                setShowAddEmployee(false)
+                              }
+                            }}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                          >
+                            Hinzufügen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddEmployee(false)
+                              setNewEmployee({ name: '', email: '' })
+                            }}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                          >
+                            Abbrechen
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Employee List */}
+                    {employees.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p className="mb-2">Noch keine Mitarbeiter hinzugefügt</p>
+                        <p className="text-sm">Fügen Sie Mitarbeiter hinzu, um deren Kalender zu verwalten</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {employees.map((employee, index) => (
+                          <div key={employee.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="p-4 bg-gray-50 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
+                                  {employee.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-900">{employee.name}</div>
+                                  <div className="text-sm text-gray-600">{employee.email}</div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {employee.calendarConnected ? (
+                                  <span className="flex items-center gap-2 text-sm text-green-600">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    Verbunden
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleConnectCalendar('employee', employee.id)}
+                                    className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
+                                  >
+                                    Kalender verbinden
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setEmployees(employees.filter(e => e.id !== employee.id))}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Working Hours */}
+                            <div className="p-4">
+                              <h5 className="text-sm font-medium text-gray-900 mb-3">Arbeitszeiten</h5>
+                              <div className="space-y-2">
+                                {Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
+                                  const hours = employee.workingHours[dayKey as keyof typeof employee.workingHours]
+                                  return (
+                                    <div key={dayKey} className="flex items-center gap-4">
+                                      <div className="w-24 text-sm text-gray-700">{dayLabel}</div>
+                                      <label className="flex items-center gap-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={hours.working}
+                                          onChange={(e) => {
+                                            const updated = [...employees]
+                                            updated[index].workingHours[dayKey as keyof typeof employee.workingHours].working = e.target.checked
+                                            setEmployees(updated)
+                                          }}
+                                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                        />
+                                        <span className="text-sm text-gray-600">Arbeitstag</span>
+                                      </label>
+                                      {hours.working && (
+                                        <>
+                                          <input
+                                            type="time"
+                                            value={hours.from}
+                                            onChange={(e) => {
+                                              const updated = [...employees]
+                                              updated[index].workingHours[dayKey as keyof typeof employee.workingHours].from = e.target.value
+                                              setEmployees(updated)
+                                            }}
+                                            className="px-3 py-1 border border-gray-300 rounded text-sm"
+                                          />
+                                          <span className="text-gray-500">-</span>
+                                          <input
+                                            type="time"
+                                            value={hours.to}
+                                            onChange={(e) => {
+                                              const updated = [...employees]
+                                              updated[index].workingHours[dayKey as keyof typeof employee.workingHours].to = e.target.value
+                                              setEmployees(updated)
+                                            }}
+                                            className="px-3 py-1 border border-gray-300 rounded text-sm"
+                                          />
+                                        </>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

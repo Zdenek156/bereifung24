@@ -63,6 +63,13 @@ export async function GET() {
         longitude: true,
         status: true,
         createdAt: true,
+        vehicle: {
+          select: {
+            make: true,
+            model: true,
+            year: true
+          }
+        },
         customer: {
           include: {
             user: {
@@ -120,6 +127,8 @@ export async function GET() {
         })
         .map(request => ({
           ...request,
+          vehicleInfo: request.vehicle ? `${request.vehicle.make} ${request.vehicle.model} (${request.vehicle.year})` : undefined,
+          vehicle: undefined, // Remove vehicle object after formatting
           distance: calculateDistance(
             workshop.user.latitude!,
             workshop.user.longitude!,

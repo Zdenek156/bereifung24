@@ -192,6 +192,8 @@ model TireRequest {
   id                String   @id @default(cuid())
   customerId        String
   customer          Customer @relation(fields: [customerId], references: [id])
+  vehicleId         String?
+  vehicle           Vehicle? @relation(fields: [vehicleId], references: [id])
   
   // Tire Specifications
   season            String  // SUMMER, WINTER, ALL_SEASON
@@ -249,6 +251,7 @@ model Vehicle {
   // Current Tires
   currentTires      VehicleTire[]
   tireHistory       TireHistory[]
+  tireRequests      TireRequest[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

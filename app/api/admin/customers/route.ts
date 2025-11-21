@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       const requestCount = user.customer?.tireRequests.length || 0
       const totalSpent = user.customer?.tireRequests.reduce((sum, request) => {
         const acceptedOffer = request.offers.find(o => o.status === 'ACCEPTED')
-        return sum + (acceptedOffer?.totalPrice || 0)
+        return sum + (acceptedOffer?.price || 0)
       }, 0) || 0
 
       // Entfernung berechnen (Haversine-Formel)

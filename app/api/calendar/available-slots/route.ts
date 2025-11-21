@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       // Get workshop opening hours for the specific day
       if (workshop.openingHours) {
         const hours = JSON.parse(workshop.openingHours)
-        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'lowercase' })
+        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
         workingHours = hours[dayOfWeek]
       }
     } else if (workshop.calendarMode === 'employees' && employeeId) {

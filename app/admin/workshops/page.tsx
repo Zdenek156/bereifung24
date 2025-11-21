@@ -136,9 +136,9 @@ export default function WorkshopManagementPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters and Search */}
+        {/* Filters, Search and Download */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -184,6 +184,35 @@ export default function WorkshopManagementPage() {
                 <option value="offers">Anzahl Angebote</option>
                 <option value="revenue">Umsatz</option>
               </select>
+            </div>
+
+            {/* Download */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Export
+              </label>
+              <div className="flex gap-2">
+                <a
+                  href="/api/admin/workshops/download?format=csv"
+                  className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 flex items-center justify-center gap-1"
+                  download
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  CSV
+                </a>
+                <a
+                  href="/api/admin/workshops/download?format=txt"
+                  className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1"
+                  download
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  TXT
+                </a>
+              </div>
             </div>
           </div>
         </div>

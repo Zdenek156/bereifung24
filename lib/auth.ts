@@ -34,6 +34,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Account ist deaktiviert')
         }
 
+        // Prüfe ob E-Mail bestätigt wurde (nur für Kunden)
+        if (user.role === 'CUSTOMER' && !user.emailVerified) {
+          throw new Error('Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben dir einen Bestätigungslink gesendet.')
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password

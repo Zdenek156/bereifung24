@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
+import crypto from 'crypto'
 import { geocodeAddress } from '@/lib/geocoding'
-import { sendEmail, welcomeCustomerEmailTemplate } from '@/lib/email'
+import { sendEmail, customerVerificationEmailTemplate, adminCustomerRegistrationEmailTemplate } from '@/lib/email'
 
 const customerSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
     // Passwort hashen
     const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 
+    // Generiere Verifikations-Token
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+
     // Geocode address if provided
     let latitude: number | null = null
     let longitude: number | null = null
@@ -69,6 +73,8 @@ export async function POST(request: Request) {
         latitude: latitude,
         longitude: longitude,
         role: 'CUSTOMER',
+        verificationToken: verificationToken,
+        emailVerified: null,
         customer: {
           create: {}
         }
@@ -78,25 +84,63 @@ export async function POST(request: Request) {
       }
     })
 
-    // Willkommens-E-Mail senden
+    // Bestätigungs-E-Mail senden
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`
+    
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Willkommen bei Bereifung24!',
-        html: welcomeCustomerEmailTemplate({
+        subject: 'Bestätige deine E-Mail-Adresse',
+        html: customerVerificationEmailTemplate({
           firstName: user.firstName,
-          email: user.email
+          verificationUrl: verificationUrl
         })
       })
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError)
+      console.error('Failed to send verification email:', emailError)
       // Fehler beim E-Mail-Versand nicht nach außen weitergeben
+    }
+
+    // Admin-Benachrichtigungen senden
+    try {
+      // @ts-ignore - Prisma types need regeneration after schema change
+      const adminSettings = await prisma.adminNotificationSetting.findMany({
+        where: {
+          notifyCustomerRegistration: true
+        }
+      })
+
+      const registrationDate = new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
+      for (const admin of adminSettings) {
+        await sendEmail({
+          to: admin.email,
+          subject: 'Neue Kunden-Registrierung - Bereifung24',
+          html: adminCustomerRegistrationEmailTemplate({
+            customerName: `${user.firstName} ${user.lastName}`,
+            email: user.email,
+            phone: user.phone || undefined,
+            city: user.city || undefined,
+            registrationDate: registrationDate
+          })
+        }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+      }
+    } catch (adminEmailError) {
+      console.error('Failed to send admin notifications:', adminEmailError)
+      // Fehler bei Admin-Benachrichtigungen nicht nach außen weitergeben
     }
 
     return NextResponse.json(
       { 
-        message: 'Registrierung erfolgreich! Du kannst dich jetzt anmelden.',
-        userId: user.id
+        message: 'Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.',
+        userId: user.id,
+        emailSent: true
       },
       { status: 201 }
     )

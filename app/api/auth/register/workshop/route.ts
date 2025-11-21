@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { geocodeAddress } from '@/lib/geocoding'
-import { sendEmail, welcomeWorkshopEmailTemplate } from '@/lib/email'
+import { sendEmail, welcomeWorkshopEmailTemplate, adminWorkshopRegistrationEmailTemplate } from '@/lib/email'
 
 const workshopSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -104,6 +104,43 @@ export async function POST(request: Request) {
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError)
       // Fehler beim E-Mail-Versand nicht nach außen weitergeben
+    }
+
+    // Admin-Benachrichtigungen senden
+    try {
+      // @ts-ignore - Prisma types need regeneration after schema change
+      const adminSettings = await prisma.adminNotificationSetting.findMany({
+        where: {
+          notifyWorkshopRegistration: true
+        }
+      })
+
+      const registrationDate = new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
+      for (const admin of adminSettings) {
+        await sendEmail({
+          to: admin.email,
+          subject: 'Neue Werkstatt-Registrierung - Freischaltung erforderlich',
+          html: adminWorkshopRegistrationEmailTemplate({
+            workshopName: `${user.firstName} ${user.lastName}`,
+            companyName: validatedData.companyName,
+            email: user.email,
+            phone: user.phone || undefined,
+            city: user.city || undefined,
+            registrationDate: registrationDate,
+            workshopId: user.workshop?.id || ''
+          })
+        }).catch(err => console.error(`Failed to send admin notification to ${admin.email}:`, err))
+      }
+    } catch (adminEmailError) {
+      console.error('Failed to send admin notifications:', adminEmailError)
+      // Fehler bei Admin-Benachrichtigungen nicht nach außen weitergeben
     }
 
     return NextResponse.json(

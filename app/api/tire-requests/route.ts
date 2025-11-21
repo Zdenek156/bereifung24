@@ -20,6 +20,7 @@ const tireRequestSchema = z.object({
   needByDate: z.string(),
   zipCode: z.string().length(5),
   radiusKm: z.number().min(5).max(100).default(25),
+  vehicleId: z.string().optional(),
 })
 
 // Haversine formula to calculate distance between two coordinates in km
@@ -72,6 +73,18 @@ export async function POST(request: NextRequest) {
         { error: 'Kunde nicht gefunden' },
         { status: 404 }
       )
+    }
+
+    // Get vehicle information if provided
+    let vehicleInfo: string | undefined
+    if (validatedData.vehicleId) {
+      const vehicle = await prisma.vehicle.findUnique({
+        where: { id: validatedData.vehicleId },
+      })
+      if (vehicle) {
+        // Format vehicle info without license plate
+        vehicleInfo = `${vehicle.brand} ${vehicle.model} (${vehicle.year})`
+      }
     }
 
     // Geocode customer address if available
@@ -182,6 +195,7 @@ export async function POST(request: NextRequest) {
                 preferredBrands: validatedData.preferredBrands,
                 additionalNotes: validatedData.additionalNotes,
                 customerCity: customer.user.city || undefined,
+                vehicleInfo: vehicleInfo,
               })
             })
             console.log(`📧 Notification email sent to workshop: ${workshop.user.email}`)

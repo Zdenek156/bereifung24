@@ -615,6 +615,7 @@ export function newTireRequestEmailTemplate(data: {
   preferredBrands?: string
   additionalNotes?: string
   customerCity?: string
+  vehicleInfo?: string
 }) {
   const seasonText = data.season === 'SUMMER' ? 'Sommerreifen' : 
                      data.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'
@@ -645,7 +646,7 @@ export function newTireRequestEmailTemplate(data: {
     <body>
       <div class="container">
         <div class="header">
-          <h1>🔔 Neue Reifenanfrage in Ihrer Nähe!</h1>
+          <h1>Neue Reifenanfrage in Ihrer Nähe!</h1>
           <p style="margin: 10px 0 0 0; font-size: 16px;">Ein Kunde sucht Reifen in Ihrem Umkreis</p>
         </div>
         <div class="content">
@@ -655,12 +656,19 @@ export function newTireRequestEmailTemplate(data: {
           
           <div class="highlight">
             <strong>📍 Entfernung:</strong> Ca. ${data.distance} von Ihrem Standort<br>
-            ${data.customerCity ? `<strong>🏙️ Stadt:</strong> ${data.customerCity}<br>` : ''}
+            ${data.customerCity ? `<strong>Stadt:</strong> ${data.customerCity}<br>` : ''}
             <strong>📅 Benötigt bis:</strong> ${data.needByDate}
           </div>
 
           <div class="tire-details">
-            <h2 style="margin-top: 0; color: #667eea;">Reifen-Details</h2>
+            <h2 style="margin-top: 0; color: #667eea;">Anfrage-Details</h2>
+            
+            ${data.vehicleInfo ? `
+            <div class="detail-row">
+              <span class="detail-label">Fahrzeug:</span>
+              <span class="detail-value">${data.vehicleInfo}</span>
+            </div>
+            ` : ''}
             
             <div class="detail-row">
               <span class="detail-label">Saison:</span>

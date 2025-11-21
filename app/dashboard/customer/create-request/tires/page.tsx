@@ -281,6 +281,7 @@ export default function CreateRequestPage() {
           needByDate: formData.needByDate,
           zipCode: formData.zipCode,
           radiusKm: formData.radiusKm,
+          vehicleId: selectedVehicle || undefined,
         }),
       })
 

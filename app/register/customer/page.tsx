@@ -19,6 +19,7 @@ export default function CustomerRegisterPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -34,6 +35,11 @@ export default function CustomerRegisterPage() {
     setError('')
 
     // Validation
+    if (!acceptTerms) {
+      setError('Bitte akzeptiere die AGB und Datenschutzerklärung')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwörter stimmen nicht überein')
       return
@@ -72,8 +78,8 @@ export default function CustomerRegisterPage() {
         return
       }
 
-      // Success - redirect to login
-      alert('Registrierung erfolgreich! Du kannst dich jetzt anmelden.')
+      // Success - zeige Hinweis
+      alert('Registrierung erfolgreich! Bitte überprüfe deine E-Mails und bestätige deine E-Mail-Adresse, bevor du dich anmeldest.')
       router.push('/login')
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')
@@ -285,6 +291,34 @@ export default function CustomerRegisterPage() {
                     </svg>
                   )}
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Terms and Conditions */}
+          <div className="pt-4">
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="acceptTerms"
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="acceptTerms" className="text-gray-700">
+                  Ich akzeptiere die{' '}
+                  <Link href="/agb" target="_blank" className="text-primary-600 hover:text-primary-700 font-medium underline">
+                    Allgemeinen Geschäftsbedingungen
+                  </Link>
+                  {' '}und die{' '}
+                  <Link href="/datenschutz" target="_blank" className="text-primary-600 hover:text-primary-700 font-medium underline">
+                    Datenschutzerklärung
+                  </Link>
+                  {' '}*
+                </label>
               </div>
             </div>
           </div>

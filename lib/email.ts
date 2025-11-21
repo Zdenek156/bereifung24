@@ -725,3 +725,274 @@ export function newTireRequestEmailTemplate(data: {
     </html>
   `
 }
+
+// Buchungsbestätigung - Kunde
+export function bookingConfirmationCustomerEmailTemplate(data: {
+  customerName: string
+  workshopName: string
+  workshopAddress: string
+  workshopPhone: string
+  appointmentDate: string
+  appointmentTime: string
+  tireBrand: string
+  tireModel: string
+  tireSize: string
+  totalPrice: number
+  paymentMethod: string
+  bookingId: string
+  workshopEmail?: string
+  customerNotes?: string
+}) {
+  const paymentMethodText = data.paymentMethod === 'PAY_ONSITE' 
+    ? 'Zahlung vor Ort' 
+    : data.paymentMethod === 'PAY_ONLINE' 
+    ? 'Online-Zahlung' 
+    : data.paymentMethod
+
+  return {
+    subject: 'Terminbestätigung - Ihr Reifenwechsel bei ' + data.workshopName,
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: white; padding: 30px; }
+        .appointment-box { background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .detail-row { padding: 12px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #6b7280; }
+        .detail-value { color: #111827; font-weight: 500; }
+        .workshop-box { background: #fafafa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .price-box { background: #667eea; color: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; margin: 10px 5px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+        .success-icon { font-size: 48px; margin-bottom: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="success-icon">✅</div>
+          <h1>Termin erfolgreich gebucht!</h1>
+        </div>
+        <div class="content">
+          <p><strong>Hallo ${data.customerName},</strong></p>
+          
+          <p>Vielen Dank für Ihre Buchung! Ihr Termin wurde erfolgreich bestätigt.</p>
+
+          <div class="appointment-box">
+            <h2 style="margin-top: 0; color: #059669;">📅 Ihr Termin</h2>
+            <div class="detail-row">
+              <span class="detail-label">Datum:</span>
+              <span class="detail-value">${data.appointmentDate}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Uhrzeit:</span>
+              <span class="detail-value">${data.appointmentTime} Uhr</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Buchungsnummer:</span>
+              <span class="detail-value">#${data.bookingId.substring(0, 8).toUpperCase()}</span>
+            </div>
+          </div>
+
+          <div class="workshop-box">
+            <h3 style="margin-top: 0; color: #667eea;">🏢 Werkstatt</h3>
+            <p style="font-size: 18px; font-weight: bold; margin: 5px 0;">${data.workshopName}</p>
+            <p style="margin: 5px 0;">📍 ${data.workshopAddress}</p>
+            <p style="margin: 5px 0;">📞 ${data.workshopPhone}</p>
+            ${data.workshopEmail ? `<p style="margin: 5px 0;">✉️ ${data.workshopEmail}</p>` : ''}
+          </div>
+
+          <h3 style="color: #667eea;">🚗 Ihre Reifen</h3>
+          <div class="detail-row">
+            <span class="detail-label">Marke & Modell:</span>
+            <span class="detail-value">${data.tireBrand} ${data.tireModel}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Größe:</span>
+            <span class="detail-value">${data.tireSize}</span>
+          </div>
+
+          <div class="price-box">
+            <h2 style="margin: 0;">Gesamtpreis</h2>
+            <div style="font-size: 36px; font-weight: bold; margin: 10px 0;">${data.totalPrice.toFixed(2)} €</div>
+            <p style="margin: 0; opacity: 0.9;">inkl. Montage</p>
+            <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Zahlungsart: ${paymentMethodText}</p>
+          </div>
+
+          ${data.customerNotes ? `
+          <div class="appointment-box">
+            <h3 style="margin-top: 0;">💬 Ihre Nachricht an die Werkstatt</h3>
+            <p style="margin: 0;">${data.customerNotes}</p>
+          </div>
+          ` : ''}
+
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer/bookings" class="button">
+              Meine Buchungen ansehen
+            </a>
+          </center>
+
+          <p style="margin-top: 30px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong>⏰ Wichtig:</strong> Bitte erscheinen Sie pünktlich zu Ihrem Termin. 
+            Bei Verspätung oder Verhinderung kontaktieren Sie bitte die Werkstatt direkt.
+          </p>
+
+          <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+            Bei Fragen zu Ihrem Termin wenden Sie sich bitte direkt an die Werkstatt.
+          </p>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Ihre Plattform für Reifenwechsel und mehr</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+  }
+}
+
+// Buchungsbestätigung - Werkstatt
+export function bookingConfirmationWorkshopEmailTemplate(data: {
+  workshopName: string
+  customerName: string
+  customerPhone: string
+  customerEmail: string
+  appointmentDate: string
+  appointmentTime: string
+  tireBrand: string
+  tireModel: string
+  tireSize: string
+  quantity: number
+  totalPrice: number
+  paymentMethod: string
+  bookingId: string
+  customerNotes?: string
+  vehicleInfo?: string
+}) {
+  const paymentMethodText = data.paymentMethod === 'PAY_ONSITE' 
+    ? 'Zahlung vor Ort' 
+    : data.paymentMethod === 'PAY_ONLINE' 
+    ? 'Online-Zahlung' 
+    : data.paymentMethod
+
+  return {
+    subject: 'Neue Terminbuchung - ' + data.customerName,
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: white; padding: 30px; }
+        .appointment-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .detail-row { padding: 12px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #6b7280; }
+        .detail-value { color: #111827; font-weight: 500; }
+        .customer-box { background: #fafafa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; margin: 10px 5px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px; background: #f3f4f6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div style="font-size: 48px; margin-bottom: 10px;">🔔</div>
+          <h1>Neue Terminbuchung!</h1>
+        </div>
+        <div class="content">
+          <p><strong>Hallo ${data.workshopName},</strong></p>
+          
+          <p>Sie haben eine neue Terminbuchung erhalten. Ein Kunde hat Ihr Angebot angenommen und einen Termin gebucht.</p>
+
+          <div class="appointment-box">
+            <h2 style="margin-top: 0; color: #3b82f6;">📅 Termin-Details</h2>
+            <div class="detail-row">
+              <span class="detail-label">Datum:</span>
+              <span class="detail-value">${data.appointmentDate}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Uhrzeit:</span>
+              <span class="detail-value">${data.appointmentTime} Uhr</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Buchungsnummer:</span>
+              <span class="detail-value">#${data.bookingId.substring(0, 8).toUpperCase()}</span>
+            </div>
+          </div>
+
+          <div class="customer-box">
+            <h3 style="margin-top: 0; color: #667eea;">👤 Kunde</h3>
+            <p style="font-size: 18px; font-weight: bold; margin: 5px 0;">${data.customerName}</p>
+            <p style="margin: 5px 0;">📞 ${data.customerPhone}</p>
+            <p style="margin: 5px 0;">✉️ ${data.customerEmail}</p>
+          </div>
+
+          <h3 style="color: #667eea;">🚗 Auftrags-Details</h3>
+          ${data.vehicleInfo ? `
+          <div class="detail-row">
+            <span class="detail-label">Fahrzeug:</span>
+            <span class="detail-value">${data.vehicleInfo}</span>
+          </div>
+          ` : ''}
+          <div class="detail-row">
+            <span class="detail-label">Reifen:</span>
+            <span class="detail-value">${data.tireBrand} ${data.tireModel}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Größe:</span>
+            <span class="detail-value">${data.tireSize}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Menge:</span>
+            <span class="detail-value">${data.quantity} Reifen</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Gesamtpreis:</span>
+            <span class="detail-value" style="font-size: 18px; font-weight: bold; color: #059669;">${data.totalPrice.toFixed(2)} €</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Zahlungsart:</span>
+            <span class="detail-value">${paymentMethodText}</span>
+          </div>
+
+          ${data.customerNotes ? `
+          <div class="appointment-box">
+            <h3 style="margin-top: 0;">💬 Nachricht vom Kunden</h3>
+            <p style="margin: 0;">${data.customerNotes}</p>
+          </div>
+          ` : ''}
+
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings" class="button">
+              Alle Buchungen ansehen
+            </a>
+          </center>
+
+          <p style="margin-top: 30px; padding: 15px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 4px;">
+            <strong>📋 Nächste Schritte:</strong><br>
+            - Reifen bestellen (falls noch nicht vorrätig)<br>
+            - Termin im Kalender vormerken<br>
+            - Bei Bedarf Kunde kontaktieren
+          </p>
+        </div>
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Ihre Plattform für Reifenwechsel und mehr</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+  }
+}

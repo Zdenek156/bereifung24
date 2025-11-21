@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate } from '@/lib/email'
 
 // GET /api/bookings - Get all bookings for current customer
 export async function GET(req: NextRequest) {
@@ -197,6 +198,34 @@ export async function POST(req: NextRequest) {
       estimatedDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
     }
 
+    // Fetch complete offer with all relations for emails
+    const completeOffer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      include: {
+        tireRequest: {
+          include: {
+            customer: {
+              include: {
+                user: true
+              }
+            }
+          }
+        },
+        workshop: {
+          include: {
+            user: true
+          }
+        }
+      }
+    })
+
+    if (!completeOffer) {
+      return NextResponse.json(
+        { error: 'Angebot nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
     // Create booking
     const booking = await prisma.booking.create({
       data: {
@@ -227,8 +256,110 @@ export async function POST(req: NextRequest) {
       data: { status: 'BOOKED' }
     })
 
-    // TODO: Send confirmation email to customer and workshop
-    // TODO: Add event to Google Calendar if connected
+    // Prepare data for emails
+    const tireSize = `${completeOffer.tireRequest.width}/${completeOffer.tireRequest.aspectRatio} R${completeOffer.tireRequest.diameter}`
+    const appointmentDateFormatted = new Date(appointmentDate).toLocaleDateString('de-DE', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    const appointmentTimeFormatted = new Date(appointmentDate).toTimeString().substring(0, 5)
+
+    // Send confirmation email to customer
+    try {
+      const customerEmailData = bookingConfirmationCustomerEmailTemplate({
+        customerName: `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
+        workshopName: completeOffer.workshop.companyName,
+        workshopAddress: `${completeOffer.workshop.user.street}, ${completeOffer.workshop.user.zipCode} ${completeOffer.workshop.user.city}`,
+        workshopPhone: completeOffer.workshop.user.phone || 'Nicht angegeben',
+        workshopEmail: completeOffer.workshop.user.email,
+        appointmentDate: appointmentDateFormatted,
+        appointmentTime: appointmentTimeFormatted,
+        tireBrand: completeOffer.tireBrand,
+        tireModel: completeOffer.tireModel,
+        tireSize: tireSize,
+        totalPrice: completeOffer.price,
+        paymentMethod: paymentMethod || 'PAY_ONSITE',
+        bookingId: booking.id,
+        customerNotes: customerMessage
+      })
+
+      await sendEmail({
+        to: completeOffer.tireRequest.customer.user.email,
+        subject: customerEmailData.subject,
+        html: customerEmailData.html
+      })
+    } catch (emailError) {
+      console.error('Failed to send customer confirmation email:', emailError)
+      // Continue even if email fails
+    }
+
+    // Send notification email to workshop
+    try {
+      const workshopEmailData = bookingConfirmationWorkshopEmailTemplate({
+        workshopName: completeOffer.workshop.companyName,
+        customerName: `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
+        customerPhone: completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben',
+        customerEmail: completeOffer.tireRequest.customer.user.email,
+        appointmentDate: appointmentDateFormatted,
+        appointmentTime: appointmentTimeFormatted,
+        tireBrand: completeOffer.tireBrand,
+        tireModel: completeOffer.tireModel,
+        tireSize: tireSize,
+        quantity: completeOffer.tireRequest.quantity,
+        totalPrice: completeOffer.price,
+        paymentMethod: paymentMethod || 'PAY_ONSITE',
+        bookingId: booking.id,
+        customerNotes: customerMessage
+      })
+
+      await sendEmail({
+        to: completeOffer.workshop.user.email,
+        subject: workshopEmailData.subject,
+        html: workshopEmailData.html
+      })
+    } catch (emailError) {
+      console.error('Failed to send workshop notification email:', emailError)
+      // Continue even if email fails
+    }
+
+    // Create Google Calendar event if workshop has calendar connected
+    let calendarEventId = null
+    if (completeOffer.workshop.googleAccessToken && completeOffer.workshop.googleRefreshToken && completeOffer.workshop.googleCalendarId) {
+      try {
+        const { createCalendarEvent } = await import('@/lib/google-calendar')
+        
+        const appointmentStart = new Date(appointmentDate)
+        const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
+        
+        const calendarEvent = await createCalendarEvent(
+          completeOffer.workshop.googleAccessToken,
+          completeOffer.workshop.googleRefreshToken,
+          completeOffer.workshop.googleCalendarId,
+          {
+            summary: `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
+            description: `Reifenwechsel für ${completeOffer.tireBrand} ${completeOffer.tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
+            start: appointmentStart.toISOString(),
+            end: appointmentEnd.toISOString(),
+            attendees: [{ email: completeOffer.tireRequest.customer.user.email }]
+          }
+        )
+        
+        calendarEventId = calendarEvent.id || null
+        
+        // Update booking with calendar event ID
+        if (calendarEventId) {
+          await prisma.booking.update({
+            where: { id: booking.id },
+            data: { googleEventId: calendarEventId }
+          })
+        }
+      } catch (calendarError) {
+        console.error('Failed to create calendar event:', calendarError)
+        // Continue even if calendar creation fails
+      }
+    }
 
     return NextResponse.json({
       message: 'Buchung erfolgreich erstellt',
@@ -237,6 +368,7 @@ export async function POST(req: NextRequest) {
         appointmentDate: booking.appointmentDate.toISOString(),
         appointmentTime: booking.appointmentTime,
         status: booking.status,
+        googleEventId: calendarEventId
       }
     })
 

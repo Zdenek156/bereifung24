@@ -19,6 +19,9 @@ interface Workshop {
   latitude?: number
   longitude?: number
   paymentMethods?: string
+  iban?: string
+  accountHolder?: string
+  paypalEmail?: string
 }
 
 interface Offer {
@@ -308,6 +311,45 @@ export default function BookAppointmentPage() {
                   </div>
                 </label>
               </div>
+
+              {/* Payment Details Box */}
+              {paymentMethod === 'PAY_ONSITE' && offer?.workshop && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Zahlungsinformationen
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-700">
+                      <span className="font-medium">Verfügbare Zahlungsmethoden:</span> {getPaymentMethods().join(', ')}
+                    </p>
+                    {offer.workshop.iban && (
+                      <div className="pt-2 border-t border-blue-200">
+                        <p className="font-medium text-gray-900 mb-1">Bankverbindung für Vorabüberweisung:</p>
+                        <p className="text-gray-700">IBAN: {offer.workshop.iban}</p>
+                        {offer.workshop.accountHolder && (
+                          <p className="text-gray-700">Kontoinhaber: {offer.workshop.accountHolder}</p>
+                        )}
+                        <p className="text-xs text-gray-600 mt-1">
+                          Die genaue Rechnungsnummer mit Verwendungszweck erhalten Sie von der Werkstatt.
+                        </p>
+                      </div>
+                    )}
+                    {offer.workshop.paypalEmail && (
+                      <div className="pt-2 border-t border-blue-200">
+                        <p className="text-gray-700">
+                          <span className="font-medium">PayPal:</span> {offer.workshop.paypalEmail}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Die genaue Rechnungsnummer erhalten Sie von der Werkstatt.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Terminauswahl */}

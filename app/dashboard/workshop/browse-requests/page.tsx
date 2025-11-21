@@ -23,12 +23,13 @@ interface TireRequest {
   needByDate: string
   status: string
   createdAt: string
+  vehicleInfo?: string
   customer: {
     user: {
       firstName: string
       lastName: string
       zipCode: string
-      city: string
+      city: string | null
     }
   }
   offers: Array<{
@@ -311,12 +312,16 @@ export default function BrowseRequestsPage() {
                           {request.customer.user.firstName} {request.customer.user.lastName}
                         </p>
                         <p className="text-sm text-gray-600">
-                          PLZ: {request.zipCode}
-                          {request.customer.user.city && ` - ${request.customer.user.city}`}
+                          PLZ: {request.zipCode}{request.customer.user.city ? ` - ${request.customer.user.city}` : ''}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                           Umkreis: {request.radiusKm} km
                         </p>
+                        {request.vehicleInfo && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            <span className="font-medium">Fahrzeug:</span> {request.vehicleInfo}
+                          </p>
+                        )}
                       </div>
 
                       {request.additionalNotes && (

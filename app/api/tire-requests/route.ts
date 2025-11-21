@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
     const tireRequest = await prisma.tireRequest.create({
       data: {
         customerId: session.user.customerId!,
+        vehicleId: validatedData.vehicleId,
         season: validatedData.season,
         width: validatedData.width,
         aspectRatio: validatedData.aspectRatio,

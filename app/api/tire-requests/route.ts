@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       })
       if (vehicle) {
         // Format vehicle info without license plate
-        vehicleInfo = `${vehicle.brand} ${vehicle.model} (${vehicle.year})`
+        vehicleInfo = `${vehicle.make} ${vehicle.model} (${vehicle.year})`
       }
     }
 

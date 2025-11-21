@@ -12,6 +12,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(req.url)
+    const sortBy = searchParams.get('sortBy') || 'recent'
+
+    // Basis-Referenzpunkt für Entfernungsberechnung
+    const baseLatitude = 51.1657
+    const baseLongitude = 10.4515
+
     const workshops = await prisma.workshop.findMany({
       include: {
         user: {
@@ -22,9 +29,12 @@ export async function GET(req: NextRequest) {
             phone: true,
             street: true,
             zipCode: true,
-            city: true
+            city: true,
+            latitude: true,
+            longitude: true
           }
         },
+        offers: true,
         bookings: {
           where: {
             status: {
@@ -35,26 +45,72 @@ export async function GET(req: NextRequest) {
             offer: true
           }
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
       }
     })
 
-    // Calculate revenue for each workshop
-    const workshopsWithRevenue = workshops.map(workshop => {
+    // Calculate revenue, offers count and distance for each workshop
+    const workshopsWithData = workshops.map(workshop => {
       const revenue = workshop.bookings.reduce((sum, booking) => sum + booking.offer.price, 0)
+      const offersCount = workshop.offers.length
+
+      // Entfernung berechnen
+      let distance: number | null = null
+      if (workshop.user.latitude && workshop.user.longitude) {
+        const R = 6371
+        const dLat = (workshop.user.latitude - baseLatitude) * Math.PI / 180
+        const dLon = (workshop.user.longitude - baseLongitude) * Math.PI / 180
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(baseLatitude * Math.PI / 180) * Math.cos(workshop.user.latitude * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        distance = Math.round(R * c)
+      }
+
       return {
         id: workshop.id,
         companyName: workshop.companyName,
         isVerified: workshop.isVerified,
         createdAt: workshop.createdAt,
-        user: workshop.user,
-        revenue
+        distance,
+        offersCount,
+        revenue,
+        user: {
+          email: workshop.user.email,
+          firstName: workshop.user.firstName,
+          lastName: workshop.user.lastName,
+          phone: workshop.user.phone,
+          street: workshop.user.street,
+          zipCode: workshop.user.zipCode,
+          city: workshop.user.city
+        }
       }
     })
 
-    return NextResponse.json(workshopsWithRevenue)
+    // Sortierung
+    let sortedWorkshops = [...workshopsWithData]
+    switch (sortBy) {
+      case 'recent':
+        sortedWorkshops.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        break
+      case 'distance':
+        sortedWorkshops.sort((a, b) => {
+          if (a.distance === null) return 1
+          if (b.distance === null) return -1
+          return a.distance - b.distance
+        })
+        break
+      case 'offers':
+        sortedWorkshops.sort((a, b) => b.offersCount - a.offersCount)
+        break
+      case 'revenue':
+        sortedWorkshops.sort((a, b) => b.revenue - a.revenue)
+        break
+    }
+
+    return NextResponse.json(sortedWorkshops)
 
   } catch (error) {
     console.error('Workshops fetch error:', error)

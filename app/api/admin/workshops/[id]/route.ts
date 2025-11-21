@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, workshopVerifiedEmailTemplate } from '@/lib/email'
 
 // PATCH - Update workshop verification status
 export async function PATCH(

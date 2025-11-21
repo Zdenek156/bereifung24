@@ -67,6 +67,32 @@ export default function AdminCustomersPage() {
     }
   }
 
+  const deleteCustomer = async (customerId: string, customerName: string) => {
+    const confirmed = window.confirm(
+      `Möchtest du den Kunden "${customerName}" wirklich endgültig löschen?\n\n` +
+      `Alle zugehörigen Daten (Anfragen, Buchungen, Fahrzeuge etc.) werden ebenfalls gelöscht.\n\n` +
+      `Diese Aktion kann nicht rückgängig gemacht werden!`
+    )
+    
+    if (!confirmed) return
+
+    try {
+      const response = await fetch(`/api/admin/customers/${customerId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        alert('Kunde erfolgreich gelöscht')
+        fetchCustomers()
+      } else {
+        alert('Fehler beim Löschen des Kunden')
+      }
+    } catch (error) {
+      console.error('Error deleting customer:', error)
+      alert('Fehler beim Löschen des Kunden')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -251,16 +277,24 @@ export default function AdminCustomersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => toggleCustomerStatus(customer.id, customer.isActive)}
-                          className={`${
-                            customer.isActive
-                              ? 'text-red-600 hover:text-red-900'
-                              : 'text-green-600 hover:text-green-900'
-                          }`}
-                        >
-                          {customer.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => toggleCustomerStatus(customer.id, customer.isActive)}
+                            className={`${
+                              customer.isActive
+                                ? 'text-orange-600 hover:text-orange-900'
+                                : 'text-green-600 hover:text-green-900'
+                            }`}
+                          >
+                            {customer.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                          </button>
+                          <button
+                            onClick={() => deleteCustomer(customer.id, `${customer.firstName} ${customer.lastName}`)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Löschen
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

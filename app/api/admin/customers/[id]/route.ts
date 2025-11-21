@@ -35,3 +35,32 @@ export async function PATCH(
     await prisma.$disconnect()
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Lösche den Benutzer und alle zugehörigen Daten (durch Cascade in Prisma Schema)
+    await prisma.user.delete({
+      where: { id: params.id }
+    })
+
+    return NextResponse.json({ success: true, message: 'Kunde erfolgreich gelöscht' })
+
+  } catch (error) {
+    console.error('Error deleting customer:', error)
+    return NextResponse.json(
+      { error: 'Fehler beim Löschen des Kunden' },
+      { status: 500 }
+    )
+  } finally {
+    await prisma.$disconnect()
+  }
+}

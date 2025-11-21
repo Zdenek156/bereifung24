@@ -12,6 +12,7 @@ $commands = @(
     "[ -s `"`$NVM_DIR/nvm.sh`" ] && . `"`$NVM_DIR/nvm.sh`"",
     "cd /var/www/bereifung24",
     "git pull",
+    "npm install",
     "npx prisma migrate deploy",
     "npx prisma generate",
     "npm run build",

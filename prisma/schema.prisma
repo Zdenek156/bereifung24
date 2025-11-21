@@ -107,21 +107,55 @@ model Workshop {
   paypalEmail     String?
   
   // Payment Methods (JSON String)
-  paymentMethods  String? // JSON: {"cash": true, "bankTransfer": true, ...}
+  paymentMethods  String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
   
   // Email Notifications
   emailNotifyRequests Boolean  @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
+  
+  // Calendar Integration
+  calendarMode         String?  @default("workshop") @map("calendarmode") // "workshop" or "employees"
+  googleCalendarId     String?  @map("googlecalendarid") // For workshop mode
+  googleAccessToken    String?  @map("googleaccesstoken")
+  googleRefreshToken   String?  @map("googlerefreshtoken")
+  googleTokenExpiry    DateTime? @map("googletokenexpiry")
   
   // Relations
   offers          Offer[]
   bookings        Booking[]
   reviews         Review[]
   commissions     Commission[]
+  employees       Employee[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
   @@map("workshops")
+}
+
+model Employee {
+  id                   String    @id @default(cuid())
+  workshopId           String
+  workshop             Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  name                 String
+  email                String
+  
+  // Google Calendar Integration
+  googleCalendarId     String?
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiry    DateTime?
+  
+  // Working Hours (JSON String)
+  workingHours         String? // JSON: {"monday": {"from": "08:00", "to": "17:00", "working": true}, ...}
+  
+  // Relations
+  bookings             Booking[]
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  @@map("employees")
 }
 
 // ============================================
@@ -306,6 +340,9 @@ model Booking {
   appointmentDate   DateTime
   appointmentTime   String
   estimatedDuration Int         @default(60) // Minuten
+  employeeId        String?
+  employee          Employee?   @relation(fields: [employeeId], references: [id])
+  googleEventId     String?     // Google Calendar Event ID
   
   // Status
   status            String      @default("CONFIRMED") // CONFIRMED, COMPLETED, CANCELLED, NO_SHOW

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { geocodeAddress } from '@/lib/geocoding'
+import { sendEmail, newTireRequestEmailTemplate } from '@/lib/email'
 
 const tireRequestSchema = z.object({
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
@@ -20,6 +21,19 @@ const tireRequestSchema = z.object({
   zipCode: z.string().length(5),
   radiusKm: z.number().min(5).max(100).default(25),
 })
+
+// Haversine formula to calculate distance between two coordinates in km
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,6 +115,90 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
       },
     })
+
+    // Find workshops within radius and send notification emails
+    if (latitude && longitude) {
+      try {
+        // Get all verified workshops with coordinates
+        // @ts-ignore - Prisma types need regeneration
+        const workshops = await prisma.workshop.findMany({
+          where: {
+            isVerified: true,
+          },
+          include: {
+            user: true,
+          },
+        })
+
+        // Calculate distance and filter workshops within radius
+        // @ts-ignore - Prisma types need regeneration
+        const workshopsInRange = workshops.filter(workshop => {
+          // @ts-ignore - Prisma types need regeneration
+          if (!workshop.user?.latitude || !workshop.user?.longitude) return false
+          
+          // @ts-ignore - Prisma types need regeneration
+          const distance = calculateDistance(
+            latitude,
+            longitude,
+            workshop.user.latitude,
+            workshop.user.longitude
+          )
+          
+          return distance <= validatedData.radiusKm
+        })
+
+        console.log(`📍 Found ${workshopsInRange.length} workshops within ${validatedData.radiusKm}km radius`)
+
+        // Send email to each workshop in range
+        // @ts-ignore - Prisma types need regeneration
+        const emailPromises = workshopsInRange.map(async (workshop) => {
+          // @ts-ignore - Prisma types need regeneration
+          const distance = calculateDistance(
+            latitude!,
+            longitude!,
+            workshop.user.latitude!,
+            workshop.user.longitude!
+          )
+
+          const tireSize = `${validatedData.width}/${validatedData.aspectRatio} R${validatedData.diameter}`
+          const formattedDate = new Date(validatedData.needByDate).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
+
+          try {
+            await sendEmail({
+              to: workshop.user.email,
+              subject: `Neue Reifenanfrage in Ihrer Nähe - ${tireSize}`,
+              html: newTireRequestEmailTemplate({
+                workshopName: workshop.user.lastName,
+                requestId: tireRequest.id,
+                season: validatedData.season,
+                tireSize: tireSize,
+                quantity: validatedData.quantity,
+                needByDate: formattedDate,
+                distance: `${distance.toFixed(1)} km`,
+                preferredBrands: validatedData.preferredBrands,
+                additionalNotes: validatedData.additionalNotes,
+                customerCity: customer.user.city || undefined,
+              })
+            })
+            console.log(`📧 Notification email sent to workshop: ${workshop.user.email}`)
+          } catch (emailError) {
+            console.error(`Failed to send notification to workshop ${workshop.id}:`, emailError)
+          }
+        })
+
+        await Promise.all(emailPromises)
+        console.log(`✅ Sent notifications to ${workshopsInRange.length} workshops`)
+      } catch (notificationError) {
+        console.error('Error sending workshop notifications:', notificationError)
+        // Don't fail the request creation if notifications fail
+      }
+    } else {
+      console.warn('No coordinates available - skipping workshop notifications')
+    }
 
     return NextResponse.json({
       success: true,

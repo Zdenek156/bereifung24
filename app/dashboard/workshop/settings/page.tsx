@@ -151,6 +151,10 @@ export default function WorkshopSettings() {
           accountHolder: data.accountHolder || '',
           emailNotifyRequests: data.emailNotifyRequests ?? true,
         })
+        
+        // Set calendar mode and connection status
+        setCalendarMode(data.calendarMode || 'workshop')
+        setWorkshopCalendarConnected(!!data.googleRefreshToken)
 
         // Parse opening hours JSON if available
         if (data.openingHours) {
@@ -180,6 +184,29 @@ export default function WorkshopSettings() {
           } catch (e) {
             console.log('Could not parse payment methods:', e)
           }
+        }
+      }
+      
+      // Fetch employees if available
+      const employeesResponse = await fetch('/api/workshop/employees')
+      if (employeesResponse.ok) {
+        const employeesData = await employeesResponse.json()
+        if (employeesData.employees) {
+          setEmployees(employeesData.employees.map((emp: any) => ({
+            id: emp.id,
+            name: emp.name,
+            email: emp.email,
+            calendarConnected: !!emp.googleRefreshToken,
+            workingHours: emp.workingHours ? JSON.parse(emp.workingHours) : {
+              monday: { from: '08:00', to: '17:00', working: true },
+              tuesday: { from: '08:00', to: '17:00', working: true },
+              wednesday: { from: '08:00', to: '17:00', working: true },
+              thursday: { from: '08:00', to: '17:00', working: true },
+              friday: { from: '08:00', to: '17:00', working: true },
+              saturday: { from: '09:00', to: '13:00', working: false },
+              sunday: { from: '09:00', to: '13:00', working: false },
+            }
+          })))
         }
       }
     } catch (error) {
@@ -223,6 +250,23 @@ export default function WorkshopSettings() {
       setMessage({ type: 'error', text: 'Netzwerkfehler beim Speichern' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleCalendarModeChange = async (newMode: 'workshop' | 'employees') => {
+    setCalendarMode(newMode)
+    
+    // Save to database immediately
+    try {
+      await fetch('/api/workshop/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          calendarMode: newMode
+        }),
+      })
+    } catch (error) {
+      console.error('Error saving calendar mode:', error)
     }
   }
 
@@ -903,6 +947,41 @@ export default function WorkshopSettings() {
           {/* Tab: Terminplanung */}
           {activeTab === 'scheduling' && (
             <div className="space-y-6">
+              {/* Calendar Status Banner */}
+              <div className={`p-4 rounded-lg border-2 ${
+                workshopCalendarConnected || employees.some(emp => emp.calendarConnected)
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <div className="flex items-center">
+                  {workshopCalendarConnected || employees.some(emp => emp.calendarConnected) ? (
+                    <>
+                      <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="font-semibold text-green-900">Google Kalender verbunden</p>
+                        <p className="text-sm text-green-700">
+                          Ihre Termine werden automatisch mit Google Kalender synchronisiert
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div>
+                        <p className="font-semibold text-yellow-900">Kein Kalender verbunden</p>
+                        <p className="text-sm text-yellow-700">
+                          Verbinden Sie Ihren Google Kalender für automatische Terminverwaltung und zur Vermeidung von Doppelbuchungen
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
               {/* Calendar Mode Selection */}
               <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Google Kalender Integration</h2>
@@ -919,7 +998,7 @@ export default function WorkshopSettings() {
                         name="calendarMode"
                         value="workshop"
                         checked={calendarMode === 'workshop'}
-                        onChange={(e) => setCalendarMode(e.target.value as 'workshop' | 'employees')}
+                        onChange={(e) => handleCalendarModeChange(e.target.value as 'workshop' | 'employees')}
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500"
                       />
                       <div className="flex-1">
@@ -939,7 +1018,7 @@ export default function WorkshopSettings() {
                         name="calendarMode"
                         value="employees"
                         checked={calendarMode === 'employees'}
-                        onChange={(e) => setCalendarMode(e.target.value as 'workshop' | 'employees')}
+                        onChange={(e) => handleCalendarModeChange(e.target.value as 'workshop' | 'employees')}
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500"
                       />
                       <div className="flex-1">

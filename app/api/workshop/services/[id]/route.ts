@@ -47,10 +47,12 @@ export async function PATCH(
     const body = await request.json()
     const {
       basePrice,
+      basePrice4,
       runFlatSurcharge,
       disposalFee,
       wheelSizeSurcharge,
       durationMinutes,
+      durationMinutes4,
       description,
       internalNotes,
       isActive
@@ -64,6 +66,7 @@ export async function PATCH(
         disposalFee: disposalFee !== undefined ? (disposalFee ? parseFloat(disposalFee) : null) : undefined,
         wheelSizeSurcharge: wheelSizeSurcharge !== undefined ? wheelSizeSurcharge : undefined,
         durationMinutes: durationMinutes !== undefined ? parseInt(durationMinutes) : undefined,
+        durationMinutes4: durationMinutes4 !== undefined ? (durationMinutes4 ? parseInt(durationMinutes4) : null) : undefined,
         description: description !== undefined ? description : undefined,
         internalNotes: internalNotes !== undefined ? internalNotes : undefined,
         isActive: isActive !== undefined ? isActive : undefined

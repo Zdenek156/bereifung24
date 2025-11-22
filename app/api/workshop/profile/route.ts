@@ -61,6 +61,11 @@ export async function GET() {
       // Notifications
       emailNotifyRequests: user.workshop.emailNotifyRequests,
       
+      // Calendar Settings
+      calendarMode: user.workshop.calendarMode,
+      googleRefreshToken: user.workshop.googleRefreshToken,
+      googleCalendarId: user.workshop.googleCalendarId,
+      
       // Timestamps
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

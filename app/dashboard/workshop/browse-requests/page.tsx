@@ -105,7 +105,7 @@ export default function BrowseRequestsPage() {
       const response = await fetch('/api/workshop/services')
       if (response.ok) {
         const data = await response.json()
-        setServices(data.filter((s: WorkshopService) => s.isActive))
+        setServices(data.services.filter((s: WorkshopService) => s.isActive))
       }
     } catch (error) {
       console.error('Error fetching services:', error)

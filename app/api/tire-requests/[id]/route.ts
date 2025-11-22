@@ -26,16 +26,13 @@ export async function GET(
         offers: {
           include: {
             workshop: {
-              select: {
-                companyName: true,
-                user: {
-                  select: {
-                    street: true,
-                    zipCode: true,
-                    city: true,
-                    phone: true,
-                  }
-                }
+              include: {
+                user: true,
+              },
+            },
+            tireOptions: {
+              orderBy: {
+                pricePerTire: 'asc',
               },
             },
           },
@@ -53,7 +50,22 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ request: tireRequest })
+    // Flatten workshop structure for easier access
+    const formattedRequest = {
+      ...tireRequest,
+      offers: tireRequest.offers.map(offer => ({
+        ...offer,
+        workshop: {
+          companyName: offer.workshop.companyName,
+          street: offer.workshop.user.street,
+          zipCode: offer.workshop.user.zipCode,
+          city: offer.workshop.user.city,
+          phone: offer.workshop.user.phone,
+        },
+      })),
+    }
+
+    return NextResponse.json({ request: formattedRequest })
   } catch (error) {
     console.error('Error fetching tire request:', error)
     return NextResponse.json(

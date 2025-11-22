@@ -5,6 +5,13 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+interface Employee {
+  id: string
+  name: string
+  email: string
+  workingHours?: string
+}
+
 interface Workshop {
   id: string
   companyName: string
@@ -22,6 +29,8 @@ interface Workshop {
   iban?: string
   accountHolder?: string
   paypalEmail?: string
+  calendarMode?: string
+  employees?: Employee[]
 }
 
 interface Offer {
@@ -67,6 +76,7 @@ export default function BookAppointmentPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('PAY_ONSITE')
   const [message, setMessage] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -120,8 +130,9 @@ export default function BookAppointmentPage() {
 
     setLoadingSlots(true)
     try {
+      const employeeParam = selectedEmployee ? `&employeeId=${selectedEmployee}` : ''
       const response = await fetch(
-        `/api/gcal/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=60`
+        `/api/gcal/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=60${employeeParam}`
       )
 
       if (response.ok) {
@@ -137,6 +148,29 @@ export default function BookAppointmentPage() {
       setLoadingSlots(false)
     }
   }
+
+  // Auto-select first employee if in employee mode and only one employee
+  useEffect(() => {
+    if (offer?.workshop?.calendarMode === 'employees' && 
+        offer?.workshop?.employees?.length === 1) {
+      setSelectedEmployee(offer.workshop.employees[0].id)
+    }
+  }, [offer])
+
+  // Fetch available slots when date or employee changes
+  useEffect(() => {
+    if (selectedDate && offer) {
+      // For employee mode, require employee selection
+      if (offer.workshop.calendarMode === 'employees') {
+        if (selectedEmployee) {
+          fetchAvailableSlots()
+        }
+      } else {
+        // Workshop mode doesn't need employee selection
+        fetchAvailableSlots()
+      }
+    }
+  }, [selectedDate, selectedEmployee, offer])
 
   const handleBooking = async () => {
     if (!selectedSlot || !offer || !request) {
@@ -355,6 +389,32 @@ export default function BookAppointmentPage() {
             {/* Terminauswahl */}
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Termin auswählen</h2>
+              
+              {/* Mitarbeiter-Auswahl (nur bei Employee Calendar Mode) */}
+              {offer.workshop.calendarMode === 'employees' && offer.workshop.employees && offer.workshop.employees.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mitarbeiter auswählen
+                  </label>
+                  <select
+                    value={selectedEmployee}
+                    onChange={(e) => {
+                      setSelectedEmployee(e.target.value)
+                      setSelectedDate('')
+                      setSelectedSlot(null)
+                      setAvailableSlots([])
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">Bitte wählen Sie einen Mitarbeiter</option>
+                    {offer.workshop.employees.map(employee => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">

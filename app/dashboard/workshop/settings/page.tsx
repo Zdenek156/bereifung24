@@ -265,6 +265,12 @@ export default function WorkshopSettings() {
           })
           console.log('Mapped employees:', mappedEmployees)
           setEmployees(mappedEmployees)
+          
+          // Auto-select employee calendar mode if any employee is connected
+          const hasConnectedEmployee = mappedEmployees.some((emp: any) => emp.calendarConnected)
+          if (hasConnectedEmployee && !data.googleCalendarId) {
+            setCalendarMode('employees')
+          }
         }
       }
     } catch (error) {

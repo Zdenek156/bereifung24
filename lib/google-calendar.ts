@@ -220,7 +220,7 @@ export async function getBusySlots(
  */
 export function generateAvailableSlots(
   date: Date,
-  workingHours: { from: string, to: string, working: boolean },
+  workingHours: { from: string, to: string, working: boolean, breakFrom?: string, breakTo?: string },
   busySlots: Array<{ start: string, end: string }>,
   slotDuration: number = 60 // minutes
 ): string[] {
@@ -241,6 +241,21 @@ export function generateAvailableSlots(
   const endTime = new Date(date)
   endTime.setHours(toHour, toMinute, 0, 0)
   
+  // Parse break times if present
+  let breakStart: Date | null = null
+  let breakEnd: Date | null = null
+  
+  if (workingHours.breakFrom && workingHours.breakTo) {
+    const [breakFromHour, breakFromMinute] = workingHours.breakFrom.split(':').map(Number)
+    const [breakToHour, breakToMinute] = workingHours.breakTo.split(':').map(Number)
+    
+    breakStart = new Date(date)
+    breakStart.setHours(breakFromHour, breakFromMinute, 0, 0)
+    
+    breakEnd = new Date(date)
+    breakEnd.setHours(breakToHour, breakToMinute, 0, 0)
+  }
+  
   // Generate slots
   let currentTime = new Date(startTime)
   
@@ -260,7 +275,14 @@ export function generateAvailableSlots(
       )
     })
     
-    if (isFree && slotEnd <= endTime) {
+    // Check if slot is during break time
+    const isInBreak = breakStart && breakEnd && (
+      (currentTime >= breakStart && currentTime < breakEnd) ||
+      (slotEnd > breakStart && slotEnd <= breakEnd) ||
+      (currentTime <= breakStart && slotEnd >= breakEnd)
+    )
+    
+    if (isFree && !isInBreak && slotEnd <= endTime) {
       // Format time as HH:MM
       const hours = currentTime.getHours().toString().padStart(2, '0')
       const minutes = currentTime.getMinutes().toString().padStart(2, '0')

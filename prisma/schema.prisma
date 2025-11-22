@@ -59,6 +59,9 @@ model User {
   emailVerified DateTime?
   isActive      Boolean   @default(true)
   
+  // OAuth
+  googleId      String?   @unique
+  
   // Password Reset
   resetToken        String?
   resetTokenExpiry  DateTime?

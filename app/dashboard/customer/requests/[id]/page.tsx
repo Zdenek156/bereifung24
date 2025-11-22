@@ -454,20 +454,24 @@ export default function RequestDetailPage() {
                       <div className="text-sm text-gray-600">
                         Gültig bis {formatDate(offer.validUntil)}
                       </div>
-                      {offer.status === 'PENDING' && request.status === 'PENDING' ? (
+                      {offer.status === 'ACCEPTED' ? (
+                        <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
+                          ✓ Angenommen
+                        </span>
+                      ) : offer.status === 'DECLINED' ? (
+                        <span className="px-4 py-2 bg-red-100 text-red-600 rounded-lg font-semibold">
+                          Abgelehnt
+                        </span>
+                      ) : (request.status === 'PENDING' || request.status === 'QUOTED') && offer.status === 'PENDING' ? (
                         <button
                           onClick={() => handleAcceptOffer(offer.id)}
                           className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
                         >
                           Angebot annehmen
                         </button>
-                      ) : offer.status === 'ACCEPTED' ? (
-                        <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
-                          ✓ Angenommen
-                        </span>
                       ) : (
                         <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg">
-                          {offer.status}
+                          Nicht verfügbar
                         </span>
                       )}
                     </div>

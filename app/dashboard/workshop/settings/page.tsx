@@ -227,23 +227,44 @@ export default function WorkshopSettings() {
       const employeesResponse = await fetch('/api/workshop/employees')
       if (employeesResponse.ok) {
         const employeesData = await employeesResponse.json()
+        console.log('Employees data:', employeesData)
         if (employeesData.employees) {
-          setEmployees(employeesData.employees.map((emp: any) => ({
-            id: emp.id,
-            name: emp.name,
-            email: emp.email,
-            calendarConnected: !!emp.googleRefreshToken,
-            googleCalendarId: emp.googleCalendarId,
-            workingHours: emp.workingHours ? JSON.parse(emp.workingHours) : {
-              monday: { from: '08:00', to: '17:00', working: true },
-              tuesday: { from: '08:00', to: '17:00', working: true },
-              wednesday: { from: '08:00', to: '17:00', working: true },
-              thursday: { from: '08:00', to: '17:00', working: true },
-              friday: { from: '08:00', to: '17:00', working: true },
-              saturday: { from: '09:00', to: '13:00', working: false },
-              sunday: { from: '09:00', to: '13:00', working: false },
+          const mappedEmployees = employeesData.employees.map((emp: any) => {
+            let parsedWorkingHours
+            try {
+              parsedWorkingHours = emp.workingHours ? JSON.parse(emp.workingHours) : {
+                monday: { from: '08:00', to: '17:00', working: true },
+                tuesday: { from: '08:00', to: '17:00', working: true },
+                wednesday: { from: '08:00', to: '17:00', working: true },
+                thursday: { from: '08:00', to: '17:00', working: true },
+                friday: { from: '08:00', to: '17:00', working: true },
+                saturday: { from: '09:00', to: '13:00', working: false },
+                sunday: { from: '09:00', to: '13:00', working: false },
+              }
+            } catch (e) {
+              console.error('Error parsing working hours for employee:', emp.id, e)
+              parsedWorkingHours = {
+                monday: { from: '08:00', to: '17:00', working: true },
+                tuesday: { from: '08:00', to: '17:00', working: true },
+                wednesday: { from: '08:00', to: '17:00', working: true },
+                thursday: { from: '08:00', to: '17:00', working: true },
+                friday: { from: '08:00', to: '17:00', working: true },
+                saturday: { from: '09:00', to: '13:00', working: false },
+                sunday: { from: '09:00', to: '13:00', working: false },
+              }
             }
-          })))
+            
+            return {
+              id: emp.id,
+              name: emp.name,
+              email: emp.email,
+              calendarConnected: !!emp.googleRefreshToken,
+              googleCalendarId: emp.googleCalendarId,
+              workingHours: parsedWorkingHours
+            }
+          })
+          console.log('Mapped employees:', mappedEmployees)
+          setEmployees(mappedEmployees)
         }
       }
     } catch (error) {

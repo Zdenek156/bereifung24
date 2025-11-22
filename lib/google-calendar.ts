@@ -6,12 +6,12 @@ import { google } from 'googleapis'
 const SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 /**
- * Get OAuth2 Client
+ * Get OAuth2 Client for Calendar (separate from NextAuth login)
  */
 export function getOAuth2Client() {
   return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
     `${process.env.NEXTAUTH_URL}/api/calendar/callback`
   )
 }

@@ -201,7 +201,7 @@ export default function PricingPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={settings.autoFixedMarkup}
+                      value={settings.autoFixedMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, autoFixedMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 20.00"
@@ -216,7 +216,7 @@ export default function PricingPage() {
                       step="0.1"
                       min="0"
                       max="100"
-                      value={settings.autoPercentMarkup}
+                      value={settings.autoPercentMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, autoPercentMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 19"
@@ -292,7 +292,7 @@ export default function PricingPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={settings.motoFixedMarkup}
+                      value={settings.motoFixedMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, motoFixedMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 25.00"
@@ -307,7 +307,7 @@ export default function PricingPage() {
                       step="0.1"
                       min="0"
                       max="100"
-                      value={settings.motoPercentMarkup}
+                      value={settings.motoPercentMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, motoPercentMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 19"
@@ -380,7 +380,7 @@ export default function PricingPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={settings.serviceFixedMarkup}
+                      value={settings.serviceFixedMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, serviceFixedMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 10.00"
@@ -395,7 +395,7 @@ export default function PricingPage() {
                       step="0.1"
                       min="0"
                       max="100"
-                      value={settings.servicePercentMarkup}
+                      value={settings.servicePercentMarkup || ''}
                       onChange={(e) => setSettings({ ...settings, servicePercentMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="z.B. 19"

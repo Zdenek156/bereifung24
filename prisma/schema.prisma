@@ -155,6 +155,7 @@ model Workshop {
   commissions     Commission[]
   employees       Employee[]
   workshopVacations WorkshopVacation[]
+  workshopServices WorkshopService[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -524,6 +525,43 @@ model EmployeeVacation {
   updatedAt   DateTime @updatedAt
   
   @@map("employee_vacations")
+}
+
+// ============================================
+// WORKSHOP SERVICES
+// ============================================
+
+model WorkshopService {
+  id                    String   @id @default(cuid())
+  workshopId            String
+  workshop              Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  // Service Type
+  serviceType           String   // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH
+  
+  // Pricing
+  basePrice             Float    // Grundpreis
+  
+  // Service-specific pricing
+  runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen
+  disposalFee           Float?   // Entsorgungsgebühr
+  wheelSizeSurcharge    Json?    // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
+  
+  // Duration
+  durationMinutes       Int      // Dauer in Minuten (wichtig für Kalender)
+  
+  // Availability
+  isActive              Boolean  @default(true)
+  
+  // Notes
+  description           String?  // Beschreibung des Services
+  internalNotes         String?  // Interne Notizen
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([workshopId, serviceType])
+  @@map("workshop_services")
 }
 
 // ============================================

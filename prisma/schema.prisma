@@ -154,6 +154,7 @@ model Workshop {
   reviews         Review[]
   commissions     Commission[]
   employees       Employee[]
+  workshopVacations WorkshopVacation[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -180,6 +181,7 @@ model Employee {
   
   // Relations
   bookings             Booking[]
+  employeeVacations    EmployeeVacation[]
   
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -488,6 +490,40 @@ model Commission {
   updatedAt       DateTime @updatedAt
   
   @@map("commissions")
+}
+
+// ============================================
+// VACATION MANAGEMENT
+// ============================================
+
+model WorkshopVacation {
+  id          String   @id @default(cuid())
+  workshopId  String
+  workshop    Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?  // e.g., "Betriebsurlaub", "Feiertage", "Umbau"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("workshop_vacations")
+}
+
+model EmployeeVacation {
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?  // e.g., "Urlaub", "Krankheit", "Fortbildung"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("employee_vacations")
 }
 
 // ============================================

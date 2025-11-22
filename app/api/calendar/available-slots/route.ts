@@ -21,7 +21,22 @@ export async function GET(request: NextRequest) {
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
       include: {
-        employees: true
+        employees: {
+          include: {
+            employeeVacations: {
+              where: {
+                startDate: { lte: new Date(date + 'T23:59:59') },
+                endDate: { gte: new Date(date + 'T00:00:00') }
+              }
+            }
+          }
+        },
+        workshopVacations: {
+          where: {
+            startDate: { lte: new Date(date + 'T23:59:59') },
+            endDate: { gte: new Date(date + 'T00:00:00') }
+          }
+        }
       }
     })
     
@@ -30,6 +45,14 @@ export async function GET(request: NextRequest) {
         { error: 'Werkstatt nicht gefunden' },
         { status: 404 }
       )
+    }
+    
+    // Check if workshop is on vacation
+    if (workshop.workshopVacations && workshop.workshopVacations.length > 0) {
+      return NextResponse.json({ 
+        availableSlots: [],
+        message: 'Werkstatt ist im Urlaub'
+      })
     }
     
     let calendarData: {
@@ -66,6 +89,14 @@ export async function GET(request: NextRequest) {
           { error: 'Mitarbeiter nicht gefunden' },
           { status: 404 }
         )
+      }
+      
+      // Check if employee is on vacation
+      if (employee.employeeVacations && employee.employeeVacations.length > 0) {
+        return NextResponse.json({ 
+          availableSlots: [],
+          message: 'Mitarbeiter ist im Urlaub'
+        })
       }
       
       calendarData = {

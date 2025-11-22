@@ -1428,10 +1428,16 @@ export default function WorkshopSettings() {
                               {editingEmployeeId === employee.id && (
                                 <div className="px-4 pb-4">
                                   <div className="space-y-3 mb-4">
+                                    {(() => {
+                                      console.log('Employee workingHours:', employee.workingHours)
+                                      console.log('Type:', typeof employee.workingHours)
+                                      console.log('Keys:', Object.keys(employee.workingHours || {}))
+                                      return null
+                                    })()}
                                     {Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
                                       const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
                                       if (!hours) {
-                                        console.log('Missing hours for day:', dayKey, 'employee:', employee.name)
+                                        console.log('Missing hours for day:', dayKey, 'employee:', employee.name, 'available keys:', Object.keys(employee.workingHours || {}))
                                         return null
                                       }
                                       return (

@@ -1407,8 +1407,9 @@ export default function WorkshopSettings() {
                             <div className="p-4">
                               <h5 className="text-sm font-medium text-gray-900 mb-3">Arbeitszeiten</h5>
                               <div className="space-y-2">
-                                {Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
-                                  const hours = employee.workingHours[dayKey as keyof typeof employee.workingHours]
+                                {employee.workingHours && Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
+                                  const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
+                                  if (!hours) return null
                                   return (
                                     <div key={dayKey} className="flex items-center gap-4">
                                       <div className="w-24 text-sm text-gray-700">{dayLabel}</div>

@@ -305,8 +305,7 @@ export default function WorkshopServicesPage() {
                           </label>
                           <input
                             type="number"
-                            min="15"
-                            step="15"
+                            min="1"
                             value={formData.durationMinutes}
                             onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
                             required
@@ -319,8 +318,7 @@ export default function WorkshopServicesPage() {
                           </label>
                           <input
                             type="number"
-                            min="15"
-                            step="15"
+                            min="1"
                             value={formData.durationMinutes4}
                             onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
                             required
@@ -402,8 +400,7 @@ export default function WorkshopServicesPage() {
                           </label>
                           <input
                             type="number"
-                            min="15"
-                            step="15"
+                            min="1"
                             value={formData.durationMinutes}
                             onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
                             required
@@ -416,8 +413,7 @@ export default function WorkshopServicesPage() {
                           </label>
                           <input
                             type="number"
-                            min="15"
-                            step="15"
+                            min="1"
                             value={formData.durationMinutes4}
                             onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
                             required
@@ -467,8 +463,7 @@ export default function WorkshopServicesPage() {
                       </label>
                       <input
                         type="number"
-                        min="15"
-                        step="15"
+                        min="1"
                         value={formData.durationMinutes}
                         onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
                         required

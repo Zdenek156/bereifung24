@@ -499,52 +499,33 @@ export default function BrowseRequestsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preis pro Reifen (€) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={offerForm.pricePerTire}
-                      onChange={(e) => setOfferForm({ ...offerForm, pricePerTire: e.target.value })}
-                      placeholder="99.99"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Preisberechnung aus Service-Verwaltung</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-600 mb-1">Preis pro Reifen</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {offerForm.pricePerTire ? `${parseFloat(offerForm.pricePerTire).toFixed(2)} €` : 'Nicht konfiguriert'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 mb-1">Montagegebühr gesamt</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {offerForm.installationFee ? `${parseFloat(offerForm.installationFee).toFixed(2)} €` : 'Nicht konfiguriert'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 mb-1">Dauer</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
+                      </div>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Montagegebühr gesamt (€) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={offerForm.installationFee}
-                      onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
-                      placeholder="50.00"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dauer (Minuten)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={offerForm.durationMinutes}
-                      onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
-                      placeholder="60"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
+                  {(!offerForm.pricePerTire || !offerForm.installationFee) && (
+                    <div className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                      ⚠️ Bitte konfigurieren Sie zuerst Ihre Services in der Service-Verwaltung
+                    </div>
+                  )}
                 </div>
 
                 <div>

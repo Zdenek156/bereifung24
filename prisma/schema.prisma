@@ -541,6 +541,7 @@ model WorkshopService {
   
   // Pricing
   basePrice             Float    // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)
+  basePrice4            Float?   // Preis für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
   
   // Service-specific pricing
   runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)

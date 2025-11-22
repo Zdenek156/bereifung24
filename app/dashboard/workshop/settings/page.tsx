@@ -166,10 +166,12 @@ export default function WorkshopSettings() {
   }, [searchParams])
 
   const fetchProfile = async () => {
+    let profileData: any = null
     try {
       const response = await fetch('/api/workshop/profile')
       if (response.ok) {
         const data = await response.json()
+        profileData = data
         setProfile(data)
         setFormData({
           firstName: data.firstName || '',
@@ -266,9 +268,9 @@ export default function WorkshopSettings() {
           console.log('Mapped employees:', mappedEmployees)
           setEmployees(mappedEmployees)
           
-          // Auto-select employee calendar mode if any employee is connected
+          // Auto-select employee calendar mode if any employee is connected but workshop calendar is not
           const hasConnectedEmployee = mappedEmployees.some((emp: any) => emp.calendarConnected)
-          if (hasConnectedEmployee && !data.googleCalendarId) {
+          if (hasConnectedEmployee && !profileData?.googleRefreshToken) {
             setCalendarMode('employees')
           }
         }

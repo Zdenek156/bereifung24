@@ -13,9 +13,11 @@ interface Service {
   disposalFee: number | null
   wheelSizeSurcharge: any | null
   durationMinutes: number
+  durationMinutes4: number | null
   description: string | null
   internalNotes: string | null
   isActive: boolean
+  priceFor: string | null // '2_TIRES' or '4_TIRES' or 'SINGLE' or 'BOTH'
 }
 
 const serviceTypeLabels: { [key: string]: string } = {
@@ -50,12 +52,15 @@ export default function WorkshopServicesPage() {
   const [formData, setFormData] = useState({
     serviceType: '',
     basePrice: '',
+    basePrice4: '',
     runFlatSurcharge: '',
     disposalFee: '',
     durationMinutes: '60',
+    durationMinutes4: '',
     description: '',
     internalNotes: '',
-    isActive: true
+    isActive: true,
+    priceFor: '4_TIRES'
   })
 
   useEffect(() => {
@@ -113,15 +118,25 @@ export default function WorkshopServicesPage() {
 
   const handleEdit = (service: Service) => {
     setEditingService(service)
+    
+    // Für TIRE_CHANGE oder MOTORCYCLE_TIRE: basePrice * 2 als basePrice4
+    let calculatedBasePrice4 = ''
+    if (['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(service.serviceType)) {
+      calculatedBasePrice4 = (service.basePrice * 2).toString()
+    }
+    
     setFormData({
       serviceType: service.serviceType,
       basePrice: service.basePrice.toString(),
+      basePrice4: calculatedBasePrice4,
       runFlatSurcharge: service.runFlatSurcharge?.toString() || '',
       disposalFee: service.disposalFee?.toString() || '',
       durationMinutes: service.durationMinutes.toString(),
+      durationMinutes4: service.durationMinutes4?.toString() || '',
       description: service.description || '',
       internalNotes: service.internalNotes || '',
-      isActive: service.isActive
+      isActive: service.isActive,
+      priceFor: service.priceFor || '4_TIRES'
     })
     setShowAddForm(true)
   }
@@ -165,12 +180,15 @@ export default function WorkshopServicesPage() {
     setFormData({
       serviceType: '',
       basePrice: '',
+      basePrice4: '',
       runFlatSurcharge: '',
       disposalFee: '',
       durationMinutes: '60',
+      durationMinutes4: '',
       description: '',
       internalNotes: '',
-      isActive: true
+      isActive: true,
+      priceFor: '4_TIRES'
     })
     setEditingService(null)
     setShowAddForm(false)
@@ -247,66 +265,219 @@ export default function WorkshopServicesPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Grundpreis (€) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.basePrice}
-                    onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
+                {/* Reifenwechsel: 2 oder 4 Reifen */}
+                {formData.serviceType === 'TIRE_CHANGE' && (
+                  <>
+                    <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-3">Preise und Dauer für 2 oder 4 Reifen</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Preis für 2 Reifen (€) *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.basePrice}
+                            onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Preis für 4 Reifen (€) *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.basePrice4}
+                            onChange={(e) => setFormData({ ...formData, basePrice4: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dauer für 2 Reifen (Min.) *
+                          </label>
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={formData.durationMinutes}
+                            onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dauer für 4 Reifen (Min.) *
+                          </label>
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={formData.durationMinutes4}
+                            onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Runflat-Aufpreis pro Reifen (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.runFlatSurcharge}
+                        onChange={(e) => setFormData({ ...formData, runFlatSurcharge: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 5.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Entsorgungsgebühr pro Reifen (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.disposalFee}
+                        onChange={(e) => setFormData({ ...formData, disposalFee: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 3.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dauer (Minuten) *
-                  </label>
-                  <input
-                    type="number"
-                    min="15"
-                    step="15"
-                    value={formData.durationMinutes}
-                    onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Wichtig für Kalendereinträge</p>
-                </div>
+                {/* Motorradreifen: 1 oder 2 Reifen */}
+                {formData.serviceType === 'MOTORCYCLE_TIRE' && (
+                  <>
+                    <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-3">Preise und Dauer für 1 oder 2 Reifen</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Preis für 1 Reifen (€) *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.basePrice}
+                            onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Preis für 2 Reifen (€) *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.basePrice4}
+                            onChange={(e) => setFormData({ ...formData, basePrice4: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dauer für 1 Reifen (Min.) *
+                          </label>
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={formData.durationMinutes}
+                            onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dauer für 2 Reifen (Min.) *
+                          </label>
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={formData.durationMinutes4}
+                            onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Entsorgungsgebühr pro Reifen (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.disposalFee}
+                        onChange={(e) => setFormData({ ...formData, disposalFee: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 3.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Runflat-Aufpreis (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.runFlatSurcharge}
-                    onChange={(e) => setFormData({ ...formData, runFlatSurcharge: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="Optional"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Entsorgungsgebühr (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.disposalFee}
-                    onChange={(e) => setFormData({ ...formData, disposalFee: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="Optional"
-                  />
-                </div>
+                {/* Alle anderen Services: Standard Preis und Dauer */}
+                {!['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(formData.serviceType) && formData.serviceType && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preis (€) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.basePrice}
+                        onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dauer (Minuten) *
+                      </label>
+                      <input
+                        type="number"
+                        min="15"
+                        step="15"
+                        value={formData.durationMinutes}
+                        onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Wichtig für Kalendereinträge</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div>
@@ -398,22 +569,64 @@ export default function WorkshopServicesPage() {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Grundpreis</p>
-                        <p className="text-lg font-semibold text-gray-900">{service.basePrice.toFixed(2)} €</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Dauer</p>
-                        <p className="text-lg font-semibold text-gray-900">{service.durationMinutes} Min.</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Optionen</p>
-                        <div className="text-sm text-gray-700">
-                          {service.runFlatSurcharge && <span className="block">+ {service.runFlatSurcharge}€ Runflat</span>}
-                          {service.disposalFee && <span className="block">+ {service.disposalFee}€ Entsorgung</span>}
-                          {!service.runFlatSurcharge && !service.disposalFee && <span className="text-gray-400">Keine</span>}
-                        </div>
-                      </div>
+                      {/* Reifenwechsel oder Motorradreifen: 2 Preise/Dauern */}
+                      {(service.serviceType === 'TIRE_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') ? (
+                        <>
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              {service.serviceType === 'TIRE_CHANGE' ? 'Preis 2 Reifen' : 'Preis 1 Reifen'}
+                            </p>
+                            <p className="text-lg font-semibold text-gray-900">{service.basePrice.toFixed(2)} €</p>
+                            <p className="text-sm text-gray-600 mt-2">
+                              {service.serviceType === 'TIRE_CHANGE' ? 'Preis 4 Reifen' : 'Preis 2 Reifen'}
+                            </p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              {service.durationMinutes4 ? `${(service.basePrice * 2).toFixed(2)} €` : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              {service.serviceType === 'TIRE_CHANGE' ? 'Dauer 2 Reifen' : 'Dauer 1 Reifen'}
+                            </p>
+                            <p className="text-lg font-semibold text-gray-900">{service.durationMinutes} Min.</p>
+                            <p className="text-sm text-gray-600 mt-2">
+                              {service.serviceType === 'TIRE_CHANGE' ? 'Dauer 4 Reifen' : 'Dauer 2 Reifen'}
+                            </p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              {service.durationMinutes4 ? `${service.durationMinutes4} Min.` : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Zuschläge pro Reifen</p>
+                            <div className="text-sm text-gray-700">
+                              {service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge && (
+                                <span className="block">+ {service.runFlatSurcharge.toFixed(2)}€ Runflat</span>
+                              )}
+                              {service.disposalFee && (
+                                <span className="block">+ {service.disposalFee.toFixed(2)}€ Entsorgung</span>
+                              )}
+                              {!service.runFlatSurcharge && !service.disposalFee && (
+                                <span className="text-gray-400">Keine</span>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-sm text-gray-600">Preis</p>
+                            <p className="text-lg font-semibold text-gray-900">{service.basePrice.toFixed(2)} €</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Dauer</p>
+                            <p className="text-lg font-semibold text-gray-900">{service.durationMinutes} Min.</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Zuschläge</p>
+                            <p className="text-sm text-gray-400">Keine</p>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {service.description && (

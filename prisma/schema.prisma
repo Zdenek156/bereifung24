@@ -540,15 +540,16 @@ model WorkshopService {
   serviceType           String   // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH
   
   // Pricing
-  basePrice             Float    // Grundpreis
+  basePrice             Float    // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)
   
   // Service-specific pricing
-  runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen
-  disposalFee           Float?   // Entsorgungsgebühr
+  runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
+  disposalFee           Float?   // Entsorgungsgebühr (pro Reifen)
   wheelSizeSurcharge    Json?    // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
   
   // Duration
-  durationMinutes       Int      // Dauer in Minuten (wichtig für Kalender)
+  durationMinutes       Int      // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)
+  durationMinutes4      Int?     // Dauer für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
   
   // Availability
   isActive              Boolean  @default(true)

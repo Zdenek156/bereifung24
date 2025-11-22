@@ -158,8 +158,8 @@ export default function PricingPage() {
                   <li><strong>Prozentualer Aufschlag:</strong> Prozentuale Marge auf den Zwischenpreis (z.B. 15% auf Einkaufspreis + fester Aufschlag)</li>
                   <li><strong>MwSt.:</strong> Wählen Sie, ob die berechneten Preise mit oder ohne 19% Mehrwertsteuer im Angebot angezeigt werden</li>
                 </ul>
-                <p className="mt-3"><strong>Beispielrechnung:</strong> Einkaufspreis 80€, Fester Aufschlag 20€, Prozentualer Aufschlag 15%, ohne MwSt. = <strong>(80 + 20) × 1,15 = 115€</strong></p>
-                <p>Mit MwSt.: <strong>115€ × 1,19 = 136,85€</strong></p>
+                <p className="mt-3"><strong>Beispielrechnung:</strong> Einkaufspreis 80€, Fester Aufschlag 20€, Prozentualer Aufschlag 19%, ohne MwSt. = <strong>(80 + 20) × 1,19 = 119€</strong></p>
+                <p>Mit MwSt.: <strong>119€ × 1,19 = 141,61€</strong></p>
               </div>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function PricingPage() {
                       value={settings.autoPercentMarkup}
                       onChange={(e) => setSettings({ ...settings, autoPercentMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="z.B. 15"
+                      placeholder="z.B. 19"
                     />
                   </div>
                 </div>
@@ -310,7 +310,7 @@ export default function PricingPage() {
                       value={settings.motoPercentMarkup}
                       onChange={(e) => setSettings({ ...settings, motoPercentMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="z.B. 20"
+                      placeholder="z.B. 19"
                     />
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export default function PricingPage() {
                       value={settings.servicePercentMarkup}
                       onChange={(e) => setSettings({ ...settings, servicePercentMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="z.B. 10"
+                      placeholder="z.B. 19"
                     />
                   </div>
                 </div>

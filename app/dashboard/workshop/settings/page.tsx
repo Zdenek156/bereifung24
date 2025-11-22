@@ -70,6 +70,7 @@ export default function WorkshopSettings() {
   }>>([])
   const [showAddEmployee, setShowAddEmployee] = useState(false)
   const [newEmployee, setNewEmployee] = useState({ name: '', email: '' })
+  const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -1411,132 +1412,158 @@ export default function WorkshopSettings() {
                               </div>
                             </div>
                             
-                            {/* Working Hours */}
-                            <div className="p-4">
-                              <h5 className="text-sm font-medium text-gray-900 mb-3">Arbeitszeiten</h5>
-                              <div className="space-y-3">
-                                {employee.workingHours && Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
-                                  const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
-                                  if (!hours) return null
-                                  return (
-                                    <div key={dayKey} className="border-b border-gray-100 pb-3 last:border-0">
-                                      <div className="flex items-center gap-4 mb-2">
-                                        <div className="w-24 text-sm text-gray-700 font-medium">{dayLabel}</div>
-                                        <label className="flex items-center gap-2">
-                                          <input
-                                            type="checkbox"
-                                            checked={hours.working}
-                                            onChange={(e) => {
-                                              const updated = [...employees]
-                                              updated[index].workingHours[dayKey as keyof typeof employee.workingHours].working = e.target.checked
-                                              setEmployees(updated)
-                                            }}
-                                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                          />
-                                          <span className="text-sm text-gray-600">Arbeitstag</span>
-                                        </label>
-                                        {hours.working && (
-                                          <>
-                                            <input
-                                              type="time"
-                                              value={hours.from}
-                                              onChange={(e) => {
-                                                const updated = [...employees]
-                                                updated[index].workingHours[dayKey as keyof typeof employee.workingHours].from = e.target.value
-                                                setEmployees(updated)
-                                              }}
-                                              className="px-3 py-1 border border-gray-300 rounded text-sm"
-                                            />
-                                            <span className="text-gray-500">-</span>
-                                            <input
-                                              type="time"
-                                              value={hours.to}
-                                              onChange={(e) => {
-                                                const updated = [...employees]
-                                                updated[index].workingHours[dayKey as keyof typeof employee.workingHours].to = e.target.value
-                                                setEmployees(updated)
-                                              }}
-                                              className="px-3 py-1 border border-gray-300 rounded text-sm"
-                                            />
-                                          </>
-                                        )}
-                                      </div>
-                                      {hours.working && (
-                                        <div className="flex items-center gap-4 ml-28">
-                                          <span className="text-xs text-gray-500">Pause:</span>
-                                          <input
-                                            type="time"
-                                            value={hours.breakFrom || ''}
-                                            onChange={(e) => {
-                                              const updated = [...employees]
-                                              updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakFrom = e.target.value
-                                              setEmployees(updated)
-                                            }}
-                                            placeholder="Von"
-                                            className="px-3 py-1 border border-gray-300 rounded text-sm"
-                                          />
-                                          <span className="text-gray-500">-</span>
-                                          <input
-                                            type="time"
-                                            value={hours.breakTo || ''}
-                                            onChange={(e) => {
-                                              const updated = [...employees]
-                                              updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakTo = e.target.value
-                                              setEmployees(updated)
-                                            }}
-                                            placeholder="Bis"
-                                            className="px-3 py-1 border border-gray-300 rounded text-sm"
-                                          />
-                                          {(hours.breakFrom || hours.breakTo) && (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const updated = [...employees]
-                                                updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakFrom = undefined
-                                                updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakTo = undefined
-                                                setEmployees(updated)
-                                              }}
-                                              className="text-xs text-red-600 hover:text-red-700"
-                                            >
-                                              Entfernen
-                                            </button>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                              
-                              {/* Save Working Hours Button */}
-                              <div className="mt-4 pt-4 border-t border-gray-200">
+                            {/* Working Hours Section */}
+                            <div className="border-t border-gray-200">
+                              <div className="p-4 flex items-center justify-between">
+                                <h5 className="text-sm font-medium text-gray-900">Arbeitszeiten & Pausen</h5>
                                 <button
                                   type="button"
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch(`/api/workshop/employees/${employee.id}`, {
-                                        method: 'PATCH',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                          workingHours: JSON.stringify(employee.workingHours)
-                                        })
-                                      })
-                                      
-                                      if (response.ok) {
-                                        setMessage({ type: 'success', text: 'Arbeitszeiten erfolgreich gespeichert!' })
-                                      } else {
-                                        setMessage({ type: 'error', text: 'Fehler beim Speichern der Arbeitszeiten' })
-                                      }
-                                    } catch (error) {
-                                      console.error('Error saving working hours:', error)
-                                      setMessage({ type: 'error', text: 'Fehler beim Speichern der Arbeitszeiten' })
-                                    }
-                                  }}
-                                  className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                                  onClick={() => setEditingEmployeeId(editingEmployeeId === employee.id ? null : employee.id)}
+                                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
                                 >
-                                  Arbeitszeiten speichern
+                                  {editingEmployeeId === employee.id ? 'Schließen' : 'Bearbeiten'}
                                 </button>
                               </div>
+                              
+                              {editingEmployeeId === employee.id && (
+                                <div className="px-4 pb-4">
+                                  <div className="space-y-3 mb-4">
+                                    {employee.workingHours && Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
+                                      const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
+                                      if (!hours) return null
+                                      return (
+                                        <div key={dayKey} className="border border-gray-200 rounded-lg p-3">
+                                          <div className="flex items-center gap-4 mb-2">
+                                            <div className="w-24 text-sm text-gray-700 font-medium">{dayLabel}</div>
+                                            <label className="flex items-center gap-2">
+                                              <input
+                                                type="checkbox"
+                                                checked={hours.working}
+                                                onChange={(e) => {
+                                                  const updated = [...employees]
+                                                  updated[index].workingHours[dayKey as keyof typeof employee.workingHours].working = e.target.checked
+                                                  setEmployees(updated)
+                                                }}
+                                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                              />
+                                              <span className="text-sm text-gray-600">Arbeitstag</span>
+                                            </label>
+                                            {hours.working && (
+                                              <>
+                                                <input
+                                                  type="time"
+                                                  value={hours.from}
+                                                  onChange={(e) => {
+                                                    const updated = [...employees]
+                                                    updated[index].workingHours[dayKey as keyof typeof employee.workingHours].from = e.target.value
+                                                    setEmployees(updated)
+                                                  }}
+                                                  className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                                />
+                                                <span className="text-gray-500">-</span>
+                                                <input
+                                                  type="time"
+                                                  value={hours.to}
+                                                  onChange={(e) => {
+                                                    const updated = [...employees]
+                                                    updated[index].workingHours[dayKey as keyof typeof employee.workingHours].to = e.target.value
+                                                    setEmployees(updated)
+                                                  }}
+                                                  className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                                />
+                                              </>
+                                            )}
+                                          </div>
+                                          {hours.working && (
+                                            <div className="flex items-center gap-4 ml-28 pt-2 border-t border-gray-100 mt-2">
+                                              <span className="text-xs text-gray-500 font-medium">Pause:</span>
+                                              <input
+                                                type="time"
+                                                value={hours.breakFrom || ''}
+                                                onChange={(e) => {
+                                                  const updated = [...employees]
+                                                  updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakFrom = e.target.value
+                                                  setEmployees(updated)
+                                                }}
+                                                placeholder="Von"
+                                                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                              />
+                                              <span className="text-gray-500">-</span>
+                                              <input
+                                                type="time"
+                                                value={hours.breakTo || ''}
+                                                onChange={(e) => {
+                                                  const updated = [...employees]
+                                                  updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakTo = e.target.value
+                                                  setEmployees(updated)
+                                                }}
+                                                placeholder="Bis"
+                                                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                              />
+                                              {(hours.breakFrom || hours.breakTo) && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const updated = [...employees]
+                                                    updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakFrom = undefined
+                                                    updated[index].workingHours[dayKey as keyof typeof employee.workingHours].breakTo = undefined
+                                                    setEmployees(updated)
+                                                  }}
+                                                  className="text-xs text-red-600 hover:text-red-700 font-medium"
+                                                >
+                                                  Entfernen
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                  
+                                  {/* Save Working Hours Button */}
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        try {
+                                          const response = await fetch(`/api/workshop/employees/${employee.id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              workingHours: JSON.stringify(employee.workingHours)
+                                            })
+                                          })
+                                          
+                                          if (response.ok) {
+                                            setMessage({ type: 'success', text: 'Arbeitszeiten erfolgreich gespeichert!' })
+                                            setEditingEmployeeId(null)
+                                          } else {
+                                            setMessage({ type: 'error', text: 'Fehler beim Speichern der Arbeitszeiten' })
+                                          }
+                                        } catch (error) {
+                                          console.error('Error saving working hours:', error)
+                                          setMessage({ type: 'error', text: 'Fehler beim Speichern der Arbeitszeiten' })
+                                        }
+                                      }}
+                                      className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                                    >
+                                      Speichern
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingEmployeeId(null)
+                                        // Reload to discard changes
+                                        fetchProfile()
+                                      }}
+                                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                                    >
+                                      Abbrechen
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

@@ -5,13 +5,17 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   
+  console.log('[MIDDLEWARE] Path:', url.pathname, 'Search:', url.search)
+  
   // If this is a calendar callback, let it through to our handler
   if (url.pathname === '/api/gcal/callback') {
+    console.log('[MIDDLEWARE] Detected gcal callback - passing through')
     // Don't intercept, let our route handler process it
     return NextResponse.next()
   }
   
   // For all other requests, continue normally
+  console.log('[MIDDLEWARE] Non-gcal request')
   return NextResponse.next()
 }
 

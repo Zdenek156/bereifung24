@@ -393,14 +393,14 @@ model Offer {
 
 model TireOption {
   id            String   @id @default(cuid())
-  offerId       String
+  offerId       String   @map("offer_id")
   offer         Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
   
   brand         String
   model         String
-  pricePerTire  Float
+  pricePerTire  Float    @map("price_per_tire")
   
-  createdAt     DateTime @default(now())
+  createdAt     DateTime @default(now()) @map("created_at")
   
   @@map("tire_options")
 }

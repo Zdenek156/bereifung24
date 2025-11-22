@@ -91,18 +91,35 @@ export default function RequestDetailPage() {
     }
   }
 
-  const handleAcceptOffer = async (offerId: string) => {
-    if (!confirm('Möchten Sie dieses Angebot wirklich annehmen?')) return
+  const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null)
+  const [showAcceptModal, setShowAcceptModal] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null)
 
+  const handleAcceptOffer = (offerId: string) => {
+    setSelectedOfferId(offerId)
+    setShowAcceptModal(true)
+    setAcceptTerms(false)
+  }
+
+  const confirmAcceptOffer = async () => {
+    if (!acceptTerms) {
+      alert('Bitte bestätigen Sie die Vertragsbedingungen')
+      return
+    }
+
+    if (!selectedOfferId) return
+
+    setAcceptingOfferId(selectedOfferId)
     try {
-      const response = await fetch(`/api/offers/${offerId}/accept`, {
+      const response = await fetch(`/api/offers/${selectedOfferId}/accept`, {
         method: 'POST',
       })
 
       if (response.ok) {
-        const data = await response.json()
+        setShowAcceptModal(false)
         alert('Angebot erfolgreich angenommen! Sie werden zur Terminbuchung weitergeleitet.')
-        router.push(`/dashboard/customer/requests/${requestId}/book?offerId=${offerId}`)
+        router.push(`/dashboard/customer/requests/${requestId}/book?offerId=${selectedOfferId}`)
       } else {
         const data = await response.json()
         alert(data.error || 'Fehler beim Annehmen des Angebots')
@@ -110,6 +127,8 @@ export default function RequestDetailPage() {
     } catch (error) {
       console.error('Error accepting offer:', error)
       alert('Fehler beim Annehmen des Angebots')
+    } finally {
+      setAcceptingOfferId(null)
     }
   }
 
@@ -152,7 +171,93 @@ export default function RequestDetailPage() {
   const sortedOffers = [...validOffers].sort((a, b) => a.price - b.price)
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      {/* Vertragsbedingungen Modal */}
+      {showAcceptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Angebot annehmen</h2>
+            
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Wichtiger Hinweis:</strong> Mit der Annahme dieses Angebots gehen Sie einen verbindlichen Vertrag direkt mit der Werkstatt ein.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Vertragsbedingungen</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Der Vertrag kommt direkt zwischen Ihnen und der Werkstatt zustande</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Bereifung24 fungiert ausschließlich als Vermittlungsplattform</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Die Werkstatt ist für die Erfüllung der Leistung verantwortlich</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Alle anderen Angebote für diese Anfrage werden automatisch abgelehnt</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Nach der Annahme können Sie einen Termin mit der Werkstatt vereinbaren</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary-600 mr-2">•</span>
+                    <span>Bei Problemen oder Fragen wenden Sie sich bitte direkt an die Werkstatt</span>
+                  </li>
+                </ul>
+              </div>
+
+              <label className="flex items-start cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                />
+                <span className="ml-3 text-sm text-gray-700">
+                  Ich bestätige, dass ich die Vertragsbedingungen gelesen habe und verstehe, dass der Vertrag direkt zwischen mir und der Werkstatt zustande kommt. Bereifung24 ist nur Vermittler und keine Vertragspartei.
+                </span>
+              </label>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setShowAcceptModal(false)}
+                className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                disabled={acceptingOfferId !== null}
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={confirmAcceptOffer}
+                disabled={!acceptTerms || acceptingOfferId !== null}
+                className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {acceptingOfferId ? 'Wird angenommen...' : 'Angebot verbindlich annehmen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -373,6 +478,7 @@ export default function RequestDetailPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

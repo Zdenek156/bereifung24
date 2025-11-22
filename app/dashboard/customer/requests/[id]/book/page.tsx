@@ -33,12 +33,22 @@ interface Workshop {
   employees?: Employee[]
 }
 
+interface TireOption {
+  id: string
+  brand: string
+  model: string
+  pricePerTire: number
+}
+
 interface Offer {
   id: string
   price: number
   tireBrand: string
   tireModel: string
   description?: string
+  installationFee: number
+  durationMinutes?: number
+  tireOptions?: TireOption[]
   workshop: Workshop
 }
 
@@ -76,6 +86,7 @@ export default function BookAppointmentPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('PAY_ONSITE')
   const [message, setMessage] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
+  const [selectedTireOption, setSelectedTireOption] = useState<TireOption | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -112,6 +123,11 @@ export default function BookAppointmentPage() {
         const requestData = await requestResponse.json()
         setOffer(offerData.offer)
         setRequest(requestData.request)
+        
+        // Setze erste TireOption als Default
+        if (offerData.offer.tireOptions && offerData.offer.tireOptions.length > 0) {
+          setSelectedTireOption(offerData.offer.tireOptions[0])
+        }
       } else {
         alert('Fehler beim Laden der Details')
         router.push(`/dashboard/customer/requests/${requestId}`)
@@ -129,8 +145,9 @@ export default function BookAppointmentPage() {
 
     setLoadingSlots(true)
     try {
+      const duration = offer.durationMinutes || 60
       const response = await fetch(
-        `/api/gcal/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=60`
+        `/api/gcal/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=${duration}`
       )
 
       if (response.ok) {
@@ -172,6 +189,7 @@ export default function BookAppointmentPage() {
           appointmentEndTime: selectedSlot.end,
           paymentMethod: paymentMethod,
           customerMessage: message || undefined,
+          selectedTireOptionId: selectedTireOption?.id,
         }),
       })
 
@@ -292,6 +310,60 @@ export default function BookAppointmentPage() {
                 </div>
               </div>
             </div>
+
+            {/* Reifenoptionen */}
+            {offer.tireOptions && offer.tireOptions.length > 1 && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Wählen Sie Ihre Reifenoption</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Die Werkstatt bietet mehrere Reifenoptionen an. Wählen Sie die gewünschte Option für Ihren Termin.
+                </p>
+                <div className="space-y-3">
+                  {offer.tireOptions.map((option) => {
+                    const optionTotalPrice = (option.pricePerTire * request!.quantity) + offer.installationFee
+                    const isSelected = selectedTireOption?.id === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => setSelectedTireOption(option)}
+                        className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                          isSelected
+                            ? 'border-primary-600 bg-primary-50'
+                            : 'border-gray-200 hover:border-primary-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-1">
+                              <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                                isSelected ? 'border-primary-600' : 'border-gray-300'
+                              }`}>
+                                {isSelected && (
+                                  <div className="w-3 h-3 rounded-full bg-primary-600"></div>
+                                )}
+                              </div>
+                              <h3 className="text-lg font-bold text-gray-900">{option.brand} {option.model}</h3>
+                            </div>
+                            <p className="text-sm text-gray-600 ml-8">
+                              {option.pricePerTire.toFixed(2)} € pro Reifen × {request!.quantity} = {(option.pricePerTire * request!.quantity).toFixed(2)} €
+                            </p>
+                            <p className="text-sm text-gray-600 ml-8">
+                              + Montage: {offer.installationFee.toFixed(2)} €
+                            </p>
+                          </div>
+                          <div className="text-right ml-4">
+                            <p className="text-2xl font-bold text-primary-600">
+                              {optionTotalPrice.toFixed(2)} €
+                            </p>
+                            <p className="text-xs text-gray-500">Gesamt</p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Zahlungsmethode */}
             <div className="bg-white rounded-xl shadow-md p-6">

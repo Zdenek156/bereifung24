@@ -392,15 +392,17 @@ model Offer {
 }
 
 model TireOption {
-  id            String   @id @default(cuid())
-  offerId       String   @map("offer_id")
-  offer         Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  offerId       String    @map("offer_id")
+  offer         Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
   
   brand         String
   model         String
-  pricePerTire  Float    @map("price_per_tire")
+  pricePerTire  Float     @map("price_per_tire")
   
-  createdAt     DateTime @default(now()) @map("created_at")
+  bookings      Booking[]
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
   
   @@map("tire_options")
 }
@@ -419,6 +421,8 @@ model Booking {
   workshop          Workshop    @relation(fields: [workshopId], references: [id])
   offerId           String      @unique
   offer             Offer       @relation(fields: [offerId], references: [id])
+  selectedTireOptionId String?
+  selectedTireOption   TireOption? @relation(fields: [selectedTireOptionId], references: [id])
   
   // Appointment
   appointmentDate   DateTime

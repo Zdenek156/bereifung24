@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
       appointmentEndTime,
       paymentMethod,
       customerMessage,
+      selectedTireOptionId,
     } = body
 
     // Validate required fields
@@ -151,7 +152,8 @@ export async function POST(req: NextRequest) {
     const offer = await prisma.offer.findUnique({
       where: { id: offerId },
       include: {
-        tireRequest: true
+        tireRequest: true,
+        tireOptions: true
       }
     })
 
@@ -215,7 +217,8 @@ export async function POST(req: NextRequest) {
           include: {
             user: true
           }
-        }
+        },
+        tireOptions: true
       }
     })
 
@@ -224,6 +227,16 @@ export async function POST(req: NextRequest) {
         { error: 'Angebot nicht gefunden' },
         { status: 404 }
       )
+    }
+
+    // Determine selected tire option
+    let selectedTireOption = null
+    if (selectedTireOptionId && offer.tireOptions) {
+      selectedTireOption = offer.tireOptions.find(opt => opt.id === selectedTireOptionId)
+    }
+    // Fallback to first option if not specified
+    if (!selectedTireOption && offer.tireOptions && offer.tireOptions.length > 0) {
+      selectedTireOption = offer.tireOptions[0]
     }
 
     // Create booking
@@ -239,6 +252,7 @@ export async function POST(req: NextRequest) {
         status: 'CONFIRMED',
         paymentMethod: paymentMethod || 'PAY_ONSITE',
         customerNotes: customerMessage,
+        selectedTireOptionId: selectedTireOption?.id,
       },
       include: {
         workshop: {
@@ -297,15 +311,20 @@ export async function POST(req: NextRequest) {
 
     // Send notification email to workshop
     try {
+      // Use selected tire option or fallback to main offer data
+      const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
+      const tireModel = selectedTireOption?.model || completeOffer.tireModel
+      
       const workshopEmailData = bookingConfirmationWorkshopEmailTemplate({
         workshopName: completeOffer.workshop.companyName,
         customerName: `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
         customerPhone: completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben',
         customerEmail: completeOffer.tireRequest.customer.user.email,
+        customerAddress: `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`,
         appointmentDate: appointmentDateFormatted,
         appointmentTime: appointmentTimeFormatted,
-        tireBrand: completeOffer.tireBrand,
-        tireModel: completeOffer.tireModel,
+        tireBrand: tireBrand,
+        tireModel: tireModel,
         tireSize: tireSize,
         quantity: completeOffer.tireRequest.quantity,
         totalPrice: completeOffer.price,
@@ -333,13 +352,17 @@ export async function POST(req: NextRequest) {
         const appointmentStart = new Date(appointmentDate)
         const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
         
+        const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
+        const tireModel = selectedTireOption?.model || completeOffer.tireModel
+        const customerAddress = `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`
+        
         const calendarEvent = await createCalendarEvent(
           completeOffer.workshop.googleAccessToken,
           completeOffer.workshop.googleRefreshToken,
           completeOffer.workshop.googleCalendarId,
           {
             summary: `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
-            description: `Reifenwechsel für ${completeOffer.tireBrand} ${completeOffer.tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
+            description: `Reifenwechsel für ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
             start: appointmentStart.toISOString(),
             end: appointmentEnd.toISOString(),
             attendees: [{ email: completeOffer.tireRequest.customer.user.email }]

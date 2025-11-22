@@ -1218,14 +1218,10 @@ export default function WorkshopSettings() {
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={async () => {
                               if (newEmployee.name && newEmployee.email) {
-                                setEmployees([...employees, {
-                                  id: Date.now().toString(),
-                                  name: newEmployee.name,
-                                  email: newEmployee.email,
-                                  calendarConnected: false,
-                                  workingHours: {
+                                try {
+                                  const workingHours = {
                                     monday: { from: '08:00', to: '17:00', working: true },
                                     tuesday: { from: '08:00', to: '17:00', working: true },
                                     wednesday: { from: '08:00', to: '17:00', working: true },
@@ -1234,9 +1230,36 @@ export default function WorkshopSettings() {
                                     saturday: { from: '09:00', to: '13:00', working: false },
                                     sunday: { from: '09:00', to: '13:00', working: false },
                                   }
-                                }])
-                                setNewEmployee({ name: '', email: '' })
-                                setShowAddEmployee(false)
+                                  
+                                  const response = await fetch('/api/workshop/employees', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      name: newEmployee.name,
+                                      email: newEmployee.email,
+                                      workingHours: JSON.stringify(workingHours)
+                                    })
+                                  })
+                                  
+                                  if (response.ok) {
+                                    const createdEmployee = await response.json()
+                                    setEmployees([...employees, {
+                                      id: createdEmployee.id,
+                                      name: createdEmployee.name,
+                                      email: createdEmployee.email,
+                                      calendarConnected: false,
+                                      workingHours: workingHours
+                                    }])
+                                    setNewEmployee({ name: '', email: '' })
+                                    setShowAddEmployee(false)
+                                    setMessage({ type: 'success', text: 'Mitarbeiter erfolgreich hinzugefügt!' })
+                                  } else {
+                                    setMessage({ type: 'error', text: 'Fehler beim Hinzufügen des Mitarbeiters' })
+                                  }
+                                } catch (error) {
+                                  console.error('Error adding employee:', error)
+                                  setMessage({ type: 'error', text: 'Fehler beim Hinzufügen des Mitarbeiters' })
+                                }
                               }
                             }}
                             className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
@@ -1315,7 +1338,25 @@ export default function WorkshopSettings() {
                                 )}
                                 <button
                                   type="button"
-                                  onClick={() => setEmployees(employees.filter(e => e.id !== employee.id))}
+                                  onClick={async () => {
+                                    if (!confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')) return
+                                    
+                                    try {
+                                      const response = await fetch(`/api/workshop/employees/${employee.id}`, {
+                                        method: 'DELETE'
+                                      })
+                                      
+                                      if (response.ok) {
+                                        setEmployees(employees.filter(e => e.id !== employee.id))
+                                        setMessage({ type: 'success', text: 'Mitarbeiter erfolgreich gelöscht' })
+                                      } else {
+                                        setMessage({ type: 'error', text: 'Fehler beim Löschen des Mitarbeiters' })
+                                      }
+                                    } catch (error) {
+                                      console.error('Error deleting employee:', error)
+                                      setMessage({ type: 'error', text: 'Fehler beim Löschen des Mitarbeiters' })
+                                    }
+                                  }}
                                   disabled={workshopCalendarConnected}
                                   className={`p-2 rounded transition-colors ${
                                     workshopCalendarConnected

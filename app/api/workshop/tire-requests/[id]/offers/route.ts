@@ -11,7 +11,8 @@ const offerSchema = z.object({
   description: z.string().optional(),
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
   installationFee: z.number().min(0, 'Montagegebühr muss mindestens 0 sein'),
-  validDays: z.number().int().min(1).max(30).default(7)
+  validDays: z.number().int().min(1).max(30).default(7),
+  durationMinutes: z.number().int().positive().optional()
 })
 
 // POST - Werkstatt erstellt Angebot für eine Anfrage
@@ -86,6 +87,7 @@ export async function POST(
         description: validatedData.description,
         pricePerTire: validatedData.pricePerTire,
         installationFee: validatedData.installationFee,
+        durationMinutes: validatedData.durationMinutes,
         price: totalPrice,
         validUntil: validUntil,
         status: 'PENDING'

@@ -16,6 +16,7 @@ interface Offer {
   validUntil: string
   status: string
   acceptedAt: string | null
+  declinedAt: string | null
   createdAt: string
   tireRequest: {
     id: string
@@ -289,6 +290,14 @@ export default function WorkshopOffers() {
                     )}
                   </div>
                 </div>
+
+                {offer.status === 'DECLINED' && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm font-medium text-red-900">
+                      ℹ️ Der Kunde hat sich für ein Angebot einer anderen Werkstatt entschieden.
+                    </p>
+                  </div>
+                )}
 
                 {offer.booking && (
                   <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">

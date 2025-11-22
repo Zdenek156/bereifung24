@@ -211,7 +211,7 @@ export default function RequestDetailPage() {
                   </li>
                   <li className="flex items-start">
                     <span className="text-primary-600 mr-2">•</span>
-                    <span>Alle anderen Angebote für diese Anfrage werden automatisch abgelehnt</span>
+                    <span>Alle anderen Angebote für diese Anfrage werden automatisch abgelehnt und die Werkstätten werden informiert</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-primary-600 mr-2">•</span>

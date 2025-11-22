@@ -383,6 +383,7 @@ model Offer {
   
   // If accepted
   acceptedAt        DateTime?
+  declinedAt        DateTime?
   booking           Booking?
   
   createdAt         DateTime      @default(now())

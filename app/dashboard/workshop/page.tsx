@@ -140,6 +140,22 @@ export default function WorkshopDashboard() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Services verwalten</h3>
+            <p className="text-sm text-gray-600 mb-4">Preise, Dauer und Optionen festlegen</p>
+            <Link
+              href="/dashboard/workshop/services"
+              className="block w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-center"
+            >
+              Services bearbeiten
+            </Link>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
               <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

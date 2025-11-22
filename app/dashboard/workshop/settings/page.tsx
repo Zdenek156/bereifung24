@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
@@ -42,11 +42,12 @@ interface WorkshopProfile {
 export default function WorkshopSettings() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [profile, setProfile] = useState<WorkshopProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications' | 'scheduling'>('contact')
+  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications' | 'terminplanung'>('contact')
   
   // Scheduling state
   const [calendarMode, setCalendarMode] = useState<'workshop' | 'employees'>('workshop')
@@ -132,6 +133,27 @@ export default function WorkshopSettings() {
     fetchProfile()
   }, [session, status, router])
 
+  // Check URL parameters for tab and success message
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const success = searchParams.get('success')
+    const error = searchParams.get('error')
+
+    if (tab === 'terminplanung') {
+      setActiveTab('terminplanung')
+    }
+
+    if (success === 'calendar_connected') {
+      setMessage({ type: 'success', text: 'Google Kalender erfolgreich verbunden!' })
+      // Reload employees to get updated calendar status
+      fetchProfile()
+    }
+
+    if (error) {
+      setMessage({ type: 'error', text: 'Fehler bei der Kalenderverbindung' })
+    }
+  }, [searchParams])
+
   const fetchProfile = async () => {
     try {
       const response = await fetch('/api/workshop/profile')
@@ -200,6 +222,7 @@ export default function WorkshopSettings() {
             name: emp.name,
             email: emp.email,
             calendarConnected: !!emp.googleRefreshToken,
+            googleCalendarId: emp.googleCalendarId,
             workingHours: emp.workingHours ? JSON.parse(emp.workingHours) : {
               monday: { from: '08:00', to: '17:00', working: true },
               tuesday: { from: '08:00', to: '17:00', working: true },
@@ -300,14 +323,30 @@ export default function WorkshopSettings() {
       return
     }
     
-    // TODO: Implement disconnect API endpoint
-    if (type === 'workshop') {
-      setWorkshopCalendarConnected(false)
-    } else if (employeeId) {
-      const updated = employees.map(emp => 
-        emp.id === employeeId ? { ...emp, calendarConnected: false } : emp
-      )
-      setEmployees(updated)
+    try {
+      const response = await fetch('/api/gcal/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, employeeId })
+      })
+      
+      if (response.ok) {
+        if (type === 'workshop') {
+          setWorkshopCalendarConnected(false)
+          setMessage({ type: 'success', text: 'Kalenderverbindung getrennt' })
+        } else if (employeeId) {
+          const updated = employees.map(emp => 
+            emp.id === employeeId ? { ...emp, calendarConnected: false, googleCalendarId: null } : emp
+          )
+          setEmployees(updated)
+          setMessage({ type: 'success', text: 'Mitarbeiter-Kalenderverbindung getrennt' })
+        }
+      } else {
+        setMessage({ type: 'error', text: 'Fehler beim Trennen der Verbindung' })
+      }
+    } catch (error) {
+      console.error('Calendar disconnect error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Trennen der Verbindung' })
     }
   }
 
@@ -456,9 +495,9 @@ export default function WorkshopSettings() {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('scheduling')}
+                onClick={() => setActiveTab('terminplanung')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'scheduling'
+                  activeTab === 'terminplanung'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
@@ -948,7 +987,7 @@ export default function WorkshopSettings() {
           )}
 
           {/* Tab: Terminplanung */}
-          {activeTab === 'scheduling' && (
+          {activeTab === 'terminplanung' && (
             <div className="space-y-6">
               {/* Calendar Status Banner */}
               <div className={`p-4 rounded-lg border-2 ${
@@ -1180,12 +1219,25 @@ export default function WorkshopSettings() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {employee.calendarConnected ? (
-                                  <span className="flex items-center gap-2 text-sm text-green-600">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    Verbunden
-                                  </span>
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 text-sm text-green-600">
+                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                      </svg>
+                                      <span>
+                                        {employee.googleCalendarId && employee.googleCalendarId !== 'primary'
+                                          ? employee.googleCalendarId
+                                          : employee.email}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDisconnectCalendar('employee', employee.id)}
+                                      className="text-xs text-red-600 hover:text-red-700 font-medium"
+                                    >
+                                      Trennen
+                                    </button>
+                                  </div>
                                 ) : (
                                   <button
                                     type="button"

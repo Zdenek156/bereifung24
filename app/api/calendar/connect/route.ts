@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
     
     const authUrl = getAuthUrl(state)
     
+    console.log('Generated calendar auth URL:', authUrl)
+    
     return NextResponse.json({ authUrl })
   } catch (error) {
     console.error('Calendar connect error:', error)

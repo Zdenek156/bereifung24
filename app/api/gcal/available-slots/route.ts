@@ -80,38 +80,117 @@ export async function GET(request: NextRequest) {
         const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
         workingHours = hours[dayOfWeek]
       }
-    } else if (workshop.calendarMode === 'employees' && employeeId) {
-      // Use employee calendar
-      const employee = workshop.employees.find(e => e.id === employeeId)
+    } else if (workshop.calendarMode === 'employees') {
+      // Use combined employee calendars - find slots where ANY employee is available
+      const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+      const dateObj = new Date(date)
       
-      if (!employee) {
-        return NextResponse.json(
-          { error: 'Mitarbeiter nicht gefunden' },
-          { status: 404 }
-        )
-      }
+      // Filter employees who have calendar connected and are not on vacation
+      const availableEmployees = workshop.employees.filter(emp => {
+        // Must have calendar connected
+        if (!emp.googleRefreshToken || !emp.googleCalendarId) return false
+        
+        // Must not be on vacation
+        if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
+        
+        // Must be working on this day
+        if (emp.workingHours) {
+          try {
+            const hours = JSON.parse(emp.workingHours)
+            const dayHours = hours[dayOfWeek]
+            if (!dayHours || !dayHours.working) return false
+          } catch (e) {
+            return false
+          }
+        }
+        
+        return true
+      })
       
-      // Check if employee is on vacation
-      if (employee.employeeVacations && employee.employeeVacations.length > 0) {
+      if (availableEmployees.length === 0) {
         return NextResponse.json({ 
           availableSlots: [],
-          message: 'Mitarbeiter ist im Urlaub'
+          message: 'Keine Mitarbeiter verfügbar'
         })
       }
       
-      calendarData = {
-        calendarId: employee.googleCalendarId,
-        accessToken: employee.googleAccessToken,
-        refreshToken: employee.googleRefreshToken,
-        tokenExpiry: employee.googleTokenExpiry
+      // Collect all available slots from all employees
+      const allSlotsMap = new Map<string, boolean>() // time -> isAvailable
+      
+      for (const employee of availableEmployees) {
+        try {
+          let accessToken = employee.googleAccessToken
+          
+          // Check if token needs refresh
+          if (employee.googleTokenExpiry && new Date() > employee.googleTokenExpiry) {
+            const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
+            accessToken = newTokens.access_token || accessToken
+            
+            // Update token in database
+            const expiryDate = newTokens.expiry_date 
+              ? new Date(newTokens.expiry_date)
+              : new Date(Date.now() + 3600 * 1000)
+            
+            await prisma.employee.update({
+              where: { id: employee.id },
+              data: {
+                googleAccessToken: accessToken,
+                googleTokenExpiry: expiryDate
+              }
+            })
+          }
+          
+          // Get employee working hours
+          const hours = JSON.parse(employee.workingHours!)
+          const employeeWorkingHours = hours[dayOfWeek]
+          
+          if (!employeeWorkingHours || !employeeWorkingHours.working) continue
+          
+          // Get busy slots from Google Calendar
+          const timeMin = new Date(dateObj)
+          timeMin.setHours(0, 0, 0, 0)
+          
+          const timeMax = new Date(dateObj)
+          timeMax.setHours(23, 59, 59, 999)
+          
+          const busySlots = await getBusySlots(
+            accessToken!,
+            employee.googleRefreshToken!,
+            employee.googleCalendarId!,
+            timeMin.toISOString(),
+            timeMax.toISOString()
+          )
+          
+          // Filter and convert busy slots
+          const validBusySlots = busySlots
+            .filter(slot => slot.start && slot.end)
+            .map(slot => ({
+              start: slot.start as string,
+              end: slot.end as string
+            }))
+          
+          // Generate available slots for this employee
+          const employeeSlots = generateAvailableSlots(
+            dateObj,
+            employeeWorkingHours,
+            validBusySlots,
+            duration
+          )
+          
+          // Mark these slots as available
+          employeeSlots.forEach(slot => {
+            allSlotsMap.set(slot, true)
+          })
+        } catch (error) {
+          console.error(`Error processing employee ${employee.id}:`, error)
+          // Continue with other employees
+        }
       }
       
-      // Get employee working hours for the specific day
-      if (employee.workingHours) {
-        const hours = JSON.parse(employee.workingHours)
-        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-        workingHours = hours[dayOfWeek]
-      }
+      // Convert map to sorted array
+      const availableSlots = Array.from(allSlotsMap.keys()).sort()
+      
+      return NextResponse.json({ availableSlots })
     }
     
     if (!calendarData || !calendarData.calendarId || !calendarData.accessToken || !calendarData.refreshToken) {

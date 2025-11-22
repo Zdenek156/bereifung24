@@ -34,6 +34,9 @@ interface WorkshopProfile {
     paypal: boolean
     paypalEmail?: string
   }
+  calendarMode?: string
+  googleRefreshToken?: string | null
+  googleCalendarId?: string | null
 }
 
 export default function WorkshopSettings() {

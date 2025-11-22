@@ -864,6 +864,7 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
   customerName: string
   customerPhone: string
   customerEmail: string
+  customerAddress?: string
   appointmentDate: string
   appointmentTime: string
   tireBrand: string
@@ -934,8 +935,10 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
           <div class="customer-box">
             <h3 style="margin-top: 0; color: #667eea;">👤 Kunde</h3>
             <p style="font-size: 18px; font-weight: bold; margin: 5px 0;">${data.customerName}</p>
+            ${data.customerAddress ? `<p style="margin: 5px 0;">📍 ${data.customerAddress}</p>` : ''}
             <p style="margin: 5px 0;">📞 ${data.customerPhone}</p>
             <p style="margin: 5px 0;">✉️ ${data.customerEmail}</p>
+            <p style="margin: 10px 0 5px 0; font-size: 12px; color: #6b7280;"><em>Wichtig: Diese Adresse kann für die Rechnungsstellung verwendet werden.</em></p>
           </div>
 
           <h3 style="color: #667eea;">🚗 Auftrags-Details</h3>

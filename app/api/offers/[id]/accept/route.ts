@@ -96,7 +96,7 @@ export async function POST(
       )
     }
 
-    // Transaktion: Angebot annehmen und alle anderen ablehnen
+    // Transaktion: Angebot annehmen und alle anderen löschen
     const result = await prisma.$transaction(async (tx) => {
       // Aktualisiere das angenommene Angebot
       const acceptedOffer = await tx.offer.update({
@@ -104,18 +104,17 @@ export async function POST(
         data: {
           status: 'ACCEPTED',
           acceptedAt: new Date()
+        },
+        include: {
+          tireOptions: true
         }
       })
 
-      // Lehne alle anderen Angebote ab
-      await tx.offer.updateMany({
+      // Lösche alle anderen Angebote (inkl. deren tireOptions durch CASCADE)
+      await tx.offer.deleteMany({
         where: {
           tireRequestId: offer.tireRequestId,
-          id: { not: params.id },
-          status: 'PENDING'
-        },
-        data: {
-          status: 'DECLINED'
+          id: { not: params.id }
         }
       })
 

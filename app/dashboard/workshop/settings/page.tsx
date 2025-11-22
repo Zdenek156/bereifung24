@@ -57,6 +57,7 @@ export default function WorkshopSettings() {
     name: string
     email: string
     calendarConnected: boolean
+    googleCalendarId?: string | null
     workingHours: {
       monday: { from: string, to: string, working: boolean }
       tuesday: { from: string, to: string, working: boolean }

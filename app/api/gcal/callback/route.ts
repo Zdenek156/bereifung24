@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTokensFromCode, getPrimaryCalendarId } from '@/lib/google-calendar'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // OAuth callback - handle Google's redirect after authorization
 export async function GET(request: NextRequest) {
   try {

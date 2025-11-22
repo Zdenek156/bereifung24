@@ -1428,9 +1428,12 @@ export default function WorkshopSettings() {
                               {editingEmployeeId === employee.id && (
                                 <div className="px-4 pb-4">
                                   <div className="space-y-3 mb-4">
-                                    {employee.workingHours && Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
+                                    {Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
                                       const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
-                                      if (!hours) return null
+                                      if (!hours) {
+                                        console.log('Missing hours for day:', dayKey, 'employee:', employee.name)
+                                        return null
+                                      }
                                       return (
                                         <div key={dayKey} className="border border-gray-200 rounded-lg p-3">
                                           <div className="flex items-center gap-4 mb-2">

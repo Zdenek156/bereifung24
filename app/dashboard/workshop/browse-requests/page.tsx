@@ -44,11 +44,15 @@ interface TireRequest {
   }
 }
 
-interface OfferFormData {
-  tireBrand: string
-  tireModel: string
-  description: string
+interface TireOption {
+  brand: string
+  model: string
   pricePerTire: string
+}
+
+interface OfferFormData {
+  tireOptions: TireOption[]
+  description: string
   installationFee: string
   validDays: number
   durationMinutes: string
@@ -76,10 +80,8 @@ export default function BrowseRequestsPage() {
   const [showOfferForm, setShowOfferForm] = useState(false)
   const [services, setServices] = useState<WorkshopService[]>([])
   const [offerForm, setOfferForm] = useState<OfferFormData>({
-    tireBrand: '',
-    tireModel: '',
+    tireOptions: [{ brand: '', model: '', pricePerTire: '' }],
     description: '',
-    pricePerTire: '',
     installationFee: '',
     validDays: 7,
     durationMinutes: ''
@@ -147,18 +149,10 @@ export default function BrowseRequestsPage() {
     // Finde passenden Service basierend auf Anfragetyp
     const tireChangeService = services.find(s => s.serviceType === 'TIRE_CHANGE')
     
-    let calculatedPrice = ''
     let calculatedInstallation = ''
     let calculatedDuration = ''
     
     if (tireChangeService) {
-      // Wähle Preis basierend auf Anzahl (2 oder 4 Reifen)
-      const pricePerTire = request.quantity === 4 && tireChangeService.basePrice4
-        ? tireChangeService.basePrice4 / 4
-        : tireChangeService.basePrice / 2
-      
-      calculatedPrice = pricePerTire.toFixed(2)
-      
       // Berechne Montagegebühr (inkl. RunFlat und Entsorgung wenn nötig)
       let installation = 0
       if (request.isRunflat && tireChangeService.runFlatSurcharge) {
@@ -175,11 +169,11 @@ export default function BrowseRequestsPage() {
         : tireChangeService.durationMinutes).toString()
     }
     
+    // Initialisiere mit einem leeren Reifenangebot
+    const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     setOfferForm({
-      tireBrand: request.preferredBrands?.split(',')[0] || '',
-      tireModel: '',
+      tireOptions: [{ brand: preferredBrand, model: '', pricePerTire: '' }],
       description: '',
-      pricePerTire: calculatedPrice,
       installationFee: calculatedInstallation,
       validDays: 7,
       durationMinutes: calculatedDuration
@@ -190,15 +184,30 @@ export default function BrowseRequestsPage() {
     e.preventDefault()
     if (!selectedRequest) return
 
+    // Validierung: Mindestens ein Reifenangebot muss vollständig ausgefüllt sein
+    const validOptions = offerForm.tireOptions.filter(opt => 
+      opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
+    )
+    
+    if (validOptions.length === 0) {
+      alert('Bitte geben Sie mindestens ein Reifenangebot an.')
+      return
+    }
+
     setSubmitting(true)
     try {
       const response = await fetch(`/api/workshop/tire-requests/${selectedRequest.id}/offers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...offerForm,
-          pricePerTire: parseFloat(offerForm.pricePerTire),
+          tireOptions: validOptions.map(opt => ({
+            brand: opt.brand,
+            model: opt.model,
+            pricePerTire: parseFloat(opt.pricePerTire)
+          })),
+          description: offerForm.description,
           installationFee: parseFloat(offerForm.installationFee),
+          validDays: offerForm.validDays,
           durationMinutes: offerForm.durationMinutes ? parseInt(offerForm.durationMinutes) : undefined
         })
       })
@@ -219,9 +228,28 @@ export default function BrowseRequestsPage() {
     }
   }
 
-  const calculateTotal = () => {
-    if (!selectedRequest || !offerForm.pricePerTire || !offerForm.installationFee) return 0
-    return (parseFloat(offerForm.pricePerTire) * selectedRequest.quantity) + parseFloat(offerForm.installationFee)
+  const addTireOption = () => {
+    setOfferForm({
+      ...offerForm,
+      tireOptions: [...offerForm.tireOptions, { brand: '', model: '', pricePerTire: '' }]
+    })
+  }
+
+  const removeTireOption = (index: number) => {
+    if (offerForm.tireOptions.length <= 1) return
+    setOfferForm({
+      ...offerForm,
+      tireOptions: offerForm.tireOptions.filter((_, i) => i !== index)
+    })
+  }
+
+  const updateTireOption = (index: number, field: keyof TireOption, value: string) => {
+    const updated = [...offerForm.tireOptions]
+    updated[index] = { ...updated[index], [field]: value }
+    setOfferForm({
+      ...offerForm,
+      tireOptions: updated
+    })
   }
 
   if (status === 'loading' || loading) {
@@ -456,58 +484,101 @@ export default function BrowseRequestsPage() {
 
             <form onSubmit={handleSubmitOffer} className="p-6">
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Reifenmarke *
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Reifenangebote *
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={offerForm.tireBrand}
-                      onChange={(e) => setOfferForm({ ...offerForm, tireBrand: e.target.value })}
-                      placeholder="z.B. Continental"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
+                    <button
+                      type="button"
+                      onClick={addTireOption}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      + Weiteres Angebot hinzufügen
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Reifenmodell *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={offerForm.tireModel}
-                      onChange={(e) => setOfferForm({ ...offerForm, tireModel: e.target.value })}
-                      placeholder="z.B. PremiumContact 6"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
+                  
+                  <div className="space-y-4">
+                    {offerForm.tireOptions.map((option, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium text-gray-900">
+                            Angebot {index + 1}
+                          </span>
+                          {offerForm.tireOptions.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeTireOption(index)}
+                              className="text-sm text-red-600 hover:text-red-700"
+                            >
+                              Entfernen
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Marke *
+                            </label>
+                            <input
+                              type="text"
+                              value={option.brand}
+                              onChange={(e) => updateTireOption(index, 'brand', e.target.value)}
+                              placeholder="z.B. Continental"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Modell *
+                            </label>
+                            <input
+                              type="text"
+                              value={option.model}
+                              onChange={(e) => updateTireOption(index, 'model', e.target.value)}
+                              placeholder="z.B. PremiumContact 6"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Preis pro Reifen (€) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={option.pricePerTire}
+                              onChange={(e) => updateTireOption(index, 'pricePerTire', e.target.value)}
+                              placeholder="0.00"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Beschreibung (optional)
+                    Zusätzliche Beschreibung (optional)
                   </label>
                   <textarea
                     value={offerForm.description}
                     onChange={(e) => setOfferForm({ ...offerForm, description: e.target.value })}
                     rows={3}
-                    placeholder="Zusätzliche Informationen zum Reifen..."
+                    placeholder="Weitere Informationen zum Angebot..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Preisberechnung aus Service-Verwaltung</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-600 mb-1">Preis pro Reifen</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {offerForm.pricePerTire ? `${parseFloat(offerForm.pricePerTire).toFixed(2)} €` : 'Nicht konfiguriert'}
-                      </div>
-                    </div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Service-Informationen</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-gray-600 mb-1">Montagegebühr gesamt</div>
                       <div className="text-lg font-bold text-gray-900">
@@ -521,7 +592,7 @@ export default function BrowseRequestsPage() {
                       </div>
                     </div>
                   </div>
-                  {(!offerForm.pricePerTire || !offerForm.installationFee) && (
+                  {!offerForm.installationFee && (
                     <div className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
                       ⚠️ Bitte konfigurieren Sie zuerst Ihre Services in der Service-Verwaltung
                     </div>
@@ -544,30 +615,7 @@ export default function BrowseRequestsPage() {
                   </select>
                 </div>
 
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedRequest.quantity}x Reifen à {offerForm.pricePerTire || '0.00'} €
-                    </span>
-                    <span className="text-sm text-gray-900">
-                      {offerForm.pricePerTire ? (parseFloat(offerForm.pricePerTire) * selectedRequest.quantity).toFixed(2) : '0.00'} €
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">Montage</span>
-                    <span className="text-sm text-gray-900">
-                      {offerForm.installationFee || '0.00'} €
-                    </span>
-                  </div>
-                  <div className="border-t border-blue-200 pt-2 mt-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
-                      <span className="text-lg font-bold text-primary-600">
-                        {calculateTotal().toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                </div>
+
               </div>
 
               <div className="mt-6 flex gap-3">

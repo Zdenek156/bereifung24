@@ -5,11 +5,15 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendEmail, newOfferEmailTemplate } from '@/lib/email'
 
+const tireOptionSchema = z.object({
+  brand: z.string().min(1, 'Reifenmarke erforderlich'),
+  model: z.string().min(1, 'Reifenmodell erforderlich'),
+  pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein')
+})
+
 const offerSchema = z.object({
-  tireBrand: z.string().min(1, 'Reifenmarke erforderlich'),
-  tireModel: z.string().min(1, 'Reifenmodell erforderlich'),
+  tireOptions: z.array(tireOptionSchema).min(1, 'Mindestens ein Reifenangebot erforderlich'),
   description: z.string().optional(),
-  pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
   installationFee: z.number().min(0, 'Montagegebühr muss mindestens 0 sein'),
   validDays: z.number().int().min(1).max(30).default(7),
   durationMinutes: z.number().int().positive().optional()
@@ -71,10 +75,7 @@ export async function POST(
     const body = await request.json()
     const validatedData = offerSchema.parse(body)
 
-    // Berechne Gesamtpreis
-    const totalPrice = (validatedData.pricePerTire * tireRequest.quantity) + validatedData.installationFee
-
-    // Erstelle Angebot
+    // Erstelle Angebot mit mehreren Reifen-Optionen
     const validUntil = new Date()
     validUntil.setDate(validUntil.getDate() + validatedData.validDays)
 
@@ -82,17 +83,21 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: validatedData.tireBrand,
-        tireModel: validatedData.tireModel,
         description: validatedData.description,
-        pricePerTire: validatedData.pricePerTire,
         installationFee: validatedData.installationFee,
         durationMinutes: validatedData.durationMinutes,
-        price: totalPrice,
         validUntil: validUntil,
-        status: 'PENDING'
+        status: 'PENDING',
+        tireOptions: {
+          create: validatedData.tireOptions.map(option => ({
+            brand: option.brand,
+            model: option.model,
+            pricePerTire: option.pricePerTire
+          }))
+        }
       },
       include: {
+        tireOptions: true,
         tireRequest: {
           include: {
             customer: {
@@ -121,13 +126,18 @@ export async function POST(
     // Email an Kunde senden
     try {
       const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+      const firstOption = offer.tireOptions[0]
+      const priceRange = offer.tireOptions.length > 1 
+        ? `ab ${(firstOption.pricePerTire * tireRequest.quantity + validatedData.installationFee).toFixed(2)} €`
+        : `${(firstOption.pricePerTire * tireRequest.quantity + validatedData.installationFee).toFixed(2)} €`
+      
       const emailTemplate = newOfferEmailTemplate({
         customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
         workshopName: offer.workshop.companyName,
-        tireBrand: offer.tireBrand,
-        tireModel: offer.tireModel,
+        tireBrand: firstOption.brand,
+        tireModel: firstOption.model,
         tireSpecs: tireSpecs,
-        price: offer.price,
+        price: parseFloat(priceRange.replace(/[^\d.]/g, '')),
         requestId: offer.tireRequestId
       })
 

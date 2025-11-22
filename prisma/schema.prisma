@@ -325,37 +325,55 @@ model TireHistory {
 // ============================================
 
 model Offer {
-  id                String      @id @default(cuid())
+  id                String        @id @default(cuid())
   tireRequestId     String
-  tireRequest       TireRequest @relation(fields: [tireRequestId], references: [id])
+  tireRequest       TireRequest   @relation(fields: [tireRequestId], references: [id])
   workshopId        String
-  workshop          Workshop    @relation(fields: [workshopId], references: [id])
+  workshop          Workshop      @relation(fields: [workshopId], references: [id])
   
-  // Tire Details
-  tireBrand         String
-  tireModel         String
+  // Tire Details (deprecated - now using tireOptions)
+  tireBrand         String?
+  tireModel         String?
   description       String?
   
+  // Multiple tire options
+  tireOptions       TireOption[]
+  
   // Pricing
-  price             Float       // Gesamtpreis inkl. Montage
-  pricePerTire      Float?
+  price             Float?        // Deprecated - calculated from selected option
+  pricePerTire      Float?        // Deprecated
   installationFee   Float?
-  durationMinutes   Int?        // Geschätzte Dauer für den Service
+  durationMinutes   Int?          // Geschätzte Dauer für den Service
   
   // Validity
   validUntil        DateTime
   
   // Status
-  status            String      @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
+  status            String        @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
   
   // If accepted
   acceptedAt        DateTime?
+  selectedOptionId  String?       // Which tire option was selected
   booking           Booking?
   
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   
   @@map("offers")
+}
+
+model TireOption {
+  id            String   @id @default(cuid())
+  offerId       String
+  offer         Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  
+  brand         String
+  model         String
+  pricePerTire  Float
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("tire_options")
 }
 
 // ============================================

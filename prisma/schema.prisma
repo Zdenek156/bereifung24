@@ -166,29 +166,29 @@ model Workshop {
 
 model PricingSettings {
   id                    String    @id @default(cuid())
-  workshopId            String    @unique
+  workshopId            String    @unique @map("workshop_id")
   workshop              Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   
   // Auto Reifen
-  autoManualPricing     Boolean   @default(true)
-  autoFixedMarkup       Float     @default(0)
-  autoPercentMarkup     Float     @default(0)
-  autoIncludeVat        Boolean   @default(false)
+  autoManualPricing     Boolean   @default(true) @map("auto_manual_pricing")
+  autoFixedMarkup       Float     @default(0) @map("auto_fixed_markup")
+  autoPercentMarkup     Float     @default(0) @map("auto_percent_markup")
+  autoIncludeVat        Boolean   @default(false) @map("auto_include_vat")
   
   // Motorrad Reifen
-  motoManualPricing     Boolean   @default(true)
-  motoFixedMarkup       Float     @default(0)
-  motoPercentMarkup     Float     @default(0)
-  motoIncludeVat        Boolean   @default(false)
+  motoManualPricing     Boolean   @default(true) @map("moto_manual_pricing")
+  motoFixedMarkup       Float     @default(0) @map("moto_fixed_markup")
+  motoPercentMarkup     Float     @default(0) @map("moto_percent_markup")
+  motoIncludeVat        Boolean   @default(false) @map("moto_include_vat")
   
   // Andere Services
-  serviceManualPricing  Boolean   @default(true)
-  serviceFixedMarkup    Float     @default(0)
-  servicePercentMarkup  Float     @default(0)
-  serviceIncludeVat     Boolean   @default(false)
+  serviceManualPricing  Boolean   @default(true) @map("service_manual_pricing")
+  serviceFixedMarkup    Float     @default(0) @map("service_fixed_markup")
+  servicePercentMarkup  Float     @default(0) @map("service_percent_markup")
+  serviceIncludeVat     Boolean   @default(false) @map("service_include_vat")
   
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
   
   @@map("pricing_settings")
 }

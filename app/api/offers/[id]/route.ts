@@ -33,6 +33,17 @@ export async function GET(
                 latitude: true,
                 longitude: true,
               }
+            },
+            employees: {
+              where: {
+                googleRefreshToken: { not: null }
+              },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                workingHours: true
+              }
             }
           }
         },

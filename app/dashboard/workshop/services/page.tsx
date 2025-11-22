@@ -9,6 +9,7 @@ interface Service {
   id: string
   serviceType: string
   basePrice: number
+  basePrice4: number | null
   runFlatSurcharge: number | null
   disposalFee: number | null
   wheelSizeSurcharge: any | null
@@ -119,16 +120,10 @@ export default function WorkshopServicesPage() {
   const handleEdit = (service: Service) => {
     setEditingService(service)
     
-    // Für TIRE_CHANGE oder MOTORCYCLE_TIRE: basePrice * 2 als basePrice4
-    let calculatedBasePrice4 = ''
-    if (['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(service.serviceType)) {
-      calculatedBasePrice4 = (service.basePrice * 2).toString()
-    }
-    
     setFormData({
       serviceType: service.serviceType,
       basePrice: service.basePrice.toString(),
-      basePrice4: calculatedBasePrice4,
+      basePrice4: service.basePrice4?.toString() || '',
       runFlatSurcharge: service.runFlatSurcharge?.toString() || '',
       disposalFee: service.disposalFee?.toString() || '',
       durationMinutes: service.durationMinutes.toString(),
@@ -576,7 +571,7 @@ export default function WorkshopServicesPage() {
                               {service.serviceType === 'TIRE_CHANGE' ? 'Preis 4 Reifen' : 'Preis 2 Reifen'}
                             </p>
                             <p className="text-lg font-semibold text-gray-900">
-                              {service.durationMinutes4 ? `${(service.basePrice * 2).toFixed(2)} €` : 'N/A'}
+                              {service.basePrice4 ? `${service.basePrice4.toFixed(2)} €` : 'N/A'}
                             </p>
                           </div>
                           <div>

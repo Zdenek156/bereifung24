@@ -1,0 +1,1 @@
+ALTER TABLE workshop_services ADD COLUMN IF NOT EXISTS "basePrice4" DOUBLE PRECISION;

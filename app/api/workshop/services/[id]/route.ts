@@ -62,6 +62,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         basePrice: basePrice !== undefined ? parseFloat(basePrice) : undefined,
+        basePrice4: basePrice4 !== undefined ? (basePrice4 ? parseFloat(basePrice4) : null) : undefined,
         runFlatSurcharge: runFlatSurcharge !== undefined ? (runFlatSurcharge ? parseFloat(runFlatSurcharge) : null) : undefined,
         disposalFee: disposalFee !== undefined ? (disposalFee ? parseFloat(disposalFee) : null) : undefined,
         wheelSizeSurcharge: wheelSizeSurcharge !== undefined ? wheelSizeSurcharge : undefined,

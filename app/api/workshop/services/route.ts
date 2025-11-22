@@ -105,13 +105,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // Für TIRE_CHANGE und MOTORCYCLE_TIRE: basePrice4 wird in durationMinutes4 gespeichert (temporär)
-    // und basePrice bleibt als Preis für 2/1 Reifen
     const service = await prisma.workshopService.create({
       data: {
         workshopId: user.workshop.id,
         serviceType,
         basePrice: parseFloat(basePrice),
+        basePrice4: basePrice4 ? parseFloat(basePrice4) : null,
         runFlatSurcharge: (serviceType === 'TIRE_CHANGE' && runFlatSurcharge) ? parseFloat(runFlatSurcharge) : null,
         disposalFee: (['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(serviceType) && disposalFee) ? parseFloat(disposalFee) : null,
         wheelSizeSurcharge: wheelSizeSurcharge || null,

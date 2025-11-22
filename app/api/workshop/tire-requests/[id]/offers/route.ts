@@ -79,11 +79,19 @@ export async function POST(
     const validUntil = new Date()
     validUntil.setDate(validUntil.getDate() + validatedData.validDays)
 
+    // Verwende erste Option für Hauptfelder (Kompatibilität)
+    const firstOption = validatedData.tireOptions[0]
+    const totalPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
+
     const offer = await prisma.offer.create({
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
+        tireBrand: firstOption.brand,
+        tireModel: firstOption.model,
         description: validatedData.description,
+        pricePerTire: firstOption.pricePerTire,
+        price: totalPrice,
         installationFee: validatedData.installationFee,
         durationMinutes: validatedData.durationMinutes,
         validUntil: validUntil,

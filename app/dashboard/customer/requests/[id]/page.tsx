@@ -5,6 +5,13 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
+interface TireOption {
+  id: string
+  brand: string
+  model: string
+  pricePerTire: number
+}
+
 interface Offer {
   id: string
   workshopId: string
@@ -15,6 +22,8 @@ interface Offer {
   validUntil: string
   status: string
   createdAt: string
+  installationFee: number
+  tireOptions?: TireOption[]
   workshop: {
     companyName: string
     street: string
@@ -287,16 +296,48 @@ export default function RequestDetailPage() {
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">Reifen-Hersteller</p>
-                          <p className="font-semibold">{offer.tireBrand}</p>
+                      {offer.tireOptions && offer.tireOptions.length > 0 ? (
+                        <>
+                          <p className="text-xs text-gray-600 mb-3">Verfügbare Optionen:</p>
+                          <div className="space-y-3">
+                            {offer.tireOptions.map((option, idx) => {
+                              const optionTotalPrice = (option.pricePerTire * request.quantity) + offer.installationFee
+                              return (
+                                <div key={option.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                      <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
+                                      <p className="text-xs text-gray-600 mt-1">
+                                        {option.pricePerTire.toFixed(2)} € pro Reifen × {request.quantity} = {(option.pricePerTire * request.quantity).toFixed(2)} €
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        + Montage: {offer.installationFee.toFixed(2)} €
+                                      </p>
+                                    </div>
+                                    <div className="text-right ml-4">
+                                      <p className="text-lg font-bold text-primary-600">
+                                        {optionTotalPrice.toFixed(2)} €
+                                      </p>
+                                      <p className="text-xs text-gray-500">Gesamt</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Reifen-Hersteller</p>
+                            <p className="font-semibold">{offer.tireBrand}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Modell</p>
+                            <p className="font-semibold">{offer.tireModel}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">Modell</p>
-                          <p className="font-semibold">{offer.tireModel}</p>
-                        </div>
-                      </div>
+                      )}
                       {offer.description && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-sm text-gray-700">{offer.description}</p>

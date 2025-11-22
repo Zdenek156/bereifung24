@@ -1034,7 +1034,9 @@ export default function WorkshopSettings() {
 
                 <div className="space-y-4">
                   <label className="block">
-                    <div className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
+                    <div className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-colors ${
+                      employees.some(emp => emp.calendarConnected) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary-500'
+                    }`}
                          style={{ borderColor: calendarMode === 'workshop' ? '#2563eb' : '#e5e7eb' }}>
                       <input
                         type="radio"
@@ -1042,19 +1044,27 @@ export default function WorkshopSettings() {
                         value="workshop"
                         checked={calendarMode === 'workshop'}
                         onChange={(e) => handleCalendarModeChange(e.target.value as 'workshop' | 'employees')}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                        disabled={employees.some(emp => emp.calendarConnected)}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                       />
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">🏢 Werkstatt-Kalender</div>
                         <div className="text-sm text-gray-600">
                           Ein gemeinsamer Kalender für die gesamte Werkstatt
                         </div>
+                        {employees.some(emp => emp.calendarConnected) && (
+                          <div className="text-xs text-red-600 mt-1">
+                            ⚠️ Nicht verfügbar - Mitarbeiter-Kalender bereits verbunden
+                          </div>
+                        )}
                       </div>
                     </div>
                   </label>
 
                   <label className="block">
-                    <div className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-primary-500 transition-colors"
+                    <div className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-colors ${
+                      workshopCalendarConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary-500'
+                    }`}
                          style={{ borderColor: calendarMode === 'employees' ? '#2563eb' : '#e5e7eb' }}>
                       <input
                         type="radio"
@@ -1062,13 +1072,19 @@ export default function WorkshopSettings() {
                         value="employees"
                         checked={calendarMode === 'employees'}
                         onChange={(e) => handleCalendarModeChange(e.target.value as 'workshop' | 'employees')}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                        disabled={workshopCalendarConnected}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                       />
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">👥 Mitarbeiter-Kalender</div>
                         <div className="text-sm text-gray-600">
                           Separate Kalender für jeden Mitarbeiter mit individuellen Arbeitszeiten
                         </div>
+                        {workshopCalendarConnected && (
+                          <div className="text-xs text-red-600 mt-1">
+                            ⚠️ Nicht verfügbar - Werkstatt-Kalender bereits verbunden
+                          </div>
+                        )}
                       </div>
                     </div>
                   </label>
@@ -1077,10 +1093,26 @@ export default function WorkshopSettings() {
 
               {/* Workshop Calendar Mode */}
               {calendarMode === 'workshop' && (
-                <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Werkstatt-Kalender verbinden</h3>
-                  
-                  {workshopCalendarConnected ? (
+                <div className="space-y-6">
+                  {employees.some(emp => emp.calendarConnected) && (
+                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                          <p className="font-semibold text-yellow-900">Mitarbeiter-Kalender aktiv</p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Sie verwenden bereits Mitarbeiter-Kalender. Um den gemeinsamen Werkstatt-Kalender zu nutzen, trennen Sie zuerst alle Mitarbeiter-Kalenderverbindungen.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Werkstatt-Kalender verbinden</h3>
+                    
+                    {workshopCalendarConnected ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -1107,7 +1139,13 @@ export default function WorkshopSettings() {
                     <button
                       type="button"
                       onClick={() => handleConnectCalendar('workshop')}
-                      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+                      disabled={employees.some(emp => emp.calendarConnected)}
+                      className={`w-full flex items-center justify-center gap-3 px-6 py-3 border-2 rounded-lg transition-colors ${
+                        employees.some(emp => emp.calendarConnected)
+                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-50'
+                          : 'bg-white border-gray-300 hover:border-primary-500 hover:bg-primary-50'
+                      }`}
+                      title={employees.some(emp => emp.calendarConnected) ? 'Nicht verfügbar - Mitarbeiter-Kalender sind verbunden' : ''}
                     >
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1118,19 +1156,40 @@ export default function WorkshopSettings() {
                       <span className="font-medium text-gray-700">Mit Google Kalender verbinden</span>
                     </button>
                   )}
+                  </div>
                 </div>
               )}
 
               {/* Employee Calendar Mode */}
               {calendarMode === 'employees' && (
                 <div className="space-y-6">
+                  {workshopCalendarConnected && (
+                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                          <p className="font-semibold text-yellow-900">Werkstatt-Kalender aktiv</p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Sie verwenden bereits den gemeinsamen Werkstatt-Kalender. Um Mitarbeiter-Kalender zu nutzen, trennen Sie zuerst die Verbindung zum Werkstatt-Kalender.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Mitarbeiter verwalten</h3>
                       <button
                         type="button"
                         onClick={() => setShowAddEmployee(true)}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                        disabled={workshopCalendarConnected}
+                        className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                          workshopCalendarConnected
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                        }`}
                       >
                         + Mitarbeiter hinzufügen
                       </button>
@@ -1243,7 +1302,13 @@ export default function WorkshopSettings() {
                                   <button
                                     type="button"
                                     onClick={() => handleConnectCalendar('employee', employee.id)}
-                                    className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
+                                    disabled={workshopCalendarConnected}
+                                    className={`px-3 py-1 text-sm rounded transition-colors ${
+                                      workshopCalendarConnected
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-primary-600 text-white hover:bg-primary-700'
+                                    }`}
+                                    title={workshopCalendarConnected ? 'Nicht verfügbar - Werkstatt-Kalender ist verbunden' : ''}
                                   >
                                     Kalender verbinden
                                   </button>
@@ -1251,7 +1316,13 @@ export default function WorkshopSettings() {
                                 <button
                                   type="button"
                                   onClick={() => setEmployees(employees.filter(e => e.id !== employee.id))}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  disabled={workshopCalendarConnected}
+                                  className={`p-2 rounded transition-colors ${
+                                    workshopCalendarConnected
+                                      ? 'text-gray-400 cursor-not-allowed'
+                                      : 'text-red-600 hover:bg-red-50'
+                                  }`}
+                                  title={workshopCalendarConnected ? 'Nicht verfügbar - Werkstatt-Kalender ist verbunden' : ''}
                                 >
                                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

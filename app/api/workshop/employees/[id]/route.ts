@@ -57,3 +57,61 @@ export async function DELETE(
     )
   }
 }
+
+// PATCH /api/workshop/employees/[id] - Update employee working hours
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'WORKSHOP') {
+      return NextResponse.json(
+        { error: 'Nicht autorisiert' },
+        { status: 401 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        workshop: true,
+      },
+    })
+
+    if (!user || !user.workshop) {
+      return NextResponse.json(
+        { error: 'Werkstatt nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Verify employee belongs to this workshop
+    const employee = await prisma.employee.findUnique({
+      where: { id: params.id },
+    })
+
+    if (!employee || employee.workshopId !== user.workshop.id) {
+      return NextResponse.json(
+        { error: 'Mitarbeiter nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    const { workingHours } = await request.json()
+
+    await prisma.employee.update({
+      where: { id: params.id },
+      data: { workingHours },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Employee update error:', error)
+    return NextResponse.json(
+      { error: 'Fehler beim Aktualisieren der Arbeitszeiten' },
+      { status: 500 }
+    )
+  }
+}

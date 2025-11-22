@@ -156,11 +156,41 @@ model Workshop {
   employees       Employee[]
   workshopVacations WorkshopVacation[]
   workshopServices WorkshopService[]
+  pricingSettings PricingSettings?
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
   @@map("workshops")
+}
+
+model PricingSettings {
+  id                    String    @id @default(cuid())
+  workshopId            String    @unique
+  workshop              Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  // Auto Reifen
+  autoManualPricing     Boolean   @default(true)
+  autoFixedMarkup       Float     @default(0)
+  autoPercentMarkup     Float     @default(0)
+  autoIncludeVat        Boolean   @default(false)
+  
+  // Motorrad Reifen
+  motoManualPricing     Boolean   @default(true)
+  motoFixedMarkup       Float     @default(0)
+  motoPercentMarkup     Float     @default(0)
+  motoIncludeVat        Boolean   @default(false)
+  
+  // Andere Services
+  serviceManualPricing  Boolean   @default(true)
+  serviceFixedMarkup    Float     @default(0)
+  servicePercentMarkup  Float     @default(0)
+  serviceIncludeVat     Boolean   @default(false)
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@map("pricing_settings")
 }
 
 model Employee {

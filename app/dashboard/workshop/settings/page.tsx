@@ -272,7 +272,7 @@ export default function WorkshopSettings() {
 
   const handleConnectCalendar = async (type: 'workshop' | 'employee', employeeId?: string) => {
     try {
-      const response = await fetch('/api/calendar/connect', {
+      const response = await fetch('/api/gcal/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, employeeId })

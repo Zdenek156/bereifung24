@@ -12,7 +12,7 @@ export function getOAuth2Client() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_OAUTH_CLIENT_ID,
     process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    `${process.env.NEXTAUTH_URL}/api/calendar/callback`
+    `${process.env.NEXTAUTH_URL}/api/gcal/callback`
   )
 }
 

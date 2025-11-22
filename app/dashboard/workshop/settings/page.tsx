@@ -235,14 +235,24 @@ export default function WorkshopSettings() {
           const mappedEmployees = employeesData.employees.map((emp: any) => {
             let parsedWorkingHours
             try {
-              parsedWorkingHours = emp.workingHours ? JSON.parse(emp.workingHours) : {
-                monday: { from: '08:00', to: '17:00', working: true },
-                tuesday: { from: '08:00', to: '17:00', working: true },
-                wednesday: { from: '08:00', to: '17:00', working: true },
-                thursday: { from: '08:00', to: '17:00', working: true },
-                friday: { from: '08:00', to: '17:00', working: true },
-                saturday: { from: '09:00', to: '13:00', working: false },
-                sunday: { from: '09:00', to: '13:00', working: false },
+              if (emp.workingHours) {
+                // Parse once
+                let parsed = JSON.parse(emp.workingHours)
+                // Check if it's still a string (double-encoded), parse again
+                if (typeof parsed === 'string') {
+                  parsed = JSON.parse(parsed)
+                }
+                parsedWorkingHours = parsed
+              } else {
+                parsedWorkingHours = {
+                  monday: { from: '08:00', to: '17:00', working: true },
+                  tuesday: { from: '08:00', to: '17:00', working: true },
+                  wednesday: { from: '08:00', to: '17:00', working: true },
+                  thursday: { from: '08:00', to: '17:00', working: true },
+                  friday: { from: '08:00', to: '17:00', working: true },
+                  saturday: { from: '09:00', to: '13:00', working: false },
+                  sunday: { from: '09:00', to: '13:00', working: false },
+                }
               }
             } catch (e) {
               console.error('Error parsing working hours for employee:', emp.id, e)
@@ -1428,18 +1438,9 @@ export default function WorkshopSettings() {
                               {editingEmployeeId === employee.id && (
                                 <div className="px-4 pb-4">
                                   <div className="space-y-3 mb-4">
-                                    {(() => {
-                                      console.log('Employee workingHours:', employee.workingHours)
-                                      console.log('Type:', typeof employee.workingHours)
-                                      console.log('Keys:', Object.keys(employee.workingHours || {}))
-                                      return null
-                                    })()}
                                     {Object.entries(dayLabels).map(([dayKey, dayLabel]) => {
                                       const hours = employee.workingHours?.[dayKey as keyof typeof employee.workingHours]
-                                      if (!hours) {
-                                        console.log('Missing hours for day:', dayKey, 'employee:', employee.name, 'available keys:', Object.keys(employee.workingHours || {}))
-                                        return null
-                                      }
+                                      if (!hours) return null
                                       return (
                                         <div key={dayKey} className="border border-gray-200 rounded-lg p-3">
                                           <div className="flex items-center gap-4 mb-2">

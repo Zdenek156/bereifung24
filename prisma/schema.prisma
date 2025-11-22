@@ -383,7 +383,6 @@ model Offer {
   
   // If accepted
   acceptedAt        DateTime?
-  selectedOptionId  String?       // Which tire option was selected
   booking           Booking?
   
   createdAt         DateTime      @default(now())

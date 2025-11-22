@@ -151,7 +151,17 @@ export default function WorkshopSettings() {
     }
 
     if (error) {
-      setMessage({ type: 'error', text: 'Fehler bei der Kalenderverbindung' })
+      const errorMessages: { [key: string]: string } = {
+        'calendar_auth_denied': 'Sie haben die Kalenderverbindung abgebrochen oder die Berechtigung verweigert.',
+        'no_code': 'Kein Autorisierungscode erhalten. Bitte versuchen Sie es erneut.',
+        'invalid_state': 'Ungültiger Status. Bitte versuchen Sie es erneut.',
+        'token_exchange_failed': 'Fehler beim Austausch der Tokens. Bitte versuchen Sie es erneut.',
+        'callback_failed': 'Fehler bei der Kalenderverbindung. Bitte versuchen Sie es erneut.'
+      }
+      setMessage({ 
+        type: 'error', 
+        text: errorMessages[error] || 'Fehler bei der Kalenderverbindung' 
+      })
     }
   }, [searchParams])
 

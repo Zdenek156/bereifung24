@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt'
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
+      id: 'google-customer', // Custom ID to avoid conflict with calendar OAuth
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       authorization: {
@@ -95,7 +96,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       // Nur Google OAuth für Kunden erlauben
-      if (account?.provider === 'google') {
+      if (account?.provider === 'google-customer') {
         if (!user.email) {
           return false
         }

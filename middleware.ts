@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   
   // If this is a calendar callback, let it through to our handler
-  if (url.pathname === '/api/calendar/callback') {
+  if (url.pathname === '/api/gcal/callback') {
     // Don't intercept, let our route handler process it
     return NextResponse.next()
   }
@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Match calendar callback specifically
-    '/api/calendar/callback',
+    '/api/gcal/callback',
     // Match auth routes (but calendar callback will be handled first)
     '/api/auth/:path*',
   ],

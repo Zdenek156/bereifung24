@@ -121,7 +121,7 @@ export default function BookAppointmentPage() {
     setLoadingSlots(true)
     try {
       const response = await fetch(
-        `/api/calendar/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=60`
+        `/api/gcal/available-slots?workshopId=${offer.workshop.id}&date=${selectedDate}&duration=60`
       )
 
       if (response.ok) {

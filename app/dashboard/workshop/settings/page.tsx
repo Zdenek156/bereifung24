@@ -1045,7 +1045,11 @@ export default function WorkshopSettings() {
                         </svg>
                         <div>
                           <div className="font-medium text-green-900">Kalender verbunden</div>
-                          <div className="text-sm text-green-700">{profile?.googleCalendarId || session?.user?.email || 'Google Kalender'}</div>
+                          <div className="text-sm text-green-700">
+                            {profile?.googleCalendarId && profile.googleCalendarId !== 'primary' 
+                              ? profile.googleCalendarId 
+                              : session?.user?.email || 'Google Kalender'}
+                          </div>
                         </div>
                       </div>
                       <button

@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Calendar auth error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&error=calendar_auth_denied`
+        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=calendar_auth_denied`
       )
     }
     
     if (!code) {
       console.error('No code in callback')
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&error=no_code`
+        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=no_code`
       )
     }
     
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     } catch (parseError) {
       console.error('Failed to parse state:', parseError)
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&error=invalid_state`
+        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=invalid_state`
       )
     }
     
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     if (!tokens.access_token || !tokens.refresh_token) {
       console.error('Missing tokens:', tokens)
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&error=token_exchange_failed`
+        `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=token_exchange_failed`
       )
     }
     
@@ -116,12 +116,12 @@ export async function GET(request: NextRequest) {
     }
     
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&success=calendar_connected`
+      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&success=calendar_connected`
     )
   } catch (error) {
     console.error('Calendar callback error:', error)
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=scheduling&error=callback_failed`
+      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=callback_failed`
     )
   }
 }

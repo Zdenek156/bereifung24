@@ -47,6 +47,7 @@ interface TireRequest {
 interface TireOption {
   brand: string
   model: string
+  costPrice: string
   pricePerTire: string
 }
 
@@ -80,7 +81,7 @@ export default function BrowseRequestsPage() {
   const [showOfferForm, setShowOfferForm] = useState(false)
   const [services, setServices] = useState<WorkshopService[]>([])
   const [offerForm, setOfferForm] = useState<OfferFormData>({
-    tireOptions: [{ brand: '', model: '', pricePerTire: '' }],
+    tireOptions: [{ brand: '', model: '', costPrice: '', pricePerTire: '' }],
     description: '',
     installationFee: '',
     validDays: 7,
@@ -176,7 +177,7 @@ export default function BrowseRequestsPage() {
     // Initialisiere mit einem leeren Reifenangebot
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     setOfferForm({
-      tireOptions: [{ brand: preferredBrand, model: '', pricePerTire: '' }],
+      tireOptions: [{ brand: preferredBrand, model: '', costPrice: '', pricePerTire: '' }],
       description: '',
       installationFee: calculatedInstallation,
       validDays: 7,
@@ -235,7 +236,7 @@ export default function BrowseRequestsPage() {
   const addTireOption = () => {
     setOfferForm({
       ...offerForm,
-      tireOptions: [...offerForm.tireOptions, { brand: '', model: '', pricePerTire: '' }]
+      tireOptions: [...offerForm.tireOptions, { brand: '', model: '', costPrice: '', pricePerTire: '' }]
     })
   }
 
@@ -254,6 +255,39 @@ export default function BrowseRequestsPage() {
       ...offerForm,
       tireOptions: updated
     })
+  }
+
+  const calculateSellingPrice = async (index: number, costPrice: string) => {
+    if (!costPrice || parseFloat(costPrice) <= 0) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/workshop/calculate-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          costPrice: parseFloat(costPrice),
+          category: 'auto' // Assuming tire requests are for auto tires
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const updated = [...offerForm.tireOptions]
+        updated[index] = { 
+          ...updated[index], 
+          costPrice: costPrice,
+          pricePerTire: data.sellingPrice.toFixed(2)
+        }
+        setOfferForm({
+          ...offerForm,
+          tireOptions: updated
+        })
+      }
+    } catch (error) {
+      console.error('Error calculating price:', error)
+    }
   }
 
   if (status === 'loading' || loading) {
@@ -520,7 +554,7 @@ export default function BrowseRequestsPage() {
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
                               Marke *
@@ -546,10 +580,37 @@ export default function BrowseRequestsPage() {
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Einkaufspreis (€) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={option.costPrice}
+                              onChange={(e) => {
+                                updateTireOption(index, 'costPrice', e.target.value)
+                                if (e.target.value && parseFloat(e.target.value) > 0) {
+                                  calculateSellingPrice(index, e.target.value)
+                                }
+                              }}
+                              placeholder="0.00"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
                           
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Preis pro Reifen (€) *
+                              Verkaufspreis (€) *
+                              {option.costPrice && option.pricePerTire && parseFloat(option.costPrice) > 0 && (
+                                <span className="ml-1 text-green-600 text-xs">
+                                  (berechnet)
+                                </span>
+                              )}
                             </label>
                             <input
                               type="number"
@@ -558,8 +619,13 @@ export default function BrowseRequestsPage() {
                               value={option.pricePerTire}
                               onChange={(e) => updateTireOption(index, 'pricePerTire', e.target.value)}
                               placeholder="0.00"
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-green-50"
                             />
+                            {option.costPrice && option.pricePerTire && parseFloat(option.costPrice) > 0 && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                Aufschlag: {(parseFloat(option.pricePerTire) - parseFloat(option.costPrice)).toFixed(2)} €
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

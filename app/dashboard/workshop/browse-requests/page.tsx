@@ -153,8 +153,12 @@ export default function BrowseRequestsPage() {
     let calculatedDuration = ''
     
     if (tireChangeService) {
-      // Berechne Montagegebühr (inkl. RunFlat und Entsorgung wenn nötig)
-      let installation = 0
+      // Verwende den konfigurierten Preis aus Service-Verwaltung
+      let installation = request.quantity === 4 && tireChangeService.basePrice4
+        ? tireChangeService.basePrice4
+        : tireChangeService.basePrice
+      
+      // Addiere RunFlat und Entsorgung wenn nötig
       if (request.isRunflat && tireChangeService.runFlatSurcharge) {
         installation += tireChangeService.runFlatSurcharge * request.quantity
       }

@@ -51,6 +51,19 @@ interface OfferFormData {
   pricePerTire: string
   installationFee: string
   validDays: number
+  durationMinutes: string
+}
+
+interface WorkshopService {
+  id: string
+  serviceType: string
+  basePrice: number
+  basePrice4: number | null
+  runFlatSurcharge: number | null
+  disposalFee: number | null
+  durationMinutes: number
+  durationMinutes4: number | null
+  isActive: boolean
 }
 
 export default function BrowseRequestsPage() {
@@ -61,13 +74,15 @@ export default function BrowseRequestsPage() {
   const [filter, setFilter] = useState<'all' | 'new' | 'quoted'>('all')
   const [selectedRequest, setSelectedRequest] = useState<TireRequest | null>(null)
   const [showOfferForm, setShowOfferForm] = useState(false)
+  const [services, setServices] = useState<WorkshopService[]>([])
   const [offerForm, setOfferForm] = useState<OfferFormData>({
     tireBrand: '',
     tireModel: '',
     description: '',
     pricePerTire: '',
     installationFee: '',
-    validDays: 7
+    validDays: 7,
+    durationMinutes: ''
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -81,8 +96,21 @@ export default function BrowseRequestsPage() {
       router.push('/dashboard')
       return
     }
+    fetchServices()
     fetchRequests()
   }, [session, status, router])
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch('/api/workshop/services')
+      if (response.ok) {
+        const data = await response.json()
+        setServices(data.filter((s: WorkshopService) => s.isActive))
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error)
+    }
+  }
 
   const fetchRequests = async () => {
     try {
@@ -115,13 +143,46 @@ export default function BrowseRequestsPage() {
   const handleCreateOffer = (request: TireRequest) => {
     setSelectedRequest(request)
     setShowOfferForm(true)
+    
+    // Finde passenden Service basierend auf Anfragetyp
+    const tireChangeService = services.find(s => s.serviceType === 'TIRE_CHANGE')
+    
+    let calculatedPrice = ''
+    let calculatedInstallation = ''
+    let calculatedDuration = ''
+    
+    if (tireChangeService) {
+      // Wähle Preis basierend auf Anzahl (2 oder 4 Reifen)
+      const pricePerTire = request.quantity === 4 && tireChangeService.basePrice4
+        ? tireChangeService.basePrice4 / 4
+        : tireChangeService.basePrice / 2
+      
+      calculatedPrice = pricePerTire.toFixed(2)
+      
+      // Berechne Montagegebühr (inkl. RunFlat und Entsorgung wenn nötig)
+      let installation = 0
+      if (request.isRunflat && tireChangeService.runFlatSurcharge) {
+        installation += tireChangeService.runFlatSurcharge * request.quantity
+      }
+      if (tireChangeService.disposalFee) {
+        installation += tireChangeService.disposalFee * request.quantity
+      }
+      calculatedInstallation = installation.toFixed(2)
+      
+      // Wähle Dauer basierend auf Anzahl
+      calculatedDuration = (request.quantity === 4 && tireChangeService.durationMinutes4
+        ? tireChangeService.durationMinutes4
+        : tireChangeService.durationMinutes).toString()
+    }
+    
     setOfferForm({
       tireBrand: request.preferredBrands?.split(',')[0] || '',
       tireModel: '',
       description: '',
-      pricePerTire: '',
-      installationFee: '',
-      validDays: 7
+      pricePerTire: calculatedPrice,
+      installationFee: calculatedInstallation,
+      validDays: 7,
+      durationMinutes: calculatedDuration
     })
   }
 
@@ -137,7 +198,8 @@ export default function BrowseRequestsPage() {
         body: JSON.stringify({
           ...offerForm,
           pricePerTire: parseFloat(offerForm.pricePerTire),
-          installationFee: parseFloat(offerForm.installationFee)
+          installationFee: parseFloat(offerForm.installationFee),
+          durationMinutes: offerForm.durationMinutes ? parseInt(offerForm.durationMinutes) : undefined
         })
       })
 
@@ -437,7 +499,7 @@ export default function BrowseRequestsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Preis pro Reifen (€) *
@@ -466,6 +528,20 @@ export default function BrowseRequestsPage() {
                       value={offerForm.installationFee}
                       onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
                       placeholder="50.00"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dauer (Minuten)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={offerForm.durationMinutes}
+                      onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
+                      placeholder="60"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>

@@ -340,6 +340,7 @@ model Offer {
   price             Float       // Gesamtpreis inkl. Montage
   pricePerTire      Float?
   installationFee   Float?
+  durationMinutes   Int?        // Geschätzte Dauer für den Service
   
   // Validity
   validUntil        DateTime

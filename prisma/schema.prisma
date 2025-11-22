@@ -331,17 +331,17 @@ model Offer {
   workshopId        String
   workshop          Workshop      @relation(fields: [workshopId], references: [id])
   
-  // Tire Details (deprecated - now using tireOptions)
-  tireBrand         String?
-  tireModel         String?
+  // Tire Details (for compatibility with existing offers)
+  tireBrand         String
+  tireModel         String
   description       String?
   
-  // Multiple tire options
+  // Multiple tire options (for new offers)
   tireOptions       TireOption[]
   
   // Pricing
-  price             Float?        // Deprecated - calculated from selected option
-  pricePerTire      Float?        // Deprecated
+  price             Float         // Total price (for compatibility)
+  pricePerTire      Float?
   installationFee   Float?
   durationMinutes   Int?          // Geschätzte Dauer für den Service
   

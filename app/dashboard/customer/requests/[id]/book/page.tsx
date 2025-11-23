@@ -158,7 +158,7 @@ export default function BookAppointmentPage() {
         console.error('Failed to fetch slots:', errorData)
         
         if (response.status === 400 || response.status === 401) {
-          alert(`Kalender-Problem: ${errorData.message || errorData.error || 'Die Werkstatt muss ihren Google Calendar verbinden.'}`)
+          alert('Online-Terminbuchung derzeit nicht verfügbar.\n\nBitte kontaktieren Sie die Werkstatt telefonisch, um einen Termin zu vereinbaren.')
         }
         
         setAvailableSlots([])

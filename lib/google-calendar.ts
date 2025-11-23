@@ -43,11 +43,23 @@ export async function getTokensFromCode(code: string) {
  * Refresh access token using refresh token
  */
 export async function refreshAccessToken(refreshToken: string) {
-  const oauth2Client = getOAuth2Client()
-  oauth2Client.setCredentials({ refresh_token: refreshToken })
-  
-  const { credentials } = await oauth2Client.refreshAccessToken()
-  return credentials
+  try {
+    const oauth2Client = getOAuth2Client()
+    oauth2Client.setCredentials({ refresh_token: refreshToken })
+    
+    console.log('Attempting to refresh access token...')
+    const { credentials } = await oauth2Client.refreshAccessToken()
+    console.log('Access token refreshed successfully')
+    
+    return {
+      access_token: credentials.access_token,
+      refresh_token: credentials.refresh_token || refreshToken, // Keep existing if not returned
+      expiry_date: credentials.expiry_date
+    }
+  } catch (error) {
+    console.error('Failed to refresh access token:', error)
+    throw new Error(`Token refresh failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 /**

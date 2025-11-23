@@ -223,21 +223,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ availableSlots: [] })
     }
     
-    // Check if token needs refresh
+    // Check if token needs refresh or is about to expire (within 5 minutes)
     let accessToken = calendarData.accessToken
-    if (calendarData.tokenExpiry && new Date() > calendarData.tokenExpiry) {
-      const newTokens = await refreshAccessToken(calendarData.refreshToken)
-      accessToken = newTokens.access_token || accessToken
+    const now = new Date()
+    const expiryThreshold = new Date(now.getTime() + 5 * 60 * 1000) // 5 minutes from now
+    
+    if (!calendarData.tokenExpiry || calendarData.tokenExpiry < expiryThreshold) {
+      console.log('Token expired or about to expire, refreshing...', {
+        tokenExpiry: calendarData.tokenExpiry,
+        now: now,
+        workshopId
+      })
       
-      // Update token in database
-      const expiryDate = newTokens.expiry_date 
-        ? new Date(newTokens.expiry_date)
-        : new Date(Date.now() + 3600 * 1000)
-      
-      if (workshop.calendarMode === 'workshop') {
-        await prisma.workshop.update({
-          where: { id: workshopId },
-          data: {
+      try {
+        const newTokens = await refreshAccessToken(calendarData.refreshToken)
+        accessToken = newTokens.access_token || accessToken
+        
+        // Update token in database
+        const expiryDate = newTokens.expiry_date 
+          ? new Date(newTokens.expiry_date)
+          : new Date(Date.now() + 3600 * 1000)
+        
+        console.log('Token refreshed, new expiry:', expiryDate)
+        
+        if (workshop.calendarMode === 'workshop') {
+          await prisma.workshop.update({
+            where: { id: workshopId },
+            data: {
             googleAccessToken: accessToken,
             googleTokenExpiry: expiryDate
           }
@@ -251,6 +263,17 @@ export async function GET(request: NextRequest) {
           }
         })
       }
+      } catch (refreshError) {
+        console.error('Failed to refresh token:', refreshError)
+        return NextResponse.json(
+          { 
+            error: 'Kalender-Token abgelaufen', 
+            message: 'Bitte verbinden Sie den Google Calendar erneut in den Einstellungen.',
+            details: refreshError instanceof Error ? refreshError.message : String(refreshError)
+          },
+          { status: 401 }
+        )
+      }
     }
     
     // Get busy slots from Google Calendar
@@ -260,6 +283,8 @@ export async function GET(request: NextRequest) {
     
     const timeMax = new Date(dateObj)
     timeMax.setHours(23, 59, 59, 999)
+    
+    console.log('Fetching busy slots for:', { calendarId: calendarData.calendarId, date, timeMin, timeMax })
     
     const busySlots = await getBusySlots(
       accessToken,

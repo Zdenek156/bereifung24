@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date') // YYYY-MM-DD
     const duration = parseInt(searchParams.get('duration') || '60') // minutes
     
+    console.log('Getting available slots:', { workshopId, employeeId, date, duration })
+    
     if (!workshopId || !date) {
+      console.error('Missing required parameters:', { workshopId, date })
       return NextResponse.json(
         { error: 'Workshop ID und Datum erforderlich' },
         { status: 400 }
@@ -269,8 +272,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ availableSlots })
   } catch (error) {
     console.error('Error getting available slots:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('Error details:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
-      { error: 'Fehler beim Laden der verfügbaren Zeiten' },
+      { error: 'Fehler beim Laden der verfügbaren Zeiten', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

@@ -370,7 +370,7 @@ export async function POST(req: NextRequest) {
     let vehicleInfo = ''
     if (completeOffer.tireRequest.vehicle) {
       const v = completeOffer.tireRequest.vehicle
-      vehicleInfo = `\nFahrzeug: ${v.brand} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
+      vehicleInfo = `\nFahrzeug: ${v.make} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
     }
     
     const eventDetails = {

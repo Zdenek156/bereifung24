@@ -249,14 +249,42 @@ export function generateAvailableSlots(
   const [fromHour, fromMinute] = workingHours.from.split(':').map(Number)
   const [toHour, toMinute] = workingHours.to.split(':').map(Number)
   
-  // Create start and end datetime in local timezone
-  // Important: Use local time to match busy slots from Google Calendar
+  // CRITICAL FIX: Extract timezone from busy slots and use it
+  // Google Calendar returns times like "2025-12-05T10:00:00+01:00"
+  // We need to create slots in the same timezone
+  let timezoneOffset = 0 // Default UTC
+  if (busySlots.length > 0 && busySlots[0].start) {
+    // Extract timezone from first busy slot (e.g., "+01:00" or "+02:00")
+    const match = busySlots[0].start.match(/([+-]\d{2}):(\d{2})$/)
+    if (match) {
+      const hours = parseInt(match[1])
+      const minutes = parseInt(match[2])
+      timezoneOffset = hours * 60 + (hours < 0 ? -minutes : minutes) // in minutes
+      console.log(`🌍 Detected timezone offset from busy slots: ${timezoneOffset} minutes (${hours}:${minutes})`)
+    }
+  }
+  console.log(`📅 Creating slots for date: ${date}, busy slots count: ${busySlots.length}`)
+  if (busySlots.length > 0) {
+    console.log(`🕐 First busy slot: ${busySlots[0].start} - ${busySlots[0].end}`)
+  }
+  
+  // Create start and end datetime adjusted for timezone
   const year = date.getFullYear()
   const month = date.getMonth()
   const day = date.getDate()
   
-  const startTime = new Date(year, month, day, fromHour, fromMinute, 0, 0)
-  const endTime = new Date(year, month, day, toHour, toMinute, 0, 0)
+  // Create times in UTC first
+  const startTime = new Date(Date.UTC(year, month, day, fromHour, fromMinute, 0, 0))
+  const endTime = new Date(Date.UTC(year, month, day, toHour, toMinute, 0, 0))
+  
+  // Adjust by timezone offset to match Google Calendar times
+  // Google Calendar: "2025-12-05T10:00:00+01:00" = 09:00 UTC
+  // We need to create: 10:00 local time = 09:00 UTC
+  // So subtract the offset: 10:00 UTC - 60min = 09:00 UTC
+  console.log(`⏰ Before adjustment - Start: ${startTime.toISOString()}, End: ${endTime.toISOString()}`)
+  startTime.setMinutes(startTime.getMinutes() - timezoneOffset)
+  endTime.setMinutes(endTime.getMinutes() - timezoneOffset)
+  console.log(`⏰ After adjustment - Start: ${startTime.toISOString()}, End: ${endTime.toISOString()}`)
   
   // Parse break times if present
   let breakStart: Date | null = null
@@ -266,8 +294,11 @@ export function generateAvailableSlots(
     const [breakFromHour, breakFromMinute] = workingHours.breakFrom.split(':').map(Number)
     const [breakToHour, breakToMinute] = workingHours.breakTo.split(':').map(Number)
     
-    breakStart = new Date(year, month, day, breakFromHour, breakFromMinute, 0, 0)
-    breakEnd = new Date(year, month, day, breakToHour, breakToMinute, 0, 0)
+    breakStart = new Date(Date.UTC(year, month, day, breakFromHour, breakFromMinute, 0, 0))
+    breakEnd = new Date(Date.UTC(year, month, day, breakToHour, breakToMinute, 0, 0))
+    // Apply same timezone adjustment
+    breakStart.setMinutes(breakStart.getMinutes() - timezoneOffset)
+    breakEnd.setMinutes(breakEnd.getMinutes() - timezoneOffset)
   }
   
   // Generate slots

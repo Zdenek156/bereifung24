@@ -109,9 +109,12 @@ export async function GET(req: NextRequest) {
 // POST /api/bookings - Create a new booking
 export async function POST(req: NextRequest) {
   try {
+    console.log('=== BOOKING POST REQUEST START ===')
     const session = await getServerSession(authOptions)
+    console.log('Session:', session ? `User ID: ${session.user?.id}` : 'No session')
     
     if (!session?.user?.id) {
+      console.log('ERROR: Not authenticated')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
@@ -121,8 +124,10 @@ export async function POST(req: NextRequest) {
     const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     })
+    console.log('Customer:', customer ? `ID: ${customer.id}` : 'Not found')
 
     if (!customer) {
+      console.log('ERROR: Customer not found')
       return NextResponse.json(
         { error: 'Kunde nicht gefunden' },
         { status: 404 }
@@ -130,6 +135,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    console.log('Request body:', JSON.stringify(body, null, 2))
+    
     const {
       offerId,
       workshopId,
@@ -142,11 +149,13 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (!offerId || !workshopId || !appointmentDate) {
+      console.log('ERROR: Missing required fields', { offerId, workshopId, appointmentDate })
       return NextResponse.json(
         { error: 'Fehlende Pflichtfelder' },
         { status: 400 }
       )
     }
+    console.log('Required fields validated')
 
     // Get offer and verify it's accepted
     const offer = await prisma.offer.findUnique({
@@ -396,9 +405,13 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Booking creation error:', error)
+    console.error('=== BOOKING CREATION ERROR ===')
+    console.error('Error type:', error?.constructor?.name)
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Full error:', error)
     return NextResponse.json(
-      { error: 'Fehler beim Erstellen der Buchung' },
+      { error: 'Fehler beim Erstellen der Buchung', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

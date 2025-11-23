@@ -5,12 +5,17 @@ import { getBusySlots } from '@/lib/google-calendar'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const workshopId = searchParams.get('workshopId')
+    let workshopId = searchParams.get('workshopId')
     const employeeId = searchParams.get('employeeId')
     const date = searchParams.get('date') || '2025-12-05'
     
+    // If no workshopId provided, get the first workshop
     if (!workshopId) {
-      return NextResponse.json({ error: 'workshopId required' }, { status: 400 })
+      const firstWorkshop = await prisma.workshop.findFirst()
+      if (!firstWorkshop) {
+        return NextResponse.json({ error: 'No workshops found' }, { status: 404 })
+      }
+      workshopId = firstWorkshop.id
     }
 
     const result: any = {

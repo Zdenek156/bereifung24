@@ -108,6 +108,11 @@ export async function GET(
         latitude: offer.workshop.user.latitude,
         longitude: offer.workshop.user.longitude,
         paymentMethods: offer.workshop.paymentMethods,
+        iban: offer.workshop.iban,
+        accountHolder: offer.workshop.accountHolder,
+        paypalEmail: offer.workshop.paypalEmail,
+        calendarMode: offer.workshop.calendarMode,
+        employees: offer.workshop.employees,
       }
     }
 

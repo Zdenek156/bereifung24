@@ -245,7 +245,27 @@ export default function BookAppointmentPage() {
 
   const getPaymentMethods = () => {
     if (!offer?.workshop.paymentMethods) return ['Barzahlung', 'EC-Karte', 'Kreditkarte']
-    return offer.workshop.paymentMethods.split(',').map(m => m.trim())
+    
+    try {
+      const methods = JSON.parse(offer.workshop.paymentMethods)
+      const labels: { [key: string]: string } = {
+        cash: 'Barzahlung',
+        ecCard: 'EC-Karte',
+        creditCard: 'Kreditkarte',
+        bankTransfer: 'Banküberweisung',
+        bankTransferIban: 'Banküberweisung',
+        paypal: 'PayPal',
+        paypalEmail: 'PayPal'
+      }
+      
+      return Object.keys(methods)
+        .filter(key => methods[key] === true || methods[key] === 'true')
+        .map(key => labels[key] || key)
+        .filter(Boolean)
+    } catch (e) {
+      // Fallback wenn es kein JSON ist, versuche kommagetrennt
+      return offer.workshop.paymentMethods.split(',').map(m => m.trim()).filter(Boolean)
+    }
   }
 
   const getMinDate = () => {

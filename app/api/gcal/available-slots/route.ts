@@ -197,8 +197,24 @@ export async function GET(request: NextRequest) {
     }
     
     if (!calendarData || !calendarData.calendarId || !calendarData.accessToken || !calendarData.refreshToken) {
+      console.error('Calendar not connected:', {
+        hasCalendarData: !!calendarData,
+        hasCalendarId: !!calendarData?.calendarId,
+        hasAccessToken: !!calendarData?.accessToken,
+        hasRefreshToken: !!calendarData?.refreshToken,
+        workshopId,
+        calendarMode: workshop.calendarMode
+      })
+      
       return NextResponse.json(
-        { error: 'Kalender nicht verbunden' },
+        { 
+          error: 'Kalender nicht verbunden', 
+          message: 'Bitte verbinden Sie den Google Calendar in den Einstellungen.',
+          details: {
+            calendarMode: workshop.calendarMode,
+            hasCalendar: !!calendarData?.calendarId
+          }
+        },
         { status: 400 }
       )
     }

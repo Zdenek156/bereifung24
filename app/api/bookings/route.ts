@@ -380,9 +380,9 @@ export async function POST(req: NextRequest) {
       try {
         const { createCalendarEvent } = await import('@/lib/google-calendar')
         const calendarEvent = await createCalendarEvent(
-          completeOffer.workshop.googleAccessToken,
-          completeOffer.workshop.googleRefreshToken,
-          completeOffer.workshop.googleCalendarId,
+          completeOffer.workshop.googleAccessToken!,
+          completeOffer.workshop.googleRefreshToken!,
+          completeOffer.workshop.googleCalendarId!,
           eventDetails
         )
         

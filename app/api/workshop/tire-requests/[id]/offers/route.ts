@@ -133,11 +133,24 @@ export async function POST(
 
     // Email an Kunde senden
     try {
+      console.log('Preparing email - offer data:', {
+        hasTireOptions: !!offer.tireOptions,
+        tireOptionsLength: offer.tireOptions?.length,
+        hasTireRequest: !!offer.tireRequest,
+        hasCustomer: !!offer.tireRequest?.customer,
+        hasWorkshop: !!offer.workshop
+      })
+
+      if (!offer.tireOptions || offer.tireOptions.length === 0) {
+        throw new Error('No tire options found in offer')
+      }
+
       const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
       const firstOption = offer.tireOptions[0]
-      const priceRange = offer.tireOptions.length > 1 
-        ? `ab ${(firstOption.pricePerTire * tireRequest.quantity + validatedData.installationFee).toFixed(2)} €`
-        : `${(firstOption.pricePerTire * tireRequest.quantity + validatedData.installationFee).toFixed(2)} €`
+      const totalOfferPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
+      const priceDisplay = offer.tireOptions.length > 1 
+        ? `ab ${totalOfferPrice.toFixed(2)} €`
+        : `${totalOfferPrice.toFixed(2)} €`
       
       const emailTemplate = newOfferEmailTemplate({
         customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
@@ -145,7 +158,7 @@ export async function POST(
         tireBrand: firstOption.brand,
         tireModel: firstOption.model,
         tireSpecs: tireSpecs,
-        price: parseFloat(priceRange.replace(/[^\d.]/g, '')),
+        price: totalOfferPrice,
         requestId: offer.tireRequestId
       })
 
@@ -153,8 +166,11 @@ export async function POST(
         to: offer.tireRequest.customer.user.email,
         ...emailTemplate
       })
+      
+      console.log('Email sent successfully to:', offer.tireRequest.customer.user.email)
     } catch (emailError) {
       console.error('Email konnte nicht gesendet werden:', emailError)
+      console.error('Email error details:', emailError instanceof Error ? emailError.stack : String(emailError))
       // Weiter ausführen, auch wenn Email fehlschlägt
     }
 

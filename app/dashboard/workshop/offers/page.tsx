@@ -47,6 +47,7 @@ export default function WorkshopOffers() {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all')
+  const [searchCode, setSearchCode] = useState('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -99,8 +100,18 @@ export default function WorkshopOffers() {
   }
 
   const filteredOffers = offers.filter(offer => {
-    if (filter === 'all') return true
-    return offer.status === filter.toUpperCase()
+    // Filter by status
+    if (filter !== 'all' && offer.status !== filter.toUpperCase()) {
+      return false
+    }
+    
+    // Filter by search code (last 4 characters of request ID)
+    if (searchCode.trim() !== '') {
+      const requestCode = offer.tireRequest.id.slice(-4).toUpperCase()
+      return requestCode.includes(searchCode.toUpperCase())
+    }
+    
+    return true
   })
 
   const stats = {
@@ -159,6 +170,34 @@ export default function WorkshopOffers() {
             <p className="text-sm text-gray-600">Abgelehnt</p>
             <p className="text-2xl font-bold text-red-600">{stats.declined}</p>
           </div>
+        </div>
+
+        {/* Search by Code */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Buchungs-Code suchen
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchCode}
+              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="Code eingeben (z.B. 3R4R)"
+              maxLength={4}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono uppercase"
+            />
+            {searchCode && (
+              <button
+                onClick={() => setSearchCode('')}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Zurücksetzen
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Kunden erhalten einen 4-stelligen Code für telefonische Terminvereinbarungen
+          </p>
         </div>
 
         {/* Filter */}
@@ -290,6 +329,28 @@ export default function WorkshopOffers() {
                     )}
                   </div>
                 </div>
+
+                {/* Booking Code for Accepted Offers */}
+                {offer.status === 'ACCEPTED' && (
+                  <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 mb-1">
+                          Buchungs-Code für telefonische Terminvereinbarung:
+                        </p>
+                        <p className="text-xs text-blue-700">
+                          Der Kunde verwendet diesen Code, wenn er telefonisch einen Termin vereinbaren möchte
+                        </p>
+                      </div>
+                      <div className="text-center bg-white px-6 py-3 rounded-lg border-2 border-blue-300">
+                        <p className="text-xs text-gray-600 mb-1">Code</p>
+                        <p className="text-3xl font-bold font-mono text-blue-600">
+                          {offer.tireRequest.id.slice(-4).toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {offer.status === 'DECLINED' && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">

@@ -268,6 +268,36 @@ export default function BookAppointmentPage() {
     }
   }
 
+  const formatOpeningHours = () => {
+    if (!offer?.workshop.openingHours) return []
+    
+    try {
+      const hours = JSON.parse(offer.workshop.openingHours)
+      const dayLabels: { [key: string]: string } = {
+        monday: 'Montag',
+        tuesday: 'Dienstag',
+        wednesday: 'Mittwoch',
+        thursday: 'Donnerstag',
+        friday: 'Freitag',
+        saturday: 'Samstag',
+        sunday: 'Sonntag'
+      }
+      
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      return days.map(day => {
+        const dayData = hours[day]
+        if (!dayData) return null
+        
+        return {
+          label: dayLabels[day],
+          hours: dayData.closed ? 'Geschlossen' : `${dayData.from} - ${dayData.to}`
+        }
+      }).filter(Boolean)
+    } catch (e) {
+      return []
+    }
+  }
+
   const getMinDate = () => {
     const today = new Date()
     return today.toISOString().split('T')[0]
@@ -740,7 +770,7 @@ export default function BookAppointmentPage() {
             </div>
 
             {/* Öffnungszeiten */}
-            {offer.workshop.openingHours && (
+            {offer.workshop.openingHours && formatOpeningHours().length > 0 && (
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -748,8 +778,13 @@ export default function BookAppointmentPage() {
                   </svg>
                   Öffnungszeiten
                 </h2>
-                <div className="text-sm text-gray-700 whitespace-pre-line">
-                  {offer.workshop.openingHours}
+                <div className="space-y-2">
+                  {formatOpeningHours().map((day: any, index: number) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span className="font-medium text-gray-700">{day.label}:</span>
+                      <span className="text-gray-600">{day.hours}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

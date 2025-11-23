@@ -278,21 +278,21 @@ export function generateAvailableSlots(
     slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration)
     
     // Check if slot is free (not overlapping with busy times)
+    // Two intervals overlap if: slotStart < busyEnd AND slotEnd > busyStart
     const isFree = !busySlots.some(busy => {
       const busyStart = new Date(busy.start)
       const busyEnd = new Date(busy.end)
       
-      // Convert to timestamps for reliable comparison across timezones
-      const currentTimeMs = currentTime.getTime()
+      // Convert to timestamps for reliable comparison
+      const slotStartMs = currentTime.getTime()
       const slotEndMs = slotEnd.getTime()
       const busyStartMs = busyStart.getTime()
       const busyEndMs = busyEnd.getTime()
       
-      return (
-        (currentTimeMs >= busyStartMs && currentTimeMs < busyEndMs) ||
-        (slotEndMs > busyStartMs && slotEndMs <= busyEndMs) ||
-        (currentTimeMs <= busyStartMs && slotEndMs >= busyEndMs)
-      )
+      // Overlap occurs if slot starts before busy ends AND slot ends after busy starts
+      const overlaps = slotStartMs < busyEndMs && slotEndMs > busyStartMs
+      
+      return overlaps
     })
     
     // Check if slot is during break time

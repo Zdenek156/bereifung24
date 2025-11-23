@@ -259,8 +259,12 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    if (!workingHours || !workingHours.working) {
-      return NextResponse.json({ availableSlots: [] })
+    if (!workingHours || !workingHours.working || workingHours.closed) {
+      const dayName = new Date(date).toLocaleDateString('de-DE', { weekday: 'long' })
+      return NextResponse.json({ 
+        availableSlots: [],
+        message: `Die Werkstatt ist am ${dayName} geschlossen`
+      })
     }
     
     // Check if token needs refresh or is about to expire (within 5 minutes)

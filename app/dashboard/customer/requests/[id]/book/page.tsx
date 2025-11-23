@@ -80,8 +80,8 @@ export default function BookAppointmentPage() {
   const [request, setRequest] = useState<TireRequest | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<string>('')
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<string>('PAY_ONSITE')
   const [message, setMessage] = useState<string>('')
@@ -89,6 +89,7 @@ export default function BookAppointmentPage() {
   const [selectedTireOption, setSelectedTireOption] = useState<TireOption | null>(null)
   const [calendarUnavailable, setCalendarUnavailable] = useState(false)
   const [showManualBooking, setShowManualBooking] = useState(false)
+  const [slotErrorMessage, setSlotErrorMessage] = useState<string>('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -146,6 +147,7 @@ export default function BookAppointmentPage() {
     if (!offer) return
 
     setLoadingSlots(true)
+    setSlotErrorMessage('')
     try {
       const duration = offer.durationMinutes || 60
       const response = await fetch(
@@ -154,14 +156,22 @@ export default function BookAppointmentPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setAvailableSlots(data.availableSlots || data.slots || [])
+        const slots = data.availableSlots || data.slots || []
+        setAvailableSlots(slots)
         setCalendarUnavailable(false)
+        
+        if (slots.length === 0 && data.message) {
+          setSlotErrorMessage(data.message)
+        }
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
         console.error('Failed to fetch slots:', errorData)
         
         if (response.status === 400 || response.status === 401) {
           setCalendarUnavailable(true)
+          setSlotErrorMessage(errorData.message || 'Kalender nicht verfügbar')
+        } else {
+          setSlotErrorMessage(errorData.message || errorData.error || 'Fehler beim Laden der Zeiten')
         }
         
         setAvailableSlots([])
@@ -169,6 +179,7 @@ export default function BookAppointmentPage() {
     } catch (error) {
       console.error('Error fetching slots:', error)
       setAvailableSlots([])
+      setSlotErrorMessage('Fehler beim Laden der verfügbaren Zeiten')
     } finally {
       setLoadingSlots(false)
     }
@@ -182,21 +193,30 @@ export default function BookAppointmentPage() {
   }, [selectedDate, offer])
 
   const handleBooking = async () => {
-    if (!selectedSlot || !offer || !request) {
+    if (!selectedSlot || !offer || !request || !selectedDate) {
       alert('Bitte wählen Sie einen Termin aus')
       return
     }
 
     setSubmitting(true)
     try {
+      // Create ISO datetime strings
+      const [hours, minutes] = selectedSlot.split(':')
+      const appointmentStart = new Date(selectedDate)
+      appointmentStart.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+      
+      const durationMinutes = offer.durationMinutes || 60
+      const appointmentEnd = new Date(appointmentStart)
+      appointmentEnd.setMinutes(appointmentEnd.getMinutes() + durationMinutes)
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           offerId: offer.id,
           workshopId: offer.workshop.id,
-          appointmentDate: selectedSlot.start,
-          appointmentEndTime: selectedSlot.end,
+          appointmentDate: appointmentStart.toISOString(),
+          appointmentEndTime: appointmentEnd.toISOString(),
           paymentMethod: paymentMethod,
           customerMessage: message || undefined,
           selectedTireOptionId: selectedTireOption?.id,
@@ -615,9 +635,32 @@ export default function BookAppointmentPage() {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                     </div>
                   ) : availableSlots.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>Keine verfügbaren Zeiten für dieses Datum.</p>
-                      <p className="text-sm mt-2">Bitte wählen Sie ein anderes Datum.</p>
+                    <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
+                      <svg className="w-12 h-12 text-yellow-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-gray-900 font-semibold mb-2">
+                        {slotErrorMessage || 'Keine verfügbaren Zeiten für dieses Datum'}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-4">
+                        {slotErrorMessage.includes('Urlaub') || slotErrorMessage.includes('geschlossen') 
+                          ? 'Die Werkstatt ist an diesem Tag nicht verfügbar.' 
+                          : 'Die Werkstatt hat möglicherweise geschlossen oder alle Termine sind bereits vergeben.'}
+                      </p>
+                      <p className="text-sm text-primary-600 font-medium">
+                        Bitte wählen Sie ein anderes Datum oder rufen Sie die Werkstatt direkt an.
+                      </p>
+                      {offer && (
+                        <a 
+                          href={`tel:${offer.workshop.phone}`}
+                          className="inline-block mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {offer.workshop.phone}
+                        </a>
+                      )}
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -625,16 +668,13 @@ export default function BookAppointmentPage() {
                         <button
                           key={index}
                           onClick={() => setSelectedSlot(slot)}
-                          disabled={!slot.available}
                           className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                            !slot.available
-                              ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
-                              : selectedSlot === slot
+                            selectedSlot === slot
                               ? 'border-primary-600 bg-primary-50 text-primary-700'
                               : 'border-gray-300 text-gray-700 hover:border-primary-400 hover:bg-primary-50'
                           }`}
                         >
-                          {formatTime(slot.start)}
+                          {slot}
                         </button>
                       ))}
                     </div>

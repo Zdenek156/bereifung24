@@ -219,7 +219,8 @@ export default function BrowseRequestsPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Fehler beim Erstellen')
+        console.error('Server error response:', error)
+        throw new Error(error.message || error.error || 'Fehler beim Erstellen')
       }
 
       alert('Angebot erfolgreich erstellt! Der Kunde wurde per E-Mail benachrichtigt.')
@@ -227,7 +228,8 @@ export default function BrowseRequestsPage() {
       setSelectedRequest(null)
       fetchRequests()
     } catch (error: any) {
-      alert(error.message || 'Fehler beim Erstellen des Angebots')
+      console.error('Offer creation failed:', error)
+      alert(`Fehler: ${error.message || 'Fehler beim Erstellen des Angebots'}`)
     } finally {
       setSubmitting(false)
     }

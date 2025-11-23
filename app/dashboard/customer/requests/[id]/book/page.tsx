@@ -533,7 +533,7 @@ export default function BookAppointmentPage() {
                     Verstanden - Ich rufe die Werkstatt an
                   </button>
                   <p className="text-sm text-gray-600 text-center mt-3">
-                    Erwähnen Sie beim Anruf Ihre Anfrage-Nummer: <strong>#{request?.id}</strong>
+                    Erwähnen Sie beim Anruf Ihre Anfrage-Nummer: <strong>#{request?.id?.slice(-4)}</strong>
                   </p>
                 </div>
               ) : (

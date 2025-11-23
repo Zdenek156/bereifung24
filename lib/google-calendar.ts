@@ -249,12 +249,14 @@ export function generateAvailableSlots(
   const [fromHour, fromMinute] = workingHours.from.split(':').map(Number)
   const [toHour, toMinute] = workingHours.to.split(':').map(Number)
   
-  // Create start and end datetime
-  const startTime = new Date(date)
-  startTime.setHours(fromHour, fromMinute, 0, 0)
+  // Create start and end datetime in local timezone
+  // Important: Use local time to match busy slots from Google Calendar
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const day = date.getDate()
   
-  const endTime = new Date(date)
-  endTime.setHours(toHour, toMinute, 0, 0)
+  const startTime = new Date(year, month, day, fromHour, fromMinute, 0, 0)
+  const endTime = new Date(year, month, day, toHour, toMinute, 0, 0)
   
   // Parse break times if present
   let breakStart: Date | null = null
@@ -264,11 +266,8 @@ export function generateAvailableSlots(
     const [breakFromHour, breakFromMinute] = workingHours.breakFrom.split(':').map(Number)
     const [breakToHour, breakToMinute] = workingHours.breakTo.split(':').map(Number)
     
-    breakStart = new Date(date)
-    breakStart.setHours(breakFromHour, breakFromMinute, 0, 0)
-    
-    breakEnd = new Date(date)
-    breakEnd.setHours(breakToHour, breakToMinute, 0, 0)
+    breakStart = new Date(year, month, day, breakFromHour, breakFromMinute, 0, 0)
+    breakEnd = new Date(year, month, day, breakToHour, breakToMinute, 0, 0)
   }
   
   // Generate slots

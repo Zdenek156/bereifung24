@@ -208,6 +208,7 @@ export async function getBusySlots(
   timeMax: string // ISO datetime
 ) {
   try {
+    console.log('🔍 getBusySlots called:', { calendarId, timeMin, timeMax })
     const calendar = getCalendarClient(accessToken, refreshToken)
     
     const response = await calendar.freebusy.query({
@@ -220,9 +221,11 @@ export async function getBusySlots(
     })
     
     const busySlots = response.data.calendars?.[calendarId]?.busy || []
+    console.log('📅 Busy slots from Google Calendar:', JSON.stringify(busySlots, null, 2))
+    console.log('📊 Total busy slots found:', busySlots.length)
     return busySlots
   } catch (error) {
-    console.error('Error getting busy slots:', error)
+    console.error('❌ Error getting busy slots:', error)
     throw error
   }
 }

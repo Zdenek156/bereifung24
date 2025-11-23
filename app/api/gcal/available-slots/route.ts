@@ -239,6 +239,7 @@ export async function GET(request: NextRequest) {
           
           // Combine calendar busy slots with DB bookings
           const allEmployeeBusySlots = [...validBusySlots, ...dbBusySlots]
+          console.log(`👤 Employee ${employee.id} - Calendar busy: ${validBusySlots.length}, DB busy: ${dbBusySlots.length}, Total: ${allEmployeeBusySlots.length}`)
           
           // Generate available slots for this employee
           const employeeSlots = generateAvailableSlots(
@@ -247,6 +248,7 @@ export async function GET(request: NextRequest) {
             allEmployeeBusySlots,
             duration
           )
+          console.log(`✅ Employee ${employee.id} - Generated ${employeeSlots.length} available slots`)
           
           // Mark these slots as available
           employeeSlots.forEach(slot => {
@@ -409,11 +411,12 @@ export async function GET(request: NextRequest) {
     // Combine calendar busy slots with DB bookings
     const allBusySlots = [...validBusySlots, ...dbBusySlots]
     
-    console.log('Busy slots:', {
+    console.log('📊 WORKSHOP CALENDAR - Busy slots:', {
       fromCalendar: validBusySlots.length,
       fromDatabase: dbBusySlots.length,
       total: allBusySlots.length
     })
+    console.log('📅 All busy slots details:', JSON.stringify(allBusySlots, null, 2))
     
     // Generate available slots
     const availableSlots = generateAvailableSlots(

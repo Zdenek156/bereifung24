@@ -382,7 +382,7 @@ model Offer {
   status            String        @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
   
   // If accepted
-  acceptedAt        DateTime?     @map("accepted_at")
+  acceptedAt        DateTime?
   declinedAt        DateTime?     @map("declined_at")
   booking           Booking?
   

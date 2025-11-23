@@ -219,7 +219,8 @@ export async function POST(req: NextRequest) {
               include: {
                 user: true
               }
-            }
+            },
+            vehicle: true // Include vehicle information
           }
         },
         workshop: {
@@ -358,11 +359,23 @@ export async function POST(req: NextRequest) {
     const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
     const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
     const tireModel = selectedTireOption?.model || completeOffer.tireModel
-    const customerAddress = `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`
+    
+    // Build customer address with city (not email)
+    const customerStreet = completeOffer.tireRequest.customer.user.street || ''
+    const customerZip = completeOffer.tireRequest.customer.user.zipCode || ''
+    const customerCity = completeOffer.tireRequest.customer.user.city || ''
+    const customerAddress = [customerStreet, customerZip, customerCity].filter(Boolean).join(', ')
+    
+    // Build vehicle info if available
+    let vehicleInfo = ''
+    if (completeOffer.tireRequest.vehicle) {
+      const v = completeOffer.tireRequest.vehicle
+      vehicleInfo = `\nFahrzeug: ${v.brand} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
+    }
     
     const eventDetails = {
       summary: `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
-      description: `Reifenwechsel für ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
+      description: `Reifenwechsel mit ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}${vehicleInfo}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
       start: appointmentStart.toISOString(),
       end: appointmentEnd.toISOString(),
       attendees: [{ email: completeOffer.tireRequest.customer.user.email }]

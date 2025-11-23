@@ -23,7 +23,14 @@ export async function GET(request: NextRequest) {
     
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
-      include: {
+      select: {
+        id: true,
+        calendarMode: true,
+        openingHours: true,
+        googleCalendarId: true,
+        googleAccessToken: true,
+        googleRefreshToken: true,
+        googleTokenExpiry: true,
         employees: {
           include: {
             employeeVacations: {

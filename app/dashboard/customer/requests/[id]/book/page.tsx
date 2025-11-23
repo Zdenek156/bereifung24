@@ -87,6 +87,8 @@ export default function BookAppointmentPage() {
   const [message, setMessage] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [selectedTireOption, setSelectedTireOption] = useState<TireOption | null>(null)
+  const [calendarUnavailable, setCalendarUnavailable] = useState(false)
+  const [showManualBooking, setShowManualBooking] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -153,12 +155,13 @@ export default function BookAppointmentPage() {
       if (response.ok) {
         const data = await response.json()
         setAvailableSlots(data.availableSlots || data.slots || [])
+        setCalendarUnavailable(false)
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
         console.error('Failed to fetch slots:', errorData)
         
         if (response.status === 400 || response.status === 401) {
-          alert('Online-Terminbuchung derzeit nicht verfügbar.\n\nBitte kontaktieren Sie die Werkstatt telefonisch, um einen Termin zu vereinbaren.')
+          setCalendarUnavailable(true)
         }
         
         setAvailableSlots([])
@@ -213,6 +216,15 @@ export default function BookAppointmentPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleManualBooking = () => {
+    setShowManualBooking(true)
+  }
+
+  const confirmManualBooking = () => {
+    alert('Vielen Dank! Bitte rufen Sie die Werkstatt an, um Ihren Termin zu vereinbaren.')
+    router.push('/dashboard/customer/requests')
   }
 
   const getMapUrl = () => {
@@ -451,24 +463,99 @@ export default function BookAppointmentPage() {
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Termin auswählen</h2>
               
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Wählen Sie ein Datum
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value)
-                    setSelectedSlot(null)
-                  }}
-                  min={getMinDate()}
-                  max={getMaxDate()}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
+              {calendarUnavailable ? (
+                <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
+                  <div className="flex items-start mb-4">
+                    <svg className="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        Online-Terminbuchung derzeit nicht verfügbar
+                      </h3>
+                      <p className="text-gray-700 mb-4">
+                        Die automatische Terminbuchung ist aktuell nicht möglich. Bitte rufen Sie die Werkstatt direkt an, um einen Termin zu vereinbaren.
+                      </p>
+                    </div>
+                  </div>
 
-              {selectedDate && (
+                  {offer && (
+                    <div className="bg-white rounded-lg p-4 mb-4">
+                      <h4 className="font-bold text-gray-900 mb-3">Werkstatt Kontaktdaten:</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span className="font-semibold">{offer.workshop.companyName}</span>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-primary-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <a href={`tel:${offer.workshop.phone}`} className="text-primary-600 font-bold text-lg hover:text-primary-700">
+                            {offer.workshop.phone}
+                          </a>
+                        </div>
+
+                        {offer.workshop.email && (
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <a href={`mailto:${offer.workshop.email}`} className="text-primary-600 hover:text-primary-700">
+                              {offer.workshop.email}
+                            </a>
+                          </div>
+                        )}
+
+                        {offer.workshop.street && (
+                          <div className="flex items-start">
+                            <svg className="w-5 h-5 text-gray-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <div>
+                              <div>{offer.workshop.street}</div>
+                              <div>{offer.workshop.zipCode} {offer.workshop.city}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={confirmManualBooking}
+                    className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold hover:bg-primary-700 transition-colors"
+                  >
+                    Verstanden - Ich rufe die Werkstatt an
+                  </button>
+                  <p className="text-sm text-gray-600 text-center mt-3">
+                    Erwähnen Sie beim Anruf Ihre Anfrage-Nummer: <strong>#{request?.id}</strong>
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Wählen Sie ein Datum
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => {
+                        setSelectedDate(e.target.value)
+                        setSelectedSlot(null)
+                      }}
+                      min={getMinDate()}
+                      max={getMaxDate()}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {selectedDate && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Verfügbare Zeiten
@@ -503,6 +590,8 @@ export default function BookAppointmentPage() {
                     </div>
                   )}
                 </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -521,18 +610,20 @@ export default function BookAppointmentPage() {
             </div>
 
             {/* Buchungs-Button */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <button
-                onClick={handleBooking}
-                disabled={!selectedSlot || submitting}
-                className="w-full py-4 bg-primary-600 text-white rounded-lg font-bold text-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {submitting ? 'Wird gebucht...' : 'Verbindlich buchen'}
-              </button>
-              <p className="text-sm text-gray-600 text-center mt-3">
-                Mit der Buchung akzeptieren Sie die AGB der Werkstatt
-              </p>
-            </div>
+            {!calendarUnavailable && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <button
+                  onClick={handleBooking}
+                  disabled={!selectedSlot || submitting}
+                  className="w-full py-4 bg-primary-600 text-white rounded-lg font-bold text-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Wird gebucht...' : 'Verbindlich buchen'}
+                </button>
+                <p className="text-sm text-gray-600 text-center mt-3">
+                  Mit der Buchung akzeptieren Sie die AGB der Werkstatt
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Rechte Spalte: Werkstatt-Informationen */}

@@ -283,10 +283,16 @@ export function generateAvailableSlots(
       const busyStart = new Date(busy.start)
       const busyEnd = new Date(busy.end)
       
+      // Convert to timestamps for reliable comparison across timezones
+      const currentTimeMs = currentTime.getTime()
+      const slotEndMs = slotEnd.getTime()
+      const busyStartMs = busyStart.getTime()
+      const busyEndMs = busyEnd.getTime()
+      
       return (
-        (currentTime >= busyStart && currentTime < busyEnd) ||
-        (slotEnd > busyStart && slotEnd <= busyEnd) ||
-        (currentTime <= busyStart && slotEnd >= busyEnd)
+        (currentTimeMs >= busyStartMs && currentTimeMs < busyEndMs) ||
+        (slotEndMs > busyStartMs && slotEndMs <= busyEndMs) ||
+        (currentTimeMs <= busyStartMs && slotEndMs >= busyEndMs)
       )
     })
     

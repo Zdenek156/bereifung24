@@ -364,7 +364,12 @@ export async function POST(req: NextRequest) {
     const customerStreet = completeOffer.tireRequest.customer.user.street || ''
     const customerZip = completeOffer.tireRequest.customer.user.zipCode || ''
     const customerCity = completeOffer.tireRequest.customer.user.city || ''
-    const customerAddress = [customerStreet, customerZip, customerCity].filter(Boolean).join(', ')
+    // Format: "Street, PLZ City" (no comma between PLZ and city)
+    const addressParts = []
+    if (customerStreet) addressParts.push(customerStreet)
+    const zipCity = [customerZip, customerCity].filter(Boolean).join(' ')
+    if (zipCity) addressParts.push(zipCity)
+    const customerAddress = addressParts.join(', ')
     
     // Build vehicle info if available
     let vehicleInfo = ''

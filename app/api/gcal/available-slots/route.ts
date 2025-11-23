@@ -84,9 +84,10 @@ export async function GET(request: NextRequest) {
       employeeCount: workshop.employees.length
     })
     
-    if (workshop.calendarMode === 'workshop' && workshopHasCalendar) {
+    // INTELLIGENT FALLBACK: Try workshop calendar first if connected, otherwise use employees
+    if (workshopHasCalendar) {
       // Use workshop calendar
-      console.log('Using workshop calendar')
+      console.log('✓ Using workshop calendar (connected)')
       calendarData = {
         calendarId: workshop.googleCalendarId,
         accessToken: workshop.googleAccessToken,
@@ -101,9 +102,9 @@ export async function GET(request: NextRequest) {
         workingHours = hours[dayOfWeek]
       }
     } else {
-      // Use employee calendars if workshop calendar is not connected or mode is employees
+      // Fallback to employee calendars if workshop calendar is not connected
       useEmployeeCalendars = true
-      console.log('Checking for employee calendars...', {
+      console.log('⚠ Workshop calendar not connected, falling back to employee calendars...', {
         employeesTotal: workshop.employees.length
       })
     }

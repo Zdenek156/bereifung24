@@ -75,6 +75,14 @@ export async function POST(
     const body = await request.json()
     const validatedData = offerSchema.parse(body)
 
+    console.log('Creating offer with data:', {
+      workshopId: workshop.id,
+      tireRequestId: params.id,
+      tireOptionsCount: validatedData.tireOptions.length,
+      installationFee: validatedData.installationFee,
+      validDays: validatedData.validDays
+    })
+
     // Erstelle Angebot mit mehreren Reifen-Optionen
     const validUntil = new Date()
     validUntil.setDate(validUntil.getDate() + validatedData.validDays)
@@ -83,7 +91,11 @@ export async function POST(
     const firstOption = validatedData.tireOptions[0]
     const totalPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
 
-    const offer = await prisma.offer.create({
+    console.log('About to create offer in database')
+    
+    let offer
+    try {
+      offer = await prisma.offer.create({
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
@@ -122,6 +134,11 @@ export async function POST(
         }
       }
     })
+    console.log('Offer created successfully:', offer.id)
+    } catch (dbError) {
+      console.error('Database error creating offer:', dbError)
+      throw new Error(`Database error: ${dbError instanceof Error ? dbError.message : String(dbError)}`)
+    }
 
     // Update TireRequest status zu QUOTED wenn erstes Angebot
     if (tireRequest.status === 'PENDING') {

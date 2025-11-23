@@ -27,10 +27,15 @@ export async function GET(request: NextRequest) {
       calendarInfo: {}
     }
 
-    // Get workshop info with ALL employee fields
+    // Get workshop info with ALL fields explicitly selected
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
-      include: {
+      select: {
+        id: true,
+        googleCalendarId: true,
+        googleAccessToken: true,
+        googleRefreshToken: true,
+        googleTokenExpiry: true,
         employees: {
           select: {
             id: true,

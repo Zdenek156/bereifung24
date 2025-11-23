@@ -152,8 +152,15 @@ export default function BookAppointmentPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setAvailableSlots(data.slots || [])
+        setAvailableSlots(data.availableSlots || data.slots || [])
       } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
+        console.error('Failed to fetch slots:', errorData)
+        
+        if (response.status === 400 || response.status === 401) {
+          alert(`Kalender-Problem: ${errorData.message || errorData.error || 'Die Werkstatt muss ihren Google Calendar verbinden.'}`)
+        }
+        
         setAvailableSlots([])
       }
     } catch (error) {

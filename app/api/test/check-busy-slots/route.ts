@@ -61,7 +61,9 @@ export async function GET(request: NextRequest) {
     const timeMax = new Date(dateObj)
     timeMax.setHours(23, 59, 59, 999)
 
-    // Get busy slots from calendar
+    // Get busy slots from calendar - CHECK ALL SOURCES
+    const allCalendarSlots: any[] = []
+    
     if (employeeId) {
       // Check specific employee calendar
       const employee = workshop.employees.find(e => e.id === employeeId)
@@ -73,41 +75,62 @@ export async function GET(request: NextRequest) {
           timeMin.toISOString(),
           timeMax.toISOString()
         )
-        result.calendarBusySlots = busySlots
-        result.source = 'employee'
-        result.calendarId = employee.googleCalendarId
+        allCalendarSlots.push({
+          source: 'employee (requested)',
+          employeeId: employee.id,
+          calendarId: employee.googleCalendarId,
+          busySlots
+        })
       }
-    } else if (workshopHasCalendar) {
-      // Check workshop calendar
-      const busySlots = await getBusySlots(
-        workshop.googleAccessToken!,
-        workshop.googleRefreshToken!,
-        workshop.googleCalendarId!,
-        timeMin.toISOString(),
-        timeMax.toISOString()
-      )
-      result.calendarBusySlots = busySlots
-      result.source = 'workshop'
-      result.calendarId = workshop.googleCalendarId
-    } else if (workshop.employees.length > 0) {
-      // Check first employee calendar
-      const employee = workshop.employees.find(e => 
-        e.googleCalendarId && e.googleAccessToken && e.googleRefreshToken
-      )
-      if (employee) {
+    } else {
+      // Check workshop calendar if available
+      if (workshopHasCalendar) {
         const busySlots = await getBusySlots(
-          employee.googleAccessToken!,
-          employee.googleRefreshToken!,
-          employee.googleCalendarId!,
+          workshop.googleAccessToken!,
+          workshop.googleRefreshToken!,
+          workshop.googleCalendarId!,
           timeMin.toISOString(),
           timeMax.toISOString()
         )
-        result.calendarBusySlots = busySlots
-        result.source = 'employee (first available)'
-        result.calendarId = employee.googleCalendarId
-        result.employeeId = employee.id
+        allCalendarSlots.push({
+          source: 'workshop',
+          calendarId: workshop.googleCalendarId,
+          busySlots
+        })
+      }
+      
+      // Check ALL employee calendars
+      for (const employee of workshop.employees) {
+        if (employee.googleCalendarId && employee.googleAccessToken && employee.googleRefreshToken) {
+          try {
+            const busySlots = await getBusySlots(
+              employee.googleAccessToken,
+              employee.googleRefreshToken,
+              employee.googleCalendarId,
+              timeMin.toISOString(),
+              timeMax.toISOString()
+            )
+            allCalendarSlots.push({
+              source: 'employee',
+              employeeId: employee.id,
+              calendarId: employee.googleCalendarId,
+              busySlots
+            })
+          } catch (error) {
+            allCalendarSlots.push({
+              source: 'employee',
+              employeeId: employee.id,
+              calendarId: employee.googleCalendarId,
+              error: error instanceof Error ? error.message : String(error)
+            })
+          }
+        }
       }
     }
+    
+    result.allCalendarSources = allCalendarSlots
+    // Combine all busy slots for backward compatibility
+    result.calendarBusySlots = allCalendarSlots.flatMap(source => source.busySlots || [])
 
     // Get database bookings
     const dbBookings = await prisma.booking.findMany({

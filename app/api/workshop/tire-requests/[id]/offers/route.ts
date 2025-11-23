@@ -172,8 +172,10 @@ export async function POST(
     }
 
     console.error('Offer creation error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
-      { error: 'Fehler beim Erstellen des Angebots' },
+      { error: 'Fehler beim Erstellen des Angebots', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

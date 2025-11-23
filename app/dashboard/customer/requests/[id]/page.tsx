@@ -161,7 +161,10 @@ export default function RequestDetailPage() {
     })
   }
 
-  // Filter out expired offers
+  // Check if an offer has been accepted
+  const acceptedOffer = request.offers.find(offer => offer.status === 'ACCEPTED')
+  
+  // If no accepted offer, show all valid pending offers
   const now = new Date()
   const validOffers = request.offers.filter(offer => {
     const validUntil = new Date(offer.validUntil)
@@ -346,24 +349,185 @@ export default function RequestDetailPage() {
             </div>
           </div>
 
-          {/* Offers List */}
+          {/* Offers List or Accepted Offer Details */}
           <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900">
-                Erhaltene Angebote ({sortedOffers.length})
-              </h2>
-              <p className="text-gray-600 mt-1">Sortiert nach Preis (günstigste zuerst)</p>
-            </div>
+            {acceptedOffer ? (
+              // Show accepted offer details
+              <>
+                <div className="mb-6">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="text-4xl">✓</span>
+                    <h2 className="text-3xl font-bold text-green-600">
+                      Angebot angenommen
+                    </h2>
+                  </div>
+                  <p className="text-gray-600">Hier sind die Details Ihres angenommenen Angebots</p>
+                </div>
 
-            {sortedOffers.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                <div className="text-6xl mb-4">⏳</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Noch keine Angebote</h3>
-                <p className="text-gray-600">
-                  Werkstätten in Ihrer Nähe wurden benachrichtigt. Sie erhalten bald Angebote.
-                </p>
-              </div>
+                <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-green-400 mb-6">
+                  {/* Workshop Info */}
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Werkstatt</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Name</p>
+                        <p className="font-semibold text-lg">{acceptedOffer.workshop.companyName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Telefon</p>
+                        <p className="font-semibold text-lg">{acceptedOffer.workshop.phone}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-600 mb-1">Adresse</p>
+                        <p className="font-semibold">
+                          {acceptedOffer.workshop.street}<br />
+                          {acceptedOffer.workshop.zipCode} {acceptedOffer.workshop.city}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tire Details */}
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Reifen</h3>
+                    {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
+                      <div className="space-y-3">
+                        {acceptedOffer.tireOptions.map((option) => (
+                          <div key={option.id} className="bg-gray-50 rounded-lg p-4">
+                            <p className="font-semibold text-lg text-gray-900 mb-2">
+                              {option.brand} {option.model}
+                            </p>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-600">Preis pro Reifen</p>
+                                <p className="font-semibold">{option.pricePerTire.toFixed(2)} €</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">Anzahl</p>
+                                <p className="font-semibold">{request.quantity} Reifen</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="font-semibold text-lg text-gray-900 mb-2">
+                          {acceptedOffer.tireBrand} {acceptedOffer.tireModel}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Dimension: {request.width}/{request.aspectRatio} R{request.diameter}
+                        </p>
+                        <p className="text-sm text-gray-600">Anzahl: {request.quantity} Reifen</p>
+                      </div>
+                    )}
+                    {acceptedOffer.description && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-700">{acceptedOffer.description}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price Breakdown */}
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Kosten</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
+                        <>
+                          {acceptedOffer.tireOptions.map((option, idx) => (
+                            <div key={option.id} className="flex justify-between text-sm">
+                              <span className="text-gray-700">{option.brand} {option.model} ({request.quantity}x)</span>
+                              <span className="font-semibold">{(option.pricePerTire * request.quantity).toFixed(2)} €</span>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">Reifen ({request.quantity}x)</span>
+                          <span className="font-semibold">{(acceptedOffer.price - acceptedOffer.installationFee).toFixed(2)} €</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700">Montagekosten</span>
+                        <span className="font-semibold">{acceptedOffer.installationFee.toFixed(2)} €</span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-300 flex justify-between">
+                        <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
+                        <span className="text-2xl font-bold text-primary-600">{acceptedOffer.price.toFixed(2)} €</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Appointment Info */}
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Termin</h3>
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                      <div className="flex items-start">
+                        <svg className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-blue-900 mb-2">
+                            Terminvereinbarung erforderlich
+                          </p>
+                          <p className="text-sm text-blue-800 mb-3">
+                            Bitte vereinbaren Sie telefonisch einen Termin mit der Werkstatt.
+                          </p>
+                          <div className="bg-white rounded-lg p-4 border border-blue-200">
+                            <p className="text-sm text-gray-700 mb-2">
+                              <strong>Telefonnummer:</strong> {acceptedOffer.workshop.phone}
+                            </p>
+                            <p className="text-sm text-gray-700 mb-2">
+                              <strong>Ihr Buchungscode:</strong>
+                            </p>
+                            <div className="bg-gray-900 text-white px-4 py-3 rounded-lg font-mono text-2xl text-center tracking-wider">
+                              {request.id.slice(-4).toUpperCase()}
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2 text-center">
+                              Bitte geben Sie diesen Code bei der Terminvereinbarung an
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    href={`/dashboard/customer/requests/${requestId}/book?offerId=${acceptedOffer.id}`}
+                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center"
+                  >
+                    Termin online buchen
+                  </Link>
+                  <Link
+                    href="/dashboard/customer/requests"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
+                  >
+                    Zurück zur Übersicht
+                  </Link>
+                </div>
+              </>
             ) : (
+              // Show all available offers
+              <>
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Erhaltene Angebote ({sortedOffers.length})
+                  </h2>
+                  <p className="text-gray-600 mt-1">Sortiert nach Preis (günstigste zuerst)</p>
+                </div>
+
+                {sortedOffers.length === 0 ? (
+                  <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                    <div className="text-6xl mb-4">⏳</div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Noch keine Angebote</h3>
+                    <p className="text-gray-600">
+                      Werkstätten in Ihrer Nähe wurden benachrichtigt. Sie erhalten bald Angebote.
+                    </p>
+                  </div>
+                ) : (
               <div className="space-y-4">
                 {sortedOffers.map((offer, index) => (
                   <div
@@ -478,6 +642,8 @@ export default function RequestDetailPage() {
                   </div>
                 ))}
               </div>
+            )}
+              </>
             )}
           </div>
         </div>

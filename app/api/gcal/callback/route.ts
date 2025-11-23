@@ -84,8 +84,24 @@ export async function GET(request: NextRequest) {
       : new Date(Date.now() + 3600 * 1000) // 1 hour default
     
     // Save tokens to database
-    console.log('Saving to database...', { type, workshopId, employeeId })
+    console.log('Saving to database...', { 
+      type, 
+      workshopId, 
+      employeeId,
+      calendarId,
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      expiryDate 
+    })
+    
     if (type === 'workshop') {
+      console.log('Updating workshop with data:', {
+        workshopId,
+        calendarId,
+        accessTokenLength: tokens.access_token?.length,
+        refreshTokenLength: tokens.refresh_token?.length
+      })
+      
       const updated = await prisma.workshop.update({
         where: { id: workshopId },
         data: {
@@ -95,11 +111,23 @@ export async function GET(request: NextRequest) {
           googleTokenExpiry: expiryDate,
         }
       })
-      console.log('Workshop updated:', { 
-        id: updated.id, 
-        hasRefreshToken: !!updated.googleRefreshToken 
+      
+      console.log('Workshop updated successfully:', { 
+        id: updated.id,
+        companyName: updated.companyName,
+        hasCalendarId: !!updated.googleCalendarId,
+        hasAccessToken: !!updated.googleAccessToken,
+        hasRefreshToken: !!updated.googleRefreshToken,
+        tokenExpiry: updated.googleTokenExpiry
       })
     } else if (type === 'employee' && employeeId) {
+      console.log('Updating employee with data:', {
+        employeeId,
+        calendarId,
+        accessTokenLength: tokens.access_token?.length,
+        refreshTokenLength: tokens.refresh_token?.length
+      })
+      
       const updated = await prisma.employee.update({
         where: { id: employeeId },
         data: {
@@ -109,19 +137,31 @@ export async function GET(request: NextRequest) {
           googleTokenExpiry: expiryDate,
         }
       })
-      console.log('Employee updated:', { 
-        id: updated.id, 
-        hasRefreshToken: !!updated.googleRefreshToken 
+      
+      console.log('Employee updated successfully:', { 
+        id: updated.id,
+        name: updated.name,
+        hasCalendarId: !!updated.googleCalendarId,
+        hasAccessToken: !!updated.googleAccessToken,
+        hasRefreshToken: !!updated.googleRefreshToken,
+        tokenExpiry: updated.googleTokenExpiry
       })
+    } else {
+      console.error('Invalid type or missing employee ID:', { type, employeeId })
+      throw new Error('Invalid calendar connection type')
     }
     
+    console.log('Calendar connection successful, redirecting...')
     return NextResponse.redirect(
       `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&success=calendar_connected`
     )
   } catch (error) {
     console.error('Calendar callback error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=callback_failed`
+      `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?tab=terminplanung&error=callback_failed&message=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
     )
   }
 }

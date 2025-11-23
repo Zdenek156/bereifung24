@@ -155,6 +155,33 @@ export async function GET(request: NextRequest) {
         )
       }
       
+      // Get DB bookings for this workshop on this date
+      const timeMin = new Date(date + 'T00:00:00')
+      const timeMax = new Date(date + 'T23:59:59')
+      
+      const dbBookings = await prisma.booking.findMany({
+        where: {
+          workshopId: workshopId,
+          appointmentDate: {
+            gte: timeMin,
+            lte: timeMax
+          },
+          status: {
+            in: ['CONFIRMED', 'COMPLETED']
+          }
+        },
+        select: {
+          appointmentDate: true,
+          estimatedDuration: true
+        }
+      })
+      
+      // Convert DB bookings to busy slots
+      const dbBusySlots = dbBookings.map(booking => ({
+        start: booking.appointmentDate.toISOString(),
+        end: new Date(booking.appointmentDate.getTime() + booking.estimatedDuration * 60000).toISOString()
+      }))
+      
       // Collect all available slots from all employees
       const allSlotsMap = new Map<string, boolean>() // time -> isAvailable
       
@@ -210,11 +237,14 @@ export async function GET(request: NextRequest) {
               end: slot.end as string
             }))
           
+          // Combine calendar busy slots with DB bookings
+          const allEmployeeBusySlots = [...validBusySlots, ...dbBusySlots]
+          
           // Generate available slots for this employee
           const employeeSlots = generateAvailableSlots(
             dateObj,
             employeeWorkingHours,
-            validBusySlots,
+            allEmployeeBusySlots,
             duration
           )
           
@@ -347,11 +377,49 @@ export async function GET(request: NextRequest) {
         end: slot.end as string
       }))
     
+    // ALSO get busy slots from database bookings (for bookings not yet synced to calendar)
+    const dbBookings = await prisma.booking.findMany({
+      where: {
+        workshopId: workshopId,
+        appointmentDate: {
+          gte: timeMin,
+          lte: timeMax
+        },
+        status: {
+          in: ['CONFIRMED', 'COMPLETED'] // Don't block cancelled/no-show slots
+        }
+      },
+      select: {
+        appointmentDate: true,
+        appointmentTime: true,
+        estimatedDuration: true
+      }
+    })
+    
+    // Convert DB bookings to busy slot format
+    const dbBusySlots = dbBookings.map(booking => {
+      const start = new Date(booking.appointmentDate)
+      const end = new Date(start.getTime() + booking.estimatedDuration * 60000)
+      return {
+        start: start.toISOString(),
+        end: end.toISOString()
+      }
+    })
+    
+    // Combine calendar busy slots with DB bookings
+    const allBusySlots = [...validBusySlots, ...dbBusySlots]
+    
+    console.log('Busy slots:', {
+      fromCalendar: validBusySlots.length,
+      fromDatabase: dbBusySlots.length,
+      total: allBusySlots.length
+    })
+    
     // Generate available slots
     const availableSlots = generateAvailableSlots(
       dateObj,
       workingHours,
-      validBusySlots,
+      allBusySlots,
       duration
     )
     

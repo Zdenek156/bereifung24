@@ -66,10 +66,27 @@ export async function GET(request: NextRequest) {
     } | null = null
     
     let workingHours: any = null
+    let useEmployeeCalendars = false
     
     // Determine which calendar to use
-    if (workshop.calendarMode === 'workshop') {
+    // Priority: 1. Workshop calendar (if connected), 2. Employee calendars (if available)
+    
+    const workshopHasCalendar = !!(
+      workshop.googleCalendarId && 
+      workshop.googleAccessToken && 
+      workshop.googleRefreshToken
+    )
+    
+    console.log('Calendar check:', {
+      calendarMode: workshop.calendarMode,
+      workshopHasCalendar,
+      workshopCalendarId: workshop.googleCalendarId,
+      employeeCount: workshop.employees.length
+    })
+    
+    if (workshop.calendarMode === 'workshop' && workshopHasCalendar) {
       // Use workshop calendar
+      console.log('Using workshop calendar')
       calendarData = {
         calendarId: workshop.googleCalendarId,
         accessToken: workshop.googleAccessToken,
@@ -83,7 +100,15 @@ export async function GET(request: NextRequest) {
         const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
         workingHours = hours[dayOfWeek]
       }
-    } else if (workshop.calendarMode === 'employees') {
+    } else {
+      // Use employee calendars if workshop calendar is not connected or mode is employees
+      useEmployeeCalendars = true
+      console.log('Checking for employee calendars...', {
+        employeesTotal: workshop.employees.length
+      })
+    }
+    
+    if (useEmployeeCalendars) {
       // Use combined employee calendars - find slots where ANY employee is available
       const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
       const dateObj = new Date(date)
@@ -91,7 +116,13 @@ export async function GET(request: NextRequest) {
       // Filter employees who have calendar connected and are not on vacation
       const availableEmployees = workshop.employees.filter(emp => {
         // Must have calendar connected
-        if (!emp.googleRefreshToken || !emp.googleCalendarId) return false
+        const hasCalendar = !!(emp.googleRefreshToken && emp.googleCalendarId)
+        console.log(`Employee ${emp.name} calendar check:`, {
+          hasRefreshToken: !!emp.googleRefreshToken,
+          hasCalendarId: !!emp.googleCalendarId,
+          hasCalendar
+        })
+        if (!hasCalendar) return false
         
         // Must not be on vacation
         if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
@@ -110,11 +141,17 @@ export async function GET(request: NextRequest) {
         return true
       })
       
+      console.log('Available employees with calendar:', availableEmployees.length)
+      
       if (availableEmployees.length === 0) {
-        return NextResponse.json({ 
-          availableSlots: [],
-          message: 'Keine Mitarbeiter verfügbar'
-        })
+        return NextResponse.json(
+          { 
+            error: 'Kalender nicht verbunden',
+            message: 'Bitte verbinden Sie einen Google Calendar in den Einstellungen (Werkstatt oder Mitarbeiter).',
+            availableSlots: []
+          },
+          { status: 400 }
+        )
       }
       
       // Collect all available slots from all employees
@@ -196,14 +233,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ availableSlots })
     }
     
+    // This should only be reached if workshop calendar mode is selected but not connected
     if (!calendarData || !calendarData.calendarId || !calendarData.accessToken || !calendarData.refreshToken) {
-      console.error('Calendar not connected:', {
+      console.error('Workshop calendar not connected:', {
         hasCalendarData: !!calendarData,
         hasCalendarId: !!calendarData?.calendarId,
         hasAccessToken: !!calendarData?.accessToken,
         hasRefreshToken: !!calendarData?.refreshToken,
         workshopId,
-        calendarMode: workshop.calendarMode
+        calendarMode: workshop.calendarMode,
+        useEmployeeCalendars
       })
       
       return NextResponse.json(
@@ -212,7 +251,8 @@ export async function GET(request: NextRequest) {
           message: 'Bitte verbinden Sie den Google Calendar in den Einstellungen.',
           details: {
             calendarMode: workshop.calendarMode,
-            hasCalendar: !!calendarData?.calendarId
+            hasCalendar: !!calendarData?.calendarId,
+            suggestion: 'Werkstatt-Kalender nicht verbunden. Wechseln Sie zu Mitarbeiter-Kalendern oder verbinden Sie den Werkstatt-Kalender.'
           }
         },
         { status: 400 }

@@ -352,44 +352,109 @@ export async function POST(req: NextRequest) {
       // Continue even if email fails
     }
 
-    // Create Google Calendar event if workshop has calendar connected
+    // Create Google Calendar event - INTELLIGENT FALLBACK: Workshop first, then employees
     let calendarEventId = null
-    if (completeOffer.workshop.googleAccessToken && completeOffer.workshop.googleRefreshToken && completeOffer.workshop.googleCalendarId) {
+    const appointmentStart = new Date(appointmentDate)
+    const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
+    const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
+    const tireModel = selectedTireOption?.model || completeOffer.tireModel
+    const customerAddress = `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`
+    
+    const eventDetails = {
+      summary: `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
+      description: `Reifenwechsel für ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
+      start: appointmentStart.toISOString(),
+      end: appointmentEnd.toISOString(),
+      attendees: [{ email: completeOffer.tireRequest.customer.user.email }]
+    }
+    
+    const workshopHasCalendar = !!(
+      completeOffer.workshop.googleAccessToken && 
+      completeOffer.workshop.googleRefreshToken && 
+      completeOffer.workshop.googleCalendarId
+    )
+    
+    if (workshopHasCalendar) {
+      // Priority 1: Use workshop calendar
+      console.log('Creating event in workshop calendar')
       try {
         const { createCalendarEvent } = await import('@/lib/google-calendar')
-        
-        const appointmentStart = new Date(appointmentDate)
-        const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
-        
-        const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
-        const tireModel = selectedTireOption?.model || completeOffer.tireModel
-        const customerAddress = `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`
-        
         const calendarEvent = await createCalendarEvent(
           completeOffer.workshop.googleAccessToken,
           completeOffer.workshop.googleRefreshToken,
           completeOffer.workshop.googleCalendarId,
-          {
-            summary: `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
-            description: `Reifenwechsel für ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`,
-            start: appointmentStart.toISOString(),
-            end: appointmentEnd.toISOString(),
-            attendees: [{ email: completeOffer.tireRequest.customer.user.email }]
-          }
+          eventDetails
         )
         
         calendarEventId = calendarEvent.id || null
         
-        // Update booking with calendar event ID
         if (calendarEventId) {
           await prisma.booking.update({
             where: { id: booking.id },
             data: { googleEventId: calendarEventId }
           })
+          console.log('✓ Event created in workshop calendar:', calendarEventId)
         }
       } catch (calendarError) {
-        console.error('Failed to create calendar event:', calendarError)
-        // Continue even if calendar creation fails
+        console.error('Failed to create workshop calendar event:', calendarError)
+      }
+    } else {
+      // Priority 2: Use employee calendar (find first available employee with calendar on that day)
+      console.log('Workshop calendar not connected, trying employee calendars...')
+      try {
+        const employees = await prisma.employee.findMany({
+          where: {
+            workshopId: workshopId,
+            googleAccessToken: { not: null },
+            googleRefreshToken: { not: null },
+            googleCalendarId: { not: null }
+          }
+        })
+        
+        const dayOfWeek = new Date(appointmentDate).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+        
+        // Find first employee working on this day
+        for (const employee of employees) {
+          if (!employee.workingHours) continue
+          
+          try {
+            const hours = JSON.parse(employee.workingHours)
+            const dayHours = hours[dayOfWeek]
+            
+            if (dayHours && dayHours.working && employee.googleAccessToken && employee.googleRefreshToken && employee.googleCalendarId) {
+              const { createCalendarEvent } = await import('@/lib/google-calendar')
+              const calendarEvent = await createCalendarEvent(
+                employee.googleAccessToken,
+                employee.googleRefreshToken,
+                employee.googleCalendarId,
+                eventDetails
+              )
+              
+              calendarEventId = calendarEvent.id || null
+              
+              if (calendarEventId) {
+                await prisma.booking.update({
+                  where: { id: booking.id },
+                  data: { 
+                    googleEventId: calendarEventId,
+                    employeeId: employee.id // Link booking to employee
+                  }
+                })
+                console.log(`✓ Event created in employee calendar (${employee.name}):`, calendarEventId)
+                break // Stop after first successful calendar event creation
+              }
+            }
+          } catch (empError) {
+            console.error(`Failed to create event for employee ${employee.id}:`, empError)
+            continue
+          }
+        }
+        
+        if (!calendarEventId) {
+          console.log('⚠ No employee calendar available, booking saved without calendar sync')
+        }
+      } catch (employeeError) {
+        console.error('Failed to create employee calendar event:', employeeError)
       }
     }
 

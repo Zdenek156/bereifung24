@@ -742,9 +742,53 @@ export default function BookAppointmentPage() {
             {/* Öffnungszeiten */}
             {offer.workshop.openingHours && (
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Öffnungszeiten</h2>
-                <div className="text-sm text-gray-700 whitespace-pre-line">
-                  {offer.workshop.openingHours}
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Öffnungszeiten
+                </h2>
+                <div className="space-y-2">
+                  {(() => {
+                    try {
+                      const hours = JSON.parse(offer.workshop.openingHours)
+                      const dayLabels: { [key: string]: string } = {
+                        monday: 'Montag',
+                        tuesday: 'Dienstag',
+                        wednesday: 'Mittwoch',
+                        thursday: 'Donnerstag',
+                        friday: 'Freitag',
+                        saturday: 'Samstag',
+                        sunday: 'Sonntag'
+                      }
+                      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                      
+                      return days.map(day => {
+                        const timeSlots = hours[day]
+                        if (!timeSlots || timeSlots === 'closed' || timeSlots === '') {
+                          return (
+                            <div key={day} className="flex justify-between text-sm py-1 border-b border-gray-100">
+                              <span className="font-medium text-gray-700">{dayLabels[day]}</span>
+                              <span className="text-gray-500">Geschlossen</span>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div key={day} className="flex justify-between text-sm py-1 border-b border-gray-100">
+                            <span className="font-medium text-gray-700">{dayLabels[day]}</span>
+                            <span className="text-gray-900">{timeSlots}</span>
+                          </div>
+                        )
+                      })
+                    } catch (e) {
+                      // Fallback für altes Text-Format
+                      return (
+                        <div className="text-sm text-gray-700 whitespace-pre-line">
+                          {offer.workshop.openingHours}
+                        </div>
+                      )
+                    }
+                  })()}
                 </div>
               </div>
             )}

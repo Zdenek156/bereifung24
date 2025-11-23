@@ -748,47 +748,8 @@ export default function BookAppointmentPage() {
                   </svg>
                   Öffnungszeiten
                 </h2>
-                <div className="space-y-2">
-                  {(() => {
-                    try {
-                      const hours = JSON.parse(offer.workshop.openingHours)
-                      const dayLabels: { [key: string]: string } = {
-                        monday: 'Montag',
-                        tuesday: 'Dienstag',
-                        wednesday: 'Mittwoch',
-                        thursday: 'Donnerstag',
-                        friday: 'Freitag',
-                        saturday: 'Samstag',
-                        sunday: 'Sonntag'
-                      }
-                      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-                      
-                      return days.map(day => {
-                        const timeSlots = hours[day]
-                        if (!timeSlots || timeSlots === 'closed' || timeSlots === '') {
-                          return (
-                            <div key={day} className="flex justify-between text-sm py-1 border-b border-gray-100">
-                              <span className="font-medium text-gray-700">{dayLabels[day]}</span>
-                              <span className="text-gray-500">Geschlossen</span>
-                            </div>
-                          )
-                        }
-                        return (
-                          <div key={day} className="flex justify-between text-sm py-1 border-b border-gray-100">
-                            <span className="font-medium text-gray-700">{dayLabels[day]}</span>
-                            <span className="text-gray-900">{timeSlots}</span>
-                          </div>
-                        )
-                      })
-                    } catch (e) {
-                      // Fallback für altes Text-Format
-                      return (
-                        <div className="text-sm text-gray-700 whitespace-pre-line">
-                          {offer.workshop.openingHours}
-                        </div>
-                      )
-                    }
-                  })()}
+                <div className="text-sm text-gray-700 whitespace-pre-line">
+                  {offer.workshop.openingHours}
                 </div>
               </div>
             )}

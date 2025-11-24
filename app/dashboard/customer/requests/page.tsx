@@ -157,13 +157,21 @@ export default function RequestsPage() {
                       <span className="text-3xl">{getSeasonEmoji(request.season)}</span>
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900">
-                          {request.width}/{request.aspectRatio} R{request.diameter}
-                          {request.loadIndex && ` ${request.loadIndex}`}
-                          {request.speedRating && request.speedRating}
-                          {request.isRunflat && ' (Runflat)'}
+                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                            // Service request (wheel change, etc.)
+                            <span>🔧 Räder umstecken (Sommer/Winter)</span>
+                          ) : (
+                            // Regular tire request
+                            <>
+                              {request.width}/{request.aspectRatio} R{request.diameter}
+                              {request.loadIndex && ` ${request.loadIndex}`}
+                              {request.speedRating && request.speedRating}
+                              {request.isRunflat && ' (Runflat)'}
+                            </>
+                          )}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {request.quantity} Reifen • Erstellt am {formatDate(request.createdAt)}
+                          {request.width === 0 ? 'Service-Anfrage' : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -194,6 +202,13 @@ export default function RequestsPage() {
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Bevorzugte Hersteller:</strong> {request.preferredBrands}
                       </p>
+                    )}
+                    
+                    {request.additionalNotes && request.width === 0 && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-900 font-semibold mb-1">Service-Details:</p>
+                        <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
+                      </div>
                     )}
                   </div>
 

@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
               ${customer.user.firstName} ${customer.user.lastName}<br>
               ${customer.user.street || ''}<br>
               ${customer.user.zipCode || ''} ${customer.user.city || ''}<br>
-              ${customer.user.phone || ''}
+              Telefon: ${customer.user.phone || 'Nicht angegeben'}<br>
+              E-Mail: ${customer.user.email}
             </p>
             
             <h3>Fahrzeug:</h3>
@@ -155,37 +156,64 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log(`✅ Sent notifications to ${workshops.length} workshops offering WHEEL_CHANGE service`)
+
     // Send confirmation email to customer
     try {
       await sendEmail({
         to: customer.user.email,
         subject: 'Ihre Anfrage für Räder umstecken wurde erstellt',
         html: `
-          <h2>Anfrage erfolgreich erstellt</h2>
-          <p>Vielen Dank für Ihre Anfrage!</p>
-          
-          <h3>Ihre Anfrage:</h3>
-          <p>
-            Service: Räder umstecken (Sommer/Winter)<br>
-            ${vehicleInfo !== 'Nicht angegeben' ? `Fahrzeug: ${vehicleInfo}<br>` : ''}
-            ${validatedData.preferredDate ? `Wunschtermin: ${new Date(validatedData.preferredDate).toLocaleDateString('de-DE')}<br>` : ''}
-          </p>
-          
-          <h3>Details:</h3>
-          <ul>
-            <li>Komplett montierte Räder: ${validatedData.hasWheels ? 'Ja' : 'Nein'}</li>
-            <li>Wuchten gewünscht: ${validatedData.needsBalancing ? 'Ja' : 'Nein'}</li>
-            <li>Einlagerung gewünscht: ${validatedData.needsStorage ? 'Ja' : 'Nein'}</li>
-          </ul>
-          
-          <p>Wir haben Ihre Anfrage an Werkstätten in Ihrer Nähe weitergeleitet. Sie werden in Kürze Angebote erhalten.</p>
-          
-          <p>
-            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer" 
-               style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; margin-top: 16px;">
-              Zum Dashboard
-            </a>
-          </p>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9fafb; padding: 30px; }
+              .highlight { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .button { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>✅ Anfrage erfolgreich erstellt</h1>
+              </div>
+              <div class="content">
+                <p><strong>Hallo ${customer.user.firstName},</strong></p>
+                <p>Vielen Dank für Ihre Anfrage für Räder umstecken!</p>
+                
+                <div class="highlight">
+                  <strong>📢 Ihre Anfrage wurde an ${workshops.length} Werkstatt${workshops.length !== 1 ? 'en' : ''} in Ihrer Nähe weitergeleitet!</strong><br>
+                  Sie werden in Kürze Angebote erhalten.
+                </div>
+                
+                <h3>Ihre Anfrage:</h3>
+                <p>
+                  <strong>Service:</strong> Räder umstecken (Sommer/Winter)<br>
+                  ${vehicleInfo !== 'Nicht angegeben' ? `<strong>Fahrzeug:</strong> ${vehicleInfo}<br>` : ''}
+                  ${validatedData.preferredDate ? `<strong>Wunschtermin:</strong> ${new Date(validatedData.preferredDate).toLocaleDateString('de-DE')}<br>` : ''}
+                </p>
+                
+                <h3>Details:</h3>
+                <ul>
+                  <li>Komplett montierte Räder: ${validatedData.hasWheels ? 'Ja' : 'Nein'}</li>
+                  <li>Wuchten gewünscht: ${validatedData.needsBalancing ? 'Ja' : 'Nein'}</li>
+                  <li>Einlagerung gewünscht: ${validatedData.needsStorage ? 'Ja' : 'Nein'}</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                  <a href="${process.env.NEXTAUTH_URL}/dashboard/customer" class="button">
+                    Zum Dashboard
+                  </a>
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
         `
       })
     } catch (emailError) {

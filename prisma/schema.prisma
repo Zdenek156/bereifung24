@@ -600,10 +600,14 @@ model WorkshopService {
   runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
   disposalFee           Float?   // Entsorgungsgebühr (pro Reifen)
   wheelSizeSurcharge    Json?    // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
+  balancingPrice        Float?   // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
+  storagePrice          Float?   // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
   
   // Duration
   durationMinutes       Int      // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)
   durationMinutes4      Int?     // Dauer für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
+  balancingMinutes      Int?     // Zusätzliche Dauer für Wuchten (pro Rad bei WHEEL_CHANGE)
+  storageAvailable      Boolean? @default(false) // Einlagerung verfügbar
   
   // Availability
   isActive              Boolean  @default(true)

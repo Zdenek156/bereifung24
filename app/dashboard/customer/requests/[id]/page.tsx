@@ -283,44 +283,65 @@ export default function RequestDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Ihre Anfrage</h2>
               
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Reifentyp</p>
-                  <p className="text-lg font-semibold">{getSeasonText(request.season)}</p>
-                </div>
+                {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                  // Service request (wheel change, etc.)
+                  <>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Service</p>
+                      <p className="text-2xl font-bold text-primary-600">🔧 Räder umstecken</p>
+                      <p className="text-sm text-gray-600 mt-1">Sommer/Winter Wechsel</p>
+                    </div>
 
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Dimension</p>
-                  <p className="text-2xl font-bold text-primary-600">
-                    {request.width}/{request.aspectRatio} R{request.diameter}
-                  </p>
-                  {(request.loadIndex || request.speedRating) && (
-                    <p className="text-sm text-gray-600">
-                      {request.loadIndex && `Tragfähigkeit: ${request.loadIndex}`}
-                      {request.loadIndex && request.speedRating && ' • '}
-                      {request.speedRating && `Geschwindigkeit: ${request.speedRating}`}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Eigenschaften</p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                      {request.quantity} Reifen
-                    </span>
-                    {request.isRunflat && (
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                        Runflat
-                      </span>
+                    {request.additionalNotes && (
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                        <p className="text-sm text-blue-900 font-semibold mb-2">Service-Details:</p>
+                        <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
+                      </div>
                     )}
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  // Regular tire request
+                  <>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Reifentyp</p>
+                      <p className="text-lg font-semibold">{getSeasonText(request.season)}</p>
+                    </div>
 
-                {request.preferredBrands && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Bevorzugte Hersteller</p>
-                    <p className="text-sm">{request.preferredBrands}</p>
-                  </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Dimension</p>
+                      <p className="text-2xl font-bold text-primary-600">
+                        {request.width}/{request.aspectRatio} R{request.diameter}
+                      </p>
+                      {(request.loadIndex || request.speedRating) && (
+                        <p className="text-sm text-gray-600">
+                          {request.loadIndex && `Tragfähigkeit: ${request.loadIndex}`}
+                          {request.loadIndex && request.speedRating && ' • '}
+                          {request.speedRating && `Geschwindigkeit: ${request.speedRating}`}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Eigenschaften</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                          {request.quantity} Reifen
+                        </span>
+                        {request.isRunflat && (
+                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            Runflat
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {request.preferredBrands && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Bevorzugte Hersteller</p>
+                        <p className="text-sm">{request.preferredBrands}</p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div>
@@ -333,7 +354,7 @@ export default function RequestDetailPage() {
                   <p className="text-sm font-semibold">{formatDate(request.needByDate)}</p>
                 </div>
 
-                {request.additionalNotes && (
+                {request.additionalNotes && request.width !== 0 && (
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Zusätzliche Hinweise</p>
                     <p className="text-sm">{request.additionalNotes}</p>

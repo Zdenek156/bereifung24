@@ -16,6 +16,7 @@ interface TireRequest {
   isRunflat: boolean
   quantity: number
   preferredBrands?: string
+  additionalNotes?: string
   status: string
   needByDate: string
   zipCode: string

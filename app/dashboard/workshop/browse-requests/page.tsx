@@ -387,41 +387,62 @@ export default function BrowseRequestsPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">
-                            {request.width}/{request.aspectRatio} R{request.diameter}
-                          </h3>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            request.season === 'SUMMER' ? 'bg-yellow-100 text-yellow-800' :
-                            request.season === 'WINTER' ? 'bg-blue-100 text-blue-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {getSeasonLabel(request.season)}
-                          </span>
-                          {request.isRunflat && (
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              Runflat
-                            </span>
+                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🔧 Räder umstecken
+                            </h3>
+                          ) : (
+                            <>
+                              <h3 className="text-xl font-bold text-gray-900">
+                                {request.width}/{request.aspectRatio} R{request.diameter}
+                              </h3>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                request.season === 'SUMMER' ? 'bg-yellow-100 text-yellow-800' :
+                                request.season === 'WINTER' ? 'bg-blue-100 text-blue-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {getSeasonLabel(request.season)}
+                              </span>
+                              {request.isRunflat && (
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  Runflat
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p>
-                            <span className="font-medium">Menge:</span> {request.quantity} Reifen
-                          </p>
-                          {request.loadIndex && (
-                            <p>
-                              <span className="font-medium">Tragfähigkeit:</span> {request.loadIndex}
-                              {request.speedRating && ` ${request.speedRating}`}
-                            </p>
-                          )}
-                          {request.preferredBrands && (
-                            <p>
-                              <span className="font-medium">Bevorzugte Marken:</span> {request.preferredBrands}
-                            </p>
-                          )}
-                          {request.specificBrand && (
-                            <p>
-                              <span className="font-medium">Spezifische Marke:</span> {request.specificBrand}
-                            </p>
+                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                            <>
+                              {request.additionalNotes && (
+                                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                                  <p className="text-sm text-blue-900 font-semibold mb-1">Service-Details:</p>
+                                  <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p>
+                                <span className="font-medium">Menge:</span> {request.quantity} Reifen
+                              </p>
+                              {request.loadIndex && (
+                                <p>
+                                  <span className="font-medium">Tragfähigkeit:</span> {request.loadIndex}
+                                  {request.speedRating && ` ${request.speedRating}`}
+                                </p>
+                              )}
+                              {request.preferredBrands && (
+                                <p>
+                                  <span className="font-medium">Bevorzugte Marken:</span> {request.preferredBrands}
+                                </p>
+                              )}
+                              {request.specificBrand && (
+                                <p>
+                                  <span className="font-medium">Spezifische Marke:</span> {request.specificBrand}
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

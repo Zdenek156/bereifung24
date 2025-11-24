@@ -374,6 +374,9 @@ model Offer {
   pricePerTire      Float?
   installationFee   Float?
   durationMinutes   Int?          // Geschätzte Dauer für den Service
+  balancingPrice    Float?        @map("balancingprice") // Wuchten-Preis für Wheel Change
+  storagePrice      Float?        @map("storageprice") // Einlagerung-Preis für Wheel Change
+  storageAvailable  Boolean?      @default(false) @map("storageavailable") // Einlagerung verfügbar
   
   // Validity
   validUntil        DateTime

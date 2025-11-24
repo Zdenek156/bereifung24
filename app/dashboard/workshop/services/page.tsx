@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 
 interface Service {
@@ -48,6 +48,7 @@ const availableServiceTypes = [
 export default function WorkshopServicesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const formRef = useRef<HTMLDivElement>(null)
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -146,6 +147,11 @@ export default function WorkshopServicesPage() {
       priceFor: service.priceFor || '4_TIRES'
     })
     setShowAddForm(true)
+    
+    // Scroll to form after state update
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   const handleDelete = async (id: string) => {
@@ -250,7 +256,7 @@ export default function WorkshopServicesPage() {
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div ref={formRef} className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-xl font-bold mb-6">
               {editingService ? 'Service bearbeiten' : 'Neuer Service'}
             </h2>

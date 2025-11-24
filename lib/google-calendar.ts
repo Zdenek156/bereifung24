@@ -258,10 +258,15 @@ export function generateAvailableSlots(
   const month = date.getMonth()
   const day = date.getDate()
   
-  // CRITICAL FIX: Create times matching the LOCAL timezone, not UTC
-  // If busy slot is "2025-12-05T10:00:00+01:00" (10:00 local, 09:00 UTC)
-  // We should generate slot at 10:00 local time
-  // To do this, we need to adjust for timezone offset FROM busy slots
+  // CRITICAL FIX: Working hours are in LOCAL timezone
+  // Google Calendar: "10:00+01:00" = 10:00 Vienna time = 09:00 UTC
+  // Working hours "10:00" = 10:00 Vienna time = 09:00 UTC
+  // 
+  // The problem: Date.UTC() creates times in UTC, not local time!
+  // Date.UTC(2025, 11, 5, 10, 0) = "2025-12-05T10:00:00Z" (10:00 UTC)
+  // But we need "2025-12-05T10:00:00+01:00" (10:00 local = 09:00 UTC)
+  //
+  // Solution: Extract timezone offset and adjust working hours
   let timezoneOffset = 0 // in minutes
   if (busySlots.length > 0 && busySlots[0].start) {
     const match = busySlots[0].start.match(/([+-]\d{2}):(\d{2})$/)
@@ -272,26 +277,14 @@ export function generateAvailableSlots(
     }
   }
   
-  // DEBUG: Write to file since console.log doesn't work in PM2 cluster
-  const fs = require('fs')
-  fs.appendFileSync('/tmp/slots-debug.log', `\n=== ${new Date().toISOString()} ===\n`)
-  fs.appendFileSync('/tmp/slots-debug.log', `Date: ${date.toISOString()}\n`)
-  fs.appendFileSync('/tmp/slots-debug.log', `Busy slots count: ${busySlots.length}\n`)
-  if (busySlots.length > 0) {
-    fs.appendFileSync('/tmp/slots-debug.log', `First busy: ${JSON.stringify(busySlots[0])}\n`)
-  }
-  fs.appendFileSync('/tmp/slots-debug.log', `Timezone offset: ${timezoneOffset} minutes\n`)
-  
-  // Create UTC times, then adjust them to match the calendar's timezone
-  // Example: For 10:00 with +01:00 offset:
-  // UTC(2025-12-05 10:00) = 10:00 UTC
-  // Subtract 60 min = 09:00 UTC (which matches "2025-12-05T10:00:00+01:00")
+  // Create times in UTC
   const startTime = new Date(Date.UTC(year, month, day, fromHour, fromMinute, 0, 0))
   const endTime = new Date(Date.UTC(year, month, day, toHour, toMinute, 0, 0))
-  fs.appendFileSync('/tmp/slots-debug.log', `Start time BEFORE adjust: ${startTime.toISOString()}\n`)
+  
+  // Convert to local timezone by subtracting offset
+  // Example: 10:00 UTC - 60min = 09:00 UTC (which represents 10:00+01:00)
   startTime.setMinutes(startTime.getMinutes() - timezoneOffset)
   endTime.setMinutes(endTime.getMinutes() - timezoneOffset)
-  fs.appendFileSync('/tmp/slots-debug.log', `Start time AFTER adjust: ${startTime.toISOString()}\n`)
   
   // Parse break times if present
   let breakStart: Date | null = null
@@ -341,9 +334,14 @@ export function generateAvailableSlots(
     )
     
     if (isFree && !isInBreak && slotEnd <= endTime) {
-      // Format time as HH:MM
-      const hours = currentTime.getHours().toString().padStart(2, '0')
-      const minutes = currentTime.getMinutes().toString().padStart(2, '0')
+      // Convert back to local time for display
+      // currentTime is in UTC adjusted for timezone
+      // Add the offset back to show local time to user
+      const localTime = new Date(currentTime)
+      localTime.setMinutes(localTime.getMinutes() + timezoneOffset)
+      
+      const hours = localTime.getHours().toString().padStart(2, '0')
+      const minutes = localTime.getMinutes().toString().padStart(2, '0')
       availableSlots.push(`${hours}:${minutes}`)
     }
     

@@ -287,13 +287,11 @@ export async function GET(request: NextRequest) {
           if (!cal) return []
           
           const busySlots = await getBusySlots(
-            cal,
             emp.googleAccessToken!,
             emp.googleRefreshToken!,
-            emp.googleTokenExpiry,
-            workshop.id,
-            date,
-            date
+            cal,
+            `${date}T00:00:00`,
+            `${date}T23:59:59`
           )
           
           return busySlots.map(s => ({ start: s.start, end: s.end }))

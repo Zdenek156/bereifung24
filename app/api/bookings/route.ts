@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate } from '@/lib/email'
+import { getBusySlots, generateAvailableSlots } from '@/lib/google-calendar'
 
 // GET /api/bookings - Get all bookings for current customer
 export async function GET(req: NextRequest) {
@@ -248,6 +249,236 @@ export async function POST(req: NextRequest) {
     if (!selectedTireOption && offer.tireOptions && offer.tireOptions.length > 0) {
       selectedTireOption = offer.tireOptions[0]
     }
+
+    // ====== RACE CONDITION PREVENTION ======
+    // Re-check slot availability right before booking to prevent double-booking
+    console.log('🔒 Checking slot availability before booking...')
+    
+    const appointmentDateObj = new Date(appointmentDate)
+    const requestedTime = appointmentDateObj.toTimeString().substring(0, 5) // e.g., "14:00"
+    const dateOnly = appointmentDateObj.toISOString().split('T')[0] // YYYY-MM-DD
+    
+    // Get workshop with calendar info
+    const workshopForCheck = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+      select: {
+        id: true,
+        calendarMode: true,
+        openingHours: true,
+        googleCalendarId: true,
+        googleAccessToken: true,
+        googleRefreshToken: true,
+        googleTokenExpiry: true,
+        employees: {
+          select: {
+            id: true,
+            name: true,
+            workingHours: true,
+            googleCalendarId: true,
+            googleAccessToken: true,
+            googleRefreshToken: true,
+            googleTokenExpiry: true,
+            employeeVacations: {
+              where: {
+                startDate: { lte: appointmentDateObj },
+                endDate: { gte: appointmentDateObj }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (!workshopForCheck) {
+      return NextResponse.json(
+        { error: 'Werkstatt nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Check if slot is still available
+    let isSlotAvailable = false
+    
+    if (workshopForCheck.calendarMode === 'EMPLOYEE') {
+      // Employee calendar mode - check all employee calendars
+      const dayOfWeek = appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+      
+      const availableEmployees = workshopForCheck.employees.filter(emp => {
+        if (!emp.googleCalendarId || !emp.googleRefreshToken) return false
+        if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
+        
+        if (emp.workingHours) {
+          try {
+            const hours = JSON.parse(emp.workingHours)
+            const dayHours = hours[dayOfWeek]
+            if (!dayHours || !dayHours.working) return false
+          } catch (e) {
+            return false
+          }
+        }
+        return true
+      })
+
+      if (availableEmployees.length === 0) {
+        return NextResponse.json(
+          { 
+            error: 'Keine Mitarbeiter verfügbar',
+            message: 'Für diesen Zeitpunkt sind keine Mitarbeiter mit Kalender verfügbar.'
+          },
+          { status: 409 }
+        )
+      }
+
+      // Check availability for all employees
+      for (const employee of availableEmployees) {
+        try {
+          // Get busy slots from Google Calendar
+          const calendarBusySlots = await getBusySlots(
+            employee.googleAccessToken!,
+            employee.googleRefreshToken!,
+            employee.googleCalendarId!,
+            `${dateOnly}T00:00:00`,
+            `${dateOnly}T23:59:59`
+          )
+
+          // Get DB bookings for this employee
+          const dbBookings = await prisma.booking.findMany({
+            where: {
+              workshopId: workshopId,
+              appointmentDate: {
+                gte: new Date(`${dateOnly}T00:00:00`),
+                lte: new Date(`${dateOnly}T23:59:59`)
+              },
+              status: { in: ['CONFIRMED', 'COMPLETED'] }
+            },
+            select: {
+              appointmentDate: true,
+              estimatedDuration: true
+            }
+          })
+
+          const dbBusySlots = dbBookings.map(booking => ({
+            start: booking.appointmentDate.toISOString(),
+            end: new Date(booking.appointmentDate.getTime() + booking.estimatedDuration * 60000).toISOString()
+          }))
+
+          // Combine all busy slots
+          const allBusySlots = [
+            ...calendarBusySlots.map(s => ({ start: s.start as string, end: s.end as string })),
+            ...dbBusySlots
+          ]
+
+          // Get working hours for this employee
+          const workingHours = employee.workingHours ? JSON.parse(employee.workingHours)[dayOfWeek] : null
+          if (!workingHours || !workingHours.working) continue
+
+          // Generate available slots
+          const availableSlots = generateAvailableSlots(
+            appointmentDateObj,
+            workingHours,
+            allBusySlots,
+            estimatedDuration
+          )
+
+          // Check if requested time is in available slots
+          if (availableSlots.includes(requestedTime)) {
+            isSlotAvailable = true
+            console.log(`✅ Slot ${requestedTime} is available with employee ${employee.name}`)
+            break
+          }
+        } catch (error) {
+          console.error(`Error checking employee ${employee.id}:`, error)
+          continue
+        }
+      }
+    } else {
+      // Workshop calendar mode
+      if (!workshopForCheck.googleCalendarId || !workshopForCheck.googleRefreshToken) {
+        // No calendar connected, just check DB bookings
+        const conflicts = await prisma.booking.findMany({
+          where: {
+            workshopId: workshopId,
+            appointmentDate: appointmentDateObj,
+            status: { in: ['CONFIRMED', 'COMPLETED'] }
+          }
+        })
+        
+        isSlotAvailable = conflicts.length === 0
+      } else {
+        // Check Google Calendar + DB
+        const calendarBusySlots = await getBusySlots(
+          workshopForCheck.googleAccessToken!,
+          workshopForCheck.googleRefreshToken!,
+          workshopForCheck.googleCalendarId,
+          `${dateOnly}T00:00:00`,
+          `${dateOnly}T23:59:59`
+        )
+
+        const dbBookings = await prisma.booking.findMany({
+          where: {
+            workshopId: workshopId,
+            appointmentDate: {
+              gte: new Date(`${dateOnly}T00:00:00`),
+              lte: new Date(`${dateOnly}T23:59:59`)
+            },
+            status: { in: ['CONFIRMED', 'COMPLETED'] }
+          },
+          select: {
+            appointmentDate: true,
+            estimatedDuration: true
+          }
+        })
+
+        const dbBusySlots = dbBookings.map(booking => ({
+          start: booking.appointmentDate.toISOString(),
+          end: new Date(booking.appointmentDate.getTime() + booking.estimatedDuration * 60000).toISOString()
+        }))
+
+        const allBusySlots = [
+          ...calendarBusySlots.map(s => ({ start: s.start as string, end: s.end as string })),
+          ...dbBusySlots
+        ]
+
+        // Get working hours
+        const dayOfWeek = appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+        const workingHours = workshopForCheck.openingHours ? JSON.parse(workshopForCheck.openingHours)[dayOfWeek] : null
+        
+        if (!workingHours || !workingHours.working) {
+          return NextResponse.json(
+            { 
+              error: 'Werkstatt geschlossen',
+              message: 'Die Werkstatt ist an diesem Tag geschlossen.'
+            },
+            { status: 409 }
+          )
+        }
+
+        const availableSlots = generateAvailableSlots(
+          appointmentDateObj,
+          workingHours,
+          allBusySlots,
+          estimatedDuration
+        )
+
+        isSlotAvailable = availableSlots.includes(requestedTime)
+      }
+    }
+
+    // If slot is not available, return conflict error
+    if (!isSlotAvailable) {
+      console.log(`❌ Slot ${requestedTime} is no longer available - booking prevented!`)
+      return NextResponse.json(
+        { 
+          error: 'Termin nicht mehr verfügbar',
+          message: 'Der gewählte Termin wurde in der Zwischenzeit von einem anderen Kunden gebucht. Bitte wählen Sie einen anderen Zeitpunkt.',
+          code: 'SLOT_NO_LONGER_AVAILABLE'
+        },
+        { status: 409 } // 409 Conflict
+      )
+    }
+
+    console.log(`✅ Slot ${requestedTime} is still available - proceeding with booking`)
+    // ====== END RACE CONDITION PREVENTION ======
 
     // Create booking
     const booking = await prisma.booking.create({

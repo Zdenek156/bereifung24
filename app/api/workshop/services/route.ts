@@ -49,6 +49,7 @@ export async function GET(request: Request) {
 
 // POST /api/workshop/services - Create a new service
 export async function POST(request: Request) {
+  let body: any
   try {
     const session = await getServerSession(authOptions)
 
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await request.json()
+    body = await request.json()
     const {
       serviceType,
       basePrice,

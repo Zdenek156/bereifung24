@@ -411,40 +411,29 @@ export default function BrowseRequestsPage() {
                             </>
                           )}
                         </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
-                            <>
-                              {request.additionalNotes && (
-                                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
-                                  <p className="text-sm text-blue-900 font-semibold mb-1">Service-Details:</p>
-                                  <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <>
+                        {request.width !== 0 && (
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>
+                              <span className="font-medium">Menge:</span> {request.quantity} Reifen
+                            </p>
+                            {request.loadIndex && (
                               <p>
-                                <span className="font-medium">Menge:</span> {request.quantity} Reifen
+                                <span className="font-medium">Tragfähigkeit:</span> {request.loadIndex}
+                                {request.speedRating && ` ${request.speedRating}`}
                               </p>
-                              {request.loadIndex && (
-                                <p>
-                                  <span className="font-medium">Tragfähigkeit:</span> {request.loadIndex}
-                                  {request.speedRating && ` ${request.speedRating}`}
-                                </p>
-                              )}
-                              {request.preferredBrands && (
-                                <p>
-                                  <span className="font-medium">Bevorzugte Marken:</span> {request.preferredBrands}
-                                </p>
-                              )}
-                              {request.specificBrand && (
-                                <p>
-                                  <span className="font-medium">Spezifische Marke:</span> {request.specificBrand}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        </div>
+                            )}
+                            {request.preferredBrands && (
+                              <p>
+                                <span className="font-medium">Bevorzugte Marken:</span> {request.preferredBrands}
+                              </p>
+                            )}
+                            {request.specificBrand && (
+                              <p>
+                                <span className="font-medium">Spezifische Marke:</span> {request.specificBrand}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-right">
@@ -458,20 +447,20 @@ export default function BrowseRequestsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg mb-3">
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-2">Kunde</h4>
+                        <h4 className="font-medium text-gray-900 mb-1">Kunde</h4>
                         <p className="text-sm text-gray-600">
                           {request.customer.user.firstName} {request.customer.user.lastName}
                         </p>
                         <p className="text-sm text-gray-600">
                           PLZ: {request.zipCode}{request.city ? ` - ${request.city}` : ''}
                         </p>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500">
                           Umkreis: {request.radiusKm} km
                         </p>
                         {request.vehicleInfo && (
-                          <p className="text-sm text-gray-600 mt-2">
+                          <p className="text-sm text-gray-600 mt-1">
                             <span className="font-medium">Fahrzeug:</span> {request.vehicleInfo}
                           </p>
                         )}
@@ -479,8 +468,10 @@ export default function BrowseRequestsPage() {
 
                       {request.additionalNotes && (
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Zusätzliche Hinweise</h4>
-                          <p className="text-sm text-gray-600">{request.additionalNotes}</p>
+                          <h4 className="font-medium text-gray-900 mb-1">
+                            {request.width === 0 ? 'Service-Details' : 'Zusätzliche Hinweise'}
+                          </h4>
+                          <p className="text-sm text-gray-600 whitespace-pre-line">{request.additionalNotes}</p>
                         </div>
                       )}
                     </div>

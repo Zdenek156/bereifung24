@@ -276,29 +276,7 @@ export async function GET(request: NextRequest) {
       // Convert map to sorted array
       const availableSlots = Array.from(allSlotsMap.keys()).sort()
       
-      // Add debug info for timezone issue
-      const debugInfo = {
-        dateRequested: date,
-        dateObject: dateObj.toISOString(),
-        employeeCount: availableEmployees.length,
-        firstEmployeeBusySlots: availableEmployees.length > 0 ? await (async () => {
-          const emp = availableEmployees[0]
-          const cal = emp.googleCalendarId
-          if (!cal) return []
-          
-          const busySlots = await getBusySlots(
-            emp.googleAccessToken!,
-            emp.googleRefreshToken!,
-            cal,
-            `${date}T00:00:00`,
-            `${date}T23:59:59`
-          )
-          
-          return busySlots.map(s => ({ start: s.start, end: s.end }))
-        })() : []
-      }
-      
-      return NextResponse.json({ availableSlots, debug: debugInfo })
+      return NextResponse.json({ availableSlots })
     }
     
     // This should only be reached if workshop calendar mode is selected but not connected

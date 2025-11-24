@@ -280,26 +280,24 @@ export async function GET(request: NextRequest) {
       const debugInfo = {
         dateRequested: date,
         dateObject: dateObj.toISOString(),
-        employees: await Promise.all(employees.map(async (emp) => {
-          const cal = emp.googleCalendarId || workshop.googleCalendarId
-          if (!cal) return null
+        employeeCount: availableEmployees.length,
+        firstEmployeeBusySlots: availableEmployees.length > 0 ? await (async () => {
+          const emp = availableEmployees[0]
+          const cal = emp.googleCalendarId
+          if (!cal) return []
           
           const busySlots = await getCalendarBusySlots(
             cal,
-            workshop.googleAccessToken!,
-            workshop.googleRefreshToken!,
-            workshop.googleTokenExpiry,
+            emp.googleAccessToken!,
+            emp.googleRefreshToken!,
+            emp.googleTokenExpiry,
             workshop.id,
             date,
             date
           )
           
-          return {
-            name: emp.name,
-            calendarId: cal,
-            busySlots: busySlots.map(s => ({ start: s.start, end: s.end }))
-          }
-        }))
+          return busySlots.map(s => ({ start: s.start, end: s.end }))
+        })() : []
       }
       
       return NextResponse.json({ availableSlots, debug: debugInfo })

@@ -203,15 +203,13 @@ export default function BrowseRequestsPage() {
     const isWheelChange = selectedRequest.width === 0 && selectedRequest.aspectRatio === 0 && selectedRequest.diameter === 0
 
     // Validierung: Bei normalen Reifenanfragen muss mindestens ein Reifenangebot vollständig ausgefüllt sein
-    if (!isWheelChange) {
-      const validOptions = offerForm.tireOptions.filter(opt => 
-        opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
-      )
-      
-      if (validOptions.length === 0) {
-        alert('Bitte geben Sie mindestens ein Reifenangebot an.')
-        return
-      }
+    const validOptions = offerForm.tireOptions.filter(opt => 
+      opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
+    )
+    
+    if (!isWheelChange && validOptions.length === 0) {
+      alert('Bitte geben Sie mindestens ein Reifenangebot an.')
+      return
     }
 
     setSubmitting(true)
@@ -220,11 +218,13 @@ export default function BrowseRequestsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tireOptions: validOptions.map(opt => ({
-            brand: opt.brand,
-            model: opt.model,
-            pricePerTire: parseFloat(opt.pricePerTire)
-          })),
+          ...(validOptions.length > 0 && {
+            tireOptions: validOptions.map(opt => ({
+              brand: opt.brand,
+              model: opt.model,
+              pricePerTire: parseFloat(opt.pricePerTire)
+            }))
+          }),
           description: offerForm.description,
           installationFee: parseFloat(offerForm.installationFee),
           validDays: offerForm.validDays,

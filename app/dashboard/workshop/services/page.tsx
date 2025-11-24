@@ -165,6 +165,10 @@ export default function WorkshopServicesPage() {
       if (response.ok) {
         setMessage({ type: 'success', text: 'Service gelöscht' })
         fetchServices()
+        // Close form and reset if we were editing the deleted service
+        if (editingService?.id === id) {
+          resetForm()
+        }
       } else {
         setMessage({ type: 'error', text: 'Fehler beim Löschen' })
       }

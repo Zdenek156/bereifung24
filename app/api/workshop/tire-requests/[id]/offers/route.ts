@@ -16,7 +16,10 @@ const offerSchema = z.object({
   description: z.string().optional(),
   installationFee: z.number().min(0, 'Montagegebühr muss mindestens 0 sein'),
   validDays: z.number().int().min(1).max(30).default(7),
-  durationMinutes: z.number().int().positive().optional()
+  durationMinutes: z.number().int().positive().optional(),
+  balancingPrice: z.number().min(0).optional(), // Wuchten-Preis für Wheel Change
+  storagePrice: z.number().min(0).optional(), // Einlagerung-Preis für Wheel Change
+  storageAvailable: z.boolean().optional() // Einlagerung verfügbar
 })
 
 // POST - Werkstatt erstellt Angebot für eine Anfrage
@@ -121,6 +124,9 @@ export async function POST(
         price: totalPrice,
         installationFee: validatedData.installationFee,
         durationMinutes: validatedData.durationMinutes,
+        balancingPrice: validatedData.balancingPrice,
+        storagePrice: validatedData.storagePrice,
+        storageAvailable: validatedData.storageAvailable,
         validUntil: validUntil,
         status: 'PENDING',
         ...(hasValidTireOptions && {

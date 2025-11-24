@@ -30,6 +30,10 @@ export async function POST(
       )
     }
 
+    // Parse optional balancing and storage selections
+    const body = await request.json().catch(() => ({}))
+    const { wantsBalancing = false, wantsStorage = false } = body
+
     // Hole das Angebot mit allen Relations
     const offer = await prisma.offer.findUnique({
       where: { id: params.id },
@@ -103,7 +107,9 @@ export async function POST(
         where: { id: params.id },
         data: {
           status: 'ACCEPTED',
-          acceptedAt: new Date()
+          acceptedAt: new Date(),
+          customerWantsBalancing: wantsBalancing,
+          customerWantsStorage: wantsStorage
         },
         include: {
           tireOptions: true

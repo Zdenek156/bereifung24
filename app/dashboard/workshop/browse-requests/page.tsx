@@ -147,31 +147,42 @@ export default function BrowseRequestsPage() {
     setSelectedRequest(request)
     setShowOfferForm(true)
     
+    // Prüfe ob es eine Räder-Wechsel-Anfrage ist (width=0)
+    const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
+    
     // Finde passenden Service basierend auf Anfragetyp
-    const tireChangeService = services.find(s => s.serviceType === 'TIRE_CHANGE')
+    const service = isWheelChange 
+      ? services.find(s => s.serviceType === 'WHEEL_CHANGE')
+      : services.find(s => s.serviceType === 'TIRE_CHANGE')
     
     let calculatedInstallation = ''
     let calculatedDuration = ''
     
-    if (tireChangeService) {
-      // Verwende den konfigurierten Preis aus Service-Verwaltung
-      let installation = request.quantity === 4 && tireChangeService.basePrice4
-        ? tireChangeService.basePrice4
-        : tireChangeService.basePrice
-      
-      // Addiere RunFlat und Entsorgung wenn nötig
-      if (request.isRunflat && tireChangeService.runFlatSurcharge) {
-        installation += tireChangeService.runFlatSurcharge * request.quantity
+    if (service) {
+      if (isWheelChange) {
+        // Räder-Wechsel: Einfacher Grundpreis
+        calculatedInstallation = service.basePrice.toFixed(2)
+        calculatedDuration = service.durationMinutes.toString()
+      } else {
+        // Reifen-Wechsel: Preis basierend auf Anzahl
+        let installation = request.quantity === 4 && service.basePrice4
+          ? service.basePrice4
+          : service.basePrice
+        
+        // Addiere RunFlat und Entsorgung wenn nötig
+        if (request.isRunflat && service.runFlatSurcharge) {
+          installation += service.runFlatSurcharge * request.quantity
+        }
+        if (service.disposalFee) {
+          installation += service.disposalFee * request.quantity
+        }
+        calculatedInstallation = installation.toFixed(2)
+        
+        // Wähle Dauer basierend auf Anzahl
+        calculatedDuration = (request.quantity === 4 && service.durationMinutes4
+          ? service.durationMinutes4
+          : service.durationMinutes).toString()
       }
-      if (tireChangeService.disposalFee) {
-        installation += tireChangeService.disposalFee * request.quantity
-      }
-      calculatedInstallation = installation.toFixed(2)
-      
-      // Wähle Dauer basierend auf Anzahl
-      calculatedDuration = (request.quantity === 4 && tireChangeService.durationMinutes4
-        ? tireChangeService.durationMinutes4
-        : tireChangeService.durationMinutes).toString()
     }
     
     // Initialisiere mit einem leeren Reifenangebot
@@ -189,14 +200,18 @@ export default function BrowseRequestsPage() {
     e.preventDefault()
     if (!selectedRequest) return
 
-    // Validierung: Mindestens ein Reifenangebot muss vollständig ausgefüllt sein
-    const validOptions = offerForm.tireOptions.filter(opt => 
-      opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
-    )
-    
-    if (validOptions.length === 0) {
-      alert('Bitte geben Sie mindestens ein Reifenangebot an.')
-      return
+    const isWheelChange = selectedRequest.width === 0 && selectedRequest.aspectRatio === 0 && selectedRequest.diameter === 0
+
+    // Validierung: Bei normalen Reifenanfragen muss mindestens ein Reifenangebot vollständig ausgefüllt sein
+    if (!isWheelChange) {
+      const validOptions = offerForm.tireOptions.filter(opt => 
+        opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
+      )
+      
+      if (validOptions.length === 0) {
+        alert('Bitte geben Sie mindestens ein Reifenangebot an.')
+        return
+      }
     }
 
     setSubmitting(true)
@@ -393,8 +408,8 @@ export default function BrowseRequestsPage() {
                             </h3>
                           ) : (
                             <>
-                              <h3 className="text-xl font-bold text-gray-900">
-                                {request.width}/{request.aspectRatio} R{request.diameter}
+                              <h3 className="text-xl font-bold text-primary-600">
+                                🔧 {request.width}/{request.aspectRatio} R{request.diameter}
                               </h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 request.season === 'SUMMER' ? 'bg-yellow-100 text-yellow-800' :
@@ -528,27 +543,34 @@ export default function BrowseRequestsPage() {
                 </button>
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter} • 
-                {' '}{getSeasonLabel(selectedRequest.season)} • 
-                {' '}{selectedRequest.quantity} Reifen
+                {selectedRequest.width === 0 ? (
+                  <>Für: 🔧 Räder umstecken (Sommer/Winter)</>
+                ) : (
+                  <>
+                    Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter} • 
+                    {' '}{getSeasonLabel(selectedRequest.season)} • 
+                    {' '}{selectedRequest.quantity} Reifen
+                  </>
+                )}
               </div>
             </div>
 
             <form onSubmit={handleSubmitOffer} className="p-6">
               <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Reifenangebote *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addTireOption}
-                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      + Weiteres Angebot hinzufügen
-                    </button>
-                  </div>
+                {selectedRequest.width !== 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Reifenangebote *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addTireOption}
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        + Weiteres Angebot hinzufügen
+                      </button>
+                    </div>
                   
                   <div className="space-y-4">
                     {offerForm.tireOptions.map((option, index) => (
@@ -646,6 +668,7 @@ export default function BrowseRequestsPage() {
                     ))}
                   </div>
                 </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

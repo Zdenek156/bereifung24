@@ -12,7 +12,7 @@ const tireOptionSchema = z.object({
 })
 
 const offerSchema = z.object({
-  tireOptions: z.array(tireOptionSchema).min(1, 'Mindestens ein Reifenangebot erforderlich'),
+  tireOptions: z.array(tireOptionSchema).optional(), // Optional für Service-Anfragen
   description: z.string().optional(),
   installationFee: z.number().min(0, 'Montagegebühr muss mindestens 0 sein'),
   validDays: z.number().int().min(1).max(30).default(7),
@@ -75,10 +75,23 @@ export async function POST(
     const body = await request.json()
     const validatedData = offerSchema.parse(body)
 
+    // Prüfe ob es eine Service-Anfrage ist (Räder-Wechsel)
+    const isServiceRequest = tireRequest.width === 0 && tireRequest.aspectRatio === 0 && tireRequest.diameter === 0
+    const hasValidTireOptions = validatedData.tireOptions && validatedData.tireOptions.length > 0
+
+    // Validierung: Normale Reifenanfragen brauchen Reifenangebote
+    if (!isServiceRequest && !hasValidTireOptions) {
+      return NextResponse.json(
+        { error: 'Mindestens ein Reifenangebot erforderlich' },
+        { status: 400 }
+      )
+    }
+
     console.log('Creating offer with data:', {
       workshopId: workshop.id,
       tireRequestId: params.id,
-      tireOptionsCount: validatedData.tireOptions.length,
+      isServiceRequest,
+      tireOptionsCount: hasValidTireOptions ? validatedData.tireOptions!.length : 0,
       installationFee: validatedData.installationFee,
       validDays: validatedData.validDays
     })
@@ -87,9 +100,11 @@ export async function POST(
     const validUntil = new Date()
     validUntil.setDate(validUntil.getDate() + validatedData.validDays)
 
-    // Verwende erste Option für Hauptfelder (Kompatibilität)
-    const firstOption = validatedData.tireOptions[0]
-    const totalPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
+    // Für Service-Anfragen: Verwende Standardwerte, sonst erste Option
+    const firstOption = hasValidTireOptions ? validatedData.tireOptions![0] : null
+    const totalPrice = isServiceRequest 
+      ? validatedData.installationFee
+      : (firstOption!.pricePerTire * tireRequest.quantity) + validatedData.installationFee
 
     console.log('About to create offer in database')
     
@@ -99,22 +114,24 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: firstOption.brand,
-        tireModel: firstOption.model,
+        tireBrand: firstOption?.brand || 'Service',
+        tireModel: firstOption?.model || 'Räder umstecken',
         description: validatedData.description,
-        pricePerTire: firstOption.pricePerTire,
+        pricePerTire: firstOption?.pricePerTire || 0,
         price: totalPrice,
         installationFee: validatedData.installationFee,
         durationMinutes: validatedData.durationMinutes,
         validUntil: validUntil,
         status: 'PENDING',
-        tireOptions: {
-          create: validatedData.tireOptions.map(option => ({
-            brand: option.brand,
-            model: option.model,
-            pricePerTire: option.pricePerTire
-          }))
-        }
+        ...(hasValidTireOptions && {
+          tireOptions: {
+            create: validatedData.tireOptions!.map(option => ({
+              brand: option.brand,
+              model: option.model,
+              pricePerTire: option.pricePerTire
+            }))
+          }
+        })
       },
       include: {
         tireOptions: true,

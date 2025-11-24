@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendEmail } from '@/lib/email'
+import { geocodeAddress } from '@/lib/geocoding'
 
 const wheelChangeRequestSchema = z.object({
   vehicleId: z.string().optional(),
@@ -52,6 +53,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Geocode customer address if available
+    let latitude: number | null = null
+    let longitude: number | null = null
+    let city: string | null = null
+
+    if (customer.user.street && customer.user.city) {
+      const geocodeResult = await geocodeAddress(
+        customer.user.street,
+        customer.user.zipCode || '00000',
+        customer.user.city
+      )
+      
+      if (geocodeResult) {
+        latitude = geocodeResult.latitude
+        longitude = geocodeResult.longitude
+        city = geocodeResult.city || customer.user.city
+      } else {
+        console.warn(`Failed to geocode address for customer ${customer.id}`)
+        city = customer.user.city
+      }
+    } else {
+      city = customer.user.city
+    }
+
     // Create a tire request with minimal data for wheel change service
     // We'll use dummy tire specs since it's just wheel swapping
     const tireRequest = await prisma.tireRequest.create({
@@ -71,8 +96,10 @@ export async function POST(request: NextRequest) {
           validatedData.additionalNotes ? `Anmerkungen: ${validatedData.additionalNotes}` : '',
         ].filter(Boolean).join('\n'),
         zipCode: customer.user.zipCode || '00000',
-        city: customer.user.city || '',
+        city: city || customer.user.city || '',
         radiusKm: 25,
+        latitude,
+        longitude,
         needByDate: validatedData.preferredDate 
           ? new Date(validatedData.preferredDate)
           : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now

@@ -286,7 +286,7 @@ export async function GET(request: NextRequest) {
           const cal = emp.googleCalendarId
           if (!cal) return []
           
-          const busySlots = await getCalendarBusySlots(
+          const busySlots = await getBusySlots(
             cal,
             emp.googleAccessToken!,
             emp.googleRefreshToken!,

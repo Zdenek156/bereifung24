@@ -62,7 +62,8 @@ export default function WheelChangePage() {
       })
 
       if (res.ok) {
-        router.push('/dashboard/customer?success=wheel-change')
+        alert('Räder-Wechsel Anfrage erfolgreich erstellt! Werkstätten werden nun benachrichtigt und senden Ihnen Angebote zu.')
+        router.push('/dashboard/customer/requests')
       } else {
         const data = await res.json()
         setError(data.error || 'Fehler beim Erstellen der Anfrage')

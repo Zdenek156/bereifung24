@@ -23,6 +23,9 @@ interface Offer {
   status: string
   createdAt: string
   installationFee: number
+  balancingPrice?: number | null
+  storagePrice?: number | null
+  storageAvailable?: boolean | null
   tireOptions?: TireOption[]
   workshop: {
     companyName: string
@@ -95,11 +98,15 @@ export default function RequestDetailPage() {
   const [showAcceptModal, setShowAcceptModal] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null)
+  const [wantsBalancing, setWantsBalancing] = useState(false)
+  const [wantsStorage, setWantsStorage] = useState(false)
 
   const handleAcceptOffer = (offerId: string) => {
     setSelectedOfferId(offerId)
     setShowAcceptModal(true)
     setAcceptTerms(false)
+    setWantsBalancing(false)
+    setWantsStorage(false)
   }
 
   const confirmAcceptOffer = async () => {
@@ -114,6 +121,11 @@ export default function RequestDetailPage() {
     try {
       const response = await fetch(`/api/offers/${selectedOfferId}/accept`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wantsBalancing,
+          wantsStorage
+        })
       })
 
       if (response.ok) {
@@ -197,6 +209,63 @@ export default function RequestDetailPage() {
             </div>
 
             <div className="space-y-4 mb-6">
+              {/* Optional Services for Wheel Change */}
+              {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && 
+               request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 && (
+                <>
+                  {request.offers.find(o => o.id === selectedOfferId)?.balancingPrice && 
+                   request.offers.find(o => o.id === selectedOfferId)!.balancingPrice! > 0 && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-blue-50">
+                      <label className="flex items-start cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wantsBalancing}
+                          onChange={(e) => setWantsBalancing(e.target.checked)}
+                          className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                        />
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-900">Wuchten hinzufügen</span>
+                            <span className="text-lg font-bold text-primary-600">
+                              +{(request.offers.find(o => o.id === selectedOfferId)!.balancingPrice! * 4).toFixed(2)} €
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {request.offers.find(o => o.id === selectedOfferId)!.balancingPrice!.toFixed(2)} € pro Rad (4 Räder)
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+
+                  {request.offers.find(o => o.id === selectedOfferId)?.storageAvailable && 
+                   request.offers.find(o => o.id === selectedOfferId)?.storagePrice && 
+                   request.offers.find(o => o.id === selectedOfferId)!.storagePrice! > 0 && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-green-50">
+                      <label className="flex items-start cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wantsStorage}
+                          onChange={(e) => setWantsStorage(e.target.checked)}
+                          className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                        />
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-900">Einlagerung hinzufügen</span>
+                            <span className="text-lg font-bold text-primary-600">
+                              +{request.offers.find(o => o.id === selectedOfferId)!.storagePrice!.toFixed(2)} €
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            Preis pro Saison - Die Werkstatt lagert Ihre Räder sicher ein
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="border border-gray-200 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">Vertragsbedingungen</h3>
                 <ul className="space-y-2 text-sm text-gray-600">

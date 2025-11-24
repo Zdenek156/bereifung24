@@ -384,6 +384,8 @@ model Offer {
   // If accepted
   acceptedAt        DateTime?
   declinedAt        DateTime?     @map("declined_at")
+  customerWantsBalancing Boolean?  @default(false) @map("customer_wants_balancing")
+  customerWantsStorage   Boolean?  @default(false) @map("customer_wants_storage")
   booking           Booking?
   
   createdAt         DateTime      @default(now())
@@ -444,6 +446,10 @@ model Booking {
   // Notes
   customerNotes     String?
   workshopNotes     String?
+  
+  // Optional services (for wheel change)
+  wantsBalancing    Boolean?    @default(false) @map("wantsbalancing")
+  wantsStorage      Boolean?    @default(false) @map("wantsstorage")
   
   // After completion
   completedAt       DateTime?

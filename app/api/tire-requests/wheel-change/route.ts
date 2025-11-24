@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
           validatedData.hasWheels ? '✓ Komplett montierte Räder vorhanden' : '✗ Keine montierten Räder',
           validatedData.needsBalancing ? '✓ Wuchten gewünscht' : '✗ Wuchten nicht gewünscht',
           validatedData.needsStorage ? '✓ Einlagerung gewünscht' : '✗ Einlagerung nicht gewünscht',
-          validatedData.preferredDate ? `Wunschtermin: ${validatedData.preferredDate}` : '',
           validatedData.additionalNotes ? `Anmerkungen: ${validatedData.additionalNotes}` : '',
         ].filter(Boolean).join('\n'),
         zipCode: customer.user.zipCode || '00000',

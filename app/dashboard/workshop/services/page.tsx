@@ -13,8 +13,12 @@ interface Service {
   runFlatSurcharge: number | null
   disposalFee: number | null
   wheelSizeSurcharge: any | null
+  balancingPrice: number | null
+  storagePrice: number | null
   durationMinutes: number
   durationMinutes4: number | null
+  balancingMinutes: number | null
+  storageAvailable: boolean | null
   description: string | null
   internalNotes: string | null
   isActive: boolean
@@ -56,8 +60,12 @@ export default function WorkshopServicesPage() {
     basePrice4: '',
     runFlatSurcharge: '',
     disposalFee: '',
+    balancingPrice: '',
+    storagePrice: '',
     durationMinutes: '60',
     durationMinutes4: '',
+    balancingMinutes: '',
+    storageAvailable: false,
     description: '',
     internalNotes: '',
     isActive: true,
@@ -126,8 +134,12 @@ export default function WorkshopServicesPage() {
       basePrice4: service.basePrice4?.toString() || '',
       runFlatSurcharge: service.runFlatSurcharge?.toString() || '',
       disposalFee: service.disposalFee?.toString() || '',
+      balancingPrice: service.balancingPrice?.toString() || '',
+      storagePrice: service.storagePrice?.toString() || '',
       durationMinutes: service.durationMinutes.toString(),
       durationMinutes4: service.durationMinutes4?.toString() || '',
+      balancingMinutes: service.balancingMinutes?.toString() || '',
+      storageAvailable: service.storageAvailable || false,
       description: service.description || '',
       internalNotes: service.internalNotes || '',
       isActive: service.isActive,
@@ -167,10 +179,6 @@ export default function WorkshopServicesPage() {
         fetchServices()
       }
     } catch (error) {
-      console.error('Error toggling service:', error)
-    }
-  }
-
   const resetForm = () => {
     setFormData({
       serviceType: '',
@@ -178,12 +186,20 @@ export default function WorkshopServicesPage() {
       basePrice4: '',
       runFlatSurcharge: '',
       disposalFee: '',
+      balancingPrice: '',
+      storagePrice: '',
       durationMinutes: '60',
       durationMinutes4: '',
+      balancingMinutes: '',
+      storageAvailable: false,
       description: '',
       internalNotes: '',
       isActive: true,
       priceFor: '4_TIRES'
+    })
+    setEditingService(null)
+    setShowAddForm(false)
+  }   priceFor: '4_TIRES'
     })
     setEditingService(null)
     setShowAddForm(false)
@@ -435,8 +451,103 @@ export default function WorkshopServicesPage() {
                   </>
                 )}
 
+                {/* Räderwechsel: Spezielle Felder */}
+                {formData.serviceType === 'WHEEL_CHANGE' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Grundpreis (€) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.basePrice}
+                        onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Preis für das Umstecken von 4 Rädern</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dauer (Minuten) *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.durationMinutes}
+                        onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Dauer für das Umstecken ohne zusätzliche Services</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wuchten - Preis pro Rad (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.balancingPrice}
+                        onChange={(e) => setFormData({ ...formData, balancingPrice: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 5.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Optional: Aufpreis wenn Kunde Wuchten wünscht</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wuchten - Zusätzliche Dauer pro Rad (Min.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.balancingMinutes}
+                        onChange={(e) => setFormData({ ...formData, balancingMinutes: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 5"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Zusätzliche Minuten pro Rad für Wuchten</p>
+                    </div>
+                    <div className="md:col-span-2 border-t pt-4">
+                      <label className="flex items-start cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.storageAvailable}
+                          onChange={(e) => setFormData({ ...formData, storageAvailable: e.target.checked })}
+                          className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                        />
+                        <div className="ml-3">
+                          <span className="block font-medium text-gray-700">Einlagerung verfügbar</span>
+                          <span className="block text-sm text-gray-500">Können Sie die abmontierten Räder einlagern?</span>
+                        </div>
+                      </label>
+                    </div>
+                    {formData.storageAvailable && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Einlagerungspreis pro Saison (€)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={formData.storagePrice}
+                          onChange={(e) => setFormData({ ...formData, storagePrice: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="z.B. 50.00"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Preis für die Einlagerung bis zur nächsten Saison</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 {/* Alle anderen Services: Standard Preis und Dauer */}
-                {!['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(formData.serviceType) && formData.serviceType && (
+                {!['TIRE_CHANGE', 'MOTORCYCLE_TIRE', 'WHEEL_CHANGE'].includes(formData.serviceType) && formData.serviceType && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

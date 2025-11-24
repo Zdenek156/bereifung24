@@ -404,12 +404,16 @@ export default function BrowseRequestsPage() {
                         <div className="flex items-center gap-3 mb-2">
                           {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔧 Räder umstecken
+                              🔄 Räder umstecken
                             </h3>
                           ) : (
                             <>
                               <h3 className="text-xl font-bold text-primary-600">
-                                🔧 {request.width}/{request.aspectRatio} R{request.diameter}
+                                🚗 Autoreifen mit Montage {' '}
+                                {request.season === 'SUMMER' && '☀️ '}
+                                {request.season === 'WINTER' && '❄️ '}
+                                {request.season === 'ALL_SEASON' && '🌤️ '}
+                                {request.width}/{request.aspectRatio} R{request.diameter}
                               </h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 request.season === 'SUMMER' ? 'bg-yellow-100 text-yellow-800' :

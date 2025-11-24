@@ -155,15 +155,18 @@ export default function RequestsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-3xl">{getSeasonEmoji(request.season)}</span>
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900">
                           {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
                             // Service request (wheel change, etc.)
-                            <span>🔧 Räder umstecken (Sommer/Winter)</span>
+                            <span>🔄 Räder umstecken (Sommer/Winter)</span>
                           ) : (
                             // Regular tire request
                             <>
+                              🚗 Autoreifen mit Montage {' '}
+                              {request.season === 'SUMMER' && '☀️ '}
+                              {request.season === 'WINTER' && '❄️ '}
+                              {request.season === 'ALL_SEASON' && '🌤️ '}
                               {request.width}/{request.aspectRatio} R{request.diameter}
                               {request.loadIndex && ` ${request.loadIndex}`}
                               {request.speedRating && request.speedRating}

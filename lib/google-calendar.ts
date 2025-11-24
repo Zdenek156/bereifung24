@@ -272,14 +272,26 @@ export function generateAvailableSlots(
     }
   }
   
+  // DEBUG: Write to file since console.log doesn't work in PM2 cluster
+  const fs = require('fs')
+  fs.appendFileSync('/tmp/slots-debug.log', `\n=== ${new Date().toISOString()} ===\n`)
+  fs.appendFileSync('/tmp/slots-debug.log', `Date: ${date.toISOString()}\n`)
+  fs.appendFileSync('/tmp/slots-debug.log', `Busy slots count: ${busySlots.length}\n`)
+  if (busySlots.length > 0) {
+    fs.appendFileSync('/tmp/slots-debug.log', `First busy: ${JSON.stringify(busySlots[0])}\n`)
+  }
+  fs.appendFileSync('/tmp/slots-debug.log', `Timezone offset: ${timezoneOffset} minutes\n`)
+  
   // Create UTC times, then adjust them to match the calendar's timezone
   // Example: For 10:00 with +01:00 offset:
   // UTC(2025-12-05 10:00) = 10:00 UTC
   // Subtract 60 min = 09:00 UTC (which matches "2025-12-05T10:00:00+01:00")
   const startTime = new Date(Date.UTC(year, month, day, fromHour, fromMinute, 0, 0))
   const endTime = new Date(Date.UTC(year, month, day, toHour, toMinute, 0, 0))
+  fs.appendFileSync('/tmp/slots-debug.log', `Start time BEFORE adjust: ${startTime.toISOString()}\n`)
   startTime.setMinutes(startTime.getMinutes() - timezoneOffset)
   endTime.setMinutes(endTime.getMinutes() - timezoneOffset)
+  fs.appendFileSync('/tmp/slots-debug.log', `Start time AFTER adjust: ${startTime.toISOString()}\n`)
   
   // Parse break times if present
   let breakStart: Date | null = null

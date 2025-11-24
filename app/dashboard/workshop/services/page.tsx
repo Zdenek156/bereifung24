@@ -179,6 +179,10 @@ export default function WorkshopServicesPage() {
         fetchServices()
       }
     } catch (error) {
+      console.error('Error toggling service:', error)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       serviceType: '',
@@ -196,10 +200,6 @@ export default function WorkshopServicesPage() {
       internalNotes: '',
       isActive: true,
       priceFor: '4_TIRES'
-    })
-    setEditingService(null)
-    setShowAddForm(false)
-  }   priceFor: '4_TIRES'
     })
     setEditingService(null)
     setShowAddForm(false)

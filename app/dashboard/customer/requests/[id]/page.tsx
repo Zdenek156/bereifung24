@@ -293,9 +293,9 @@ export default function RequestDetailPage() {
                     </div>
 
                     {request.additionalNotes && (
-                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-                        <p className="text-sm text-blue-900 font-semibold mb-2">Service-Details:</p>
-                        <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Service-Details</p>
+                        <p className="text-sm text-gray-800 whitespace-pre-line">{request.additionalNotes}</p>
                       </div>
                     )}
                   </>

@@ -150,7 +150,7 @@ export default function RequestsPage() {
             {requests.map((request) => (
               <div
                 key={request.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6"
+                className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-4"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -199,17 +199,10 @@ export default function RequestsPage() {
                       </div>
                     </div>
 
-                    {request.preferredBrands && (
+                    {request.preferredBrands && request.width !== 0 && (
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Bevorzugte Hersteller:</strong> {request.preferredBrands}
                       </p>
-                    )}
-                    
-                    {request.additionalNotes && request.width === 0 && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-sm text-blue-900 font-semibold mb-1">Service-Details:</p>
-                        <p className="text-sm text-blue-800 whitespace-pre-line">{request.additionalNotes}</p>
-                      </div>
                     )}
                   </div>
 

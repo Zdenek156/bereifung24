@@ -176,7 +176,7 @@ export default function AlignmentPage() {
                   onChange={(e) => handleVehicleSelect(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">Kein Fahrzeug auswählen</option>
+                  <option value="">Wählen Sie hier Ihr Fahrzeug aus (optional)</option>
                   {vehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.make} {vehicle.model} ({vehicle.year})
@@ -333,6 +333,7 @@ export default function AlignmentPage() {
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
               min={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
+              placeholder="Wählen Sie ein Datum"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <p className="mt-1 text-xs text-gray-500">Frühestens morgen</p>

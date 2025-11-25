@@ -139,16 +139,16 @@ export async function POST(request: NextRequest) {
         w."companyName",
         (
           6371 * acos(
-            cos(radians(${latitude})) * cos(radians(w.latitude)) *
-            cos(radians(w.longitude) - radians(${longitude})) +
-            sin(radians(${latitude})) * sin(radians(w.latitude))
+            cos(radians(${latitude})) * cos(radians(u.latitude)) *
+            cos(radians(u.longitude) - radians(${longitude})) +
+            sin(radians(${latitude})) * sin(radians(u.latitude))
           )
         ) AS distance
       FROM workshops w
       INNER JOIN users u ON w."userId" = u.id
       WHERE u.active = true
-      AND w.latitude IS NOT NULL
-      AND w.longitude IS NOT NULL
+      AND u.latitude IS NOT NULL
+      AND u.longitude IS NOT NULL
       HAVING distance <= ${validatedData.radiusKm}
       ORDER BY distance
       LIMIT 20

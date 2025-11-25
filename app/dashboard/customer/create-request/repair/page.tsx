@@ -39,15 +39,22 @@ export default function TireRepairPage() {
 
   const fetchVehicles = async () => {
     try {
+      console.log('Fetching vehicles...')
       const res = await fetch('/api/vehicles')
+      console.log('Vehicles response status:', res.status)
       if (res.ok) {
         const data = await res.json()
+        console.log('Vehicles data:', data)
         setVehicles(data.vehicles || [])
+        console.log('Vehicles set:', data.vehicles?.length || 0, 'vehicles')
+      } else {
+        console.error('Failed to fetch vehicles:', res.status)
       }
     } catch (error) {
       console.error('Fehler beim Laden der Fahrzeuge:', error)
     } finally {
       setLoading(false)
+      console.log('Loading complete')
     }
   }
 
@@ -134,9 +141,10 @@ export default function TireRepairPage() {
           {/* Fahrzeug auswählen */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Fahrzeug auswählen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
+            <p className="text-xs text-gray-500 mb-2">Debug: loading={loading.toString()}, vehicles={vehicles.length}</p>
             
             {loading ? (
-              <div className="p-4 text-center text-gray-600">Lädt...</div>
+              <div className="p-4 text-center text-gray-600">Lädt Fahrzeuge...</div>
             ) : vehicles.length === 0 ? (
               <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-blue-800 mb-2">Sie haben noch keine Fahrzeuge gespeichert.</p>

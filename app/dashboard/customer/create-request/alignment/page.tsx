@@ -36,9 +36,9 @@ export default function AlignmentPage() {
 
   useEffect(() => {
     fetchVehicles()
-    // Set default date (7 days from now)
+    // Set default date (1 day from now for services)
     const defaultDate = new Date()
-    defaultDate.setDate(defaultDate.getDate() + 7)
+    defaultDate.setDate(defaultDate.getDate() + 1)
     setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
   }, [])
 
@@ -345,11 +345,11 @@ export default function AlignmentPage() {
               type="date"
               value={formData.needByDate}
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              min={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
+            <p className="mt-1 text-xs text-gray-500">Frühestens morgen</p>
           </div>
 
           {/* Suchradius */}

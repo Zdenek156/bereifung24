@@ -135,7 +135,9 @@ export default function TireRepairPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Fahrzeug auswählen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
             
-            {vehicles.length === 0 ? (
+            {loading ? (
+              <div className="p-4 text-center text-gray-600">Lädt...</div>
+            ) : vehicles.length === 0 ? (
               <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-blue-800 mb-2">Sie haben noch keine Fahrzeuge gespeichert.</p>
                 <p className="text-sm text-blue-700 mb-4">Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen.</p>

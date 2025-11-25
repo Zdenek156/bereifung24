@@ -171,6 +171,9 @@ export default function OtherServicesPage() {
           {/* Fahrzeugauswahl */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Fahrzeug auswählen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Sie können ein Fahrzeug auswählen, wenn der Service an einem bestimmten Fahrzeug durchgeführt werden soll
+            </p>
             
             {loading ? (
               <div className="p-4 text-center text-gray-600">Lädt...</div>

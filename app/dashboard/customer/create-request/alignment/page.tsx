@@ -1,46 +1,113 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+interface Vehicle {
+  id: string
+  make: string
+  model: string
+  year: number
+}
 
 export default function AlignmentPage() {
   const { data: session } = useSession()
   const router = useRouter()
   
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
 
   const [formData, setFormData] = useState({
     vehicleId: '',
-    serviceType: 'MEASUREMENT' as 'MEASUREMENT' | 'ADJUSTMENT' | 'BOTH',
-    hasSymptoms: false,
-    symptoms: [] as string[],
-    additionalNotes: '',
-    needByDate: ''
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleYear: '',
+    alignmentType: 'full' as 'front' | 'full' | 'four-wheel',
+    hasIssues: false,
+    issueDescription: '',
+    needByDate: '',
+    radiusKm: 25,
+    additionalNotes: ''
   })
 
-  const handleSymptomToggle = (symptom: string) => {
-    setFormData(prev => ({
-      ...prev,
-      symptoms: prev.symptoms.includes(symptom)
-        ? prev.symptoms.filter(s => s !== symptom)
-        : [...prev.symptoms, symptom]
-    }))
+  useEffect(() => {
+    fetchVehicles()
+    // Set default date (7 days from now)
+    const defaultDate = new Date()
+    defaultDate.setDate(defaultDate.getDate() + 7)
+    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
+  }, [])
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await fetch('/api/vehicles')
+      if (res.ok) {
+        const data = await res.json()
+        setVehicles(data.vehicles || [])
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Fahrzeuge:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVehicleSelect = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId)
+    if (vehicle) {
+      setFormData(prev => ({
+        ...prev,
+        vehicleId: vehicle.id,
+        vehicleMake: vehicle.make,
+        vehicleModel: vehicle.model,
+        vehicleYear: vehicle.year.toString()
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!formData.vehicleMake || !formData.vehicleModel) {
+      setError('Bitte geben Sie Fahrzeughersteller und -modell an')
+      return
+    }
+
+    if (!formData.needByDate) {
+      setError('Bitte wählen Sie ein Datum aus')
+      return
+    }
+
+    if (formData.hasIssues && (!formData.issueDescription || formData.issueDescription.length < 10)) {
+      setError('Bitte beschreiben Sie die Probleme genauer (mind. 10 Zeichen)')
+      return
+    }
+
     setSubmitting(true)
     setError('')
 
     try {
+      const requestData = {
+        vehicleId: formData.vehicleId || undefined,
+        vehicleMake: formData.vehicleMake,
+        vehicleModel: formData.vehicleModel,
+        vehicleYear: formData.vehicleYear || undefined,
+        alignmentType: formData.alignmentType,
+        hasIssues: formData.hasIssues,
+        issueDescription: formData.hasIssues ? formData.issueDescription : undefined,
+        needByDate: formData.needByDate,
+        radiusKm: formData.radiusKm,
+        additionalNotes: formData.additionalNotes || undefined
+      }
+
       const res = await fetch('/api/tire-requests/alignment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestData)
       })
 
       if (res.ok) {
@@ -95,140 +162,176 @@ export default function AlignmentPage() {
             </div>
           </div>
 
-          {/* Fahrzeugauswahl - Optional */}
+          {/* Fahrzeugauswahl */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fahrzeug auswählen <span className="text-gray-500">(optional)</span>
-            </label>
-            <select
-              value={formData.vehicleId}
-              onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="">Fahrzeug auswählen...</option>
-            </select>
-            <p className="mt-2 text-sm text-gray-500">
-              Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Fahrzeug auswählen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
+            
+            {loading ? (
+              <div className="p-4 text-center text-gray-600">Lädt...</div>
+            ) : vehicles.length === 0 ? (
+              <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 mb-2">Sie haben noch keine Fahrzeuge gespeichert.</p>
+                <p className="text-sm text-blue-700 mb-4">Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen.</p>
+                <Link
+                  href="/dashboard/customer/vehicles"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Fahrzeug hinzufügen
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {vehicles.map((vehicle) => (
+                  <label
+                    key={vehicle.id}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      formData.vehicleId === vehicle.id
+                        ? 'border-primary-600 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="vehicle"
+                      value={vehicle.id}
+                      checked={formData.vehicleId === vehicle.id}
+                      onChange={(e) => handleVehicleSelect(e.target.value)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {vehicle.make} {vehicle.model}
+                      </p>
+                      <p className="text-sm text-gray-600">Baujahr: {vehicle.year}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Service-Art */}
+          {/* Manuelle Eingabe falls kein Fahrzeug */}
+          {!formData.vehicleId && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fahrzeughersteller *
+                </label>
+                <input
+                  type="text"
+                  value={formData.vehicleMake}
+                  onChange={(e) => setFormData({ ...formData, vehicleMake: e.target.value })}
+                  required
+                  placeholder="z.B. BMW"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Modell *
+                </label>
+                <input
+                  type="text"
+                  value={formData.vehicleModel}
+                  onChange={(e) => setFormData({ ...formData, vehicleModel: e.target.value })}
+                  required
+                  placeholder="z.B. 3er"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Baujahr <span className="text-gray-500">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.vehicleYear}
+                  onChange={(e) => setFormData({ ...formData, vehicleYear: e.target.value })}
+                  placeholder="z.B. 2020"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Art der Vermessung */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Welchen Service benötigen Sie?</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Art der Vermessung</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.serviceType === 'MEASUREMENT' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.alignmentType === 'front' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="serviceType"
-                  value="MEASUREMENT"
-                  checked={formData.serviceType === 'MEASUREMENT'}
-                  onChange={(e) => setFormData({ ...formData, serviceType: e.target.value as any })}
+                  name="alignmentType"
+                  value="front"
+                  checked={formData.alignmentType === 'front'}
+                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Nur Vermessung</p>
-                <p className="text-sm text-gray-600 text-center">Zustand prüfen</p>
+                <p className="font-semibold text-gray-900">Vorderachse</p>
+                <p className="text-sm text-gray-600 text-center">Nur vorne</p>
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.serviceType === 'ADJUSTMENT' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.alignmentType === 'full' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="serviceType"
-                  value="ADJUSTMENT"
-                  checked={formData.serviceType === 'ADJUSTMENT'}
-                  onChange={(e) => setFormData({ ...formData, serviceType: e.target.value as any })}
+                  name="alignmentType"
+                  value="full"
+                  checked={formData.alignmentType === 'full'}
+                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Nur Einstellung</p>
-                <p className="text-sm text-gray-600 text-center">Werte korrigieren</p>
+                <p className="font-semibold text-gray-900">Komplettvermessung</p>
+                <p className="text-sm text-gray-600 text-center">Alle Achsen</p>
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.serviceType === 'BOTH' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.alignmentType === 'four-wheel' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="serviceType"
-                  value="BOTH"
-                  checked={formData.serviceType === 'BOTH'}
-                  onChange={(e) => setFormData({ ...formData, serviceType: e.target.value as any })}
+                  name="alignmentType"
+                  value="four-wheel"
+                  checked={formData.alignmentType === 'four-wheel'}
+                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Vermessung + Einstellung</p>
-                <p className="text-sm text-gray-600 text-center">Komplett-Service</p>
+                <p className="font-semibold text-gray-900">4-Rad-Vermessung</p>
+                <p className="text-sm text-gray-600 text-center">Präzise 4-Rad</p>
               </label>
             </div>
           </div>
 
-          {/* Symptome */}
+          {/* Probleme */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Gibt es Auffälligkeiten?</h2>
             <label className="flex items-center gap-3 mb-4 cursor-pointer">
               <input
                 type="checkbox"
-                checked={formData.hasSymptoms}
-                onChange={(e) => setFormData({ ...formData, hasSymptoms: e.target.checked, symptoms: [] })}
+                checked={formData.hasIssues}
+                onChange={(e) => setFormData({ ...formData, hasIssues: e.target.checked, issueDescription: '' })}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
               <span className="text-gray-900">Ja, ich habe Probleme festgestellt</span>
             </label>
 
-            {formData.hasSymptoms && (
-              <div className="space-y-3 ml-7">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.symptoms.includes('pulling')}
-                    onChange={() => handleSymptomToggle('pulling')}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <div>
-                    <span className="block font-medium text-gray-900">Fahrzeug zieht zur Seite</span>
-                    <span className="block text-sm text-gray-600">Auto weicht beim Geradeausfahren ab</span>
-                  </div>
+            {formData.hasIssues && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Beschreibung der Probleme * <span className="text-xs text-gray-500">(mind. 10 Zeichen)</span>
                 </label>
-
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.symptoms.includes('uneven_wear')}
-                    onChange={() => handleSymptomToggle('uneven_wear')}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <div>
-                    <span className="block font-medium text-gray-900">Ungleichmäßiger Reifenverschleiß</span>
-                    <span className="block text-sm text-gray-600">Reifen nutzen sich einseitig ab</span>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.symptoms.includes('vibration')}
-                    onChange={() => handleSymptomToggle('vibration')}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <div>
-                    <span className="block font-medium text-gray-900">Vibrationen im Lenkrad</span>
-                    <span className="block text-sm text-gray-600">Lenkrad vibriert bei höheren Geschwindigkeiten</span>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.symptoms.includes('crooked_steering')}
-                    onChange={() => handleSymptomToggle('crooked_steering')}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <div>
-                    <span className="block font-medium text-gray-900">Schiefes Lenkrad</span>
-                    <span className="block text-sm text-gray-600">Lenkrad steht schief bei Geradeausfahrt</span>
-                  </div>
-                </label>
+                <textarea
+                  value={formData.issueDescription}
+                  onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
+                  rows={4}
+                  required={formData.hasIssues}
+                  placeholder="z.B. Fahrzeug zieht nach links, ungleicher Reifenverschleiß, Lenkrad vibriert..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">{formData.issueDescription.length} Zeichen</p>
               </div>
             )}
           </div>
@@ -236,15 +339,37 @@ export default function AlignmentPage() {
           {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis (optional)
+              Benötigt bis Datum *
             </label>
             <input
               type="date"
               value={formData.needByDate}
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
+          </div>
+
+          {/* Suchradius */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suchradius: {formData.radiusKm} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.radiusKm}
+              onChange={(e) => setFormData({ ...formData, radiusKm: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>5 km</span>
+              <span>100 km</span>
+            </div>
           </div>
 
           {/* Zusätzliche Anmerkungen */}

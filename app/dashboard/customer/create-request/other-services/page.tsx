@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+interface Vehicle {
+  id: string
+  make: string
+  model: string
+  year: number
+}
 
 const SERVICE_OPTIONS = [
   { id: 'rdks', label: 'RDKS anlernen', description: 'Reifendruckkontrollsystem neu programmieren' },
@@ -20,16 +27,42 @@ export default function OtherServicesPage() {
   const { data: session } = useSession()
   const router = useRouter()
   
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
 
   const [formData, setFormData] = useState({
     vehicleId: '',
     services: [] as string[],
     otherServiceDescription: '',
-    additionalNotes: '',
-    needByDate: ''
+    serviceDescription: '',
+    needByDate: '',
+    radiusKm: 25,
+    additionalNotes: ''
   })
+
+  useEffect(() => {
+    fetchVehicles()
+    // Set default date (7 days from now)
+    const defaultDate = new Date()
+    defaultDate.setDate(defaultDate.getDate() + 7)
+    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
+  }, [])
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await fetch('/api/vehicles')
+      if (res.ok) {
+        const data = await res.json()
+        setVehicles(data.vehicles || [])
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Fahrzeuge:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleServiceToggle = (serviceId: string) => {
     setFormData(prev => ({
@@ -48,8 +81,18 @@ export default function OtherServicesPage() {
       return
     }
 
-    if (formData.services.includes('other') && !formData.otherServiceDescription.trim()) {
-      setError('Bitte beschreiben Sie den gewünschten Service bei "Sonstiges"')
+    if (formData.services.includes('other') && (!formData.otherServiceDescription.trim() || formData.otherServiceDescription.length < 10)) {
+      setError('Bitte beschreiben Sie den gewünschten Service bei "Sonstiges" genauer (mind. 10 Zeichen)')
+      return
+    }
+
+    if (!formData.serviceDescription.trim() || formData.serviceDescription.length < 10) {
+      setError('Bitte beschreiben Sie Ihre Anfrage genauer (mind. 10 Zeichen)')
+      return
+    }
+
+    if (!formData.needByDate) {
+      setError('Bitte wählen Sie ein Datum aus')
       return
     }
 
@@ -57,10 +100,20 @@ export default function OtherServicesPage() {
     setError('')
 
     try {
+      const requestData = {
+        vehicleId: formData.vehicleId || undefined,
+        services: formData.services,
+        otherServiceDescription: formData.services.includes('other') ? formData.otherServiceDescription : undefined,
+        serviceDescription: formData.serviceDescription,
+        needByDate: formData.needByDate,
+        radiusKm: formData.radiusKm,
+        additionalNotes: formData.additionalNotes || undefined
+      }
+
       const res = await fetch('/api/tire-requests/other-services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestData)
       })
 
       if (res.ok) {
@@ -115,21 +168,52 @@ export default function OtherServicesPage() {
             </div>
           </div>
 
-          {/* Fahrzeugauswahl - Optional */}
+          {/* Fahrzeugauswahl */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fahrzeug auswählen <span className="text-gray-500">(optional)</span>
-            </label>
-            <select
-              value={formData.vehicleId}
-              onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="">Fahrzeug auswählen...</option>
-            </select>
-            <p className="mt-2 text-sm text-gray-500">
-              Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Fahrzeug auswählen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
+            
+            {loading ? (
+              <div className="p-4 text-center text-gray-600">Lädt...</div>
+            ) : vehicles.length === 0 ? (
+              <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 mb-2">Sie haben noch keine Fahrzeuge gespeichert.</p>
+                <p className="text-sm text-blue-700 mb-4">Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen.</p>
+                <Link
+                  href="/dashboard/customer/vehicles"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Fahrzeug hinzufügen
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {vehicles.map((vehicle) => (
+                  <label
+                    key={vehicle.id}
+                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      formData.vehicleId === vehicle.id
+                        ? 'border-primary-600 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="vehicle"
+                      value={vehicle.id}
+                      checked={formData.vehicleId === vehicle.id}
+                      onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {vehicle.make} {vehicle.model}
+                      </p>
+                      <p className="text-sm text-gray-600">Baujahr: {vehicle.year}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Service-Auswahl */}
@@ -166,7 +250,7 @@ export default function OtherServicesPage() {
           {formData.services.includes('other') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Beschreibung für "Sonstiges" *
+                Beschreibung für "Sonstiges" * <span className="text-xs text-gray-500">(mind. 10 Zeichen)</span>
               </label>
               <textarea
                 value={formData.otherServiceDescription}
@@ -176,21 +260,60 @@ export default function OtherServicesPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500">{formData.otherServiceDescription.length} Zeichen</p>
             </div>
           )}
+
+          {/* Service-Beschreibung */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Allgemeine Beschreibung Ihrer Anfrage * <span className="text-xs text-gray-500">(mind. 10 Zeichen)</span>
+            </label>
+            <textarea
+              value={formData.serviceDescription}
+              onChange={(e) => setFormData({ ...formData, serviceDescription: e.target.value })}
+              rows={4}
+              required
+              placeholder="Beschreiben Sie bitte, was genau gemacht werden soll und worauf zu achten ist..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-500">{formData.serviceDescription.length} Zeichen</p>
+          </div>
 
           {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis (optional)
+              Benötigt bis Datum *
             </label>
             <input
               type="date"
               value={formData.needByDate}
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
+          </div>
+
+          {/* Suchradius */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suchradius: {formData.radiusKm} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.radiusKm}
+              onChange={(e) => setFormData({ ...formData, radiusKm: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>5 km</span>
+              <span>100 km</span>
+            </div>
           </div>
 
           {/* Zusätzliche Anmerkungen */}

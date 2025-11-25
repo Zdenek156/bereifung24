@@ -53,12 +53,30 @@ export default function MotorcycleTiresPage() {
     preferredBrands: '',
     additionalNotes: '',
     needByDate: '',
+    radiusKm: 25,
     motorcycleMake: '',
     motorcycleModel: ''
   })
 
+  useEffect(() => {
+    // Set default date (7 days from now)
+    const defaultDate = new Date()
+    defaultDate.setDate(defaultDate.getDate() + 7)
+    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.motorcycleMake || !formData.motorcycleModel) {
+      setError('Bitte geben Sie Marke und Modell des Motorrads an')
+      return
+    }
+
+    if (!formData.needByDate) {
+      setError('Bitte wählen Sie ein Datum aus')
+      return
+    }
     
     // Validierung je nach quantity
     if (formData.quantity === 'BOTH' || formData.quantity === 'FRONT') {
@@ -79,10 +97,38 @@ export default function MotorcycleTiresPage() {
     setError('')
 
     try {
+      const requestData = {
+        motorcycleMake: formData.motorcycleMake,
+        motorcycleModel: formData.motorcycleModel,
+        season: formData.season,
+        needsFrontTire: formData.quantity === 'FRONT' || formData.quantity === 'BOTH',
+        needsRearTire: formData.quantity === 'REAR' || formData.quantity === 'BOTH',
+        frontTire: (formData.quantity === 'FRONT' || formData.quantity === 'BOTH') ? {
+          width: parseInt(formData.frontWidth),
+          aspectRatio: parseInt(formData.frontAspectRatio),
+          diameter: parseInt(formData.frontDiameter),
+          loadIndex: formData.frontLoadIndex ? parseInt(formData.frontLoadIndex) : undefined,
+          speedRating: formData.frontSpeedRating || undefined
+        } : undefined,
+        rearTire: (formData.quantity === 'REAR' || formData.quantity === 'BOTH') ? {
+          width: parseInt(formData.rearWidth),
+          aspectRatio: parseInt(formData.rearAspectRatio),
+          diameter: parseInt(formData.rearDiameter),
+          loadIndex: formData.rearLoadIndex ? parseInt(formData.rearLoadIndex) : undefined,
+          speedRating: formData.rearSpeedRating || undefined
+        } : undefined,
+        needByDate: formData.needByDate,
+        radiusKm: formData.radiusKm,
+        tireQuality: formData.tireQuality,
+        tireDisposal: formData.tireDisposal,
+        preferredBrands: formData.preferredBrands || undefined,
+        additionalNotes: formData.additionalNotes || undefined
+      }
+
       const res = await fetch('/api/tire-requests/motorcycle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestData)
       })
 
       if (res.ok) {
@@ -544,15 +590,37 @@ export default function MotorcycleTiresPage() {
           {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis (optional)
+              Benötigt bis Datum *
             </label>
             <input
               type="date"
               value={formData.needByDate}
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
+          </div>
+
+          {/* Suchradius */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suchradius: {formData.radiusKm} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.radiusKm}
+              onChange={(e) => setFormData({ ...formData, radiusKm: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>5 km</span>
+              <span>100 km</span>
+            </div>
           </div>
 
           {/* Zusätzliche Anmerkungen */}

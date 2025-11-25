@@ -23,13 +23,18 @@ export default function TireRepairPage() {
   const [formData, setFormData] = useState({
     vehicleId: '',
     issueType: 'puncture' as 'puncture' | 'valve' | 'other',
-    description: '',
-    preferredDate: '',
+    issueDescription: '',
+    needByDate: '',
+    radiusKm: 25,
     additionalNotes: ''
   })
 
   useEffect(() => {
     fetchVehicles()
+    // Set default date (7 days from now)
+    const defaultDate = new Date()
+    defaultDate.setDate(defaultDate.getDate() + 7)
+    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
   }, [])
 
   const fetchVehicles = async () => {
@@ -49,8 +54,13 @@ export default function TireRepairPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.description.trim()) {
-      setError('Bitte beschreiben Sie das Problem')
+    if (!formData.issueDescription.trim() || formData.issueDescription.length < 10) {
+      setError('Bitte beschreiben Sie das Problem genauer (mind. 10 Zeichen)')
+      return
+    }
+
+    if (!formData.needByDate) {
+      setError('Bitte wählen Sie ein Datum aus')
       return
     }
 
@@ -61,7 +71,14 @@ export default function TireRepairPage() {
       const res = await fetch('/api/tire-requests/repair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          vehicleId: formData.vehicleId || undefined,
+          issueType: formData.issueType,
+          issueDescription: formData.issueDescription,
+          needByDate: formData.needByDate,
+          radiusKm: formData.radiusKm,
+          additionalNotes: formData.additionalNotes || undefined
+        })
       })
 
       if (res.ok) {
@@ -220,30 +237,53 @@ export default function TireRepairPage() {
           {/* Problembeschreibung */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Beschreibung des Problems *
+              Beschreibung des Problems * <span className="text-xs text-gray-500">(mind. 10 Zeichen)</span>
             </label>
             <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              value={formData.issueDescription}
+              onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
               rows={4}
               required
               placeholder="Beschreiben Sie bitte so genau wie möglich, was mit dem Reifen ist..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="mt-1 text-xs text-gray-500">{formData.issueDescription.length} Zeichen</p>
           </div>
 
-          {/* Wunschtermin */}
+          {/* Benötigt bis Datum */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Wunschtermin (optional)
+              Benötigt bis Datum *
             </label>
             <input
               type="date"
-              value={formData.preferredDate}
-              onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              value={formData.needByDate}
+              onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
+              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
+          </div>
+
+          {/* Suchradius */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suchradius: {formData.radiusKm} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.radiusKm}
+              onChange={(e) => setFormData({ ...formData, radiusKm: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>5 km</span>
+              <span>100 km</span>
+            </div>
           </div>
 
           {/* Zusätzliche Anmerkungen */}

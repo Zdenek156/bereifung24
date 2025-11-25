@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Alignment request body:', JSON.stringify(body, null, 2))
     const validatedData = alignmentRequestSchema.parse(body)
 
     // Get customer
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating alignment request:', error)
     
     if (error instanceof z.ZodError) {
+      console.error('Validation errors:', JSON.stringify(error.errors, null, 2))
       return NextResponse.json(
         { error: 'Ungültige Eingabedaten', details: error.errors },
         { status: 400 }
@@ -189,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Fehler beim Erstellen der Anfrage' },
+      { error: 'Fehler beim Erstellen der Anfrage', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

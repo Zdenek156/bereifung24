@@ -30,9 +30,9 @@ export async function POST(
       )
     }
 
-    // Parse optional balancing and storage selections
+    // Parse optional storage selection
     const body = await request.json().catch(() => ({}))
-    const { wantsBalancing = false, wantsStorage = false } = body
+    const { wantsStorage = false } = body
 
     // Hole das Angebot mit allen Relations
     const offer = await prisma.offer.findUnique({
@@ -102,14 +102,26 @@ export async function POST(
 
     // Transaktion: Angebot annehmen und alle anderen ablehnen
     const result = await prisma.$transaction(async (tx) => {
+      // Calculate final price (balancing already included in offer price, add storage if selected)
+      let finalPrice = offer.price
+      if (wantsStorage) {
+        const offerWithPrices = await tx.offer.findUnique({
+          where: { id: params.id },
+          select: { storagePrice: true }
+        })
+        if (offerWithPrices?.storagePrice) {
+          finalPrice += Number(offerWithPrices.storagePrice)
+        }
+      }
+
       // Aktualisiere das angenommene Angebot
       const acceptedOffer = await tx.offer.update({
         where: { id: params.id },
         data: {
           status: 'ACCEPTED',
           acceptedAt: new Date(),
-          customerWantsBalancing: wantsBalancing,
-          customerWantsStorage: wantsStorage
+          customerWantsStorage: wantsStorage,
+          price: finalPrice
         },
         include: {
           tireOptions: true

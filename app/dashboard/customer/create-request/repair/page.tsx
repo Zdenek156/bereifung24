@@ -138,44 +138,29 @@ export default function TireRepairPage() {
             
             {loading ? (
               <div className="p-4 text-center text-gray-600">Lädt Fahrzeuge...</div>
-            ) : vehicles.length === 0 ? (
-              <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-blue-800 mb-2">Sie haben noch keine Fahrzeuge gespeichert.</p>
-                <p className="text-sm text-blue-700 mb-4">Sie können die Anfrage auch ohne Fahrzeugauswahl erstellen.</p>
-                <Link
-                  href="/dashboard/customer/vehicles"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                >
-                  Fahrzeug hinzufügen
-                </Link>
-              </div>
             ) : (
-              <div className="space-y-3">
-                {vehicles.map((vehicle) => (
-                  <label
-                    key={vehicle.id}
-                    className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                      formData.vehicleId === vehicle.id
-                        ? 'border-primary-600 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="vehicle"
-                      value={vehicle.id}
-                      checked={formData.vehicleId === vehicle.id}
-                      onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500"
-                    />
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {vehicle.make} {vehicle.model}
-                      </p>
-                      <p className="text-sm text-gray-600">Baujahr: {vehicle.year}</p>
-                    </div>
-                  </label>
-                ))}
+              <div className="space-y-4">
+                <select
+                  value={formData.vehicleId}
+                  onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Kein Fahrzeug auswählen</option>
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.make} {vehicle.model} ({vehicle.year})
+                    </option>
+                  ))}
+                </select>
+                
+                {vehicles.length === 0 && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                    Sie haben noch keine Fahrzeuge gespeichert. Sie können die Anfrage auch ohne Fahrzeug erstellen oder{' '}
+                    <Link href="/dashboard/customer/vehicles" className="font-medium underline">
+                      ein Fahrzeug hinzufügen
+                    </Link>.
+                  </div>
+                )}
               </div>
             )}
           </div>

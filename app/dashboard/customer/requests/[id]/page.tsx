@@ -156,6 +156,47 @@ export default function RequestDetailPage() {
     return null
   }
 
+  // Helper function to detect service type from notes
+  const getServiceType = () => {
+    if (request.width !== 0 || request.aspectRatio !== 0 || request.diameter !== 0) {
+      return 'TIRE_CHANGE' // Regular tire change
+    }
+    
+    const notes = request.additionalNotes || ''
+    if (notes.includes('RÄDER UMSTECKEN') || notes.includes('🔄')) return 'WHEEL_CHANGE'
+    if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REIFENREPARATUR')) return 'REPAIR'
+    if (notes.includes('MOTORRADREIFEN') || notes.includes('🏍️')) return 'MOTORCYCLE'
+    if (notes.includes('ACHSVERMESSUNG') || notes.includes('📐')) return 'ALIGNMENT'
+    if (notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
+    
+    return 'UNKNOWN'
+  }
+
+  const serviceType = getServiceType()
+
+  const getServiceIcon = () => {
+    switch (serviceType) {
+      case 'WHEEL_CHANGE': return '🔄'
+      case 'REPAIR': return '🔧'
+      case 'MOTORCYCLE': return '🏍️'
+      case 'ALIGNMENT': return '📐'
+      case 'OTHER_SERVICES': return '🔧'
+      default: return '🚗'
+    }
+  }
+
+  const getServiceTitle = () => {
+    switch (serviceType) {
+      case 'WHEEL_CHANGE': return 'Räder umstecken'
+      case 'REPAIR': return 'Reifenreparatur'
+      case 'MOTORCYCLE': return 'Motorradreifen'
+      case 'ALIGNMENT': return 'Achsvermessung'
+      case 'OTHER_SERVICES': return 'Reifenservice'
+      case 'TIRE_CHANGE': return 'Reifenwechsel'
+      default: return 'Service'
+    }
+  }
+
   const getSeasonText = (season: string) => {
     const texts = {
       SUMMER: 'Sommerreifen',
@@ -324,13 +365,12 @@ export default function RequestDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Ihre Anfrage</h2>
               
               <div className="space-y-4">
-                {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
-                  // Service request (wheel change, etc.)
+                {serviceType !== 'TIRE_CHANGE' ? (
+                  // Service request (wheel change, repair, etc.)
                   <>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Service</p>
-                      <p className="text-2xl font-bold text-primary-600">🔧 Räder umstecken</p>
-                      <p className="text-sm text-gray-600 mt-1">Sommer/Winter Wechsel</p>
+                      <p className="text-2xl font-bold text-primary-600">{getServiceIcon()} {getServiceTitle()}</p>
                     </div>
 
                     {request.additionalNotes && (
@@ -449,10 +489,21 @@ export default function RequestDetailPage() {
                     </div>
                   </div>
 
-                  {/* Tire Details */}
+                  {/* Service/Tire Details */}
                   <div className="mb-6 pb-6 border-b border-gray-200">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Reifen</h3>
-                    {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      {serviceType !== 'TIRE_CHANGE' ? 'Service-Details' : 'Reifen'}
+                    </h3>
+                    {serviceType !== 'TIRE_CHANGE' ? (
+                      // Service details
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-2xl mb-2">{getServiceIcon()}</p>
+                        <p className="font-semibold text-lg text-gray-900 mb-2">{getServiceTitle()}</p>
+                        {request.additionalNotes && (
+                          <p className="text-sm text-gray-700 whitespace-pre-line mt-3">{request.additionalNotes}</p>
+                        )}
+                      </div>
+                    ) : acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
                       <div className="space-y-3">
                         {acceptedOffer.tireOptions.map((option) => (
                           <div key={option.id} className="bg-gray-50 rounded-lg p-4">

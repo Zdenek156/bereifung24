@@ -47,7 +47,8 @@ export default function AlignmentPage() {
       const res = await fetch('/api/vehicles')
       if (res.ok) {
         const data = await res.json()
-        setVehicles(data.vehicles || [])
+        // API returns array directly, not { vehicles: [...] }
+        setVehicles(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Fehler beim Laden der Fahrzeuge:', error)

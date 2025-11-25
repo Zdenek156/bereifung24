@@ -226,6 +226,31 @@
 
 ---
 
+## 🎨 Phase 13: Werkstatt-Branding & Dokumenten-Management
+- [ ] **Werkstatt-Logo Upload:**
+  - [ ] Logo-Upload-Funktion in Werkstatt-Einstellungen
+  - [ ] Bildoptimierung (Format, Größe)
+  - [ ] Logo-Anzeige bei Angeboten
+  - [ ] Logo-Anzeige in Werkstatt-Profil
+  - [ ] Logo-Anzeige bei Termin-Bestätigung
+- [ ] **Umsatzsteuer-Status (§14 UStG):**
+  - [ ] Checkbox in Werkstatt-Einstellungen: "Unternehmen nach §14 UStG"
+  - [ ] Bei aktiviert: Hinweis "Preis enthält keine MwSt." bei allen Preisen
+  - [ ] Bei nicht aktiviert: "(inkl. MwSt.)" bei allen Preisangaben
+  - [ ] Anpassung in Angebots-Darstellung
+  - [ ] Anpassung in Rechnungen
+- [ ] **Rechnungs-Upload:**
+  - [ ] Upload-Funktion für Rechnungen (PDF) nach Angebotsannahme
+  - [ ] Rechnungs-Liste in Werkstatt-Dashboard
+  - [ ] Kunden-Zugriff auf hochgeladene Rechnungen
+  - [ ] Download-Funktion für Kunden
+  - [ ] Automatische E-Mail-Benachrichtigung an Kunden bei Rechnungs-Upload
+  - [ ] Rechnungshistorie für beide Seiten
+
+**Status:** ⚪ Ausstehend
+
+---
+
 ## 📊 Aktueller Fortschritt
 
 **Gesamt-Fortschritt:** 15% ███░░░░░░░░░░░░░░░░░

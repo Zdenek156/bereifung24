@@ -48,6 +48,10 @@ interface Offer {
   description?: string
   installationFee: number
   durationMinutes?: number
+  balancingPrice?: number | null
+  storagePrice?: number | null
+  storageAvailable?: boolean | null
+  customerWantsStorage?: boolean | null
   tireOptions?: TireOption[]
   workshop: Workshop
 }
@@ -66,6 +70,7 @@ interface TireRequest {
   diameter: number
   quantity: number
   needByDate: string
+  additionalNotes?: string
 }
 
 export default function BookAppointmentPage() {
@@ -247,6 +252,49 @@ export default function BookAppointmentPage() {
     router.push('/dashboard/customer/requests')
   }
 
+  // Helper function to detect service type from notes
+  const getServiceType = () => {
+    if (!request) return 'UNKNOWN'
+    
+    if (request.width !== 0 || request.aspectRatio !== 0 || request.diameter !== 0) {
+      return 'TIRE_CHANGE' // Regular tire change
+    }
+    
+    const notes = request.additionalNotes || ''
+    if (notes.includes('RÄDER UMSTECKEN') || notes.includes('🔄')) return 'WHEEL_CHANGE'
+    if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REIFENREPARATUR')) return 'REPAIR'
+    if (notes.includes('MOTORRADREIFEN') || notes.includes('🏍️')) return 'MOTORCYCLE'
+    if (notes.includes('ACHSVERMESSUNG') || notes.includes('📐')) return 'ALIGNMENT'
+    if (notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
+    
+    return 'UNKNOWN'
+  }
+
+  const getServiceIcon = () => {
+    const type = getServiceType()
+    switch (type) {
+      case 'WHEEL_CHANGE': return '🔄'
+      case 'REPAIR': return '🔧'
+      case 'MOTORCYCLE': return '🏍️'
+      case 'ALIGNMENT': return '📐'
+      case 'OTHER_SERVICES': return '🔧'
+      default: return '🚗'
+    }
+  }
+
+  const getServiceTitle = () => {
+    const type = getServiceType()
+    switch (type) {
+      case 'WHEEL_CHANGE': return 'Räder umstecken'
+      case 'REPAIR': return 'Reifenreparatur'
+      case 'MOTORCYCLE': return 'Motorradreifen'
+      case 'ALIGNMENT': return 'Achsvermessung'
+      case 'OTHER_SERVICES': return 'Reifenservice'
+      case 'TIRE_CHANGE': return 'Reifenwechsel'
+      default: return 'Service'
+    }
+  }
+
   const getMapUrl = () => {
     if (!offer?.workshop) return ''
     const address = `${offer.workshop.street}, ${offer.workshop.zipCode} ${offer.workshop.city}`
@@ -376,28 +424,51 @@ export default function BookAppointmentPage() {
             {/* Angebots-Übersicht */}
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Ihr Angebot</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Reifengröße</p>
-                  <p className="font-semibold">{tireSpecs}</p>
+              {getServiceType() !== 'TIRE_CHANGE' ? (
+                // Service request (wheel change, repair, etc.)
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-4xl">{getServiceIcon()}</span>
+                    <div>
+                      <p className="text-sm text-gray-600">Service</p>
+                      <p className="text-2xl font-bold text-gray-900">{getServiceTitle()}</p>
+                    </div>
+                  </div>
+                  {request.additionalNotes && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-700 whitespace-pre-line">{request.additionalNotes}</p>
+                    </div>
+                  )}
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600">Gesamtpreis</p>
+                    <p className="text-3xl font-bold text-primary-600">{offer.price.toFixed(2)} €</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Menge</p>
-                  <p className="font-semibold">{request.quantity} Reifen</p>
+              ) : (
+                // Regular tire change
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Reifengröße</p>
+                    <p className="font-semibold">{tireSpecs}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Menge</p>
+                    <p className="font-semibold">{request.quantity} Reifen</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Marke</p>
+                    <p className="font-semibold">{offer.tireBrand}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Modell</p>
+                    <p className="font-semibold">{offer.tireModel}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">Preis (inkl. Montage)</p>
+                    <p className="text-3xl font-bold text-primary-600">{offer.price.toFixed(2)} €</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Marke</p>
-                  <p className="font-semibold">{offer.tireBrand}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Modell</p>
-                  <p className="font-semibold">{offer.tireModel}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm text-gray-600">Preis (inkl. Montage)</p>
-                  <p className="text-3xl font-bold text-primary-600">{offer.price.toFixed(2)} €</p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Reifenoptionen */}

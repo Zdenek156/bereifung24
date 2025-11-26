@@ -29,6 +29,24 @@ export default function TireRepairPage() {
     additionalNotes: ''
   })
 
+  const [userZipCode, setUserZipCode] = useState('')
+
+  useEffect(() => {
+    // Fetch user profile to get zipCode
+    const fetchUserProfile = async () => {
+      try {
+        const res = await fetch('/api/user/profile')
+        if (res.ok) {
+          const data = await res.json()
+          setUserZipCode(data.zipCode || '')
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+      }
+    }
+    fetchUserProfile()
+  }, [])
+
   useEffect(() => {
     fetchVehicles()
   }, [])

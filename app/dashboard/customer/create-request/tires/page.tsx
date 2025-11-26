@@ -76,6 +76,7 @@ export default function CreateRequestPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<string>('')
   const [useManualEntry, setUseManualEntry] = useState(false)
   const [mixedTires, setMixedTires] = useState(false)
+  const [userZipCode, setUserZipCode] = useState('')
   
   const [formData, setFormData] = useState({
     season: 'SUMMER',
@@ -97,7 +98,6 @@ export default function CreateRequestPage() {
     preferredBrands: '',
     additionalNotes: '',
     needByDate: '',
-    zipCode: '',
     radiusKm: 25,
   })
   
@@ -105,13 +105,18 @@ export default function CreateRequestPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  // Load vehicles
+  // Load vehicles and user profile
   useEffect(() => {
     if (status === 'authenticated') {
       fetch('/api/vehicles')
         .then(res => res.json())
         .then(data => setVehicles(data))
         .catch(err => console.error('Fehler beim Laden der Fahrzeuge:', err))
+      
+      fetch('/api/user/profile')
+        .then(res => res.json())
+        .then(data => setUserZipCode(data.zipCode || ''))
+        .catch(err => console.error('Fehler beim Laden des Profils:', err))
     }
   }, [status])
 
@@ -246,8 +251,8 @@ export default function CreateRequestPage() {
       }
     }
 
-    if (!formData.zipCode) {
-      setError('Bitte Postleitzahl angeben')
+    if (!userZipCode) {
+      setError('Bitte PLZ in Ihren Einstellungen hinterlegen')
       return
     }
 
@@ -280,7 +285,7 @@ export default function CreateRequestPage() {
           preferredBrands: formData.preferredBrands || undefined,
           additionalNotes: formData.additionalNotes || undefined,
           needByDate: formData.needByDate,
-          zipCode: formData.zipCode,
+          zipCode: userZipCode,
           radiusKm: formData.radiusKm,
           vehicleId: selectedVehicle || undefined,
         }),
@@ -921,38 +926,20 @@ export default function CreateRequestPage() {
               Standort & Zeitrahmen
             </h3>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Postleitzahl *
-                  </label>
-                  <input
-                    type="text"
-                    name="zipCode"
-                    required
-                    value={formData.zipCode}
-                    onChange={handleChange}
-                    placeholder="12345"
-                    maxLength={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Benötigt bis *
-                  </label>
-                  <input
-                    type="date"
-                    name="needByDate"
-                    required
-                    value={formData.needByDate}
-                    onChange={handleChange}
-                    min={minDateString}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Mindestens 7 Tage im Voraus</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Benötigt bis *
+                </label>
+                <input
+                  type="date"
+                  name="needByDate"
+                  required
+                  value={formData.needByDate}
+                  onChange={handleChange}
+                  min={minDateString}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">Mindestens 7 Tage im Voraus</p>
               </div>
 
               <div>

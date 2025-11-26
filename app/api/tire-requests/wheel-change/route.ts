@@ -12,6 +12,7 @@ const wheelChangeRequestSchema = z.object({
   needsBalancing: z.boolean().default(false),
   needsStorage: z.boolean().default(false),
   preferredDate: z.string().optional(),
+  radiusKm: z.number().min(5).max(100).default(25),
   additionalNotes: z.string().optional(),
 })
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
         ].filter(Boolean).join('\n'),
         zipCode: customer.user.zipCode || '00000',
         city: city || customer.user.city || '',
-        radiusKm: 25,
+        radiusKm: validatedData.radiusKm,
         latitude,
         longitude,
         needByDate: validatedData.preferredDate 

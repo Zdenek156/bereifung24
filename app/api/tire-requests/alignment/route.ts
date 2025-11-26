@@ -11,7 +11,8 @@ const alignmentRequestSchema = z.object({
   vehicleMake: z.string().min(2, 'Bitte Fahrzeughersteller angeben'),
   vehicleModel: z.string().min(2, 'Bitte Fahrzeugmodell angeben'),
   vehicleYear: z.string().optional(),
-  alignmentType: z.enum(['front', 'full', 'four-wheel']),
+  axleType: z.enum(['front', 'rear', 'both']),
+  serviceLevel: z.enum(['measurement-only', 'with-adjustment', 'with-adjustment-inspection']),
   hasIssues: z.boolean().default(false),
   issueDescription: z.string().optional(),
   needByDate: z.string(),
@@ -71,10 +72,16 @@ export async function POST(request: NextRequest) {
       city = customer.user.city
     }
 
-    const alignmentTypeMap = {
-      front: 'Achsvermessung vorne (Spur)',
-      full: 'Achsvermessung komplett',
-      'four-wheel': '4-Rad-Vermessung (3D)'
+    const axleTypeMap = {
+      front: 'Vorderachse',
+      rear: 'Hinterachse',
+      both: 'Beide Achsen'
+    }
+
+    const serviceLevelMap = {
+      'measurement-only': 'Nur Achsvermessung',
+      'with-adjustment': 'Achsvermessung mit Spureinstellung',
+      'with-adjustment-inspection': 'Achsvermessung mit Spureinstellung und Fahrwerk-/Achsteile Prüfung'
     }
 
     // Create tire request with dummy specs for alignment service
@@ -90,7 +97,8 @@ export async function POST(request: NextRequest) {
         additionalNotes: [
           '📐 ACHSVERMESSUNG / SPUREINSTELLUNG',
           `Fahrzeug: ${validatedData.vehicleMake} ${validatedData.vehicleModel}${validatedData.vehicleYear ? ` (${validatedData.vehicleYear})` : ''}`,
-          `Art: ${alignmentTypeMap[validatedData.alignmentType]}`,
+          `Achse(n): ${axleTypeMap[validatedData.axleType]}`,
+          `Leistung: ${serviceLevelMap[validatedData.serviceLevel]}`,
           '',
           validatedData.hasIssues && validatedData.issueDescription ? `⚠️ Probleme: ${validatedData.issueDescription}` : '✓ Keine bekannten Probleme',
           validatedData.additionalNotes ? `Anmerkungen: ${validatedData.additionalNotes}` : '',

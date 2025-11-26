@@ -234,10 +234,10 @@ export default function TireRepairPage() {
             <p className="mt-1 text-xs text-gray-500">{formData.issueDescription.length} Zeichen</p>
           </div>
 
-          {/* Benötigt bis Datum */}
+          {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis Datum *
+              Benötigt bis *
             </label>
             <input
               type="date"

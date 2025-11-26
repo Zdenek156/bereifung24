@@ -186,10 +186,10 @@ export default function WheelChangePage() {
             </div>
           </div>
 
-          {/* Wunschtermin */}
+          {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Wunschtermin (optional)
+              Benötigt bis *
             </label>
             <input
               type="date"

@@ -59,10 +59,7 @@ export default function MotorcycleTiresPage() {
   })
 
   useEffect(() => {
-    // Set default date (7 days from now)
-    const defaultDate = new Date()
-    defaultDate.setDate(defaultDate.getDate() + 7)
-    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
+    // No default date
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

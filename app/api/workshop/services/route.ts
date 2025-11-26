@@ -21,6 +21,13 @@ export async function GET(request: Request) {
         workshop: {
           include: {
             workshopServices: {
+              include: {
+                servicePackages: {
+                  orderBy: {
+                    packageType: 'asc'
+                  }
+                }
+              },
               orderBy: {
                 serviceType: 'asc'
               }
@@ -90,7 +97,8 @@ export async function POST(request: Request) {
       storageAvailable,
       description,
       internalNotes,
-      isActive
+      isActive,
+      packages
     } = body
 
     // Check if service already exists
@@ -110,24 +118,38 @@ export async function POST(request: Request) {
       )
     }
 
+    // Create service with packages if provided
     const service = await prisma.workshopService.create({
       data: {
         workshopId: user.workshop.id,
         serviceType,
-        basePrice: parseFloat(basePrice),
+        basePrice: basePrice ? parseFloat(basePrice) : 0,
         basePrice4: basePrice4 ? parseFloat(basePrice4) : null,
         runFlatSurcharge: (serviceType === 'TIRE_CHANGE' && runFlatSurcharge) ? parseFloat(runFlatSurcharge) : null,
         disposalFee: (['TIRE_CHANGE', 'MOTORCYCLE_TIRE'].includes(serviceType) && disposalFee) ? parseFloat(disposalFee) : null,
         wheelSizeSurcharge: wheelSizeSurcharge || null,
         balancingPrice: (serviceType === 'WHEEL_CHANGE' && balancingPrice) ? parseFloat(balancingPrice) : null,
         storagePrice: (serviceType === 'WHEEL_CHANGE' && storagePrice) ? parseFloat(storagePrice) : null,
-        durationMinutes: parseInt(durationMinutes),
+        durationMinutes: durationMinutes ? parseInt(durationMinutes) : 60,
         durationMinutes4: durationMinutes4 ? parseInt(durationMinutes4) : null,
         balancingMinutes: (serviceType === 'WHEEL_CHANGE' && balancingMinutes) ? parseInt(balancingMinutes) : null,
         storageAvailable: (serviceType === 'WHEEL_CHANGE' && storageAvailable) ? storageAvailable : false,
         description: description || null,
         internalNotes: internalNotes || null,
-        isActive: isActive !== undefined ? isActive : true
+        isActive: isActive !== undefined ? isActive : true,
+        servicePackages: packages && packages.length > 0 ? {
+          create: packages.map((pkg: any) => ({
+            packageType: pkg.packageType,
+            name: pkg.name,
+            description: pkg.description || null,
+            price: parseFloat(pkg.price),
+            durationMinutes: parseInt(pkg.durationMinutes),
+            isActive: pkg.isActive !== undefined ? pkg.isActive : true
+          }))
+        } : undefined
+      },
+      include: {
+        servicePackages: true
       }
     })
 

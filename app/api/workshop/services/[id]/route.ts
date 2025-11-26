@@ -59,8 +59,32 @@ export async function PATCH(
       storageAvailable,
       description,
       internalNotes,
-      isActive
+      isActive,
+      packages
     } = body
+
+    // Handle package updates if provided
+    if (packages !== undefined) {
+      // Delete existing packages
+      await prisma.servicePackage.deleteMany({
+        where: { workshopServiceId: params.id }
+      })
+
+      // Create new packages if any
+      if (packages && packages.length > 0) {
+        await prisma.servicePackage.createMany({
+          data: packages.map((pkg: any) => ({
+            workshopServiceId: params.id,
+            packageType: pkg.packageType,
+            name: pkg.name,
+            description: pkg.description || null,
+            price: parseFloat(pkg.price),
+            durationMinutes: parseInt(pkg.durationMinutes),
+            isActive: pkg.isActive !== undefined ? pkg.isActive : true
+          }))
+        })
+      }
+    }
 
     const updatedService = await prisma.workshopService.update({
       where: { id: params.id },
@@ -79,6 +103,9 @@ export async function PATCH(
         description: description !== undefined ? description : undefined,
         internalNotes: internalNotes !== undefined ? internalNotes : undefined,
         isActive: isActive !== undefined ? isActive : undefined
+      },
+      include: {
+        servicePackages: true
       }
     })
 

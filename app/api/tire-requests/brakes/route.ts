@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       where: {
         workshopServices: {
           some: {
-            serviceType: 'OTHER_SERVICES',
+            serviceType: 'BRAKE_SERVICE',
             isActive: true
           }
         }

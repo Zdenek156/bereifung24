@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       where: {
         workshopServices: {
           some: {
-            serviceType: 'OTHER_SERVICES',
+            serviceType: 'BATTERY_SERVICE',
             isActive: true
           }
         }

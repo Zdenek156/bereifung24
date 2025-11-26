@@ -599,7 +599,7 @@ model WorkshopService {
   workshop              Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   
   // Service Type
-  serviceType           String   // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH
+  serviceType           String   // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
   
   // Pricing
   basePrice             Float    // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)

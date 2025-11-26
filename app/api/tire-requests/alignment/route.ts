@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         ) AS distance
       FROM workshops w
       INNER JOIN users u ON w."userId" = u.id
-      WHERE u.active = true
+      WHERE u."isActive" = true
       AND u.latitude IS NOT NULL
       AND u.longitude IS NOT NULL
       HAVING distance <= ${validatedData.radiusKm}

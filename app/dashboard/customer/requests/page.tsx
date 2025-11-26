@@ -158,8 +158,15 @@ export default function RequestsPage() {
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900">
                           {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
-                            // Service request (wheel change, etc.)
-                            <span>🔄 Räder umstecken (Sommer/Winter)</span>
+                            // Service request - detect type by emoji in additionalNotes
+                            <>
+                              {request.additionalNotes?.includes('🔧') && '🔧 Reifenreparatur'}
+                              {request.additionalNotes?.includes('🏍️') && '🏍️ Motorradreifen mit Montage'}
+                              {request.additionalNotes?.includes('📐') && '📐 Achsvermessung / Spureinstellung'}
+                              {request.additionalNotes?.includes('🔄') && '🔄 Räder umstecken (Sommer/Winter)'}
+                              {request.additionalNotes?.includes('🛠️') && '🛠️ Sonstige Reifendienstleistungen'}
+                              {!request.additionalNotes?.match(/[🔧🏍️📐🔄🛠️]/) && '🔧 Service-Anfrage'}
+                            </>
                           ) : (
                             // Regular tire request
                             <>

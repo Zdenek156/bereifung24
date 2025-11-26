@@ -161,7 +161,8 @@ export async function POST(request: NextRequest) {
               <h3>Details:</h3>
               <ul>
                 <li><strong>Fahrzeug:</strong> ${validatedData.vehicleMake} ${validatedData.vehicleModel}${validatedData.vehicleYear ? ` (${validatedData.vehicleYear})` : ''}</li>
-                <li><strong>Art:</strong> ${alignmentTypeMap[validatedData.alignmentType]}</li>
+                <li><strong>Achse(n):</strong> ${axleTypeMap[validatedData.axleType]}</li>
+                <li><strong>Leistung:</strong> ${serviceLevelMap[validatedData.serviceLevel]}</li>
                 ${validatedData.hasIssues && validatedData.issueDescription ? `<li><strong>Probleme:</strong> ${validatedData.issueDescription}</li>` : ''}
                 <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${city}</li>
                 <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>

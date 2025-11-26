@@ -27,6 +27,7 @@ export default function WheelChangePage() {
     needsBalancing: false,
     needsStorage: false,
     preferredDate: '',
+    radiusKm: 25,
     additionalNotes: ''
   })
 
@@ -208,6 +209,26 @@ export default function WheelChangePage() {
               placeholder="Hier Datum auswählen"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+          </div>
+
+          {/* Suchradius */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suchradius: {formData.radiusKm} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              step="5"
+              value={formData.radiusKm}
+              onChange={(e) => setFormData({ ...formData, radiusKm: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>5 km</span>
+              <span>100 km</span>
+            </div>
           </div>
 
           {/* Zusätzliche Anmerkungen */}

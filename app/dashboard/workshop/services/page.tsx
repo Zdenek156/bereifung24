@@ -32,7 +32,11 @@ const serviceTypeLabels: { [key: string]: string } = {
   MOTORCYCLE_TIRE: 'Motorradreifen',
   ALIGNMENT_MEASUREMENT: 'Achsvermessung',
   ALIGNMENT_ADJUSTMENT: 'Achseinstellung',
-  ALIGNMENT_BOTH: 'Achsvermessung + Einstellung'
+  ALIGNMENT_BOTH: 'Achsvermessung + Einstellung',
+  CLIMATE_SERVICE: 'Klimaservice',
+  BRAKE_SERVICE: 'Bremsen-Service',
+  BATTERY_SERVICE: 'Batterie-Service',
+  OTHER_SERVICES: 'Sonstige Reifendienste'
 }
 
 const availableServiceTypes = [
@@ -42,7 +46,11 @@ const availableServiceTypes = [
   { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️' },
   { value: 'ALIGNMENT_MEASUREMENT', label: 'Achsvermessung', icon: '📏' },
   { value: 'ALIGNMENT_ADJUSTMENT', label: 'Achseinstellung', icon: '⚙️' },
-  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏' }
+  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏' },
+  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️' },
+  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '🛑' },
+  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋' },
+  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️' }
 ]
 
 export default function WorkshopServicesPage() {

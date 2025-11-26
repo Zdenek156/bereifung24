@@ -128,50 +128,39 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Find nearby workshops
-    const nearbyWorkshops = await prisma.$queryRaw<Array<{
-      id: string;
-      companyName: string;
-      distance: number;
-    }>>`
-      SELECT * FROM (
-        SELECT 
-          w.id,
-          w."companyName",
-          (
-            6371 * acos(
-              cos(radians(${latitude})) * cos(radians(u.latitude)) *
-              cos(radians(u.longitude) - radians(${longitude})) +
-              sin(radians(${latitude})) * sin(radians(u.latitude))
-            )
-          ) AS distance
-        FROM workshops w
-        INNER JOIN users u ON w."userId" = u.id
-        WHERE u."isActive" = true
-        AND u.latitude IS NOT NULL
-        AND u.longitude IS NOT NULL
-      ) AS workshops_with_distance
-      WHERE distance <= ${validatedData.radiusKm}
-      ORDER BY distance
-      LIMIT 20
-    `
+    // Get nearby workshops that offer motorcycle tire service
+    const workshops = await prisma.workshop.findMany({
+      where: {
+        workshopServices: {
+          some: {
+            serviceType: 'MOTORCYCLE_TIRE',
+            isActive: true
+          }
+        }
+      },
+      include: {
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        }
+      },
+      take: 20
+    })
 
-    // Send email notifications
-    for (const workshop of nearbyWorkshops) {
-      const workshopWithUser = await prisma.workshop.findUnique({
-        where: { id: workshop.id },
-        include: { user: true }
-      })
-
-      if (workshopWithUser?.user.email) {
+    // Send email notifications to workshops
+    for (const workshop of workshops) {
+      if (workshop.user.email) {
         try {
           await sendEmail({
-            to: workshopWithUser.user.email,
-            subject: '🏍️ Neue Motorradreifen-Anfrage in Ihrer Nähe',
+            to: workshop.user.email,
+            subject: '🏍️ Neue Motorradreifen-Anfrage',
             html: `
               <h2>Neue Motorradreifen-Anfrage</h2>
-              <p>Hallo ${workshopWithUser.companyName},</p>
-              <p>Es gibt eine neue Motorradreifen-Anfrage in Ihrer Nähe (${workshop.distance.toFixed(1)} km).</p>
+              <p>Hallo ${workshop.companyName},</p>
+              <p>Es gibt eine neue Motorradreifen-Anfrage in Ihrer Nähe.</p>
               
               <h3>Details:</h3>
               <ul>
@@ -202,7 +191,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requestId: tireRequest.id,
-      workshopsNotified: nearbyWorkshops.length,
+      workshopsNotified: workshops.length,
     })
 
   } catch (error) {

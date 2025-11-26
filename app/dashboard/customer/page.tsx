@@ -66,7 +66,10 @@ export default function CustomerDashboard() {
         'other-services': 'Ihre Service-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
         'wheel-change': 'Ihre Räderwechsel-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
         'motorcycle': 'Ihre Motorradreifen-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
-        'tires': 'Ihre Reifenanfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.'
+        'tires': 'Ihre Reifenanfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'climate': 'Ihre Klimaservice-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'brakes': 'Ihre Bremsen-Service-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'battery': 'Ihre Batterie-Service-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.'
       }
       
       setSuccessMessage(successMessages[success] || 'Ihre Anfrage wurde erfolgreich erstellt!')

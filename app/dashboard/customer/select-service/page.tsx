@@ -48,6 +48,30 @@ export default function SelectServicePage() {
       available: true
     },
     {
+      id: 'climate',
+      title: 'Klimaservice',
+      description: 'Klimaanlagen-Wartung, Desinfektion, Nachfüllen',
+      icon: '❄️',
+      route: '/dashboard/customer/create-request/climate',
+      available: true
+    },
+    {
+      id: 'brakes',
+      title: 'Bremsen Service',
+      description: 'Bremsbeläge und Bremsscheiben wechseln',
+      icon: '🛑',
+      route: '/dashboard/customer/create-request/brakes',
+      available: true
+    },
+    {
+      id: 'battery',
+      title: 'Autobatterie Service',
+      description: 'Batterie wechseln inkl. Registrierung',
+      icon: '🔋',
+      route: '/dashboard/customer/create-request/battery',
+      available: true
+    },
+    {
       id: 'other-services',
       title: 'Sonstige Reifendienste',
       description: 'RDKS anlernen, Ventile tauschen, Räderwäsche, Reifen einlagern',

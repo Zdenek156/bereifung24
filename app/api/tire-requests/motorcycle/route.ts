@@ -134,22 +134,24 @@ export async function POST(request: NextRequest) {
       companyName: string;
       distance: number;
     }>>`
-      SELECT 
-        w.id,
-        w."companyName",
-        (
-          6371 * acos(
-            cos(radians(${latitude})) * cos(radians(u.latitude)) *
-            cos(radians(u.longitude) - radians(${longitude})) +
-            sin(radians(${latitude})) * sin(radians(u.latitude))
-          )
-        ) AS distance
-      FROM workshops w
-      INNER JOIN users u ON w."userId" = u.id
-      WHERE u."isActive" = true
-      AND u.latitude IS NOT NULL
-      AND u.longitude IS NOT NULL
-      HAVING distance <= ${validatedData.radiusKm}
+      SELECT * FROM (
+        SELECT 
+          w.id,
+          w."companyName",
+          (
+            6371 * acos(
+              cos(radians(${latitude})) * cos(radians(u.latitude)) *
+              cos(radians(u.longitude) - radians(${longitude})) +
+              sin(radians(${latitude})) * sin(radians(u.latitude))
+            )
+          ) AS distance
+        FROM workshops w
+        INNER JOIN users u ON w."userId" = u.id
+        WHERE u."isActive" = true
+        AND u.latitude IS NOT NULL
+        AND u.longitude IS NOT NULL
+      ) AS workshops_with_distance
+      WHERE distance <= ${validatedData.radiusKm}
       ORDER BY distance
       LIMIT 20
     `

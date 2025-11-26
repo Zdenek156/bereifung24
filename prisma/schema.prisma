@@ -16,17 +16,17 @@ datasource db {
 // ============================================
 
 model AdminNotificationSetting {
-  id                        String   @id @default(cuid())
-  email                     String   @unique
-  name                      String?
-  
+  id    String  @id @default(cuid())
+  email String  @unique
+  name  String?
+
   // Notification Types
-  notifyCustomerRegistration Boolean  @default(true)  // Benachrichtigung bei Kunden-Registrierung
-  notifyWorkshopRegistration Boolean  @default(true)  // Benachrichtigung bei Werkstatt-Registrierung
-  
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  
+  notifyCustomerRegistration Boolean @default(true) // Benachrichtigung bei Kunden-Registrierung
+  notifyWorkshopRegistration Boolean @default(true) // Benachrichtigung bei Werkstatt-Registrierung
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("admin_notification_settings")
 }
 
@@ -35,47 +35,47 @@ model AdminNotificationSetting {
 // ============================================
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  password      String
-  role          String   @default("CUSTOMER") // CUSTOMER, WORKSHOP, ADMIN
-  
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  role     String @default("CUSTOMER") // CUSTOMER, WORKSHOP, ADMIN
+
   // Profile
-  firstName     String
-  lastName      String
-  phone         String?
-  street        String?
-  zipCode       String?
-  city          String?
-  latitude      Float?
-  longitude     Float?
-  
+  firstName String
+  lastName  String
+  phone     String?
+  street    String?
+  zipCode   String?
+  city      String?
+  latitude  Float?
+  longitude Float?
+
   // Customer Type (for billing)
-  customerType  String?   @default("PRIVATE") // PRIVATE, BUSINESS
-  companyName   String?
-  taxId         String?   // Steuernummer/USt-IdNr for business customers
-  
+  customerType String? @default("PRIVATE") // PRIVATE, BUSINESS
+  companyName  String?
+  taxId        String? // Steuernummer/USt-IdNr for business customers
+
   // Verification
   emailVerified DateTime?
   isActive      Boolean   @default(true)
-  
+
   // OAuth
-  googleId      String?   @unique
-  
+  googleId String? @unique
+
   // Password Reset
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   // Email Verification
   verificationToken String?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations based on role
-  customer      Customer?
-  workshop      Workshop?
-  
+  customer Customer?
+  workshop Workshop?
+
   @@map("users")
 }
 
@@ -84,23 +84,23 @@ model User {
 // ============================================
 
 model Customer {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Email Notifications
-  emailNotifyOffers Boolean  @default(true) // Benachrichtigung bei neuen Angeboten
-  
+  emailNotifyOffers Boolean @default(true) // Benachrichtigung bei neuen Angeboten
+
   // Relations
-  tireRequests    TireRequest[]
-  bookings        Booking[]
-  reviews         Review[]
-  tireRatings     TireRating[]
-  vehicles        Vehicle[]
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  tireRequests TireRequest[]
+  bookings     Booking[]
+  reviews      Review[]
+  tireRatings  TireRating[]
+  vehicles     Vehicle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("customers")
 }
 
@@ -109,114 +109,114 @@ model Customer {
 // ============================================
 
 model Workshop {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Business Info
-  companyName     String
-  taxId           String?
-  website         String?
-  description     String?
-  
+  companyName String
+  taxId       String?
+  website     String?
+  description String?
+
   // Opening Hours (JSON String)
-  openingHours    String? // JSON: {"monday": "09:00-18:00", ...}
-  
+  openingHours String? // JSON: {"monday": "09:00-18:00", ...}
+
   // Verification
-  isVerified      Boolean   @default(false)
-  verifiedAt      DateTime?
-  
+  isVerified Boolean   @default(false)
+  verifiedAt DateTime?
+
   // Banking (SEPA)
   iban            String?
   accountHolder   String?
   sepaMandateRef  String?   @unique // B24-timestamp-random
   sepaMandateDate DateTime?
-  
+
   // PayPal
-  paypalEmail     String?
-  
+  paypalEmail String?
+
   // Payment Methods (JSON String)
-  paymentMethods  String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
-  
+  paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
+
   // Email Notifications
-  emailNotifyRequests Boolean  @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
-  
+  emailNotifyRequests Boolean @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
+
   // Calendar Integration
-  calendarMode         String?  @default("workshop") @map("calendarmode") // "workshop" or "employees"
-  googleCalendarId     String?  @map("googlecalendarid") // For workshop mode
-  googleAccessToken    String?  @map("googleaccesstoken")
-  googleRefreshToken   String?  @map("googlerefreshtoken")
-  googleTokenExpiry    DateTime? @map("googletokenexpiry")
-  
+  calendarMode       String?   @default("workshop") @map("calendarmode") // "workshop" or "employees"
+  googleCalendarId   String?   @map("googlecalendarid") // For workshop mode
+  googleAccessToken  String?   @map("googleaccesstoken")
+  googleRefreshToken String?   @map("googlerefreshtoken")
+  googleTokenExpiry  DateTime? @map("googletokenexpiry")
+
   // Relations
-  offers          Offer[]
-  bookings        Booking[]
-  reviews         Review[]
-  commissions     Commission[]
-  employees       Employee[]
+  offers            Offer[]
+  bookings          Booking[]
+  reviews           Review[]
+  commissions       Commission[]
+  employees         Employee[]
   workshopVacations WorkshopVacation[]
-  workshopServices WorkshopService[]
-  pricingSettings PricingSettings?
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  workshopServices  WorkshopService[]
+  pricingSettings   PricingSettings?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("workshops")
 }
 
 model PricingSettings {
-  id                    String    @id @default(cuid())
-  workshopId            String    @unique @map("workshop_id")
-  workshop              Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  workshopId String   @unique @map("workshop_id")
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
   // Auto Reifen
-  autoManualPricing     Boolean   @default(true) @map("auto_manual_pricing")
-  autoFixedMarkup       Float     @default(0) @map("auto_fixed_markup")
-  autoPercentMarkup     Float     @default(0) @map("auto_percent_markup")
-  autoIncludeVat        Boolean   @default(false) @map("auto_include_vat")
-  
+  autoManualPricing Boolean @default(true) @map("auto_manual_pricing")
+  autoFixedMarkup   Float   @default(0) @map("auto_fixed_markup")
+  autoPercentMarkup Float   @default(0) @map("auto_percent_markup")
+  autoIncludeVat    Boolean @default(false) @map("auto_include_vat")
+
   // Motorrad Reifen
-  motoManualPricing     Boolean   @default(true) @map("moto_manual_pricing")
-  motoFixedMarkup       Float     @default(0) @map("moto_fixed_markup")
-  motoPercentMarkup     Float     @default(0) @map("moto_percent_markup")
-  motoIncludeVat        Boolean   @default(false) @map("moto_include_vat")
-  
+  motoManualPricing Boolean @default(true) @map("moto_manual_pricing")
+  motoFixedMarkup   Float   @default(0) @map("moto_fixed_markup")
+  motoPercentMarkup Float   @default(0) @map("moto_percent_markup")
+  motoIncludeVat    Boolean @default(false) @map("moto_include_vat")
+
   // Andere Services
-  serviceManualPricing  Boolean   @default(true) @map("service_manual_pricing")
-  serviceFixedMarkup    Float     @default(0) @map("service_fixed_markup")
-  servicePercentMarkup  Float     @default(0) @map("service_percent_markup")
-  serviceIncludeVat     Boolean   @default(false) @map("service_include_vat")
-  
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  
+  serviceManualPricing Boolean @default(true) @map("service_manual_pricing")
+  serviceFixedMarkup   Float   @default(0) @map("service_fixed_markup")
+  servicePercentMarkup Float   @default(0) @map("service_percent_markup")
+  serviceIncludeVat    Boolean @default(false) @map("service_include_vat")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@map("pricing_settings")
 }
 
 model Employee {
-  id                   String    @id @default(cuid())
-  workshopId           String
-  workshop             Workshop  @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  
-  name                 String
-  email                String
-  
+  id         String   @id @default(cuid())
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  name  String
+  email String
+
   // Google Calendar Integration
-  googleCalendarId     String?
-  googleAccessToken    String?
-  googleRefreshToken   String?
-  googleTokenExpiry    DateTime?
-  
+  googleCalendarId   String?
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleTokenExpiry  DateTime?
+
   // Working Hours (JSON String)
-  workingHours         String? // JSON: {"monday": {"from": "08:00", "to": "17:00", "working": true}, ...}
-  
+  workingHours String? // JSON: {"monday": {"from": "08:00", "to": "17:00", "working": true}, ...}
+
   // Relations
-  bookings             Booking[]
-  employeeVacations    EmployeeVacation[]
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
+  bookings          Booking[]
+  employeeVacations EmployeeVacation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("employees")
 }
 
@@ -225,47 +225,47 @@ model Employee {
 // ============================================
 
 model TireRequest {
-  id                String   @id @default(cuid())
-  customerId        String
-  customer          Customer @relation(fields: [customerId], references: [id])
-  vehicleId         String?
-  vehicle           Vehicle? @relation(fields: [vehicleId], references: [id])
-  
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  vehicleId  String?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+
   // Tire Specifications
-  season            String  // SUMMER, WINTER, ALL_SEASON
-  width             Int
-  aspectRatio       Int
-  diameter          Int
-  loadIndex         Int?
-  speedRating       String?
-  isRunflat         Boolean  @default(false)
-  quantity          Int      @default(4)
-  
+  season      String // SUMMER, WINTER, ALL_SEASON
+  width       Int
+  aspectRatio Int
+  diameter    Int
+  loadIndex   Int?
+  speedRating String?
+  isRunflat   Boolean @default(false)
+  quantity    Int     @default(4)
+
   // Preferences
-  preferredBrands   String? // Comma-separated brands
-  specificBrand     String?
-  additionalNotes   String?
-  
+  preferredBrands String? // Comma-separated brands
+  specificBrand   String?
+  additionalNotes String?
+
   // Location
-  zipCode           String
-  city              String?
-  radiusKm          Int      @default(25)
-  latitude          Float?
-  longitude         Float?
-  
+  zipCode   String
+  city      String?
+  radiusKm  Int     @default(25)
+  latitude  Float?
+  longitude Float?
+
   // Timing
-  needByDate        DateTime
-  
+  needByDate DateTime
+
   // Status
-  status            String   @default("PENDING") // PENDING, QUOTED, ACCEPTED, COMPLETED, CANCELLED
-  
+  status String @default("PENDING") // PENDING, QUOTED, ACCEPTED, COMPLETED, CANCELLED
+
   // Relations
-  offers            Offer[]
-  booking           Booking?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  offers  Offer[]
+  booking Booking?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("tire_requests")
 }
 
@@ -274,79 +274,79 @@ model TireRequest {
 // ============================================
 
 model Vehicle {
-  id                String   @id @default(cuid())
-  customerId        String
-  customer          Customer @relation(fields: [customerId], references: [id])
-  
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
   // Vehicle Details
-  make              String
-  model             String
-  year              Int
-  licensePlate      String?
-  vin               String?   @unique
-  
+  make         String
+  model        String
+  year         Int
+  licensePlate String?
+  vin          String? @unique
+
   // Current Tires
-  currentTires      VehicleTire[]
-  tireHistory       TireHistory[]
-  tireRequests      TireRequest[]
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  currentTires VehicleTire[]
+  tireHistory  TireHistory[]
+  tireRequests TireRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("vehicles")
 }
 
 model VehicleTire {
-  id                String   @id @default(cuid())
-  vehicleId         String
-  vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
-  
+  id        String  @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
   // Tire Specs
-  position          String   // FRONT_LEFT, FRONT_RIGHT, REAR_LEFT, REAR_RIGHT
-  season            String   // SUMMER, WINTER, ALL_SEASON
-  width             Int
-  aspectRatio       Int
-  diameter          Int
-  loadIndex         Int?
-  speedRating       String?
-  brand             String?
-  model             String?
-  dotCode           String?  // Herstellungsdatum
-  
+  position    String // FRONT_LEFT, FRONT_RIGHT, REAR_LEFT, REAR_RIGHT
+  season      String // SUMMER, WINTER, ALL_SEASON
+  width       Int
+  aspectRatio Int
+  diameter    Int
+  loadIndex   Int?
+  speedRating String?
+  brand       String?
+  model       String?
+  dotCode     String? // Herstellungsdatum
+
   // Condition
-  treadDepth        Float?
-  installedDate     DateTime?
+  treadDepth           Float?
+  installedDate        DateTime?
   estimatedReplacement DateTime?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("vehicle_tires")
 }
 
 model TireHistory {
-  id                String   @id @default(cuid())
-  vehicleId         String
-  vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
-  
+  id        String  @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
   // What was installed
-  season            String
-  width             Int
-  aspectRatio       Int
-  diameter          Int
-  brand             String?
-  model             String?
-  quantity          Int
-  
+  season      String
+  width       Int
+  aspectRatio Int
+  diameter    Int
+  brand       String?
+  model       String?
+  quantity    Int
+
   // When and where
-  installedDate     DateTime
-  workshopName      String?
-  totalCost         Float?
-  
-  notes             String?
-  
-  createdAt         DateTime @default(now())
-  
+  installedDate DateTime
+  workshopName  String?
+  totalCost     Float?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
   @@map("tire_history")
 }
 
@@ -355,61 +355,61 @@ model TireHistory {
 // ============================================
 
 model Offer {
-  id                String        @id @default(cuid())
-  tireRequestId     String
-  tireRequest       TireRequest   @relation(fields: [tireRequestId], references: [id])
-  workshopId        String
-  workshop          Workshop      @relation(fields: [workshopId], references: [id])
-  
+  id            String      @id @default(cuid())
+  tireRequestId String
+  tireRequest   TireRequest @relation(fields: [tireRequestId], references: [id])
+  workshopId    String
+  workshop      Workshop    @relation(fields: [workshopId], references: [id])
+
   // Tire Details (for compatibility with existing offers)
-  tireBrand         String
-  tireModel         String
-  description       String?
-  
+  tireBrand   String
+  tireModel   String
+  description String?
+
   // Multiple tire options (for new offers)
-  tireOptions       TireOption[]
-  
+  tireOptions TireOption[]
+
   // Pricing
-  price             Float         // Total price (for compatibility)
-  pricePerTire      Float?
-  installationFee   Float?
-  durationMinutes   Int?          // Geschätzte Dauer für den Service
-  balancingPrice    Float?        @map("balancingprice") // Wuchten-Preis für Wheel Change
-  storagePrice      Float?        @map("storageprice") // Einlagerung-Preis für Wheel Change
-  storageAvailable  Boolean?      @default(false) @map("storageavailable") // Einlagerung verfügbar
-  
+  price            Float // Total price (for compatibility)
+  pricePerTire     Float?
+  installationFee  Float?
+  durationMinutes  Int? // Geschätzte Dauer für den Service
+  balancingPrice   Float?   @map("balancingprice") // Wuchten-Preis für Wheel Change
+  storagePrice     Float?   @map("storageprice") // Einlagerung-Preis für Wheel Change
+  storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
+
   // Validity
-  validUntil        DateTime
-  
+  validUntil DateTime
+
   // Status
-  status            String        @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
-  
+  status String @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
+
   // If accepted
-  acceptedAt        DateTime?
-  declinedAt        DateTime?     @map("declined_at")
+  acceptedAt             DateTime?
+  declinedAt             DateTime? @map("declined_at")
   customerWantsBalancing Boolean?  @default(false) @map("customer_wants_balancing")
   customerWantsStorage   Boolean?  @default(false) @map("customer_wants_storage")
-  booking           Booking?
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  
+  booking                Booking?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("offers")
 }
 
 model TireOption {
-  id            String    @id @default(cuid())
-  offerId       String    @map("offer_id")
-  offer         Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  
-  brand         String
-  model         String
-  pricePerTire  Float     @map("price_per_tire")
-  
-  bookings      Booking[]
-  
-  createdAt     DateTime  @default(now()) @map("created_at")
-  
+  id      String @id @default(cuid())
+  offerId String @map("offer_id")
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  brand        String
+  model        String
+  pricePerTire Float  @map("price_per_tire")
+
+  bookings Booking[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@map("tire_options")
 }
 
@@ -418,51 +418,51 @@ model TireOption {
 // ============================================
 
 model Booking {
-  id                String      @id @default(cuid())
-  tireRequestId     String      @unique
-  tireRequest       TireRequest @relation(fields: [tireRequestId], references: [id])
-  customerId        String
-  customer          Customer    @relation(fields: [customerId], references: [id])
-  workshopId        String
-  workshop          Workshop    @relation(fields: [workshopId], references: [id])
-  offerId           String      @unique
-  offer             Offer       @relation(fields: [offerId], references: [id])
+  id                   String      @id @default(cuid())
+  tireRequestId        String      @unique
+  tireRequest          TireRequest @relation(fields: [tireRequestId], references: [id])
+  customerId           String
+  customer             Customer    @relation(fields: [customerId], references: [id])
+  workshopId           String
+  workshop             Workshop    @relation(fields: [workshopId], references: [id])
+  offerId              String      @unique
+  offer                Offer       @relation(fields: [offerId], references: [id])
   selectedTireOptionId String?
   selectedTireOption   TireOption? @relation(fields: [selectedTireOptionId], references: [id])
-  
+
   // Appointment
   appointmentDate   DateTime
   appointmentTime   String
-  estimatedDuration Int         @default(60) // Minuten
+  estimatedDuration Int       @default(60) // Minuten
   employeeId        String?
-  employee          Employee?   @relation(fields: [employeeId], references: [id])
-  googleEventId     String?     // Google Calendar Event ID
-  
+  employee          Employee? @relation(fields: [employeeId], references: [id])
+  googleEventId     String? // Google Calendar Event ID
+
   // Status
-  status            String      @default("CONFIRMED") // CONFIRMED, COMPLETED, CANCELLED, NO_SHOW
-  
+  status String @default("CONFIRMED") // CONFIRMED, COMPLETED, CANCELLED, NO_SHOW
+
   // Payment
-  paymentMethod     String?     // PAYPAL, BANK_TRANSFER, CREDIT_CARD, ON_SITE
-  paymentStatus     String      @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
-  paidAt            DateTime?
-  
+  paymentMethod String? // PAYPAL, BANK_TRANSFER, CREDIT_CARD, ON_SITE
+  paymentStatus String    @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  paidAt        DateTime?
+
   // Notes
-  customerNotes     String?
-  workshopNotes     String?
-  
+  customerNotes String?
+  workshopNotes String?
+
   // Optional services (for wheel change)
-  wantsBalancing    Boolean?    @default(false) @map("wantsbalancing")
-  wantsStorage      Boolean?    @default(false) @map("wantsstorage")
-  
+  wantsBalancing Boolean? @default(false) @map("wantsbalancing")
+  wantsStorage   Boolean? @default(false) @map("wantsstorage")
+
   // After completion
-  completedAt       DateTime?
-  review            Review?
-  tireRating        TireRating?
-  commission        Commission?
-  
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
+  completedAt DateTime?
+  review      Review?
+  tireRating  TireRating?
+  commission  Commission?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("bookings")
 }
 
@@ -471,25 +471,25 @@ model Booking {
 // ============================================
 
 model Review {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
-  booking       Booking  @relation(fields: [bookingId], references: [id])
-  customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
-  workshopId    String
-  workshop      Workshop @relation(fields: [workshopId], references: [id])
-  
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id])
+
   // Rating
-  rating        Int      // 1-5 Sterne
-  comment       String?
-  
+  rating  Int // 1-5 Sterne
+  comment String?
+
   // Response
   workshopResponse String?
   respondedAt      DateTime?
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("reviews")
 }
 
@@ -498,25 +498,25 @@ model Review {
 // ============================================
 
 model TireRating {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
-  booking       Booking  @relation(fields: [bookingId], references: [id])
-  customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
-  
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
   // Rating
-  rating        Int      // 1-5 Sterne
-  comment       String?  // Persönliche Notizen zu den Reifen
-  
+  rating  Int // 1-5 Sterne
+  comment String? // Persönliche Notizen zu den Reifen
+
   // Categories (optional detailed ratings)
-  quietnessRating     Int?  // 1-5: Lautstärke
-  gripRating          Int?  // 1-5: Grip/Haftung
-  wearRating          Int?  // 1-5: Verschleiß
-  comfortRating       Int?  // 1-5: Komfort
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  quietnessRating Int? // 1-5: Lautstärke
+  gripRating      Int? // 1-5: Grip/Haftung
+  wearRating      Int? // 1-5: Verschleiß
+  comfortRating   Int? // 1-5: Komfort
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("tire_ratings")
 }
 
@@ -525,33 +525,33 @@ model TireRating {
 // ============================================
 
 model Commission {
-  id              String   @id @default(cuid())
-  bookingId       String   @unique
-  booking         Booking  @relation(fields: [bookingId], references: [id])
-  workshopId      String
-  workshop        Workshop @relation(fields: [workshopId], references: [id])
-  
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id])
+
   // Amounts
-  orderTotal      Float    // Gesamtbetrag des Auftrags
-  commissionRate  Float    @default(5.0) // Prozentsatz (Standard 5%)
-  commissionAmount Float   // Berechnete Provision
-  
+  orderTotal       Float // Gesamtbetrag des Auftrags
+  commissionRate   Float @default(5.0) // Prozentsatz (Standard 5%)
+  commissionAmount Float // Berechnete Provision
+
   // Status
-  status          String   @default("PENDING") // PENDING, BILLED, COLLECTED, FAILED
-  
+  status String @default("PENDING") // PENDING, BILLED, COLLECTED, FAILED
+
   // Billing
-  billedAt        DateTime?
-  collectedAt     DateTime?
-  
+  billedAt    DateTime?
+  collectedAt DateTime?
+
   // SEPA Details
-  sepaReference   String?
-  sepaStatus      String?
-  
-  notes           String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  sepaReference String?
+  sepaStatus    String?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("commissions")
 }
 
@@ -560,32 +560,32 @@ model Commission {
 // ============================================
 
 model WorkshopVacation {
-  id          String   @id @default(cuid())
-  workshopId  String
-  workshop    Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  
-  startDate   DateTime
-  endDate     DateTime
-  reason      String?  // e.g., "Betriebsurlaub", "Feiertage", "Umbau"
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String? // e.g., "Betriebsurlaub", "Feiertage", "Umbau"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("workshop_vacations")
 }
 
 model EmployeeVacation {
-  id          String   @id @default(cuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  startDate   DateTime
-  endDate     DateTime
-  reason      String?  // e.g., "Urlaub", "Krankheit", "Fortbildung"
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String? // e.g., "Urlaub", "Krankheit", "Fortbildung"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("employee_vacations")
 }
 
@@ -594,42 +594,84 @@ model EmployeeVacation {
 // ============================================
 
 model WorkshopService {
-  id                    String   @id @default(cuid())
-  workshopId            String
-  workshop              Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
   // Service Type
-  serviceType           String   // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
-  
+  serviceType String // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
+
   // Pricing
-  basePrice             Float    // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)
-  basePrice4            Float?   // Preis für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
-  
+  basePrice  Float // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)
+  basePrice4 Float? // Preis für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
+
   // Service-specific pricing
-  runFlatSurcharge      Float?   // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
-  disposalFee           Float?   // Entsorgungsgebühr (pro Reifen)
-  wheelSizeSurcharge    Json?    // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
-  balancingPrice        Float?   @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
-  storagePrice          Float?   @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
-  
+  runFlatSurcharge   Float? // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
+  disposalFee        Float? // Entsorgungsgebühr (pro Reifen)
+  wheelSizeSurcharge Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
+  balancingPrice     Float? @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
+  storagePrice       Float? @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+
   // Duration
-  durationMinutes       Int      // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)
-  durationMinutes4      Int?     // Dauer für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
-  balancingMinutes      Int?     @map("balancingminutes") // Zusätzliche Dauer für Wuchten (pro Rad bei WHEEL_CHANGE)
-  storageAvailable      Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
-  
+  durationMinutes  Int // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)
+  durationMinutes4 Int? // Dauer für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
+  balancingMinutes Int?     @map("balancingminutes") // Zusätzliche Dauer für Wuchten (pro Rad bei WHEEL_CHANGE)
+  storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
+
+  // Service Packages (JSON structure for service-specific options)
+  // For CLIMATE_SERVICE: { "check": { price: 49, duration: 30 }, "basic": { price: 89, duration: 45 }, "comfort": { price: 129, duration: 60 }, "premium": { price: 179, duration: 90 } }
+  // For BRAKE_SERVICE: { "front_pads": { price: 150, duration: 60 }, "front_pads_discs": { price: 280, duration: 90 }, "rear_pads": { price: 140, duration: 60 }, "rear_pads_discs": { price: 270, duration: 90 }, "rear_pads_discs_handbrake": { price: 320, duration: 120 } }
+  // For BATTERY_SERVICE: { "standard": { price: 50, duration: 30 } } or custom packages
+  // For ALIGNMENT_*: { "measurement": { price: 80, duration: 45 }, "adjustment": { price: 150, duration: 90 }, "both": { price: 200, duration: 120 } }
+  packages Json? // Service-specific package configurations with price and duration
+
   // Availability
-  isActive              Boolean  @default(true)
-  
+  isActive Boolean @default(true)
+
   // Notes
-  description           String?  // Beschreibung des Services
-  internalNotes         String?  // Interne Notizen
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
+  description   String? // Beschreibung des Services
+  internalNotes String? // Interne Notizen
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  servicePackages ServicePackage[]
+
   @@unique([workshopId, serviceType])
   @@map("workshop_services")
+}
+
+// ============================================
+// SERVICE PACKAGES (for granular package management)
+// ============================================
+
+model ServicePackage {
+  id                String          @id @default(cuid())
+  workshopServiceId String
+  workshopService   WorkshopService @relation(fields: [workshopServiceId], references: [id], onDelete: Cascade)
+
+  // Package Type (service-specific)
+  packageType String // For CLIMATE_SERVICE: check, basic, comfort, premium
+  // For BRAKE_SERVICE: front_pads, front_pads_discs, rear_pads, rear_pads_discs, rear_pads_discs_handbrake
+  // For BATTERY_SERVICE: standard, premium, etc.
+  // For ALIGNMENT: measurement_only, with_adjustment, with_adjustment_inspection
+
+  // Package Details
+  name        String // Display name (e.g., "Klimacheck", "Vorderachse - Beläge + Scheiben")
+  description String? // Package description
+
+  // Pricing & Duration
+  price           Float // Price for this package
+  durationMinutes Int // Duration in minutes
+
+  // Availability
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workshopServiceId, packageType])
+  @@map("service_packages")
 }
 
 // ============================================
@@ -637,12 +679,12 @@ model WorkshopService {
 // ============================================
 
 model AdminLog {
-  id          String   @id @default(cuid())
-  adminEmail  String
-  action      String
-  details     String?
-  
-  createdAt   DateTime @default(now())
-  
+  id         String  @id @default(cuid())
+  adminEmail String
+  action     String
+  details    String?
+
+  createdAt DateTime @default(now())
+
   @@map("admin_logs")
 }

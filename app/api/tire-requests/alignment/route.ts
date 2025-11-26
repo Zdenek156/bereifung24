@@ -113,12 +113,20 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Get nearby workshops that offer alignment service
+    // Get nearby workshops that offer alignment service with matching packages
+    // Map service level to package types
+    const packageTypeMap = {
+      'measurement-only': 'measurement_only',
+      'with-adjustment': 'with_adjustment',
+      'with-adjustment-inspection': 'with_adjustment_inspection'
+    }
+    const requiredPackageType = packageTypeMap[validatedData.serviceLevel as keyof typeof packageTypeMap]
+
     // Map service level to workshop service types
     const serviceTypeMap = {
-      'measurement': 'ALIGNMENT_MEASUREMENT',
-      'adjustment': 'ALIGNMENT_ADJUSTMENT',
-      'both': 'ALIGNMENT_BOTH'
+      'measurement-only': 'ALIGNMENT_MEASUREMENT',
+      'with-adjustment': 'ALIGNMENT_BOTH',
+      'with-adjustment-inspection': 'ALIGNMENT_BOTH'
     }
     const requiredServiceType = serviceTypeMap[validatedData.serviceLevel as keyof typeof serviceTypeMap]
 
@@ -126,12 +134,14 @@ export async function POST(request: NextRequest) {
       where: {
         workshopServices: {
           some: {
-            serviceType: {
-              in: requiredServiceType === 'ALIGNMENT_BOTH' 
-                ? ['ALIGNMENT_BOTH', 'ALIGNMENT_MEASUREMENT', 'ALIGNMENT_ADJUSTMENT']
-                : [requiredServiceType, 'ALIGNMENT_BOTH']
-            },
-            isActive: true
+            serviceType: requiredServiceType,
+            isActive: true,
+            servicePackages: {
+              some: {
+                packageType: requiredPackageType,
+                isActive: true
+              }
+            }
           }
         }
       },
@@ -141,6 +151,19 @@ export async function POST(request: NextRequest) {
             email: true,
             firstName: true,
             lastName: true,
+          }
+        },
+        workshopServices: {
+          where: {
+            serviceType: requiredServiceType
+          },
+          include: {
+            servicePackages: {
+              where: {
+                packageType: requiredPackageType,
+                isActive: true
+              }
+            }
           }
         }
       },

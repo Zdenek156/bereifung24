@@ -126,7 +126,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Get nearby workshops that offer brake service
+    // Determine required package types based on selected axles
+    const requiredPackages: string[] = []
+    if (validatedData.frontAxle === 'pads') requiredPackages.push('front_pads')
+    if (validatedData.frontAxle === 'pads-discs') requiredPackages.push('front_pads_discs')
+    if (validatedData.rearAxle === 'pads') requiredPackages.push('rear_pads')
+    if (validatedData.rearAxle === 'pads-discs') requiredPackages.push('rear_pads_discs')
+    if (validatedData.rearAxle === 'pads-discs-handbrake') requiredPackages.push('rear_pads_discs_handbrake')
+
+    // Get nearby workshops that offer brake service with ALL required packages
     const workshops = await prisma.workshop.findMany({
       where: {
         workshopServices: {
@@ -143,13 +151,34 @@ export async function POST(request: NextRequest) {
             firstName: true,
             lastName: true,
           }
+        },
+        workshopServices: {
+          where: {
+            serviceType: 'BRAKE_SERVICE'
+          },
+          include: {
+            servicePackages: {
+              where: {
+                packageType: {
+                  in: requiredPackages
+                },
+                isActive: true
+              }
+            }
+          }
         }
       },
       take: 20
     })
 
+    // Filter workshops that have ALL required packages
+    const qualifiedWorkshops = workshops.filter(workshop => {
+      const availablePackages = workshop.workshopServices[0]?.servicePackages.map(p => p.packageType) || []
+      return requiredPackages.every(required => availablePackages.includes(required))
+    })
+
     // Send notification emails to workshops
-    for (const workshop of workshops) {
+    for (const workshop of qualifiedWorkshops) {
       try {
         await sendEmail({
           to: workshop.user.email,
@@ -212,7 +241,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requestId: tireRequest.id,
-      notifiedWorkshops: workshops.length
+      notifiedWorkshops: qualifiedWorkshops.length
     })
 
   } catch (error) {

@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 
+interface ServicePackage {
+  id: string
+  packageType: string
+  name: string
+  description: string | null
+  price: number
+  durationMinutes: number
+  isActive: boolean
+}
+
 interface Service {
   id: string
   serviceType: string
@@ -12,7 +22,6 @@ interface Service {
   basePrice4: number | null
   runFlatSurcharge: number | null
   disposalFee: number | null
-  wheelSizeSurcharge: any | null
   balancingPrice: number | null
   storagePrice: number | null
   durationMinutes: number
@@ -22,7 +31,7 @@ interface Service {
   description: string | null
   internalNotes: string | null
   isActive: boolean
-  priceFor: string | null // '2_TIRES' or '4_TIRES' or 'SINGLE' or 'BOTH'
+  servicePackages: ServicePackage[]
 }
 
 const serviceTypeLabels: { [key: string]: string } = {
@@ -40,18 +49,48 @@ const serviceTypeLabels: { [key: string]: string } = {
 }
 
 const availableServiceTypes = [
-  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧' },
-  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡' },
-  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨' },
-  { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️' },
-  { value: 'ALIGNMENT_MEASUREMENT', label: 'Achsvermessung', icon: '📏' },
-  { value: 'ALIGNMENT_ADJUSTMENT', label: 'Achseinstellung', icon: '⚙️' },
-  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏' },
-  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️' },
-  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '🛑' },
-  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋' },
-  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️' }
+  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧', hasPackages: false },
+  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: false },
+  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨', hasPackages: false },
+  { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', hasPackages: false },
+  { value: 'ALIGNMENT_MEASUREMENT', label: 'Achsvermessung', icon: '📏', hasPackages: true },
+  { value: 'ALIGNMENT_ADJUSTMENT', label: 'Achseinstellung', icon: '⚙️', hasPackages: true },
+  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏', hasPackages: true },
+  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️', hasPackages: true },
+  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '🛑', hasPackages: true },
+  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋', hasPackages: false },
+  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️', hasPackages: false }
 ]
+
+// Package configurations for each service type
+const packageConfigurations: { [key: string]: { type: string; name: string; description: string }[] } = {
+  CLIMATE_SERVICE: [
+    { type: 'check', name: 'Klimacheck/Inspektion', description: 'Funktionsprüfung der Klimaanlage' },
+    { type: 'basic', name: 'Basic Service', description: 'Desinfektion der Klimaanlage' },
+    { type: 'comfort', name: 'Comfort Service', description: 'Desinfektion + Pollenfilter wechseln' },
+    { type: 'premium', name: 'Premium Service', description: 'Desinfektion + Pollenfilter + Kältemittel auffüllen' }
+  ],
+  BRAKE_SERVICE: [
+    { type: 'front_pads', name: 'Vorderachse - Bremsbeläge', description: 'Wechsel der Bremsbeläge vorne' },
+    { type: 'front_pads_discs', name: 'Vorderachse - Beläge + Scheiben', description: 'Wechsel Bremsbeläge + Bremsscheiben vorne' },
+    { type: 'rear_pads', name: 'Hinterachse - Bremsbeläge', description: 'Wechsel der Bremsbeläge hinten' },
+    { type: 'rear_pads_discs', name: 'Hinterachse - Beläge + Scheiben', description: 'Wechsel Bremsbeläge + Bremsscheiben hinten' },
+    { type: 'rear_pads_discs_handbrake', name: 'Hinterachse - Beläge + Scheiben + Handbremse', description: 'Komplettpaket hinten inkl. Handbremse' }
+  ],
+  ALIGNMENT_MEASUREMENT: [
+    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
+    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Achsvermessung mit anschließender Einstellung' }
+  ],
+  ALIGNMENT_ADJUSTMENT: [
+    { type: 'adjustment_only', name: 'Nur Einstellung', description: 'Achseinstellung ohne Vermessung' },
+    { type: 'with_measurement', name: 'Einstellung + Vermessung', description: 'Achseinstellung mit Vermessung' }
+  ],
+  ALIGNMENT_BOTH: [
+    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
+    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Vollständige Achsvermessung mit Einstellung' },
+    { type: 'with_adjustment_inspection', name: 'Vermessung + Einstellung + Inspektion', description: 'Komplett-Service mit Fahrwerksinspektion' }
+  ]
+}
 
 export default function WorkshopServicesPage() {
   const { data: session, status } = useSession()
@@ -62,24 +101,10 @@ export default function WorkshopServicesPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-
-  const [formData, setFormData] = useState({
-    serviceType: '',
-    basePrice: '',
-    basePrice4: '',
-    runFlatSurcharge: '',
-    disposalFee: '',
-    balancingPrice: '',
-    storagePrice: '',
-    durationMinutes: '60',
-    durationMinutes4: '',
-    balancingMinutes: '',
-    storageAvailable: false,
-    description: '',
-    internalNotes: '',
-    isActive: true,
-    priceFor: '4_TIRES'
-  })
+  const [selectedServiceType, setSelectedServiceType] = useState('')
+  
+  // Package form state
+  const [packages, setPackages] = useState<{ [key: string]: { price: string; duration: string; active: boolean } }>({})
 
   useEffect(() => {
     if (status === 'loading') return
@@ -104,10 +129,60 @@ export default function WorkshopServicesPage() {
     }
   }
 
+  const initializePackages = (serviceType: string) => {
+    const config = packageConfigurations[serviceType] || []
+    const initialPackages: { [key: string]: { price: string; duration: string; active: boolean } } = {}
+    
+    config.forEach(pkg => {
+      initialPackages[pkg.type] = {
+        price: '',
+        duration: '60',
+        active: true
+      }
+    })
+    
+    setPackages(initialPackages)
+  }
+
+  const handleServiceTypeChange = (serviceType: string) => {
+    setSelectedServiceType(serviceType)
+    
+    // Initialize packages if service type supports them
+    const serviceConfig = availableServiceTypes.find(s => s.value === serviceType)
+    if (serviceConfig?.hasPackages) {
+      initializePackages(serviceType)
+    }
+  }
+
+  const handlePackageChange = (packageType: string, field: 'price' | 'duration' | 'active', value: string | boolean) => {
+    setPackages(prev => ({
+      ...prev,
+      [packageType]: {
+        ...prev[packageType],
+        [field]: value
+      }
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     try {
+      // Prepare packages data
+      const packagesData = Object.entries(packages)
+        .filter(([_, pkg]) => pkg.active && pkg.price && pkg.duration)
+        .map(([type, pkg]) => {
+          const config = packageConfigurations[selectedServiceType]?.find(p => p.type === type)
+          return {
+            packageType: type,
+            name: config?.name || type,
+            description: config?.description || null,
+            price: parseFloat(pkg.price),
+            durationMinutes: parseInt(pkg.duration),
+            isActive: pkg.active
+          }
+        })
+
       const url = editingService 
         ? `/api/workshop/services/${editingService.id}`
         : '/api/workshop/services'
@@ -115,7 +190,14 @@ export default function WorkshopServicesPage() {
       const response = await fetch(url, {
         method: editingService ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          serviceType: selectedServiceType,
+          isActive: true,
+          packages: packagesData.length > 0 ? packagesData : undefined,
+          // For non-package services, include basic pricing
+          basePrice: packagesData.length === 0 ? 0 : undefined,
+          durationMinutes: packagesData.length === 0 ? 60 : undefined
+        })
       })
 
       if (response.ok) {
@@ -136,27 +218,25 @@ export default function WorkshopServicesPage() {
 
   const handleEdit = (service: Service) => {
     setEditingService(service)
+    setSelectedServiceType(service.serviceType)
     
-    setFormData({
-      serviceType: service.serviceType,
-      basePrice: service.basePrice.toString(),
-      basePrice4: service.basePrice4?.toString() || '',
-      runFlatSurcharge: service.runFlatSurcharge?.toString() || '',
-      disposalFee: service.disposalFee?.toString() || '',
-      balancingPrice: service.balancingPrice?.toString() || '',
-      storagePrice: service.storagePrice?.toString() || '',
-      durationMinutes: service.durationMinutes.toString(),
-      durationMinutes4: service.durationMinutes4?.toString() || '',
-      balancingMinutes: service.balancingMinutes?.toString() || '',
-      storageAvailable: service.storageAvailable || false,
-      description: service.description || '',
-      internalNotes: service.internalNotes || '',
-      isActive: service.isActive,
-      priceFor: service.priceFor || '4_TIRES'
-    })
+    // Load existing packages
+    if (service.servicePackages && service.servicePackages.length > 0) {
+      const loadedPackages: { [key: string]: { price: string; duration: string; active: boolean } } = {}
+      service.servicePackages.forEach(pkg => {
+        loadedPackages[pkg.packageType] = {
+          price: pkg.price.toString(),
+          duration: pkg.durationMinutes.toString(),
+          active: pkg.isActive
+        }
+      })
+      setPackages(loadedPackages)
+    } else {
+      initializePackages(service.serviceType)
+    }
+    
     setShowAddForm(true)
     
-    // Scroll to form after state update
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 100)
@@ -173,7 +253,6 @@ export default function WorkshopServicesPage() {
       if (response.ok) {
         setMessage({ type: 'success', text: 'Service gelöscht' })
         fetchServices()
-        // Close form and reset if we were editing the deleted service
         if (editingService?.id === id) {
           resetForm()
         }
@@ -201,24 +280,25 @@ export default function WorkshopServicesPage() {
     }
   }
 
+  const togglePackageActive = async (serviceId: string, packageId: string, currentActive: boolean) => {
+    try {
+      const response = await fetch(`/api/workshop/services/${serviceId}/packages/${packageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentActive })
+      })
+
+      if (response.ok) {
+        fetchServices()
+      }
+    } catch (error) {
+      console.error('Error toggling package:', error)
+    }
+  }
+
   const resetForm = () => {
-    setFormData({
-      serviceType: '',
-      basePrice: '',
-      basePrice4: '',
-      runFlatSurcharge: '',
-      disposalFee: '',
-      balancingPrice: '',
-      storagePrice: '',
-      durationMinutes: '60',
-      durationMinutes4: '',
-      balancingMinutes: '',
-      storageAvailable: false,
-      description: '',
-      internalNotes: '',
-      isActive: true,
-      priceFor: '4_TIRES'
-    })
+    setSelectedServiceType('')
+    setPackages({})
     setEditingService(null)
     setShowAddForm(false)
   }
@@ -234,6 +314,10 @@ export default function WorkshopServicesPage() {
     )
   }
 
+  const serviceConfig = availableServiceTypes.find(s => s.value === selectedServiceType)
+  const hasPackages = serviceConfig?.hasPackages || false
+  const packageConfig = packageConfigurations[selectedServiceType] || []
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -244,7 +328,7 @@ export default function WorkshopServicesPage() {
                 ← Zurück zum Dashboard
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Services verwalten</h1>
-              <p className="mt-1 text-sm text-gray-600">Preise, Dauer und Optionen für Ihre angebotenen Services</p>
+              <p className="mt-1 text-sm text-gray-600">Konfigurieren Sie Ihre Servicepakete mit individuellen Preisen und Dauern</p>
             </div>
             {!showAddForm && availableTypes.length > 0 && (
               <button
@@ -273,375 +357,106 @@ export default function WorkshopServicesPage() {
               {editingService ? 'Service bearbeiten' : 'Neuer Service'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service-Typ *
-                  </label>
-                  <select
-                    value={formData.serviceType}
-                    onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-                    required
-                    disabled={!!editingService}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Bitte wählen...</option>
-                    {(editingService ? availableServiceTypes : availableTypes).map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.icon} {type.label}
-                      </option>
+              {/* Service Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service-Typ *
+                </label>
+                <select
+                  value={selectedServiceType}
+                  onChange={(e) => handleServiceTypeChange(e.target.value)}
+                  required
+                  disabled={!!editingService}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Bitte wählen...</option>
+                  {(editingService ? availableServiceTypes : availableTypes).map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.icon} {type.label} {type.hasPackages ? '(mit Paketen)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Package Configuration */}
+              {hasPackages && selectedServiceType && packageConfig.length > 0 && (
+                <div className="bg-blue-50 p-6 rounded-lg space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Servicepakete konfigurieren
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Legen Sie für jedes Paket Preis und Dauer fest. Aktivierte Pakete können von Kunden gewählt werden.
+                  </p>
+
+                  <div className="space-y-6">
+                    {packageConfig.map(pkg => (
+                      <div key={pkg.type} className="bg-white p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-start gap-4">
+                          <input
+                            type="checkbox"
+                            checked={packages[pkg.type]?.active !== false}
+                            onChange={(e) => handlePackageChange(pkg.type, 'active', e.target.checked)}
+                            className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                          />
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-1">
+                              <p className="font-semibold text-gray-900">{pkg.name}</p>
+                              <p className="text-sm text-gray-600">{pkg.description}</p>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Preis (€) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={packages[pkg.type]?.price || ''}
+                                onChange={(e) => handlePackageChange(pkg.type, 'price', e.target.value)}
+                                required={packages[pkg.type]?.active !== false}
+                                disabled={packages[pkg.type]?.active === false}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
+                                placeholder="z.B. 89.00"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Dauer (Min.) *
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={packages[pkg.type]?.duration || ''}
+                                onChange={(e) => handlePackageChange(pkg.type, 'duration', e.target.value)}
+                                required={packages[pkg.type]?.active !== false}
+                                disabled={packages[pkg.type]?.active === false}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
+                                placeholder="z.B. 60"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </select>
+                  </div>
                 </div>
+              )}
 
-                {/* Reifenwechsel: 2 oder 4 Reifen */}
-                {formData.serviceType === 'TIRE_CHANGE' && (
-                  <>
-                    <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 mb-3">Preise und Dauer für 2 oder 4 Reifen</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Preis für 2 Reifen (€) *
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.basePrice}
-                            onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Preis für 4 Reifen (€) *
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.basePrice4}
-                            onChange={(e) => setFormData({ ...formData, basePrice4: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dauer für 2 Reifen (Min.) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={formData.durationMinutes}
-                            onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dauer für 4 Reifen (Min.) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={formData.durationMinutes4}
-                            onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Runflat-Aufpreis pro Reifen (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.runFlatSurcharge}
-                        onChange={(e) => setFormData({ ...formData, runFlatSurcharge: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 5.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Entsorgungsgebühr pro Reifen (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.disposalFee}
-                        onChange={(e) => setFormData({ ...formData, disposalFee: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 3.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
-                    </div>
-                  </>
-                )}
-
-                {/* Motorradreifen: 1 oder 2 Reifen */}
-                {formData.serviceType === 'MOTORCYCLE_TIRE' && (
-                  <>
-                    <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 mb-3">Preise und Dauer für 1 oder 2 Reifen</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Preis für 1 Reifen (€) *
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.basePrice}
-                            onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Preis für 2 Reifen (€) *
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.basePrice4}
-                            onChange={(e) => setFormData({ ...formData, basePrice4: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dauer für 1 Reifen (Min.) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={formData.durationMinutes}
-                            onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dauer für 2 Reifen (Min.) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={formData.durationMinutes4}
-                            onChange={(e) => setFormData({ ...formData, durationMinutes4: e.target.value })}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Entsorgungsgebühr pro Reifen (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.disposalFee}
-                        onChange={(e) => setFormData({ ...formData, disposalFee: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 3.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Wird pro Reifen berechnet</p>
-                    </div>
-                  </>
-                )}
-
-                {/* Räderwechsel: Spezielle Felder */}
-                {formData.serviceType === 'WHEEL_CHANGE' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Grundpreis (€) *
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.basePrice}
-                        onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Preis für das Umstecken von 4 Rädern</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dauer (Minuten) *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.durationMinutes}
-                        onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Dauer für das Umstecken ohne zusätzliche Services</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Wuchten - Preis pro Rad (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.balancingPrice}
-                        onChange={(e) => setFormData({ ...formData, balancingPrice: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 5.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Optional: Aufpreis wenn Kunde Wuchten wünscht</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Wuchten - Zusätzliche Dauer pro Rad (Min.)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.balancingMinutes}
-                        onChange={(e) => setFormData({ ...formData, balancingMinutes: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 5"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Zusätzliche Minuten pro Rad für Wuchten</p>
-                    </div>
-                    <div className="md:col-span-2 border-t pt-4">
-                      <label className="flex items-start cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.storageAvailable}
-                          onChange={(e) => setFormData({ ...formData, storageAvailable: e.target.checked })}
-                          className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                        />
-                        <div className="ml-3">
-                          <span className="block font-medium text-gray-700">Einlagerung verfügbar</span>
-                          <span className="block text-sm text-gray-500">Können Sie die abmontierten Räder einlagern?</span>
-                        </div>
-                      </label>
-                    </div>
-                    {formData.storageAvailable && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Einlagerungspreis pro Saison (€)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={formData.storagePrice}
-                          onChange={(e) => setFormData({ ...formData, storagePrice: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 50.00"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Preis für die Einlagerung bis zur nächsten Saison</p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Alle anderen Services: Standard Preis und Dauer */}
-                {!['TIRE_CHANGE', 'MOTORCYCLE_TIRE', 'WHEEL_CHANGE'].includes(formData.serviceType) && formData.serviceType && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preis (€) *
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.basePrice}
-                        onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dauer (Minuten) *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.durationMinutes}
-                        onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Wichtig für Kalendereinträge</p>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Beschreibung
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  placeholder="Für Kunden sichtbare Beschreibung..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Interne Notizen
-                </label>
-                <textarea
-                  value={formData.internalNotes}
-                  onChange={(e) => setFormData({ ...formData, internalNotes: e.target.value })}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  placeholder="Nur für interne Verwendung..."
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
-                  Service aktiv (für Kunden verfügbar)
-                </label>
-              </div>
+              {/* No packages message for simple services */}
+              {!hasPackages && selectedServiceType && (
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <p className="text-sm text-yellow-800">
+                    ℹ️ Dieser Service-Typ verwendet noch das alte Format ohne Pakete. 
+                    Verwenden Sie die alte Service-Verwaltung oder warten Sie auf das Update.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  disabled={!selectedServiceType || (hasPackages && Object.values(packages).filter(p => p.active).length === 0)}
+                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {editingService ? 'Aktualisieren' : 'Hinzufügen'}
                 </button>
@@ -687,72 +502,43 @@ export default function WorkshopServicesPage() {
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      {/* Reifenwechsel oder Motorradreifen: 2 Preise/Dauern */}
-                      {(service.serviceType === 'TIRE_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') ? (
-                        <>
-                          <div>
-                            <p className="text-sm text-gray-600">
-                              {service.serviceType === 'TIRE_CHANGE' ? 'Preis 2 Reifen' : 'Preis 1 Reifen'}
-                            </p>
-                            <p className="text-lg font-semibold text-gray-900">{service.basePrice.toFixed(2)} €</p>
-                            <p className="text-sm text-gray-600 mt-2">
-                              {service.serviceType === 'TIRE_CHANGE' ? 'Preis 4 Reifen' : 'Preis 2 Reifen'}
-                            </p>
-                            <p className="text-lg font-semibold text-gray-900">
-                              {service.basePrice4 ? `${service.basePrice4.toFixed(2)} €` : 'N/A'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">
-                              {service.serviceType === 'TIRE_CHANGE' ? 'Dauer 2 Reifen' : 'Dauer 1 Reifen'}
-                            </p>
-                            <p className="text-lg font-semibold text-gray-900">{service.durationMinutes} Min.</p>
-                            <p className="text-sm text-gray-600 mt-2">
-                              {service.serviceType === 'TIRE_CHANGE' ? 'Dauer 4 Reifen' : 'Dauer 2 Reifen'}
-                            </p>
-                            <p className="text-lg font-semibold text-gray-900">
-                              {service.durationMinutes4 ? `${service.durationMinutes4} Min.` : 'N/A'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Zuschläge pro Reifen</p>
-                            <div className="text-sm text-gray-700">
-                              {service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge && (
-                                <span className="block">+ {service.runFlatSurcharge.toFixed(2)}€ Runflat</span>
+                    {/* Display Packages */}
+                    {service.servicePackages && service.servicePackages.length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-gray-700">Servicepakete:</p>
+                        {service.servicePackages.map(pkg => (
+                          <div key={pkg.id} className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{pkg.name}</p>
+                              {pkg.description && (
+                                <p className="text-sm text-gray-600">{pkg.description}</p>
                               )}
-                              {service.disposalFee && (
-                                <span className="block">+ {service.disposalFee.toFixed(2)}€ Entsorgung</span>
-                              )}
-                              {!service.runFlatSurcharge && !service.disposalFee && (
-                                <span className="text-gray-400">Keine</span>
-                              )}
+                              <div className="flex gap-6 mt-2">
+                                <span className="text-sm">
+                                  <span className="font-medium">Preis:</span> {pkg.price.toFixed(2)} €
+                                </span>
+                                <span className="text-sm">
+                                  <span className="font-medium">Dauer:</span> {pkg.durationMinutes} Min.
+                                </span>
+                              </div>
                             </div>
+                            <button
+                              onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
+                              className={`px-3 py-1 rounded text-xs font-medium ${
+                                pkg.isActive 
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              }`}
+                            >
+                              {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
+                            </button>
                           </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <p className="text-sm text-gray-600">Preis</p>
-                            <p className="text-lg font-semibold text-gray-900">{service.basePrice.toFixed(2)} €</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Dauer</p>
-                            <p className="text-lg font-semibold text-gray-900">{service.durationMinutes} Min.</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Zuschläge</p>
-                            <p className="text-sm text-gray-400">Keine</p>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {service.description && (
-                      <p className="text-sm text-gray-700 mb-2">{service.description}</p>
-                    )}
-                    {service.internalNotes && (
-                      <p className="text-xs text-gray-500 italic">Intern: {service.internalNotes}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-600">
+                        <p>Preis: {service.basePrice.toFixed(2)} € | Dauer: {service.durationMinutes} Min.</p>
+                      </div>
                     )}
                   </div>
 

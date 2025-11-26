@@ -19,6 +19,7 @@ export default function WheelChangePage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   const [formData, setFormData] = useState({
     vehicleId: '',
@@ -62,8 +63,10 @@ export default function WheelChangePage() {
       })
 
       if (res.ok) {
-        alert('Räder-Wechsel Anfrage erfolgreich erstellt! Werkstätten werden nun benachrichtigt und senden Ihnen Angebote zu.')
-        router.push('/dashboard/customer/requests')
+        setSuccess(true)
+        setTimeout(() => {
+          router.push('/dashboard/customer?success=wheel-change')
+        }, 2000)
       } else {
         const data = await res.json()
         setError(data.error || 'Fehler beim Erstellen der Anfrage')
@@ -109,6 +112,12 @@ export default function WheelChangePage() {
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">✓ Räder-Wechsel Anfrage erfolgreich erstellt! Werkstätten werden benachrichtigt. Sie werden weitergeleitet...</p>
             </div>
           )}
 

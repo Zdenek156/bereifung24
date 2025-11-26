@@ -103,6 +103,7 @@ export default function CreateRequestPage() {
   
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   // Load vehicles
   useEffect(() => {
@@ -293,8 +294,10 @@ export default function CreateRequestPage() {
         return
       }
 
-      alert('Reifenanfrage erfolgreich erstellt! Werkstätten werden nun benachrichtigt.')
-      router.push('/dashboard/customer/requests')
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/dashboard/customer?success=tires')
+      }, 2000)
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')
       setLoading(false)
@@ -331,6 +334,12 @@ export default function CreateRequestPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">✓ Reifenanfrage erfolgreich erstellt! Werkstätten werden benachrichtigt. Sie werden weitergeleitet...</p>
             </div>
           )}
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 interface DashboardStats {
@@ -14,6 +14,7 @@ interface DashboardStats {
 export default function CustomerDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [stats, setStats] = useState<DashboardStats>({
     openRequests: 0,
     receivedOffers: 0,
@@ -21,6 +22,7 @@ export default function CustomerDashboard() {
     savedVehicles: 0
   })
   const [loading, setLoading] = useState(true)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -52,6 +54,30 @@ export default function CustomerDashboard() {
 
     fetchStats()
   }, [session, status, router])
+
+  // Check URL parameters for success message
+  useEffect(() => {
+    const success = searchParams.get('success')
+    
+    if (success) {
+      const successMessages: { [key: string]: string } = {
+        'repair': 'Ihre Reparaturanfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'alignment': 'Ihre Achsvermessungs-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'other-services': 'Ihre Service-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'wheel-change': 'Ihre Räderwechsel-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.',
+        'motorcycle': 'Ihre Motorradreifen-Anfrage wurde erfolgreich erstellt! Werkstätten in Ihrer Nähe werden benachrichtigt.'
+      }
+      
+      setSuccessMessage(successMessages[success] || 'Ihre Anfrage wurde erfolgreich erstellt!')
+      
+      // Clear the success message after 10 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage(null)
+      }, 10000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
 
   if (status === 'loading' || !session) {
     return (
@@ -88,6 +114,32 @@ export default function CustomerDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg shadow-md">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setSuccessMessage(null)}
+                  className="inline-flex text-green-400 hover:text-green-500 focus:outline-none"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Welcome & Instructions Section */}
         <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-6 mb-8 border border-primary-100">
           <div className="flex items-start gap-4">

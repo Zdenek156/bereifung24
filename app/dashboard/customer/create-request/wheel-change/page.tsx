@@ -196,6 +196,7 @@ export default function WheelChangePage() {
               value={formData.preferredDate}
               onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
               min={new Date().toISOString().split('T')[0]}
+              placeholder="Hier Datum auswählen"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>

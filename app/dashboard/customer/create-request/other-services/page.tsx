@@ -44,10 +44,6 @@ export default function OtherServicesPage() {
 
   useEffect(() => {
     fetchVehicles()
-    // Set default date (1 day from now for services)
-    const defaultDate = new Date()
-    defaultDate.setDate(defaultDate.getDate() + 1)
-    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
   }, [])
 
   const fetchVehicles = async () => {
@@ -280,7 +276,7 @@ export default function OtherServicesPage() {
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
               min={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
-              placeholder="Wählen Sie ein Datum"
+              placeholder="Hier Datum auswählen"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <p className="mt-1 text-xs text-gray-500">Frühestens morgen</p>

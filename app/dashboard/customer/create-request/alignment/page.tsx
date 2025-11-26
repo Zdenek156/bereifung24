@@ -26,7 +26,8 @@ export default function AlignmentPage() {
     vehicleMake: '',
     vehicleModel: '',
     vehicleYear: '',
-    alignmentType: 'full' as 'front' | 'full' | 'four-wheel',
+    axleType: 'both' as 'front' | 'rear' | 'both',
+    serviceLevel: 'measurement-only' as 'measurement-only' | 'with-adjustment' | 'with-adjustment-inspection',
     hasIssues: false,
     issueDescription: '',
     needByDate: '',
@@ -36,10 +37,6 @@ export default function AlignmentPage() {
 
   useEffect(() => {
     fetchVehicles()
-    // Set default date (1 day from now for services)
-    const defaultDate = new Date()
-    defaultDate.setDate(defaultDate.getDate() + 1)
-    setFormData(prev => ({ ...prev, needByDate: defaultDate.toISOString().split('T')[0] }))
   }, [])
 
   const fetchVehicles = async () => {
@@ -240,19 +237,19 @@ export default function AlignmentPage() {
             </div>
           )}
 
-          {/* Art der Vermessung */}
+          {/* Achsenauswahl */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Art der Vermessung</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Welche Achse(n) sollen vermessen werden? *</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.alignmentType === 'front' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.axleType === 'front' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="alignmentType"
+                  name="axleType"
                   value="front"
-                  checked={formData.alignmentType === 'front'}
-                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
+                  checked={formData.axleType === 'front'}
+                  onChange={(e) => setFormData({ ...formData, axleType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
                 <p className="font-semibold text-gray-900">Vorderachse</p>
@@ -260,35 +257,50 @@ export default function AlignmentPage() {
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.alignmentType === 'full' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.axleType === 'rear' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="alignmentType"
-                  value="full"
-                  checked={formData.alignmentType === 'full'}
-                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
+                  name="axleType"
+                  value="rear"
+                  checked={formData.axleType === 'rear'}
+                  onChange={(e) => setFormData({ ...formData, axleType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Komplettvermessung</p>
-                <p className="text-sm text-gray-600 text-center">Alle Achsen</p>
+                <p className="font-semibold text-gray-900">Hinterachse</p>
+                <p className="text-sm text-gray-600 text-center">Nur hinten</p>
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.alignmentType === 'four-wheel' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.axleType === 'both' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="alignmentType"
-                  value="four-wheel"
-                  checked={formData.alignmentType === 'four-wheel'}
-                  onChange={(e) => setFormData({ ...formData, alignmentType: e.target.value as any })}
+                  name="axleType"
+                  value="both"
+                  checked={formData.axleType === 'both'}
+                  onChange={(e) => setFormData({ ...formData, axleType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">4-Rad-Vermessung</p>
-                <p className="text-sm text-gray-600 text-center">Präzise 4-Rad</p>
+                <p className="font-semibold text-gray-900">Beide Achsen</p>
+                <p className="text-sm text-gray-600 text-center">Vorder- und Hinterachse</p>
               </label>
             </div>
+          </div>
+
+          {/* Service-Level Auswahl */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Welche Leistung benötigen Sie? *</h2>
+            <select
+              value={formData.serviceLevel}
+              onChange={(e) => setFormData({ ...formData, serviceLevel: e.target.value as any })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="measurement-only">Nur Achsvermessung</option>
+              <option value="with-adjustment">Achsvermessung mit Spureinstellung</option>
+              <option value="with-adjustment-inspection">Achsvermessung mit Spureinstellung und Fahrwerk-/Achsteile Prüfung</option>
+            </select>
           </div>
 
           {/* Probleme */}
@@ -333,7 +345,7 @@ export default function AlignmentPage() {
               onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
               min={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
-              placeholder="Wählen Sie ein Datum"
+              placeholder="Hier Datum auswählen"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <p className="mt-1 text-xs text-gray-500">Frühestens morgen</p>

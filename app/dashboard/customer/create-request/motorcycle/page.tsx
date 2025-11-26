@@ -587,7 +587,7 @@ export default function MotorcycleTiresPage() {
           {/* Benötigt bis */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis Datum *
+              Benötigt bis *
             </label>
             <input
               type="date"

@@ -350,6 +350,40 @@ export default function BatteryServicePage() {
                 </p>
               </div>
             )}
+
+            {/* Preview Section */}
+            {(identificationMethod === 'vin' && formData.vin.length === 17) && (
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p className="text-sm font-medium text-primary-800">
+                  ✓ Identifikation über VIN: <span className="text-lg font-bold">{formData.vin}</span>
+                </p>
+              </div>
+            )}
+
+            {(identificationMethod === 'key' && formData.keyNumber) && (
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p className="text-sm font-medium text-primary-800">
+                  ✓ Identifikation über Schlüsselnummer: <span className="text-lg font-bold">{formData.keyNumber}</span>
+                </p>
+              </div>
+            )}
+
+            {(identificationMethod === 'part' && (formData.partNumber || formData.manufacturerNumber || formData.currentBatteryInfo)) && (
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p className="text-sm font-medium text-primary-800 mb-2">
+                  ✓ Identifikation über Batterie-Nummern:
+                </p>
+                {formData.partNumber && (
+                  <p className="text-sm text-primary-700">• Teilenummer: <span className="font-semibold">{formData.partNumber}</span></p>
+                )}
+                {formData.manufacturerNumber && (
+                  <p className="text-sm text-primary-700">• Herstellernummer: <span className="font-semibold">{formData.manufacturerNumber}</span></p>
+                )}
+                {formData.currentBatteryInfo && (
+                  <p className="text-sm text-primary-700">• Info: <span className="font-semibold">{formData.currentBatteryInfo}</span></p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Hersteller-Präferenz */}

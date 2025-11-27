@@ -147,7 +147,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works - Step by Step */}
-      <section className="py-20 bg-white">
+      <section id="how-it-works" className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -198,7 +198,7 @@ export default function HomePage() {
       </section>
 
       {/* All Services - Comprehensive Overview */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+      <section id="services" className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -519,7 +519,7 @@ export default function HomePage() {
                 <li><Link href="/impressum" className="hover:text-white transition-colors">Impressum</Link></li>
                 <li><Link href="/datenschutz" className="hover:text-white transition-colors">Datenschutz</Link></li>
                 <li><Link href="/agb" className="hover:text-white transition-colors">AGB</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Cookie-Einstellungen</Link></li>
+                <li><Link href="/cookie-settings" className="hover:text-white transition-colors">Cookie-Einstellungen</Link></li>
               </ul>
             </div>
           </div>

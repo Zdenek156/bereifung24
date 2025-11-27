@@ -24,6 +24,10 @@ const vehicleUpdateSchema = z.object({
   model: z.string().min(1),
   year: z.number().min(1980).max(new Date().getFullYear() + 1),
   licensePlate: z.string().optional(),
+  vin: z.string().optional(),
+  nextInspectionDate: z.string().optional(),
+  inspectionReminder: z.boolean().optional(),
+  inspectionReminderDays: z.number().min(1).max(90).optional(),
   summerTires: tireSpecSchema.optional(),
   winterTires: tireSpecSchema.optional(),
   allSeasonTires: tireSpecSchema.optional(),
@@ -61,7 +65,7 @@ export async function PUT(
     const body = await req.json()
     const validated = vehicleUpdateSchema.parse(body)
 
-    // Store tire data as JSON in vin field (temporary solution)
+    // Store tire data as JSON (will be migrated later)
     const tireData: any = {}
     if (validated.summerTires) tireData.summerTires = validated.summerTires
     if (validated.winterTires) tireData.winterTires = validated.winterTires
@@ -74,7 +78,10 @@ export async function PUT(
         model: validated.model,
         year: validated.year,
         licensePlate: validated.licensePlate,
-        vin: JSON.stringify(tireData),
+        vin: validated.vin || JSON.stringify(tireData),
+        nextInspectionDate: validated.nextInspectionDate ? new Date(validated.nextInspectionDate) : null,
+        inspectionReminder: validated.inspectionReminder,
+        inspectionReminderDays: validated.inspectionReminderDays,
       }
     })
 

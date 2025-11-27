@@ -24,6 +24,10 @@ const vehicleSchema = z.object({
   model: z.string().min(1),
   year: z.number().min(1980).max(new Date().getFullYear() + 1),
   licensePlate: z.string().optional(),
+  vin: z.string().optional(),
+  nextInspectionDate: z.string().optional(),
+  inspectionReminder: z.boolean().optional(),
+  inspectionReminderDays: z.number().min(1).max(90).optional(),
   summerTires: tireSpecSchema.optional(),
   winterTires: tireSpecSchema.optional(),
   allSeasonTires: tireSpecSchema.optional(),
@@ -106,7 +110,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validated = vehicleSchema.parse(body)
 
-    // Store tire data as JSON in vin field (temporary solution)
+    // Store tire data as JSON in a separate field (will be migrated later)
     const tireData: any = {}
     if (validated.summerTires) tireData.summerTires = validated.summerTires
     if (validated.winterTires) tireData.winterTires = validated.winterTires
@@ -119,7 +123,10 @@ export async function POST(req: NextRequest) {
         model: validated.model,
         year: validated.year,
         licensePlate: validated.licensePlate,
-        vin: JSON.stringify(tireData), // Store as JSON temporarily
+        vin: validated.vin || JSON.stringify(tireData), // Use VIN if provided, otherwise tire data
+        nextInspectionDate: validated.nextInspectionDate ? new Date(validated.nextInspectionDate) : null,
+        inspectionReminder: validated.inspectionReminder || false,
+        inspectionReminderDays: validated.inspectionReminderDays || 30,
       }
     })
 

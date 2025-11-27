@@ -194,6 +194,28 @@ export default function WheelChangePage() {
                 </div>
               </label>
             </div>
+
+            {/* Preview Section */}
+            {(formData.vehicleId || formData.needsBalancing || formData.needsStorage) && (
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p className="text-sm font-medium text-primary-800 mb-2">
+                  ✓ Ihre Auswahl:
+                </p>
+                {formData.vehicleId && vehicles.length > 0 && (
+                  <p className="text-sm text-primary-700">
+                    • Fahrzeug: <span className="font-semibold">
+                      {vehicles.find(v => v.id === formData.vehicleId)?.make} {vehicles.find(v => v.id === formData.vehicleId)?.model} ({vehicles.find(v => v.id === formData.vehicleId)?.year})
+                    </span>
+                  </p>
+                )}
+                {formData.needsBalancing && (
+                  <p className="text-sm text-primary-700">• Wuchten vor Montage</p>
+                )}
+                {formData.needsStorage && (
+                  <p className="text-sm text-primary-700">• Einlagerung gewünscht</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Benötigt bis */}

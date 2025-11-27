@@ -298,6 +298,33 @@ export default function VehiclesPage() {
                       Noch keine Reifengrößen hinterlegt
                     </p>
                   )}
+
+                  {/* VIN Display */}
+                  {vehicle.vin && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold">VIN:</span> {vehicle.vin}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Inspection Date Display */}
+                  {vehicle.nextInspectionDate && (
+                    <div className={`${vehicle.vin ? '' : 'mt-4 pt-4 border-t border-gray-200'}`}>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold">Nächster TÜV:</span>{' '}
+                        {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                        {vehicle.inspectionReminder && (
+                          <span className="ml-2 text-xs text-primary-600">
+                            🔔 {vehicle.inspectionReminderDays} Tage Erinnerung
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -341,7 +368,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     year: vehicle.year,
     licensePlate: vehicle.licensePlate || '',
     vin: vehicle.vin || '',
-    nextInspectionDate: vehicle.nextInspectionDate ? new Date(vehicle.nextInspectionDate).toISOString().split('T')[0] : '',
+    nextInspectionDate: vehicle.nextInspectionDate ? new Date(vehicle.nextInspectionDate).toISOString().substring(0, 7) : '',
     inspectionReminder: vehicle.inspectionReminder || false,
     inspectionReminderDays: (vehicle.inspectionReminderDays || 30).toString(),
     // Summer Tires
@@ -694,12 +721,13 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     Nächster TÜV-Termin (optional)
                   </label>
                   <input
-                    type="date"
+                    type="month"
                     name="nextInspectionDate"
                     value={formData.nextInspectionDate}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Monat und Jahr des nächsten TÜV-Termins</p>
                 </div>
 
                 {formData.nextInspectionDate && (
@@ -1306,12 +1334,13 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     Nächster TÜV-Termin (optional)
                   </label>
                   <input
-                    type="date"
+                    type="month"
                     name="nextInspectionDate"
                     value={formData.nextInspectionDate}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Monat und Jahr des nächsten TÜV-Termins</p>
                 </div>
 
                 {formData.nextInspectionDate && (

@@ -169,7 +169,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    console.log('POST /api/vehicles - Received body:', JSON.stringify(body, null, 2))
+    
     const validated = vehicleSchema.parse(body)
+    console.log('POST /api/vehicles - Validated data:', JSON.stringify(validated, null, 2))
 
     // Store tire data as JSON in a separate field (will be migrated later)
     const tireData: any = {}
@@ -215,9 +218,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    console.log('POST /api/vehicles - Creating vehicle with data:', JSON.stringify(vehicleData, null, 2))
+    
     const vehicle = await prisma.vehicle.create({
       data: vehicleData
     })
+
+    console.log('POST /api/vehicles - Vehicle created successfully:', vehicle.id)
 
     return NextResponse.json({ 
       id: vehicle.id,
@@ -225,12 +232,13 @@ export async function POST(req: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Validation error:', error.errors)
+      console.error('POST /api/vehicles - Validation error:', error.errors)
       return NextResponse.json({ error: 'Ungültige Daten', details: error.errors }, { status: 400 })
     }
-    console.error('POST /api/vehicles error:', error)
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('Error details:', error instanceof Error ? error.message : String(error))
+    console.error('POST /api/vehicles - Error:', error)
+    console.error('POST /api/vehicles - Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('POST /api/vehicles - Error details:', error instanceof Error ? error.message : String(error))
+    console.error('POST /api/vehicles - Error type:', error?.constructor?.name)
     
     // Check for Prisma unique constraint errors
     if (error instanceof Error && error.message.includes('Unique constraint')) {

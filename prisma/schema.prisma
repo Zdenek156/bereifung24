@@ -606,11 +606,12 @@ model WorkshopService {
   basePrice4 Float? // Preis für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
 
   // Service-specific pricing
-  runFlatSurcharge   Float? // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
-  disposalFee        Float? // Entsorgungsgebühr (pro Reifen)
-  wheelSizeSurcharge Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
-  balancingPrice     Float? @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
-  storagePrice       Float? @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+  runFlatSurcharge         Float? // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
+  disposalFee              Float? // Entsorgungsgebühr (pro Reifen)
+  wheelSizeSurcharge       Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
+  balancingPrice           Float? @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
+  storagePrice             Float? @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+  refrigerantPricePer100ml Float? // Preis pro 100ml Kältemittel (nur bei CLIMATE_SERVICE)
 
   // Duration
   durationMinutes  Int // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)

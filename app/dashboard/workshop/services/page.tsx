@@ -24,6 +24,7 @@ interface Service {
   disposalFee: number | null
   balancingPrice: number | null
   storagePrice: number | null
+  refrigerantPricePer100ml: number | null
   durationMinutes: number
   durationMinutes4: number | null
   balancingMinutes: number | null
@@ -64,7 +65,11 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
     { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' },
     { type: 'two_tires_disposal', name: '2 Reifen + Entsorgung', description: '2 Reifen wechseln inkl. Entsorgung der Altreifen' },
-    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' }
+    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' },
+    { type: 'two_tires_runflat', name: '2 Runflat-Reifen', description: '2 Runflat-Reifen wechseln (inkl. Aufpreis)' },
+    { type: 'four_tires_runflat', name: '4 Runflat-Reifen', description: '4 Runflat-Reifen wechseln (inkl. Aufpreis)' },
+    { type: 'two_tires_runflat_disposal', name: '2 Runflat + Entsorgung', description: '2 Runflat-Reifen + Entsorgung' },
+    { type: 'four_tires_runflat_disposal', name: '4 Runflat + Entsorgung', description: '4 Runflat-Reifen + Entsorgung' }
   ],
   WHEEL_CHANGE: [
     { type: 'basic', name: 'Räderwechsel Standard', description: 'Umstecken der Kompletträder ohne Zusatzleistungen' },
@@ -73,19 +78,26 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'complete', name: 'Komplett-Service', description: 'Umstecken + Wuchten + Einlagerung' }
   ],
   TIRE_REPAIR: [
-    { type: 'small', name: 'Kleine Reparatur', description: 'Einfache Reparatur (z.B. Nagel, kleines Loch bis 6mm)' },
-    { type: 'large', name: 'Große Reparatur', description: 'Aufwendige Reparatur oder Seitenwand-Reparatur' },
+    { type: 'foreign_object', name: 'Fremdkörper-Reparatur', description: 'Reparatur nach Fremdkörper (Nagel, Schraube, etc.)' },
+    { type: 'valve_damage', name: 'Ventilschaden-Reparatur', description: 'Reparatur bei defektem Ventil' },
     { type: 'emergency', name: 'Notfall-Service', description: 'Express-Reparatur mit Sofort-Service' }
   ],
   MOTORCYCLE_TIRE: [
     { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel nur am Vorderrad' },
     { type: 'rear', name: 'Hinterrad', description: 'Reifenwechsel nur am Hinterrad' },
-    { type: 'both', name: 'Beide Reifen', description: 'Kompletter Reifenwechsel vorne und hinten' }
+    { type: 'both', name: 'Beide Reifen', description: 'Kompletter Reifenwechsel vorne und hinten' },
+    { type: 'front_disposal', name: 'Vorderrad + Entsorgung', description: 'Vorderrad mit Altreifenentsorgung' },
+    { type: 'rear_disposal', name: 'Hinterrad + Entsorgung', description: 'Hinterrad mit Altreifenentsorgung' },
+    { type: 'both_disposal', name: 'Beide + Entsorgung', description: 'Beide Reifen mit Altreifenentsorgung' }
   ],
   ALIGNMENT_BOTH: [
-    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
-    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Vollständige Achsvermessung mit Einstellung' },
-    { type: 'with_adjustment_inspection', name: 'Vermessung + Einstellung + Inspektion', description: 'Komplett-Service mit Fahrwerksinspektion' }
+    { type: 'measurement_front', name: 'Vermessung Vorderachse', description: 'Achsvermessung nur Vorderachse' },
+    { type: 'measurement_rear', name: 'Vermessung Hinterachse', description: 'Achsvermessung nur Hinterachse' },
+    { type: 'measurement_both', name: 'Vermessung beide Achsen', description: 'Vollständige Achsvermessung vorne + hinten' },
+    { type: 'adjustment_front', name: 'Einstellung Vorderachse', description: 'Vermessung + Einstellung Vorderachse' },
+    { type: 'adjustment_rear', name: 'Einstellung Hinterachse', description: 'Vermessung + Einstellung Hinterachse' },
+    { type: 'adjustment_both', name: 'Einstellung beide Achsen', description: 'Vermessung + Einstellung vorne + hinten' },
+    { type: 'full_service', name: 'Komplett-Service', description: 'Vermessung + Einstellung + Fahrwerksinspektion' }
   ],
   CLIMATE_SERVICE: [
     { type: 'check', name: 'Klimacheck/Inspektion', description: 'Funktionsprüfung der Klimaanlage' },
@@ -123,6 +135,8 @@ export default function WorkshopServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [selectedServiceType, setSelectedServiceType] = useState('')
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
+  const [refrigerantPrice, setRefrigerantPrice] = useState<string>('')
   
   // Package form state
   const [packages, setPackages] = useState<{ [key: string]: { price: string; duration: string; active: boolean } }>({})
@@ -208,17 +222,24 @@ export default function WorkshopServicesPage() {
         ? `/api/workshop/services/${editingService.id}`
         : '/api/workshop/services'
       
+      const requestBody: any = {
+        serviceType: selectedServiceType,
+        isActive: true,
+        packages: packagesData.length > 0 ? packagesData : undefined,
+        // For non-package services, include basic pricing
+        basePrice: packagesData.length === 0 ? 0 : undefined,
+        durationMinutes: packagesData.length === 0 ? 60 : undefined
+      }
+
+      // Add refrigerant price for CLIMATE_SERVICE
+      if (selectedServiceType === 'CLIMATE_SERVICE' && refrigerantPrice) {
+        requestBody.refrigerantPricePer100ml = parseFloat(refrigerantPrice)
+      }
+      
       const response = await fetch(url, {
         method: editingService ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceType: selectedServiceType,
-          isActive: true,
-          packages: packagesData.length > 0 ? packagesData : undefined,
-          // For non-package services, include basic pricing
-          basePrice: packagesData.length === 0 ? 0 : undefined,
-          durationMinutes: packagesData.length === 0 ? 60 : undefined
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {
@@ -237,9 +258,26 @@ export default function WorkshopServicesPage() {
     }
   }
 
+  const toggleServiceExpand = (serviceId: string) => {
+    setExpandedServices(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(serviceId)) {
+        newSet.delete(serviceId)
+      } else {
+        newSet.add(serviceId)
+      }
+      return newSet
+    })
+  }
+
   const handleEdit = (service: Service) => {
     setEditingService(service)
     setSelectedServiceType(service.serviceType)
+    
+    // Load refrigerant price for climate service
+    if (service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml) {
+      setRefrigerantPrice(service.refrigerantPricePer100ml.toString())
+    }
     
     // Load existing packages
     if (service.servicePackages && service.servicePackages.length > 0) {
@@ -256,6 +294,8 @@ export default function WorkshopServicesPage() {
       initializePackages(service.serviceType)
     }
     
+    // Expand the service when editing
+    setExpandedServices(new Set([service.id]))
     setShowAddForm(true)
     
     setTimeout(() => {
@@ -320,8 +360,10 @@ export default function WorkshopServicesPage() {
   const resetForm = () => {
     setSelectedServiceType('')
     setPackages({})
+    setRefrigerantPrice('')
     setEditingService(null)
     setShowAddForm(false)
+    setExpandedServices(new Set())
   }
 
   const usedServiceTypes = services.map(s => s.serviceType)
@@ -398,6 +440,36 @@ export default function WorkshopServicesPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Refrigerant Price for Climate Service */}
+              {selectedServiceType === 'CLIMATE_SERVICE' && (
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    ⚠️ Hinweis zur Kältemittelbefüllung
+                  </h3>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Wenn die Klimaanlage nicht voll ist, können zusätzliche Kosten für die Befüllung entstehen.
+                  </p>
+                  <div className="max-w-xs">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Preis pro 100ml Kältemittel (€) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={refrigerantPrice}
+                      onChange={(e) => setRefrigerantPrice(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="z.B. 5.00"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Dieser Preis wird dem Kunden angezeigt
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Package Configuration */}
               {hasPackages && selectedServiceType && packageConfig.length > 0 && (
@@ -523,38 +595,60 @@ export default function WorkshopServicesPage() {
                       </span>
                     </div>
                     
-                    {/* Display Packages */}
+                    {/* Refrigerant Price Info for Climate Service */}
+                    {service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml && (
+                      <div className="mb-3 text-sm text-gray-700 bg-yellow-50 p-2 rounded">
+                        💧 Kältemittel: {service.refrigerantPricePer100ml.toFixed(2)} € / 100ml
+                      </div>
+                    )}
+                    
+                    {/* Display Packages Summary or Details */}
                     {service.servicePackages && service.servicePackages.length > 0 ? (
                       <div className="space-y-3">
-                        <p className="text-sm font-medium text-gray-700">Servicepakete:</p>
-                        {service.servicePackages.map(pkg => (
-                          <div key={pkg.id} className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{pkg.name}</p>
-                              {pkg.description && (
-                                <p className="text-sm text-gray-600">{pkg.description}</p>
-                              )}
-                              <div className="flex gap-6 mt-2">
-                                <span className="text-sm">
-                                  <span className="font-medium">Preis:</span> {pkg.price.toFixed(2)} €
-                                </span>
-                                <span className="text-sm">
-                                  <span className="font-medium">Dauer:</span> {pkg.durationMinutes} Min.
-                                </span>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-700">
+                            {service.servicePackages.filter(p => p.isActive).length} Servicepakete aktiv
+                          </p>
+                          <button
+                            onClick={() => toggleServiceExpand(service.id)}
+                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                          >
+                            {expandedServices.has(service.id) ? '▼ Details ausblenden' : '▶ Details anzeigen'}
+                          </button>
+                        </div>
+                        
+                        {expandedServices.has(service.id) && (
+                          <div className="space-y-2 mt-3">
+                            {service.servicePackages.map(pkg => (
+                              <div key={pkg.id} className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900">{pkg.name}</p>
+                                  {pkg.description && (
+                                    <p className="text-sm text-gray-600">{pkg.description}</p>
+                                  )}
+                                  <div className="flex gap-6 mt-2">
+                                    <span className="text-sm">
+                                      <span className="font-medium">Preis:</span> {pkg.price.toFixed(2)} €
+                                    </span>
+                                    <span className="text-sm">
+                                      <span className="font-medium">Dauer:</span> {pkg.durationMinutes} Min.
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
+                                  className={`px-3 py-1 rounded text-xs font-medium ${
+                                    pkg.isActive 
+                                      ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
+                                </button>
                               </div>
-                            </div>
-                            <button
-                              onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
-                              className={`px-3 py-1 rounded text-xs font-medium ${
-                                pkg.isActive 
-                                  ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                              }`}
-                            >
-                              {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
-                            </button>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-600">

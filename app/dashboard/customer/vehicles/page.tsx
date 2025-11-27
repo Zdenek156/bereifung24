@@ -10,6 +10,10 @@ type Vehicle = {
   model: string
   year: number
   licensePlate?: string
+  vin?: string
+  nextInspectionDate?: string
+  inspectionReminder?: boolean
+  inspectionReminderDays?: number
   summerTires?: {
     width: number
     aspectRatio: number
@@ -334,6 +338,10 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     model: vehicle.model,
     year: vehicle.year,
     licensePlate: vehicle.licensePlate || '',
+    vin: vehicle.vin || '',
+    nextInspectionDate: vehicle.nextInspectionDate ? new Date(vehicle.nextInspectionDate).toISOString().split('T')[0] : '',
+    inspectionReminder: vehicle.inspectionReminder || false,
+    inspectionReminderDays: (vehicle.inspectionReminderDays || 30).toString(),
     // Summer Tires
     hasSummerTires: !!vehicle.summerTires,
     summerDifferentSizes: vehicle.summerTires?.hasDifferentSizes || false,
@@ -525,6 +533,18 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
         }
       }
 
+      // Add VIN and inspection fields
+      if (formData.vin) {
+        payload.vin = formData.vin
+      }
+      if (formData.nextInspectionDate) {
+        payload.nextInspectionDate = formData.nextInspectionDate
+        payload.inspectionReminder = formData.inspectionReminder || false
+        if (formData.inspectionReminder && formData.inspectionReminderDays) {
+          payload.inspectionReminderDays = parseInt(formData.inspectionReminderDays.toString())
+        }
+      }
+
       const res = await fetch(`/api/vehicles/${vehicle.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -625,6 +645,73 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fahrzeug-Identifizierungsnummer (VIN) (optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="vin"
+                    value={formData.vin}
+                    onChange={handleChange}
+                    placeholder="z.B. WDB1234567890"
+                    maxLength={17}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nächster TÜV-Termin (optional)
+                  </label>
+                  <input
+                    type="date"
+                    name="nextInspectionDate"
+                    value={formData.nextInspectionDate}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                {formData.nextInspectionDate && (
+                  <>
+                    <div className="col-span-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="inspectionReminderEdit"
+                          name="inspectionReminder"
+                          checked={formData.inspectionReminder}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="inspectionReminderEdit" className="ml-3 text-sm font-medium text-gray-700">
+                          Erinnerung vor TÜV-Termin erhalten
+                        </label>
+                      </div>
+                    </div>
+
+                    {formData.inspectionReminder && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tage vor TÜV-Termin
+                        </label>
+                        <select
+                          name="inspectionReminderDays"
+                          value={formData.inspectionReminderDays}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="7">7 Tage vorher</option>
+                          <option value="14">14 Tage vorher</option>
+                          <option value="30">30 Tage vorher</option>
+                          <option value="60">60 Tage vorher</option>
+                        </select>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -834,6 +921,10 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
     model: '',
     year: new Date().getFullYear(),
     licensePlate: '',
+    vin: '',
+    nextInspectionDate: '',
+    inspectionReminder: false,
+    inspectionReminderDays: '30',
     // Summer Tires
     hasSummerTires: false,
     summerDifferentSizes: false,
@@ -1025,6 +1116,18 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
         }
       }
 
+      // Add VIN and inspection fields
+      if (formData.vin) {
+        payload.vin = formData.vin
+      }
+      if (formData.nextInspectionDate) {
+        payload.nextInspectionDate = formData.nextInspectionDate
+        payload.inspectionReminder = formData.inspectionReminder || false
+        if (formData.inspectionReminder && formData.inspectionReminderDays) {
+          payload.inspectionReminderDays = parseInt(formData.inspectionReminderDays.toString())
+        }
+      }
+
       const res = await fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1125,6 +1228,73 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fahrzeug-Identifizierungsnummer (VIN) (optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="vin"
+                    value={formData.vin}
+                    onChange={handleChange}
+                    placeholder="z.B. WDB1234567890"
+                    maxLength={17}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nächster TÜV-Termin (optional)
+                  </label>
+                  <input
+                    type="date"
+                    name="nextInspectionDate"
+                    value={formData.nextInspectionDate}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                {formData.nextInspectionDate && (
+                  <>
+                    <div className="col-span-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="inspectionReminderAdd"
+                          name="inspectionReminder"
+                          checked={formData.inspectionReminder}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="inspectionReminderAdd" className="ml-3 text-sm font-medium text-gray-700">
+                          Erinnerung vor TÜV-Termin erhalten
+                        </label>
+                      </div>
+                    </div>
+
+                    {formData.inspectionReminder && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tage vor TÜV-Termin
+                        </label>
+                        <select
+                          name="inspectionReminderDays"
+                          value={formData.inspectionReminderDays}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="7">7 Tage vorher</option>
+                          <option value="14">14 Tage vorher</option>
+                          <option value="30">30 Tage vorher</option>
+                          <option value="60">60 Tage vorher</option>
+                        </select>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 

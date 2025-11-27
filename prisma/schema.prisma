@@ -285,6 +285,11 @@ model Vehicle {
   licensePlate String?
   vin          String? @unique
 
+  // TÜV (Technical Inspection)
+  nextInspectionDate     DateTime?
+  inspectionReminder     Boolean   @default(false)
+  inspectionReminderDays Int?      @default(30) // Days before inspection to send reminder
+
   // Current Tires
   currentTires VehicleTire[]
   tireHistory  TireHistory[]

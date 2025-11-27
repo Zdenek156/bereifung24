@@ -62,10 +62,15 @@ export async function GET(req: NextRequest) {
     const transformedVehicles = vehicles.map((vehicle: any) => {
       const result: any = {
         id: vehicle.id,
+        vehicleType: vehicle.vehicleType || 'CAR',
         make: vehicle.make,
         model: vehicle.model,
         year: vehicle.year,
         licensePlate: vehicle.licensePlate,
+        vin: vehicle.vin,
+        nextInspectionDate: vehicle.nextInspectionDate?.toISOString(),
+        inspectionReminder: vehicle.inspectionReminder,
+        inspectionReminderDays: vehicle.inspectionReminderDays,
         createdAt: vehicle.createdAt.toISOString(),
       }
 
@@ -77,7 +82,7 @@ export async function GET(req: NextRequest) {
           result.winterTires = tireData.winterTires
           result.allSeasonTires = tireData.allSeasonTires
         } catch (e) {
-          // Ignore parse errors
+          // Ignore parse errors - vin might be actual VIN string
         }
       }
 

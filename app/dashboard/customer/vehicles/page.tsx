@@ -385,9 +385,18 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     allSeasonRearSpeedRating: vehicle.allSeasonTires?.rearSpeedRating || '',
   })
 
-  const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325]
-  const ASPECT_RATIOS = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
-  const DIAMETERS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+  // Dynamische Reifengrößen basierend auf Fahrzeugtyp
+  const TIRE_WIDTHS = formData.vehicleType === 'MOTORCYCLE' 
+    ? [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 240]
+    : [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325]
+  
+  const ASPECT_RATIOS = formData.vehicleType === 'MOTORCYCLE'
+    ? [50, 55, 60, 65, 70, 75, 80, 90]
+    : [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
+  
+  const DIAMETERS = formData.vehicleType === 'MOTORCYCLE'
+    ? [10, 12, 14, 15, 16, 17, 18, 19, 21]
+    : [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
   const LOAD_INDEX_MAP: Record<number, number> = {
     50: 190, 55: 218, 60: 250, 65: 290, 70: 335, 75: 387, 80: 450, 82: 475, 84: 500, 85: 515, 86: 530, 87: 545, 88: 560, 89: 580, 90: 600,
     91: 615, 92: 630, 93: 650, 94: 670, 95: 690, 96: 710, 97: 730, 98: 750, 99: 775, 100: 800, 101: 825, 102: 850, 103: 875, 104: 900, 105: 925,
@@ -617,7 +626,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     name="make"
                     value={formData.make}
                     onChange={handleChange}
-                    placeholder="z.B. Volkswagen"
+                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -631,7 +640,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     name="model"
                     value={formData.model}
                     onChange={handleChange}
-                    placeholder="z.B. Golf"
+                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -986,9 +995,18 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
     allSeasonRearSpeedRating: '',
   })
 
-  const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
-  const ASPECT_RATIOS = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
-  const DIAMETERS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+  // Dynamische Reifengrößen basierend auf Fahrzeugtyp
+  const TIRE_WIDTHS = formData.vehicleType === 'MOTORCYCLE' 
+    ? [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 240]
+    : [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
+  
+  const ASPECT_RATIOS = formData.vehicleType === 'MOTORCYCLE'
+    ? [50, 55, 60, 65, 70, 75, 80, 90]
+    : [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
+  
+  const DIAMETERS = formData.vehicleType === 'MOTORCYCLE'
+    ? [10, 12, 14, 15, 16, 17, 18, 19, 21]
+    : [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
   const LOAD_INDEX_MAP: Record<number, number> = {
     50: 190, 55: 218, 60: 250, 65: 290, 70: 335, 75: 387, 80: 450, 82: 475, 84: 500, 85: 515, 86: 530, 87: 545, 88: 560, 89: 580, 90: 600,
     91: 615, 92: 630, 93: 650, 94: 670, 95: 690, 96: 710, 97: 730, 98: 750, 99: 775, 100: 800, 101: 825, 102: 850, 103: 875, 104: 900, 105: 925,
@@ -1220,7 +1238,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     name="make"
                     value={formData.make}
                     onChange={handleChange}
-                    placeholder="z.B. Volkswagen"
+                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -1234,7 +1252,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     name="model"
                     value={formData.model}
                     onChange={handleChange}
-                    placeholder="z.B. Golf"
+                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>

@@ -48,7 +48,7 @@ export default function HomePage() {
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-32 md:pt-24 md:pb-40">
           <div className="max-w-5xl mx-auto text-center">
             <div className="inline-block mb-6 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-semibold">
-              🚀 Deutschlands erste digitale Reifenservice-Plattform
+              Deutschlands erste digitale Reifenservice-Plattform
             </div>
             
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
@@ -496,7 +496,7 @@ export default function HomePage() {
                 <li><Link href="/login" className="hover:text-white transition-colors">Anmelden</Link></li>
                 <li><Link href="#services" className="hover:text-white transition-colors">Alle Services</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">FAQ</Link></li>
+                <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>
             </div>
 
@@ -506,9 +506,9 @@ export default function HomePage() {
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/register/workshop" className="hover:text-white transition-colors">Werkstatt registrieren</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Werkstatt-Login</Link></li>
-                <li><Link href="#workshop-benefits" className="hover:text-white transition-colors">Vorteile</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Support</Link></li>
+                <li><Link href="/workshop-benefits" className="hover:text-white transition-colors">Vorteile</Link></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
+                <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
               </ul>
             </div>
 
@@ -529,7 +529,7 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
               <p>&copy; 2025 Bereifung24. Alle Rechte vorbehalten.</p>
               <p className="mt-4 md:mt-0">
-                Made with ❤️ in Switzerland
+                Made with ❤️ in Deutschland
               </p>
             </div>
           </div>

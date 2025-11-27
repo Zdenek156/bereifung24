@@ -20,15 +20,15 @@ export default function BatteryServicePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [identificationMethod, setIdentificationMethod] = useState<'manual' | 'vin' | 'key'>('manual')
+  const [identificationMethod, setIdentificationMethod] = useState<'vin' | 'key' | 'part'>('vin')
 
   const [formData, setFormData] = useState({
     vehicleId: '',
     vin: '',
     keyNumber: '',
-    currentBatteryAh: '',
-    currentBatteryCCA: '',
-    currentBatteryType: '' as '' | 'lead-acid' | 'efb' | 'agm' | 'lithium',
+    partNumber: '',
+    manufacturerNumber: '',
+    currentBatteryInfo: '',
     preferredBrands: '',
     hasIssues: false,
     issueDescription: '',
@@ -69,9 +69,9 @@ export default function BatteryServicePage() {
       return
     }
 
-    if (identificationMethod === 'manual') {
-      if (!formData.currentBatteryAh && !formData.currentBatteryType) {
-        setError('Bitte geben Sie entweder die Kapazität (Ah) oder den Batterietyp an')
+    if (identificationMethod === 'part') {
+      if (!formData.partNumber && !formData.manufacturerNumber && !formData.currentBatteryInfo) {
+        setError('Bitte geben Sie mindestens eine Identifikationsmöglichkeit an (Teilenummer, Herstellernummer oder Batterie-Info)')
         return
       }
     }
@@ -204,25 +204,6 @@ export default function BatteryServicePage() {
 
             <div className="space-y-3 mb-6">
               <label className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                identificationMethod === 'manual' ? 'border-primary-600 bg-primary-50' : 'border-gray-300 hover:border-primary-300'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    name="identificationMethod"
-                    value="manual"
-                    checked={identificationMethod === 'manual'}
-                    onChange={(e) => setIdentificationMethod(e.target.value as any)}
-                    className="mt-1 h-5 w-5 text-primary-600"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium text-gray-900">Manuelle Eingabe der aktuellen Batterie</span>
-                    <p className="text-sm text-gray-600 mt-1">Sie kennen die Daten Ihrer aktuellen Batterie (Ah, Typ)</p>
-                  </div>
-                </div>
-              </label>
-
-              <label className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 identificationMethod === 'vin' ? 'border-primary-600 bg-primary-50' : 'border-gray-300 hover:border-primary-300'
               }`}>
                 <div className="flex items-start gap-3">
@@ -262,60 +243,70 @@ export default function BatteryServicePage() {
                   </div>
                 </div>
               </label>
+
+              <label className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                identificationMethod === 'part' ? 'border-primary-600 bg-primary-50' : 'border-gray-300 hover:border-primary-300'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="identificationMethod"
+                    value="part"
+                    checked={identificationMethod === 'part'}
+                    onChange={(e) => setIdentificationMethod(e.target.value as any)}
+                    className="mt-1 h-5 w-5 text-primary-600"
+                  />
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-900">Über Teilenummer / Herstellernummer</span>
+                    <p className="text-sm text-gray-600 mt-1">Sie kennen die Batterie-Nummer der aktuell verbauten Batterie</p>
+                  </div>
+                </div>
+              </label>
             </div>
 
             {/* Conditional Fields based on identification method */}
-            {identificationMethod === 'manual' && (
+            {identificationMethod === 'part' && (
               <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Kapazität (Ah) <span className="text-gray-500">(optional)</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.currentBatteryAh}
-                      onChange={(e) => setFormData({ ...formData, currentBatteryAh: e.target.value })}
-                      placeholder="z.B. 70"
-                      min="30"
-                      max="200"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">Ampere-Stunden (steht auf der Batterie)</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Kaltstartleistung (CCA) <span className="text-gray-500">(optional)</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.currentBatteryCCA}
-                      onChange={(e) => setFormData({ ...formData, currentBatteryCCA: e.target.value })}
-                      placeholder="z.B. 680"
-                      min="200"
-                      max="1000"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">Cold Cranking Amps (A)</p>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Teilenummer <span className="text-gray-500">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.partNumber}
+                    onChange={(e) => setFormData({ ...formData, partNumber: e.target.value })}
+                    placeholder="z.B. 000915105CF"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Original-Teilenummer (z.B. vom Hersteller)</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Batterietyp <span className="text-gray-500">(optional)</span>
+                    Herstellernummer <span className="text-gray-500">(optional)</span>
                   </label>
-                  <select
-                    value={formData.currentBatteryType}
-                    onChange={(e) => setFormData({ ...formData, currentBatteryType: e.target.value as any })}
+                  <input
+                    type="text"
+                    value={formData.manufacturerNumber}
+                    onChange={(e) => setFormData({ ...formData, manufacturerNumber: e.target.value })}
+                    placeholder="z.B. Varta 574402075"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Typ auswählen...</option>
-                    <option value="lead-acid">Standard Bleisäure (ältere Fahrzeuge ohne Start-Stopp)</option>
-                    <option value="efb">EFB - Enhanced Flooded Battery (einfache Start-Stopp-Systeme)</option>
-                    <option value="agm">AGM - Absorbent Glass Mat (moderne Start-Stopp, Rekuperation)</option>
-                    <option value="lithium">Lithium-Ionen (Hybride, E-Autos)</option>
-                  </select>
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Batterie-Nummer des Herstellers (steht auf der Batterie)</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Weitere Batterie-Informationen <span className="text-gray-500">(optional)</span>
+                  </label>
+                  <textarea
+                    value={formData.currentBatteryInfo}
+                    onChange={(e) => setFormData({ ...formData, currentBatteryInfo: e.target.value })}
+                    placeholder="z.B. Varta Silver Dynamic 74Ah 750A AGM"
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Alle zusätzlichen Informationen von der aktuellen Batterie</p>
                 </div>
               </div>
             )}

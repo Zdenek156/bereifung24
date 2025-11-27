@@ -599,7 +599,7 @@ model WorkshopService {
   workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
 
   // Service Type
-  serviceType String // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_MEASUREMENT, ALIGNMENT_ADJUSTMENT, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
+  serviceType String // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
 
   // Pricing
   basePrice  Float // Grundpreis (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE, sonst Gesamtpreis)
@@ -618,12 +618,8 @@ model WorkshopService {
   balancingMinutes Int?     @map("balancingminutes") // Zusätzliche Dauer für Wuchten (pro Rad bei WHEEL_CHANGE)
   storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
 
-  // Service Packages (JSON structure for service-specific options)
-  // For CLIMATE_SERVICE: { "check": { price: 49, duration: 30 }, "basic": { price: 89, duration: 45 }, "comfort": { price: 129, duration: 60 }, "premium": { price: 179, duration: 90 } }
-  // For BRAKE_SERVICE: { "front_pads": { price: 150, duration: 60 }, "front_pads_discs": { price: 280, duration: 90 }, "rear_pads": { price: 140, duration: 60 }, "rear_pads_discs": { price: 270, duration: 90 }, "rear_pads_discs_handbrake": { price: 320, duration: 120 } }
-  // For BATTERY_SERVICE: { "standard": { price: 50, duration: 30 } } or custom packages
-  // For ALIGNMENT_*: { "measurement": { price: 80, duration: 45 }, "adjustment": { price: 150, duration: 90 }, "both": { price: 200, duration: 120 } }
-  packages Json? // Service-specific package configurations with price and duration
+  // Service Packages (JSON structure for service-specific options - DEPRECATED, use ServicePackage relation instead)
+  packages Json? // Legacy field - use servicePackages relation for new implementations
 
   // Availability
   isActive Boolean @default(true)
@@ -651,13 +647,19 @@ model ServicePackage {
   workshopService   WorkshopService @relation(fields: [workshopServiceId], references: [id], onDelete: Cascade)
 
   // Package Type (service-specific)
-  packageType String // For CLIMATE_SERVICE: check, basic, comfort, premium
-  // For BRAKE_SERVICE: front_pads, front_pads_discs, rear_pads, rear_pads_discs, rear_pads_discs_handbrake
-  // For BATTERY_SERVICE: standard, premium, etc.
-  // For ALIGNMENT: measurement_only, with_adjustment, with_adjustment_inspection
+  // TIRE_CHANGE: two_tires, four_tires, two_tires_disposal, four_tires_disposal
+  // WHEEL_CHANGE: basic, with_balancing, with_storage, complete
+  // TIRE_REPAIR: small, large, emergency
+  // MOTORCYCLE_TIRE: front, rear, both
+  // ALIGNMENT_BOTH: measurement_only, with_adjustment, with_adjustment_inspection
+  // CLIMATE_SERVICE: check, basic, comfort, premium
+  // BRAKE_SERVICE: front_pads, front_pads_discs, rear_pads, rear_pads_discs, rear_pads_discs_handbrake
+  // BATTERY_SERVICE: test, replacement, premium
+  // OTHER_SERVICES: rdks, valve, storage, tpms
+  packageType String
 
   // Package Details
-  name        String // Display name (e.g., "Klimacheck", "Vorderachse - Beläge + Scheiben")
+  name        String // Display name (e.g., "Klimacheck", "2 Reifen wechseln")
   description String? // Package description
 
   // Pricing & Duration

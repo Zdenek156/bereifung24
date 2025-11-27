@@ -26,8 +26,8 @@ export default function SupportPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">E-Mail</h3>
               <p className="text-gray-600 mb-4">Schreiben Sie uns</p>
-              <a href="mailto:support@bereifung24.ch" className="text-primary-600 hover:text-primary-700 font-medium">
-                support@bereifung24.ch
+              <a href="mailto:support@bereifung24.de" className="text-primary-600 hover:text-primary-700 font-medium">
+                support@bereifung24.de
               </a>
             </div>
 
@@ -39,8 +39,8 @@ export default function SupportPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Telefon</h3>
               <p className="text-gray-600 mb-4">Mo-Fr 9-17 Uhr</p>
-              <a href="tel:+41000000000" className="text-primary-600 hover:text-primary-700 font-medium">
-                +41 (0) 00 000 00 00
+              <a href="tel:+4971479679990" className="text-primary-600 hover:text-primary-700 font-medium">
+                07147 - 9679990
               </a>
             </div>
 
@@ -76,8 +76,8 @@ export default function SupportPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Kontaktformular</h2>
             <p className="text-gray-600 mb-6">
               Haben Sie eine spezifische Frage? Schreiben Sie uns direkt an{' '}
-              <a href="mailto:support@bereifung24.ch" className="text-primary-600 hover:text-primary-700 font-medium">
-                support@bereifung24.ch
+              <a href="mailto:support@bereifung24.de" className="text-primary-600 hover:text-primary-700 font-medium">
+                support@bereifung24.de
               </a>
             </p>
           </section>

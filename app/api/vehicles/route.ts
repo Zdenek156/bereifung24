@@ -60,39 +60,94 @@ export async function GET(req: NextRequest) {
 
     // Transform data to include tire specs grouped by season
     const transformedVehicles = vehicles.map((vehicle: any) => {
-      const result: any = {
-        id: vehicle.id,
-        vehicleType: vehicle.vehicleType || 'CAR',
-        make: vehicle.make,
-        model: vehicle.model,
-        year: vehicle.year,
-        licensePlate: vehicle.licensePlate,
-        vin: vehicle.vin,
-        nextInspectionDate: vehicle.nextInspectionDate?.toISOString(),
-        inspectionReminder: vehicle.inspectionReminder,
-        inspectionReminderDays: vehicle.inspectionReminderDays,
-        createdAt: vehicle.createdAt.toISOString(),
-      }
+      try {
+        // Ensure all required fields exist with defaults
+        const result: any = {
+          id: vehicle.id || '',
+          vehicleType: vehicle.vehicleType || 'CAR',
+          make: vehicle.make || 'Unbekannt',
+          model: vehicle.model || 'Unbekannt',
+          year: vehicle.year || new Date().getFullYear(),
+          licensePlate: vehicle.licensePlate || null,
+          vin: null, // Will be set below if actual VIN
+          nextInspectionDate: null,
+          inspectionReminder: false,
+          inspectionReminderDays: 30,
+          createdAt: new Date().toISOString(),
+        }
 
-      // Get summer tires data from vin field (temporary storage as JSON)
-      if (vehicle.vin) {
+        // Safely handle inspection date
         try {
-          const tireData = JSON.parse(vehicle.vin)
-          result.summerTires = tireData.summerTires
-          result.winterTires = tireData.winterTires
-          result.allSeasonTires = tireData.allSeasonTires
+          if (vehicle.nextInspectionDate) {
+            result.nextInspectionDate = vehicle.nextInspectionDate.toISOString()
+          }
         } catch (e) {
-          // Ignore parse errors - vin might be actual VIN string
+          console.error('Error parsing inspection date:', e)
+        }
+
+        // Safely handle other fields
+        if (typeof vehicle.inspectionReminder === 'boolean') {
+          result.inspectionReminder = vehicle.inspectionReminder
+        }
+        if (typeof vehicle.inspectionReminderDays === 'number') {
+          result.inspectionReminderDays = vehicle.inspectionReminderDays
+        }
+        if (vehicle.createdAt) {
+          try {
+            result.createdAt = vehicle.createdAt.toISOString()
+          } catch (e) {
+            // Keep default
+          }
+        }
+
+        // Check if vin field contains JSON tire data or actual VIN
+        if (vehicle.vin) {
+          try {
+            // Try to parse as JSON (tire data)
+            const tireData = JSON.parse(vehicle.vin)
+            if (tireData.summerTires || tireData.winterTires || tireData.allSeasonTires) {
+              // It's tire data
+              result.summerTires = tireData.summerTires
+              result.winterTires = tireData.winterTires
+              result.allSeasonTires = tireData.allSeasonTires
+            } else {
+              // Empty JSON, treat as no VIN
+              result.vin = null
+            }
+          } catch (e) {
+            // Not JSON, must be actual VIN string
+            result.vin = vehicle.vin
+          }
+        }
+
+        return result
+      } catch (itemError) {
+        console.error('Error transforming vehicle:', vehicle.id, itemError)
+        // Return minimal vehicle data on error
+        return {
+          id: vehicle.id,
+          vehicleType: 'CAR',
+          make: vehicle.make || 'Unbekannt',
+          model: vehicle.model || 'Unbekannt',
+          year: vehicle.year || new Date().getFullYear(),
+          licensePlate: null,
+          vin: null,
+          nextInspectionDate: null,
+          inspectionReminder: false,
+          inspectionReminderDays: 30,
+          createdAt: new Date().toISOString(),
         }
       }
-
-      return result
     })
 
     return NextResponse.json(transformedVehicles)
   } catch (error) {
     console.error('GET /api/vehicles error:', error)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    return NextResponse.json({ 
+      error: 'Fehler beim Laden der Fahrzeuge',
+      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    }, { status: 500 })
   }
 }
 

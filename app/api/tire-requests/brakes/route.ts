@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
     if (validatedData.rearAxle === 'pads-discs') requiredPackages.push('rear_pads_discs')
     if (validatedData.rearAxle === 'pads-discs-handbrake') requiredPackages.push('rear_pads_discs_handbrake')
 
-    // Get nearby workshops that offer brake service with ALL required packages
+    // Get nearby workshops that offer brake service
+    // TODO: Filter by servicePackages once all workshops have packages configured
     const workshops = await prisma.workshop.findMany({
       where: {
         workshopServices: {
@@ -155,30 +156,17 @@ export async function POST(request: NextRequest) {
         workshopServices: {
           where: {
             serviceType: 'BRAKE_SERVICE'
-          },
-          include: {
-            servicePackages: {
-              where: {
-                packageType: {
-                  in: requiredPackages
-                },
-                isActive: true
-              }
-            }
           }
         }
       },
       take: 20
     })
 
-    // Filter workshops that have ALL required packages
-    const qualifiedWorkshops = workshops.filter(workshop => {
-      const availablePackages = workshop.workshopServices[0]?.servicePackages.map(p => p.packageType) || []
-      return requiredPackages.every(required => availablePackages.includes(required))
-    })
+    // TODO: Filter workshops that have ALL required packages once packages are configured
+    // For now, send to all workshops offering BRAKE_SERVICE
 
     // Send notification emails to workshops
-    for (const workshop of qualifiedWorkshops) {
+    for (const workshop of workshops) {
       try {
         await sendEmail({
           to: workshop.user.email,
@@ -241,7 +229,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requestId: tireRequest.id,
-      notifiedWorkshops: qualifiedWorkshops.length
+      notifiedWorkshops: workshops.length
     })
 
   } catch (error) {

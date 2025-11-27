@@ -39,8 +39,6 @@ const serviceTypeLabels: { [key: string]: string } = {
   WHEEL_CHANGE: 'Räderwechsel',
   TIRE_REPAIR: 'Reifenreparatur',
   MOTORCYCLE_TIRE: 'Motorradreifen',
-  ALIGNMENT_MEASUREMENT: 'Achsvermessung',
-  ALIGNMENT_ADJUSTMENT: 'Achseinstellung',
   ALIGNMENT_BOTH: 'Achsvermessung + Einstellung',
   CLIMATE_SERVICE: 'Klimaservice',
   BRAKE_SERVICE: 'Bremsen-Service',
@@ -49,21 +47,46 @@ const serviceTypeLabels: { [key: string]: string } = {
 }
 
 const availableServiceTypes = [
-  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧', hasPackages: false },
-  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: false },
-  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨', hasPackages: false },
-  { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', hasPackages: false },
-  { value: 'ALIGNMENT_MEASUREMENT', label: 'Achsvermessung', icon: '📏', hasPackages: true },
-  { value: 'ALIGNMENT_ADJUSTMENT', label: 'Achseinstellung', icon: '⚙️', hasPackages: true },
+  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧', hasPackages: true },
+  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: true },
+  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨', hasPackages: true },
+  { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', hasPackages: true },
   { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏', hasPackages: true },
   { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️', hasPackages: true },
   { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '🛑', hasPackages: true },
-  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋', hasPackages: false },
-  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️', hasPackages: false }
+  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋', hasPackages: true },
+  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️', hasPackages: true }
 ]
 
 // Package configurations for each service type
 const packageConfigurations: { [key: string]: { type: string; name: string; description: string }[] } = {
+  TIRE_CHANGE: [
+    { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
+    { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' },
+    { type: 'two_tires_disposal', name: '2 Reifen + Entsorgung', description: '2 Reifen wechseln inkl. Entsorgung der Altreifen' },
+    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' }
+  ],
+  WHEEL_CHANGE: [
+    { type: 'basic', name: 'Räderwechsel Standard', description: 'Umstecken der Kompletträder ohne Zusatzleistungen' },
+    { type: 'with_balancing', name: 'Räderwechsel + Wuchten', description: 'Umstecken + Auswuchten aller Räder' },
+    { type: 'with_storage', name: 'Räderwechsel + Einlagerung', description: 'Umstecken + Einlagerung der abmontierten Räder' },
+    { type: 'complete', name: 'Komplett-Service', description: 'Umstecken + Wuchten + Einlagerung' }
+  ],
+  TIRE_REPAIR: [
+    { type: 'small', name: 'Kleine Reparatur', description: 'Einfache Reparatur (z.B. Nagel, kleines Loch bis 6mm)' },
+    { type: 'large', name: 'Große Reparatur', description: 'Aufwendige Reparatur oder Seitenwand-Reparatur' },
+    { type: 'emergency', name: 'Notfall-Service', description: 'Express-Reparatur mit Sofort-Service' }
+  ],
+  MOTORCYCLE_TIRE: [
+    { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel nur am Vorderrad' },
+    { type: 'rear', name: 'Hinterrad', description: 'Reifenwechsel nur am Hinterrad' },
+    { type: 'both', name: 'Beide Reifen', description: 'Kompletter Reifenwechsel vorne und hinten' }
+  ],
+  ALIGNMENT_BOTH: [
+    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
+    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Vollständige Achsvermessung mit Einstellung' },
+    { type: 'with_adjustment_inspection', name: 'Vermessung + Einstellung + Inspektion', description: 'Komplett-Service mit Fahrwerksinspektion' }
+  ],
   CLIMATE_SERVICE: [
     { type: 'check', name: 'Klimacheck/Inspektion', description: 'Funktionsprüfung der Klimaanlage' },
     { type: 'basic', name: 'Basic Service', description: 'Desinfektion der Klimaanlage' },
@@ -77,18 +100,16 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'rear_pads_discs', name: 'Hinterachse - Beläge + Scheiben', description: 'Wechsel Bremsbeläge + Bremsscheiben hinten' },
     { type: 'rear_pads_discs_handbrake', name: 'Hinterachse - Beläge + Scheiben + Handbremse', description: 'Komplettpaket hinten inkl. Handbremse' }
   ],
-  ALIGNMENT_MEASUREMENT: [
-    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
-    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Achsvermessung mit anschließender Einstellung' }
+  BATTERY_SERVICE: [
+    { type: 'test', name: 'Batterie-Test', description: 'Überprüfung der Batterie und Ladesystem' },
+    { type: 'replacement', name: 'Batterie-Wechsel', description: 'Ausbau und Einbau einer neuen Batterie' },
+    { type: 'premium', name: 'Premium-Service', description: 'Wechsel + Diagnose + Codierung (für moderne Fahrzeuge)' }
   ],
-  ALIGNMENT_ADJUSTMENT: [
-    { type: 'adjustment_only', name: 'Nur Einstellung', description: 'Achseinstellung ohne Vermessung' },
-    { type: 'with_measurement', name: 'Einstellung + Vermessung', description: 'Achseinstellung mit Vermessung' }
-  ],
-  ALIGNMENT_BOTH: [
-    { type: 'measurement_only', name: 'Nur Vermessung', description: 'Achsvermessung ohne Einstellung' },
-    { type: 'with_adjustment', name: 'Vermessung + Einstellung', description: 'Vollständige Achsvermessung mit Einstellung' },
-    { type: 'with_adjustment_inspection', name: 'Vermessung + Einstellung + Inspektion', description: 'Komplett-Service mit Fahrwerksinspektion' }
+  OTHER_SERVICES: [
+    { type: 'rdks', name: 'RDKS-Service', description: 'Reifendruckkontrollsystem prüfen/programmieren' },
+    { type: 'valve', name: 'Ventil-Wechsel', description: 'Austausch von Reifenventilen' },
+    { type: 'storage', name: 'Reifen-Einlagerung', description: 'Einlagerung von Reifen/Rädern' },
+    { type: 'tpms', name: 'TPMS-Programmierung', description: 'Reifendrucksensoren programmieren' }
   ]
 }
 

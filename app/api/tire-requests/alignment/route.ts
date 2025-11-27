@@ -122,26 +122,13 @@ export async function POST(request: NextRequest) {
     }
     const requiredPackageType = packageTypeMap[validatedData.serviceLevel as keyof typeof packageTypeMap]
 
-    // Map service level to workshop service types
-    const serviceTypeMap = {
-      'measurement-only': 'ALIGNMENT_MEASUREMENT',
-      'with-adjustment': 'ALIGNMENT_BOTH',
-      'with-adjustment-inspection': 'ALIGNMENT_BOTH'
-    }
-    const requiredServiceType = serviceTypeMap[validatedData.serviceLevel as keyof typeof serviceTypeMap]
-
+    // All alignment requests use ALIGNMENT_BOTH service type
     const workshops = await prisma.workshop.findMany({
       where: {
         workshopServices: {
           some: {
-            serviceType: requiredServiceType,
-            isActive: true,
-            servicePackages: {
-              some: {
-                packageType: requiredPackageType,
-                isActive: true
-              }
-            }
+            serviceType: 'ALIGNMENT_BOTH',
+            isActive: true
           }
         }
       },
@@ -155,20 +142,15 @@ export async function POST(request: NextRequest) {
         },
         workshopServices: {
           where: {
-            serviceType: requiredServiceType
+            serviceType: 'ALIGNMENT_BOTH'
           },
-          include: {
-            servicePackages: {
-              where: {
-                packageType: requiredPackageType,
-                isActive: true
-              }
-            }
-          }
         }
       },
       take: 20
     })
+
+    // TODO: Filter by servicePackages once all workshops have packages configured
+    // For now, send to all workshops offering ALIGNMENT_BOTH
 
     // Send email notifications to workshops
     for (const workshop of workshops) {

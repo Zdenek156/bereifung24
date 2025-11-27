@@ -113,19 +113,14 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Get nearby workshops that offer climate service with the requested package
+    // Get nearby workshops that offer climate service
+    // TODO: Filter by servicePackages once all workshops have packages configured
     const workshops = await prisma.workshop.findMany({
       where: {
         workshopServices: {
           some: {
             serviceType: 'CLIMATE_SERVICE',
-            isActive: true,
-            servicePackages: {
-              some: {
-                packageType: validatedData.serviceType,
-                isActive: true
-              }
-            }
+            isActive: true
           }
         }
       },
@@ -140,14 +135,6 @@ export async function POST(request: NextRequest) {
         workshopServices: {
           where: {
             serviceType: 'CLIMATE_SERVICE'
-          },
-          include: {
-            servicePackages: {
-              where: {
-                packageType: validatedData.serviceType,
-                isActive: true
-              }
-            }
           }
         }
       },

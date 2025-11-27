@@ -136,19 +136,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const vehicle = await prisma.vehicle.create({
-      data: {
-        customerId: customer.id,
-        vehicleType: validated.vehicleType || 'CAR',
-        make: validated.make,
-        model: validated.model,
-        year: validated.year,
-        licensePlate: validated.licensePlate,
-        vin: validated.vin || JSON.stringify(tireData), // Use VIN if provided, otherwise tire data
-        nextInspectionDate: inspectionDate,
-        inspectionReminder: validated.inspectionReminder || false,
-        inspectionReminderDays: validated.inspectionReminderDays || 30,
+    // Prepare vehicle data
+    const vehicleData: any = {
+      customerId: customer.id,
+      vehicleType: validated.vehicleType || 'CAR',
+      make: validated.make,
+      model: validated.model,
+      year: validated.year,
+      licensePlate: validated.licensePlate || null,
+      nextInspectionDate: inspectionDate,
+      inspectionReminder: validated.inspectionReminder || false,
+      inspectionReminderDays: validated.inspectionReminderDays || 30,
+    }
+
+    // Only set VIN if provided and not empty
+    if (validated.vin && validated.vin.trim().length > 0) {
+      vehicleData.vin = validated.vin.trim()
+    } else {
+      // Store tire data as JSON if VIN not provided
+      const hasTireData = Object.keys(tireData).length > 0
+      if (hasTireData) {
+        vehicleData.vin = JSON.stringify(tireData)
       }
+    }
+
+    const vehicle = await prisma.vehicle.create({
+      data: vehicleData
     })
 
     return NextResponse.json({ 
@@ -157,9 +170,23 @@ export async function POST(req: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors)
       return NextResponse.json({ error: 'Ungültige Daten', details: error.errors }, { status: 400 })
     }
     console.error('POST /api/vehicles error:', error)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Error details:', error instanceof Error ? error.message : String(error))
+    
+    // Check for Prisma unique constraint errors
+    if (error instanceof Error && error.message.includes('Unique constraint')) {
+      return NextResponse.json({ 
+        error: 'Fahrzeug mit dieser VIN existiert bereits' 
+      }, { status: 409 })
+    }
+    
+    return NextResponse.json({ 
+      error: 'Interner Serverfehler',
+      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    }, { status: 500 })
   }
 }

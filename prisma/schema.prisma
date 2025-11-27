@@ -279,6 +279,7 @@ model Vehicle {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   // Vehicle Details
+  vehicleType  String   @default("CAR") // CAR, MOTORCYCLE, TRAILER
   make         String
   model        String
   year         Int

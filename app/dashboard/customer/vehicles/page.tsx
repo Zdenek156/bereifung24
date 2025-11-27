@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 
 type Vehicle = {
   id: string
+  vehicleType?: string
   make: string
   model: string
   year: number
@@ -334,6 +335,7 @@ export default function VehiclesPage() {
 function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    vehicleType: vehicle.vehicleType || 'CAR',
     make: vehicle.make,
     model: vehicle.model,
     year: vehicle.year,
@@ -479,6 +481,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
       }
 
       const payload: any = {
+        vehicleType: formData.vehicleType,
         make: formData.make,
         model: formData.model,
         year: parseInt(formData.year.toString()),
@@ -589,6 +592,22 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Fahrzeugdaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fahrzeugtyp *
+                  </label>
+                  <select
+                    name="vehicleType"
+                    value={formData.vehicleType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="CAR">🚗 Auto</option>
+                    <option value="MOTORCYCLE">🏍️ Motorrad</option>
+                    <option value="TRAILER">🚚 Anhänger</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hersteller *
@@ -917,6 +936,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    vehicleType: 'CAR',
     make: '',
     model: '',
     year: new Date().getFullYear(),
@@ -1116,6 +1136,9 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
         }
       }
 
+      // Add vehicle type
+      payload.vehicleType = formData.vehicleType
+
       // Add VIN and inspection fields
       if (formData.vin) {
         payload.vin = formData.vin
@@ -1172,6 +1195,22 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Fahrzeugdaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fahrzeugtyp *
+                  </label>
+                  <select
+                    name="vehicleType"
+                    value={formData.vehicleType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="CAR">🚗 Auto</option>
+                    <option value="MOTORCYCLE">🏍️ Motorrad</option>
+                    <option value="TRAILER">🚚 Anhänger</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hersteller *

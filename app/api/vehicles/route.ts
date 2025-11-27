@@ -20,6 +20,7 @@ const tireSpecSchema = z.object({
 })
 
 const vehicleSchema = z.object({
+  vehicleType: z.enum(['CAR', 'MOTORCYCLE', 'TRAILER']).default('CAR'),
   make: z.string().min(1),
   model: z.string().min(1),
   year: z.number().min(1980).max(new Date().getFullYear() + 1),
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
     const vehicle = await prisma.vehicle.create({
       data: {
         customerId: customer.id,
+        vehicleType: validated.vehicleType,
         make: validated.make,
         model: validated.model,
         year: validated.year,

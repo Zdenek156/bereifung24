@@ -122,16 +122,30 @@ export async function POST(req: NextRequest) {
     if (validated.winterTires) tireData.winterTires = validated.winterTires
     if (validated.allSeasonTires) tireData.allSeasonTires = validated.allSeasonTires
 
+    // Parse inspection date - handle both YYYY-MM and YYYY-MM-DD formats
+    let inspectionDate = null
+    if (validated.nextInspectionDate) {
+      try {
+        // If format is YYYY-MM, add -01 to make it a valid date
+        const dateStr = validated.nextInspectionDate.length === 7 
+          ? `${validated.nextInspectionDate}-01` 
+          : validated.nextInspectionDate
+        inspectionDate = new Date(dateStr)
+      } catch (e) {
+        console.error('Error parsing inspection date:', e)
+      }
+    }
+
     const vehicle = await prisma.vehicle.create({
       data: {
         customerId: customer.id,
-        vehicleType: validated.vehicleType,
+        vehicleType: validated.vehicleType || 'CAR',
         make: validated.make,
         model: validated.model,
         year: validated.year,
         licensePlate: validated.licensePlate,
         vin: validated.vin || JSON.stringify(tireData), // Use VIN if provided, otherwise tire data
-        nextInspectionDate: validated.nextInspectionDate ? new Date(validated.nextInspectionDate) : null,
+        nextInspectionDate: inspectionDate,
         inspectionReminder: validated.inspectionReminder || false,
         inspectionReminderDays: validated.inspectionReminderDays || 30,
       }

@@ -790,21 +790,23 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             {/* Summer Tires */}
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  id="hasSummerTires"
-                  name="hasSummerTires"
-                  checked={formData.hasSummerTires}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="hasSummerTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
+                {formData.vehicleType !== 'MOTORCYCLE' && (
+                  <input
+                    type="checkbox"
+                    id="hasSummerTires"
+                    name="hasSummerTires"
+                    checked={formData.hasSummerTires}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                )}
+                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-3' : ''} text-lg font-semibold text-gray-900 flex items-center`}>
                   <span className="text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
                   {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
               </div>
 
-              {formData.hasSummerTires && (
+              {(formData.vehicleType === 'MOTORCYCLE' || formData.hasSummerTires) && (
                 <div className="ml-8 space-y-4">
                   <div className="flex items-center mb-4">
                     <input
@@ -913,7 +915,8 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
               )}
             </div>
 
-            {/* Winter Tires */}
+            {/* Winter Tires (not used for motorcycles) */}
+            {formData.vehicleType !== 'MOTORCYCLE' && (
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
                 <input
@@ -1036,8 +1039,10 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
               )}
             </div>
+            )}
 
-            {/* All Season Tires */}
+            {/* All Season Tires (not used for motorcycles) */}
+            {formData.vehicleType !== 'MOTORCYCLE' && (
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
                 <input
@@ -1160,6 +1165,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -1612,24 +1618,26 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
               </div>
             </div>
 
-            {/* Summer Tires */}
+            {/* Summer Tires (Reifengrößen for motorcycles) */}
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  id="hasSummerTires"
-                  name="hasSummerTires"
-                  checked={formData.hasSummerTires}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="hasSummerTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="text-2xl mr-2">☀️</span>
-                  Sommerreifen
+                {formData.vehicleType !== 'MOTORCYCLE' && (
+                  <input
+                    type="checkbox"
+                    id="hasSummerTires"
+                    name="hasSummerTires"
+                    checked={formData.hasSummerTires}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                )}
+                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-3' : ''} text-lg font-semibold text-gray-900 flex items-center`}>
+                  <span className="text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                  {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
               </div>
 
-              {formData.hasSummerTires && (
+              {(formData.vehicleType === 'MOTORCYCLE' || formData.hasSummerTires) && (
                 <div className="ml-8 space-y-4">
                   <div className="flex items-center mb-4">
                     <input
@@ -1734,7 +1742,8 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
               )}
             </div>
 
-            {/* Winter Tires */}
+            {/* Winter Tires (not used for motorcycles) */}
+            {formData.vehicleType !== 'MOTORCYCLE' && (
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
                 <input
@@ -1855,8 +1864,10 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                 </div>
               )}
             </div>
+            )}
 
-            {/* All Season Tires */}
+            {/* All Season Tires (not used for motorcycles) */}
+            {formData.vehicleType !== 'MOTORCYCLE' && (
             <div className="border-t pt-6">
               <div className="flex items-center mb-4">
                 <input
@@ -1977,6 +1988,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Footer */}

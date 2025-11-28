@@ -9,7 +9,7 @@ import { sendEmail, newTireRequestEmailTemplate } from '@/lib/email'
 const tireRequestSchema = z.object({
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
   width: z.number().min(135).max(325),
-  aspectRatio: z.number().min(30).max(85),
+  aspectRatio: z.number().min(25).max(90),
   diameter: z.number().min(13).max(24),
   loadIndex: z.number().min(50).max(150).optional(),
   speedRating: z.string().optional(),

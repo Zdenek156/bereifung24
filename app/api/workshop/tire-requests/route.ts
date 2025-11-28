@@ -41,7 +41,7 @@ export async function GET() {
     const allRequests = await prisma.tireRequest.findMany({
       where: {
         status: {
-          in: ['PENDING', 'QUOTED'] // Anfragen die noch offen sind oder bereits Angebote haben
+          in: ['PENDING', 'OPEN', 'QUOTED'] // Anfragen die noch offen sind oder bereits Angebote haben
         }
       },
       select: {

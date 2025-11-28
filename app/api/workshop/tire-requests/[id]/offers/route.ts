@@ -218,7 +218,7 @@ export async function POST(
         tireSpecs: tireSpecs,
         price: totalOfferPrice,
         requestId: offer.tireRequestId,
-        motorcycleTireType: offer.motorcycleTireType
+        motorcycleTireType: offer.motorcycleTireType || undefined
       })
 
       await sendEmail({

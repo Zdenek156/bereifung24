@@ -170,7 +170,9 @@ export default function VehiclesPage() {
                 {/* Vehicle Header */}
                 <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-3xl">🚗</div>
+                    <div className="text-3xl">
+                      {vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '🚗'}
+                    </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setEditingVehicle(vehicle)}
@@ -295,7 +297,9 @@ export default function VehiclesPage() {
 
                   {!vehicle.summerTires && !vehicle.winterTires && !vehicle.allSeasonTires && (
                     <p className="text-gray-500 text-sm italic">
-                      Noch keine Reifengrößen hinterlegt
+                      {vehicle.vehicleType === 'MOTORCYCLE'
+                        ? 'Noch keine Motorrad-Reifengrößen hinterlegt'
+                        : 'Noch keine Reifengrößen hinterlegt'}
                     </p>
                   )}
 

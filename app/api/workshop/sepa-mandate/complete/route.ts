@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       }
     })
 
-    console.log(`✅ SEPA Mandate created for workshop ${workshop.name}:`, {
+    console.log(`✅ SEPA Mandate created for workshop ${workshop.companyName}:`, {
       mandateId,
       customerId,
       status: 'pending_submission'

@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             },
             offer: {
               select: {
-                totalPrice: true
+                price: true
               }
             }
           }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       try {
         // Calculate total revenue for this workshop in the billing period
         const totalRevenue = workshop.bookings.reduce(
-          (sum, booking) => sum + (booking.offer?.totalPrice || 0),
+          (sum, booking) => sum + (booking.offer?.price || 0),
           0
         )
 
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         // Create commission records for each booking
         const commissionRecords = await Promise.all(
           workshop.bookings.map(async (booking) => {
-            const bookingCommission = calculateCommission(booking.offer?.totalPrice || 0, 4.9)
+            const bookingCommission = calculateCommission(booking.offer?.price || 0, 4.9)
 
             return prisma.commission.create({
               data: {

@@ -182,8 +182,8 @@ export async function POST(request: NextRequest) {
                 <li><strong>Motorrad:</strong> ${validatedData.motorcycleMake} ${validatedData.motorcycleModel}</li>
                 <li><strong>Saison:</strong> ${seasonMap[validatedData.season]}</li>
                 ${validatedData.tireType ? `<li><strong>Reifentyp:</strong> ${validatedData.tireType === 'STANDARD' ? 'Standard' : validatedData.tireType === 'SPORT' ? 'Sport' : validatedData.tireType === 'TOURING' ? 'Touring' : 'Off-Road'}</li>` : ''}
-                ${validatedData.needsFrontTire ? `<li><strong>Vorderreifen:</strong> ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}</li>` : ''}
-                ${validatedData.needsRearTire ? `<li><strong>Hinterreifen:</strong> ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}</li>` : ''}
+                ${validatedData.needsFrontTire && validatedData.frontTire ? `<li><strong>Vorderreifen:</strong> ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}</li>` : ''}
+                ${validatedData.needsRearTire && validatedData.rearTire ? `<li><strong>Hinterreifen:</strong> ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}</li>` : ''}
                 <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${city}</li>
                 <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>
               </ul>

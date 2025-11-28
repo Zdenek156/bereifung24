@@ -362,7 +362,7 @@ export default function VehiclesPage() {
   )
 }
 
-// Edit Vehicle Modal Component  
+// Edit Vehicle Modal Component [EDIT_MODAL]  
 function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -1185,7 +1185,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
   )
 }
 
-// Add Vehicle Modal Component
+// Add Vehicle Modal Component [ADD_MODAL]
 function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({

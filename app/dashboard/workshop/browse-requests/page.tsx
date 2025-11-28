@@ -269,24 +269,57 @@ export default function BrowseRequestsPage() {
         calculatedInstallation = installation.toFixed(2)
         calculatedDuration = duration.toString()
       } else {
-        // Autoreifen-Wechsel: Preis basierend auf Anzahl
-        let installation = request.quantity === 4 && service.basePrice4
-          ? service.basePrice4
-          : service.basePrice
+        // Autoreifen-Wechsel: Nutze Service-Pakete wenn verfügbar
+        let installation = 0
+        let duration = 60
         
-        // Addiere RunFlat und Entsorgung wenn nötig
-        if (request.isRunflat && service.runFlatSurcharge) {
-          installation += service.runFlatSurcharge * request.quantity
+        if (service.servicePackages && service.servicePackages.length > 0) {
+          // Finde passendes Paket basierend auf Reifenanzahl
+          let selectedPackage
+          
+          if (request.quantity === 4) {
+            // 4 Reifen - suche Paket mit "4" im Namen
+            selectedPackage = service.servicePackages.find(p => 
+              p.name.includes('4') || p.name.toLowerCase().includes('alle')
+            )
+          } else if (request.quantity === 2) {
+            // 2 Reifen - suche Paket mit "2" im Namen
+            selectedPackage = service.servicePackages.find(p => 
+              p.name.includes('2') && !p.name.toLowerCase().includes('entsorgung')
+            )
+          }
+          
+          // Fallback auf erstes Paket wenn nichts gefunden
+          if (!selectedPackage && service.servicePackages.length > 0) {
+            selectedPackage = service.servicePackages[0]
+          }
+          
+          if (selectedPackage) {
+            installation = selectedPackage.price
+            duration = selectedPackage.durationMinutes
+          }
+        } else {
+          // Fallback auf alte Logik wenn keine Pakete definiert
+          installation = request.quantity === 4 && service.basePrice4
+            ? service.basePrice4
+            : service.basePrice
+          
+          // Addiere RunFlat und Entsorgung wenn nötig
+          if (request.isRunflat && service.runFlatSurcharge) {
+            installation += service.runFlatSurcharge * request.quantity
+          }
+          if (service.disposalFee) {
+            installation += service.disposalFee * request.quantity
+          }
+          
+          // Wähle Dauer basierend auf Anzahl
+          duration = request.quantity === 4 && service.durationMinutes4
+            ? service.durationMinutes4
+            : service.durationMinutes
         }
-        if (service.disposalFee) {
-          installation += service.disposalFee * request.quantity
-        }
+        
         calculatedInstallation = installation.toFixed(2)
-        
-        // Wähle Dauer basierend auf Anzahl
-        calculatedDuration = (request.quantity === 4 && service.durationMinutes4
-          ? service.durationMinutes4
-          : service.durationMinutes).toString()
+        calculatedDuration = duration.toString()
       }
     }
     

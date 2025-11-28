@@ -152,9 +152,6 @@ export default function MotorcycleTiresPage() {
       detectedSeason = 'ALL_SEASON'
     }
 
-    console.log('Tire data:', tireData, 'Detected season:', detectedSeason)
-    console.log('Speed rating from tireData:', tireData?.speedRating)
-
     // Pre-fill tire dimensions if available
     if (tireData) {
       const hasDifferentSizes = tireData.hasDifferentSizes
@@ -175,7 +172,6 @@ export default function MotorcycleTiresPage() {
         : (tireData.speedRating || '')
       
       const frontSpeedRating = tireData.speedRating || ''
-      console.log('Setting frontSpeedRating to:', frontSpeedRating)
 
       // Set all data in one call to prevent race conditions
       setFormData(prev => ({

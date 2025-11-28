@@ -21,15 +21,20 @@ export async function POST(request: Request) {
       where: { userId: session.user.id },
       select: {
         id: true,
-        name: true,
-        email: true,
-        ownerName: true,
-        address: true,
-        city: true,
-        zipCode: true,
+        companyName: true,
         gocardlessCustomerId: true,
         gocardlessMandateId: true,
-        gocardlessMandateStatus: true
+        gocardlessMandateStatus: true,
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            street: true,
+            city: true,
+            zipCode: true
+          }
+        }
       }
     })
 
@@ -63,12 +68,12 @@ export async function POST(request: Request) {
     const redirectFlow = await createRedirectFlow({
       sessionToken,
       successRedirectUrl,
-      description: `SEPA-Lastschriftmandat für ${workshop.name} - Bereifung24 Provisionsabzug`,
+      description: `SEPA-Lastschriftmandat für ${workshop.companyName} - Bereifung24 Provisionsabzug`,
       prefillCustomer: {
-        email: workshop.email,
-        givenName: workshop.ownerName?.split(' ')[0],
-        familyName: workshop.ownerName?.split(' ').slice(1).join(' '),
-        companyName: workshop.name
+        email: workshop.user.email,
+        givenName: workshop.user.firstName,
+        familyName: workshop.user.lastName,
+        companyName: workshop.companyName
       }
     })
 

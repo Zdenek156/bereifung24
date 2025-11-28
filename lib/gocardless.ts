@@ -7,7 +7,7 @@ const constants = require('gocardless-nodejs/constants')
 // Lazy initialization to avoid startup errors if env vars are missing
 let _gocardlessClient: any = null
 
-function getGocardlessClient() {
+export function getGocardlessClient() {
   if (!_gocardlessClient) {
     if (!process.env.GOCARDLESS_ACCESS_TOKEN) {
       throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured')
@@ -25,12 +25,6 @@ function getGocardlessClient() {
   return _gocardlessClient
 }
 
-export const gocardlessClient = new Proxy({}, {
-  get(target, prop) {
-    return getGocardlessClient()[prop]
-  }
-})
-
 /**
  * Create GoCardless Customer
  */
@@ -45,7 +39,7 @@ export async function createGoCardlessCustomer(data: {
   countryCode?: string
 }) {
   try {
-    const customer = await gocardlessClient.customers.create({
+    const customer = await getGocardlessClient().customers.create({
       email: data.email,
       given_name: data.firstName,
       family_name: data.lastName,
@@ -77,7 +71,7 @@ export async function createCustomerBankAccount(data: {
   countryCode?: string
 }) {
   try {
-    const bankAccount = await gocardlessClient.customerBankAccounts.create({
+    const bankAccount = await getGocardlessClient().customerBankAccounts.create({
       account_holder_name: data.accountHolderName,
       iban: data.iban,
       country_code: data.countryCode || 'DE',
@@ -105,7 +99,7 @@ export async function createMandate(data: {
   reference: string
 }) {
   try {
-    const mandate = await gocardlessClient.mandates.create({
+    const mandate = await getGocardlessClient().mandates.create({
       links: {
         customer: data.customerId,
         customer_bank_account: data.bankAccountId
@@ -129,7 +123,7 @@ export async function createMandate(data: {
  */
 export async function getMandateStatus(mandateId: string) {
   try {
-    const mandate = await gocardlessClient.mandates.find(mandateId)
+    const mandate = await getGocardlessClient().mandates.find(mandateId)
     return mandate
   } catch (error) {
     console.error('GoCardless Get Mandate Error:', error)
@@ -150,7 +144,7 @@ export async function createPayment(data: {
   metadata?: Record<string, string>
 }) {
   try {
-    const payment = await gocardlessClient.payments.create({
+    const payment = await getGocardlessClient().payments.create({
       amount: Math.round(data.amount), // Must be integer (cents)
       currency: data.currency || 'EUR',
       description: data.description,
@@ -177,7 +171,7 @@ export async function createPayment(data: {
  */
 export async function getPaymentStatus(paymentId: string) {
   try {
-    const payment = await gocardlessClient.payments.find(paymentId)
+    const payment = await getGocardlessClient().payments.find(paymentId)
     return payment
   } catch (error) {
     console.error('GoCardless Get Payment Error:', error)
@@ -190,7 +184,7 @@ export async function getPaymentStatus(paymentId: string) {
  */
 export async function cancelPayment(paymentId: string) {
   try {
-    const payment = await gocardlessClient.payments.cancel(paymentId)
+    const payment = await getGocardlessClient().payments.cancel(paymentId)
     return payment
   } catch (error) {
     console.error('GoCardless Cancel Payment Error:', error)
@@ -203,7 +197,7 @@ export async function cancelPayment(paymentId: string) {
  */
 export async function cancelMandate(mandateId: string) {
   try {
-    const mandate = await gocardlessClient.mandates.cancel(mandateId)
+    const mandate = await getGocardlessClient().mandates.cancel(mandateId)
     return mandate
   } catch (error) {
     console.error('GoCardless Cancel Mandate Error:', error)
@@ -243,7 +237,7 @@ export async function createRedirectFlow(data: {
   }
 }) {
   try {
-    const redirectFlow = await gocardlessClient.redirectFlows.create({
+    const redirectFlow = await getGocardlessClient().redirectFlows.create({
       session_token: data.sessionToken,
       success_redirect_url: data.successRedirectUrl,
       description: data.description || 'Bereifung24 SEPA-Lastschriftmandat',
@@ -266,7 +260,7 @@ export async function completeRedirectFlow(
   sessionToken: string
 ) {
   try {
-    const redirectFlow = await gocardlessClient.redirectFlows.complete(
+    const redirectFlow = await getGocardlessClient().redirectFlows.complete(
       redirectFlowId,
       { session_token: sessionToken }
     )

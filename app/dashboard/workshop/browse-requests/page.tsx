@@ -75,6 +75,15 @@ interface WorkshopService {
   balancingPrice: number | null
   storagePrice: number | null
   storageAvailable: boolean | null
+  packages?: ServicePackage[]
+}
+
+interface ServicePackage {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  durationMinutes: number
 }
 
 export default function BrowseRequestsPage() {
@@ -114,7 +123,7 @@ export default function BrowseRequestsPage() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch('/api/workshop/services')
+      const response = await fetch('/api/workshop/services?includePackages=true')
       if (response.ok) {
         const data = await response.json()
         setServices(data.services.filter((s: WorkshopService) => s.isActive))
@@ -177,7 +186,12 @@ export default function BrowseRequestsPage() {
       isClimate,
       isOtherService
     })
-    console.log('Available services:', services.map(s => ({ type: s.serviceType, price: s.basePrice, duration: s.durationMinutes })))
+    console.log('Available services:', services.map(s => ({ 
+      type: s.serviceType, 
+      price: s.basePrice, 
+      duration: s.durationMinutes,
+      packages: s.packages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
+    })))
     
     // Finde passenden Service basierend auf Anfragetyp
     let service: WorkshopService | undefined
@@ -202,7 +216,12 @@ export default function BrowseRequestsPage() {
       service = services.find(s => s.serviceType === 'TIRE_CHANGE')
     }
     
-    console.log('Found service:', service ? { type: service.serviceType, price: service.basePrice, duration: service.durationMinutes } : 'None')
+    console.log('Found service:', service ? { 
+      type: service.serviceType, 
+      price: service.basePrice, 
+      duration: service.durationMinutes,
+      packages: service.packages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
+    } : 'None')
     
     let calculatedInstallation = ''
     let calculatedDuration = ''
@@ -213,19 +232,42 @@ export default function BrowseRequestsPage() {
         calculatedInstallation = service.basePrice.toFixed(2)
         calculatedDuration = service.durationMinutes.toString()
       } else if (isMotorcycle) {
-        // Motorradreifen: Preis basierend auf Anzahl (quantity = 1 oder 2)
-        let installation = request.quantity === 2 && service.basePrice4
-          ? service.basePrice4
-          : service.basePrice
+        // Motorradreifen: Verwende Paket-Preise
+        // Prüfe ob Vorder- oder Hinterreifen oder beide benötigt werden
+        const needsFront = request.additionalNotes?.includes('✓ Vorderreifen')
+        const needsRear = request.additionalNotes?.includes('✓ Hinterreifen')
         
-        if (service.disposalFee) {
-          installation += service.disposalFee * request.quantity
+        let installation = 0
+        let duration = 60
+        
+        if (service.packages && service.packages.length > 0) {
+          // Finde passendes Paket
+          let selectedPackage
+          
+          if (needsFront && needsRear) {
+            // Beide Reifen - suche "Beide" Paket
+            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('beide'))
+          } else if (needsFront) {
+            // Nur Vorderrad
+            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('vorderrad') && !p.name.toLowerCase().includes('entsorgung'))
+          } else if (needsRear) {
+            // Nur Hinterrad
+            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('hinterrad') && !p.name.toLowerCase().includes('entsorgung'))
+          }
+          
+          // Fallback auf erstes Paket wenn nichts gefunden
+          if (!selectedPackage && service.packages.length > 0) {
+            selectedPackage = service.packages[0]
+          }
+          
+          if (selectedPackage) {
+            installation = selectedPackage.price
+            duration = selectedPackage.durationMinutes
+          }
         }
-        calculatedInstallation = installation.toFixed(2)
         
-        calculatedDuration = (request.quantity === 2 && service.durationMinutes4
-          ? service.durationMinutes4
-          : service.durationMinutes).toString()
+        calculatedInstallation = installation.toFixed(2)
+        calculatedDuration = duration.toString()
       } else {
         // Autoreifen-Wechsel: Preis basierend auf Anzahl
         let installation = request.quantity === 4 && service.basePrice4

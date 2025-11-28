@@ -375,7 +375,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     nextInspectionDate: vehicle.nextInspectionDate ? new Date(vehicle.nextInspectionDate).toISOString().substring(0, 7) : '',
     inspectionReminder: vehicle.inspectionReminder || false,
     inspectionReminderDays: (vehicle.inspectionReminderDays || 30).toString(),
-    // Summer Tires
+    // Summer Tires (For motorcycles: all tire sizes stored here regardless of season)
     hasSummerTires: !!vehicle.summerTires,
     summerDifferentSizes: vehicle.summerTires?.hasDifferentSizes || false,
     summerWidth: vehicle.summerTires?.width.toString() || '',

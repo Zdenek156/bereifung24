@@ -50,6 +50,7 @@ interface TireOption {
   costPrice: string
   pricePerTire: string
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
+  carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
 }
 
 interface OfferFormData {
@@ -307,13 +308,19 @@ export default function BrowseRequestsPage() {
 
     // Initialisiere mit einem leeren Reifenangebot
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
+    
+    // Determine default car tire type based on quantity
+    const defaultCarTireType: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO' = 
+      request.quantity === 4 ? 'ALL_FOUR' : 'FRONT_TWO'
+    
     setOfferForm({
       tireOptions: [{ 
         brand: preferredBrand, 
         model: '', 
         costPrice: '', 
         pricePerTire: '',
-        motorcycleTireType: defaultTireType 
+        motorcycleTireType: defaultTireType,
+        carTireType: !isMotorcycle ? defaultCarTireType : undefined
       }],
       description: '',
       installationFee: calculatedInstallation,
@@ -352,7 +359,8 @@ export default function BrowseRequestsPage() {
               brand: opt.brand,
               model: opt.model,
               pricePerTire: parseFloat(opt.pricePerTire),
-              motorcycleTireType: opt.motorcycleTireType
+              motorcycleTireType: opt.motorcycleTireType,
+              carTireType: opt.carTireType
             }))
           }),
           description: offerForm.description,
@@ -386,6 +394,8 @@ export default function BrowseRequestsPage() {
   const addTireOption = () => {
     const isMotorcycle = selectedRequest?.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     let defaultTireType: 'FRONT' | 'REAR' | 'BOTH' | undefined = undefined
+    const defaultCarTireType: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO' = 
+      selectedRequest?.quantity === 4 ? 'ALL_FOUR' : 'FRONT_TWO'
     
     if (isMotorcycle) {
       // Default to BOTH for additional tire options
@@ -399,7 +409,8 @@ export default function BrowseRequestsPage() {
         model: '', 
         costPrice: '', 
         pricePerTire: '',
-        motorcycleTireType: defaultTireType
+        motorcycleTireType: defaultTireType,
+        carTireType: !isMotorcycle ? defaultCarTireType : undefined
       }]
     })
   }
@@ -921,6 +932,25 @@ export default function BrowseRequestsPage() {
                               <option value="BOTH">🏍️ Beide Reifen (Vorne + Hinten)</option>
                               <option value="FRONT">🏍️ Nur Vorderreifen</option>
                               <option value="REAR">🏍️ Nur Hinterreifen</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Car Tire Type Selection - per tire option */}
+                        {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Angebot für *
+                            </label>
+                            <select
+                              value={option.carTireType || 'ALL_FOUR'}
+                              onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              required
+                            >
+                              <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
+                              <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
+                              <option value="REAR_TWO">🚗 2 Hinterreifen</option>
                             </select>
                           </div>
                         )}

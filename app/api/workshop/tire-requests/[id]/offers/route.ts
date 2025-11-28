@@ -9,7 +9,8 @@ const tireOptionSchema = z.object({
   brand: z.string().min(1, 'Reifenmarke erforderlich'),
   model: z.string().min(1, 'Reifenmodell erforderlich'),
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
-  motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional() // Für Motorradreifen - pro Reifenangebot
+  motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional(), // Für Motorradreifen - pro Reifenangebot
+  carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional() // Für Autoreifen - pro Reifenangebot
 })
 
 const offerSchema = z.object({
@@ -137,7 +138,8 @@ export async function POST(
               brand: option.brand,
               model: option.model,
               pricePerTire: option.pricePerTire,
-              motorcycleTireType: option.motorcycleTireType
+              motorcycleTireType: option.motorcycleTireType,
+              carTireType: option.carTireType
             }))
           }
         })

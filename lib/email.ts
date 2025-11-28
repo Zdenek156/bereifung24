@@ -291,6 +291,7 @@ export function newOfferEmailTemplate(data: {
     model: string
     pricePerTire: number
     motorcycleTireType?: string | null
+    carTireType?: string | null
   }>
   tireSpecs: string
   price: number
@@ -299,10 +300,16 @@ export function newOfferEmailTemplate(data: {
   installationFee: number
 }) {
   // Format motorcycle tire type for display
-  const formatTireType = (type?: string | null) => {
-    if (type === 'FRONT') return '🏍️ Nur Vorderreifen'
-    if (type === 'REAR') return '🏍️ Nur Hinterreifen'
-    if (type === 'BOTH') return '🏍️ Beide Reifen'
+  const formatTireType = (type?: string | null, isMotorcycle: boolean = true) => {
+    if (isMotorcycle) {
+      if (type === 'FRONT') return '🏍️ Nur Vorderreifen'
+      if (type === 'REAR') return '🏍️ Nur Hinterreifen'
+      if (type === 'BOTH') return '🏍️ Beide Reifen'
+    } else {
+      if (type === 'ALL_FOUR') return '🚗 Alle 4 Reifen'
+      if (type === 'FRONT_TWO') return '🚗 2 Vorderreifen'
+      if (type === 'REAR_TWO') return '🚗 2 Hinterreifen'
+    }
     return ''
   }
   
@@ -343,7 +350,11 @@ export function newOfferEmailTemplate(data: {
             
             ${data.tireOptions.map(option => {
               const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
-              const tireTypeLabel = formatTireType(option.motorcycleTireType)
+              const tireTypeLabel = option.motorcycleTireType 
+                ? formatTireType(option.motorcycleTireType, true)
+                : option.carTireType 
+                  ? formatTireType(option.carTireType, false)
+                  : ''
               return `
                 <div style="background: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 4px; border: 1px solid #e5e7eb;">
                   <p style="margin: 0 0 5px 0;"><strong>Reifen:</strong> ${option.brand} ${option.model}</p>
@@ -387,7 +398,11 @@ Dimension: ${data.tireSpecs}
 
 ${data.tireOptions.map(option => {
   const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
-  const tireTypeLabel = formatTireType(option.motorcycleTireType)
+  const tireTypeLabel = option.motorcycleTireType 
+    ? formatTireType(option.motorcycleTireType, true)
+    : option.carTireType 
+      ? formatTireType(option.carTireType, false)
+      : ''
   return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (inkl. Montage)`
 }).join('\n\n')}
 

@@ -956,8 +956,37 @@ export default function WorkshopSettings() {
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Bankverbindung & SEPA-Mandat</h2>
             <p className="text-sm text-gray-600 mb-6">
-              Für die Auszahlung Ihrer Provisionen (4,9% pro Auftrag)
+              Für die automatische Einziehung Ihrer Provisionen (4,9% pro Auftrag)
             </p>
+            
+            {/* GoCardless SEPA Link */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-1">
+                      Automatische SEPA-Lastschrift einrichten
+                    </h3>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Richten Sie ein sicheres SEPA-Lastschriftmandat über GoCardless ein. 
+                      Ihre Provisionen werden automatisch monatlich eingezogen.
+                    </p>
+                    <Link 
+                      href="/dashboard/workshop/settings/sepa-mandate"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      SEPA-Mandat jetzt einrichten
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
             
             {profile?.sepaMandateRef && (
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">

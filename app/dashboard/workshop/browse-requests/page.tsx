@@ -60,6 +60,7 @@ interface OfferFormData {
   balancingPrice?: string
   storagePrice?: string
   storageAvailable?: boolean
+  motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
 }
 
 interface WorkshopService {
@@ -288,6 +289,22 @@ export default function BrowseRequestsPage() {
       }
     }
     
+    // Determine default motorcycle tire type
+    let defaultTireType: 'FRONT' | 'REAR' | 'BOTH' | undefined = undefined
+    if (isMotorcycle) {
+      const needsFront = request.additionalNotes?.includes('✓ Vorderreifen')
+      const needsRear = request.additionalNotes?.includes('✓ Hinterreifen')
+      if (needsFront && needsRear) {
+        defaultTireType = 'BOTH'
+      } else if (needsFront) {
+        defaultTireType = 'FRONT'
+      } else if (needsRear) {
+        defaultTireType = 'REAR'
+      } else {
+        defaultTireType = 'BOTH' // Fallback
+      }
+    }
+
     // Initialisiere mit einem leeren Reifenangebot
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     setOfferForm({
@@ -298,7 +315,8 @@ export default function BrowseRequestsPage() {
       durationMinutes: calculatedDuration,
       balancingPrice: service?.balancingPrice?.toFixed(2) || '',
       storagePrice: service?.storagePrice?.toFixed(2) || '',
-      storageAvailable: service?.storageAvailable || false
+      storageAvailable: service?.storageAvailable || false,
+      motorcycleTireType: defaultTireType
     })
   }
 
@@ -337,7 +355,8 @@ export default function BrowseRequestsPage() {
           durationMinutes: offerForm.durationMinutes ? parseInt(offerForm.durationMinutes) : undefined,
           balancingPrice: offerForm.balancingPrice && parseFloat(offerForm.balancingPrice) > 0 ? parseFloat(offerForm.balancingPrice) : undefined,
           storagePrice: offerForm.storagePrice && parseFloat(offerForm.storagePrice) > 0 ? parseFloat(offerForm.storagePrice) : undefined,
-          storageAvailable: offerForm.storageAvailable || false
+          storageAvailable: offerForm.storageAvailable || false,
+          motorcycleTireType: offerForm.motorcycleTireType
         })
       })
 
@@ -723,6 +742,24 @@ export default function BrowseRequestsPage() {
               <div className="mt-2 text-sm text-gray-600">
                 {selectedRequest.width === 0 ? (
                   <>Für: 🔧 Räder umstecken (Sommer/Winter)</>
+                ) : selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
+                  <>
+                    {(() => {
+                      // Parse additionalNotes to get front and rear tire dimensions
+                      const frontMatch = selectedRequest.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+                      const rearMatch = selectedRequest.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+                      
+                      if (frontMatch && rearMatch) {
+                        return `Für: 🏍️ Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''} • ${getSeasonLabel(selectedRequest.season)}`
+                      } else if (frontMatch) {
+                        return `Für: 🏍️ Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''} • ${getSeasonLabel(selectedRequest.season)}`
+                      } else if (rearMatch) {
+                        return `Für: 🏍️ Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''} • ${getSeasonLabel(selectedRequest.season)}`
+                      }
+                      // Fallback
+                      return `Für: 🏍️ ${selectedRequest.width}/${selectedRequest.aspectRatio} R${selectedRequest.diameter} • ${getSeasonLabel(selectedRequest.season)}`
+                    })()}
+                  </>
                 ) : (
                   <>
                     Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter} • 
@@ -846,6 +883,31 @@ export default function BrowseRequestsPage() {
                     ))}
                   </div>
                 </div>
+                )}
+
+                {/* Motorcycle Tire Type Selection */}
+                {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Angebot für *
+                    </label>
+                    <select
+                      value={offerForm.motorcycleTireType || 'BOTH'}
+                      onChange={(e) => setOfferForm({ 
+                        ...offerForm, 
+                        motorcycleTireType: e.target.value as 'FRONT' | 'REAR' | 'BOTH' 
+                      })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="BOTH">🏍️ Beide Reifen (Vorne + Hinten)</option>
+                      <option value="FRONT">🏍️ Nur Vorderreifen</option>
+                      <option value="REAR">🏍️ Nur Hinterreifen</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wählen Sie aus, für welchen Reifen dieses Angebot gilt
+                    </p>
+                  </div>
                 )}
 
                 <div>

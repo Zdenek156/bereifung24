@@ -291,8 +291,19 @@ export function newOfferEmailTemplate(data: {
   tireSpecs: string
   price: number
   requestId: string
+  motorcycleTireType?: string
 }) {
-  const subject = `Neues Angebot für Ihre Reifenanfrage - ${data.tireBrand} ${data.tireModel}`
+  // Format motorcycle tire type for display
+  let tireTypeLabel = ''
+  if (data.motorcycleTireType === 'FRONT') {
+    tireTypeLabel = ' (Nur Vorderreifen)'
+  } else if (data.motorcycleTireType === 'REAR') {
+    tireTypeLabel = ' (Nur Hinterreifen)'
+  } else if (data.motorcycleTireType === 'BOTH') {
+    tireTypeLabel = ' (Beide Reifen)'
+  }
+  
+  const subject = `Neues Angebot für Ihre Reifenanfrage - ${data.tireBrand} ${data.tireModel}${tireTypeLabel}`
   
   const html = `
     <!DOCTYPE html>
@@ -326,6 +337,7 @@ export function newOfferEmailTemplate(data: {
             
             <p><strong>Reifen:</strong> ${data.tireBrand} ${data.tireModel}</p>
             <p><strong>Dimension:</strong> ${data.tireSpecs}</p>
+            ${tireTypeLabel ? `<p style="background: #eff6ff; padding: 8px; border-radius: 4px; color: #1e40af; font-weight: 600;">🏍️ ${tireTypeLabel.replace(/[()]/g, '')}</p>` : ''}
             
             <div class="price">${data.price.toFixed(2)} €</div>
             <p style="color: #6b7280; font-size: 14px;">inkl. Montage</p>
@@ -359,7 +371,7 @@ Sie haben ein neues Angebot erhalten!
 
 Werkstatt: ${data.workshopName}
 Reifen: ${data.tireBrand} ${data.tireModel}
-Dimension: ${data.tireSpecs}
+Dimension: ${data.tireSpecs}${tireTypeLabel ? '\n' + tireTypeLabel : ''}
 Preis: ${data.price.toFixed(2)} € (inkl. Montage)
 
 Sehen Sie sich das Angebot an: ${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${data.requestId}

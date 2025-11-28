@@ -19,7 +19,8 @@ const offerSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
   balancingPrice: z.number().min(0).optional(), // Wuchten-Preis für Wheel Change
   storagePrice: z.number().min(0).optional(), // Einlagerung-Preis für Wheel Change
-  storageAvailable: z.boolean().optional() // Einlagerung verfügbar
+  storageAvailable: z.boolean().optional(), // Einlagerung verfügbar
+  motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional() // Für Motorradreifen
 })
 
 // POST - Werkstatt erstellt Angebot für eine Anfrage
@@ -127,6 +128,7 @@ export async function POST(
         balancingPrice: validatedData.balancingPrice,
         storagePrice: validatedData.storagePrice,
         storageAvailable: validatedData.storageAvailable,
+        motorcycleTireType: validatedData.motorcycleTireType,
         validUntil: validUntil,
         status: 'PENDING',
         ...(hasValidTireOptions && {
@@ -185,7 +187,23 @@ export async function POST(
         throw new Error('No tire options found in offer')
       }
 
-      const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+      // Extract motorcycle tire info if applicable
+      const isMotorcycle = offer.tireRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
+      let tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+      
+      if (isMotorcycle && offer.tireRequest.additionalNotes) {
+        const frontMatch = offer.tireRequest.additionalNotes.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+        const rearMatch = offer.tireRequest.additionalNotes.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+        
+        if (frontMatch && rearMatch) {
+          tireSpecs = `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''}`
+        } else if (frontMatch) {
+          tireSpecs = `Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''}`
+        } else if (rearMatch) {
+          tireSpecs = `Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''}`
+        }
+      }
+      
       const firstOption = offer.tireOptions[0]
       const totalOfferPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
       const priceDisplay = offer.tireOptions.length > 1 
@@ -199,7 +217,8 @@ export async function POST(
         tireModel: firstOption.model,
         tireSpecs: tireSpecs,
         price: totalOfferPrice,
-        requestId: offer.tireRequestId
+        requestId: offer.tireRequestId,
+        motorcycleTireType: offer.motorcycleTireType
       })
 
       await sendEmail({

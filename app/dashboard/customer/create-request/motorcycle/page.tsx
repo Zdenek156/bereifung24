@@ -23,25 +23,29 @@ const SPEED_RATING_MAP: Record<string, number> = {
 }
 const SPEED_RATINGS = Object.keys(SPEED_RATING_MAP)
 
+type TireData = {
+  width: number
+  aspectRatio: number
+  diameter: number
+  loadIndex?: number
+  speedRating?: string
+  hasDifferentSizes?: boolean
+  rearWidth?: number
+  rearAspectRatio?: number
+  rearDiameter?: number
+  rearLoadIndex?: number
+  rearSpeedRating?: string
+}
+
 type Vehicle = {
   id: string
   make: string
   model: string
   year: number
   vehicleType?: string
-  summerTires?: {
-    width: number
-    aspectRatio: number
-    diameter: number
-    loadIndex?: number
-    speedRating?: string
-    hasDifferentSizes?: boolean
-    rearWidth?: number
-    rearAspectRatio?: number
-    rearDiameter?: number
-    rearLoadIndex?: number
-    rearSpeedRating?: string
-  }
+  summerTires?: TireData
+  winterTires?: TireData
+  allSeasonTires?: TireData
 }
 
 export default function MotorcycleTiresPage() {
@@ -126,37 +130,41 @@ export default function MotorcycleTiresPage() {
     if (!vehicle) return
 
     console.log('Selected vehicle:', vehicle)
-    console.log('Summer tires:', vehicle.summerTires)
+
+    // Determine which tire data to use (prefer summer, then winter, then all-season)
+    const tireData = vehicle.summerTires || vehicle.winterTires || vehicle.allSeasonTires
+
+    console.log('Tire data:', tireData)
 
     // Pre-fill tire dimensions if available
-    if (vehicle.summerTires) {
-      const hasDifferentSizes = vehicle.summerTires.hasDifferentSizes
-      const rearWidth = hasDifferentSizes && vehicle.summerTires.rearWidth 
-        ? vehicle.summerTires.rearWidth.toString() 
-        : vehicle.summerTires.width.toString()
-      const rearAspectRatio = hasDifferentSizes && vehicle.summerTires.rearAspectRatio 
-        ? vehicle.summerTires.rearAspectRatio.toString() 
-        : vehicle.summerTires.aspectRatio.toString()
-      const rearDiameter = hasDifferentSizes && vehicle.summerTires.rearDiameter 
-        ? vehicle.summerTires.rearDiameter.toString() 
-        : vehicle.summerTires.diameter.toString()
-      const rearLoadIndex = hasDifferentSizes && vehicle.summerTires.rearLoadIndex 
-        ? vehicle.summerTires.rearLoadIndex.toString() 
-        : (vehicle.summerTires.loadIndex?.toString() || '')
-      const rearSpeedRating = hasDifferentSizes && vehicle.summerTires.rearSpeedRating 
-        ? vehicle.summerTires.rearSpeedRating 
-        : (vehicle.summerTires.speedRating || '')
+    if (tireData) {
+      const hasDifferentSizes = tireData.hasDifferentSizes
+      const rearWidth = hasDifferentSizes && tireData.rearWidth 
+        ? tireData.rearWidth.toString() 
+        : tireData.width.toString()
+      const rearAspectRatio = hasDifferentSizes && tireData.rearAspectRatio 
+        ? tireData.rearAspectRatio.toString() 
+        : tireData.aspectRatio.toString()
+      const rearDiameter = hasDifferentSizes && tireData.rearDiameter 
+        ? tireData.rearDiameter.toString() 
+        : tireData.diameter.toString()
+      const rearLoadIndex = hasDifferentSizes && tireData.rearLoadIndex 
+        ? tireData.rearLoadIndex.toString() 
+        : (tireData.loadIndex?.toString() || '')
+      const rearSpeedRating = hasDifferentSizes && tireData.rearSpeedRating 
+        ? tireData.rearSpeedRating 
+        : (tireData.speedRating || '')
 
       // Set all data in one call to prevent race conditions
       setFormData(prev => ({
         ...prev,
         motorcycleMake: vehicle.make,
         motorcycleModel: vehicle.model,
-        frontWidth: vehicle.summerTires!.width.toString(),
-        frontAspectRatio: vehicle.summerTires!.aspectRatio.toString(),
-        frontDiameter: vehicle.summerTires!.diameter.toString(),
-        frontLoadIndex: vehicle.summerTires!.loadIndex?.toString() || '',
-        frontSpeedRating: vehicle.summerTires!.speedRating || '',
+        frontWidth: tireData.width.toString(),
+        frontAspectRatio: tireData.aspectRatio.toString(),
+        frontDiameter: tireData.diameter.toString(),
+        frontLoadIndex: tireData.loadIndex?.toString() || '',
+        frontSpeedRating: tireData.speedRating || '',
         // Use rear-specific dimensions if available, otherwise use front dimensions
         rearWidth,
         rearAspectRatio,

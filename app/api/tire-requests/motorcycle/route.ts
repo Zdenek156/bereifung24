@@ -99,17 +99,26 @@ export async function POST(request: NextRequest) {
     if (validatedData.needsFrontTire) quantity++
     if (validatedData.needsRearTire) quantity++
 
+    // Use front tire or rear tire dimensions as primary (whichever is available)
+    const primaryTire = validatedData.frontTire || validatedData.rearTire
+    if (!primaryTire) {
+      return NextResponse.json(
+        { error: 'Mindestens ein Reifen muss angegeben werden' },
+        { status: 400 }
+      )
+    }
+
     // Create tire request for motorcycle
     const tireRequest = await prisma.tireRequest.create({
       data: {
         customerId: session.user.customerId!,
         vehicleId: null,
         season: validatedData.season,
-        // Store front tire dimensions as primary
-        width: validatedData.frontTire.width,
-        aspectRatio: validatedData.frontTire.aspectRatio,
-        diameter: validatedData.frontTire.diameter,
-        speedRating: validatedData.frontTire.speedRating || '',
+        // Store primary tire dimensions
+        width: primaryTire.width,
+        aspectRatio: primaryTire.aspectRatio,
+        diameter: primaryTire.diameter,
+        speedRating: primaryTire.speedRating || '',
         quantity,
         preferredBrands: validatedData.preferredBrands || '',
         additionalNotes: [
@@ -118,8 +127,8 @@ export async function POST(request: NextRequest) {
           `Saison: ${seasonMap[validatedData.season]}`,
           validatedData.tireType ? `Reifentyp: ${validatedData.tireType === 'STANDARD' ? 'Standard' : validatedData.tireType === 'SPORT' ? 'Sport' : validatedData.tireType === 'TOURING' ? 'Touring' : 'Off-Road'}` : '',
           '',
-          validatedData.needsFrontTire ? `✓ Vorderreifen: ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}${validatedData.frontTire.speedRating ? ' ' + validatedData.frontTire.speedRating : ''}` : '',
-          validatedData.needsRearTire ? `✓ Hinterreifen: ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}${validatedData.rearTire.speedRating ? ' ' + validatedData.rearTire.speedRating : ''}` : '',
+          validatedData.needsFrontTire && validatedData.frontTire ? `✓ Vorderreifen: ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}${validatedData.frontTire.speedRating ? ' ' + validatedData.frontTire.speedRating : ''}` : '',
+          validatedData.needsRearTire && validatedData.rearTire ? `✓ Hinterreifen: ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}${validatedData.rearTire.speedRating ? ' ' + validatedData.rearTire.speedRating : ''}` : '',
           '',
           validatedData.preferredBrands ? `Bevorzugte Marken: ${validatedData.preferredBrands}` : '',
           validatedData.additionalNotes ? `Anmerkungen: ${validatedData.additionalNotes}` : '',

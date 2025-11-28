@@ -209,10 +209,7 @@ export default function VehiclesPage() {
                     <div className="border-l-4 border-yellow-400 pl-4">
                       <div className="flex items-center mb-1">
                         {vehicle.vehicleType === 'MOTORCYCLE' ? (
-                          <>
-                            <span className="text-2xl mr-2">🏍️</span>
-                            <span className="font-semibold text-gray-700">Reifengrößen</span>
-                          </>
+                          <span className="font-semibold text-gray-700">Reifengrößen</span>
                         ) : (
                           <>
                             <span className="text-2xl mr-2">☀️</span>

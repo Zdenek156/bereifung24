@@ -286,24 +286,28 @@ export function workshopVerifiedEmailTemplate(data: {
 export function newOfferEmailTemplate(data: {
   customerName: string
   workshopName: string
-  tireBrand: string
-  tireModel: string
+  tireOptions: Array<{
+    brand: string
+    model: string
+    pricePerTire: number
+    motorcycleTireType?: string | null
+  }>
   tireSpecs: string
   price: number
   requestId: string
-  motorcycleTireType?: string
+  quantity: number
+  installationFee: number
 }) {
   // Format motorcycle tire type for display
-  let tireTypeLabel = ''
-  if (data.motorcycleTireType === 'FRONT') {
-    tireTypeLabel = ' (Nur Vorderreifen)'
-  } else if (data.motorcycleTireType === 'REAR') {
-    tireTypeLabel = ' (Nur Hinterreifen)'
-  } else if (data.motorcycleTireType === 'BOTH') {
-    tireTypeLabel = ' (Beide Reifen)'
+  const formatTireType = (type?: string | null) => {
+    if (type === 'FRONT') return '🏍️ Nur Vorderreifen'
+    if (type === 'REAR') return '🏍️ Nur Hinterreifen'
+    if (type === 'BOTH') return '🏍️ Beide Reifen'
+    return ''
   }
   
-  const subject = `Neues Angebot für Ihre Reifenanfrage - ${data.tireBrand} ${data.tireModel}${tireTypeLabel}`
+  const firstOption = data.tireOptions[0]
+  const subject = `Neues Angebot für Ihre Reifenanfrage - ${firstOption.brand} ${firstOption.model}${firstOption.motorcycleTireType ? ` (${formatTireType(firstOption.motorcycleTireType)})` : ''}`
   
   const html = `
     <!DOCTYPE html>
@@ -335,12 +339,21 @@ export function newOfferEmailTemplate(data: {
           <div class="offer-box">
             <h2 style="margin-top: 0; color: #1e40af;">Angebot von ${data.workshopName}</h2>
             
-            <p><strong>Reifen:</strong> ${data.tireBrand} ${data.tireModel}</p>
             <p><strong>Dimension:</strong> ${data.tireSpecs}</p>
-            ${tireTypeLabel ? `<p style="background: #eff6ff; padding: 8px; border-radius: 4px; color: #1e40af; font-weight: 600;">🏍️ ${tireTypeLabel.replace(/[()]/g, '')}</p>` : ''}
             
-            <div class="price">${data.price.toFixed(2)} €</div>
-            <p style="color: #6b7280; font-size: 14px;">inkl. Montage</p>
+            ${data.tireOptions.map(option => {
+              const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
+              const tireTypeLabel = formatTireType(option.motorcycleTireType)
+              return `
+                <div style="background: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 4px; border: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 5px 0;"><strong>Reifen:</strong> ${option.brand} ${option.model}</p>
+                  ${tireTypeLabel ? `<p style="margin: 5px 0; background: #eff6ff; padding: 6px; border-radius: 4px; color: #1e40af; font-weight: 600; display: inline-block;">${tireTypeLabel}</p>` : ''}
+                  <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 600; color: #1e40af;">${optionPrice.toFixed(2)} € <span style="font-size: 14px; color: #6b7280; font-weight: normal;">inkl. Montage</span></p>
+                </div>
+              `
+            }).join('')}
+            
+            ${data.tireOptions.length > 1 ? '<p style="color: #6b7280; font-size: 14px; margin-top: 15px;">Die Werkstatt bietet Ihnen mehrere Optionen zur Auswahl an.</p>' : ''}
           </div>
           
           <p>Schauen Sie sich das vollständige Angebot in Ihrem Dashboard an und nehmen Sie es an, wenn es Ihnen zusagt.</p>
@@ -370,9 +383,15 @@ Hallo ${data.customerName},
 Sie haben ein neues Angebot erhalten!
 
 Werkstatt: ${data.workshopName}
-Reifen: ${data.tireBrand} ${data.tireModel}
-Dimension: ${data.tireSpecs}${tireTypeLabel ? '\n' + tireTypeLabel : ''}
-Preis: ${data.price.toFixed(2)} € (inkl. Montage)
+Dimension: ${data.tireSpecs}
+
+${data.tireOptions.map(option => {
+  const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
+  const tireTypeLabel = formatTireType(option.motorcycleTireType)
+  return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (inkl. Montage)`
+}).join('\n\n')}
+
+${data.tireOptions.length > 1 ? '\nDie Werkstatt bietet Ihnen mehrere Optionen zur Auswahl an.' : ''}
 
 Sehen Sie sich das Angebot an: ${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${data.requestId}
 

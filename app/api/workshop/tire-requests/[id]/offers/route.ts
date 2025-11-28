@@ -8,7 +8,8 @@ import { sendEmail, newOfferEmailTemplate } from '@/lib/email'
 const tireOptionSchema = z.object({
   brand: z.string().min(1, 'Reifenmarke erforderlich'),
   model: z.string().min(1, 'Reifenmodell erforderlich'),
-  pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein')
+  pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
+  motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional() // Für Motorradreifen - pro Reifenangebot
 })
 
 const offerSchema = z.object({
@@ -19,8 +20,7 @@ const offerSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
   balancingPrice: z.number().min(0).optional(), // Wuchten-Preis für Wheel Change
   storagePrice: z.number().min(0).optional(), // Einlagerung-Preis für Wheel Change
-  storageAvailable: z.boolean().optional(), // Einlagerung verfügbar
-  motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional() // Für Motorradreifen
+  storageAvailable: z.boolean().optional() // Einlagerung verfügbar
 })
 
 // POST - Werkstatt erstellt Angebot für eine Anfrage
@@ -128,7 +128,7 @@ export async function POST(
         balancingPrice: validatedData.balancingPrice,
         storagePrice: validatedData.storagePrice,
         storageAvailable: validatedData.storageAvailable,
-        motorcycleTireType: validatedData.motorcycleTireType,
+        motorcycleTireType: validatedData.tireOptions?.[0]?.motorcycleTireType || null, // Keep for backward compatibility
         validUntil: validUntil,
         status: 'PENDING',
         ...(hasValidTireOptions && {
@@ -136,7 +136,8 @@ export async function POST(
             create: validatedData.tireOptions!.map(option => ({
               brand: option.brand,
               model: option.model,
-              pricePerTire: option.pricePerTire
+              pricePerTire: option.pricePerTire,
+              motorcycleTireType: option.motorcycleTireType
             }))
           }
         })
@@ -213,12 +214,12 @@ export async function POST(
       const emailTemplate = newOfferEmailTemplate({
         customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
         workshopName: offer.workshop.companyName,
-        tireBrand: firstOption.brand,
-        tireModel: firstOption.model,
+        tireOptions: offer.tireOptions,
         tireSpecs: tireSpecs,
         price: totalOfferPrice,
         requestId: offer.tireRequestId,
-        motorcycleTireType: offer.motorcycleTireType || undefined
+        quantity: tireRequest.quantity,
+        installationFee: validatedData.installationFee
       })
 
       await sendEmail({

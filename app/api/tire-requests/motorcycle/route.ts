@@ -49,6 +49,17 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     console.log('Motorcycle request body:', JSON.stringify(body, null, 2))
+    
+    try {
+      const validatedData = motorcycleRequestSchema.parse(body)
+    } catch (validationError) {
+      console.error('Validation error:', validationError)
+      return NextResponse.json(
+        { error: 'Validierungsfehler', details: validationError },
+        { status: 400 }
+      )
+    }
+    
     const validatedData = motorcycleRequestSchema.parse(body)
 
     // Get customer

@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       where: { userId: session.user.id },
       select: {
         id: true,
-        name: true,
+        companyName: true,
         gocardlessCustomerId: true,
         gocardlessMandateId: true,
         gocardlessMandateStatus: true,

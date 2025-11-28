@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         bookings: {
           where: {
             status: 'CONFIRMED',
-            bookingDate: {
+            appointmentDate: {
               gte: billingStart,
               lte: billingEnd
             }

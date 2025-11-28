@@ -153,6 +153,7 @@ export default function MotorcycleTiresPage() {
     }
 
     console.log('Tire data:', tireData, 'Detected season:', detectedSeason)
+    console.log('Speed rating from tireData:', tireData?.speedRating)
 
     // Pre-fill tire dimensions if available
     if (tireData) {
@@ -172,6 +173,9 @@ export default function MotorcycleTiresPage() {
       const rearSpeedRating = hasDifferentSizes && tireData.rearSpeedRating 
         ? tireData.rearSpeedRating 
         : (tireData.speedRating || '')
+      
+      const frontSpeedRating = tireData.speedRating || ''
+      console.log('Setting frontSpeedRating to:', frontSpeedRating)
 
       // Set all data in one call to prevent race conditions
       setFormData(prev => ({
@@ -183,7 +187,7 @@ export default function MotorcycleTiresPage() {
         frontAspectRatio: tireData.aspectRatio.toString(),
         frontDiameter: tireData.diameter.toString(),
         frontLoadIndex: tireData.loadIndex?.toString() || '',
-        frontSpeedRating: tireData.speedRating || '',
+        frontSpeedRating,
         // Use rear-specific dimensions if available, otherwise use front dimensions
         rearWidth,
         rearAspectRatio,

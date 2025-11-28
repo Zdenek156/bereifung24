@@ -1,13 +1,13 @@
 // lib/gocardless.ts
 // GoCardless API Integration für SEPA-Lastschrift
 
-import gocardless from 'gocardless-nodejs'
-import { Environments } from 'gocardless-nodejs/constants'
+const gocardless = require('gocardless-nodejs')
+const constants = require('gocardless-nodejs/constants')
 
 // Initialize GoCardless client
 const environment = process.env.GOCARDLESS_ENVIRONMENT === 'live' 
-  ? Environments.Live 
-  : Environments.Sandbox
+  ? constants.Environments.Live 
+  : constants.Environments.Sandbox
 
 export const gocardlessClient = gocardless(
   process.env.GOCARDLESS_ACCESS_TOKEN!,

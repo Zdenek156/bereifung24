@@ -48,8 +48,18 @@ export async function POST(
           }
         },
         workshop: {
-          include: {
-            user: true
+          select: {
+            id: true,
+            companyName: true,
+            emailNotifyOfferAccepted: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
           }
         }
       }
@@ -154,22 +164,28 @@ export async function POST(
 
     // Email an Werkstatt senden
     try {
-      const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
-      const emailTemplate = offerAcceptedEmailTemplate({
-        workshopName: offer.workshop.companyName,
-        customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
-        tireBrand: offer.tireBrand,
-        tireModel: offer.tireModel,
-        tireSpecs: tireSpecs,
-        price: offer.price,
-        customerPhone: offer.tireRequest.customer.user.phone || undefined,
-        customerEmail: offer.tireRequest.customer.user.email
-      })
+      // Prüfe ob Werkstatt Benachrichtigungen für akzeptierte Angebote aktiviert hat
+      if (offer.workshop.emailNotifyOfferAccepted) {
+        const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+        const emailTemplate = offerAcceptedEmailTemplate({
+          workshopName: offer.workshop.companyName,
+          customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+          tireBrand: offer.tireBrand,
+          tireModel: offer.tireModel,
+          tireSpecs: tireSpecs,
+          price: offer.price,
+          customerPhone: offer.tireRequest.customer.user.phone || undefined,
+          customerEmail: offer.tireRequest.customer.user.email
+        })
 
-      await sendEmail({
-        to: offer.workshop.user.email,
-        ...emailTemplate
-      })
+        await sendEmail({
+          to: offer.workshop.user.email,
+          ...emailTemplate
+        })
+        console.log(`📧 Offer accepted email sent to workshop: ${offer.workshop.user.email}`)
+      } else {
+        console.log(`⏭️  Workshop ${offer.workshopId} has disabled offer accepted notifications`)
+      }
     } catch (emailError) {
       console.error('Email konnte nicht gesendet werden:', emailError)
       // Weiter ausführen, auch wenn Email fehlschlägt

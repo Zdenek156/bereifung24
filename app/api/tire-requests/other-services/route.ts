@@ -132,6 +132,12 @@ export async function POST(request: NextRequest) {
     // Send email notifications to workshops
     for (const workshop of workshops) {
       if (workshop.user.email) {
+        // Prüfe ob Werkstatt Benachrichtigungen aktiviert hat
+        if (!workshop.emailNotifyRequests) {
+          console.log(`⏭️  Workshop ${workshop.id} has disabled new request notifications`)
+          continue
+        }
+
         try {
           await sendEmail({
             to: workshop.user.email,

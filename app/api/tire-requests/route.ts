@@ -173,6 +173,13 @@ export async function POST(request: NextRequest) {
         // @ts-ignore - Prisma types need regeneration
         const emailPromises = workshopsInRange.map(async (workshop) => {
           // @ts-ignore - Prisma types need regeneration
+          // Prüfe ob Werkstatt Benachrichtigungen für neue Anfragen aktiviert hat
+          if (!workshop.emailNotifyRequests) {
+            console.log(`⏭️  Workshop ${workshop.id} has disabled new request notifications`)
+            return
+          }
+
+          // @ts-ignore - Prisma types need regeneration
           const distance = calculateDistance(
             latitude!,
             longitude!,

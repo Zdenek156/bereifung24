@@ -28,7 +28,7 @@ const motorcycleRequestSchema = z.object({
   bothTires: z.boolean().default(true),
   needsFrontTire: z.boolean().default(true),
   needsRearTire: z.boolean().default(true),
-  tireQuality: z.enum(['ECONOMY', 'MIDDLE', 'PREMIUM']).optional(),
+  tireQuality: z.enum(['ECONOMY', 'MIDDLE', 'PREMIUM', 'QUALITY', 'BUDGET']).optional(),
   tireDisposal: z.boolean().optional(),
   preferredBrands: z.string().optional(),
   needByDate: z.string(),

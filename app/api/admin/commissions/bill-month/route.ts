@@ -60,7 +60,10 @@ export async function POST(request: Request) {
             appointmentDate: true,
             tireRequest: {
               select: {
-                serviceType: true
+                season: true,
+                width: true,
+                aspectRatio: true,
+                diameter: true
               }
             },
             offer: {
@@ -126,7 +129,7 @@ export async function POST(request: Request) {
                 billingMonth: month,
                 billingYear: year,
                 invoiceNumber,
-                description: `Provision ${booking.tireRequest?.serviceType || 'Service'} - ${year}/${month.toString().padStart(2, '0')}`
+                description: `Provision ${booking.tireRequest?.season ? `${booking.tireRequest.season} ${booking.tireRequest.width}/${booking.tireRequest.aspectRatio}R${booking.tireRequest.diameter}` : 'Reifenservice'} - ${year}/${month.toString().padStart(2, '0')}`
               }
             })
           })

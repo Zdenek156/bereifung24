@@ -170,7 +170,7 @@ export default function MotorcycleTiresPage() {
         : (tireData.speedRating || '')
 
       // Set all data in one call to prevent race conditions
-      setFormData(prev => ({
+      const newFormData = {
         ...prev,
         motorcycleMake: vehicle.make,
         motorcycleModel: vehicle.model,
@@ -186,7 +186,18 @@ export default function MotorcycleTiresPage() {
         rearDiameter,
         rearLoadIndex,
         rearSpeedRating,
-      }))
+      }
+      
+      console.log('Setting form data:', newFormData)
+      console.log('Front tire values:', {
+        width: tireData.width,
+        aspectRatio: tireData.aspectRatio,
+        diameter: tireData.diameter,
+        loadIndex: tireData.loadIndex,
+        speedRating: tireData.speedRating
+      })
+      
+      return newFormData
     } else {
       // Only set make and model if no tire data
       setFormData(prev => ({

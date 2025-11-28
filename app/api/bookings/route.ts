@@ -225,8 +225,25 @@ export async function POST(req: NextRequest) {
           }
         },
         workshop: {
-          include: {
-            user: true
+          select: {
+            id: true,
+            companyName: true,
+            emailNotifyBookings: true, // Include notification preference
+            googleAccessToken: true,
+            googleRefreshToken: true,
+            googleCalendarId: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+                street: true,
+                zipCode: true,
+                city: true
+              }
+            }
           }
         },
         tireOptions: true
@@ -552,33 +569,39 @@ export async function POST(req: NextRequest) {
 
     // Send notification email to workshop
     try {
-      // Use selected tire option or fallback to main offer data
-      const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
-      const tireModel = selectedTireOption?.model || completeOffer.tireModel
-      
-      const workshopEmailData = bookingConfirmationWorkshopEmailTemplate({
-        workshopName: completeOffer.workshop.companyName,
-        customerName: `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
-        customerPhone: completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben',
-        customerEmail: completeOffer.tireRequest.customer.user.email,
-        customerAddress: `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`,
-        appointmentDate: appointmentDateFormatted,
-        appointmentTime: appointmentTimeFormatted,
-        tireBrand: tireBrand,
-        tireModel: tireModel,
-        tireSize: tireSize,
-        quantity: completeOffer.tireRequest.quantity,
-        totalPrice: completeOffer.price,
-        paymentMethod: paymentMethod || 'PAY_ONSITE',
-        bookingId: booking.id,
-        customerNotes: customerMessage
-      })
+      // Prüfe ob Werkstatt Benachrichtigungen für neue Buchungen aktiviert hat
+      if (completeOffer.workshop.emailNotifyBookings) {
+        // Use selected tire option or fallback to main offer data
+        const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
+        const tireModel = selectedTireOption?.model || completeOffer.tireModel
+        
+        const workshopEmailData = bookingConfirmationWorkshopEmailTemplate({
+          workshopName: completeOffer.workshop.companyName,
+          customerName: `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`,
+          customerPhone: completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben',
+          customerEmail: completeOffer.tireRequest.customer.user.email,
+          customerAddress: `${completeOffer.tireRequest.customer.user.street || ''}, ${completeOffer.tireRequest.customer.user.zipCode || ''} ${completeOffer.tireRequest.customer.user.city || ''}`,
+          appointmentDate: appointmentDateFormatted,
+          appointmentTime: appointmentTimeFormatted,
+          tireBrand: tireBrand,
+          tireModel: tireModel,
+          tireSize: tireSize,
+          quantity: completeOffer.tireRequest.quantity,
+          totalPrice: completeOffer.price,
+          paymentMethod: paymentMethod || 'PAY_ONSITE',
+          bookingId: booking.id,
+          customerNotes: customerMessage
+        })
 
-      await sendEmail({
-        to: completeOffer.workshop.user.email,
-        subject: workshopEmailData.subject,
-        html: workshopEmailData.html
-      })
+        await sendEmail({
+          to: completeOffer.workshop.user.email,
+          subject: workshopEmailData.subject,
+          html: workshopEmailData.html
+        })
+        console.log(`📧 Booking confirmation email sent to workshop: ${completeOffer.workshop.user.email}`)
+      } else {
+        console.log(`⏭️  Workshop ${completeOffer.workshopId} has disabled booking notifications`)
+      }
     } catch (emailError) {
       console.error('Failed to send workshop notification email:', emailError)
       // Continue even if email fails

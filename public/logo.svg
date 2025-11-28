@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Background Circle/Square with rounded corners -->
+  <rect width="120" height="120" rx="20" fill="#2563eb"/>
+  
+  <!-- B24 Text -->
+  <text x="60" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">B24</text>
+</svg>

@@ -134,6 +134,14 @@ model Workshop {
 
   // PayPal
   paypalEmail String?
+  
+  // GoCardless Integration
+  gocardlessCustomerId     String?   @unique // GoCardless Customer ID
+  gocardlessMandateId      String?   @unique // GoCardless Mandate ID
+  gocardlessMandateStatus  String?   // pending_submission, submitted, active, cancelled, failed, expired
+  gocardlessMandateRef     String?   @unique // Eindeutige Mandate Reference
+  gocardlessMandateCreatedAt DateTime?
+  gocardlessBankAccountId  String?   // GoCardless Bank Account ID
 
   // Payment Methods (JSON String)
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
@@ -550,27 +558,54 @@ model Commission {
   workshopId String
   workshop   Workshop @relation(fields: [workshopId], references: [id])
 
-  // Amounts
-  orderTotal       Float // Gesamtbetrag des Auftrags
-  commissionRate   Float @default(5.0) // Prozentsatz (Standard 5%)
-  commissionAmount Float // Berechnete Provision
+  // Amounts (Netto-Rechnung)
+  orderTotal       Float // Gesamtbetrag des Auftrags (Brutto)
+  commissionRate   Float @default(4.9) // Prozentsatz (4,9%)
+  commissionAmount Float // Berechnete Provision (Brutto)
+  
+  // Tax Calculation (für Rechnung)
+  taxRate          Float @default(19.0) // MwSt-Satz (19%)
+  taxAmount        Float? // MwSt-Betrag auf Provision
+  netAmount        Float? // Provision Netto (ohne MwSt)
+  grossAmount      Float? // Provision Brutto (= commissionAmount)
+  
+  // Billing Period
+  billingPeriodStart DateTime? // Start des Abrechnungszeitraums
+  billingPeriodEnd   DateTime? // Ende des Abrechnungszeitraums
+  billingMonth       Int? // Monat der Abrechnung (1-12)
+  billingYear        Int? // Jahr der Abrechnung
 
   // Status
-  status String @default("PENDING") // PENDING, BILLED, COLLECTED, FAILED
+  status String @default("PENDING") // PENDING, BILLED, COLLECTED, FAILED, REFUNDED
 
   // Billing
   billedAt    DateTime?
   collectedAt DateTime?
+  failedAt    DateTime?
 
-  // SEPA Details
-  sepaReference String?
-  sepaStatus    String?
+  // SEPA/GoCardless Details
+  sepaReference String? // Legacy SEPA Referenz
+  sepaStatus    String? // Legacy SEPA Status
+  
+  // GoCardless Integration
+  gocardlessPaymentId     String? @unique // GoCardless Payment ID
+  gocardlessPaymentStatus String? // pending_submission, submitted, confirmed, paid_out, failed, cancelled
+  gocardlessChargeDate    DateTime? // Geplantes Abbuchungsdatum
+  gocardlessPayoutId      String? // GoCardless Payout ID (wenn ausgezahlt)
+  
+  // Invoice/Document
+  invoiceNumber    String? @unique // Rechnungsnummer (z.B. RE-2024-001)
+  invoiceUrl       String? // Link zur generierten PDF-Rechnung
+  invoiceSentAt    DateTime? // Wann wurde Rechnung versendet
 
   notes String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([workshopId, status])
+  @@index([billingMonth, billingYear])
+  @@index([gocardlessPaymentId])
   @@map("commissions")
 }
 

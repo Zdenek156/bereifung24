@@ -10,6 +10,7 @@ const motorcycleRequestSchema = z.object({
   motorcycleMake: z.string().min(2, 'Bitte Hersteller angeben'),
   motorcycleModel: z.string().min(2, 'Bitte Modell angeben'),
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
+  tireType: z.enum(['STANDARD', 'SPORT', 'TOURING', 'OFF_ROAD']).optional(),
   frontTire: z.object({
     width: z.number().min(70).max(400), // Full motorcycle range
     aspectRatio: z.number().min(25).max(90),
@@ -110,7 +111,8 @@ export async function POST(request: NextRequest) {
         additionalNotes: [
           '🏍️ MOTORRADREIFEN',
           `Motorrad: ${validatedData.motorcycleMake} ${validatedData.motorcycleModel}`,
-          `Reifentyp: ${seasonMap[validatedData.season]}`,
+          `Saison: ${seasonMap[validatedData.season]}`,
+          validatedData.tireType ? `Reifentyp: ${validatedData.tireType === 'STANDARD' ? 'Standard' : validatedData.tireType === 'SPORT' ? 'Sport' : validatedData.tireType === 'TOURING' ? 'Touring' : 'Off-Road'}` : '',
           '',
           validatedData.needsFrontTire ? `✓ Vorderreifen: ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}${validatedData.frontTire.speedRating ? ' ' + validatedData.frontTire.speedRating : ''}` : '',
           validatedData.needsRearTire ? `✓ Hinterreifen: ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}${validatedData.rearTire.speedRating ? ' ' + validatedData.rearTire.speedRating : ''}` : '',
@@ -165,7 +167,8 @@ export async function POST(request: NextRequest) {
               <h3>Details:</h3>
               <ul>
                 <li><strong>Motorrad:</strong> ${validatedData.motorcycleMake} ${validatedData.motorcycleModel}</li>
-                <li><strong>Reifentyp:</strong> ${seasonMap[validatedData.season]}</li>
+                <li><strong>Saison:</strong> ${seasonMap[validatedData.season]}</li>
+                ${validatedData.tireType ? `<li><strong>Reifentyp:</strong> ${validatedData.tireType === 'STANDARD' ? 'Standard' : validatedData.tireType === 'SPORT' ? 'Sport' : validatedData.tireType === 'TOURING' ? 'Touring' : 'Off-Road'}</li>` : ''}
                 ${validatedData.needsFrontTire ? `<li><strong>Vorderreifen:</strong> ${validatedData.frontTire.width}/${validatedData.frontTire.aspectRatio} R${validatedData.frontTire.diameter}</li>` : ''}
                 ${validatedData.needsRearTire ? `<li><strong>Hinterreifen:</strong> ${validatedData.rearTire.width}/${validatedData.rearTire.aspectRatio} R${validatedData.rearTire.diameter}</li>` : ''}
                 <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${city}</li>

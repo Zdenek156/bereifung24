@@ -156,24 +156,63 @@ export default function BrowseRequestsPage() {
     setSelectedRequest(request)
     setShowOfferForm(true)
     
-    // Prüfe ob es eine Räder-Wechsel-Anfrage ist (width=0)
+    // Erkenne Service-Typ aus additionalNotes
+    const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
+    const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+    const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+    const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
+    const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
+    const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
+    const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
     
     // Finde passenden Service basierend auf Anfragetyp
-    const service = isWheelChange 
-      ? services.find(s => s.serviceType === 'WHEEL_CHANGE')
-      : services.find(s => s.serviceType === 'TIRE_CHANGE')
+    let service: WorkshopService | undefined
+    
+    if (isMotorcycle) {
+      service = services.find(s => s.serviceType === 'MOTORCYCLE_TIRE')
+    } else if (isWheelChange) {
+      service = services.find(s => s.serviceType === 'WHEEL_CHANGE')
+    } else if (isRepair) {
+      service = services.find(s => s.serviceType === 'TIRE_REPAIR')
+    } else if (isAlignment) {
+      service = services.find(s => s.serviceType === 'ALIGNMENT')
+    } else if (isBrakes) {
+      service = services.find(s => s.serviceType === 'BRAKE_SERVICE')
+    } else if (isBattery) {
+      service = services.find(s => s.serviceType === 'BATTERY_SERVICE')
+    } else if (isClimate) {
+      service = services.find(s => s.serviceType === 'CLIMATE_SERVICE')
+    } else if (isOtherService) {
+      service = services.find(s => s.serviceType === 'OTHER')
+    } else {
+      service = services.find(s => s.serviceType === 'TIRE_CHANGE')
+    }
     
     let calculatedInstallation = ''
     let calculatedDuration = ''
     
     if (service) {
-      if (isWheelChange) {
-        // Räder-Wechsel: Einfacher Grundpreis
+      if (isWheelChange || isRepair || isAlignment || isOtherService || isBrakes || isBattery || isClimate) {
+        // Einfache Services: Grundpreis
         calculatedInstallation = service.basePrice.toFixed(2)
         calculatedDuration = service.durationMinutes.toString()
+      } else if (isMotorcycle) {
+        // Motorradreifen: Preis basierend auf Anzahl (quantity = 1 oder 2)
+        let installation = request.quantity === 2 && service.basePrice4
+          ? service.basePrice4
+          : service.basePrice
+        
+        if (service.disposalFee) {
+          installation += service.disposalFee * request.quantity
+        }
+        calculatedInstallation = installation.toFixed(2)
+        
+        calculatedDuration = (request.quantity === 2 && service.durationMinutes4
+          ? service.durationMinutes4
+          : service.durationMinutes).toString()
       } else {
-        // Reifen-Wechsel: Preis basierend auf Anzahl
+        // Autoreifen-Wechsel: Preis basierend auf Anzahl
         let installation = request.quantity === 4 && service.basePrice4
           ? service.basePrice4
           : service.basePrice

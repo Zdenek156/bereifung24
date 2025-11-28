@@ -390,15 +390,43 @@ export default function RequestDetailPage() {
 
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Dimension</p>
-                      <p className="text-2xl font-bold text-primary-600">
-                        {request.width}/{request.aspectRatio} R{request.diameter}
-                      </p>
-                      {(request.loadIndex || request.speedRating) && (
-                        <p className="text-sm text-gray-600">
-                          {request.loadIndex && `Tragfähigkeit: ${request.loadIndex}`}
-                          {request.loadIndex && request.speedRating && ' • '}
-                          {request.speedRating && `Geschwindigkeit: ${request.speedRating}`}
-                        </p>
+                      {serviceType === 'MOTORCYCLE' && request.additionalNotes ? (
+                        // Motorradreifen: Extrahiere beide Dimensionen aus additionalNotes
+                        (() => {
+                          const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s*[A-Z()]+)?)/)
+                          const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s*[A-Z()]+)?)/)
+                          
+                          return (
+                            <div className="space-y-2">
+                              {frontMatch && (
+                                <p className="text-lg font-bold text-primary-600">
+                                  🏍️ Vorne: {frontMatch[1]}
+                                </p>
+                              )}
+                              {rearMatch && (
+                                <p className="text-lg font-bold text-primary-600">
+                                  🏍️ Hinten: {rearMatch[1]}
+                                </p>
+                              )}
+                              {!frontMatch && !rearMatch && (
+                                <p className="text-2xl font-bold text-primary-600">
+                                  {request.width}/{request.aspectRatio} R{request.diameter}
+                                  {request.loadIndex && ` ${request.loadIndex}`}
+                                  {request.speedRating && ` ${request.speedRating}`}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })()
+                      ) : (
+                        // Normale Autoreifen
+                        <>
+                          <p className="text-2xl font-bold text-primary-600">
+                            {request.width}/{request.aspectRatio} R{request.diameter}
+                            {request.loadIndex && ` ${request.loadIndex}`}
+                            {request.speedRating && ` ${request.speedRating}`}
+                          </p>
+                        </>
                       )}
                     </div>
 

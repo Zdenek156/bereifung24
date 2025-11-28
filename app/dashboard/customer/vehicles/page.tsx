@@ -812,25 +812,25 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
               {formData.hasSummerTires && (
                 <div className="ml-8 space-y-4">
-                  {formData.vehicleType === 'MOTORCYCLE' && (
-                    <div className="flex items-center mb-4">
-                      <input
-                        type="checkbox"
-                        id="summerDifferentSizes"
-                        name="summerDifferentSizes"
-                        checked={formData.summerDifferentSizes}
-                        onChange={handleChange}
-                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                        Unterschiedliche Vorder- und Hinterreifen
-                      </label>
-                    </div>
-                  )}
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="summerDifferentSizes"
+                      name="summerDifferentSizes"
+                      checked={formData.summerDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
 
                   {/* Front Tire (or single tire for cars) */}
                   <div>
-                    {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                    {formData.summerDifferentSizes && (
                       <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
                     )}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -872,8 +872,8 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     </div>
                   </div>
 
-                  {/* Rear Tire for motorcycles */}
-                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                  {/* Rear Tire for mixed sizes */}
+                  {formData.summerDifferentSizes && (
                     <div className="pt-4 border-t border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -937,7 +937,28 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
               </div>
 
               {formData.hasWinterTires && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-8">
+                <div className="ml-8 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="winterDifferentSizes"
+                      name="winterDifferentSizes"
+                      checked={formData.winterDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="winterDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
+
+                  <div>
+                    {formData.winterDifferentSizes && (
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
+                    )}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
                     <select name="winterWidth" value={formData.winterWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -974,6 +995,51 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     </select>
                   </div>
                 </div>
+                  </div>
+
+                  {formData.winterDifferentSizes && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
+                          <select name="winterRearWidth" value={formData.winterRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
+                          <select name="winterRearAspectRatio" value={formData.winterRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
+                          <select name="winterRearDiameter" value={formData.winterRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
+                          <select name="winterRearLoadIndex" value={formData.winterRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
+                          <select name="winterRearSpeedRating" value={formData.winterRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -995,7 +1061,28 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
               </div>
 
               {formData.hasAllSeasonTires && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-8">
+                <div className="ml-8 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="allSeasonDifferentSizes"
+                      name="allSeasonDifferentSizes"
+                      checked={formData.allSeasonDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
+
+                  <div>
+                    {formData.allSeasonDifferentSizes && (
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
+                    )}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
                     <select name="allSeasonWidth" value={formData.allSeasonWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -1031,6 +1118,51 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
                     </select>
                   </div>
+                </div>
+                  </div>
+
+                  {formData.allSeasonDifferentSizes && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
+                          <select name="allSeasonRearWidth" value={formData.allSeasonRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
+                          <select name="allSeasonRearAspectRatio" value={formData.allSeasonRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
+                          <select name="allSeasonRearDiameter" value={formData.allSeasonRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
+                          <select name="allSeasonRearLoadIndex" value={formData.allSeasonRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
+                          <select name="allSeasonRearSpeedRating" value={formData.allSeasonRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1505,23 +1637,23 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
               {formData.hasSummerTires && (
                 <div className="ml-8 space-y-4">
-                  {formData.vehicleType === 'MOTORCYCLE' && (
-                    <div className="flex items-center mb-4">
-                      <input
-                        type="checkbox"
-                        id="summerDifferentSizesAdd"
-                        name="summerDifferentSizes"
-                        checked={formData.summerDifferentSizes}
-                        onChange={handleChange}
-                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="summerDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
-                        Unterschiedliche Vorder- und Hinterreifen
-                      </label>
-                    </div>
-                  )}
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="summerDifferentSizesAdd"
+                      name="summerDifferentSizes"
+                      checked={formData.summerDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="summerDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
 
-                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                  {formData.summerDifferentSizes && (
                     <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
                   )}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -1562,7 +1694,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </div>
                   </div>
 
-                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                  {formData.summerDifferentSizes && (
                     <div className="pt-4 border-t border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -1627,6 +1759,22 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
               {formData.hasWinterTires && (
                 <div className="ml-8 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="winterDifferentSizesAdd"
+                      name="winterDifferentSizes"
+                      checked={formData.winterDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="winterDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
+
                   {formData.winterDifferentSizes && (
                     <h4 className="text-md font-medium text-gray-800">Vorderreifen</h4>
                   )}
@@ -1666,20 +1814,6 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                         {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="winterDifferentSizes"
-                      name="winterDifferentSizes"
-                      checked={formData.winterDifferentSizes}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="winterDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                      Unterschiedliche Größen vorne/hinten (Mischbereifung)
-                    </label>
                   </div>
 
                   {formData.winterDifferentSizes && (
@@ -1747,6 +1881,22 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
               {formData.hasAllSeasonTires && (
                 <div className="ml-8 space-y-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="allSeasonDifferentSizesAdd"
+                      name="allSeasonDifferentSizes"
+                      checked={formData.allSeasonDifferentSizes}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="allSeasonDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                      {formData.vehicleType === 'MOTORCYCLE' 
+                        ? 'Unterschiedliche Vorder- und Hinterreifen'
+                        : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
+                    </label>
+                  </div>
+
                   {formData.allSeasonDifferentSizes && (
                     <h4 className="text-md font-medium text-gray-800">Vorderreifen</h4>
                   )}
@@ -1786,20 +1936,6 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                         {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="allSeasonDifferentSizes"
-                      name="allSeasonDifferentSizes"
-                      checked={formData.allSeasonDifferentSizes}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                      Unterschiedliche Größen vorne/hinten (Mischbereifung)
-                    </label>
                   </div>
 
                   {formData.allSeasonDifferentSizes && (

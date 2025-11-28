@@ -161,12 +161,9 @@ export default function RequestsPage() {
                             // Motorcycle tire request
                             <>
                               🏍️ Motorradreifen mit Montage {' '}
-                              {request.season === 'SUMMER' && '☀️ '}
-                              {request.season === 'WINTER' && '❄️ '}
-                              {request.season === 'ALL_SEASON' && '🌤️ '}
-                              {request.width}/{request.aspectRatio} R{request.diameter}
-                              {request.loadIndex && ` ${request.loadIndex}`}
-                              {request.speedRating && request.speedRating}
+                              {request.season === 'SUMMER' && '☀️'}
+                              {request.season === 'WINTER' && '❄️'}
+                              {request.season === 'ALL_SEASON' && '🌤️'}
                             </>
                           ) : request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
                             // Service request - detect type by emoji in additionalNotes
@@ -181,17 +178,48 @@ export default function RequestsPage() {
                             // Regular car tire request
                             <>
                               🚗 Autoreifen mit Montage {' '}
-                              {request.season === 'SUMMER' && '☀️ '}
-                              {request.season === 'WINTER' && '❄️ '}
-                              {request.season === 'ALL_SEASON' && '🌤️ '}
-                              {request.width}/{request.aspectRatio} R{request.diameter}
-                              {request.loadIndex && ` ${request.loadIndex}`}
-                              {request.speedRating && request.speedRating}
-                              {request.isRunflat && ' (Runflat)'}
+                              {request.season === 'SUMMER' && '☀️'}
+                              {request.season === 'WINTER' && '❄️'}
+                              {request.season === 'ALL_SEASON' && '🌤️'}
                             </>
                           )}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        
+                        {/* Tire dimensions - smaller text below title */}
+                        {request.width !== 0 && (
+                          <p className="text-sm text-gray-700 mt-1">
+                            {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
+                              // Motorcycle - show front and rear
+                              <>
+                                {(() => {
+                                  // Parse additionalNotes to get front and rear tire dimensions
+                                  const frontMatch = request.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+                                  const rearMatch = request.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(\s+\w+)?/)
+                                  
+                                  if (frontMatch && rearMatch) {
+                                    return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''}`
+                                  } else if (frontMatch) {
+                                    return `Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] || ''}`
+                                  } else if (rearMatch) {
+                                    return `Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] || ''}`
+                                  }
+                                  // Fallback to primary dimensions
+                                  return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
+                                })()}
+                              </>
+                            ) : (
+                              // Car tires - show single dimension
+                              <>
+                                {request.width}/{request.aspectRatio} R{request.diameter}
+                                {request.loadIndex && ` ${request.loadIndex}`}
+                                {request.speedRating && request.speedRating}
+                                {request.isRunflat && ' (Runflat)'}
+                              </>
+                            )}
+                          </p>
+                        )}
+                        
+                        <p className="text-sm text-gray-600 mt-1">
                           {request.width === 0 ? 'Service-Anfrage' : request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? `Motorradreifen • ${request.quantity} Stück` : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
                         </p>
                       </div>

@@ -208,8 +208,8 @@ export default function VehiclesPage() {
                   {vehicle.summerTires && (
                     <div className="border-l-4 border-yellow-400 pl-4">
                       <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">☀️</span>
-                        <span className="font-semibold text-gray-700">Sommerreifen</span>
+                        <span className="text-2xl mr-2">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                        <span className="font-semibold text-gray-700">{vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}</span>
                       </div>
                       <p className="text-lg font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (

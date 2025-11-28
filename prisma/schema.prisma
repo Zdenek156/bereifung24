@@ -388,6 +388,7 @@ model Offer {
   balancingPrice   Float?   @map("balancingprice") // Wuchten-Preis für Wheel Change
   storagePrice     Float?   @map("storageprice") // Einlagerung-Preis für Wheel Change
   storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
+  motorcycleTireType String? @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle offers
 
   // Validity
   validUntil DateTime

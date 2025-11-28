@@ -1,0 +1,35 @@
+# =================================================================
+# GoCardless Server Deployment - Manuelle Befehle
+# =================================================================
+# 
+# Kopiere diese Befehle einzeln in dein PowerShell-Terminal
+# (außerhalb von VS Code oder im VS Code integrierten Terminal)
+#
+# Deine SSH-Keys sollten dort ohne Passwort funktionieren!
+# =================================================================
+
+# Schritt 1: .env aktualisieren
+ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && cat >> .env << 'EOFMARKER'
+
+# GoCardless (SEPA Direct Debit) - LIVE MODE
+GOCARDLESS_ACCESS_TOKEN=\"live_WmP-dhJqZY7Amzn-J6TqYivdjL2OHefpmc0fYWrj\"
+GOCARDLESS_ENVIRONMENT=\"live\"
+GOCARDLESS_WEBHOOK_SECRET=\"\"
+EOFMARKER
+"
+
+# Schritt 2: GoCardless Package installieren
+ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npm install gocardless-nodejs"
+
+# Schritt 3: Database Migration
+ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npx prisma migrate deploy"
+
+# Schritt 4: App neu bauen
+ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npm run build"
+
+# Schritt 5: PM2 neu starten
+ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && pm2 restart bereifung24-app"
+
+# =================================================================
+# Fertig! Wenn alles funktioniert hat, sage mir Bescheid!
+# =================================================================

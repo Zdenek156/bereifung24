@@ -811,42 +811,110 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
               </div>
 
               {formData.hasSummerTires && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-8">
+                <div className="ml-8 space-y-4">
+                  {formData.vehicleType === 'MOTORCYCLE' && (
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="checkbox"
+                        id="summerDifferentSizes"
+                        name="summerDifferentSizes"
+                        checked={formData.summerDifferentSizes}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
+                        Unterschiedliche Vorder- und Hinterreifen
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Front Tire (or single tire for cars) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                    <select name="summerWidth" value={formData.summerWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                    </select>
+                    {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
+                    )}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
+                        <select name="summerWidth" value={formData.summerWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="">Wählen</option>
+                          {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
+                        <select name="summerAspectRatio" value={formData.summerAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="">Wählen</option>
+                          {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
+                        <select name="summerDiameter" value={formData.summerDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="">Wählen</option>
+                          {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
+                        <select name="summerLoadIndex" value={formData.summerLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="">Optional</option>
+                          {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
+                        <select name="summerSpeedRating" value={formData.summerSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="">Optional</option>
+                          {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                    <select name="summerAspectRatio" value={formData.summerAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                    <select name="summerDiameter" value={formData.summerDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                    <select name="summerLoadIndex" value={formData.summerLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                    <select name="summerSpeedRating" value={formData.summerSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                    </select>
-                  </div>
+
+                  {/* Rear Tire for motorcycles */}
+                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
+                          <select name="summerRearWidth" value={formData.summerRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
+                          <select name="summerRearAspectRatio" value={formData.summerRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
+                          <select name="summerRearDiameter" value={formData.summerRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Wählen</option>
+                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
+                          <select name="summerRearLoadIndex" value={formData.summerRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
+                          <select name="summerRearSpeedRating" value={formData.summerRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Optional</option>
+                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1437,8 +1505,24 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
               {formData.hasSummerTires && (
                 <div className="ml-8 space-y-4">
-                  {formData.summerDifferentSizes && (
-                    <h4 className="text-md font-medium text-gray-800">Vorderreifen</h4>
+                  {formData.vehicleType === 'MOTORCYCLE' && (
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="checkbox"
+                        id="summerDifferentSizesAdd"
+                        name="summerDifferentSizes"
+                        checked={formData.summerDifferentSizes}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="summerDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                        Unterschiedliche Vorder- und Hinterreifen
+                      </label>
+                    </div>
+                  )}
+
+                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
                   )}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
@@ -1478,23 +1562,9 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="summerDifferentSizes"
-                      name="summerDifferentSizes"
-                      checked={formData.summerDifferentSizes}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                      Unterschiedliche Größen vorne/hinten (Mischbereifung)
-                    </label>
-                  </div>
-
-                  {formData.summerDifferentSizes && (
-                    <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-800">Hinterreifen</h4>
+                  {formData.vehicleType === 'MOTORCYCLE' && formData.summerDifferentSizes && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>

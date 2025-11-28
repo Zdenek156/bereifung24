@@ -75,7 +75,7 @@ interface WorkshopService {
   balancingPrice: number | null
   storagePrice: number | null
   storageAvailable: boolean | null
-  packages?: ServicePackage[]
+  servicePackages?: ServicePackage[]
 }
 
 interface ServicePackage {
@@ -186,14 +186,12 @@ export default function BrowseRequestsPage() {
       isClimate,
       isOtherService
     })
-    console.log('Available services:', services.map(s => ({ 
-      type: s.serviceType, 
-      price: s.basePrice, 
-      duration: s.durationMinutes,
-      packages: s.packages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
-    })))
-    
-    // Finde passenden Service basierend auf Anfragetyp
+        console.log('Available services:', services.map(s => ({
+          type: s.serviceType,
+          price: s.basePrice,
+          duration: s.durationMinutes,
+          servicePackages: s.servicePackages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
+        })))    // Finde passenden Service basierend auf Anfragetyp
     let service: WorkshopService | undefined
     
     if (isMotorcycle) {
@@ -220,7 +218,7 @@ export default function BrowseRequestsPage() {
       type: service.serviceType, 
       price: service.basePrice, 
       duration: service.durationMinutes,
-      packages: service.packages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
+      servicePackages: service.servicePackages?.map(p => ({ name: p.name, price: p.price, duration: p.durationMinutes }))
     } : 'None')
     
     let calculatedInstallation = ''
@@ -240,24 +238,24 @@ export default function BrowseRequestsPage() {
         let installation = 0
         let duration = 60
         
-        if (service.packages && service.packages.length > 0) {
+        if (service.servicePackages && service.servicePackages.length > 0) {
           // Finde passendes Paket
           let selectedPackage
           
           if (needsFront && needsRear) {
             // Beide Reifen - suche "Beide" Paket
-            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('beide'))
+            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('beide'))
           } else if (needsFront) {
             // Nur Vorderrad
-            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('vorderrad') && !p.name.toLowerCase().includes('entsorgung'))
+            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('vorderrad') && !p.name.toLowerCase().includes('entsorgung'))
           } else if (needsRear) {
             // Nur Hinterrad
-            selectedPackage = service.packages.find(p => p.name.toLowerCase().includes('hinterrad') && !p.name.toLowerCase().includes('entsorgung'))
+            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('hinterrad') && !p.name.toLowerCase().includes('entsorgung'))
           }
           
           // Fallback auf erstes Paket wenn nichts gefunden
-          if (!selectedPackage && service.packages.length > 0) {
-            selectedPackage = service.packages[0]
+          if (!selectedPackage && service.servicePackages.length > 0) {
+            selectedPackage = service.servicePackages[0]
           }
           
           if (selectedPackage) {

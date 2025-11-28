@@ -388,7 +388,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     summerRearDiameter: vehicle.summerTires?.rearDiameter?.toString() || '',
     summerRearLoadIndex: vehicle.summerTires?.rearLoadIndex?.toString() || '',
     summerRearSpeedRating: vehicle.summerTires?.rearSpeedRating || '',
-    // Winter Tires
+    // Winter Tires (not used for motorcycles)
     hasWinterTires: !!vehicle.winterTires,
     winterDifferentSizes: vehicle.winterTires?.hasDifferentSizes || false,
     winterWidth: vehicle.winterTires?.width.toString() || '',
@@ -401,7 +401,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     winterRearDiameter: vehicle.winterTires?.rearDiameter?.toString() || '',
     winterRearLoadIndex: vehicle.winterTires?.rearLoadIndex?.toString() || '',
     winterRearSpeedRating: vehicle.winterTires?.rearSpeedRating || '',
-    // All Season Tires
+    // All Season Tires (not used for motorcycles)
     hasAllSeasonTires: !!vehicle.allSeasonTires,
     allSeasonDifferentSizes: vehicle.allSeasonTires?.hasDifferentSizes || false,
     allSeasonWidth: vehicle.allSeasonTires?.width.toString() || '',
@@ -799,8 +799,8 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label htmlFor="hasSummerTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="text-2xl mr-2">☀️</span>
-                  Sommerreifen
+                  <span className="text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                  {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
               </div>
 

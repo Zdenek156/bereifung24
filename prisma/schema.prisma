@@ -291,6 +291,11 @@ model Vehicle {
   inspectionReminder     Boolean   @default(false)
   inspectionReminderDays Int?      @default(30) // Days before inspection to send reminder
 
+  // Tire Sizes (stored as JSON)
+  summerTires     String? // JSON string with tire dimensions
+  winterTires     String? // JSON string with tire dimensions
+  allSeasonTires  String? // JSON string with tire dimensions
+
   // Current Tires
   currentTires VehicleTire[]
   tireHistory  TireHistory[]

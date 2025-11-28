@@ -27,6 +27,7 @@ type Vehicle = {
   make: string
   model: string
   year: number
+  vehicleType?: string
   summerTires?: { 
     width: number
     aspectRatio: number
@@ -110,7 +111,11 @@ export default function CreateRequestPage() {
     if (status === 'authenticated') {
       fetch('/api/vehicles')
         .then(res => res.json())
-        .then(data => setVehicles(data))
+        .then(data => {
+          // Filter only cars for tire requests
+          const cars = data.filter((v: Vehicle) => v.vehicleType === 'CAR' || !v.vehicleType)
+          setVehicles(cars)
+        })
         .catch(err => console.error('Fehler beim Laden der Fahrzeuge:', err))
       
       fetch('/api/user/profile')

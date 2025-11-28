@@ -150,7 +150,6 @@ export async function GET(req: NextRequest) {
             console.error('Error parsing allSeasonTires:', e)
           }
         }
-        }
 
         return result
       } catch (itemError) {

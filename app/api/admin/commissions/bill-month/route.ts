@@ -121,8 +121,9 @@ export async function POST(request: Request) {
               data: {
                 workshopId: workshop.id,
                 bookingId: booking.id,
-                amount: bookingCommission.commissionGross,
+                orderTotal: booking.offer?.price || 0,
                 commissionRate: 4.9,
+                commissionAmount: bookingCommission.commissionGross,
                 netAmount: bookingCommission.commissionNet,
                 grossAmount: bookingCommission.commissionGross,
                 taxAmount: bookingCommission.taxAmount,
@@ -132,8 +133,7 @@ export async function POST(request: Request) {
                 billingPeriodEnd: billingEnd,
                 billingMonth: month,
                 billingYear: year,
-                invoiceNumber,
-                description: `Provision ${booking.tireRequest?.season ? `${booking.tireRequest.season} ${booking.tireRequest.width}/${booking.tireRequest.aspectRatio}R${booking.tireRequest.diameter}` : 'Reifenservice'} - ${year}/${month.toString().padStart(2, '0')}`
+                invoiceNumber
               }
             })
           })

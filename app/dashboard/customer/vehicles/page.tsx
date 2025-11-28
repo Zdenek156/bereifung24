@@ -477,15 +477,16 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
         return
       }
 
-      // Prüfe ob mindestens ein Reifentyp ausgewählt ist
-      if (!formData.hasSummerTires && !formData.hasWinterTires && !formData.hasAllSeasonTires) {
+      // Prüfe ob mindestens ein Reifentyp ausgewählt ist (für Motorräder sind Reifengrößen immer aktiv)
+      const hasSummerTiresSelected = formData.vehicleType === 'MOTORCYCLE' || formData.hasSummerTires
+      if (!hasSummerTiresSelected && !formData.hasWinterTires && !formData.hasAllSeasonTires) {
         alert('Bitte mindestens einen Reifentyp auswählen')
         setLoading(false)
         return
       }
 
       // Validierung Sommerreifen
-      if (formData.hasSummerTires) {
+      if (hasSummerTiresSelected) {
         if (!formData.summerWidth || !formData.summerAspectRatio || !formData.summerDiameter) {
           alert('Bitte alle Dimensionen für Sommerreifen angeben')
           setLoading(false)
@@ -540,7 +541,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
         licensePlate: formData.licensePlate || undefined,
       }
 
-      if (formData.hasSummerTires && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter) {
+      if (hasSummerTiresSelected && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter) {
         payload.summerTires = {
           width: parseInt(formData.summerWidth),
           aspectRatio: parseInt(formData.summerAspectRatio),
@@ -586,6 +587,11 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
           rearLoadIndex: formData.allSeasonDifferentSizes && formData.allSeasonRearLoadIndex ? parseInt(formData.allSeasonRearLoadIndex) : undefined,
           rearSpeedRating: formData.allSeasonDifferentSizes && formData.allSeasonRearSpeedRating ? formData.allSeasonRearSpeedRating : undefined,
         }
+      }
+
+      // For motorcycles, ensure hasSummerTires is set if tire data exists
+      if (formData.vehicleType === 'MOTORCYCLE' && (formData.summerWidth || formData.summerAspectRatio || formData.summerDiameter)) {
+        payload.hasSummerTires = true
       }
 
       // Add VIN and inspection fields
@@ -1306,15 +1312,16 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
         return
       }
 
-      // Prüfe ob mindestens ein Reifentyp ausgewählt ist
-      if (!formData.hasSummerTires && !formData.hasWinterTires && !formData.hasAllSeasonTires) {
+      // Prüfe ob mindestens ein Reifentyp ausgewählt ist (für Motorräder sind Reifengrößen immer aktiv)
+      const hasSummerTiresSelected = formData.vehicleType === 'MOTORCYCLE' || formData.hasSummerTires
+      if (!hasSummerTiresSelected && !formData.hasWinterTires && !formData.hasAllSeasonTires) {
         alert('Bitte mindestens einen Reifentyp auswählen')
         setLoading(false)
         return
       }
 
       // Validierung Sommerreifen
-      if (formData.hasSummerTires) {
+      if (hasSummerTiresSelected) {
         if (!formData.summerWidth || !formData.summerAspectRatio || !formData.summerDiameter) {
           alert('Bitte alle Dimensionen für Sommerreifen angeben')
           setLoading(false)
@@ -1368,7 +1375,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
         licensePlate: formData.licensePlate || undefined,
       }
 
-      if (formData.hasSummerTires && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter) {
+      if (hasSummerTiresSelected && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter) {
         payload.summerTires = {
           width: parseInt(formData.summerWidth),
           aspectRatio: parseInt(formData.summerAspectRatio),
@@ -1418,6 +1425,11 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
       // Add vehicle type
       payload.vehicleType = formData.vehicleType
+
+      // For motorcycles, ensure hasSummerTires is set if tire data exists
+      if (formData.vehicleType === 'MOTORCYCLE' && (formData.summerWidth || formData.summerAspectRatio || formData.summerDiameter)) {
+        payload.hasSummerTires = true
+      }
 
       // Add VIN and inspection fields
       if (formData.vin) {

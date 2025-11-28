@@ -166,6 +166,19 @@ export default function BrowseRequestsPage() {
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
     const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
     
+    console.log('Request additionalNotes:', request.additionalNotes)
+    console.log('Service detection:', {
+      isMotorcycle,
+      isWheelChange,
+      isRepair,
+      isAlignment,
+      isBrakes,
+      isBattery,
+      isClimate,
+      isOtherService
+    })
+    console.log('Available services:', services.map(s => ({ type: s.serviceType, price: s.basePrice, duration: s.durationMinutes })))
+    
     // Finde passenden Service basierend auf Anfragetyp
     let service: WorkshopService | undefined
     
@@ -188,6 +201,8 @@ export default function BrowseRequestsPage() {
     } else {
       service = services.find(s => s.serviceType === 'TIRE_CHANGE')
     }
+    
+    console.log('Found service:', service ? { type: service.serviceType, price: service.basePrice, duration: service.durationMinutes } : 'None')
     
     let calculatedInstallation = ''
     let calculatedDuration = ''

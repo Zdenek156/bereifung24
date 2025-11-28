@@ -60,6 +60,11 @@ export async function GET() {
       
       // Notifications
       emailNotifyRequests: user.workshop.emailNotifyRequests,
+      emailNotifyOfferAccepted: user.workshop.emailNotifyOfferAccepted,
+      emailNotifyBookings: user.workshop.emailNotifyBookings,
+      emailNotifyReviews: user.workshop.emailNotifyReviews,
+      emailNotifyReminders: user.workshop.emailNotifyReminders,
+      emailNotifyCommissions: user.workshop.emailNotifyCommissions,
       
       // Calendar Settings
       calendarMode: user.workshop.calendarMode,
@@ -119,6 +124,11 @@ export async function PATCH(request: Request) {
       
       // Notifications
       emailNotifyRequests,
+      emailNotifyOfferAccepted,
+      emailNotifyBookings,
+      emailNotifyReviews,
+      emailNotifyReminders,
+      emailNotifyCommissions,
     } = body
 
     // Update user data
@@ -147,6 +157,11 @@ export async function PATCH(request: Request) {
         accountHolder,
         paymentMethods,
         emailNotifyRequests,
+        emailNotifyOfferAccepted,
+        emailNotifyBookings,
+        emailNotifyReviews,
+        emailNotifyReminders,
+        emailNotifyCommissions,
         // Update SEPA mandate date if IBAN changed
         ...(iban && iban !== body.oldIban ? { sepaMandateDate: new Date() } : {}),
       },

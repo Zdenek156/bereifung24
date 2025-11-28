@@ -25,6 +25,11 @@ interface WorkshopProfile {
   sepaMandateRef: string | null
   sepaMandateDate: string | null
   emailNotifyRequests: boolean
+  emailNotifyOfferAccepted: boolean
+  emailNotifyBookings: boolean
+  emailNotifyReviews: boolean
+  emailNotifyReminders: boolean
+  emailNotifyCommissions: boolean
   paymentMethods?: {
     cash: boolean
     ecCard: boolean
@@ -87,6 +92,11 @@ export default function WorkshopSettings() {
     iban: '',
     accountHolder: '',
     emailNotifyRequests: true,
+    emailNotifyOfferAccepted: true,
+    emailNotifyBookings: true,
+    emailNotifyReviews: true,
+    emailNotifyReminders: true,
+    emailNotifyCommissions: true,
   })
 
   const [paymentMethods, setPaymentMethods] = useState({
@@ -189,6 +199,11 @@ export default function WorkshopSettings() {
           iban: data.iban || '',
           accountHolder: data.accountHolder || '',
           emailNotifyRequests: data.emailNotifyRequests ?? true,
+          emailNotifyOfferAccepted: data.emailNotifyOfferAccepted ?? true,
+          emailNotifyBookings: data.emailNotifyBookings ?? true,
+          emailNotifyReviews: data.emailNotifyReviews ?? true,
+          emailNotifyReminders: data.emailNotifyReminders ?? true,
+          emailNotifyCommissions: data.emailNotifyCommissions ?? true,
         })
         
         // Set calendar mode and connection status
@@ -1014,26 +1029,166 @@ export default function WorkshopSettings() {
           {/* Tab: Benachrichtigungen */}
           {activeTab === 'notifications' && (
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail-Benachrichtigungen</h2>
-            
-            <div>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.emailNotifyRequests}
-                  onChange={(e) => setFormData({ ...formData, emailNotifyRequests: e.target.checked })}
-                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <div>
-                  <span className="block text-sm font-medium text-gray-900">
-                    Anfragen-Benachrichtigungen
-                  </span>
-                  <span className="block text-sm text-gray-600">
-                    Ich möchte per E-Mail benachrichtigt werden, wenn ein Kunde eine neue Reifenafrage in meinem Umkreis erstellt
-                  </span>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail-Benachrichtigungen</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Verwalten Sie hier, für welche Ereignisse Sie E-Mail-Benachrichtigungen erhalten möchten.
+              </p>
+              
+              <div className="space-y-6">
+                {/* Neue Anfragen */}
+                <div className="border-b border-gray-200 pb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyRequests}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyRequests: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">📬</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Neue Anfragen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Benachrichtigung erhalten, wenn ein Kunde eine neue Reifenanfrage in Ihrem Umkreis erstellt
+                      </span>
+                    </div>
+                  </label>
                 </div>
-              </label>
-            </div>
+
+                {/* Angebot angenommen */}
+                <div className="border-b border-gray-200 pb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyOfferAccepted}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyOfferAccepted: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">✅</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Angebot angenommen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Benachrichtigung erhalten, wenn ein Kunde eines Ihrer Angebote annimmt
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Neue Terminbuchungen */}
+                <div className="border-b border-gray-200 pb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyBookings}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyBookings: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">📅</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Neue Terminbuchungen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Benachrichtigung erhalten, wenn ein Kunde einen Termin bei Ihnen bucht
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Neue Bewertungen */}
+                <div className="border-b border-gray-200 pb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyReviews}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyReviews: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">⭐</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Neue Bewertungen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Benachrichtigung erhalten, wenn ein Kunde eine Bewertung für Ihre Werkstatt abgibt
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Terminerinnerungen */}
+                <div className="border-b border-gray-200 pb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyReminders}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyReminders: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">⏰</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Terminerinnerungen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Erinnerung am Tag vor dem Termin erhalten (24 Stunden im Voraus)
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Provisionsabrechnungen */}
+                <div className="pb-2">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.emailNotifyCommissions}
+                      onChange={(e) => setFormData({ ...formData, emailNotifyCommissions: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">💰</span>
+                        <span className="block text-base font-semibold text-gray-900">
+                          Monatliche Provisionsabrechnungen
+                        </span>
+                      </div>
+                      <span className="block text-sm text-gray-600 mt-1">
+                        Monatliche Übersicht über fällige Provisionen und Abrechnungsdetails erhalten
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex">
+                    <svg className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-blue-900 font-medium">Hinweis zu E-Mail-Benachrichtigungen</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Wichtige System-E-Mails (z.B. Passwort-Reset, Sicherheitsmeldungen) werden unabhängig von diesen Einstellungen immer versendet.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

@@ -35,6 +35,12 @@ type Vehicle = {
     diameter: number
     loadIndex?: number
     speedRating?: string
+    hasDifferentSizes?: boolean
+    rearWidth?: number
+    rearAspectRatio?: number
+    rearDiameter?: number
+    rearLoadIndex?: number
+    rearSpeedRating?: string
   }
 }
 
@@ -109,6 +115,23 @@ export default function MotorcycleTiresPage() {
 
     // Pre-fill tire dimensions if available
     if (vehicle.summerTires) {
+      const hasDifferentSizes = vehicle.summerTires.hasDifferentSizes
+      const rearWidth = hasDifferentSizes && vehicle.summerTires.rearWidth 
+        ? vehicle.summerTires.rearWidth.toString() 
+        : vehicle.summerTires.width.toString()
+      const rearAspectRatio = hasDifferentSizes && vehicle.summerTires.rearAspectRatio 
+        ? vehicle.summerTires.rearAspectRatio.toString() 
+        : vehicle.summerTires.aspectRatio.toString()
+      const rearDiameter = hasDifferentSizes && vehicle.summerTires.rearDiameter 
+        ? vehicle.summerTires.rearDiameter.toString() 
+        : vehicle.summerTires.diameter.toString()
+      const rearLoadIndex = hasDifferentSizes && vehicle.summerTires.rearLoadIndex 
+        ? vehicle.summerTires.rearLoadIndex.toString() 
+        : (vehicle.summerTires.loadIndex?.toString() || '')
+      const rearSpeedRating = hasDifferentSizes && vehicle.summerTires.rearSpeedRating 
+        ? vehicle.summerTires.rearSpeedRating 
+        : (vehicle.summerTires.speedRating || '')
+
       setFormData(prev => ({
         ...prev,
         frontWidth: vehicle.summerTires!.width.toString(),
@@ -116,12 +139,12 @@ export default function MotorcycleTiresPage() {
         frontDiameter: vehicle.summerTires!.diameter.toString(),
         frontLoadIndex: vehicle.summerTires!.loadIndex?.toString() || '',
         frontSpeedRating: vehicle.summerTires!.speedRating || '',
-        // For motorcycles, assume same dimensions for rear if not specified
-        rearWidth: vehicle.summerTires!.width.toString(),
-        rearAspectRatio: vehicle.summerTires!.aspectRatio.toString(),
-        rearDiameter: vehicle.summerTires!.diameter.toString(),
-        rearLoadIndex: vehicle.summerTires!.loadIndex?.toString() || '',
-        rearSpeedRating: vehicle.summerTires!.speedRating || '',
+        // Use rear-specific dimensions if available, otherwise use front dimensions
+        rearWidth,
+        rearAspectRatio,
+        rearDiameter,
+        rearLoadIndex,
+        rearSpeedRating,
       }))
     }
   }

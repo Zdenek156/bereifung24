@@ -74,7 +74,8 @@ export default function MotorcycleTiresPage() {
     rearLoadIndex: '',
     rearSpeedRating: '',
     
-    season: 'SUMMER' as 'SUMMER' | 'SPORT' | 'TOURING' | 'OFF_ROAD',
+    season: 'SUMMER' as 'SUMMER' | 'WINTER' | 'ALL_SEASON',
+    tireType: 'STANDARD' as 'STANDARD' | 'SPORT' | 'TOURING' | 'OFF_ROAD',
     quantity: 'BOTH' as 'FRONT' | 'REAR' | 'BOTH',
     tireQuality: 'QUALITY' as 'QUALITY' | 'BUDGET',
     tireDisposal: true,
@@ -131,10 +132,23 @@ export default function MotorcycleTiresPage() {
 
     console.log('Selected vehicle:', vehicle)
 
-    // Determine which tire data to use (prefer summer, then winter, then all-season)
-    const tireData = vehicle.summerTires || vehicle.winterTires || vehicle.allSeasonTires
+    // Determine which tire data to use based on available data
+    // Priority: summer -> winter -> all-season
+    let tireData = vehicle.summerTires || vehicle.winterTires || vehicle.allSeasonTires
+    let detectedSeason: 'SUMMER' | 'WINTER' | 'ALL_SEASON' = 'SUMMER'
+    
+    if (vehicle.summerTires) {
+      tireData = vehicle.summerTires
+      detectedSeason = 'SUMMER'
+    } else if (vehicle.winterTires) {
+      tireData = vehicle.winterTires
+      detectedSeason = 'WINTER'
+    } else if (vehicle.allSeasonTires) {
+      tireData = vehicle.allSeasonTires
+      detectedSeason = 'ALL_SEASON'
+    }
 
-    console.log('Tire data:', tireData)
+    console.log('Tire data:', tireData, 'Detected season:', detectedSeason)
 
     // Pre-fill tire dimensions if available
     if (tireData) {
@@ -160,6 +174,7 @@ export default function MotorcycleTiresPage() {
         ...prev,
         motorcycleMake: vehicle.make,
         motorcycleModel: vehicle.model,
+        season: detectedSeason,
         frontWidth: tireData.width.toString(),
         frontAspectRatio: tireData.aspectRatio.toString(),
         frontDiameter: tireData.diameter.toString(),
@@ -218,6 +233,7 @@ export default function MotorcycleTiresPage() {
         motorcycleMake: formData.motorcycleMake,
         motorcycleModel: formData.motorcycleModel,
         season: formData.season,
+        tireType: formData.tireType,
         needsFrontTire: formData.quantity === 'FRONT' || formData.quantity === 'BOTH',
         needsRearTire: formData.quantity === 'REAR' || formData.quantity === 'BOTH',
         frontTire: (formData.quantity === 'FRONT' || formData.quantity === 'BOTH') ? {
@@ -601,10 +617,10 @@ export default function MotorcycleTiresPage() {
             </div>
           )}
 
-          {/* Reifentyp */}
+          {/* Saison */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Reifentyp</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Saison</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                 formData.season === 'SUMMER' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
@@ -616,19 +632,70 @@ export default function MotorcycleTiresPage() {
                   onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">☀️ Standard</p>
-                <p className="text-xs text-gray-600 text-center">Allround</p>
+                <p className="font-semibold text-gray-900">☀️ Sommerreifen</p>
+                <p className="text-xs text-gray-600 text-center">Für warme Monate</p>
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.season === 'SPORT' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.season === 'WINTER' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
                   name="season"
-                  value="SPORT"
-                  checked={formData.season === 'SPORT'}
+                  value="WINTER"
+                  checked={formData.season === 'WINTER'}
                   onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
+                  className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                />
+                <p className="font-semibold text-gray-900">❄️ Winterreifen</p>
+                <p className="text-xs text-gray-600 text-center">Für kalte Monate</p>
+              </label>
+
+              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                formData.season === 'ALL_SEASON' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="season"
+                  value="ALL_SEASON"
+                  checked={formData.season === 'ALL_SEASON'}
+                  onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
+                  className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                />
+                <p className="font-semibold text-gray-900">🌤️ Ganzjahresreifen</p>
+                <p className="text-xs text-gray-600 text-center">Ganzjährig</p>
+              </label>
+            </div>
+          </div>
+
+          {/* Reifentyp */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Reifentyp</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                formData.tireType === 'STANDARD' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="tireType"
+                  value="STANDARD"
+                  checked={formData.tireType === 'STANDARD'}
+                  onChange={(e) => setFormData({ ...formData, tireType: e.target.value as any })}
+                  className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                />
+                <p className="font-semibold text-gray-900">🏍️ Standard</p>
+                <p className="text-xs text-gray-600 text-center">Allround</p>
+              </label>
+
+              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                formData.tireType === 'SPORT' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="tireType"
+                  value="SPORT"
+                  checked={formData.tireType === 'SPORT'}
+                  onChange={(e) => setFormData({ ...formData, tireType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
                 <p className="font-semibold text-gray-900">🏁 Sport</p>
@@ -636,14 +703,14 @@ export default function MotorcycleTiresPage() {
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.season === 'TOURING' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.tireType === 'TOURING' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="season"
+                  name="tireType"
                   value="TOURING"
-                  checked={formData.season === 'TOURING'}
-                  onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
+                  checked={formData.tireType === 'TOURING'}
+                  onChange={(e) => setFormData({ ...formData, tireType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
                 <p className="font-semibold text-gray-900">🛣️ Touring</p>
@@ -651,14 +718,14 @@ export default function MotorcycleTiresPage() {
               </label>
 
               <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.season === 'OFF_ROAD' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                formData.tireType === 'OFF_ROAD' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
-                  name="season"
+                  name="tireType"
                   value="OFF_ROAD"
-                  checked={formData.season === 'OFF_ROAD'}
-                  onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
+                  checked={formData.tireType === 'OFF_ROAD'}
+                  onChange={(e) => setFormData({ ...formData, tireType: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
                 <p className="font-semibold text-gray-900">🏔️ Off-Road</p>

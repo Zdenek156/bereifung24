@@ -370,7 +370,7 @@ export default function RequestDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Ihre Anfrage</h2>
               
               <div className="space-y-4">
-                {serviceType !== 'TIRE_CHANGE' ? (
+                {serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE' ? (
                   // Service request (wheel change, repair, etc.)
                   <>
                     <div>
@@ -386,7 +386,7 @@ export default function RequestDetailPage() {
                     )}
                   </>
                 ) : (
-                  // Regular tire request
+                  // Regular tire request or motorcycle
                   <>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Reifentyp</p>

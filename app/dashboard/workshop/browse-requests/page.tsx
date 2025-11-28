@@ -411,25 +411,72 @@ export default function BrowseRequestsPage() {
                 (new Date(request.needByDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
               )
 
+              // Detect service type from additionalNotes
+              const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
+              const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
+              const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+              const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+              const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
+              const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
+              const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
+              const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
+
+              // Extract tire dimensions for motorcycle
+              let frontTireSize = ''
+              let rearTireSize = ''
+              if (isMotorcycle && request.additionalNotes) {
+                const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*([\d\/]+\s*R\d+[^\n]*)/)
+                const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*([\d\/]+\s*R\d+[^\n]*)/)
+                if (frontMatch) frontTireSize = frontMatch[1].trim()
+                if (rearMatch) rearTireSize = rearMatch[1].trim()
+              }
+
               return (
                 <div key={request.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                          {isMotorcycle ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🏍️ Motorradreifen
+                            </h3>
+                          ) : isWheelChange ? (
                             <h3 className="text-xl font-bold text-primary-600">
                               🔄 Räder umstecken
                             </h3>
+                          ) : isRepair ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🔧 Reparatur
+                            </h3>
+                          ) : isAlignment ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              ⚙️ Achsvermessung
+                            </h3>
+                          ) : isOtherService ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🛠️ Sonstige Dienstleistung
+                            </h3>
+                          ) : isBrakes ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🔴 Bremsenwechsel
+                            </h3>
+                          ) : isBattery ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🔋 Batteriewechsel
+                            </h3>
+                          ) : isClimate ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              ❄️ Klimaservice
+                            </h3>
                           ) : (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🚗 Autoreifen mit Montage
+                            </h3>
+                          )}
+                          
+                          {!isWheelChange && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && (
                             <>
-                              <h3 className="text-xl font-bold text-primary-600">
-                                🚗 Autoreifen mit Montage {' '}
-                                {request.season === 'SUMMER' && '☀️ '}
-                                {request.season === 'WINTER' && '❄️ '}
-                                {request.season === 'ALL_SEASON' && '🌤️ '}
-                                {request.width}/{request.aspectRatio} R{request.diameter}
-                              </h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 request.season === 'SUMMER' ? 'bg-yellow-100 text-yellow-800' :
                                 request.season === 'WINTER' ? 'bg-blue-100 text-blue-800' :
@@ -445,17 +492,35 @@ export default function BrowseRequestsPage() {
                             </>
                           )}
                         </div>
-                        {request.width !== 0 && (
+
+                        {/* Tire dimensions below title */}
+                        {isMotorcycle ? (
+                          <div className="text-sm text-gray-600 mb-2">
+                            {frontTireSize && rearTireSize ? (
+                              <p>Vorne: {frontTireSize} • Hinten: {rearTireSize}</p>
+                            ) : frontTireSize ? (
+                              <p>Vorderreifen: {frontTireSize}</p>
+                            ) : rearTireSize ? (
+                              <p>Hinterreifen: {rearTireSize}</p>
+                            ) : null}
+                          </div>
+                        ) : !isWheelChange && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && request.width > 0 ? (
+                          <div className="text-sm text-gray-600 mb-2">
+                            <p>
+                              {request.season === 'SUMMER' && '☀️ '}
+                              {request.season === 'WINTER' && '❄️ '}
+                              {request.season === 'ALL_SEASON' && '🌤️ '}
+                              {request.width}/{request.aspectRatio} R{request.diameter}
+                              {request.loadIndex && request.speedRating && ` ${request.loadIndex}${request.speedRating}`}
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {!isWheelChange && request.width !== 0 && !isMotorcycle && (
                           <div className="text-sm text-gray-600 space-y-1">
                             <p>
                               <span className="font-medium">Menge:</span> {request.quantity} Reifen
                             </p>
-                            {request.loadIndex && (
-                              <p>
-                                <span className="font-medium">Tragfähigkeit:</span> {request.loadIndex}
-                                {request.speedRating && ` ${request.speedRating}`}
-                              </p>
-                            )}
                             {request.preferredBrands && (
                               <p>
                                 <span className="font-medium">Bevorzugte Marken:</span> {request.preferredBrands}

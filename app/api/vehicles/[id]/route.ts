@@ -6,16 +6,16 @@ import { z } from 'zod'
 
 // Validation Schema
 const tireSpecSchema = z.object({
-  width: z.number().min(80).max(395), // Allow motorcycle widths starting at 80
-  aspectRatio: z.number().min(25).max(90), // Allow motorcycle ratios up to 90
-  diameter: z.number().min(10).max(24), // Allow motorcycle diameters from 10
-  loadIndex: z.number().min(50).max(120).optional(),
+  width: z.number().min(70).max(400), // Motorcycle: 70mm (mini scooters) to 400mm (extreme cruisers)
+  aspectRatio: z.number().min(25).max(90), // Motorcycle: 25% (race) to 90% (enduro/vintage)
+  diameter: z.number().min(8).max(26), // Motorcycle: 8" (mini) to 26" (extreme enduro)
+  loadIndex: z.number().min(30).max(150).optional(), // Extended range for motorcycles
   speedRating: z.string().optional(),
   hasDifferentSizes: z.boolean().optional(),
-  rearWidth: z.number().min(80).max(395).optional(),
+  rearWidth: z.number().min(70).max(400).optional(),
   rearAspectRatio: z.number().min(25).max(90).optional(),
-  rearDiameter: z.number().min(10).max(24).optional(),
-  rearLoadIndex: z.number().min(50).max(120).optional(),
+  rearDiameter: z.number().min(8).max(26).optional(),
+  rearLoadIndex: z.number().min(30).max(150).optional(),
   rearSpeedRating: z.string().optional(),
 })
 

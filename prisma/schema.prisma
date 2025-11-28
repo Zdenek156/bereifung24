@@ -139,7 +139,12 @@ model Workshop {
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
 
   // Email Notifications
-  emailNotifyRequests Boolean @default(true) // Benachrichtigung bei neuen Anfragen im Umkreis
+  emailNotifyRequests      Boolean @default(true) @map("email_notify_requests") // Benachrichtigung bei neuen Anfragen im Umkreis
+  emailNotifyOfferAccepted Boolean @default(true) @map("email_notify_offer_accepted") // Benachrichtigung wenn Angebot angenommen wurde
+  emailNotifyBookings      Boolean @default(true) @map("email_notify_bookings") // Benachrichtigung bei neuen Terminbuchungen
+  emailNotifyReviews       Boolean @default(true) @map("email_notify_reviews") // Benachrichtigung bei neuen Bewertungen
+  emailNotifyReminders     Boolean @default(true) @map("email_notify_reminders") // Terminserinnerungen
+  emailNotifyCommissions   Boolean @default(true) @map("email_notify_commissions") // Monatliche Provisionsabrechnungen
 
   // Calendar Integration
   calendarMode       String?   @default("workshop") @map("calendarmode") // "workshop" or "employees"

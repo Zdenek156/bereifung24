@@ -6,15 +6,15 @@ import { z } from 'zod'
 
 // Validation Schema
 const tireSpecSchema = z.object({
-  width: z.number().min(135).max(395),
-  aspectRatio: z.number().min(25).max(85),
-  diameter: z.number().min(13).max(24),
+  width: z.number().min(80).max(395), // Allow motorcycle widths starting at 80
+  aspectRatio: z.number().min(25).max(90), // Allow motorcycle ratios up to 90
+  diameter: z.number().min(10).max(24), // Allow motorcycle diameters from 10
   loadIndex: z.number().min(50).max(120).optional(),
   speedRating: z.string().optional(),
   hasDifferentSizes: z.boolean().optional(),
-  rearWidth: z.number().min(135).max(395).optional(),
-  rearAspectRatio: z.number().min(25).max(85).optional(),
-  rearDiameter: z.number().min(13).max(24).optional(),
+  rearWidth: z.number().min(80).max(395).optional(),
+  rearAspectRatio: z.number().min(25).max(90).optional(),
+  rearDiameter: z.number().min(10).max(24).optional(),
   rearLoadIndex: z.number().min(50).max(120).optional(),
   rearSpeedRating: z.string().optional(),
 })
@@ -100,16 +100,18 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Check if vin field contains JSON tire data or actual VIN
+        // Handle VIN - check if it's actual VIN or legacy tire data
         if (vehicle.vin) {
           try {
-            // Try to parse as JSON (tire data)
+            // Try to parse as JSON (legacy tire data)
             const tireData = JSON.parse(vehicle.vin)
             if (tireData.summerTires || tireData.winterTires || tireData.allSeasonTires) {
-              // It's tire data
-              result.summerTires = tireData.summerTires
-              result.winterTires = tireData.winterTires
-              result.allSeasonTires = tireData.allSeasonTires
+              // It's legacy tire data - use it only if no dedicated tire columns exist
+              if (!vehicle.summerTires && !vehicle.winterTires && !vehicle.allSeasonTires) {
+                result.summerTires = tireData.summerTires
+                result.winterTires = tireData.winterTires
+                result.allSeasonTires = tireData.allSeasonTires
+              }
             } else {
               // Empty JSON, treat as no VIN
               result.vin = null
@@ -118,6 +120,36 @@ export async function GET(req: NextRequest) {
             // Not JSON, must be actual VIN string
             result.vin = vehicle.vin
           }
+        }
+        
+        // Use dedicated tire columns if they exist
+        if (vehicle.summerTires) {
+          try {
+            result.summerTires = typeof vehicle.summerTires === 'string' 
+              ? JSON.parse(vehicle.summerTires) 
+              : vehicle.summerTires
+          } catch (e) {
+            console.error('Error parsing summerTires:', e)
+          }
+        }
+        if (vehicle.winterTires) {
+          try {
+            result.winterTires = typeof vehicle.winterTires === 'string' 
+              ? JSON.parse(vehicle.winterTires) 
+              : vehicle.winterTires
+          } catch (e) {
+            console.error('Error parsing winterTires:', e)
+          }
+        }
+        if (vehicle.allSeasonTires) {
+          try {
+            result.allSeasonTires = typeof vehicle.allSeasonTires === 'string' 
+              ? JSON.parse(vehicle.allSeasonTires) 
+              : vehicle.allSeasonTires
+          } catch (e) {
+            console.error('Error parsing allSeasonTires:', e)
+          }
+        }
         }
 
         return result
@@ -174,12 +206,6 @@ export async function POST(req: NextRequest) {
     const validated = vehicleSchema.parse(body)
     console.log('POST /api/vehicles - Validated data:', JSON.stringify(validated, null, 2))
 
-    // Store tire data as JSON in a separate field (will be migrated later)
-    const tireData: any = {}
-    if (validated.summerTires) tireData.summerTires = validated.summerTires
-    if (validated.winterTires) tireData.winterTires = validated.winterTires
-    if (validated.allSeasonTires) tireData.allSeasonTires = validated.allSeasonTires
-
     // Parse inspection date - handle both YYYY-MM and YYYY-MM-DD formats
     let inspectionDate = null
     if (validated.nextInspectionDate) {
@@ -202,20 +228,21 @@ export async function POST(req: NextRequest) {
       model: validated.model,
       year: validated.year,
       licensePlate: validated.licensePlate || null,
+      vin: validated.vin && validated.vin.trim().length > 0 ? validated.vin.trim() : null,
       nextInspectionDate: inspectionDate,
       inspectionReminder: validated.inspectionReminder || false,
       inspectionReminderDays: validated.inspectionReminderDays || 30,
     }
 
-    // Only set VIN if provided and not empty
-    if (validated.vin && validated.vin.trim().length > 0) {
-      vehicleData.vin = validated.vin.trim()
-    } else {
-      // Store tire data as JSON if VIN not provided
-      const hasTireData = Object.keys(tireData).length > 0
-      if (hasTireData) {
-        vehicleData.vin = JSON.stringify(tireData)
-      }
+    // Store tire data in dedicated columns
+    if (validated.summerTires) {
+      vehicleData.summerTires = JSON.stringify(validated.summerTires)
+    }
+    if (validated.winterTires) {
+      vehicleData.winterTires = JSON.stringify(validated.winterTires)
+    }
+    if (validated.allSeasonTires) {
+      vehicleData.allSeasonTires = JSON.stringify(validated.allSeasonTires)
     }
 
     console.log('POST /api/vehicles - Creating vehicle with data:', JSON.stringify(vehicleData, null, 2))

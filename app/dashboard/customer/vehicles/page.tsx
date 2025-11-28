@@ -208,8 +208,17 @@ export default function VehiclesPage() {
                   {vehicle.summerTires && (
                     <div className="border-l-4 border-yellow-400 pl-4">
                       <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">☀️</span>
-                        <span className="font-semibold text-gray-700">Sommerreifen</span>
+                        {vehicle.vehicleType === 'MOTORCYCLE' ? (
+                          <>
+                            <span className="text-2xl mr-2">🏍️</span>
+                            <span className="font-semibold text-gray-700">Reifengrößen</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-2xl mr-2">☀️</span>
+                            <span className="font-semibold text-gray-700">Sommerreifen</span>
+                          </>
+                        )}
                       </div>
                       <p className="text-lg font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (
@@ -235,7 +244,7 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
-                  {vehicle.winterTires && (
+                  {vehicle.winterTires && vehicle.vehicleType !== 'MOTORCYCLE' && (
                     <div className="border-l-4 border-blue-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">❄️</span>
@@ -265,7 +274,7 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
-                  {vehicle.allSeasonTires && (
+                  {vehicle.allSeasonTires && vehicle.vehicleType !== 'MOTORCYCLE' && (
                     <div className="border-l-4 border-green-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">🌤️</span>
@@ -418,15 +427,15 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
   // Dynamische Reifengrößen basierend auf Fahrzeugtyp
   const TIRE_WIDTHS = formData.vehicleType === 'MOTORCYCLE' 
-    ? [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 240, 250, 260, 280, 300, 320, 330, 340, 350, 360, 370, 380, 400]
+    ? [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400]
     : [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325]
   
   const ASPECT_RATIOS = formData.vehicleType === 'MOTORCYCLE'
-    ? [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+    ? [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
     : [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
   
   const DIAMETERS = formData.vehicleType === 'MOTORCYCLE'
-    ? [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26]
+    ? [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
     : [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
   
   // Complete load index mapping for both motorcycles and cars
@@ -1041,15 +1050,15 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
   // Dynamische Reifengrößen basierend auf Fahrzeugtyp
   const TIRE_WIDTHS = formData.vehicleType === 'MOTORCYCLE' 
-    ? [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 240, 250, 260, 280, 300, 320, 330, 340, 350, 360, 370, 380, 400]
+    ? [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400]
     : [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
   
   const ASPECT_RATIOS = formData.vehicleType === 'MOTORCYCLE'
-    ? [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+    ? [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
     : [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
   
   const DIAMETERS = formData.vehicleType === 'MOTORCYCLE'
-    ? [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26]
+    ? [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
     : [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
   
   // Complete load index mapping for both motorcycles and cars

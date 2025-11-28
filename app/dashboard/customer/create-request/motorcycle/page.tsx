@@ -23,7 +23,7 @@ const LOAD_INDICES = Object.keys(LOAD_INDEX_MAP).map(Number)
 
 // Speed Rating für Motorräder
 const SPEED_RATING_MAP: Record<string, number> = {
-  L: 120, M: 130, N: 140, P: 150, Q: 160, R: 170, S: 180, T: 190, H: 210, V: 240, W: 270, ZR: 240
+  L: 120, M: 130, N: 140, P: 150, Q: 160, R: 170, S: 180, T: 190, H: 210, V: 240, W: 270, Y: 300, ZR: 240, '(Y)': 300
 }
 const SPEED_RATINGS = Object.keys(SPEED_RATING_MAP)
 

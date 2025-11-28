@@ -208,14 +208,8 @@ export default function VehiclesPage() {
                   {vehicle.summerTires && (
                     <div className="border-l-4 border-yellow-400 pl-4">
                       <div className="flex items-center mb-1">
-                        {vehicle.vehicleType === 'MOTORCYCLE' ? (
-                          <span className="font-semibold text-gray-700">Reifengrößen</span>
-                        ) : (
-                          <>
-                            <span className="text-2xl mr-2">☀️</span>
-                            <span className="font-semibold text-gray-700">Sommerreifen</span>
-                          </>
-                        )}
+                        <span className="text-2xl mr-2">☀️</span>
+                        <span className="font-semibold text-gray-700">Sommerreifen</span>
                       </div>
                       <p className="text-lg font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (
@@ -241,7 +235,7 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
-                  {vehicle.winterTires && vehicle.vehicleType !== 'MOTORCYCLE' && (
+                  {vehicle.winterTires && (
                     <div className="border-l-4 border-blue-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">❄️</span>
@@ -271,7 +265,7 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
-                  {vehicle.allSeasonTires && vehicle.vehicleType !== 'MOTORCYCLE' && (
+                  {vehicle.allSeasonTires && (
                     <div className="border-l-4 border-green-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">🌤️</span>

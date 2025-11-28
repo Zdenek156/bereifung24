@@ -91,6 +91,7 @@ export default function MotorcycleTiresPage() {
         .then(data => {
           // Filter only motorcycles
           const motorcycles = data.filter((v: Vehicle) => v.vehicleType === 'MOTORCYCLE')
+          console.log('Loaded motorcycles:', motorcycles)
           setVehicles(motorcycles)
         })
         .catch(err => console.error('Fehler beim Laden der Motorräder:', err))
@@ -101,17 +102,31 @@ export default function MotorcycleTiresPage() {
   // Handle vehicle selection
   const handleVehicleSelect = (vehicleId: string) => {
     setSelectedVehicle(vehicleId)
-    if (!vehicleId) return
+    if (!vehicleId) {
+      // Reset form when deselecting
+      setFormData(prev => ({
+        ...prev,
+        motorcycleMake: '',
+        motorcycleModel: '',
+        frontWidth: '',
+        frontAspectRatio: '',
+        frontDiameter: '',
+        frontLoadIndex: '',
+        frontSpeedRating: '',
+        rearWidth: '',
+        rearAspectRatio: '',
+        rearDiameter: '',
+        rearLoadIndex: '',
+        rearSpeedRating: '',
+      }))
+      return
+    }
 
     const vehicle = vehicles.find(v => v.id === vehicleId)
     if (!vehicle) return
 
-    // Set make and model from selected vehicle
-    setFormData(prev => ({
-      ...prev,
-      motorcycleMake: vehicle.make,
-      motorcycleModel: vehicle.model
-    }))
+    console.log('Selected vehicle:', vehicle)
+    console.log('Summer tires:', vehicle.summerTires)
 
     // Pre-fill tire dimensions if available
     if (vehicle.summerTires) {
@@ -132,8 +147,11 @@ export default function MotorcycleTiresPage() {
         ? vehicle.summerTires.rearSpeedRating 
         : (vehicle.summerTires.speedRating || '')
 
+      // Set all data in one call to prevent race conditions
       setFormData(prev => ({
         ...prev,
+        motorcycleMake: vehicle.make,
+        motorcycleModel: vehicle.model,
         frontWidth: vehicle.summerTires!.width.toString(),
         frontAspectRatio: vehicle.summerTires!.aspectRatio.toString(),
         frontDiameter: vehicle.summerTires!.diameter.toString(),
@@ -145,6 +163,13 @@ export default function MotorcycleTiresPage() {
         rearDiameter,
         rearLoadIndex,
         rearSpeedRating,
+      }))
+    } else {
+      // Only set make and model if no tire data
+      setFormData(prev => ({
+        ...prev,
+        motorcycleMake: vehicle.make,
+        motorcycleModel: vehicle.model,
       }))
     }
   }

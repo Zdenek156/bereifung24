@@ -33,17 +33,24 @@ export async function GET(request: Request) {
         workshop: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            gocardlessMandateStatus: true
+            companyName: true,
+            gocardlessMandateStatus: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
           }
         },
         booking: {
           select: {
             id: true,
-            serviceType: true,
-            bookingDate: true,
-            totalPrice: true
+            appointmentDate: true,
+            offer: {
+              select: {
+                price: true
+              }
+            }
           }
         }
       },
@@ -57,7 +64,7 @@ export async function GET(request: Request) {
     // Calculate totals
     const totals = commissions.reduce(
       (acc, comm) => {
-        acc.grossAmount += comm.grossAmount || comm.amount
+        acc.grossAmount += comm.grossAmount || comm.commissionAmount
         acc.netAmount += comm.netAmount || 0
         acc.taxAmount += comm.taxAmount || 0
         acc.count += 1
@@ -72,7 +79,7 @@ export async function GET(request: Request) {
           }
         }
         acc.byStatus[comm.status].count += 1
-        acc.byStatus[comm.status].grossAmount += comm.grossAmount || comm.amount
+        acc.byStatus[comm.status].grossAmount += comm.grossAmount || comm.commissionAmount
         acc.byStatus[comm.status].netAmount += comm.netAmount || 0
         acc.byStatus[comm.status].taxAmount += comm.taxAmount || 0
 
@@ -106,10 +113,10 @@ export async function GET(request: Request) {
 
       acc[workshopId].commissions.push(comm)
       acc[workshopId].totals.count += 1
-      acc[workshopId].totals.grossAmount += comm.grossAmount || comm.amount
+      acc[workshopId].totals.grossAmount += comm.grossAmount || comm.commissionAmount
       acc[workshopId].totals.netAmount += comm.netAmount || 0
       acc[workshopId].totals.taxAmount += comm.taxAmount || 0
-      acc[workshopId].totals.totalRevenue += comm.booking?.totalPrice || 0
+      acc[workshopId].totals.totalRevenue += comm.booking?.offer?.price || 0
 
       return acc
     }, {} as Record<string, any>)
@@ -136,7 +143,7 @@ export async function GET(request: Request) {
       }
 
       acc[periodKey].count += 1
-      acc[periodKey].grossAmount += comm.grossAmount || comm.amount
+      acc[periodKey].grossAmount += comm.grossAmount || comm.commissionAmount
       acc[periodKey].netAmount += comm.netAmount || 0
       acc[periodKey].taxAmount += comm.taxAmount || 0
       acc[periodKey].workshopsCount.add(comm.workshopId)

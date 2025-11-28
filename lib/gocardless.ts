@@ -237,13 +237,26 @@ export async function createRedirectFlow(data: {
   }
 }) {
   try {
-    const redirectFlow = await getGocardlessClient().redirectFlows.create({
+    const createData: any = {
       session_token: data.sessionToken,
       success_redirect_url: data.successRedirectUrl,
-      description: data.description || 'Bereifung24 SEPA-Lastschriftmandat',
-      prefilled_customer: data.prefillCustomer,
       scheme: 'sepa_core'
-    })
+    }
+
+    if (data.description) {
+      createData.description = data.description
+    }
+
+    if (data.prefillCustomer) {
+      createData.prefilled_customer = {
+        email: data.prefillCustomer.email,
+        given_name: data.prefillCustomer.givenName,
+        family_name: data.prefillCustomer.familyName,
+        company_name: data.prefillCustomer.companyName
+      }
+    }
+
+    const redirectFlow = await getGocardlessClient().redirectFlows.create(createData)
 
     return redirectFlow
   } catch (error) {

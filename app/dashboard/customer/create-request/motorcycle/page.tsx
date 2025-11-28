@@ -170,34 +170,39 @@ export default function MotorcycleTiresPage() {
         : (tireData.speedRating || '')
 
       // Set all data in one call to prevent race conditions
-      const newFormData = {
-        ...prev,
-        motorcycleMake: vehicle.make,
-        motorcycleModel: vehicle.model,
-        season: detectedSeason,
-        frontWidth: tireData.width.toString(),
-        frontAspectRatio: tireData.aspectRatio.toString(),
-        frontDiameter: tireData.diameter.toString(),
-        frontLoadIndex: tireData.loadIndex?.toString() || '',
-        frontSpeedRating: tireData.speedRating || '',
-        // Use rear-specific dimensions if available, otherwise use front dimensions
-        rearWidth,
-        rearAspectRatio,
-        rearDiameter,
-        rearLoadIndex,
-        rearSpeedRating,
-      }
-      
-      console.log('Setting form data:', newFormData)
-      console.log('Front tire values:', {
+      console.log('Loading tire data:', {
         width: tireData.width,
         aspectRatio: tireData.aspectRatio,
         diameter: tireData.diameter,
         loadIndex: tireData.loadIndex,
-        speedRating: tireData.speedRating
+        speedRating: tireData.speedRating,
+        hasDifferentSizes: tireData.hasDifferentSizes,
+        rearWidth: tireData.rearWidth,
+        rearAspectRatio: tireData.rearAspectRatio,
+        rearDiameter: tireData.rearDiameter
       })
       
-      return newFormData
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          motorcycleMake: vehicle.make,
+          motorcycleModel: vehicle.model,
+          season: detectedSeason,
+          frontWidth: tireData.width.toString(),
+          frontAspectRatio: tireData.aspectRatio.toString(),
+          frontDiameter: tireData.diameter.toString(),
+          frontLoadIndex: tireData.loadIndex?.toString() || '',
+          frontSpeedRating: tireData.speedRating || '',
+          // Use rear-specific dimensions if available, otherwise use front dimensions
+          rearWidth,
+          rearAspectRatio,
+          rearDiameter,
+          rearLoadIndex,
+          rearSpeedRating,
+        }
+        console.log('Setting form data:', newData)
+        return newData
+      })
     } else {
       // Only set make and model if no tire data
       setFormData(prev => ({

@@ -23,13 +23,31 @@ const SPEED_RATING_MAP: Record<string, number> = {
 }
 const SPEED_RATINGS = Object.keys(SPEED_RATING_MAP)
 
+type Vehicle = {
+  id: string
+  make: string
+  model: string
+  year: number
+  vehicleType?: string
+  summerTires?: {
+    width: number
+    aspectRatio: number
+    diameter: number
+    loadIndex?: number
+    speedRating?: string
+  }
+}
+
 export default function MotorcycleTiresPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicle, setSelectedVehicle] = useState('')
+  const [vehiclesLoading, setVehiclesLoading] = useState(true)
 
   const [formData, setFormData] = useState({
     // Vorderreifen
@@ -58,9 +76,55 @@ export default function MotorcycleTiresPage() {
     motorcycleModel: ''
   })
 
+  // Load motorcycles
   useEffect(() => {
-    // No default date
-  }, [])
+    if (status === 'authenticated') {
+      setVehiclesLoading(true)
+      fetch('/api/vehicles')
+        .then(res => res.json())
+        .then(data => {
+          // Filter only motorcycles
+          const motorcycles = data.filter((v: Vehicle) => v.vehicleType === 'MOTORCYCLE')
+          setVehicles(motorcycles)
+        })
+        .catch(err => console.error('Fehler beim Laden der Motorräder:', err))
+        .finally(() => setVehiclesLoading(false))
+    }
+  }, [status])
+
+  // Handle vehicle selection
+  const handleVehicleSelect = (vehicleId: string) => {
+    setSelectedVehicle(vehicleId)
+    if (!vehicleId) return
+
+    const vehicle = vehicles.find(v => v.id === vehicleId)
+    if (!vehicle) return
+
+    // Set make and model from selected vehicle
+    setFormData(prev => ({
+      ...prev,
+      motorcycleMake: vehicle.make,
+      motorcycleModel: vehicle.model
+    }))
+
+    // Pre-fill tire dimensions if available
+    if (vehicle.summerTires) {
+      setFormData(prev => ({
+        ...prev,
+        frontWidth: vehicle.summerTires!.width.toString(),
+        frontAspectRatio: vehicle.summerTires!.aspectRatio.toString(),
+        frontDiameter: vehicle.summerTires!.diameter.toString(),
+        frontLoadIndex: vehicle.summerTires!.loadIndex?.toString() || '',
+        frontSpeedRating: vehicle.summerTires!.speedRating || '',
+        // For motorcycles, assume same dimensions for rear if not specified
+        rearWidth: vehicle.summerTires!.width.toString(),
+        rearAspectRatio: vehicle.summerTires!.aspectRatio.toString(),
+        rearDiameter: vehicle.summerTires!.diameter.toString(),
+        rearLoadIndex: vehicle.summerTires!.loadIndex?.toString() || '',
+        rearSpeedRating: vehicle.summerTires!.speedRating || '',
+      }))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -181,9 +245,45 @@ export default function MotorcycleTiresPage() {
             </div>
           </div>
 
+          {/* Vehicle Selection */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Motorrad auswählen</h2>
+            {vehiclesLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-gray-600">Lade Motorräder...</p>
+              </div>
+            ) : vehicles.length > 0 ? (
+              <div>
+                <select
+                  value={selectedVehicle}
+                  onChange={(e) => handleVehicleSelect(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Motorrad auswählen oder manuell eingeben</option>
+                  {vehicles.map(vehicle => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.make} {vehicle.model} ({vehicle.year})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-sm text-gray-600">
+                  💡 Wählen Sie ein gespeichertes Motorrad aus oder geben Sie die Daten manuell ein
+                </p>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  Sie haben noch keine Motorräder in Ihrer Fahrzeugverwaltung gespeichert. 
+                  Sie können die Daten trotzdem manuell eingeben.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Motorrad-Info (Optional) */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Motorrad-Informationen <span className="text-sm font-normal text-gray-500">(optional)</span></h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Motorrad-Informationen {!selectedVehicle && <span className="text-sm font-normal text-gray-500">(optional)</span>}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

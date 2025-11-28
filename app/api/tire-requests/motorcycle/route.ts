@@ -13,19 +13,23 @@ const motorcycleRequestSchema = z.object({
   tireType: z.enum(['STANDARD', 'SPORT', 'TOURING', 'OFF_ROAD']).optional(),
   frontTire: z.object({
     width: z.number().min(70).max(400), // Full motorcycle range
-    aspectRatio: z.number().min(25).max(90),
+    aspectRatio: z.number().min(25).max(100),
     diameter: z.number().min(8).max(26), // Extended diameter range
+    loadIndex: z.number().optional(),
     speedRating: z.string().optional(),
-  }),
+  }).optional(),
   rearTire: z.object({
     width: z.number().min(70).max(400), // Full motorcycle range
-    aspectRatio: z.number().min(25).max(90),
+    aspectRatio: z.number().min(25).max(100),
     diameter: z.number().min(8).max(26), // Extended diameter range
+    loadIndex: z.number().optional(),
     speedRating: z.string().optional(),
-  }),
+  }).optional(),
   bothTires: z.boolean().default(true),
   needsFrontTire: z.boolean().default(true),
   needsRearTire: z.boolean().default(true),
+  tireQuality: z.enum(['ECONOMY', 'MIDDLE', 'PREMIUM']).optional(),
+  tireDisposal: z.boolean().optional(),
   preferredBrands: z.string().optional(),
   needByDate: z.string(),
   radiusKm: z.number().min(5).max(100),

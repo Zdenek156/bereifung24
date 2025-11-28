@@ -6,15 +6,15 @@ import { z } from 'zod'
 
 // Validation Schema
 const tireSpecSchema = z.object({
-  width: z.number().min(135).max(395),
-  aspectRatio: z.number().min(25).max(85),
-  diameter: z.number().min(13).max(24),
+  width: z.number().min(80).max(395), // Allow motorcycle widths starting at 80
+  aspectRatio: z.number().min(25).max(90), // Allow motorcycle ratios up to 90
+  diameter: z.number().min(10).max(24), // Allow motorcycle diameters from 10
   loadIndex: z.number().min(50).max(120).optional(),
   speedRating: z.string().optional(),
   hasDifferentSizes: z.boolean().optional(),
-  rearWidth: z.number().min(135).max(395).optional(),
-  rearAspectRatio: z.number().min(25).max(85).optional(),
-  rearDiameter: z.number().min(13).max(24).optional(),
+  rearWidth: z.number().min(80).max(395).optional(),
+  rearAspectRatio: z.number().min(25).max(90).optional(),
+  rearDiameter: z.number().min(10).max(24).optional(),
   rearLoadIndex: z.number().min(50).max(120).optional(),
   rearSpeedRating: z.string().optional(),
 })
@@ -66,12 +66,6 @@ export async function PUT(
     const body = await req.json()
     const validated = vehicleUpdateSchema.parse(body)
 
-    // Store tire data as JSON (will be migrated later)
-    const tireData: any = {}
-    if (validated.summerTires) tireData.summerTires = validated.summerTires
-    if (validated.winterTires) tireData.winterTires = validated.winterTires
-    if (validated.allSeasonTires) tireData.allSeasonTires = validated.allSeasonTires
-
     // Parse inspection date - handle both YYYY-MM and YYYY-MM-DD formats
     let inspectionDate = null
     if (validated.nextInspectionDate) {
@@ -93,20 +87,27 @@ export async function PUT(
       model: validated.model,
       year: validated.year,
       licensePlate: validated.licensePlate || null,
+      vin: validated.vin && validated.vin.trim().length > 0 ? validated.vin.trim() : null,
       nextInspectionDate: inspectionDate,
       inspectionReminder: validated.inspectionReminder,
       inspectionReminderDays: validated.inspectionReminderDays,
     }
 
-    // Only update VIN if provided and not empty
-    if (validated.vin && validated.vin.trim().length > 0) {
-      updateData.vin = validated.vin.trim()
+    // Store tire data in dedicated columns
+    if (validated.summerTires) {
+      updateData.summerTires = JSON.stringify(validated.summerTires)
     } else {
-      // Store tire data as JSON if VIN not provided
-      const hasTireData = Object.keys(tireData).length > 0
-      if (hasTireData) {
-        updateData.vin = JSON.stringify(tireData)
-      }
+      updateData.summerTires = null
+    }
+    if (validated.winterTires) {
+      updateData.winterTires = JSON.stringify(validated.winterTires)
+    } else {
+      updateData.winterTires = null
+    }
+    if (validated.allSeasonTires) {
+      updateData.allSeasonTires = JSON.stringify(validated.allSeasonTires)
+    } else {
+      updateData.allSeasonTires = null
     }
 
     const updatedVehicle = await prisma.vehicle.update({

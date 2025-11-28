@@ -4,15 +4,32 @@
 const gocardless = require('gocardless-nodejs')
 const constants = require('gocardless-nodejs/constants')
 
-// Initialize GoCardless client
-const environment = process.env.GOCARDLESS_ENVIRONMENT === 'live' 
-  ? constants.Environments.Live 
-  : constants.Environments.Sandbox
+// Lazy initialization to avoid startup errors if env vars are missing
+let _gocardlessClient: any = null
 
-export const gocardlessClient = gocardless(
-  process.env.GOCARDLESS_ACCESS_TOKEN!,
-  environment
-)
+function getGocardlessClient() {
+  if (!_gocardlessClient) {
+    if (!process.env.GOCARDLESS_ACCESS_TOKEN) {
+      throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured')
+    }
+    
+    const environment = process.env.GOCARDLESS_ENVIRONMENT === 'live' 
+      ? constants.Environments.Live 
+      : constants.Environments.Sandbox
+    
+    _gocardlessClient = gocardless(
+      process.env.GOCARDLESS_ACCESS_TOKEN,
+      environment
+    )
+  }
+  return _gocardlessClient
+}
+
+export const gocardlessClient = new Proxy({}, {
+  get(target, prop) {
+    return getGocardlessClient()[prop]
+  }
+})
 
 /**
  * Create GoCardless Customer

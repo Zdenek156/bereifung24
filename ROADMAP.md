@@ -251,6 +251,58 @@
 
 ---
 
+## 🏪 Phase 14: SEO-Optimierte Werkstatt-Landing Pages
+- [ ] **Individuelle Werkstatt-Landing Pages:**
+  - [ ] Öffentliche URL-Struktur: `bereifung24.de/werkstatt/[werkstatt-slug]`
+  - [ ] SEO-freundliche URLs (z.B. `/werkstatt/autohaus-mueller-berlin`)
+  - [ ] Vollständige Werkstatt-Informationen:
+    - [ ] Name, Logo, Bilder der Werkstatt
+    - [ ] Vollständige Adresse mit interaktiver Google Maps Integration
+    - [ ] Öffnungszeiten (übersichtlich dargestellt)
+    - [ ] Kontaktdaten (Telefon, E-Mail, Website)
+    - [ ] Beschreibungstext der Werkstatt
+  - [ ] **Service-Übersicht:**
+    - [ ] Liste aller angebotenen Services
+    - [ ] Service-Pakete mit Preisen
+    - [ ] Spezialleistungen (Motorradreifen, Klimaservice, etc.)
+  - [ ] **Bewertungen & Rezensionen:**
+    - [ ] Anzeige von Kundenbewertungen
+    - [ ] Durchschnittliche Bewertung mit Sternen
+    - [ ] Authentische Rezensionen mit Datum
+  - [ ] **CTA-Elemente:**
+    - [ ] "Jetzt Anfrage stellen" Button
+    - [ ] "Termin vereinbaren" Button
+    - [ ] Direkte Kontaktmöglichkeiten
+  - [ ] **SEO-Optimierung:**
+    - [ ] Strukturierte Daten (Schema.org LocalBusiness)
+    - [ ] Meta-Tags (Title, Description) mit Werkstatt-Name & Ort
+    - [ ] OpenGraph-Tags für Social Media
+    - [ ] Canonical URLs
+    - [ ] Sitemap-Integration
+    - [ ] Lokale Keywords (Stadt, Region, PLZ)
+  - [ ] **Verwaltung im Workshop-Dashboard:**
+    - [ ] Landing Page Editor für Werkstätten
+    - [ ] Bildergalerie-Upload (Werkstatt, Team, Ausstattung)
+    - [ ] Beschreibungstext bearbeiten
+    - [ ] Service-Highlights auswählen
+    - [ ] Preview-Funktion
+  - [ ] **Technische Umsetzung:**
+    - [ ] Server-Side Rendering (SSR) für beste SEO
+    - [ ] Dynamische Generierung basierend auf Werkstatt-Daten
+    - [ ] Breadcrumb-Navigation
+    - [ ] Mobile-optimiert & responsive
+    - [ ] Schnelle Ladezeiten (Performance-Optimierung)
+  - [ ] **Bereifung24 SEO-Vorteile:**
+    - [ ] Backlinks von allen Werkstatt-Seiten zur Hauptseite
+    - [ ] Erhöhte Content-Menge (einzigartige Seiten pro Werkstatt)
+    - [ ] Lokale Suchmaschinen-Optimierung durch verschiedene Standorte
+    - [ ] Erhöhte Domain Authority durch mehr indexierte Seiten
+    - [ ] Long-Tail Keywords durch spezifische Werkstatt/Service-Kombinationen
+
+**Status:** ⚪ Ausstehend
+
+---
+
 ## 📊 Aktueller Fortschritt
 
 **Gesamt-Fortschritt:** 15% ███░░░░░░░░░░░░░░░░░

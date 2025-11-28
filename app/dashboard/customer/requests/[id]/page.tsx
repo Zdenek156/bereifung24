@@ -158,14 +158,19 @@ export default function RequestDetailPage() {
 
   // Helper function to detect service type from notes
   const getServiceType = () => {
+    const notes = request.additionalNotes || ''
+    
+    // Check for motorcycle first (before checking dimensions)
+    if (notes.includes('MOTORRADREIFEN') || notes.includes('🏍️')) return 'MOTORCYCLE'
+    
+    // Then check for regular tire change
     if (request.width !== 0 || request.aspectRatio !== 0 || request.diameter !== 0) {
       return 'TIRE_CHANGE' // Regular tire change
     }
     
-    const notes = request.additionalNotes || ''
+    // Other services
     if (notes.includes('RÄDER UMSTECKEN') || notes.includes('🔄')) return 'WHEEL_CHANGE'
     if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REIFENREPARATUR')) return 'REPAIR'
-    if (notes.includes('MOTORRADREIFEN') || notes.includes('🏍️')) return 'MOTORCYCLE'
     if (notes.includes('ACHSVERMESSUNG') || notes.includes('📐')) return 'ALIGNMENT'
     if (notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
     

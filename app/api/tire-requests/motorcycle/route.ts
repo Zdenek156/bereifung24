@@ -12,13 +12,13 @@ const motorcycleRequestSchema = z.object({
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
   frontTire: z.object({
     width: z.number().min(80).max(240),
-    aspectRatio: z.number().min(25).max(85),
+    aspectRatio: z.number().min(25).max(90),
     diameter: z.number().min(10).max(24),
     speedRating: z.string().optional(),
   }),
   rearTire: z.object({
     width: z.number().min(80).max(240),
-    aspectRatio: z.number().min(25).max(85),
+    aspectRatio: z.number().min(25).max(90),
     diameter: z.number().min(10).max(24),
     speedRating: z.string().optional(),
   }),

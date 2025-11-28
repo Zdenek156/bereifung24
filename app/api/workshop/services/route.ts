@@ -47,8 +47,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ services: user.workshop.workshopServices })
   } catch (error) {
     console.error('Services fetch error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
-      { error: 'Fehler beim Laden der Services' },
+      { error: 'Fehler beim Laden der Services', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

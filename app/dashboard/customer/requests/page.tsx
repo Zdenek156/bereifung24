@@ -157,18 +157,28 @@ export default function RequestsPage() {
                     <div className="flex items-center gap-3 mb-3">
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900">
-                          {request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
+                          {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
+                            // Motorcycle tire request
+                            <>
+                              🏍️ Motorradreifen mit Montage {' '}
+                              {request.season === 'SUMMER' && '☀️ '}
+                              {request.season === 'WINTER' && '❄️ '}
+                              {request.season === 'ALL_SEASON' && '🌤️ '}
+                              {request.width}/{request.aspectRatio} R{request.diameter}
+                              {request.loadIndex && ` ${request.loadIndex}`}
+                              {request.speedRating && request.speedRating}
+                            </>
+                          ) : request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
                             // Service request - detect type by emoji in additionalNotes
                             <>
                               {request.additionalNotes?.includes('🔧') && '🔧 Reifenreparatur'}
-                              {request.additionalNotes?.includes('🏍️') && '🏍️ Motorradreifen mit Montage'}
                               {request.additionalNotes?.includes('📐') && '📐 Achsvermessung / Spureinstellung'}
                               {request.additionalNotes?.includes('🔄') && '🔄 Räder umstecken (Sommer/Winter)'}
                               {request.additionalNotes?.includes('🛠️') && '🛠️ Sonstige Reifendienstleistungen'}
-                              {!request.additionalNotes?.match(/[🔧🏍️📐🔄🛠️]/) && '🔧 Service-Anfrage'}
+                              {!request.additionalNotes?.match(/[🔧📐🔄🛠️]/) && '🔧 Service-Anfrage'}
                             </>
                           ) : (
-                            // Regular tire request
+                            // Regular car tire request
                             <>
                               🚗 Autoreifen mit Montage {' '}
                               {request.season === 'SUMMER' && '☀️ '}
@@ -182,7 +192,7 @@ export default function RequestsPage() {
                           )}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {request.width === 0 ? 'Service-Anfrage' : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
+                          {request.width === 0 ? 'Service-Anfrage' : request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? `Motorradreifen • ${request.quantity} Stück` : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
                         </p>
                       </div>
                     </div>

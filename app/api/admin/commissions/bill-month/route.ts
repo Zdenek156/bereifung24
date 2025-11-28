@@ -44,9 +44,13 @@ export async function POST(request: Request) {
       },
       select: {
         id: true,
-        name: true,
-        email: true,
+        companyName: true,
         gocardlessMandateId: true,
+        user: {
+          select: {
+            email: true
+          }
+        },
         bookings: {
           where: {
             status: 'CONFIRMED',
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
 
         // Skip if no revenue
         if (totalRevenue === 0) {
-          console.log(`⏭️ Workshop ${workshop.name} - No revenue for ${year}-${month}`)
+          console.log(`⏭️ Workshop ${workshop.companyName} - No revenue for ${year}-${month}`)
           totalSkipped++
           continue
         }
@@ -169,11 +173,11 @@ export async function POST(request: Request) {
           }
         })
 
-        console.log(`✅ Workshop ${workshop.name}: €${commission.commissionGross.toFixed(2)} scheduled for ${chargeDateStr}`)
+        console.log(`✅ Workshop ${workshop.companyName}: €${commission.commissionGross.toFixed(2)} scheduled for ${chargeDateStr}`)
 
         results.push({
           workshopId: workshop.id,
-          workshopName: workshop.name,
+          workshopName: workshop.companyName,
           totalRevenue,
           commission: commission.commissionGross,
           commissionNet: commission.commissionNet,
@@ -188,10 +192,10 @@ export async function POST(request: Request) {
         totalProcessed++
 
       } catch (error: any) {
-        console.error(`❌ Error processing workshop ${workshop.name}:`, error.message)
+        console.error(`❌ Error processing workshop ${workshop.companyName}:`, error.message)
         results.push({
           workshopId: workshop.id,
-          workshopName: workshop.name,
+          workshopName: workshop.companyName,
           success: false,
           error: error.message
         })

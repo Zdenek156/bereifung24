@@ -5,10 +5,10 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-// Motorrad-spezifische Dimensionen
-const MOTO_WIDTHS = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 240, 260, 280, 300]
-const MOTO_ASPECT_RATIOS = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
-const MOTO_DIAMETERS = [10, 12, 14, 16, 17, 18, 19, 21]
+// Motorrad-spezifische Dimensionen (erweitert für alle gängigen Größen)
+const MOTO_WIDTHS = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360, 380, 400]
+const MOTO_ASPECT_RATIOS = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+const MOTO_DIAMETERS = [8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
 
 // Load Index für Motorräder
 const LOAD_INDEX_MAP: Record<number, number> = {
@@ -170,39 +170,23 @@ export default function MotorcycleTiresPage() {
         : (tireData.speedRating || '')
 
       // Set all data in one call to prevent race conditions
-      console.log('Loading tire data:', {
-        width: tireData.width,
-        aspectRatio: tireData.aspectRatio,
-        diameter: tireData.diameter,
-        loadIndex: tireData.loadIndex,
-        speedRating: tireData.speedRating,
-        hasDifferentSizes: tireData.hasDifferentSizes,
-        rearWidth: tireData.rearWidth,
-        rearAspectRatio: tireData.rearAspectRatio,
-        rearDiameter: tireData.rearDiameter
-      })
-      
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          motorcycleMake: vehicle.make,
-          motorcycleModel: vehicle.model,
-          season: detectedSeason,
-          frontWidth: tireData.width.toString(),
-          frontAspectRatio: tireData.aspectRatio.toString(),
-          frontDiameter: tireData.diameter.toString(),
-          frontLoadIndex: tireData.loadIndex?.toString() || '',
-          frontSpeedRating: tireData.speedRating || '',
-          // Use rear-specific dimensions if available, otherwise use front dimensions
-          rearWidth,
-          rearAspectRatio,
-          rearDiameter,
-          rearLoadIndex,
-          rearSpeedRating,
-        }
-        console.log('Setting form data:', newData)
-        return newData
-      })
+      setFormData(prev => ({
+        ...prev,
+        motorcycleMake: vehicle.make,
+        motorcycleModel: vehicle.model,
+        season: detectedSeason,
+        frontWidth: tireData.width.toString(),
+        frontAspectRatio: tireData.aspectRatio.toString(),
+        frontDiameter: tireData.diameter.toString(),
+        frontLoadIndex: tireData.loadIndex?.toString() || '',
+        frontSpeedRating: tireData.speedRating || '',
+        // Use rear-specific dimensions if available, otherwise use front dimensions
+        rearWidth,
+        rearAspectRatio,
+        rearDiameter,
+        rearLoadIndex,
+        rearSpeedRating,
+      }))
     } else {
       // Only set make and model if no tire data
       setFormData(prev => ({

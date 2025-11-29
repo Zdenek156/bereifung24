@@ -44,6 +44,13 @@ export async function GET(request: Request) {
     // Get latest status from GoCardless
     const mandate = await getMandateStatus(workshop.gocardlessMandateId)
 
+    console.log('=== SEPA MANDATE STATUS DEBUG ===')
+    console.log('Workshop:', workshop.companyName)
+    console.log('Mandate ID:', workshop.gocardlessMandateId)
+    console.log('GoCardless Status:', mandate.status)
+    console.log('Local Status:', workshop.gocardlessMandateStatus)
+    console.log('================================')
+
     // Update local status if changed
     if (mandate.status !== workshop.gocardlessMandateStatus) {
       await prisma.workshop.update({
@@ -54,7 +61,7 @@ export async function GET(request: Request) {
       })
     }
 
-    return NextResponse.json({
+    const response = {
       configured: true,
       mandate: {
         id: mandate.id,
@@ -64,7 +71,11 @@ export async function GET(request: Request) {
         nextPossibleChargeDate: mandate.next_possible_charge_date,
         scheme: mandate.scheme
       }
-    })
+    }
+
+    console.log('API Response:', JSON.stringify(response, null, 2))
+
+    return NextResponse.json(response)
 
   } catch (error: any) {
     console.error('Error getting SEPA mandate status:', error)

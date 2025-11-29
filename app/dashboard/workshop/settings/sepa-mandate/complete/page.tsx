@@ -27,11 +27,8 @@ function SEPAMandateCompleteContent() {
   const completeMandateSetup = async () => {
     const redirectFlowId = searchParams.get('redirect_flow_id')
     
-    // Get session token from sessionStorage
-    const sessionToken = sessionStorage.getItem('gc_session_token')
-    const storedFlowId = sessionStorage.getItem('gc_redirect_flow_id')
-
-    if (!redirectFlowId || !sessionToken) {
+    // Session token is now retrieved from database on the backend
+    if (!redirectFlowId) {
       setError('Fehlende Mandats-Informationen. Bitte versuchen Sie es erneut.')
       setCompleting(false)
       return
@@ -44,8 +41,7 @@ function SEPAMandateCompleteContent() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          redirectFlowId,
-          sessionToken
+          redirectFlowId
         })
       })
 
@@ -53,9 +49,6 @@ function SEPAMandateCompleteContent() {
 
       if (res.ok && data.success) {
         setSuccess(true)
-        // Clean up sessionStorage
-        sessionStorage.removeItem('gc_session_token')
-        sessionStorage.removeItem('gc_redirect_flow_id')
         
         // Redirect after 3 seconds
         setTimeout(() => {

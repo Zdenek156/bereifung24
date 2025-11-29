@@ -352,11 +352,7 @@ export default function WorkshopSettings() {
       if (response.ok) {
         const data = await response.json()
         
-        // Store session information
-        sessionStorage.setItem('gocardless_redirect_flow_id', data.redirectFlowId)
-        sessionStorage.setItem('gocardless_session_token', data.sessionToken)
-        
-        // Redirect to GoCardless
+        // Session token is now stored in database, just redirect
         window.location.href = data.redirectUrl
       } else {
         const errorData = await response.json()

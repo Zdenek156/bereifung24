@@ -142,6 +142,8 @@ model Workshop {
   gocardlessMandateRef     String?   @unique // Eindeutige Mandate Reference
   gocardlessMandateCreatedAt DateTime?
   gocardlessBankAccountId  String?   // GoCardless Bank Account ID
+  gocardlessSessionToken   String?   // Temporary session token for redirect flow
+  gocardlessRedirectFlowId String?   // Temporary redirect flow ID
 
   // Payment Methods (JSON String)
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}

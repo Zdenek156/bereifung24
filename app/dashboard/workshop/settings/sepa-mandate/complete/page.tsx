@@ -59,7 +59,7 @@ export default function SEPAMandateCompletePage() {
         
         // Redirect after 3 seconds
         setTimeout(() => {
-          router.push('/dashboard/workshop/settings/sepa-mandate')
+          router.push('/dashboard/workshop/settings?tab=sepa')
         }, 3000)
       } else {
         setError(data.error || 'Fehler beim Abschließen des Mandats')
@@ -112,7 +112,7 @@ export default function SEPAMandateCompletePage() {
                 {error}
               </p>
               <button
-                onClick={() => router.push('/dashboard/workshop/settings/sepa-mandate')}
+                onClick={() => router.push('/dashboard/workshop/settings?tab=sepa')}
                 className="bg-primary-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
               >
                 Zurück zu Einstellungen

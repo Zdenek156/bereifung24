@@ -77,6 +77,12 @@ export default function WorkshopSettings() {
   const [newEmployee, setNewEmployee] = useState({ name: '', email: '' })
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null)
   
+  // SEPA Mandate state
+  const [mandate, setMandate] = useState<any>(null)
+  const [mandateLoading, setMandateLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [mandateError, setMandateError] = useState('')
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -145,6 +151,13 @@ export default function WorkshopSettings() {
     fetchProfile()
   }, [session, status, router])
 
+  // Fetch SEPA mandate status when SEPA tab is active
+  useEffect(() => {
+    if (activeTab === 'sepa' && session?.user?.role === 'WORKSHOP') {
+      fetchMandateStatus()
+    }
+  }, [activeTab, session])
+
   // Check URL parameters for tab and success message
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -153,6 +166,8 @@ export default function WorkshopSettings() {
 
     if (tab === 'terminplanung') {
       setActiveTab('terminplanung')
+    } else if (tab === 'sepa') {
+      setActiveTab('sepa')
     }
 
     if (success === 'calendar_connected') {
@@ -305,6 +320,53 @@ export default function WorkshopSettings() {
       console.error('Error fetching profile:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchMandateStatus = async () => {
+    try {
+      setMandateLoading(true)
+      const response = await fetch('/api/workshop/sepa-mandate/status')
+      if (response.ok) {
+        const data = await response.json()
+        setMandate(data)
+      } else {
+        console.error('Failed to fetch mandate status')
+      }
+    } catch (error) {
+      console.error('Error fetching mandate status:', error)
+    } finally {
+      setMandateLoading(false)
+    }
+  }
+
+  const createMandate = async () => {
+    try {
+      setCreating(true)
+      setMandateError('')
+
+      const response = await fetch('/api/workshop/sepa-mandate/create', {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Store session information
+        sessionStorage.setItem('gocardless_redirect_flow_id', data.redirectFlowId)
+        sessionStorage.setItem('gocardless_session_token', data.sessionToken)
+        
+        // Redirect to GoCardless
+        window.location.href = data.redirectUrl
+      } else {
+        const errorData = await response.json()
+        setMandateError(errorData.error || 'Fehler beim Erstellen des Mandats')
+      }
+    } catch (error) {
+      console.error('Error creating mandate:', error)
+      setMandateError('Netzwerkfehler beim Erstellen des Mandats')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -954,104 +1016,219 @@ export default function WorkshopSettings() {
           {/* Tab: Bankverbindung & SEPA */}
           {activeTab === 'sepa' && (
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Bankverbindung & SEPA-Mandat</h2>
-            <p className="text-sm text-gray-600 mb-6">
-              Für die automatische Einziehung Ihrer Provisionen (4,9% pro Auftrag)
-            </p>
-            
-            {/* GoCardless SEPA Link */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <svg className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Bankverbindung & SEPA-Mandat</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Für die automatische Einziehung Ihrer Provisionen (4,9% pro Auftrag)
+              </p>
+
+              {mandateLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <svg className="animate-spin h-8 w-8 text-primary-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <div>
-                    <h3 className="font-semibold text-blue-900 mb-1">
-                      Automatische SEPA-Lastschrift einrichten
-                    </h3>
-                    <p className="text-sm text-blue-700 mb-3">
-                      Richten Sie ein sicheres SEPA-Lastschriftmandat über GoCardless ein. 
-                      Ihre Provisionen werden automatisch monatlich eingezogen.
-                    </p>
-                    <Link 
-                      href="/dashboard/workshop/settings/sepa-mandate"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      SEPA-Mandat jetzt einrichten
-                    </Link>
-                  </div>
                 </div>
-              </div>
-            </div>
-            
-            {profile?.sepaMandateRef && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <div className="text-sm">
-                    <p className="font-medium text-blue-900">SEPA-Mandatsreferenz</p>
-                    <p className="text-blue-700 mt-1 font-mono">{profile.sepaMandateRef}</p>
-                    {profile.sepaMandateDate && (
-                      <p className="text-blue-600 mt-1">
-                        Mandat erteilt am: {new Date(profile.sepaMandateDate).toLocaleDateString('de-DE')}
-                      </p>
+              ) : mandate?.configured ? (
+                <div>
+                  {/* Configured State */}
+                  <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-7 h-7 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-green-900 mb-1">
+                          SEPA-Mandat aktiv
+                        </h3>
+                        <p className="text-green-700">
+                          Ihre Provisionen werden automatisch monatlich eingezogen
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6 mb-6">
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">Status:</span>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                        {mandate.status === 'active' ? 'Aktiv' : 
+                         mandate.status === 'pending_submission' ? 'Wird verarbeitet' :
+                         mandate.status}
+                      </span>
+                    </div>
+
+                    {/* Mandate Reference */}
+                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">Mandatsreferenz</h3>
+                      <p className="font-mono text-base text-gray-900">{mandate.reference}</p>
+                    </div>
+
+                    {/* Mandate Created Date */}
+                    {mandate.createdAt && (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Mandat erteilt am</h3>
+                        <p className="text-base text-gray-900">
+                          {new Date(mandate.createdAt).toLocaleDateString('de-DE', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Next Charge Date */}
+                    {mandate.nextChargeDate && (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                          </svg>
+                          <div>
+                            <h3 className="text-sm font-medium text-blue-900 mb-1">Nächste Abbuchung</h3>
+                            <p className="text-base text-blue-700">
+                              {new Date(mandate.nextChargeDate).toLocaleDateString('de-DE', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
+
+                  {/* Info Box */}
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2">Wichtige Informationen</h3>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span>Die Provisionen werden automatisch am 1. jedes Monats berechnet</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span>Der Lastschrifteinzug erfolgt 3 Werktage nach Rechnungsstellung</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span>Sie können das Mandat jederzeit widerrufen</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <span>Sie erhalten vor jeder Abbuchung eine Rechnung per E-Mail</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div>
+                  {/* Not Configured State */}
+                  {mandateError && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-700">{mandateError}</p>
+                    </div>
+                  )}
 
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  IBAN
-                </label>
-                <input
-                  type="text"
-                  value={formData.iban}
-                  onChange={(e) => setFormData({ ...formData, iban: e.target.value.toUpperCase() })}
-                  placeholder="DE89 3704 0044 0532 0130 00"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Für die Auszahlung Ihrer Provisionen (4,9% pro Auftrag)
-                </p>
-              </div>
+                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <h3 className="font-semibold text-yellow-900 mb-1">
+                          Kein SEPA-Mandat eingerichtet
+                        </h3>
+                        <p className="text-yellow-700">
+                          Um Provisionen automatisch abbuchen zu können, benötigen wir ein SEPA-Lastschriftmandat
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kontoinhaber
-                </label>
-                <input
-                  type="text"
-                  value={formData.accountHolder}
-                  onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })}
-                  placeholder="Name des Kontoinhabers"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900">Was ist ein SEPA-Lastschriftmandat?</h3>
+                    <p className="text-gray-600">
+                      Mit einem SEPA-Lastschriftmandat autorisieren Sie Bereifung24, fällige Provisionen 
+                      automatisch von Ihrem Bankkonto abzubuchen. Dies vereinfacht die monatliche Abrechnung 
+                      erheblich.
+                    </p>
 
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">SEPA-Lastschriftmandat</h3>
-                <p className="text-sm text-gray-600">
-                  Mit der Angabe Ihrer Bankverbindung erteilen Sie Bereifung24 (Zdenek Kyzlink, 
-                  Jahnstraße 2, 71706 Markgröningen) ein SEPA-Lastschriftmandat für die Einziehung 
-                  der Plattformgebühr (4,9% pro Auftrag, monatlich abgerechnet). Sie werden vor jedem Lastschrifteinzug 
-                  per E-Mail informiert.
-                </p>
-                {formData.iban !== profile?.iban && formData.iban && (
-                  <p className="text-sm text-orange-600 mt-2 font-medium">
-                    ⚠️ Bei Änderung der IBAN wird ein neues SEPA-Mandat mit heutigem Datum erstellt.
-                  </p>
-                )}
-              </div>
-            </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Vorteile:</h4>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Automatische monatliche Abrechnung
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Transparente Rechnungsstellung
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Keine vergessenen Zahlungen
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Jederzeit widerrufbar
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">Ablauf:</h4>
+                      <ol className="space-y-1 text-sm text-blue-800">
+                        <li>1. Klicken Sie auf "SEPA-Mandat einrichten"</li>
+                        <li>2. Sie werden zu GoCardless weitergeleitet (unser Zahlungsdienstleister)</li>
+                        <li>3. Geben Sie Ihre Bankdaten ein und bestätigen Sie das Mandat</li>
+                        <li>4. Nach Bestätigung werden Sie zurück zu Bereifung24 geleitet</li>
+                      </ol>
+                    </div>
+
+                    <button
+                      onClick={createMandate}
+                      disabled={creating}
+                      className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {creating ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Wird erstellt...
+                        </span>
+                      ) : (
+                        'SEPA-Mandat einrichten'
+                      )}
+                    </button>
+
+                    <p className="text-xs text-gray-500 text-center">
+                      Sichere Verbindung über GoCardless • Zertifizierter Zahlungsdienstleister
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

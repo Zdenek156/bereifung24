@@ -97,6 +97,8 @@ export default function BrowseRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<TireRequest | null>(null)
   const [showOfferForm, setShowOfferForm] = useState(false)
   const [services, setServices] = useState<WorkshopService[]>([])
+  const [sepaMandateStatus, setSepaMandateStatus] = useState<string | null>(null)
+  const [sepaMandateLoading, setSepaMandateLoading] = useState(true)
   const [offerForm, setOfferForm] = useState<OfferFormData>({
     tireOptions: [{ brand: '', model: '', costPrice: '', pricePerTire: '' }],
     description: '',
@@ -121,7 +123,22 @@ export default function BrowseRequestsPage() {
     }
     fetchServices()
     fetchRequests()
+    fetchSepaMandateStatus()
   }, [session, status, router])
+
+  const fetchSepaMandateStatus = async () => {
+    try {
+      const response = await fetch('/api/workshop/sepa-mandate/status')
+      if (response.ok) {
+        const data = await response.json()
+        setSepaMandateStatus(data.status)
+      }
+    } catch (error) {
+      console.error('Error fetching SEPA mandate status:', error)
+    } finally {
+      setSepaMandateLoading(false)
+    }
+  }
 
   const fetchServices = async () => {
     try {
@@ -530,6 +547,37 @@ export default function BrowseRequestsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* SEPA Mandate Warning */}
+        {!sepaMandateLoading && sepaMandateStatus !== 'active' && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  SEPA-Lastschriftmandat erforderlich
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Um Angebote erstellen zu können, müssen Sie zunächst ein SEPA-Lastschriftmandat für die Provisionsabrechnung einrichten.
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/dashboard/workshop/settings?tab=sepa"
+                    className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                  >
+                    Jetzt SEPA-Mandat einrichten →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filter */}
         <div className="bg-white rounded-lg shadow mb-6 p-4">
           <div className="flex gap-4">
@@ -766,6 +814,22 @@ export default function BrowseRequestsPage() {
                         <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium text-sm">
                           ✓ Angebot erstellt
                         </span>
+                      ) : sepaMandateStatus !== 'active' ? (
+                        <div className="flex flex-col items-end gap-2">
+                          <button
+                            disabled
+                            className="px-6 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium"
+                            title="SEPA-Mandat erforderlich"
+                          >
+                            Angebot erstellen
+                          </button>
+                          <Link 
+                            href="/dashboard/workshop/settings?tab=sepa"
+                            className="text-sm text-primary-600 hover:text-primary-700 underline"
+                          >
+                            SEPA-Mandat einrichten
+                          </Link>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleCreateOffer(request)}

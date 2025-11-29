@@ -131,7 +131,12 @@ export default function BrowseRequestsPage() {
       const response = await fetch('/api/workshop/sepa-mandate/status')
       if (response.ok) {
         const data = await response.json()
-        setSepaMandateStatus(data.status)
+        // Check if mandate is configured and active
+        if (data.configured && data.mandate) {
+          setSepaMandateStatus(data.mandate.status)
+        } else {
+          setSepaMandateStatus(null)
+        }
       }
     } catch (error) {
       console.error('Error fetching SEPA mandate status:', error)

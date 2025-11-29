@@ -15,22 +15,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { redirectFlowId, sessionToken } = await request.json()
+    const { redirectFlowId } = await request.json()
 
-    if (!redirectFlowId || !sessionToken) {
+    if (!redirectFlowId) {
       return NextResponse.json(
-        { error: 'Missing redirectFlowId or sessionToken' },
+        { error: 'Missing redirectFlowId' },
         { status: 400 }
       )
     }
 
-    // Get workshop
+    // Get workshop with stored session token
     const workshop = await prisma.workshop.findUnique({
       where: { userId: session.user.id }
     })
 
     if (!workshop) {
       return NextResponse.json({ error: 'Workshop not found' }, { status: 404 })
+    }
+
+    // Verify redirect flow ID matches
+    if (workshop.gocardlessRedirectFlowId !== redirectFlowId) {
+      return NextResponse.json(
+        { error: 'Invalid redirect flow ID' },
+        { status: 400 }
+      )
+    }
+
+    // Get stored session token
+    const sessionToken = workshop.gocardlessSessionToken
+    
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: 'Session token not found' },
+        { status: 400 }
+      )
     }
 
     // Complete the redirect flow
@@ -41,7 +59,7 @@ export async function POST(request: Request) {
     const customerId = completedFlow.links.customer
     const bankAccountId = completedFlow.links.customer_bank_account
 
-    // Update workshop with GoCardless details
+    // Update workshop with GoCardless details and clear temporary session data
     await prisma.workshop.update({
       where: { id: workshop.id },
       data: {
@@ -50,7 +68,9 @@ export async function POST(request: Request) {
         gocardlessMandateStatus: 'pending_submission', // Will be updated via webhook
         gocardlessMandateRef: completedFlow.mandate_request?.reference || null,
         gocardlessMandateCreatedAt: new Date(),
-        gocardlessBankAccountId: bankAccountId
+        gocardlessBankAccountId: bankAccountId,
+        gocardlessSessionToken: null, // Clear temporary session token
+        gocardlessRedirectFlowId: null // Clear temporary redirect flow ID
       }
     })
 

@@ -53,15 +53,6 @@ export async function POST(request: Request) {
     // Generate session token
     const sessionToken = crypto.randomBytes(32).toString('hex')
 
-    // Save session token temporarily (optional, for verification)
-    await prisma.workshop.update({
-      where: { id: workshop.id },
-      data: {
-        // You could add a temporary field for this, or use existing field
-        // For now we'll just proceed
-      }
-    })
-
     // Create redirect flow
     const successRedirectUrl = `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings/sepa-mandate/complete`
     
@@ -77,12 +68,12 @@ export async function POST(request: Request) {
       }
     })
 
-    // Store session token in database for later verification
+    // Store session token and redirect flow ID in database
     await prisma.workshop.update({
       where: { id: workshop.id },
       data: {
-        // Store in a temp field or in metadata
-        // For now, we'll return it and handle in complete endpoint
+        gocardlessSessionToken: sessionToken,
+        gocardlessRedirectFlowId: redirectFlow.id
       }
     })
 
@@ -90,7 +81,6 @@ export async function POST(request: Request) {
       success: true,
       redirectUrl: redirectFlow.redirect_url,
       redirectFlowId: redirectFlow.id,
-      sessionToken,
       message: 'Bitte schließen Sie die SEPA-Mandatseinrichtung ab'
     })
 

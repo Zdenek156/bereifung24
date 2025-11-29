@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     })
 
     // Create redirect flow
-    const successRedirectUrl = `${process.env.NEXTAUTH_URL}/workshop/settings/sepa-mandate/complete`
+    const successRedirectUrl = `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings/sepa-mandate/complete`
     
     const redirectFlow = await createRedirectFlow({
       sessionToken,

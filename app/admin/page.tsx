@@ -237,14 +237,25 @@ export default function AdminDashboard() {
             <div className="text-primary-600 font-medium">Einstellungen →</div>
           </Link>
 
+          <Link href="/admin/billing" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Monatliche Abrechnung</h3>
+            <p className="text-sm text-gray-600 mb-4">Buchungsübersicht & GoCardless-Zahlungen</p>
+            <div className="text-primary-600 font-medium">Zur Abrechnung →</div>
+          </Link>
+
           <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Provisionen</h3>
-            <p className="text-sm text-gray-600 mb-4">Zahlungen und offene Posten verwalten</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Provisionen (Alt)</h3>
+            <p className="text-sm text-gray-600 mb-4">Einzelne Zahlungen verwalten</p>
             <div className="text-primary-600 font-medium">Zur Verwaltung →</div>
           </Link>
 

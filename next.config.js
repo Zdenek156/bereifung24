@@ -14,6 +14,7 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['reifen.bereifung24.de', 'localhost:3000'],
     },
+    instrumentationHook: true,
   },
 }
 

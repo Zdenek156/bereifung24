@@ -208,20 +208,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       </div>
                     </div>
                     
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">📞</span>
-                      <a href={`tel:${landingPage.workshop.user.phone}`} className="hover:underline">
-                        {landingPage.workshop.user.phone}
-                      </a>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">✉️</span>
-                      <a href={`mailto:${landingPage.workshop.user.email}`} className="hover:underline">
-                        {landingPage.workshop.user.email}
-                      </a>
-                    </div>
-                    
                     {landingPage.workshop.website && (
                       <div className="flex items-center">
                         <span className="text-2xl mr-3">🌐</span>

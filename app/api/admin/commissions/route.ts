@@ -34,7 +34,12 @@ export async function GET() {
           }
         },
         workshop: {
-          include: {
+          select: {
+            id: true,
+            companyName: true,
+            iban: true,
+            accountHolder: true,
+            paypalEmail: true,
             user: {
               select: {
                 firstName: true,
@@ -42,14 +47,6 @@ export async function GET() {
                 email: true
               }
             }
-          },
-          select: {
-            id: true,
-            companyName: true,
-            iban: true,
-            accountHolder: true,
-            paypalEmail: true,
-            user: true
           }
         }
       },

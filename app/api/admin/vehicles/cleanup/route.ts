@@ -29,28 +29,30 @@ export async function POST(req: NextRequest) {
       deletedCounts: {}
     }
 
-    // Delete vehicles
-    if (deleteVehicles) {
-      const vehicleResult = await prisma.vehicle.deleteMany({})
-      results.deletedCounts.vehicles = vehicleResult.count
+    // Delete in correct order (child records first, then parents)
+    
+    // 1. Delete bookings first (they reference offers)
+    if (deleteBookings || deleteOffers || deleteTireRequests) {
+      const bookingResult = await prisma.booking.deleteMany({})
+      results.deletedCounts.bookings = bookingResult.count
     }
 
-    // Delete tire requests (and related offers/bookings will cascade)
+    // 2. Delete offers (they reference tire requests)
+    if (deleteOffers || deleteTireRequests) {
+      const offerResult = await prisma.offer.deleteMany({})
+      results.deletedCounts.offers = offerResult.count
+    }
+
+    // 3. Delete tire requests (now safe as no references exist)
     if (deleteTireRequests) {
       const tireRequestResult = await prisma.tireRequest.deleteMany({})
       results.deletedCounts.tireRequests = tireRequestResult.count
     }
 
-    // Delete offers (if not already deleted via tire requests)
-    if (deleteOffers && !deleteTireRequests) {
-      const offerResult = await prisma.offer.deleteMany({})
-      results.deletedCounts.offers = offerResult.count
-    }
-
-    // Delete bookings (if not already deleted via tire requests/offers)
-    if (deleteBookings && !deleteTireRequests && !deleteOffers) {
-      const bookingResult = await prisma.booking.deleteMany({})
-      results.deletedCounts.bookings = bookingResult.count
+    // 4. Delete vehicles (independent)
+    if (deleteVehicles) {
+      const vehicleResult = await prisma.vehicle.deleteMany({})
+      results.deletedCounts.vehicles = vehicleResult.count
     }
 
     return NextResponse.json(results)

@@ -269,7 +269,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                     loading="lazy"
                     allowFullScreen
                     referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAUqcKuWSweYwG3SiY9FkBeKMN1gOXQHQA&q=${encodeURIComponent(
+                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCCSIGljCWlIs7-1cgD05zfLwbvSNlb9Lk&q=${encodeURIComponent(
                       `${landingPage.workshop.user.street}, ${landingPage.workshop.user.zipCode} ${landingPage.workshop.user.city}`
                     )}`}
                   />

@@ -189,11 +189,11 @@ export default function LandingPageEditor() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Landing Page bearbeiten</h1>
-              <p className="mt-2 text-gray-600">bereifung24.de/{landingPage.slug}</p>
+              <p className="mt-2 text-gray-600">bereifung24.de/lp/{landingPage.slug}</p>
             </div>
             <div className="flex gap-3">
               <Link
-                href={`/${landingPage.slug}`}
+                href={`/lp/${landingPage.slug}`}
                 target="_blank"
                 className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >

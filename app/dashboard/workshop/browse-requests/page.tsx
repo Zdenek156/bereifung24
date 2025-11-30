@@ -553,7 +553,7 @@ export default function BrowseRequestsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* SEPA Mandate Warning */}
-        {!sepaMandateLoading && sepaMandateStatus !== 'active' && (
+        {!sepaMandateLoading && !sepaMandateStatus && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -576,6 +576,45 @@ export default function BrowseRequestsPage() {
                     className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
                   >
                     Jetzt SEPA-Mandat einrichten →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SEPA Mandate Pending Info */}
+        {!sepaMandateLoading && sepaMandateStatus && sepaMandateStatus !== 'active' && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  SEPA-Mandat wird aktiviert
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    Ihr SEPA-Lastschriftmandat wurde erfolgreich eingerichtet und wird derzeit von GoCardless geprüft. 
+                    Die Aktivierung dauert in der Regel <strong>3-5 Werktage</strong>. Sie können bereits jetzt Angebote erstellen.
+                  </p>
+                  <p className="mt-2">
+                    Status: <span className="font-medium">
+                      {sepaMandateStatus === 'pending_submission' ? 'Wird eingereicht' : 
+                       sepaMandateStatus === 'submitted' ? 'Eingereicht, warte auf Bestätigung' : 
+                       sepaMandateStatus}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/dashboard/workshop/settings?tab=sepa"
+                    className="text-sm font-medium text-blue-800 hover:text-blue-900 underline"
+                  >
+                    Status prüfen →
                   </Link>
                 </div>
               </div>
@@ -819,7 +858,7 @@ export default function BrowseRequestsPage() {
                         <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium text-sm">
                           ✓ Angebot erstellt
                         </span>
-                      ) : sepaMandateStatus !== 'active' ? (
+                      ) : !sepaMandateStatus ? (
                         <div className="flex flex-col items-end gap-2">
                           <button
                             disabled

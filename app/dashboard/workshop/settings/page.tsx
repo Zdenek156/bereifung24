@@ -1045,14 +1045,38 @@ export default function WorkshopSettings() {
 
                   <div className="grid gap-6 mb-6">
                     {/* Status Badge */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-700">Status:</span>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
-                        {mandate.status === 'active' ? 'Aktiv' : 
-                         mandate.status === 'pending_submission' ? 'Wird verarbeitet' :
-                         mandate.status}
-                      </span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700">Status:</span>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          mandate.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          <span className={`w-2 h-2 rounded-full mr-2 ${
+                            mandate.status === 'active' 
+                              ? 'bg-green-600' 
+                              : 'bg-yellow-600'
+                          }`}></span>
+                          {mandate.status === 'active' ? 'Aktiv' : 
+                           mandate.status === 'pending_submission' ? 'Wird eingereicht' :
+                           mandate.status === 'submitted' ? 'Eingereicht' :
+                           mandate.status}
+                        </span>
+                      </div>
+                      {mandate.status !== 'active' && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          <p className="flex items-start gap-2">
+                            <svg className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <span>
+                              Ihr Mandat wird derzeit von GoCardless geprüft. Die Aktivierung dauert in der Regel <strong>3-5 Werktage</strong>. 
+                              Sie werden per E-Mail benachrichtigt, sobald das Mandat aktiv ist.
+                            </span>
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Mandate Reference */}

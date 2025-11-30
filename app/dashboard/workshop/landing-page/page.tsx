@@ -131,7 +131,7 @@ export default function LandingPageOverview() {
 
   const copyUrl = () => {
     if (!landingPage) return
-    const url = `${window.location.origin}/werkstatt/${landingPage.slug}`
+    const url = `${window.location.origin}/${landingPage.slug}`
     navigator.clipboard.writeText(url)
     alert('URL in Zwischenablage kopiert!')
   }
@@ -258,9 +258,9 @@ export default function LandingPageOverview() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Ihre Landing Page URL</h2>
               <div className="flex items-center space-x-3">
-                <div className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <code className="text-sm text-gray-700">
-                    {typeof window !== 'undefined' && `${window.location.origin}/werkstatt/${landingPage.slug}`}
+                <div className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200 overflow-x-auto">
+                  <code className="text-sm text-gray-700 whitespace-nowrap">
+                    {typeof window !== 'undefined' && `${window.location.origin}/${landingPage.slug}`}
                   </code>
                 </div>
                 <button
@@ -273,7 +273,7 @@ export default function LandingPageOverview() {
                   </svg>
                 </button>
                 <a
-                  href={`/werkstatt/${landingPage.slug}`}
+                  href={`/${landingPage.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-3 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
@@ -329,7 +329,7 @@ export default function LandingPageOverview() {
               </Link>
 
               <Link
-                href={`/werkstatt/${landingPage.slug}`}
+                href={`/${landingPage.slug}`}
                 target="_blank"
                 className="block p-6 bg-white border-2 border-purple-200 text-purple-700 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all text-center"
               >
@@ -354,16 +354,16 @@ export default function LandingPageOverview() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   URL-Slug (nur Kleinbuchstaben, Zahlen, Bindestriche)
                 </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                    bereifung24.de/werkstatt/
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <span className="inline-flex items-center px-3 py-2 rounded-lg sm:rounded-r-none border border-gray-300 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
+                    bereifung24.de/
                   </span>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => handleSlugChange(e.target.value)}
                     placeholder="meine-werkstatt"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg sm:rounded-l-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 {slug && slugAvailable !== null && (

@@ -172,6 +172,7 @@ model Workshop {
   workshopVacations WorkshopVacation[]
   workshopServices  WorkshopService[]
   pricingSettings   PricingSettings?
+  landingPage       WorkshopLandingPage?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -731,6 +732,82 @@ model ServicePackage {
 
   @@unique([workshopServiceId, packageType])
   @@map("service_packages")
+}
+
+// ============================================
+// WORKSHOP LANDING PAGES
+// ============================================
+
+model WorkshopLandingPage {
+  id         String   @id @default(cuid())
+  workshopId String   @unique
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Status & URL
+  isActive Boolean @default(false)
+  slug     String  @unique // URL slug (e.g., "autoservice-mueller-berlin")
+
+  // SEO
+  metaTitle       String? // Max 60 chars
+  metaDescription String? @db.Text // Max 160 chars
+  keywords        String? // Comma-separated keywords
+
+  // Hero Section
+  heroHeadline String? // Main headline
+  heroSubline  String? // Subheadline
+  heroImage    String? // Hero background image URL
+  ctaText      String  @default("Jetzt Anfrage stellen") // CTA button text
+
+  // About Section
+  aboutTitle String?
+  aboutText  String? @db.Text
+
+  // Images
+  galleryImages String[] // Array of image URLs
+
+  // Team Section
+  showTeam    Boolean @default(false)
+  teamMembers Json? // [{name, role, image, bio}]
+
+  // Services (custom or from workshop)
+  useWorkshopServices Boolean @default(true) // Use workshop's services
+  customServices      Json? // Custom service list if not using workshop services
+
+  // Features
+  showLogo         Boolean @default(true)
+  showReviews      Boolean @default(true)
+  showMap          Boolean @default(true)
+  showOpeningHours Boolean @default(true)
+  showPartnerLogos Boolean @default(false)
+
+  // Partner/Brand Logos
+  partnerLogos Json? // [{name, image}]
+
+  // FAQ Section
+  showFaq  Boolean @default(false)
+  faqItems Json? // [{question, answer}]
+
+  // Social Media
+  socialLinks Json? // {facebook, instagram, youtube}
+
+  // Design & Branding
+  template     String @default("modern") // modern, classic, minimal, professional
+  primaryColor String @default("#2563eb") // Brand color
+  accentColor  String @default("#10b981") // Accent color
+
+  // Analytics
+  viewCount    Int       @default(0)
+  lastViewedAt DateTime?
+
+  // Tracking
+  lastPublishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("workshop_landing_pages")
 }
 
 // ============================================

@@ -86,12 +86,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             description: landingPage.metaDescription,
             address: {
               '@type': 'PostalAddress',
-              streetAddress: landingPage.workshop.user.address || '',
+              streetAddress: landingPage.workshop.user.street || '',
               postalCode: landingPage.workshop.user.zipCode || '',
               addressLocality: landingPage.workshop.user.city || '',
               addressCountry: 'DE'
             },
-            telephone: landingPage.workshop.user.phone,
+            telephone: landingPage.workshop.user.phone || '',
             email: landingPage.workshop.user.email,
             ...(landingPage.workshop.website && { url: landingPage.workshop.website }),
           })
@@ -208,7 +208,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       <span className="text-2xl mr-3">🏢</span>
                       <div>
                         <div className="font-semibold">{landingPage.workshop.companyName}</div>
-                        <div>{landingPage.workshop.user.address}</div>
+                        <div>{landingPage.workshop.user.street}</div>
                         <div>{landingPage.workshop.user.zipCode} {landingPage.workshop.user.city}</div>
                       </div>
                     </div>
@@ -274,7 +274,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                     loading="lazy"
                     allowFullScreen
                     src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(
-                      `${landingPage.workshop.user.address}, ${landingPage.workshop.user.zipCode} ${landingPage.workshop.user.city}`
+                      `${landingPage.workshop.user.street}, ${landingPage.workshop.user.zipCode} ${landingPage.workshop.user.city}`
                     )}`}
                   />
                 </div>

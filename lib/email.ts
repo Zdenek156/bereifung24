@@ -1045,3 +1045,189 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
   `
   }
 }
+
+export function sepaMandateActivatedEmailTemplate(data: {
+  workshopName: string
+  companyName: string
+  mandateReference: string
+  activatedAt: string
+}) {
+  return {
+    subject: 'SEPA-Lastschriftmandat aktiviert - Sie können jetzt Angebote erstellen',
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          line-height: 1.6; 
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+        }
+        .container { 
+          max-width: 600px; 
+          margin: 20px auto; 
+          background: white; 
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header { 
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white; 
+          padding: 30px 20px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 28px;
+        }
+        .content { 
+          padding: 30px 20px;
+        }
+        .success-icon {
+          text-align: center;
+          font-size: 64px;
+          margin: 20px 0;
+        }
+        .highlight {
+          background-color: #f0f9ff;
+          border-left: 4px solid #3b82f6;
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+        }
+        .info-box {
+          background-color: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 15px;
+          margin: 20px 0;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .info-row:last-child {
+          border-bottom: none;
+        }
+        .info-label {
+          font-weight: 600;
+          color: #6b7280;
+        }
+        .info-value {
+          color: #111827;
+        }
+        .button { 
+          display: inline-block;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white; 
+          padding: 14px 32px; 
+          text-decoration: none; 
+          border-radius: 6px;
+          margin: 20px 0;
+          font-weight: 600;
+          text-align: center;
+        }
+        .button:hover {
+          opacity: 0.9;
+        }
+        .button-container {
+          text-align: center;
+          margin: 30px 0;
+        }
+        .footer { 
+          background: #f3f4f6;
+          padding: 20px;
+          text-align: center;
+          color: #6b7280;
+          font-size: 14px;
+        }
+        .footer p {
+          margin: 5px 0;
+        }
+        ul {
+          padding-left: 20px;
+        }
+        li {
+          margin: 8px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 SEPA-Mandat aktiviert!</h1>
+        </div>
+        
+        <div class="content">
+          <div class="success-icon">✅</div>
+          
+          <p>Sehr geehrte Damen und Herren von <strong>${data.companyName}</strong>,</p>
+          
+          <div class="highlight">
+            <p style="margin: 0; font-size: 18px; font-weight: 600;">
+              Ihr SEPA-Lastschriftmandat wurde erfolgreich aktiviert!
+            </p>
+          </div>
+          
+          <p>
+            Gute Nachrichten: GoCardless hat Ihr SEPA-Lastschriftmandat geprüft und aktiviert. 
+            Sie können ab sofort Angebote auf Kundenanfragen erstellen.
+          </p>
+
+          <div class="info-box">
+            <div class="info-row">
+              <span class="info-label">Mandatsreferenz:</span>
+              <span class="info-value"><strong>${data.mandateReference}</strong></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Aktiviert am:</span>
+              <span class="info-value">${data.activatedAt}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status:</span>
+              <span class="info-value" style="color: #10b981; font-weight: 600;">✓ Aktiv</span>
+            </div>
+          </div>
+
+          <h3 style="color: #667eea; margin-top: 30px;">Was bedeutet das für Sie?</h3>
+          <ul>
+            <li><strong>Angebote erstellen:</strong> Sie können jetzt auf alle Kundenanfragen mit Angeboten reagieren</li>
+            <li><strong>Automatische Abrechnung:</strong> Ihre Provisionen werden monatlich per SEPA-Lastschrift eingezogen</li>
+            <li><strong>Keine manuelle Zahlung:</strong> Sie müssen sich um nichts kümmern - alles läuft automatisch</li>
+          </ul>
+
+          <div class="button-container">
+            <a href="https://reifen.bereifung24.de/dashboard/workshop/browse-requests" class="button">
+              Jetzt Anfragen durchsuchen
+            </a>
+          </div>
+
+          <p style="margin-top: 30px;">
+            Bei Fragen zu Ihrem SEPA-Mandat oder der Abrechnung können Sie sich jederzeit an uns wenden.
+          </p>
+
+          <p>
+            Viel Erfolg mit Bereifung24!<br>
+            Ihr Bereifung24-Team
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Ihre Plattform für Reifenwechsel und mehr</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+  }
+}

@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyWebhookSignature } from '@/lib/gocardless'
+import { sendEmail, sepaMandateActivatedEmailTemplate } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -100,6 +101,42 @@ async function handleMandateEvent(action: string, mandateId: string) {
 
   if (result.count > 0) {
     console.log(`✅ Updated mandate ${mandateId} to status: ${newStatus}`)
+    
+    // Send email notification when mandate becomes active
+    if (newStatus === 'active') {
+      try {
+        // Fetch workshop details including user email
+        const workshop = await prisma.workshop.findFirst({
+          where: { gocardlessMandateId: mandateId },
+          include: { user: true }
+        })
+
+        if (workshop && workshop.user?.email) {
+          const emailData = sepaMandateActivatedEmailTemplate({
+            workshopName: workshop.companyName,
+            companyName: workshop.companyName,
+            mandateReference: workshop.gocardlessMandateRef || mandateId,
+            activatedAt: new Date().toLocaleDateString('de-DE', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })
+          })
+
+          await sendEmail({
+            to: workshop.user.email,
+            ...emailData
+          })
+
+          console.log(`📧 SEPA activation email sent to ${workshop.user.email}`)
+        } else {
+          console.log(`⚠️ Could not send email: Workshop or user email not found for mandate ${mandateId}`)
+        }
+      } catch (emailError) {
+        console.error(`❌ Failed to send SEPA activation email:`, emailError)
+        // Don't throw - email failure shouldn't break webhook processing
+      }
+    }
   } else {
     console.log(`⚠️ No workshop found for mandate ${mandateId}`)
   }

@@ -583,7 +583,7 @@ model Commission {
   // Billing
   billedAt    DateTime?
   collectedAt DateTime?
-  failedAt    DateTime?
+  failedAt    DateTime? @map("failedat")
 
   // SEPA/GoCardless Details
   sepaReference String? // Legacy SEPA Referenz

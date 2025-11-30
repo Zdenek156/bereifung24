@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// List of known static routes to avoid checking database
+const STATIC_ROUTES = [
+  '/api', '/admin', '/dashboard', '/login', '/register', '/forgot-password',
+  '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
+  '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings',
+  '/_next', '/favicon.ico', '/apple-icon', '/icon'
+]
+
 // This middleware runs before NextAuth can intercept calendar callbacks
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
@@ -10,8 +18,19 @@ export function middleware(request: NextRequest) {
   // If this is a calendar callback, let it through to our handler
   if (url.pathname === '/api/gcal/callback') {
     console.log('[MIDDLEWARE] Detected gcal callback - passing through')
-    // Don't intercept, let our route handler process it
     return NextResponse.next()
+  }
+  
+  // Check if this could be a landing page (not a static route)
+  const isStaticRoute = STATIC_ROUTES.some(route => url.pathname.startsWith(route))
+  const isRootPath = url.pathname === '/'
+  
+  if (!isStaticRoute && !isRootPath && !url.pathname.startsWith('/lp/')) {
+    // This could be a landing page slug, rewrite to /lp/[slug]
+    const slug = url.pathname.slice(1) // Remove leading /
+    console.log('[MIDDLEWARE] Potential landing page slug:', slug)
+    url.pathname = `/lp/${slug}`
+    return NextResponse.rewrite(url)
   }
   
   // For all other requests, continue normally

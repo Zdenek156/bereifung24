@@ -131,7 +131,7 @@ export default function LandingPageOverview() {
 
   const copyUrl = () => {
     if (!landingPage) return
-    const url = `${window.location.origin}/lp/${landingPage.slug}`
+    const url = `${window.location.origin}/${landingPage.slug}`
     navigator.clipboard.writeText(url)
     alert('URL in Zwischenablage kopiert!')
   }
@@ -273,7 +273,7 @@ export default function LandingPageOverview() {
                   </svg>
                 </button>
                 <a
-                  href={`/lp/${landingPage.slug}`}
+                  href={`/${landingPage.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-3 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
@@ -329,7 +329,7 @@ export default function LandingPageOverview() {
               </Link>
 
               <Link
-                href={`/lp/${landingPage.slug}`}
+                href={`/${landingPage.slug}`}
                 target="_blank"
                 className="block p-6 bg-white border-2 border-purple-200 text-purple-700 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all text-center"
               >
@@ -356,7 +356,7 @@ export default function LandingPageOverview() {
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <span className="inline-flex items-center px-3 py-2 rounded-lg sm:rounded-r-none border border-gray-300 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
-                    bereifung24.de/lp/
+                    bereifung24.de/
                   </span>
                   <input
                     type="text"

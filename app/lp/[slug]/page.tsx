@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     robots: landingPage.isActive ? 'index,follow' : 'noindex,nofollow',
     alternates: {
-      canonical: `https://bereifung24.de/lp/${params.slug}`
+      canonical: `https://bereifung24.de/${params.slug}`
     }
   }
 }

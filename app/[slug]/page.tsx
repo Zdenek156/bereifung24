@@ -108,16 +108,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center">
-              {landingPage.showLogo && landingPage.workshop.logo && (
-                <div className="mb-8">
-                  <img 
-                    src={landingPage.workshop.logo} 
-                    alt={landingPage.workshop.companyName}
-                    className="h-20 mx-auto"
-                  />
-                </div>
-              )}
-              
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
                 {landingPage.heroHeadline || `Willkommen bei ${landingPage.workshop.companyName}`}
               </h1>

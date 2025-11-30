@@ -131,12 +131,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                 >
                   Jetzt Anfrage stellen
                 </Link>
-                <a
-                  href={`tel:${landingPage.workshop.user.phone}`}
-                  className="inline-block px-8 py-4 bg-white text-gray-900 border-2 border-gray-300 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-all"
-                >
-                  📞 {landingPage.workshop.user.phone}
-                </a>
               </div>
             </div>
           </div>

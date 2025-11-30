@@ -86,12 +86,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             description: landingPage.metaDescription,
             address: {
               '@type': 'PostalAddress',
-              streetAddress: landingPage.workshop.address,
-              postalCode: landingPage.workshop.zipCode,
-              addressLocality: landingPage.workshop.city,
+              streetAddress: landingPage.workshop.user.address || '',
+              postalCode: landingPage.workshop.user.zipCode || '',
+              addressLocality: landingPage.workshop.user.city || '',
               addressCountry: 'DE'
             },
-            telephone: landingPage.workshop.phone,
+            telephone: landingPage.workshop.user.phone,
             email: landingPage.workshop.user.email,
             ...(landingPage.workshop.website && { url: landingPage.workshop.website }),
           })
@@ -137,10 +137,10 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                   Jetzt Anfrage stellen
                 </Link>
                 <a
-                  href={`tel:${landingPage.workshop.phone}`}
+                  href={`tel:${landingPage.workshop.user.phone}`}
                   className="inline-block px-8 py-4 bg-white text-gray-900 border-2 border-gray-300 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-all"
                 >
-                  📞 {landingPage.workshop.phone}
+                  📞 {landingPage.workshop.user.phone}
                 </a>
               </div>
             </div>
@@ -208,15 +208,15 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       <span className="text-2xl mr-3">🏢</span>
                       <div>
                         <div className="font-semibold">{landingPage.workshop.companyName}</div>
-                        <div>{landingPage.workshop.address}</div>
-                        <div>{landingPage.workshop.zipCode} {landingPage.workshop.city}</div>
+                        <div>{landingPage.workshop.user.address}</div>
+                        <div>{landingPage.workshop.user.zipCode} {landingPage.workshop.user.city}</div>
                       </div>
                     </div>
                     
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">📞</span>
-                      <a href={`tel:${landingPage.workshop.phone}`} className="hover:underline">
-                        {landingPage.workshop.phone}
+                      <a href={`tel:${landingPage.workshop.user.phone}`} className="hover:underline">
+                        {landingPage.workshop.user.phone}
                       </a>
                     </div>
                     
@@ -274,7 +274,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                     loading="lazy"
                     allowFullScreen
                     src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(
-                      `${landingPage.workshop.address}, ${landingPage.workshop.zipCode} ${landingPage.workshop.city}`
+                      `${landingPage.workshop.user.address}, ${landingPage.workshop.user.zipCode} ${landingPage.workshop.user.city}`
                     )}`}
                   />
                 </div>

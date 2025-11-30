@@ -46,6 +46,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function WorkshopLandingPage({ params }: PageProps) {
+  console.log('Looking for slug:', params.slug)
+  
   const landingPage = await prisma.workshopLandingPage.findUnique({
     where: { slug: params.slug },
     include: {
@@ -57,7 +59,10 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     }
   })
 
+  console.log('Found landing page:', landingPage ? `Yes (active: ${landingPage.isActive})` : 'No')
+
   if (!landingPage || !landingPage.isActive) {
+    console.log('Landing page not found or not active, showing 404')
     notFound()
   }
 

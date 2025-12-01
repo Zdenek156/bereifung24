@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         needByDate: new Date(validatedData.needByDate),
         latitude,
         longitude,
-        status: 'OPEN',
+        status: 'PENDING',
       },
     })
 

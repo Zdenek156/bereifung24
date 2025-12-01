@@ -269,6 +269,17 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mb-4">Testdaten selektiv löschen</p>
             <div className="text-primary-600 font-medium">Zum Tool →</div>
           </Link>
+
+          <Link href="/admin/sepa-mandates" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">SEPA-Mandate</h3>
+            <p className="text-sm text-gray-600 mb-4">GoCardless Status prüfen & synchronisieren</p>
+            <div className="text-primary-600 font-medium">Zur Verwaltung →</div>
+          </Link>
         </div>
 
         {/* Platform Stats */}

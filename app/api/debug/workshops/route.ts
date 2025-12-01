@@ -8,7 +8,6 @@ export async function GET() {
       select: {
         id: true,
         companyName: true,
-        serviceRadius: true,
         user: {
           select: {
             email: true,
@@ -34,7 +33,6 @@ export async function GET() {
         email: w.user.email,
         location: `${w.user.zipCode} ${w.user.city}`,
         hasCoordinates: !!(w.user.latitude && w.user.longitude),
-        serviceRadius: w.serviceRadius,
         totalOffers: w._count.offers
       }))
     })

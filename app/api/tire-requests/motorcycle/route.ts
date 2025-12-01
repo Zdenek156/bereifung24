@@ -50,17 +50,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Motorcycle request body:', JSON.stringify(body, null, 2))
     
-    try {
-      const validatedData = motorcycleRequestSchema.parse(body)
-    } catch (validationError) {
-      console.error('Validation error:', validationError)
+    const validationResult = motorcycleRequestSchema.safeParse(body)
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error)
       return NextResponse.json(
-        { error: 'Validierungsfehler', details: validationError },
+        { error: 'Validierungsfehler', details: validationResult.error },
         { status: 400 }
       )
     }
     
-    const validatedData = motorcycleRequestSchema.parse(body)
+    const validatedData = validationResult.data
 
     // Get customer
     const customer = await prisma.customer.findUnique({

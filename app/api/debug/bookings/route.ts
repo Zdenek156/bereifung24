@@ -6,8 +6,8 @@ export async function GET() {
     // Get all bookings with offers
     const bookings = await prisma.booking.findMany({
       where: {
-        offerId: {
-          not: null
+        NOT: {
+          offerId: null
         }
       },
       select: {

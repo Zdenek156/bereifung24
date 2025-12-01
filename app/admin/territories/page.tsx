@@ -32,7 +32,6 @@ interface Workshop {
   address: string | null;
   city: string | null;
   zipCode: string | null;
-  isActive: boolean;
   hasSepaMandateActive: boolean;
   createdAt: string;
   offersCount: number;
@@ -116,8 +115,7 @@ export default function TerritoriesPage() {
   }
 
   const filteredCustomers = showCustomers ? data.customers : [];
-  const filteredWorkshops = showWorkshops ? 
-    (showActiveOnly ? data.workshops.filter(w => w.isActive) : data.workshops) : [];
+  const filteredWorkshops = showWorkshops ? data.workshops : [];
 
   // Find postal codes with no workshops (potential expansion areas)
   const expansionAreas = data.postalCodeStats
@@ -168,7 +166,7 @@ export default function TerritoriesPage() {
                 <p className="text-sm text-gray-600">Werkstätten</p>
                 <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalWorkshops}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {data.overallStats.activeWorkshops} aktiv, {data.overallStats.workshopsWithSepa} mit SEPA
+                  {data.overallStats.workshopsWithSepa} mit SEPA
                 </p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -276,23 +274,13 @@ export default function TerritoriesPage() {
                     onChange={(e) => setShowWorkshops(e.target.checked)}
                     className="w-4 h-4 text-red-600 rounded"
                   />
-                  <span className="text-sm font-medium">
-                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>
-                    Werkstätten anzeigen ({data.workshops.length})
-                  </span>
-                </label>
+                <span className="text-sm font-medium">
+                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>
+                  Werkstätten anzeigen ({data.workshops.length})
+                </span>
+              </label>
 
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={showActiveOnly}
-                    onChange={(e) => setShowActiveOnly(e.target.checked)}
-                    className="w-4 h-4 text-green-600 rounded"
-                  />
-                  <span className="text-sm font-medium">Nur aktive Werkstätten</span>
-                </label>
-
-                <button
+              <button
                   onClick={fetchData}
                   className="ml-auto px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"
                 >

@@ -48,7 +48,6 @@ export async function GET() {
       select: {
         id: true,
         companyName: true,
-        isActive: true,
         gocardlessMandateStatus: true,
         createdAt: true,
         user: {
@@ -137,7 +136,6 @@ export async function GET() {
     // Overall statistics
     const totalCustomers = customers.length;
     const totalWorkshops = workshops.length;
-    const activeWorkshops = workshops.filter(w => w.isActive).length;
     const workshopsWithSepa = workshops.filter(w => w.gocardlessMandateStatus === 'active').length;
     const totalRequests = customers.reduce((sum, c) => sum + c.tireRequests.length, 0);
     const totalOffers = workshops.reduce((sum, w) => sum + w.offers.length, 0);
@@ -177,7 +175,6 @@ export async function GET() {
         address: w.user?.street || null,
         city: w.user?.city || null,
         zipCode: w.user?.zipCode || null,
-        isActive: w.isActive,
         hasSepaMandateActive: w.gocardlessMandateStatus === 'active',
         createdAt: w.createdAt,
         offersCount: w.offers.length,
@@ -192,7 +189,6 @@ export async function GET() {
       overallStats: {
         totalCustomers,
         totalWorkshops,
-        activeWorkshops,
         workshopsWithSepa,
         totalRequests,
         totalOffers,

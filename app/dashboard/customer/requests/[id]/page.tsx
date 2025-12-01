@@ -168,10 +168,13 @@ export default function RequestDetailPage() {
       return 'TIRE_CHANGE' // Regular tire change
     }
     
-    // Other services
-    if (notes.includes('RÄDER UMSTECKEN') || notes.includes('🔄')) return 'WHEEL_CHANGE'
-    if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REIFENREPARATUR')) return 'REPAIR'
-    if (notes.includes('ACHSVERMESSUNG') || notes.includes('📐')) return 'ALIGNMENT'
+    // Other services - check by keywords
+    if (notes.includes('KLIMASERVICE')) return 'CLIMATE'
+    if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT'
+    if (notes.includes('BREMSENWECHSEL')) return 'BRAKES'
+    if (notes.includes('BATTERIEWECHSEL')) return 'BATTERY'
+    if (notes.includes('RÄDER UMSTECKEN')) return 'WHEEL_CHANGE'
+    if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REPARATUR')) return 'REPAIR'
     if (notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
     
     return 'UNKNOWN'
@@ -181,10 +184,13 @@ export default function RequestDetailPage() {
 
   const getServiceIcon = () => {
     switch (serviceType) {
+      case 'CLIMATE': return '❄️'
+      case 'ALIGNMENT': return '📐'
+      case 'BRAKES': return '🔴'
+      case 'BATTERY': return '🔋'
       case 'WHEEL_CHANGE': return '🔄'
       case 'REPAIR': return '🔧'
       case 'MOTORCYCLE': return '🏍️'
-      case 'ALIGNMENT': return '📐'
       case 'OTHER_SERVICES': return '🔧'
       default: return '🚗'
     }
@@ -192,10 +198,13 @@ export default function RequestDetailPage() {
 
   const getServiceTitle = () => {
     switch (serviceType) {
+      case 'CLIMATE': return 'Klimaservice'
+      case 'ALIGNMENT': return 'Achsvermessung'
+      case 'BRAKES': return 'Bremsenwechsel'
+      case 'BATTERY': return 'Batteriewechsel'
       case 'WHEEL_CHANGE': return 'Räder umstecken'
       case 'REPAIR': return 'Reifenreparatur'
       case 'MOTORCYCLE': return 'Motorradreifen'
-      case 'ALIGNMENT': return 'Achsvermessung'
       case 'OTHER_SERVICES': return 'Reifenservice'
       case 'TIRE_CHANGE': return 'Reifenwechsel'
       default: return 'Service'

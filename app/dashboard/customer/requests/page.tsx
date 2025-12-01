@@ -166,13 +166,16 @@ export default function RequestsPage() {
                               {request.season === 'ALL_SEASON' && '🌤️'}
                             </>
                           ) : request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 ? (
-                            // Service request - detect type by emoji in additionalNotes
+                            // Service request - detect type by keyword in additionalNotes
                             <>
-                              {request.additionalNotes?.includes('🔧') && '🔧 Reifenreparatur'}
-                              {request.additionalNotes?.includes('📐') && '📐 Achsvermessung / Spureinstellung'}
-                              {request.additionalNotes?.includes('🔄') && '🔄 Räder umstecken (Sommer/Winter)'}
+                              {request.additionalNotes?.includes('KLIMASERVICE') && '❄️ Klimaservice'}
+                              {request.additionalNotes?.includes('ACHSVERMESSUNG') && '📐 Achsvermessung / Spureinstellung'}
+                              {request.additionalNotes?.includes('BREMSENWECHSEL') && '🔴 Bremsenwechsel'}
+                              {request.additionalNotes?.includes('BATTERIEWECHSEL') && '🔋 Batteriewechsel'}
+                              {request.additionalNotes?.includes('RÄDER UMSTECKEN') && '🔄 Räder umstecken (Sommer/Winter)'}
+                              {request.additionalNotes?.includes('🔧 REPARATUR') && '🔧 Reifenreparatur'}
                               {request.additionalNotes?.includes('🛠️') && '🛠️ Sonstige Reifendienstleistungen'}
-                              {!request.additionalNotes?.match(/[🔧📐🔄🛠️]/) && '🔧 Service-Anfrage'}
+                              {!request.additionalNotes?.includes('KLIMASERVICE') && !request.additionalNotes?.includes('ACHSVERMESSUNG') && !request.additionalNotes?.includes('BREMSENWECHSEL') && !request.additionalNotes?.includes('BATTERIEWECHSEL') && !request.additionalNotes?.includes('RÄDER UMSTECKEN') && !request.additionalNotes?.includes('🔧 REPARATUR') && !request.additionalNotes?.includes('🛠️') && '🔧 Service-Anfrage'}
                             </>
                           ) : (
                             // Regular car tire request

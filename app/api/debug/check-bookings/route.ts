@@ -3,59 +3,15 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // Alle Bookings mit allen Details
-    const bookings = await prisma.booking.findMany({
-      include: {
-        offer: {
-          include: {
-            tireRequest: {
-              include: {
-                customer: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true
-                  }
-                }
-              }
-            },
-            workshop: {
-              select: {
-                companyName: true,
-                email: true
-              }
-            }
-          }
-        },
-        commission: true
-      },
+    // Alle Offers
+    const offers = await prisma.offer.findMany({
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    // Alle Offers
-    const offers = await prisma.offer.findMany({
-      include: {
-        tireRequest: {
-          include: {
-            customer: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
-        },
-        workshop: {
-          select: {
-            companyName: true,
-            email: true
-          }
-        },
-        booking: true
-      },
+    // Alle Bookings  
+    const bookings = await prisma.booking.findMany({
       orderBy: {
         createdAt: 'desc'
       }
@@ -63,21 +19,6 @@ export async function GET() {
 
     // Alle Commissions
     const commissions = await prisma.commission.findMany({
-      include: {
-        booking: {
-          include: {
-            offer: {
-              include: {
-                workshop: {
-                  select: {
-                    companyName: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       orderBy: {
         createdAt: 'desc'
       }
@@ -85,42 +26,38 @@ export async function GET() {
 
     return NextResponse.json({
       summary: {
-        totalBookings: bookings.length,
         totalOffers: offers.length,
+        totalBookings: bookings.length,
         totalCommissions: commissions.length,
-        bookingsWithCommission: bookings.filter(b => b.commission).length,
-        bookingsWithoutCommission: bookings.filter(b => !b.commission).length
+        offersAccepted: offers.filter(o => o.status === 'ACCEPTED').length,
+        bookingsCompleted: bookings.filter(b => b.status === 'COMPLETED').length
       },
+      offers: offers.map(o => ({
+        id: o.id,
+        status: o.status,
+        price: o.price,
+        createdAt: o.createdAt,
+        workshopId: o.workshopId,
+        tireRequestId: o.tireRequestId
+      })),
       bookings: bookings.map(b => ({
         id: b.id,
         status: b.status,
         appointmentDate: b.appointmentDate,
         createdAt: b.createdAt,
-        customer: b.offer.tireRequest.customer.firstName + ' ' + b.offer.tireRequest.customer.lastName,
-        workshop: b.offer.workshop.companyName,
-        totalPrice: b.offer.totalPrice,
-        hasCommission: !!b.commission,
-        commissionAmount: b.commission?.amount,
-        commissionStatus: b.commission?.status
-      })),
-      offers: offers.map(o => ({
-        id: o.id,
-        status: o.status,
-        totalPrice: o.totalPrice,
-        createdAt: o.createdAt,
-        customer: o.tireRequest.customer.firstName + ' ' + o.tireRequest.customer.lastName,
-        workshop: o.workshop.companyName,
-        hasBooking: !!o.booking,
-        bookingId: o.booking?.id
+        offerId: b.offerId,
+        workshopId: b.workshopId,
+        customerId: b.customerId
       })),
       commissions: commissions.map(c => ({
         id: c.id,
-        amount: c.amount,
-        percentage: c.percentage,
+        commissionAmount: c.commissionAmount,
+        commissionPercentage: c.commissionPercentage,
         status: c.status,
+        month: c.month,
+        year: c.year,
         dueDate: c.dueDate,
         paidAt: c.paidAt,
-        workshop: c.booking.offer.workshop.companyName,
         bookingId: c.bookingId
       }))
     })

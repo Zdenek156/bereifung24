@@ -406,7 +406,7 @@ export default function RequestDetailPage() {
                       <p className="text-sm text-gray-600 mb-1">Dimension</p>
                       {serviceType === 'MOTORCYCLE' && request.additionalNotes ? (
                         // Motorradreifen: Extrahiere beide Dimensionen aus additionalNotes
-                        {(() => {
+                        (() => {
                           const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
                           const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
                           

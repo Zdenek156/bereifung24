@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getGoCardlessClient } from '@/lib/gocardless'
+import { getGocardlessClient } from '@/lib/gocardless'
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     // Hole aktuellen Status von GoCardless
-    const client = getGoCardlessClient()
+    const client = getGocardlessClient()
     const mandate = await client.mandates.find(workshop.gocardlessMandateId)
 
     // Update in Datenbank

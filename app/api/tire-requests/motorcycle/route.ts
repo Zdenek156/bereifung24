@@ -91,10 +91,16 @@ export async function POST(request: NextRequest) {
         longitude = geocodeResult.longitude
         city = geocodeResult.city || customer.user.city
       } else {
-        console.warn(`Failed to geocode address for customer ${customer.id}`)
+        console.error(`Geocoding failed for customer ${customer.id}:`, {
+          street: customer.user.street,
+          zipCode: customer.user.zipCode,
+          city: customer.user.city
+        })
+        // Weiter fortfahren auch ohne Koordinaten - Werkstätte können trotzdem basierend auf PLZ/Stadt suchen
         city = customer.user.city
       }
     } else {
+      console.error(`Customer ${customer.id} has incomplete address`)
       city = customer.user.city
     }
 

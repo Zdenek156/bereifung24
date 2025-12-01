@@ -110,9 +110,10 @@ export async function GET() {
     if (workshop.user.latitude !== null && workshop.user.longitude !== null) {
       filteredRequests = allRequests
         .filter(request => {
-          // Zeige Anfragen ohne Koordinaten nicht
+          // Wenn Anfrage keine Koordinaten hat, zeige sie trotzdem an (PLZ/Stadt-Matching)
           if (request.latitude === null || request.longitude === null) {
-            return false
+            console.warn(`Request ${request.id} has no coordinates - showing anyway`)
+            return true // Zeige Anfragen ohne Koordinaten an
           }
 
           // Berechne Distanz
@@ -138,16 +139,22 @@ export async function GET() {
           // Remove vehicle object and add formatted string
           const { vehicle, ...requestWithoutVehicle } = requestWithVehicle
           
+          // Berechne Distanz nur wenn beide Koordinaten vorhanden
+          let distance = 999 // Default für Anfragen ohne Koordinaten (werden ans Ende sortiert)
+          if (request.latitude !== null && request.longitude !== null) {
+            distance = calculateDistance(
+              workshop.user.latitude!,
+              workshop.user.longitude!,
+              request.latitude,
+              request.longitude
+            )
+          }
+          
           return {
             ...requestWithoutVehicle,
             vehicle: null,
             vehicleInfo,
-            distance: calculateDistance(
-              workshop.user.latitude!,
-              workshop.user.longitude!,
-              request.latitude!,
-              request.longitude!
-            )
+            distance
           }
         })
         .sort((a, b) => a.distance - b.distance)

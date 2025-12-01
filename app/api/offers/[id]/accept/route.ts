@@ -146,6 +146,8 @@ export async function POST(
           offerId: offer.id,
           tireRequestId: offer.tireRequestId,
           status: 'PENDING', // Wird zu CONFIRMED sobald Termin vereinbart
+          appointmentDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Platzhalter: +7 Tage
+          appointmentTime: '00:00', // Platzhalter
           wantsBalancing: offer.customerWantsBalancing || false,
           wantsStorage: wantsStorage
         }

@@ -110,7 +110,7 @@ export async function POST(
       )
     }
 
-    // Transaktion: Angebot annehmen und alle anderen ablehnen
+    // Transaktion: Angebot annehmen, Booking erstellen und alle anderen ablehnen
     const result = await prisma.$transaction(async (tx) => {
       // Calculate final price (balancing already included in offer price, add storage if selected)
       let finalPrice = offer.price
@@ -135,6 +135,58 @@ export async function POST(
         },
         include: {
           tireOptions: true
+        }
+      })
+
+      // Erstelle Booking sofort (Termin kann später vereinbart werden)
+      const booking = await tx.booking.create({
+        data: {
+          customerId: customer.id,
+          workshopId: offer.workshopId,
+          offerId: offer.id,
+          tireRequestId: offer.tireRequestId,
+          status: 'PENDING', // Wird zu CONFIRMED sobald Termin vereinbart
+          wantsBalancing: offer.customerWantsBalancing || false,
+          wantsStorage: wantsStorage
+        }
+      })
+
+      // Berechne und erstelle Commission sofort
+      const commissionRate = 4.9 // 4,9% Provision
+      const orderTotal = finalPrice
+      const commissionAmount = (orderTotal * commissionRate) / 100
+      
+      // Berechne Netto/Brutto für Rechnung
+      const taxRate = 19.0
+      const grossAmount = commissionAmount
+      const netAmount = grossAmount / (1 + taxRate / 100)
+      const taxAmount = grossAmount - netAmount
+
+      // Bestimme Abrechnungszeitraum (aktueller Monat)
+      const now = new Date()
+      const billingMonth = now.getMonth() + 1
+      const billingYear = now.getFullYear()
+      
+      // Berechne Billing Period (Monatserster bis Monatsletzter)
+      const billingPeriodStart = new Date(billingYear, billingMonth - 1, 1)
+      const billingPeriodEnd = new Date(billingYear, billingMonth, 0, 23, 59, 59, 999)
+
+      await tx.commission.create({
+        data: {
+          bookingId: booking.id,
+          workshopId: offer.workshopId,
+          orderTotal: orderTotal,
+          commissionRate: commissionRate,
+          commissionAmount: commissionAmount,
+          taxRate: taxRate,
+          taxAmount: taxAmount,
+          netAmount: netAmount,
+          grossAmount: grossAmount,
+          billingPeriodStart: billingPeriodStart,
+          billingPeriodEnd: billingPeriodEnd,
+          billingMonth: billingMonth,
+          billingYear: billingYear,
+          status: 'PENDING' // PENDING -> BILLED -> COLLECTED
         }
       })
 

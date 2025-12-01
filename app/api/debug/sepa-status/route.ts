@@ -25,7 +25,7 @@ export async function GET() {
     return NextResponse.json({
       total: workshops.length,
       workshops: workshops.map(w => ({
-        id: w.id.substring(0, 8) + '...',
+        id: w.id, // Vollständige ID
         name: w.companyName,
         email: w.user.email,
         owner: `${w.user.firstName} ${w.user.lastName}`,
@@ -33,7 +33,7 @@ export async function GET() {
         mandateStatus: w.gocardlessMandateStatus,
         mandateRef: w.gocardlessMandateRef,
         mandateCreatedAt: w.gocardlessMandateCreatedAt,
-        customerId: w.gocardlessCustomerId ? w.gocardlessCustomerId.substring(0, 12) + '...' : null
+        customerId: w.gocardlessCustomerId
       }))
     })
   } catch (error) {

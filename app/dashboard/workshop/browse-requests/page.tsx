@@ -681,13 +681,13 @@ export default function BrowseRequestsPage() {
 
               // Detect service type from additionalNotes
               const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
-              const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
+              const isClimate = request.additionalNotes?.includes('KLIMASERVICE')
+              const isAlignment = request.additionalNotes?.includes('ACHSVERMESSUNG')
+              const isBrakes = request.additionalNotes?.includes('BREMSENWECHSEL')
+              const isBattery = request.additionalNotes?.includes('BATTERIEWECHSEL')
               const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
-              const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+              const isWheelChange = request.additionalNotes?.includes('RÄDER UMSTECKEN')
               const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
-              const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
-              const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
-              const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
 
               // Extract tire dimensions for motorcycle (including load index and speed rating)
               let frontTireSize = ''
@@ -911,9 +911,7 @@ export default function BrowseRequestsPage() {
                 </button>
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                {selectedRequest.width === 0 ? (
-                  <>Für: 🔧 Räder umstecken (Sommer/Winter)</>
-                ) : selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
+                {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
                   <>
                     {(() => {
                       // Parse additionalNotes to get front and rear tire dimensions with load index
@@ -938,6 +936,20 @@ export default function BrowseRequestsPage() {
                       return `Für: 🏍️ ${selectedRequest.width}/${selectedRequest.aspectRatio} R${selectedRequest.diameter}${loadSpeed} • ${getSeasonLabel(selectedRequest.season)}`
                     })()}
                   </>
+                ) : selectedRequest.additionalNotes?.includes('KLIMASERVICE') ? (
+                  <>Für: ❄️ Klimaservice</>
+                ) : selectedRequest.additionalNotes?.includes('ACHSVERMESSUNG') ? (
+                  <>Für: ⚙️ Achsvermessung / Spureinstellung</>
+                ) : selectedRequest.additionalNotes?.includes('BREMSENWECHSEL') ? (
+                  <>Für: 🔴 Bremsenwechsel</>
+                ) : selectedRequest.additionalNotes?.includes('BATTERIEWECHSEL') ? (
+                  <>Für: 🔋 Batteriewechsel</>
+                ) : selectedRequest.additionalNotes?.includes('RÄDER UMSTECKEN') ? (
+                  <>Für: 🔄 Räder umstecken (Sommer/Winter)</>
+                ) : selectedRequest.additionalNotes?.includes('🔧 REPARATUR') ? (
+                  <>Für: 🔧 Reifenreparatur</>
+                ) : selectedRequest.width === 0 ? (
+                  <>Für: 🛠️ Service-Anfrage</>
                 ) : (
                   <>
                     Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter} • 

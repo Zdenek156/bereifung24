@@ -33,7 +33,6 @@ interface Workshop {
   address: string | null;
   city: string | null;
   zipCode: string | null;
-  isActive: boolean;
   hasSepaMandateActive: boolean;
   offersCount: number;
   acceptedOffersCount: number;
@@ -174,8 +173,7 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
     workshops.forEach((workshop) => {
       const coords = getCoordinatesForPostalCode(workshop.zipCode || '');
       if (coords) {
-        const icon = workshop.isActive ? workshopIcon : inactiveWorkshopIcon;
-        const marker = L.marker(coords, { icon }).addTo(map);
+        const marker = L.marker(coords, { icon: workshopIcon }).addTo(map);
         
         const popupContent = `
           <div style="min-width: 200px;">
@@ -188,12 +186,6 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
               ${workshop.address ? `<p><strong>Adresse:</strong> ${workshop.address}</p>` : ''}
               ${workshop.city ? `<p><strong>Stadt:</strong> ${workshop.city}, ${workshop.zipCode}</p>` : ''}
               <hr style="margin: 8px 0; border-color: #E5E7EB;" />
-              <p>
-                <strong>Status:</strong> 
-                <span style="color: ${workshop.isActive ? '#10B981' : '#6B7280'}; font-weight: 600;">
-                  ${workshop.isActive ? '✓ Aktiv' : '○ Inaktiv'}
-                </span>
-              </p>
               <p>
                 <strong>SEPA:</strong> 
                 <span style="color: ${workshop.hasSepaMandateActive ? '#10B981' : '#EF4444'}; font-weight: 600;">

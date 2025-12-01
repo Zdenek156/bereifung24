@@ -64,7 +64,7 @@ export async function GET() {
           select: {
             id: true,
             status: true,
-            totalPrice: true,
+            price: true,
           }
         }
       }
@@ -184,7 +184,7 @@ export async function GET() {
         acceptedOffersCount: w.offers.filter(o => o.status === 'ACCEPTED').length,
         totalRevenue: w.offers
           .filter(o => o.status === 'ACCEPTED')
-          .reduce((sum, o) => sum + (o.totalPrice || 0), 0)
+          .reduce((sum, o) => sum + (o.price || 0), 0)
       })),
       postalCodeStats: Object.values(postalCodeStats).sort((a, b) => 
         b.requests - a.requests

@@ -1,9 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { RefreshCw, CheckCircle, Clock, XCircle, AlertTriangle } from 'lucide-react'
 
 interface SepaMandateInfo {
   id: string
@@ -85,31 +82,17 @@ export default function SepaMandatesPage() {
     fetchMandates()
   }, [])
 
-  const getStatusIcon = (status: string | null) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="w-5 h-5 text-green-600" />
-      case 'pending_submission':
-        return <Clock className="w-5 h-5 text-yellow-600" />
-      case 'failed':
-      case 'cancelled':
-        return <XCircle className="w-5 h-5 text-red-600" />
-      default:
-        return <AlertTriangle className="w-5 h-5 text-gray-400" />
-    }
-  }
-
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'active':
-        return 'bg-green-50 text-green-700 border-green-200'
+        return 'bg-green-100 text-green-800 border-green-300'
       case 'pending_submission':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
       case 'failed':
       case 'cancelled':
-        return 'bg-red-50 text-red-700 border-red-200'
+        return 'bg-red-100 text-red-800 border-red-300'
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-300'
     }
   }
 
@@ -122,15 +105,23 @@ export default function SepaMandatesPage() {
             GoCardless Mandate-Status für alle Werkstätten
           </p>
         </div>
-        <Button onClick={fetchMandates} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <button 
+          onClick={fetchMandates} 
+          disabled={loading}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
+        >
+          <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           Aktualisieren
-        </Button>
+        </button>
       </div>
 
-      <Card className="p-6 mb-6 bg-blue-50 border-blue-200">
+      <div className="p-6 mb-6 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 className="font-semibold mb-2 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-blue-600" />
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
           Webhook-Konfiguration erforderlich
         </h3>
         <p className="text-sm text-gray-700 mb-3">
@@ -148,20 +139,21 @@ export default function SepaMandatesPage() {
 
       {loading ? (
         <div className="text-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+          <svg className="w-8 h-8 animate-spin mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           <p className="mt-4 text-gray-600">Lade Daten...</p>
         </div>
       ) : (
         <div className="space-y-4">
           {mandates.map((mandate) => (
-            <Card key={mandate.id} className="p-6">
+            <div key={mandate.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-xl font-semibold">{mandate.name}</h3>
                     {mandate.hasSepaMandate && (
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center gap-2 ${getStatusColor(mandate.mandateStatus)}`}>
-                        {getStatusIcon(mandate.mandateStatus)}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(mandate.mandateStatus)}`}>
                         {mandate.mandateStatus || 'Kein Status'}
                       </span>
                     )}
@@ -206,30 +198,25 @@ export default function SepaMandatesPage() {
                 <div className="flex flex-col gap-2 ml-4">
                   {mandate.hasSepaMandate && (
                     <>
-                      <Button
+                      <button
                         onClick={() => syncMandateStatus(mandate.id)}
                         disabled={syncing === mandate.id}
-                        variant="outline"
-                        size="sm"
+                        className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center gap-2"
                       >
-                        {syncing === mandate.id ? (
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                        )}
+                        <svg className={`w-4 h-4 ${syncing === mandate.id ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                         Status prüfen
-                      </Button>
+                      </button>
                       
                       {mandate.mandateStatus !== 'active' && (
-                        <Button
+                        <button
                           onClick={() => activateMandate(mandate.id)}
                           disabled={syncing === mandate.id}
-                          variant="default"
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
                         >
                           Manuell aktivieren
-                        </Button>
+                        </button>
                       )}
                     </>
                   )}
@@ -239,7 +226,7 @@ export default function SepaMandatesPage() {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

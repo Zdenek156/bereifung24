@@ -135,7 +135,7 @@ export default function SepaMandatesPage() {
           <li>In <code className="bg-white px-2 py-1 rounded">/var/www/bereifung24/.env</code> hinzufügen: <code className="bg-white px-2 py-1 rounded">GOCARDLESS_WEBHOOK_SECRET="..."</code></li>
           <li>PM2 neu starten: <code className="bg-white px-2 py-1 rounded">pm2 restart bereifung24</code></li>
         </ol>
-      </Card>
+      </div>
 
       {loading ? (
         <div className="text-center py-12">

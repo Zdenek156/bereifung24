@@ -20,6 +20,8 @@ interface Customer {
   address: string | null;
   city: string | null;
   zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   requestsCount: number;
   offersCount: number;
   acceptedOffersCount: number;
@@ -33,6 +35,8 @@ interface Workshop {
   address: string | null;
   city: string | null;
   zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   hasSepaMandateActive: boolean;
   offersCount: number;
   acceptedOffersCount: number;
@@ -143,7 +147,12 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
 
     // Add customer markers
     customers.forEach((customer) => {
-      const coords = getCoordinatesForPostalCode(customer.zipCode || '');
+      // Use database coordinates if available, otherwise try to estimate from postal code
+      const coords: [number, number] | null = 
+        (customer.latitude && customer.longitude) 
+          ? [customer.latitude, customer.longitude]
+          : getCoordinatesForPostalCode(customer.zipCode || '');
+      
       if (coords) {
         const marker = L.marker(coords, { icon: customerIcon }).addTo(map);
         
@@ -171,7 +180,12 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
 
     // Add workshop markers
     workshops.forEach((workshop) => {
-      const coords = getCoordinatesForPostalCode(workshop.zipCode || '');
+      // Use database coordinates if available, otherwise try to estimate from postal code
+      const coords: [number, number] | null = 
+        (workshop.latitude && workshop.longitude) 
+          ? [workshop.latitude, workshop.longitude]
+          : getCoordinatesForPostalCode(workshop.zipCode || '');
+      
       if (coords) {
         const marker = L.marker(coords, { icon: workshopIcon }).addTo(map);
         

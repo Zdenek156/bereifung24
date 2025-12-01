@@ -18,6 +18,8 @@ interface Customer {
   address: string | null;
   city: string | null;
   zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   createdAt: string;
   requestsCount: number;
   offersCount: number;
@@ -32,6 +34,8 @@ interface Workshop {
   address: string | null;
   city: string | null;
   zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   hasSepaMandateActive: boolean;
   createdAt: string;
   offersCount: number;

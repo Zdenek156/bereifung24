@@ -25,6 +25,8 @@ export async function GET() {
             street: true,
             city: true,
             zipCode: true,
+            latitude: true,
+            longitude: true,
           }
         },
         tireRequests: {
@@ -57,6 +59,8 @@ export async function GET() {
             street: true,
             city: true,
             zipCode: true,
+            latitude: true,
+            longitude: true,
           }
         },
         offers: {
@@ -160,6 +164,8 @@ export async function GET() {
         address: c.user?.street || null,
         city: c.user?.city || null,
         zipCode: c.user?.zipCode || null,
+        latitude: c.user?.latitude || null,
+        longitude: c.user?.longitude || null,
         createdAt: c.createdAt,
         requestsCount: c.tireRequests.length,
         offersCount: c.tireRequests.reduce((sum, r) => sum + r.offers.length, 0),
@@ -175,6 +181,8 @@ export async function GET() {
         address: w.user?.street || null,
         city: w.user?.city || null,
         zipCode: w.user?.zipCode || null,
+        latitude: w.user?.latitude || null,
+        longitude: w.user?.longitude || null,
         hasSepaMandateActive: w.gocardlessMandateStatus === 'active',
         createdAt: w.createdAt,
         offersCount: w.offers.length,

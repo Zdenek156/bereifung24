@@ -3,19 +3,15 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // Get all bookings with offers
-    const bookings = await prisma.booking.findMany({
-      where: {
-        NOT: {
-          offerId: null
-        }
-      },
+    // Get all bookings
+    const allBookings = await prisma.booking.findMany({
       select: {
         id: true,
         status: true,
         appointmentDate: true,
         completedAt: true,
         createdAt: true,
+        offerId: true,
         workshop: {
           select: {
             companyName: true,
@@ -30,11 +26,14 @@ export async function GET() {
           }
         }
       },
-      take: 20,
+      take: 50,
       orderBy: {
         createdAt: 'desc'
       }
     })
+    
+    // Filter bookings with offers
+    const bookings = allBookings.filter(b => b.offerId !== null && b.offer)
 
     // Count by status
     const statusCounts: Record<string, number> = {}
@@ -49,8 +48,8 @@ export async function GET() {
         id: b.id.substring(0, 8) + '...',
         workshop: b.workshop.companyName,
         bookingStatus: b.status,
-        offerStatus: b.offer.status,
-        price: b.offer.price,
+        offerStatus: b.offer?.status || 'N/A',
+        price: b.offer?.price || 0,
         appointmentDate: b.appointmentDate,
         completedAt: b.completedAt,
         createdAt: b.createdAt,

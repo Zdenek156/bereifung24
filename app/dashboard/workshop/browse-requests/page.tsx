@@ -693,8 +693,8 @@ export default function BrowseRequestsPage() {
               let frontTireSize = ''
               let rearTireSize = ''
               if (isMotorcycle && request.additionalNotes) {
-                const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s*[A-Z()]+)?)/)
-                const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s*[A-Z()]+)?)/)
+                const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
+                const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
                 if (frontMatch) frontTireSize = frontMatch[1].trim()
                 if (rearMatch) rearTireSize = rearMatch[1].trim()
               }
@@ -915,17 +915,17 @@ export default function BrowseRequestsPage() {
                   <>
                     {(() => {
                       // Parse additionalNotes to get front and rear tire dimensions with load index
-                      const frontMatch = selectedRequest.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+) (\d+)([A-Z()\s]+)?/)
-                      const rearMatch = selectedRequest.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+) (\d+)([A-Z()\s]+)?/)
+                      const frontMatch = selectedRequest.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                      const rearMatch = selectedRequest.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
                       
                       if (frontMatch && rearMatch) {
-                        const frontDim = `${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]} ${frontMatch[4]}${frontMatch[5] || ''}`
-                        const rearDim = `${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]} ${rearMatch[4]}${rearMatch[5] || ''}`
+                        const frontDim = `${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''}`
+                        const rearDim = `${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
                         return `Für: 🏍️ Vorne: ${frontDim} • Hinten: ${rearDim} • ${getSeasonLabel(selectedRequest.season)}`
                       } else if (frontMatch) {
-                        return `Für: 🏍️ Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]} ${frontMatch[4]}${frontMatch[5] || ''} • ${getSeasonLabel(selectedRequest.season)}`
+                        return `Für: 🏍️ Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''} • ${getSeasonLabel(selectedRequest.season)}`
                       } else if (rearMatch) {
-                        return `Für: 🏍️ Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]} ${rearMatch[4]}${rearMatch[5] || ''} • ${getSeasonLabel(selectedRequest.season)}`
+                        return `Für: 🏍️ Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''} • ${getSeasonLabel(selectedRequest.season)}`
                       }
                       // Fallback with load index and speed rating if available
                       const loadSpeed = selectedRequest.loadIndex && selectedRequest.speedRating 

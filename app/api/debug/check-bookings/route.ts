@@ -52,7 +52,7 @@ export async function GET() {
       commissions: commissions.map(c => ({
         id: c.id,
         commissionAmount: c.commissionAmount,
-        commissionPercentage: c.commissionPercentage,
+        commissionRate: c.commissionRate,
         status: c.status,
         month: c.month,
         year: c.year,

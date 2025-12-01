@@ -1,8 +1,7 @@
 module.exports = {
   apps: [{
     name: 'bereifung24',
-    script: 'npm',
-    args: 'start',
+    script: './start-with-env.sh',
     cwd: '/var/www/bereifung24',
     instances: 1,
     autorestart: true,

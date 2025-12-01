@@ -54,10 +54,11 @@ export async function GET() {
         commissionAmount: c.commissionAmount,
         commissionRate: c.commissionRate,
         status: c.status,
-        month: c.month,
-        year: c.year,
-        dueDate: c.dueDate,
-        paidAt: c.paidAt,
+        billingMonth: c.billingMonth,
+        billingYear: c.billingYear,
+        dueDate: c.billingPeriodEnd,
+        billedAt: c.billedAt,
+        collectedAt: c.collectedAt,
         bookingId: c.bookingId
       }))
     })

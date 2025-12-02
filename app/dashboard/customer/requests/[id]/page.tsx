@@ -10,6 +10,8 @@ interface TireOption {
   brand: string
   model: string
   pricePerTire: number
+  carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
+  motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
 }
 
 interface Offer {
@@ -107,13 +109,114 @@ export default function RequestDetailPage() {
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null)
   const [wantsBalancing, setWantsBalancing] = useState(false)
   const [wantsStorage, setWantsStorage] = useState(false)
+  const [selectedTireOptionIds, setSelectedTireOptionIds] = useState<string[]>([])
 
-  const handleAcceptOffer = (offerId: string) => {
+  const handleAcceptOffer = (offerId: string, defaultTireOptionId?: string) => {
+    const offer = request?.offers.find(o => o.id === offerId)
     setSelectedOfferId(offerId)
     setShowAcceptModal(true)
     setAcceptTerms(false)
     setWantsBalancing(false)
     setWantsStorage(false)
+    // Pre-select first option or provided option
+    if (offer && offer.tireOptions && offer.tireOptions.length > 0) {
+      setSelectedTireOptionIds(defaultTireOptionId ? [defaultTireOptionId] : [offer.tireOptions[0].id])
+    } else {
+      setSelectedTireOptionIds([])
+    }
+  }
+  
+  // Helper function to calculate quantity for tire option
+  const getQuantityForTireOption = (option: TireOption): number => {
+    if (option.carTireType) {
+      switch (option.carTireType) {
+        case 'ALL_FOUR': return 4
+        case 'FRONT_TWO': return 2
+        case 'REAR_TWO': return 2
+        default: return 4
+      }
+    }
+    if (option.motorcycleTireType) {
+      switch (option.motorcycleTireType) {
+        case 'BOTH': return 2
+        case 'FRONT': return 1
+        case 'REAR': return 1
+        default: return 2
+      }
+    }
+    return request?.quantity || 4
+  }
+  
+  // Calculate total for selected options
+  const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; durationMinutes?: number } => {
+    if (!offer.tireOptions || selectedTireOptionIds.length === 0) {
+      return { totalPrice: offer.price, totalQuantity: request?.quantity || 4, installationFee: offer.installationFee }
+    }
+    
+    const selectedOptions = offer.tireOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
+    let totalQuantity = 0
+    let tiresCost = 0
+    
+    selectedOptions.forEach(option => {
+      const qty = getQuantityForTireOption(option)
+      totalQuantity += qty
+      tiresCost += option.pricePerTire * qty
+    })
+    
+    // Determine installation fee based on total quantity
+    // If we have a service with packages, we need to fetch the correct one
+    // For now, use the base installationFee and scale if needed
+    const installationFee = offer.installationFee
+    
+    return {
+      totalPrice: tiresCost + installationFee,
+      totalQuantity,
+      installationFee
+    }
+  }
+  
+  // Toggle tire option selection
+  const toggleTireOption = (optionId: string, option: TireOption, offerId: string) => {
+    // Set the selected offer ID so we know which offer this belongs to
+    setSelectedOfferId(offerId)
+    
+    setSelectedTireOptionIds(prev => {
+      // For car tires, check compatibility
+      if (option.carTireType) {
+        const currentOffer = request?.offers.find(o => o.id === offerId)
+        const currentlySelected = prev.map(id => 
+          currentOffer?.tireOptions?.find(opt => opt.id === id)
+        ).filter(Boolean) as TireOption[]
+        
+        if (prev.includes(optionId)) {
+          // Remove option
+          return prev.filter(id => id !== optionId)
+        } else {
+          // Check if we can add this option
+          const totalQuantityIfAdded = currentlySelected.reduce((sum, opt) => sum + getQuantityForTireOption(opt), 0) + getQuantityForTireOption(option)
+          
+          if (totalQuantityIfAdded > 4) {
+            alert('Sie können maximal 4 Reifen auswählen')
+            return prev
+          }
+          
+          // Check for conflicts (can't have ALL_FOUR with anything else)
+          if (option.carTireType === 'ALL_FOUR' && currentlySelected.length > 0) {
+            alert('Alle 4 Reifen kann nicht mit anderen Optionen kombiniert werden')
+            return prev
+          }
+          if (currentlySelected.some(opt => opt.carTireType === 'ALL_FOUR')) {
+            alert('Bitte entfernen Sie zuerst die "Alle 4 Reifen" Option')
+            return prev
+          }
+          
+          return [...prev, optionId]
+        }
+      }
+      
+      // For motorcycle or single option
+      return prev.includes(optionId) ? prev.filter(id => id !== optionId) : [optionId]
+    })
   }
 
   const confirmAcceptOffer = async () => {
@@ -123,6 +226,12 @@ export default function RequestDetailPage() {
     }
 
     if (!selectedOfferId) return
+    
+    const offer = request?.offers.find(o => o.id === selectedOfferId)
+    if (offer && offer.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length === 0) {
+      alert('Bitte wählen Sie mindestens eine Reifenoption aus')
+      return
+    }
 
     setAcceptingOfferId(selectedOfferId)
     try {
@@ -130,7 +239,8 @@ export default function RequestDetailPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wantsStorage
+          wantsStorage,
+          selectedTireOptionIds: selectedTireOptionIds.length > 0 ? selectedTireOptionIds : undefined
         })
       })
 
@@ -270,6 +380,42 @@ export default function RequestDetailPage() {
             </div>
 
             <div className="space-y-4 mb-6">
+              {/* Show selected tire options summary */}
+              {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && 
+               selectedTireOptionIds.length > 0 && (
+                <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
+                  <h3 className="font-semibold text-gray-900 mb-3">Ihre gewählten Reifen:</h3>
+                  <div className="space-y-2 text-sm">
+                    {request.offers.find(o => o.id === selectedOfferId)!.tireOptions!
+                      .filter(opt => selectedTireOptionIds.includes(opt.id))
+                      .map(option => {
+                        const qty = getQuantityForTireOption(option)
+                        return (
+                          <div key={option.id} className="flex justify-between text-gray-700 bg-white p-2 rounded">
+                            <span>• {option.brand} {option.model} ({qty} Stück)</span>
+                            <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
+                          </div>
+                        )
+                      })}
+                    <div className="flex justify-between pt-2 border-t border-primary-300">
+                      <span className="font-medium">Montagekosten</span>
+                      <span className="font-semibold">
+                        {request.offers.find(o => o.id === selectedOfferId)!.installationFee.toFixed(2)} €
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
+                      <span>Gesamtpreis</span>
+                      <span>
+                        {calculateSelectedTotal(request.offers.find(o => o.id === selectedOfferId)!).totalPrice.toFixed(2)} €
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Gesamt: {calculateSelectedTotal(request.offers.find(o => o.id === selectedOfferId)!).totalQuantity} Reifen
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               {/* Optional Services for Wheel Change */}
               {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && 
                request.width === 0 && request.aspectRatio === 0 && request.diameter === 0 && 
@@ -776,33 +922,80 @@ export default function RequestDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4 mb-4">
                       {offer.tireOptions && offer.tireOptions.length > 0 ? (
                         <>
-                          <p className="text-xs text-gray-600 mb-3">Verfügbare Optionen:</p>
+                          <p className="text-xs text-gray-600 mb-3">Verfügbare Optionen (wählen Sie eine oder mehrere):</p>
                           <div className="space-y-3">
                             {offer.tireOptions.map((option, idx) => {
-                              const optionTotalPrice = (option.pricePerTire * request.quantity) + offer.installationFee
+                              const quantity = getQuantityForTireOption(option)
+                              const optionTirePrice = option.pricePerTire * quantity
+                              const tireTypeLabel = option.carTireType === 'ALL_FOUR' ? '🚗 Alle 4 Reifen' :
+                                                   option.carTireType === 'FRONT_TWO' ? '🚗 2 Vorderreifen' :
+                                                   option.carTireType === 'REAR_TWO' ? '🚗 2 Hinterreifen' :
+                                                   option.motorcycleTireType === 'BOTH' ? '🏍️ Beide Reifen' :
+                                                   option.motorcycleTireType === 'FRONT' ? '🏍️ Vorderreifen' :
+                                                   option.motorcycleTireType === 'REAR' ? '🏍️ Hinterreifen' :
+                                                   `${quantity} Reifen`
+                              
                               return (
-                                <div key={option.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
-                                      <p className="text-xs text-gray-600 mt-1">
-                                        {option.pricePerTire.toFixed(2)} € pro Reifen × {request.quantity} = {(option.pricePerTire * request.quantity).toFixed(2)} €
-                                      </p>
-                                      <p className="text-xs text-gray-600">
-                                        + Montage: {offer.installationFee.toFixed(2)} €
-                                      </p>
-                                    </div>
-                                    <div className="text-right ml-4">
-                                      <p className="text-lg font-bold text-primary-600">
-                                        {optionTotalPrice.toFixed(2)} €
-                                      </p>
-                                      <p className="text-xs text-gray-500">Gesamt</p>
-                                    </div>
+                                <div key={option.id} className="bg-white rounded-lg p-3 border-2 border-gray-200 hover:border-primary-300 transition-colors">
+                                  <div className="flex items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedTireOptionIds.includes(option.id)}
+                                      onChange={() => toggleTireOption(option.id, option, offer.id)}
+                                      className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
+                                      id={`option-${option.id}`}
+                                    />
+                                    <label htmlFor={`option-${option.id}`} className="flex-1 cursor-pointer">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
+                                          <p className="text-xs text-blue-600 font-medium mt-1">{tireTypeLabel}</p>
+                                          <p className="text-xs text-gray-600 mt-1">
+                                            {option.pricePerTire.toFixed(2)} € pro Reifen × {quantity} = {optionTirePrice.toFixed(2)} €
+                                          </p>
+                                        </div>
+                                        <div className="text-right ml-4">
+                                          <p className="text-lg font-bold text-primary-600">
+                                            {optionTirePrice.toFixed(2)} €
+                                          </p>
+                                          <p className="text-xs text-gray-500">{quantity} Stück</p>
+                                        </div>
+                                      </div>
+                                    </label>
                                   </div>
                                 </div>
                               )
                             })}
                           </div>
+                          
+                          {/* Show calculated total if options are selected */}
+                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && (
+                            <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
+                              <div className="space-y-2 text-sm">
+                                {offer.tireOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
+                                  const qty = getQuantityForTireOption(option)
+                                  return (
+                                    <div key={option.id} className="flex justify-between text-gray-700">
+                                      <span>• {option.brand} {option.model} ({qty} Stück)</span>
+                                      <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
+                                    </div>
+                                  )
+                                })}
+                                <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
+                                  <span>Montagekosten</span>
+                                  <span className="font-semibold">{offer.installationFee.toFixed(2)} €</span>
+                                </div>
+                                <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
+                                  <span>Gesamtpreis</span>
+                                  <span>{calculateSelectedTotal(offer).totalPrice.toFixed(2)} €</span>
+                                </div>
+                                <p className="text-xs text-gray-600 mt-2">
+                                  Gesamt: {calculateSelectedTotal(offer).totalQuantity} Reifen
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div className="grid grid-cols-2 gap-4">
@@ -838,9 +1031,11 @@ export default function RequestDetailPage() {
                       ) : (request.status === 'PENDING' || request.status === 'QUOTED') && offer.status === 'PENDING' ? (
                         <button
                           onClick={() => handleAcceptOffer(offer.id)}
-                          className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                          disabled={offer.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length === 0}
+                          className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          Angebot annehmen
+                          {offer.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length === 0 ? 
+                            'Bitte Option wählen' : 'Angebot annehmen'}
                         </button>
                       ) : (
                         <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg">

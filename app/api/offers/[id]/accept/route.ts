@@ -30,9 +30,9 @@ export async function POST(
       )
     }
 
-    // Parse optional storage selection
+    // Parse optional storage selection and selected tire options
     const body = await request.json().catch(() => ({}))
-    const { wantsStorage = false } = body
+    const { wantsStorage = false, selectedTireOptionIds = [] } = body
 
     // Hole das Angebot mit allen Relations
     const offer = await prisma.offer.findUnique({
@@ -47,6 +47,7 @@ export async function POST(
             }
           }
         },
+        tireOptions: true,
         workshop: {
           select: {
             id: true,
@@ -110,10 +111,63 @@ export async function POST(
       )
     }
 
+    // Helper function to calculate quantity based on tire type
+    const getQuantityForTireOption = (tireOption: any): number => {
+      if (tireOption.carTireType) {
+        switch (tireOption.carTireType) {
+          case 'ALL_FOUR': return 4
+          case 'FRONT_TWO': return 2
+          case 'REAR_TWO': return 2
+          default: return 4
+        }
+      }
+      if (tireOption.motorcycleTireType) {
+        switch (tireOption.motorcycleTireType) {
+          case 'BOTH': return 2
+          case 'FRONT': return 1
+          case 'REAR': return 1
+          default: return 2
+        }
+      }
+      return offer?.tireRequest.quantity || 4
+    }
+
     // Transaktion: Angebot annehmen, Booking erstellen und alle anderen ablehnen
     const result = await prisma.$transaction(async (tx) => {
-      // Calculate final price (balancing already included in offer price, add storage if selected)
-      let finalPrice = offer.price
+      // Calculate final price based on selected tire options
+      let finalPrice: number = offer?.installationFee || 0 // Start with installation fee
+      let selectedOptionsForBooking: string[] = []
+      
+      // If tire options were selected, calculate based on those
+      if (offer?.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length > 0) {
+        const selectedOptions = offer.tireOptions.filter((opt: any) => 
+          selectedTireOptionIds.includes(opt.id)
+        )
+        
+        // Calculate tire cost from selected options
+        selectedOptions.forEach((option: any) => {
+          const quantity = getQuantityForTireOption(option)
+          finalPrice += option.pricePerTire * quantity
+          selectedOptionsForBooking.push(option.id)
+        })
+        
+        console.log('Calculating price from selected options:', {
+          selectedOptions: selectedOptions.map((o: any) => ({
+            id: o.id,
+            brand: o.brand,
+            model: o.model,
+            pricePerTire: o.pricePerTire,
+            quantity: getQuantityForTireOption(o)
+          })),
+          installationFee: offer?.installationFee,
+          finalPrice
+        })
+      } else {
+        // Fallback to offer.price if no options selected
+        finalPrice = offer?.price || 0
+      }
+      
+      // Add storage if selected
       if (wantsStorage) {
         const offerWithPrices = await tx.offer.findUnique({
           where: { id: params.id },
@@ -149,13 +203,15 @@ export async function POST(
           appointmentDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Platzhalter: +7 Tage
           appointmentTime: '00:00', // Platzhalter
           wantsBalancing: offer.customerWantsBalancing || false,
-          wantsStorage: wantsStorage
+          wantsStorage: wantsStorage,
+          // Store first selected option ID if available
+          selectedTireOptionId: selectedOptionsForBooking.length > 0 ? selectedOptionsForBooking[0] : null
         }
       })
 
       // Berechne und erstelle Commission sofort
       const commissionRate = 4.9 // 4,9% Provision
-      const orderTotal = finalPrice
+      const orderTotal: number = finalPrice
       const commissionAmount = (orderTotal * commissionRate) / 100
       
       // Berechne Netto/Brutto für Rechnung

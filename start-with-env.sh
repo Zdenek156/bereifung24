@@ -1,7 +1,8 @@
 #!/bin/bash
-# Load .env file
+# Load environment files
 set -a
-source .env
+[ -f .env ] && source .env
+[ -f .env.production ] && source .env.production
 set +a
 
 # Start Next.js

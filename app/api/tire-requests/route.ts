@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
     let latitude: number | null = null
     let longitude: number | null = null
     const city: string | null = customer.user.city || null
+    console.log(`🏙️ Customer city from profile: "${city}" (user email: ${customer.user.email})`)
 
     // Geocode to get coordinates for workshop matching (but keep profile city)
     if (customer.user.street && customer.user.city) {

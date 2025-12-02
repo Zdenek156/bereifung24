@@ -190,36 +190,64 @@ export default function RequestsPage() {
                         
                         {/* Tire dimensions - smaller text below title */}
                         {request.width !== 0 && (
-                          <p className="text-sm text-gray-700 mt-1">
-                            {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
-                              // Motorcycle - show front and rear
-                              <>
-                                {(() => {
-                                  // Parse additionalNotes to get front and rear tire dimensions with load index and speed rating
-                                  const frontMatch = request.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
-                                  const rearMatch = request.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
-                                  
-                                  if (frontMatch && rearMatch) {
-                                    return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
-                                  } else if (frontMatch) {
-                                    return `Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''}`
-                                  } else if (rearMatch) {
-                                    return `Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
-                                  }
-                                  // Fallback to primary dimensions
-                                  return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
-                                })()}
-                              </>
-                            ) : (
-                              // Car tires - show single dimension
-                              <>
-                                {request.width}/{request.aspectRatio} R{request.diameter}
-                                {request.loadIndex && ` ${request.loadIndex}`}
-                                {request.speedRating && request.speedRating}
-                                {request.isRunflat && ' (Runflat)'}
-                              </>
+                          <>
+                            <p className="text-sm text-gray-700 mt-1 font-medium">
+                              {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
+                                // Motorcycle - show front and rear
+                                <>
+                                  {(() => {
+                                    // Parse additionalNotes to get front and rear tire dimensions with load index and speed rating
+                                    const frontMatch = request.additionalNotes?.match(/✓ Vorderreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                                    const rearMatch = request.additionalNotes?.match(/✓ Hinterreifen: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                                    
+                                    if (frontMatch && rearMatch) {
+                                      return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
+                                    } else if (frontMatch) {
+                                      return `Vorderreifen: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''}`
+                                    } else if (rearMatch) {
+                                      return `Hinterreifen: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
+                                    }
+                                    // Fallback to primary dimensions
+                                    return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
+                                  })()}
+                                </>
+                              ) : (
+                                // Car tires - check for front/rear or show single dimension
+                                <>
+                                  {(() => {
+                                    const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)/)
+                                    const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)/)
+                                    
+                                    if (frontMatch && rearMatch) {
+                                      return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}`
+                                    } else if (frontMatch) {
+                                      return `Vorderachse: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}`
+                                    } else if (rearMatch) {
+                                      return `Hinterachse: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}`
+                                    }
+                                    // Standard display
+                                    return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
+                                  })()}
+                                  {request.isRunflat && ' • Runflat'}
+                                </>
+                              )}
+                            </p>
+                            
+                            {/* Additional tire details */}
+                            {request.additionalNotes && (
+                              <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                                {request.additionalNotes.includes('✓ Altreifenentsorgung') && (
+                                  <div>✓ Altreifenentsorgung gewünscht</div>
+                                )}
+                                {request.additionalNotes.includes('Run-Flat') && (
+                                  <div>✓ Run-Flat Reifen</div>
+                                )}
+                                {request.preferredBrands && (
+                                  <div>Bevorzugte Marken: {request.preferredBrands}</div>
+                                )}
+                              </div>
                             )}
-                          </p>
+                          </>
                         )}
                         
                         <p className="text-sm text-gray-600 mt-1">

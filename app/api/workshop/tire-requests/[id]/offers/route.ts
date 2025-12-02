@@ -13,6 +13,16 @@ const tireOptionSchema = z.object({
   carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional() // Für Autoreifen - pro Reifenangebot
 })
 
+// Helper function to calculate quantity based on car tire type
+function getQuantityForCarTireType(carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'): number {
+  switch (carTireType) {
+    case 'ALL_FOUR': return 4
+    case 'FRONT_TWO': return 2
+    case 'REAR_TWO': return 2
+    default: return 4 // Default to 4 if not specified
+  }
+}
+
 const offerSchema = z.object({
   tireOptions: z.array(tireOptionSchema).optional(), // Optional für Service-Anfragen
   description: z.string().optional(),
@@ -122,23 +132,18 @@ export async function POST(
     const validUntil = new Date()
     validUntil.setDate(validUntil.getDate() + validatedData.validDays)
 
-    // Für Service-Anfragen: Verwende Standardwerte, sonst erste Option
-    const firstOption = hasValidTireOptions ? validatedData.tireOptions![0] : null
-    
-    // Berechne RunFlat-Aufpreis pro Reifen
-    const runFlatTotal = runFlatSurcharge * tireRequest.quantity
-    
+    // Für Service-Anfragen: Setze Preis auf installationFee, sonst 0 (Kunde wählt Option)
+    // Der finale Preis wird basierend auf der gewählten Option beim Booking berechnet
     const totalPrice = isServiceRequest 
-      ? validatedData.installationFee + runFlatTotal
-      : (firstOption!.pricePerTire * tireRequest.quantity) + validatedData.installationFee + runFlatTotal
+      ? validatedData.installationFee
+      : 0 // Wird dynamisch beim Checkout berechnet
 
-    console.log('Calculating price:', {
-      basePrice: isServiceRequest ? 0 : (firstOption?.pricePerTire || 0) * tireRequest.quantity,
+    console.log('Creating offer with multiple tire options:', {
+      isServiceRequest,
+      tireOptionsCount: hasValidTireOptions ? validatedData.tireOptions!.length : 0,
       installationFee: validatedData.installationFee,
       runFlatSurcharge,
-      quantity: tireRequest.quantity,
-      runFlatTotal,
-      totalPrice
+      basePrice: totalPrice
     })
     
     console.log('About to create offer in database')
@@ -149,10 +154,10 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: firstOption?.brand || 'Service',
-        tireModel: firstOption?.model || 'Räder umstecken',
+        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brand : 'Service',
+        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].model : 'Räder umstecken',
         description: validatedData.description,
-        pricePerTire: firstOption?.pricePerTire || 0,
+        pricePerTire: hasValidTireOptions ? validatedData.tireOptions![0].pricePerTire : 0,
         price: totalPrice,
         installationFee: validatedData.installationFee,
         durationMinutes: validatedData.durationMinutes,
@@ -238,7 +243,10 @@ export async function POST(
       }
       
       const firstOption = offer.tireOptions[0]
-      const totalOfferPrice = (firstOption.pricePerTire * tireRequest.quantity) + validatedData.installationFee
+      // Calculate with quantity from carTireType
+      const firstOptionQuantity = firstOption.carTireType ? getQuantityForCarTireType(firstOption.carTireType) : tireRequest.quantity
+      const firstOptionRunFlat = runFlatSurcharge * firstOptionQuantity
+      const totalOfferPrice = (firstOption.pricePerTire * firstOptionQuantity) + validatedData.installationFee + firstOptionRunFlat
       const priceDisplay = offer.tireOptions.length > 1 
         ? `ab ${totalOfferPrice.toFixed(2)} €`
         : `${totalOfferPrice.toFixed(2)} €`

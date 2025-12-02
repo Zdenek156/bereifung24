@@ -65,9 +65,9 @@ export async function POST(
       )
     }
 
-    // Hole Workshop-Service für RunFlat-Aufpreis (nur für TIRE_CHANGE)
+    // Hole Workshop-Service für RunFlat-Aufpreis (nur bei RunFlat-Reifen)
     let runFlatSurcharge = 0
-    if (tireRequest.isRunflat && tireRequest.serviceType === 'TIRE_CHANGE') {
+    if (tireRequest.isRunflat) {
       const workshopService = await prisma.workshopService.findFirst({
         where: {
           workshopId: workshop.id,

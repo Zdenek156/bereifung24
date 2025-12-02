@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
               <ul>
                 <li><strong>Services:</strong> ${selectedServices.join(', ')}</li>
                 <li><strong>Beschreibung:</strong> ${validatedData.serviceDescription}</li>
-                <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${city}</li>
+                <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${customer.user.city || ''}</li>
                 <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>
               </ul>
               

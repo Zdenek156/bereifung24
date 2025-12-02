@@ -195,22 +195,22 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Prominent Call-to-Action Card */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 mb-8 overflow-hidden">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <div className="text-white min-w-0">
+              <div className="text-white">
                 <h2 className="text-2xl font-bold mb-1">Neue Reifenanfrage erstellen</h2>
-                <p className="text-primary-100 text-sm md:text-base">Erstellen Sie jetzt eine Anfrage und erhalten Sie günstige Angebote von Werkstätten in Ihrer Nähe</p>
+                <p className="text-primary-100">Erstellen Sie jetzt eine Anfrage und erhalten Sie günstige Angebote von Werkstätten in Ihrer Nähe</p>
               </div>
             </div>
             <button
               onClick={() => router.push('/dashboard/customer/select-service')}
-              className="px-8 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center gap-2 flex-shrink-0"
+              className="w-full lg:w-auto px-8 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
             >
               Anfrage erstellen
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

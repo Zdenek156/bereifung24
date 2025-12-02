@@ -772,19 +772,42 @@ export default function BrowseRequestsPage() {
                               <p>Hinterreifen: {rearTireSize}</p>
                             ) : null}
                           </div>
-                        ) : !isWheelChange && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && request.width > 0 ? (
-                          <div className="text-sm text-gray-600 mb-2">
-                            <p>
-                              {request.season === 'SUMMER' && '☀️ '}
-                              {request.season === 'WINTER' && '❄️ '}
-                              {request.season === 'ALL_SEASON' && '🌤️ '}
-                              {request.width}/{request.aspectRatio} R{request.diameter}
-                              {request.loadIndex && request.speedRating && ` ${request.loadIndex}${request.speedRating}`}
-                            </p>
-                          </div>
-                        ) : null}
-
-                        {!isWheelChange && request.width !== 0 && !isMotorcycle && (
+        ) : !isWheelChange && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && request.width > 0 ? (
+          <div className="text-sm text-gray-600 mb-2">
+            {(() => {
+              const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+              const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+              
+              if (frontMatch && rearMatch) {
+                return (
+                  <p>
+                    {request.season === 'SUMMER' && '☀️ '}
+                    {request.season === 'WINTER' && '❄️ '}
+                    {request.season === 'ALL_SEASON' && '🌤️ '}
+                    Vorne: {frontMatch[1]}/{frontMatch[2]} R{frontMatch[3]}
+                    {frontMatch[4] && ` ${frontMatch[4]}`}
+                    {frontMatch[5] && ` ${frontMatch[5]}`}
+                    {' • '}
+                    Hinten: {rearMatch[1]}/{rearMatch[2]} R{rearMatch[3]}
+                    {rearMatch[4] && ` ${rearMatch[4]}`}
+                    {rearMatch[5] && ` ${rearMatch[5]}`}
+                  </p>
+                )
+              }
+              
+              return (
+                <p>
+                  {request.season === 'SUMMER' && '☀️ '}
+                  {request.season === 'WINTER' && '❄️ '}
+                  {request.season === 'ALL_SEASON' && '🌤️ '}
+                  {request.width}/{request.aspectRatio} R{request.diameter}
+                  {request.loadIndex && ` ${request.loadIndex}`}
+                  {request.speedRating && ` ${request.speedRating}`}
+                </p>
+              )
+            })()}
+          </div>
+        ) : null}                        {!isWheelChange && request.width !== 0 && !isMotorcycle && (
                           <div className="text-sm text-gray-600 space-y-1">
                             <p>
                               <span className="font-medium">Menge:</span> {request.quantity} Reifen
@@ -833,14 +856,36 @@ export default function BrowseRequestsPage() {
                         )}
                       </div>
 
-                      {request.additionalNotes && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-1">
-                            {request.width === 0 ? 'Service-Details' : 'Zusätzliche Hinweise'}
-                          </h4>
-                          <p className="text-sm text-gray-600 whitespace-pre-line">{request.additionalNotes}</p>
-                        </div>
-                      )}
+                      {request.additionalNotes && (() => {
+                        // Filter out structured data from additionalNotes
+                        let userNotes = request.additionalNotes
+                          .replace(/Vorderachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Hinterachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Vorderreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Hinterreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Altreifenentsorgung gewünscht\n?/g, '')
+                          .replace(/🏍️ MOTORRADREIFEN\n?/g, '')
+                          .replace(/🔧 REPARATUR\n?/g, '')
+                          .replace(/⚙️ ACHSVERMESSUNG\n?/g, '')
+                          .replace(/🛠️ SONSTIGE DIENSTLEISTUNG\n?/g, '')
+                          .replace(/🔴 BREMSENWECHSEL\n?/g, '')
+                          .replace(/🔋 BATTERIEWECHSEL\n?/g, '')
+                          .replace(/❄️ KLIMASERVICE\n?/g, '')
+                          .replace(/🌡️ KLIMASERVICE\n?/g, '')
+                          .trim()
+                        
+                        if (userNotes) {
+                          return (
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-1">
+                                {request.width === 0 ? 'Service-Details' : 'Zusätzliche Hinweise'}
+                              </h4>
+                              <p className="text-sm text-gray-600 whitespace-pre-line">{userNotes}</p>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
 
                     <div className="flex items-center justify-between">

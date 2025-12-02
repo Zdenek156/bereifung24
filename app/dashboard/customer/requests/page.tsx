@@ -233,20 +233,25 @@ export default function RequestsPage() {
                               )}
                             </p>
                             
-                            {/* Additional tire details */}
-                            {request.additionalNotes && (
-                              <div className="text-xs text-gray-600 mt-1 space-y-0.5">
-                                {request.additionalNotes.includes('✓ Altreifenentsorgung') && (
-                                  <div>✓ Altreifenentsorgung gewünscht</div>
-                                )}
-                                {request.additionalNotes.includes('Run-Flat') && (
-                                  <div>✓ Run-Flat Reifen</div>
-                                )}
-                                {request.preferredBrands && (
-                                  <div>Bevorzugte Marken: {request.preferredBrands}</div>
-                                )}
+                            {/* Vehicle Info */}
+                            {request.vehicle && (
+                              <div className="text-xs text-gray-600 mt-1">
+                                🚗 {request.vehicle.make} {request.vehicle.model} ({request.vehicle.year})
                               </div>
                             )}
+                            
+                            {/* Additional tire details */}
+                            <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                              {request.additionalNotes?.includes('Altreifenentsorgung') && (
+                                <div>✓ Altreifenentsorgung gewünscht</div>
+                              )}
+                              {request.isRunflat && (
+                                <div>✓ Run-Flat Reifen</div>
+                              )}
+                              {request.preferredBrands && (
+                                <div>Bevorzugte Marken: {request.preferredBrands}</div>
+                              )}
+                            </div>
                           </>
                         )}
                         

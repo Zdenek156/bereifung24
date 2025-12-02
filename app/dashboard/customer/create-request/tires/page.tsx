@@ -904,8 +904,13 @@ export default function CreateRequestPage() {
                 >
                   <option value={1}>1 Reifen</option>
                   <option value={2}>2 Reifen</option>
-                  <option value={4}>4 Reifen</option>
+                  {formData.tirePosition === 'BOTH' && <option value={4}>4 Reifen</option>}
                 </select>
+                {formData.tirePosition !== 'BOTH' && formData.quantity === 4 && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    💡 Hinweis: Bei "Vorne und Hinten" können Sie 4 Reifen auswählen
+                  </p>
+                )}
               </div>
 
               <div>

@@ -87,11 +87,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Geocode customer address if available
+    // Geocode using the provided zipCode to get correct city and coordinates
     let latitude: number | null = null
     let longitude: number | null = null
     let city: string | null = null
 
+    // Try to geocode with customer's street if available, otherwise just use zipCode
     if (customer.user.street && customer.user.city) {
       const geocodeResult = await geocodeAddress(
         customer.user.street,
@@ -102,13 +103,28 @@ export async function POST(request: NextRequest) {
       if (geocodeResult) {
         latitude = geocodeResult.latitude
         longitude = geocodeResult.longitude
-        city = geocodeResult.city || customer.user.city
-      } else {
-        console.warn(`Failed to geocode address for customer ${customer.id}`)
-        city = customer.user.city
+        city = geocodeResult.city || null
       }
-    } else {
-      city = customer.user.city
+    }
+    
+    // If geocoding failed or no street available, try to get city from zipCode
+    if (!city) {
+      try {
+        const zipCodeGeocodeResult = await geocodeAddress(
+          '',
+          validatedData.zipCode,
+          'Germany'
+        )
+        if (zipCodeGeocodeResult?.city) {
+          city = zipCodeGeocodeResult.city
+          if (!latitude && zipCodeGeocodeResult.latitude) {
+            latitude = zipCodeGeocodeResult.latitude
+            longitude = zipCodeGeocodeResult.longitude
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to geocode zipCode ${validatedData.zipCode}:`, error)
+      }
     }
 
     // Create tire request

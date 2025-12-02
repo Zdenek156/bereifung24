@@ -221,20 +221,19 @@ export default function RequestsPage() {
                                 // Car tires - check for front/rear or show single dimension
                                 <>
                                   {(() => {
-                                    const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)/)
-                                    const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)/)
+                                    const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                                    const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
                                     
                                     if (frontMatch && rearMatch) {
-                                      return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}`
+                                      return `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? frontMatch[5] : ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? rearMatch[5] : ''}`
                                     } else if (frontMatch) {
-                                      return `Vorderachse: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}`
+                                      return `Vorderachse: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? frontMatch[5] : ''}`
                                     } else if (rearMatch) {
-                                      return `Hinterachse: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}`
+                                      return `Hinterachse: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? rearMatch[5] : ''}`
                                     }
                                     // Standard display
                                     return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
                                   })()}
-                                  {request.isRunflat && ' • Runflat'}
                                 </>
                               )}
                             </p>

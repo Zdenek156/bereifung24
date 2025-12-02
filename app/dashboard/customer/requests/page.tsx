@@ -232,7 +232,7 @@ export default function RequestsPage() {
                                       return `Hinterachse: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
                                     }
                                     // Standard display
-                                    return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating || ''}`
+                                    return `${request.width}/${request.aspectRatio} R${request.diameter}${request.loadIndex ? ' ' + request.loadIndex : ''}${request.speedRating ? ' ' + request.speedRating : ''}`
                                   })()}
                                 </>
                               )}

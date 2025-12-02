@@ -237,6 +237,9 @@ export async function POST(request: NextRequest) {
             year: 'numeric'
           })
 
+          // Check if tire disposal is requested
+          const hasTireDisposal = validatedData.additionalNotes?.includes('Altreifenentsorgung gewünscht') || false
+
           try {
             await sendEmail({
               to: workshop.user.email,
@@ -253,6 +256,8 @@ export async function POST(request: NextRequest) {
                 additionalNotes: filteredNotes || undefined,
                 customerCity: city || undefined,
                 vehicleInfo: vehicleInfo,
+                isRunflat: validatedData.isRunflat,
+                hasTireDisposal: hasTireDisposal,
               })
             })
             console.log(`📧 Notification email sent to workshop: ${workshop.user.email}`)

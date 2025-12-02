@@ -662,6 +662,8 @@ export function newTireRequestEmailTemplate(data: {
   additionalNotes?: string
   customerCity?: string
   vehicleInfo?: string
+  isRunflat?: boolean
+  hasTireDisposal?: boolean
 }) {
   const seasonText = data.season === 'SUMMER' ? 'Sommerreifen' : 
                      data.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'
@@ -730,6 +732,20 @@ export function newTireRequestEmailTemplate(data: {
               <span class="detail-label">Menge: </span>
               <span class="detail-value">${data.quantity} Reifen</span>
             </div>
+            
+            ${data.isRunflat ? `
+            <div class="detail-row">
+              <span class="detail-label">Reifentyp: </span>
+              <span class="detail-value">RunFlat-Reifen</span>
+            </div>
+            ` : ''}
+            
+            ${data.hasTireDisposal ? `
+            <div class="detail-row">
+              <span class="detail-label">Altreifenentsorgung: </span>
+              <span class="detail-value">Ja, gewünscht</span>
+            </div>
+            ` : ''}
             
             ${data.preferredBrands ? `
             <div class="detail-row">

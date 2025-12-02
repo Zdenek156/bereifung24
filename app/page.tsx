@@ -43,9 +43,12 @@ export default function HomePage() {
               Deutschlands erste digitale Reifenservice-Plattform
             </div>
             
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight whitespace-nowrap">
-              Dein Reifenservice – digital & einfach
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+              Dein Reifenservice
             </h2>
+            <p className="text-3xl md:text-4xl lg:text-5xl font-semibold mb-6 text-primary-100">
+              Digital & Einfach
+            </p>
             
             <p className="text-xl md:text-2xl mb-4 text-primary-100 font-medium">
               Anfrage stellen • Angebote vergleichen • Online buchen

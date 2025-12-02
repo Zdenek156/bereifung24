@@ -130,7 +130,7 @@ export default function SepaMandatesPage() {
         </p>
         <ol className="text-sm space-y-1 ml-4 list-decimal text-gray-700">
           <li>GoCardless Dashboard → Developers → Webhooks öffnen</li>
-          <li>Webhook URL hinzufügen: <code className="bg-white px-2 py-1 rounded">https://reifen.bereifung24.de/api/webhooks/gocardless</code></li>
+          <li>Webhook URL hinzufügen: <code className="bg-white px-2 py-1 rounded">https://www.bereifung24.de/api/webhooks/gocardless</code></li>
           <li>Webhook Secret kopieren</li>
           <li>In <code className="bg-white px-2 py-1 rounded">/var/www/bereifung24/.env</code> hinzufügen: <code className="bg-white px-2 py-1 rounded">GOCARDLESS_WEBHOOK_SECRET="..."</code></li>
           <li>PM2 neu starten: <code className="bg-white px-2 py-1 rounded">pm2 restart bereifung24</code></li>

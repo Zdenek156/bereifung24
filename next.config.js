@@ -12,7 +12,7 @@ const nextConfig = {
   // Fix for HTTPS behind reverse proxy
   experimental: {
     serverActions: {
-      allowedOrigins: ['reifen.bereifung24.de', 'localhost:3000'],
+      allowedOrigins: ['www.bereifung24.de', 'bereifung24.de', 'reifen.bereifung24.de', 'localhost:3000'],
     },
     instrumentationHook: true,
   },

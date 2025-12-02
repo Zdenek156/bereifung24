@@ -703,9 +703,9 @@ export function newTireRequestEmailTemplate(data: {
           <p>Es gibt eine neue Reifenanfrage in Ihrer Nähe! Ein Kunde sucht ${seasonText} und Sie haben die Möglichkeit, ein Angebot zu erstellen.</p>
           
           <div class="highlight">
-            <strong>📍 Entfernung:</strong> Ca. ${data.distance} von Ihrem Standort<br>
-            ${data.customerCity ? `<strong>🏙️ Stadt:</strong> ${data.customerCity}<br>` : ''}
-            <strong>📅 Benötigt bis:</strong> ${data.needByDate}
+            <strong>📍 Entfernung: </strong>Ca. ${data.distance} von Ihrem Standort<br>
+            ${data.customerCity ? `<strong>🏙️ Stadt: </strong>${data.customerCity}<br>` : ''}
+            <strong>📅 Benötigt bis: </strong>${data.needByDate}
           </div>
 
           <div class="tire-details">
@@ -713,50 +713,50 @@ export function newTireRequestEmailTemplate(data: {
             
             ${data.vehicleInfo ? `
             <div class="detail-row">
-              <span class="detail-label">Fahrzeug:</span>
+              <span class="detail-label">Fahrzeug: </span>
               <span class="detail-value">${data.vehicleInfo}</span>
             </div>
             ` : ''}
             
             <div class="detail-row">
-              <span class="detail-label">Saison:</span>
+              <span class="detail-label">Saison: </span>
               <span class="detail-value">${seasonText}</span>
             </div>
             
             <div class="detail-row">
-              <span class="detail-label">Reifengröße:</span>
+              <span class="detail-label">Reifengröße: </span>
               <span class="detail-value">${data.tireSize}</span>
             </div>
             
             <div class="detail-row">
-              <span class="detail-label">Menge:</span>
+              <span class="detail-label">Menge: </span>
               <span class="detail-value">${data.quantity} Reifen</span>
             </div>
             
             ${data.isRunflat ? `
             <div class="detail-row">
-              <span class="detail-label">Reifentyp:</span>
+              <span class="detail-label">Reifentyp: </span>
               <span class="detail-value">RunFlat-Reifen</span>
             </div>
             ` : ''}
             
             ${data.hasTireDisposal ? `
             <div class="detail-row">
-              <span class="detail-label">Altreifenentsorgung:</span>
+              <span class="detail-label">Altreifenentsorgung: </span>
               <span class="detail-value">Ja</span>
             </div>
             ` : ''}
             
             ${data.preferredBrands ? `
             <div class="detail-row">
-              <span class="detail-label">Bevorzugte Marken:</span>
+              <span class="detail-label">Bevorzugte Marken: </span>
               <span class="detail-value">${data.preferredBrands}</span>
             </div>
             ` : ''}
             
             ${data.additionalNotes ? `
             <div class="detail-row">
-              <span class="detail-label">Zusätzliche Hinweise:</span>
+              <span class="detail-label">Zusätzliche Hinweise: </span>
               <span class="detail-value">${data.additionalNotes}</span>
             </div>
             ` : ''}

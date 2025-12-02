@@ -150,38 +150,33 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {steps.map((step, index) => (
-              <div key={index} className={`flex flex-col md:flex-row gap-8 items-center mb-16 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
-                <div className="flex-1">
-                  <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-8 rounded-2xl shadow-xl">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl font-bold mb-6">
-                      {index + 1}
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                      {step.title}
-                    </h3>
-                    <p className="text-lg text-primary-50 leading-relaxed mb-4">
-                      {step.description}
-                    </p>
-                    <ul className="space-y-2">
-                      {step.details.map((detail, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <svg className="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                          </svg>
-                          <span className="text-primary-100">{detail}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+              <div key={index} className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-6">
+                  {step.emoji}
                 </div>
-                <div className="flex-1">
-                  <div className={`bg-gray-50 p-8 rounded-2xl ${index % 2 === 1 ? 'md:text-right' : ''}`}>
-                    <div className="text-6xl mb-4">{step.emoji}</div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">{step.benefit}</h4>
-                    <p className="text-gray-600">{step.benefitDescription}</p>
+                <div className="mb-6">
+                  <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-3">
+                    Schritt {index + 1}
                   </div>
+                  <h3 className="text-2xl font-bold mb-3">
+                    {step.title}
+                  </h3>
+                  <p className="text-primary-50 leading-relaxed mb-4">
+                    {step.description}
+                  </p>
+                </div>
+                <div className="border-t border-white/20 pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-5 h-5 text-primary-200" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                    <span className="font-bold text-lg">{step.benefit}</span>
+                  </div>
+                  <p className="text-primary-100 text-sm">
+                    {step.benefitDescription}
+                  </p>
                 </div>
               </div>
             ))}

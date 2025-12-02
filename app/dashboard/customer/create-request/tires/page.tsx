@@ -278,8 +278,8 @@ export default function CreateRequestPage() {
       
       // Add mixed tire dimensions to notes
       if (mixedTires && formData.rearWidth && formData.rearAspectRatio && formData.rearDiameter) {
-        const frontDimensions = `Vorderachse: ${formData.width}/${formData.aspectRatio} R${formData.diameter}${formData.loadIndex ? ' ' + formData.loadIndex : ''}${formData.speedRating || ''}`
-        const rearDimensions = `Hinterachse: ${formData.rearWidth}/${formData.rearAspectRatio} R${formData.rearDiameter}${formData.rearLoadIndex ? ' ' + formData.rearLoadIndex : ''}${formData.rearSpeedRating || ''}`
+        const frontDimensions = `Vorderachse: ${formData.width}/${formData.aspectRatio} R${formData.diameter}${formData.loadIndex ? ' ' + formData.loadIndex : ''}${formData.speedRating ? ' ' + formData.speedRating : ''}`
+        const rearDimensions = `Hinterachse: ${formData.rearWidth}/${formData.rearAspectRatio} R${formData.rearDiameter}${formData.rearLoadIndex ? ' ' + formData.rearLoadIndex : ''}${formData.rearSpeedRating ? ' ' + formData.rearSpeedRating : ''}`
         notesText = `${frontDimensions}\n${rearDimensions}\n${notesText}`.trim()
       }
       

@@ -236,7 +236,7 @@ export default function TireHistory() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterSeason('ALL')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                   filterSeason === 'ALL'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -246,33 +246,39 @@ export default function TireHistory() {
               </button>
               <button
                 onClick={() => setFilterSeason('SUMMER')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   filterSeason === 'SUMMER'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Sommerreifen ({history.filter(h => h.tireDetails.season === 'SUMMER').length})
+                <span className="hidden sm:inline">Sommerreifen</span>
+                <span className="sm:hidden">Sommer</span>
+                <span> ({history.filter(h => h.tireDetails.season === 'SUMMER').length})</span>
               </button>
               <button
                 onClick={() => setFilterSeason('WINTER')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   filterSeason === 'WINTER'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Winterreifen ({history.filter(h => h.tireDetails.season === 'WINTER').length})
+                <span className="hidden sm:inline">Winterreifen</span>
+                <span className="sm:hidden">Winter</span>
+                <span> ({history.filter(h => h.tireDetails.season === 'WINTER').length})</span>
               </button>
               <button
                 onClick={() => setFilterSeason('ALL_SEASON')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   filterSeason === 'ALL_SEASON'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Ganzjahresreifen ({history.filter(h => h.tireDetails.season === 'ALL_SEASON').length})
+                <span className="hidden sm:inline">Ganzjahresreifen</span>
+                <span className="sm:hidden">Ganzjahr</span>
+                <span> ({history.filter(h => h.tireDetails.season === 'ALL_SEASON').length})</span>
               </button>
             </div>
           </div>

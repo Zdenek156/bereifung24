@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
                 <li><strong>Achse(n):</strong> ${axleTypeMap[validatedData.axleType]}</li>
                 <li><strong>Leistung:</strong> ${serviceLevelMap[validatedData.serviceLevel]}</li>
                 ${validatedData.hasIssues && validatedData.issueDescription ? `<li><strong>Probleme:</strong> ${validatedData.issueDescription}</li>` : ''}
-                <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${city}</li>
+                <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${customer.user.city || ''}</li>
                 <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>
               </ul>
               

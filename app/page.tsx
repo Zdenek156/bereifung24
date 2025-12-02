@@ -26,18 +26,19 @@ export default function HomePage() {
                   <p className="text-xs text-primary-100">Deutschlands digitale Reifenservice-Plattform</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Link
                   href="/login"
-                  className="px-5 py-2.5 text-sm font-medium hover:bg-white/10 rounded-lg transition-colors"
+                  className="px-3 sm:px-5 py-2.5 text-sm font-medium hover:bg-white/10 rounded-lg transition-colors"
                 >
                   Anmelden
                 </Link>
                 <Link
                   href="/register/customer"
-                  className="px-5 py-2.5 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-3 sm:px-5 py-2.5 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap"
                 >
-                  Kostenlos registrieren
+                  <span className="hidden sm:inline">Kostenlos registrieren</span>
+                  <span className="sm:hidden">Registrieren</span>
                 </Link>
               </div>
             </div>

@@ -65,11 +65,7 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
     { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' },
     { type: 'two_tires_disposal', name: '2 Reifen + Entsorgung', description: '2 Reifen wechseln inkl. Entsorgung der Altreifen' },
-    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' },
-    { type: 'two_tires_runflat', name: '2 Runflat-Reifen', description: '2 Runflat-Reifen wechseln (inkl. Aufpreis)' },
-    { type: 'four_tires_runflat', name: '4 Runflat-Reifen', description: '4 Runflat-Reifen wechseln (inkl. Aufpreis)' },
-    { type: 'two_tires_runflat_disposal', name: '2 Runflat + Entsorgung', description: '2 Runflat-Reifen + Entsorgung' },
-    { type: 'four_tires_runflat_disposal', name: '4 Runflat + Entsorgung', description: '4 Runflat-Reifen + Entsorgung' }
+    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' }
   ],
   WHEEL_CHANGE: [
     { type: 'basic', name: 'Räderwechsel Standard', description: 'Umstecken der Kompletträder ohne Zusatzleistungen' },
@@ -137,6 +133,7 @@ export default function WorkshopServicesPage() {
   const [selectedServiceType, setSelectedServiceType] = useState('')
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
   const [refrigerantPrice, setRefrigerantPrice] = useState<string>('')
+  const [runFlatSurcharge, setRunFlatSurcharge] = useState<string>('')
   
   // Package form state
   const [packages, setPackages] = useState<{ [key: string]: { price: string; duration: string; active: boolean } }>({})
@@ -235,6 +232,11 @@ export default function WorkshopServicesPage() {
       if (selectedServiceType === 'CLIMATE_SERVICE' && refrigerantPrice) {
         requestBody.refrigerantPricePer100ml = parseFloat(refrigerantPrice)
       }
+
+      // Add RunFlat surcharge for TIRE_CHANGE
+      if (selectedServiceType === 'TIRE_CHANGE' && runFlatSurcharge) {
+        requestBody.runFlatSurcharge = parseFloat(runFlatSurcharge)
+      }
       
       const response = await fetch(url, {
         method: editingService ? 'PATCH' : 'POST',
@@ -277,6 +279,11 @@ export default function WorkshopServicesPage() {
     // Load refrigerant price for climate service
     if (service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml) {
       setRefrigerantPrice(service.refrigerantPricePer100ml.toString())
+    }
+
+    // Load RunFlat surcharge for tire change
+    if (service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge) {
+      setRunFlatSurcharge(service.runFlatSurcharge.toString())
     }
     
     // Load existing packages
@@ -361,6 +368,7 @@ export default function WorkshopServicesPage() {
     setSelectedServiceType('')
     setPackages({})
     setRefrigerantPrice('')
+    setRunFlatSurcharge('')
     setEditingService(null)
     setShowAddForm(false)
     setExpandedServices(new Set())
@@ -466,6 +474,35 @@ export default function WorkshopServicesPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Dieser Preis wird dem Kunden angezeigt
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* RunFlat Surcharge for Tire Change */}
+              {selectedServiceType === 'TIRE_CHANGE' && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    🔧 RunFlat-Reifen Aufpreis
+                  </h3>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Geben Sie den Aufpreis pro Reifen für RunFlat-Reifen an. Dieser wird automatisch beim Angebot dazugerechnet, wenn der Kunde RunFlat-Reifen hat.
+                  </p>
+                  <div className="max-w-xs">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Aufpreis pro RunFlat-Reifen (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={runFlatSurcharge}
+                      onChange={(e) => setRunFlatSurcharge(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="z.B. 5.00"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Dieser Aufpreis wird pro Reifen berechnet (optional)
                     </p>
                   </div>
                 </div>
@@ -599,6 +636,13 @@ export default function WorkshopServicesPage() {
                     {service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml && (
                       <div className="mb-3 text-sm text-gray-700 bg-yellow-50 p-2 rounded">
                         💧 Kältemittel: {service.refrigerantPricePer100ml.toFixed(2)} € / 100ml
+                      </div>
+                    )}
+
+                    {/* RunFlat Surcharge Info for Tire Change */}
+                    {service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge && (
+                      <div className="mb-3 text-sm text-gray-700 bg-blue-50 p-2 rounded">
+                        🔧 RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
                       </div>
                     )}
                     

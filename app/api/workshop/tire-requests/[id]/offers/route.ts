@@ -244,7 +244,9 @@ export async function POST(
       
       const firstOption = offer.tireOptions[0]
       // Calculate with quantity from carTireType
-      const firstOptionQuantity = firstOption.carTireType ? getQuantityForCarTireType(firstOption.carTireType) : tireRequest.quantity
+      const firstOptionQuantity = firstOption.carTireType ? 
+        getQuantityForCarTireType(firstOption.carTireType as 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO') : 
+        tireRequest.quantity
       const firstOptionRunFlat = runFlatSurcharge * firstOptionQuantity
       const totalOfferPrice = (firstOption.pricePerTire * firstOptionQuantity) + validatedData.installationFee + firstOptionRunFlat
       const priceDisplay = offer.tireOptions.length > 1 

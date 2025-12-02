@@ -490,6 +490,11 @@ export default function RequestDetailPage() {
                             Runflat
                           </span>
                         )}
+                        {request.additionalNotes?.includes('Altreifenentsorgung gewünscht') && (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            ♻️ Altreifenentsorgung
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -512,12 +517,26 @@ export default function RequestDetailPage() {
                   <p className="text-sm font-semibold">{formatDate(request.needByDate)}</p>
                 </div>
 
-                {request.additionalNotes && request.width !== 0 && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Zusätzliche Hinweise</p>
-                    <p className="text-sm">{request.additionalNotes}</p>
-                  </div>
-                )}
+                {request.additionalNotes && request.width !== 0 && (() => {
+                  // Filter out structured data from additionalNotes
+                  let userNotes = request.additionalNotes
+                    .replace(/Vorderachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                    .replace(/Hinterachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                    .replace(/Vorderreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                    .replace(/Hinterreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                    .replace(/Altreifenentsorgung gewünscht\n?/g, '')
+                    .trim()
+                  
+                  if (userNotes) {
+                    return (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Zusätzliche Hinweise</p>
+                        <p className="text-sm whitespace-pre-line">{userNotes}</p>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 <div className="pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500">

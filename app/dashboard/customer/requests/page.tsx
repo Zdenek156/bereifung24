@@ -22,6 +22,12 @@ interface TireRequest {
   zipCode: string
   radiusKm: number
   createdAt: string
+  vehicle?: {
+    id: string
+    make: string
+    model: string
+    year: number
+  }
   _count: {
     offers: number
   }

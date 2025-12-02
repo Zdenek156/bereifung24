@@ -265,6 +265,14 @@ export async function GET(request: NextRequest) {
         customerId: session.user.customerId!,
       },
       include: {
+        vehicle: {
+          select: {
+            id: true,
+            make: true,
+            model: true,
+            year: true,
+          },
+        },
         _count: {
           select: {
             offers: true,

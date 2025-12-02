@@ -1206,7 +1206,7 @@ export function sepaMandateActivatedEmailTemplate(data: {
           </ul>
 
           <div class="button-container">
-            <a href="https://reifen.bereifung24.de/dashboard/workshop/browse-requests" class="button">
+            <a href="${process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'}/dashboard/workshop/browse-requests" class="button">
               Jetzt Anfragen durchsuchen
             </a>
           </div>

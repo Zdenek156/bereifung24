@@ -12,7 +12,7 @@ export default function AGBPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Geltungsbereich</h2>
             <p className="mb-3">
               Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für die Nutzung der Online-Plattform 
-              Bereifung24 (nachfolgend "Plattform"), die unter der Domain reifen.bereifung24.de erreichbar ist.
+              Bereifung24 (nachfolgend "Plattform"), die unter der Domain www.bereifung24.de erreichbar ist.
             </p>
             <p className="mb-3">
               Die Plattform wird betrieben von Bereifung24, Zdenek Kyzlink, Jahnstraße 2, 71706 Markgröningen 

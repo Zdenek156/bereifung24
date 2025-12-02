@@ -701,9 +701,9 @@ export function newTireRequestEmailTemplate(data: {
           <p>Es gibt eine neue Reifenanfrage in Ihrer Nähe! Ein Kunde sucht ${seasonText} und Sie haben die Möglichkeit, ein Angebot zu erstellen.</p>
           
           <div class="highlight">
-            <strong>📍 Entfernung:</strong> Ca. ${data.distance} von Ihrem Standort<br>
-            ${data.customerCity ? `<strong>Stadt:</strong> ${data.customerCity}<br>` : ''}
-            <strong>📅 Benötigt bis:</strong> ${data.needByDate}
+            <strong>📍 Entfernung: </strong> Ca. ${data.distance} von Ihrem Standort<br>
+            ${data.customerCity ? `<strong>Stadt: </strong> ${data.customerCity}<br>` : ''}
+            <strong>📅 Benötigt bis: </strong> ${data.needByDate}
           </div>
 
           <div class="tire-details">
@@ -733,14 +733,14 @@ export function newTireRequestEmailTemplate(data: {
             
             ${data.preferredBrands ? `
             <div class="detail-row">
-              <span class="detail-label">Bevorzugte Marken:</span>
+              <span class="detail-label">Bevorzugte Marken: </span>
               <span class="detail-value">${data.preferredBrands}</span>
             </div>
             ` : ''}
             
             ${data.additionalNotes ? `
             <div class="detail-row">
-              <span class="detail-label">Zusätzliche Hinweise:</span>
+              <span class="detail-label">Zusätzliche Hinweise: </span>
               <span class="detail-value">${data.additionalNotes}</span>
             </div>
             ` : ''}

@@ -199,7 +199,38 @@ export async function POST(request: NextRequest) {
             workshop.user.longitude!
           )
 
-          const tireSize = `${validatedData.width}/${validatedData.aspectRatio} R${validatedData.diameter}`
+          // Build tire size with load/speed index or parse mixed tires
+          let tireSize = ''
+          let tireSizeDisplay = ''
+          
+          // Check if additionalNotes contains mixed tire dimensions
+          const frontMatch = validatedData.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+          const rearMatch = validatedData.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+          
+          if (frontMatch && rearMatch) {
+            // Mixed tires
+            tireSize = `${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]} / ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}`
+            tireSizeDisplay = `Vorne: ${frontMatch[1]}/${frontMatch[2]} R${frontMatch[3]}${frontMatch[4] ? ' ' + frontMatch[4] : ''}${frontMatch[5] ? ' ' + frontMatch[5] : ''} • Hinten: ${rearMatch[1]}/${rearMatch[2]} R${rearMatch[3]}${rearMatch[4] ? ' ' + rearMatch[4] : ''}${rearMatch[5] ? ' ' + rearMatch[5] : ''}`
+          } else {
+            // Standard tires
+            tireSize = `${validatedData.width}/${validatedData.aspectRatio} R${validatedData.diameter}`
+            tireSizeDisplay = `${validatedData.width}/${validatedData.aspectRatio} R${validatedData.diameter}${validatedData.loadIndex ? ' ' + validatedData.loadIndex : ''}${validatedData.speedRating ? ' ' + validatedData.speedRating : ''}`
+          }
+          
+          // Filter additional notes to remove structured data
+          let filteredNotes = validatedData.additionalNotes || ''
+          filteredNotes = filteredNotes
+            .replace(/Vorderachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+            .replace(/Hinterachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+            .replace(/Vorderreifen: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+            .replace(/Hinterreifen: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+            .replace(/Altreifenentsorgung gewünscht\n?/g, '')
+            .replace(/Motorradreifen \(Anfrage über Motorrad-Formular\)\n?/g, '')
+            .replace(/Achsvermessung gewünscht\n?/g, '')
+            .replace(/Räder auswuchten gewünscht\n?/g, '')
+            .replace(/RDKS-Sensoren programmieren gewünscht\n?/g, '')
+            .trim()
+          
           const formattedDate = new Date(validatedData.needByDate).toLocaleDateString('de-DE', {
             day: '2-digit',
             month: '2-digit',
@@ -214,12 +245,12 @@ export async function POST(request: NextRequest) {
                 workshopName: workshop.user.lastName,
                 requestId: tireRequest.id,
                 season: validatedData.season,
-                tireSize: tireSize,
+                tireSize: tireSizeDisplay,
                 quantity: validatedData.quantity,
                 needByDate: formattedDate,
                 distance: `${distance.toFixed(1)} km`,
                 preferredBrands: validatedData.preferredBrands,
-                additionalNotes: validatedData.additionalNotes,
+                additionalNotes: filteredNotes || undefined,
                 customerCity: city || undefined,
                 vehicleInfo: vehicleInfo,
               })

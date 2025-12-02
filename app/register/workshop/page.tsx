@@ -19,8 +19,6 @@ export default function WorkshopRegisterPage() {
     zipCode: '',
     city: '',
     taxId: '',
-    iban: '',
-    accountHolder: '',
     description: '',
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -76,8 +74,6 @@ export default function WorkshopRegisterPage() {
           zipCode: formData.zipCode,
           city: formData.city,
           taxId: formData.taxId || undefined,
-          iban: formData.iban || undefined,
-          accountHolder: formData.accountHolder || undefined,
           description: formData.description || undefined,
         }),
       })
@@ -378,60 +374,6 @@ export default function WorkshopRegisterPage() {
             </div>
           </div>
 
-          {/* Banking (Optional) */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-              Bankverbindung (optional - kann später ergänzt werden)
-            </h3>
-            
-            <div>
-              <label htmlFor="iban" className="block text-sm font-medium text-gray-700 mb-1">
-                IBAN
-              </label>
-              <input
-                type="text"
-                id="iban"
-                name="iban"
-                value={formData.iban}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="DE89 3704 0044 0532 0130 00"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="accountHolder" className="block text-sm font-medium text-gray-700 mb-1">
-                  Kontoinhaber
-                </label>
-                <input
-                  type="text"
-                  id="accountHolder"
-                  name="accountHolder"
-                  value={formData.accountHolder}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Firmenname oder Inhaber"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="taxId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Steuernummer
-                </label>
-                <input
-                  type="text"
-                  id="taxId"
-                  name="taxId"
-                  value={formData.taxId}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="DE123456789"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Terms & Submit */}
           <div className="space-y-4 pt-4">
             <div className="flex items-start">
@@ -445,7 +387,7 @@ export default function WorkshopRegisterPage() {
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 Ich akzeptiere die <Link href="/agb" target="_blank" className="text-primary-600 hover:text-primary-500">AGB</Link> und <Link href="/datenschutz" target="_blank" className="text-primary-600 hover:text-primary-500">Datenschutzbestimmungen</Link>. 
-                Ich stimme der Provisionszahlung von 4,9% pro erfolgreich vermitteltem Auftrag zu.
+                Ich stimme der Provisionszahlung pro erfolgreich vermitteltem Auftrag zu.
               </label>
             </div>
 

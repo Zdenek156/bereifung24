@@ -273,6 +273,21 @@ export default function CreateRequestPage() {
     setLoading(true)
 
     try {
+      // Build additionalNotes with mixed tire info if applicable
+      let notesText = formData.additionalNotes || ''
+      
+      // Add mixed tire dimensions to notes
+      if (mixedTires && formData.rearWidth && formData.rearAspectRatio && formData.rearDiameter) {
+        const frontDimensions = `Vorderachse: ${formData.width}/${formData.aspectRatio} R${formData.diameter}${formData.loadIndex ? ' ' + formData.loadIndex : ''}${formData.speedRating || ''}`
+        const rearDimensions = `Hinterachse: ${formData.rearWidth}/${formData.rearAspectRatio} R${formData.rearDiameter}${formData.rearLoadIndex ? ' ' + formData.rearLoadIndex : ''}${formData.rearSpeedRating || ''}`
+        notesText = `${frontDimensions}\n${rearDimensions}\n${notesText}`.trim()
+      }
+      
+      // Add disposal info
+      if (formData.tireDisposal) {
+        notesText = `${notesText}\nAltreifenentsorgung gewünscht`.trim()
+      }
+      
       const response = await fetch('/api/tire-requests', {
         method: 'POST',
         headers: {
@@ -288,7 +303,7 @@ export default function CreateRequestPage() {
           isRunflat: formData.isRunflat,
           quantity: formData.quantity,
           preferredBrands: formData.preferredBrands || undefined,
-          additionalNotes: formData.additionalNotes || undefined,
+          additionalNotes: notesText || undefined,
           needByDate: formData.needByDate,
           zipCode: userZipCode,
           radiusKm: formData.radiusKm,

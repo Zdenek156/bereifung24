@@ -254,7 +254,7 @@ export default function RequestsPage() {
                               {request.isRunflat && (
                                 <div>✓ Run-Flat Reifen</div>
                               )}
-                              {request.preferredBrands && (
+                              {request.preferredBrands && request.preferredBrands.trim() !== '' && (
                                 <div>Bevorzugte Marken: {request.preferredBrands}</div>
                               )}
                             </div>

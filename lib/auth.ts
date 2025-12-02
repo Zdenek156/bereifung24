@@ -142,6 +142,11 @@ export const authOptions: NextAuthOptions = {
               isActive: true,
               emailVerified: new Date(),
               googleId: account.providerAccountId,
+              // Initialize address fields with empty strings to prevent auto-fill issues
+              phone: '',
+              street: '',
+              zipCode: '',
+              city: '',
               customer: {
                 create: {}
               }

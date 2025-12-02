@@ -50,9 +50,12 @@ export async function POST(
       )
     }
 
-    // Hole die Anfrage
+    // Hole die Anfrage mit RunFlat-Info
     const tireRequest = await prisma.tireRequest.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
+      include: {
+        customer: true
+      }
     })
 
     if (!tireRequest) {
@@ -60,6 +63,20 @@ export async function POST(
         { error: 'Anfrage nicht gefunden' },
         { status: 404 }
       )
+    }
+
+    // Hole Workshop-Service für RunFlat-Aufpreis (nur für TIRE_CHANGE)
+    let runFlatSurcharge = 0
+    if (tireRequest.isRunflat && tireRequest.serviceType === 'TIRE_CHANGE') {
+      const workshopService = await prisma.workshopService.findFirst({
+        where: {
+          workshopId: workshop.id,
+          serviceType: 'TIRE_CHANGE'
+        }
+      })
+      if (workshopService?.runFlatSurcharge) {
+        runFlatSurcharge = workshopService.runFlatSurcharge
+      }
     }
 
     // Prüfe ob bereits ein Angebot von dieser Werkstatt existiert
@@ -107,10 +124,23 @@ export async function POST(
 
     // Für Service-Anfragen: Verwende Standardwerte, sonst erste Option
     const firstOption = hasValidTireOptions ? validatedData.tireOptions![0] : null
+    
+    // Berechne RunFlat-Aufpreis pro Reifen
+    const runFlatTotal = runFlatSurcharge * tireRequest.quantity
+    
     const totalPrice = isServiceRequest 
-      ? validatedData.installationFee
-      : (firstOption!.pricePerTire * tireRequest.quantity) + validatedData.installationFee
+      ? validatedData.installationFee + runFlatTotal
+      : (firstOption!.pricePerTire * tireRequest.quantity) + validatedData.installationFee + runFlatTotal
 
+    console.log('Calculating price:', {
+      basePrice: isServiceRequest ? 0 : (firstOption?.pricePerTire || 0) * tireRequest.quantity,
+      installationFee: validatedData.installationFee,
+      runFlatSurcharge,
+      quantity: tireRequest.quantity,
+      runFlatTotal,
+      totalPrice
+    })
+    
     console.log('About to create offer in database')
     
     let offer

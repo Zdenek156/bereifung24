@@ -106,34 +106,30 @@ export default function HomePage() {
       {/* Unique Selling Points - Deutschlands Erste */}
       <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <div className="inline-block mb-4 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
               Einzigartig in Deutschland
             </div>
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-8">
               Was macht Bereifung24 besonders?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Die erste Plattform, die alle Reifenservices digital und transparent abbildet
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {uniqueFeatures.map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-100 group hover:-translate-y-1">
-                <div className="text-primary-600 mb-4 transform group-hover:scale-110 transition-transform">
-                  <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center">
-                    {feature.icon}
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-gray-50 to-white p-8 md:p-12 rounded-3xl border border-gray-200 shadow-xl">
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+                Bereifung24 ist <span className="font-bold text-primary-600">Deutschlands erste vollständig digitale Reifenservice-Plattform</span>, die Autofahrer und Werkstätten auf eine völlig neue Art verbindet. Während traditionelle Portale nur Reifenwechsel anbieten, decken wir das gesamte Spektrum ab – von Motorradreifen über Achsvermessung bis hin zu Klimaservice und Batteriewechsel.
+              </p>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+                Was uns einzigartig macht: <span className="font-bold text-primary-600">Absolute Transparenz durch granulare Servicepakete</span>. Du brauchst nur 2 Reifen statt 4? Nur die Vorderachse vermessen? Motorradreifen vorne und hinten zu unterschiedlichen Preisen? Bei uns zahlst du nur für das, was du wirklich benötigst. Keine Pauschalangebote, keine versteckten Kosten – jeder Service ist präzise konfigurierbar.
+              </p>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+                Für Werkstätten bedeutet Bereifung24 <span className="font-bold text-primary-600">mehr Kunden ohne Risiko</span>. Keine monatlichen Fixkosten, keine Vertragsbindung – nur eine faire Provision bei erfolgreicher Vermittlung. Mit unserem intelligenten Dashboard verwaltest du Services, Preise, Mitarbeiter und Urlaubszeiten zentral. Qualifizierte Anfragen aus deiner Region erreichen dich automatisch.
+              </p>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
+                Die Plattform vereint <span className="font-bold text-primary-600">modernste Technologie mit höchster Benutzerfreundlichkeit</span>: Anfrage erstellen in 2 Minuten, mehrere Angebote vergleichen, Termin online buchen – alles ohne Telefonate. Geprüfte Werkstätten, transparente Bewertungen, sichere Datenverwaltung nach EU-DSGVO. So wird Reifenservice zum digitalen Erlebnis, das Zeit spart, Geld spart und Nerven schont.
+              </p>
+            </div>
           </div>
         </div>
       </section>

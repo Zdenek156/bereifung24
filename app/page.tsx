@@ -44,7 +44,7 @@ export default function HomePage() {
             </div>
             
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Reifenservice neu gedacht
+              Dein Reifenservice – digital & einfach
             </h2>
             
             <p className="text-xl md:text-2xl mb-4 text-primary-100 font-medium">

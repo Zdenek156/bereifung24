@@ -120,12 +120,6 @@ export default function HomePage() {
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
                 Bereifung24 ist <span className="font-bold text-primary-600">Deutschlands erste vollständig digitale Reifenservice-Plattform</span>, die Autofahrer und Werkstätten auf eine völlig neue Art verbindet. Während traditionelle Portale nur Reifenwechsel anbieten, decken wir das gesamte Spektrum ab – von Motorradreifen über Achsvermessung bis hin zu Klimaservice und Batteriewechsel.
               </p>
-              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                Was uns einzigartig macht: <span className="font-bold text-primary-600">Absolute Transparenz durch granulare Servicepakete</span>. Du brauchst nur 2 Reifen statt 4? Nur die Vorderachse vermessen? Motorradreifen vorne und hinten zu unterschiedlichen Preisen? Bei uns zahlst du nur für das, was du wirklich benötigst. Keine Pauschalangebote, keine versteckten Kosten – jeder Service ist präzise konfigurierbar.
-              </p>
-              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                Für Werkstätten bedeutet Bereifung24 <span className="font-bold text-primary-600">mehr Kunden ohne Risiko</span>. Keine monatlichen Fixkosten, keine Vertragsbindung – nur eine faire Provision bei erfolgreicher Vermittlung. Mit unserem intelligenten Dashboard verwaltest du Services, Preise, Mitarbeiter und Urlaubszeiten zentral. Qualifizierte Anfragen aus deiner Region erreichen dich automatisch.
-              </p>
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
                 Die Plattform vereint <span className="font-bold text-primary-600">modernste Technologie mit höchster Benutzerfreundlichkeit</span>: Anfrage erstellen in 2 Minuten, mehrere Angebote vergleichen, Termin online buchen – alles ohne Telefonate. Geprüfte Werkstätten, transparente Bewertungen, sichere Datenverwaltung nach EU-DSGVO. So wird Reifenservice zum digitalen Erlebnis, das Zeit spart, Geld spart und Nerven schont.
               </p>

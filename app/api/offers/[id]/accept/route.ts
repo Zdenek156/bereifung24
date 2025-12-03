@@ -135,8 +135,9 @@ export async function POST(
     // Transaktion: Angebot annehmen, Booking erstellen und alle anderen ablehnen
     const result = await prisma.$transaction(async (tx) => {
       // Calculate final price based on selected tire options
-      let finalPrice: number = offer?.installationFee || 0 // Start with installation fee
+      let finalPrice: number = 0
       let selectedOptionsForBooking: string[] = []
+      let totalQuantity = 0
       
       // If tire options were selected, calculate based on those
       if (offer?.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length > 0) {
@@ -144,12 +145,40 @@ export async function POST(
           selectedTireOptionIds.includes(opt.id)
         )
         
-        // Calculate tire cost from selected options
+        // Calculate tire cost and total quantity from selected options
         selectedOptions.forEach((option: any) => {
           const quantity = getQuantityForTireOption(option)
+          totalQuantity += quantity
           finalPrice += option.pricePerTire * quantity
           selectedOptionsForBooking.push(option.id)
         })
+        
+        // Get workshop service to calculate dynamic installation fee
+        const workshopService = await tx.workshopService.findFirst({
+          where: {
+            workshopId: offer.workshopId,
+            serviceType: 'TIRE_CHANGE',
+            isActive: true
+          }
+        })
+        
+        // Calculate installation fee based on quantity
+        let installationFee = offer?.installationFee || 0
+        if (workshopService) {
+          if (totalQuantity <= 2) {
+            installationFee = workshopService.basePrice
+          } else {
+            installationFee = workshopService.basePrice4 || workshopService.basePrice
+          }
+          
+          // Add disposal fee if requested
+          const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+          if (hasDisposal && workshopService.disposalFee) {
+            installationFee += workshopService.disposalFee * totalQuantity
+          }
+        }
+        
+        finalPrice += installationFee
         
         console.log('Calculating price from selected options:', {
           selectedOptions: selectedOptions.map((o: any) => ({
@@ -159,7 +188,8 @@ export async function POST(
             pricePerTire: o.pricePerTire,
             quantity: getQuantityForTireOption(o)
           })),
-          installationFee: offer?.installationFee,
+          totalQuantity,
+          installationFee,
           finalPrice
         })
       } else {

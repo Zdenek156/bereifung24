@@ -14,9 +14,9 @@ const tireRequestSchema = z.object({
   loadIndex: z.number().min(50).max(150).optional(),
   speedRating: z.string().optional(),
   isRunflat: z.boolean().default(false),
-  quantity: z.number().refine((val) => val === 2 || val === 4, {
+  quantity: z.number().int().min(2).max(4).refine((val) => val === 2 || val === 4, {
     message: "Quantity must be either 2 or 4 tires"
-  }).default(2),
+  }),
   preferredBrands: z.string().optional(),
   additionalNotes: z.string().optional(),
   needByDate: z.string(),

@@ -92,7 +92,7 @@ export default function CreateRequestPage() {
     rearLoadIndex: '',
     rearSpeedRating: '',
     isRunflat: false,
-    quantity: 4,
+    quantity: 2,
     tireQuality: 'QUALITY',
     tireDisposal: false,
     tirePosition: 'BOTH', // FRONT, REAR, BOTH
@@ -217,20 +217,10 @@ export default function CreateRequestPage() {
         [name]: (e.target as HTMLInputElement).checked
       })
     } else {
-      // Wenn tirePosition geändert wird, passe die Anzahl automatisch an
-      if (name === 'tirePosition') {
-        const quantity = value === 'BOTH' ? 4 : 2
-        setFormData({
-          ...formData,
-          [name]: value,
-          quantity: quantity
-        })
-      } else {
-        setFormData({
-          ...formData,
-          [name]: value
-        })
-      }
+      setFormData({
+        ...formData,
+        [name]: value
+      })
     }
   }
 
@@ -902,15 +892,12 @@ export default function CreateRequestPage() {
                   onChange={handleChange}
                   className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value={1}>1 Reifen</option>
                   <option value={2}>2 Reifen</option>
-                  {formData.tirePosition === 'BOTH' && <option value={4}>4 Reifen</option>}
+                  <option value={4}>4 Reifen</option>
                 </select>
-                {formData.tirePosition !== 'BOTH' && formData.quantity === 4 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    💡 Hinweis: Bei "Vorne und Hinten" können Sie 4 Reifen auswählen
-                  </p>
-                )}
+                <p className="text-sm text-gray-600 mt-1">
+                  💡 Montagepreise sind für 2 oder 4 Reifen verfügbar
+                </p>
               </div>
 
               <div>

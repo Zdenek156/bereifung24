@@ -148,9 +148,14 @@ export default function RequestDetailPage() {
     setAcceptTerms(false)
     setWantsBalancing(false)
     setWantsStorage(false)
-    // Pre-select first option or provided option
-    if (offer && offer.tireOptions && offer.tireOptions.length > 0) {
-      setSelectedTireOptionIds(defaultTireOptionId ? [defaultTireOptionId] : [offer.tireOptions[0].id])
+    // Pre-select first option or provided option (including virtual options)
+    if (offer) {
+      const displayOptions = getDisplayOptions(offer)
+      if (displayOptions.length > 0) {
+        setSelectedTireOptionIds(defaultTireOptionId ? [defaultTireOptionId] : [displayOptions[0].id])
+      } else {
+        setSelectedTireOptionIds([])
+      }
     } else {
       setSelectedTireOptionIds([])
     }
@@ -165,8 +170,9 @@ export default function RequestDetailPage() {
       // For car tires, check compatibility
       if (option.carTireType) {
         const currentOffer = request?.offers.find(o => o.id === offerId)
+        const displayOptions = currentOffer ? getDisplayOptions(currentOffer) : []
         const currentlySelected = prev.map(id => 
-          currentOffer?.tireOptions?.find(opt => opt.id === id)
+          displayOptions.find(opt => opt.id === id)
         ).filter(Boolean) as TireOption[]
         
         if (prev.includes(optionId)) {
@@ -216,12 +222,25 @@ export default function RequestDetailPage() {
 
     setAcceptingOfferId(selectedOfferId)
     try {
+      // Filter out virtual IDs (those starting with the offer ID)
+      const realTireOptionIds = selectedTireOptionIds.filter(id => !id.startsWith(`${selectedOfferId}-`))
+      
       const response = await fetch(`/api/offers/${selectedOfferId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wantsStorage,
-          selectedTireOptionIds: selectedTireOptionIds.length > 0 ? selectedTireOptionIds : undefined
+          selectedTireOptionIds: realTireOptionIds.length > 0 ? realTireOptionIds : undefined,
+          // For virtual options, send quantity info
+          selectedQuantity: selectedTireOptionIds.length > 0 ? (() => {
+            const offer = request?.offers.find(o => o.id === selectedOfferId)
+            if (offer) {
+              const displayOptions = getDisplayOptions(offer)
+              const selectedOptions = displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
+              return selectedOptions.reduce((sum, opt) => sum + getQuantityForTireOption(opt), 0)
+            }
+            return request?.quantity || 4
+          })() : undefined
         })
       })
 
@@ -289,9 +308,49 @@ export default function RequestDetailPage() {
     return { fee, duration }
   }
 
+  // Get display options for an offer (real or virtual)
+  const getDisplayOptions = (offer: Offer): TireOption[] => {
+    if (offer.tireOptions && offer.tireOptions.length > 0) {
+      return offer.tireOptions
+    }
+
+    // Create virtual options for offers without explicit tireOptions
+    const virtualOptions: TireOption[] = []
+    
+    if (request && request.quantity === 4) {
+      // Create two options: front 2 and rear 2
+      virtualOptions.push({
+        id: `${offer.id}-front`,
+        brand: offer.tireBrand,
+        model: offer.tireModel,
+        pricePerTire: (offer.price - (offer.installationFee || 0)) / 4,
+        carTireType: 'FRONT_TWO'
+      })
+      virtualOptions.push({
+        id: `${offer.id}-rear`,
+        brand: offer.tireBrand,
+        model: offer.tireModel,
+        pricePerTire: (offer.price - (offer.installationFee || 0)) / 4,
+        carTireType: 'REAR_TWO'
+      })
+    } else if (request && request.quantity === 2) {
+      // Create one option for 2 tires
+      virtualOptions.push({
+        id: `${offer.id}-two`,
+        brand: offer.tireBrand,
+        model: offer.tireModel,
+        pricePerTire: (offer.price - (offer.installationFee || 0)) / 2,
+        carTireType: 'FRONT_TWO'
+      })
+    }
+    
+    return virtualOptions
+  }
+
   // Calculate selected total with dynamic installation fee
   const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; duration: number; tiresTotal: number } => {
-    const selectedOptions = offer.tireOptions?.filter(opt => selectedTireOptionIds.includes(opt.id)) || []
+    const displayOptions = getDisplayOptions(offer)
+    const selectedOptions = displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
     let totalQuantity = 0
     let tiresTotal = 0
 
@@ -989,11 +1048,14 @@ export default function RequestDetailPage() {
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      {offer.tireOptions && offer.tireOptions.length > 0 ? (
+                      {(() => {
+                        const displayOptions = getDisplayOptions(offer)
+
+                        return (
                         <>
-                          <p className="text-xs text-gray-600 mb-3">Verfügbare Optionen (wählen Sie eine oder mehrere):</p>
+                          <p className="text-xs text-gray-600 mb-3">Wählen Sie die gewünschten Reifen:</p>
                           <div className="space-y-3">
-                            {offer.tireOptions.map((option, idx) => {
+                            {displayOptions.map((option, idx) => {
                               const quantity = getQuantityForTireOption(option)
                               const optionTirePrice = option.pricePerTire * quantity
                               const tireTypeLabel = option.carTireType === 'ALL_FOUR' ? '🚗 Alle 4 Reifen' :
@@ -1038,14 +1100,14 @@ export default function RequestDetailPage() {
                           </div>
                           
                           {/* Show calculated total if options are selected */}
-                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && (() => {
+                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && displayOptions && (() => {
                             const calculation = calculateSelectedTotal(offer)
                             const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                             return (
                             <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
                               <div className="space-y-2 text-sm">
-                                {offer.tireOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
+                                {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
                                   const qty = getQuantityForTireOption(option)
                                   return (
                                     <div key={option.id} className="flex justify-between text-gray-700">
@@ -1078,18 +1140,8 @@ export default function RequestDetailPage() {
                             )
                           })()}
                         </>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-gray-600 mb-1">Reifen-Hersteller</p>
-                            <p className="font-semibold">{offer.tireBrand}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-600 mb-1">Modell</p>
-                            <p className="font-semibold">{offer.tireModel}</p>
-                          </div>
-                        </div>
-                      )}
+                        )
+                      })()}
                       {offer.description && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-sm text-gray-700">{offer.description}</p>
@@ -1112,11 +1164,11 @@ export default function RequestDetailPage() {
                       ) : (request.status === 'PENDING' || request.status === 'QUOTED') && offer.status === 'PENDING' ? (
                         <button
                           onClick={() => handleAcceptOffer(offer.id)}
-                          disabled={offer.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length === 0}
+                          disabled={selectedTireOptionIds.length === 0}
                           className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          {offer.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length === 0 ? 
-                            'Bitte Option wählen' : 'Angebot annehmen'}
+                          {selectedTireOptionIds.length === 0 ? 
+                            'Bitte Reifen wählen' : 'Angebot annehmen'}
                         </button>
                       ) : (
                         <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg">

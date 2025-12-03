@@ -30,9 +30,9 @@ export async function POST(
       )
     }
 
-    // Parse optional storage selection and selected tire options
+    // Parse optional storage selection, selected tire options, and quantity
     const body = await request.json().catch(() => ({}))
-    const { wantsStorage = false, selectedTireOptionIds = [] } = body
+    const { wantsStorage = false, selectedTireOptionIds = [], selectedQuantity } = body
 
     // Hole das Angebot mit allen Relations
     const offer = await prisma.offer.findUnique({
@@ -192,9 +192,50 @@ export async function POST(
           installationFee,
           finalPrice
         })
+      } else if (selectedQuantity) {
+        // Virtual options selected (offers without explicit tireOptions)
+        // Calculate price based on quantity
+        totalQuantity = selectedQuantity
+        const pricePerTire = (offer?.price - (offer?.installationFee || 0)) / (offer?.tireRequest.quantity || 4)
+        finalPrice = pricePerTire * totalQuantity
+        
+        // Get workshop service to calculate dynamic installation fee
+        const workshopService = await tx.workshopService.findFirst({
+          where: {
+            workshopId: offer.workshopId,
+            serviceType: 'TIRE_CHANGE',
+            isActive: true
+          }
+        })
+        
+        // Calculate installation fee based on quantity
+        let installationFee = offer?.installationFee || 0
+        if (workshopService) {
+          if (totalQuantity <= 2) {
+            installationFee = workshopService.basePrice
+          } else {
+            installationFee = workshopService.basePrice4 || workshopService.basePrice
+          }
+          
+          // Add disposal fee if requested
+          const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+          if (hasDisposal && workshopService.disposalFee) {
+            installationFee += workshopService.disposalFee * totalQuantity
+          }
+        }
+        
+        finalPrice += installationFee
+        
+        console.log('Calculating price for virtual options:', {
+          selectedQuantity: totalQuantity,
+          pricePerTire,
+          installationFee,
+          finalPrice
+        })
       } else {
         // Fallback to offer.price if no options selected
         finalPrice = offer?.price || 0
+        totalQuantity = offer?.tireRequest.quantity || 4
       }
       
       // Add storage if selected

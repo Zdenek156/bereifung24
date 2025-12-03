@@ -79,6 +79,20 @@ export default function CreateRequestPage() {
   const [mixedTires, setMixedTires] = useState(false)
   const [userZipCode, setUserZipCode] = useState('')
   
+  // Update quantity when mixedTires or tirePosition changes
+  useEffect(() => {
+    if (mixedTires || formData.tirePosition !== 'BOTH') {
+      // Bei Mischbereifung oder wenn nur vorne/hinten: Prüfe Position
+      if (formData.tirePosition === 'FRONT' || formData.tirePosition === 'REAR') {
+        // Nur vorne ODER nur hinten = 2 Reifen
+        setFormData(prev => ({ ...prev, quantity: 2 }))
+      } else if (formData.tirePosition === 'BOTH') {
+        // Vorne UND hinten = 4 Reifen
+        setFormData(prev => ({ ...prev, quantity: 4 }))
+      }
+    }
+  }, [mixedTires, formData.tirePosition])
+  
   const [formData, setFormData] = useState({
     season: 'SUMMER',
     width: '',
@@ -891,17 +905,23 @@ export default function CreateRequestPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Anzahl der Reifen
                 </label>
-                <select
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value={2}>2 Reifen</option>
-                  <option value={4}>4 Reifen</option>
-                </select>
+                {(mixedTires || formData.tirePosition !== 'BOTH') ? (
+                  <div className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium">
+                    {formData.quantity} Reifen (automatisch gesetzt)
+                  </div>
+                ) : (
+                  <select
+                    name="quantity"
+                    value={formData.quantity}
+                    onChange={handleChange}
+                    className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value={2}>2 Reifen</option>
+                    <option value={4}>4 Reifen</option>
+                  </select>
+                )}
                 <p className="text-sm text-gray-600 mt-1">
-                  💡 Montagepreise sind für 2 oder 4 Reifen verfügbar
+                  💡 {(mixedTires || formData.tirePosition !== 'BOTH') ? 'Anzahl wird automatisch durch Ihre Auswahl bestimmt' : 'Montagepreise sind für 2 oder 4 Reifen verfügbar'}
                 </p>
               </div>
 

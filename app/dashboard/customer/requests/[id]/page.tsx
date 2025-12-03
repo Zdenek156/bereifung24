@@ -323,16 +323,15 @@ export default function RequestDetailPage() {
   const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; duration: number; tiresTotal: number } => {
     const displayOptions = getDisplayOptions(offer)
     
-    // If no display options (simple offer without tire options), use offer data
+    // If no display options (simple offer without tire options), use offer data directly
     if (displayOptions.length === 0) {
       const tiresTotal = offer.price - offer.installationFee
-      const { fee, duration } = calculateInstallationFeeAndDuration(offer, request?.quantity || 4)
       return {
         totalQuantity: request?.quantity || 4,
         tiresTotal,
-        installationFee: fee,
-        duration,
-        totalPrice: tiresTotal + fee
+        installationFee: offer.installationFee, // Use the installation fee from the offer
+        duration: offer.durationMinutes || 60,
+        totalPrice: offer.price // Total price from offer includes tires + installation
       }
     }
     

@@ -1135,23 +1135,44 @@ export default function BrowseRequestsPage() {
                         )}
 
                         {/* Car Tire Type Selection - per tire option */}
-                        {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (
-                          <div className="mt-3">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Angebot für *
-                            </label>
-                            <select
-                              value={option.carTireType || 'ALL_FOUR'}
-                              onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                              required
-                            >
-                              <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
-                              <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
-                              <option value="REAR_TWO">🚗 2 Hinterreifen</option>
-                            </select>
-                          </div>
-                        )}
+                        {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (() => {
+                          // Check if it's mixed tires (different sizes front/rear)
+                          const isMixedTires = selectedRequest.additionalNotes?.includes('Vorderreifen:') && 
+                                               selectedRequest.additionalNotes?.includes('Hinterreifen:')
+                          
+                          // For non-mixed tires (4 identical tires), only show/use ALL_FOUR
+                          if (!isMixedTires) {
+                            return (
+                              <div className="mt-3">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Angebot für
+                                </label>
+                                <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+                                  🚗 Alle 4 Reifen
+                                </div>
+                              </div>
+                            )
+                          }
+                          
+                          // For mixed tires, show dropdown with all options
+                          return (
+                            <div className="mt-3">
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Angebot für *
+                              </label>
+                              <select
+                                value={option.carTireType || 'ALL_FOUR'}
+                                onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                required
+                              >
+                                <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
+                                <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
+                                <option value="REAR_TWO">🚗 2 Hinterreifen</option>
+                              </select>
+                            </div>
+                          )
+                        })()}
                       </div>
                     ))}
                   </div>

@@ -123,12 +123,16 @@ export default function RequestDetailPage() {
         if (response.ok) {
           const data = await response.json()
           services[offer.workshopId] = data
+          console.log(`Workshop ${offer.workshopId} service loaded:`, data)
+        } else {
+          console.warn(`Workshop ${offer.workshopId} service not found (${response.status})`)
         }
       } catch (error) {
         console.error(`Error fetching services for workshop ${offer.workshopId}:`, error)
       }
     }
     
+    console.log('All workshop services loaded:', services)
     setWorkshopServices(services)
   }
 
@@ -285,7 +289,11 @@ export default function RequestDetailPage() {
   const calculateInstallationFeeAndDuration = (offer: Offer, selectedQuantity: number): { fee: number, duration: number } => {
     const service = workshopServices[offer.workshopId]
     if (!service) {
-      return { fee: offer.installationFee, duration: offer.durationMinutes || 60 }
+      // If no service configured, use offer's installationFee or default to 0
+      // Only use offer.installationFee if it's greater than 0
+      const fee = offer.installationFee > 0 ? offer.installationFee : 0
+      console.warn(`Workshop ${offer.workshopId} hat keine Services konfiguriert. InstallationFee: ${fee}`)
+      return { fee, duration: offer.durationMinutes || 60 }
     }
 
     const hasDisposal = request?.additionalNotes?.includes('Altreifenentsorgung gewünscht')

@@ -14,6 +14,14 @@ interface TireOption {
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
 }
 
+interface WorkshopService {
+  basePrice: number
+  basePrice4: number | null
+  disposalFee: number | null
+  durationMinutes: number
+  durationMinutes4: number | null
+}
+
 interface Offer {
   id: string
   workshopId: string
@@ -25,6 +33,7 @@ interface Offer {
   status: string
   createdAt: string
   installationFee: number
+  durationMinutes?: number | null
   balancingPrice?: number | null
   storagePrice?: number | null
   storageAvailable?: boolean | null
@@ -92,6 +101,8 @@ export default function RequestDetailPage() {
       
       if (response.ok) {
         setRequest(data.request)
+        // Load workshop services for all offers
+        await fetchWorkshopServices(data.request.offers)
       } else {
         alert('Anfrage nicht gefunden')
         router.push('/dashboard/customer/requests')
@@ -103,6 +114,24 @@ export default function RequestDetailPage() {
     }
   }
 
+  const fetchWorkshopServices = async (offers: Offer[]) => {
+    const services: Record<string, WorkshopService> = {}
+    
+    for (const offer of offers) {
+      try {
+        const response = await fetch(`/api/workshop/${offer.workshopId}/services/TIRE_CHANGE`)
+        if (response.ok) {
+          const data = await response.json()
+          services[offer.workshopId] = data
+        }
+      } catch (error) {
+        console.error(`Error fetching services for workshop ${offer.workshopId}:`, error)
+      }
+    }
+    
+    setWorkshopServices(services)
+  }
+
   const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null)
   const [showAcceptModal, setShowAcceptModal] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
@@ -110,6 +139,7 @@ export default function RequestDetailPage() {
   const [wantsBalancing, setWantsBalancing] = useState(false)
   const [wantsStorage, setWantsStorage] = useState(false)
   const [selectedTireOptionIds, setSelectedTireOptionIds] = useState<string[]>([])
+  const [workshopServices, setWorkshopServices] = useState<Record<string, WorkshopService>>({})
 
   const handleAcceptOffer = (offerId: string, defaultTireOptionId?: string) => {
     const offer = request?.offers.find(o => o.id === offerId)
@@ -123,55 +153,6 @@ export default function RequestDetailPage() {
       setSelectedTireOptionIds(defaultTireOptionId ? [defaultTireOptionId] : [offer.tireOptions[0].id])
     } else {
       setSelectedTireOptionIds([])
-    }
-  }
-  
-  // Helper function to calculate quantity for tire option
-  const getQuantityForTireOption = (option: TireOption): number => {
-    if (option.carTireType) {
-      switch (option.carTireType) {
-        case 'ALL_FOUR': return 4
-        case 'FRONT_TWO': return 2
-        case 'REAR_TWO': return 2
-        default: return 4
-      }
-    }
-    if (option.motorcycleTireType) {
-      switch (option.motorcycleTireType) {
-        case 'BOTH': return 2
-        case 'FRONT': return 1
-        case 'REAR': return 1
-        default: return 2
-      }
-    }
-    return request?.quantity || 4
-  }
-  
-  // Calculate total for selected options
-  const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; durationMinutes?: number } => {
-    if (!offer.tireOptions || selectedTireOptionIds.length === 0) {
-      return { totalPrice: offer.price, totalQuantity: request?.quantity || 4, installationFee: offer.installationFee }
-    }
-    
-    const selectedOptions = offer.tireOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
-    let totalQuantity = 0
-    let tiresCost = 0
-    
-    selectedOptions.forEach(option => {
-      const qty = getQuantityForTireOption(option)
-      totalQuantity += qty
-      tiresCost += option.pricePerTire * qty
-    })
-    
-    // Determine installation fee based on total quantity
-    // If we have a service with packages, we need to fetch the correct one
-    // For now, use the base installationFee and scale if needed
-    const installationFee = offer.installationFee
-    
-    return {
-      totalPrice: tiresCost + installationFee,
-      totalQuantity,
-      installationFee
     }
   }
   
@@ -257,6 +238,77 @@ export default function RequestDetailPage() {
       alert('Fehler beim Annehmen des Angebots')
     } finally {
       setAcceptingOfferId(null)
+    }
+  }
+
+  // Helper function to calculate quantity based on tire type
+  const getQuantityForTireOption = (option: TireOption): number => {
+    if (option.carTireType) {
+      switch (option.carTireType) {
+        case 'ALL_FOUR': return 4
+        case 'FRONT_TWO': return 2
+        case 'REAR_TWO': return 2
+        default: return 4
+      }
+    }
+    if (option.motorcycleTireType) {
+      switch (option.motorcycleTireType) {
+        case 'BOTH': return 2
+        case 'FRONT': return 1
+        case 'REAR': return 1
+        default: return 2
+      }
+    }
+    return 4
+  }
+
+  // Calculate installation fee and duration based on selected tires
+  const calculateInstallationFeeAndDuration = (offer: Offer, selectedQuantity: number): { fee: number, duration: number } => {
+    const service = workshopServices[offer.workshopId]
+    if (!service) {
+      return { fee: offer.installationFee, duration: offer.durationMinutes || 60 }
+    }
+
+    const hasDisposal = request?.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+    let fee = 0
+    let duration = 0
+
+    if (selectedQuantity <= 2) {
+      fee = service.basePrice
+      duration = service.durationMinutes
+    } else {
+      fee = service.basePrice4 || service.basePrice
+      duration = service.durationMinutes4 || service.durationMinutes
+    }
+
+    // Add disposal fee if requested
+    if (hasDisposal && service.disposalFee) {
+      fee += service.disposalFee * selectedQuantity
+    }
+
+    return { fee, duration }
+  }
+
+  // Calculate selected total with dynamic installation fee
+  const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; duration: number; tiresTotal: number } => {
+    const selectedOptions = offer.tireOptions?.filter(opt => selectedTireOptionIds.includes(opt.id)) || []
+    let totalQuantity = 0
+    let tiresTotal = 0
+
+    selectedOptions.forEach(option => {
+      const qty = getQuantityForTireOption(option)
+      totalQuantity += qty
+      tiresTotal += option.pricePerTire * qty
+    })
+
+    const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
+    
+    return {
+      totalQuantity,
+      tiresTotal,
+      installationFee: fee,
+      duration,
+      totalPrice: tiresTotal + fee
     }
   }
 
@@ -397,21 +449,38 @@ export default function RequestDetailPage() {
                           </div>
                         )
                       })}
-                    <div className="flex justify-between pt-2 border-t border-primary-300">
-                      <span className="font-medium">Montagekosten</span>
-                      <span className="font-semibold">
-                        {request.offers.find(o => o.id === selectedOfferId)!.installationFee.toFixed(2)} €
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
-                      <span>Gesamtpreis</span>
-                      <span>
-                        {calculateSelectedTotal(request.offers.find(o => o.id === selectedOfferId)!).totalPrice.toFixed(2)} €
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Gesamt: {calculateSelectedTotal(request.offers.find(o => o.id === selectedOfferId)!).totalQuantity} Reifen
-                    </p>
+                    {(() => {
+                      const offer = request.offers.find(o => o.id === selectedOfferId)!
+                      const calculation = calculateSelectedTotal(offer)
+                      const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                      return (
+                        <>
+                          <div className="flex justify-between pt-2 border-t border-primary-300">
+                            <span className="font-medium">
+                              Montagekosten ({calculation.totalQuantity} Reifen)
+                              {hasDisposal && ' + Entsorgung'}
+                            </span>
+                            <span className="font-semibold">
+                              {calculation.installationFee.toFixed(2)} €
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-600 pt-1">
+                            <span>⏱️ Dauer</span>
+                            <span>{calculation.duration} Minuten</span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
+                            <span>Gesamtpreis</span>
+                            <span>
+                              {calculation.totalPrice.toFixed(2)} €
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            ✓ Gesamt: {calculation.totalQuantity} Reifen
+                            {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
+                          </p>
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               )}
@@ -969,7 +1038,10 @@ export default function RequestDetailPage() {
                           </div>
                           
                           {/* Show calculated total if options are selected */}
-                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && (
+                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && (() => {
+                            const calculation = calculateSelectedTotal(offer)
+                            const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                            return (
                             <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
                               <div className="space-y-2 text-sm">
@@ -983,19 +1055,28 @@ export default function RequestDetailPage() {
                                   )
                                 })}
                                 <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
-                                  <span>Montagekosten</span>
-                                  <span className="font-semibold">{offer.installationFee.toFixed(2)} €</span>
+                                  <span>
+                                    Montagekosten ({calculation.totalQuantity} Reifen)
+                                    {hasDisposal && ' + Entsorgung'}
+                                  </span>
+                                  <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>⏱️ Dauer</span>
+                                  <span>{calculation.duration} Minuten</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
                                   <span>Gesamtpreis</span>
-                                  <span>{calculateSelectedTotal(offer).totalPrice.toFixed(2)} €</span>
+                                  <span>{calculation.totalPrice.toFixed(2)} €</span>
                                 </div>
                                 <p className="text-xs text-gray-600 mt-2">
-                                  Gesamt: {calculateSelectedTotal(offer).totalQuantity} Reifen
+                                  ✓ Gesamt: {calculation.totalQuantity} Reifen
+                                  {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
                                 </p>
                               </div>
                             </div>
-                          )}
+                            )
+                          })()}
                         </>
                       ) : (
                         <div className="grid grid-cols-2 gap-4">

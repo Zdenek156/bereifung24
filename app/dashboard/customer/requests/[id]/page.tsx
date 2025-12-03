@@ -325,13 +325,23 @@ export default function RequestDetailPage() {
     
     // If no display options (simple offer without tire options), use offer data directly
     if (displayOptions.length === 0) {
-      const tiresTotal = offer.price - offer.installationFee
+      // If installationFee is 0, calculate from workshop service
+      let installationFee = offer.installationFee
+      let duration = offer.durationMinutes || 60
+      
+      if (installationFee === 0 || installationFee === null) {
+        const { fee, duration: calcDuration } = calculateInstallationFeeAndDuration(offer, request?.quantity || 4)
+        installationFee = fee
+        duration = calcDuration
+      }
+      
+      const tiresTotal = offer.price - installationFee
       return {
         totalQuantity: request?.quantity || 4,
         tiresTotal,
-        installationFee: offer.installationFee, // Use the installation fee from the offer
-        duration: offer.durationMinutes || 60,
-        totalPrice: offer.price // Total price from offer includes tires + installation
+        installationFee,
+        duration,
+        totalPrice: tiresTotal + installationFee
       }
     }
     

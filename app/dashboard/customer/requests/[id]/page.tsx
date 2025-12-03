@@ -314,42 +314,28 @@ export default function RequestDetailPage() {
       return offer.tireOptions
     }
 
-    // Create virtual options for offers without explicit tireOptions
-    const virtualOptions: TireOption[] = []
-    
-    if (request && request.quantity === 4) {
-      // Create two options: front 2 and rear 2
-      virtualOptions.push({
-        id: `${offer.id}-front`,
-        brand: offer.tireBrand,
-        model: offer.tireModel,
-        pricePerTire: (offer.price - (offer.installationFee || 0)) / 4,
-        carTireType: 'FRONT_TWO'
-      })
-      virtualOptions.push({
-        id: `${offer.id}-rear`,
-        brand: offer.tireBrand,
-        model: offer.tireModel,
-        pricePerTire: (offer.price - (offer.installationFee || 0)) / 4,
-        carTireType: 'REAR_TWO'
-      })
-    } else if (request && request.quantity === 2) {
-      // Create one option for 2 tires
-      virtualOptions.push({
-        id: `${offer.id}-two`,
-        brand: offer.tireBrand,
-        model: offer.tireModel,
-        pricePerTire: (offer.price - (offer.installationFee || 0)) / 2,
-        carTireType: 'FRONT_TWO'
-      })
-    }
-    
-    return virtualOptions
+    // For offers without tireOptions, don't create virtual options
+    // User should accept the complete offer as-is
+    return []
   }
 
   // Calculate selected total with dynamic installation fee
   const calculateSelectedTotal = (offer: Offer): { totalPrice: number; totalQuantity: number; installationFee: number; duration: number; tiresTotal: number } => {
     const displayOptions = getDisplayOptions(offer)
+    
+    // If no display options (simple offer without tire options), use offer data
+    if (displayOptions.length === 0) {
+      const tiresTotal = offer.price - offer.installationFee
+      const { fee, duration } = calculateInstallationFeeAndDuration(offer, request?.quantity || 4)
+      return {
+        totalQuantity: request?.quantity || 4,
+        tiresTotal,
+        installationFee: fee,
+        duration,
+        totalPrice: tiresTotal + fee
+      }
+    }
+    
     const selectedOptions = displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
     let totalQuantity = 0
     let tiresTotal = 0
@@ -1051,6 +1037,21 @@ export default function RequestDetailPage() {
                       {(() => {
                         const displayOptions = getDisplayOptions(offer)
 
+                        // If no tire options, show simple tire info
+                        if (displayOptions.length === 0) {
+                          return (
+                            <div>
+                              <p className="font-semibold text-lg text-gray-900 mb-2">
+                                {offer.tireBrand} {offer.tireModel}
+                              </p>
+                              <p className="text-sm text-gray-600 mb-2">Alle {request.quantity} Reifen</p>
+                              <p className="text-xs text-gray-600">
+                                {offer.tireBrand} {offer.tireModel}
+                              </p>
+                            </div>
+                          )
+                        }
+
                         return (
                         <>
                           <p className="text-xs text-gray-600 mb-3">Wählen Sie die gewünschten Reifen:</p>
@@ -1099,8 +1100,8 @@ export default function RequestDetailPage() {
                             })}
                           </div>
                           
-                          {/* Show calculated total if options are selected */}
-                          {selectedTireOptionIds.length > 0 && selectedOfferId === offer.id && displayOptions && (() => {
+                          {/* Show calculated total if options are selected OR if no options (simple offer) */}
+                          {((selectedTireOptionIds.length > 0 && selectedOfferId === offer.id) || displayOptions.length === 0) && (() => {
                             const calculation = calculateSelectedTotal(offer)
                             const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                             return (
@@ -1164,10 +1165,10 @@ export default function RequestDetailPage() {
                       ) : (request.status === 'PENDING' || request.status === 'QUOTED') && offer.status === 'PENDING' ? (
                         <button
                           onClick={() => handleAcceptOffer(offer.id)}
-                          disabled={selectedTireOptionIds.length === 0}
+                          disabled={getDisplayOptions(offer).length > 0 && selectedTireOptionIds.length === 0}
                           className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          {selectedTireOptionIds.length === 0 ? 
+                          {getDisplayOptions(offer).length > 0 && selectedTireOptionIds.length === 0 ? 
                             'Bitte Reifen wählen' : 'Angebot annehmen'}
                         </button>
                       ) : (

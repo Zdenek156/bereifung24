@@ -216,6 +216,11 @@ export default function CreateRequestPage() {
         ...formData,
         [name]: (e.target as HTMLInputElement).checked
       })
+    } else if (name === 'quantity') {
+      setFormData({
+        ...formData,
+        [name]: parseInt(value)
+      })
     } else {
       setFormData({
         ...formData,
@@ -291,7 +296,7 @@ export default function CreateRequestPage() {
           loadIndex: formData.loadIndex ? parseInt(formData.loadIndex) : undefined,
           speedRating: formData.speedRating || undefined,
           isRunflat: formData.isRunflat,
-          quantity: parseInt(formData.quantity),
+          quantity: formData.quantity,
           preferredBrands: formData.preferredBrands || undefined,
           additionalNotes: notesText || undefined,
           needByDate: formData.needByDate,

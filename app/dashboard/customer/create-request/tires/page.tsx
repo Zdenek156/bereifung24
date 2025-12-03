@@ -79,20 +79,6 @@ export default function CreateRequestPage() {
   const [mixedTires, setMixedTires] = useState(false)
   const [userZipCode, setUserZipCode] = useState('')
   
-  // Update quantity when mixedTires or tirePosition changes
-  useEffect(() => {
-    if (mixedTires || formData.tirePosition !== 'BOTH') {
-      // Bei Mischbereifung oder wenn nur vorne/hinten: Prüfe Position
-      if (formData.tirePosition === 'FRONT' || formData.tirePosition === 'REAR') {
-        // Nur vorne ODER nur hinten = 2 Reifen
-        setFormData(prev => ({ ...prev, quantity: 2 }))
-      } else if (formData.tirePosition === 'BOTH') {
-        // Vorne UND hinten = 4 Reifen
-        setFormData(prev => ({ ...prev, quantity: 4 }))
-      }
-    }
-  }, [mixedTires, formData.tirePosition])
-  
   const [formData, setFormData] = useState({
     season: 'SUMMER',
     width: '',
@@ -119,6 +105,20 @@ export default function CreateRequestPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  // Update quantity when mixedTires or tirePosition changes
+  useEffect(() => {
+    if (mixedTires || formData.tirePosition !== 'BOTH') {
+      // Bei Mischbereifung oder wenn nur vorne/hinten: Prüfe Position
+      if (formData.tirePosition === 'FRONT' || formData.tirePosition === 'REAR') {
+        // Nur vorne ODER nur hinten = 2 Reifen
+        setFormData(prev => ({ ...prev, quantity: 2 }))
+      } else if (formData.tirePosition === 'BOTH') {
+        // Vorne UND hinten = 4 Reifen
+        setFormData(prev => ({ ...prev, quantity: 4 }))
+      }
+    }
+  }, [mixedTires, formData.tirePosition])
 
   // Load vehicles and user profile
   useEffect(() => {

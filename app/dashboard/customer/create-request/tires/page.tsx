@@ -291,7 +291,7 @@ export default function CreateRequestPage() {
           loadIndex: formData.loadIndex ? parseInt(formData.loadIndex) : undefined,
           speedRating: formData.speedRating || undefined,
           isRunflat: formData.isRunflat,
-          quantity: formData.quantity,
+          quantity: parseInt(formData.quantity),
           preferredBrands: formData.preferredBrands || undefined,
           additionalNotes: notesText || undefined,
           needByDate: formData.needByDate,

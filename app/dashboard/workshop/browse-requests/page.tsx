@@ -1185,19 +1185,18 @@ export default function BrowseRequestsPage() {
                             )
                           }
                           
-                          // For mixed tires, show dropdown with all options
+                          // For mixed tires, show dropdown without "ALL_FOUR" option (different sizes front/rear)
                           return (
                             <div className="mt-3">
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Angebot für *
                               </label>
                               <select
-                                value={option.carTireType || 'ALL_FOUR'}
+                                value={option.carTireType || 'FRONT_TWO'}
                                 onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
                                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 required
                               >
-                                <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
                                 <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
                                 <option value="REAR_TWO">🚗 2 Hinterreifen</option>
                               </select>

@@ -775,8 +775,8 @@ export default function BrowseRequestsPage() {
         ) : !isWheelChange && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && request.width > 0 ? (
           <div className="text-sm text-gray-600 mb-2">
             {(() => {
-              const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
-              const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+              const frontMatch = request.additionalNotes?.match(/Vorder(?:achse|reifen): (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+              const rearMatch = request.additionalNotes?.match(/Hinter(?:achse|reifen): (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
               
               if (frontMatch && rearMatch) {
                 return (
@@ -859,10 +859,8 @@ export default function BrowseRequestsPage() {
                       {request.additionalNotes && (() => {
                         // Filter out structured data from additionalNotes
                         let userNotes = request.additionalNotes
-                          .replace(/Vorderachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
-                          .replace(/Hinterachse: \d+\/\d+ R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
-                          .replace(/Vorderreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
-                          .replace(/Hinterreifen:\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Vorder(?:achse|reifen):\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                          .replace(/Hinter(?:achse|reifen):\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
                           .replace(/Altreifenentsorgung gewünscht\n?/g, '')
                           .replace(/🏍️ MOTORRADREIFEN\n?/g, '')
                           .replace(/🔧 REPARATUR\n?/g, '')
@@ -997,9 +995,42 @@ export default function BrowseRequestsPage() {
                   <>Für: 🛠️ Service-Anfrage</>
                 ) : (
                   <>
-                    Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter} • 
-                    {' '}{getSeasonLabel(selectedRequest.season)} • 
-                    {' '}{selectedRequest.quantity} Reifen
+                    {(() => {
+                      const frontMatch = selectedRequest.additionalNotes?.match(/Vorder(?:achse|reifen): (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                      const rearMatch = selectedRequest.additionalNotes?.match(/Hinter(?:achse|reifen): (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                      
+                      if (frontMatch && rearMatch) {
+                        return (
+                          <>
+                            Für: 🚗 Mischbereifung •{' '}
+                            Vorne: {frontMatch[1]}/{frontMatch[2]} R{frontMatch[3]}
+                            {frontMatch[4] && ` ${frontMatch[4]}`}
+                            {frontMatch[5] && ` ${frontMatch[5]}`}
+                            {' • '}
+                            Hinten: {rearMatch[1]}/{rearMatch[2]} R{rearMatch[3]}
+                            {rearMatch[4] && ` ${rearMatch[4]}`}
+                            {rearMatch[5] && ` ${rearMatch[5]}`}
+                            {' • '}{getSeasonLabel(selectedRequest.season)}
+                          </>
+                        )
+                      }
+                      
+                      const loadSpeed = selectedRequest.loadIndex && selectedRequest.speedRating 
+                        ? ` ${selectedRequest.loadIndex}${selectedRequest.speedRating}`
+                        : selectedRequest.loadIndex 
+                          ? ` ${selectedRequest.loadIndex}`
+                          : selectedRequest.speedRating 
+                            ? ` ${selectedRequest.speedRating}`
+                            : ''
+                      
+                      return (
+                        <>
+                          Für: {selectedRequest.width}/{selectedRequest.aspectRatio} R{selectedRequest.diameter}{loadSpeed} • 
+                          {' '}{getSeasonLabel(selectedRequest.season)} • 
+                          {' '}{selectedRequest.quantity} Reifen
+                        </>
+                      )
+                    })()}
                   </>
                 )}
               </div>
@@ -1137,8 +1168,8 @@ export default function BrowseRequestsPage() {
                         {/* Car Tire Type Selection - per tire option */}
                         {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (() => {
                           // Check if it's mixed tires (different sizes front/rear)
-                          const isMixedTires = selectedRequest.additionalNotes?.includes('Vorderreifen:') && 
-                                               selectedRequest.additionalNotes?.includes('Hinterreifen:')
+                          const isMixedTires = (selectedRequest.additionalNotes?.includes('Vorderachse:') || selectedRequest.additionalNotes?.includes('Vorderreifen:')) && 
+                                               (selectedRequest.additionalNotes?.includes('Hinterachse:') || selectedRequest.additionalNotes?.includes('Hinterreifen:'))
                           
                           // For non-mixed tires (4 identical tires), only show/use ALL_FOUR
                           if (!isMixedTires) {

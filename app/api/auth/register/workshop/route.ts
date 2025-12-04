@@ -7,7 +7,10 @@ import { sendEmail, welcomeWorkshopEmailTemplate, adminWorkshopRegistrationEmail
 
 const workshopSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
-  password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
+  password: z.string()
+    .min(8, 'Passwort muss mindestens 8 Zeichen lang sein')
+    .regex(/[A-Z]/, 'Passwort muss mindestens einen Großbuchstaben enthalten')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Passwort muss mindestens ein Sonderzeichen enthalten'),
   firstName: z.string().min(2, 'Vorname erforderlich'),
   lastName: z.string().min(2, 'Nachname erforderlich'),
   phone: z.string().min(5, 'Telefonnummer erforderlich'),

@@ -278,7 +278,8 @@ export async function POST(
           status: 'ACCEPTED',
           acceptedAt: new Date(),
           customerWantsStorage: wantsStorage,
-          price: finalPrice
+          price: finalPrice,
+          selectedTireOptionIds: selectedOptionsForBooking
         },
         include: {
           tireOptions: true

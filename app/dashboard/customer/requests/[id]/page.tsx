@@ -40,6 +40,7 @@ interface Offer {
   storageAvailable?: boolean | null
   customerWantsStorage?: boolean | null
   tireOptions?: TireOption[]
+  selectedTireOptionIds?: string[]
   workshop: {
     companyName: string
     street: string
@@ -917,23 +918,32 @@ export default function RequestDetailPage() {
                       </div>
                     ) : acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
                       <div className="space-y-3">
-                        {acceptedOffer.tireOptions.map((option) => (
-                          <div key={option.id} className="bg-gray-50 rounded-lg p-4">
-                            <p className="font-semibold text-lg text-gray-900 mb-2">
-                              {option.brand} {option.model}
-                            </p>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <p className="text-gray-600">Preis pro Reifen</p>
-                                <p className="font-semibold">{option.pricePerTire.toFixed(2)} €</p>
+                        {acceptedOffer.tireOptions
+                          .filter(option => 
+                            !acceptedOffer.selectedTireOptionIds || 
+                            acceptedOffer.selectedTireOptionIds.length === 0 || 
+                            acceptedOffer.selectedTireOptionIds.includes(option.id)
+                          )
+                          .map((option) => {
+                            const quantity = getQuantityForTireOption(option)
+                            return (
+                              <div key={option.id} className="bg-gray-50 rounded-lg p-4">
+                                <p className="font-semibold text-lg text-gray-900 mb-2">
+                                  {option.brand} {option.model}
+                                </p>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <p className="text-gray-600">Preis pro Reifen</p>
+                                    <p className="font-semibold">{option.pricePerTire.toFixed(2)} €</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">Anzahl</p>
+                                    <p className="font-semibold">{quantity} Reifen</p>
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-gray-600">Anzahl</p>
-                                <p className="font-semibold">{request.quantity} Reifen</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                            )
+                          })}
                       </div>
                     ) : (
                       <div className="bg-gray-50 rounded-lg p-4">
@@ -959,12 +969,21 @@ export default function RequestDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                       {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
                         <>
-                          {acceptedOffer.tireOptions.map((option, idx) => (
-                            <div key={option.id} className="flex justify-between text-sm">
-                              <span className="text-gray-700">{option.brand} {option.model} ({request.quantity}x)</span>
-                              <span className="font-semibold">{(option.pricePerTire * request.quantity).toFixed(2)} €</span>
-                            </div>
-                          ))}
+                          {acceptedOffer.tireOptions
+                            .filter(option => 
+                              !acceptedOffer.selectedTireOptionIds || 
+                              acceptedOffer.selectedTireOptionIds.length === 0 || 
+                              acceptedOffer.selectedTireOptionIds.includes(option.id)
+                            )
+                            .map((option, idx) => {
+                              const quantity = getQuantityForTireOption(option)
+                              return (
+                                <div key={option.id} className="flex justify-between text-sm">
+                                  <span className="text-gray-700">{option.brand} {option.model} ({quantity}x)</span>
+                                  <span className="font-semibold">{(option.pricePerTire * quantity).toFixed(2)} €</span>
+                                </div>
+                              )
+                            })}
                         </>
                       ) : (
                         <div className="flex justify-between text-sm">

@@ -395,7 +395,6 @@ export default function WorkshopRegisterPage() {
                 </button>
               </div>
             </div>
-            </div>
           </div>
 
           {/* Terms & Submit */}

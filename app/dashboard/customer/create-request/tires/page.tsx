@@ -901,29 +901,32 @@ export default function CreateRequestPage() {
                 return null
               })()}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Anzahl der Reifen
-                </label>
-                {(mixedTires || formData.tirePosition !== 'BOTH') ? (
-                  <div className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium">
-                    {formData.quantity} Reifen (automatisch gesetzt)
-                  </div>
-                ) : (
-                  <select
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleChange}
-                    className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value={2}>2 Reifen</option>
-                    <option value={4}>4 Reifen</option>
-                  </select>
-                )}
-                <p className="text-sm text-gray-600 mt-1">
-                  💡 {(mixedTires || formData.tirePosition !== 'BOTH') ? 'Anzahl wird automatisch durch Ihre Auswahl bestimmt' : 'Montagepreise sind für 2 oder 4 Reifen verfügbar'}
-                </p>
-              </div>
+              {/* Anzahl der Reifen - nur anzeigen wenn KEINE Mischbereifung */}
+              {!mixedTires && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Anzahl der Reifen
+                  </label>
+                  {formData.tirePosition !== 'BOTH' ? (
+                    <div className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium">
+                      {formData.quantity} Reifen (automatisch gesetzt)
+                    </div>
+                  ) : (
+                    <select
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleChange}
+                      className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value={2}>2 Reifen</option>
+                      <option value={4}>4 Reifen</option>
+                    </select>
+                  )}
+                  <p className="text-sm text-gray-600 mt-1">
+                    💡 {formData.tirePosition !== 'BOTH' ? 'Anzahl wird automatisch durch Ihre Auswahl bestimmt' : 'Montagepreise sind für 2 oder 4 Reifen verfügbar'}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

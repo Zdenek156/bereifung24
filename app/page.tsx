@@ -318,9 +318,6 @@ export default function HomePage() {
                   <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-3xl mx-auto mb-4">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
                   <p className="text-gray-600">
                     {feature.description}
                   </p>
@@ -644,17 +641,14 @@ const workshopBenefits = [
 
 const trustFeatures = [
   {
-    title: '🔒',
     icon: '🔒',
     description: 'SSL-Verschlüsselung und sichere Datenspeicherung nach EU-DSGVO'
   },
   {
-    title: '✅',
     icon: '✅',
     description: 'Alle Werkstätten werden manuell geprüft und verifiziert'
   },
   {
-    title: '⚡',
     icon: '⚡',
     description: 'Schnelle Vermittlung - durchschnittlich 3-5 Angebote innerhalb von 24 Stunden'
   }

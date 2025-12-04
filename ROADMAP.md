@@ -323,6 +323,162 @@
 
 ---
 
-**Letzte Aktualisierung:** 17.11.2025, 23:55 Uhr
+## 🚀 Neue Features (Dezember 2025)
+
+### 1. Workshop Logo Upload
+**Status:** ⏳ Offen  
+**Priorität:** Hoch
+
+**Beschreibung:**
+Werkstätten sollen in den Einstellungen ihr Logo hochladen können.
+
+**Anforderungen:**
+- Upload-Funktion in Workshop-Einstellungen (`/dashboard/workshop/settings`)
+- Logo-Speicherung (Dateisystem oder Cloud-Storage)
+- Anzeige des Logos:
+  - In allen Angeboten
+  - In Angebotsdetails
+  - Auf der Workshop-Landing-Page
+  - Im Dashboard
+
+**Technische Umsetzung:**
+- Datei-Upload Komponente
+- Bildoptimierung/Resize
+- Prisma Schema Update (Workshop Model: `logoUrl` field)
+- API Endpoint: `/api/workshop/logo` (POST/DELETE)
+
+---
+
+### 2. Bewertungsfunktion (5-Sterne-Rating)
+**Status:** ⏳ Offen  
+**Priorität:** Hoch
+
+**Beschreibung:**
+Kunden können Werkstätten nach Angebotsannahme mit 5 Sternen und Text bewerten.
+
+**Anforderungen:**
+- Bewertung nur nach Angebotsannahme möglich
+- 5-Sterne-Rating + Textfeld
+- Anzeige der Bewertungen:
+  - Bei Angebotsübersicht für Kunden
+  - Auf Workshop-Landing-Page
+  - Im Workshop-Profil
+  - Im Admin-Bereich
+
+**Technische Umsetzung:**
+- Prisma Schema: `Review` Model erweitern (rating, comment, verified)
+- API Endpoints: `/api/reviews` (GET/POST)
+- Review-Komponente für Kunden
+- Durchschnittsbewertung berechnen
+- Review-Liste Komponente
+- Verifikation über Booking-Status
+
+---
+
+### 3. Analytics/Besucherstatistik im Admin-Bereich
+**Status:** ⏳ Offen  
+**Priorität:** Mittel
+
+**Beschreibung:**
+Admin-Bereich soll Besucherzahlen mit Zeitraumauswahl anzeigen.
+
+**Anforderungen:**
+- Seitenaufrufe tracken
+- Zeitraum-Filter (Tag, Woche, Monat, Jahr, Custom)
+- Anzeige von:
+  - Gesamtbesuche
+  - Unique Visitors
+  - Besuche pro Seite
+  - Landing-Page Performance
+  - Workshop-Profil Aufrufe
+
+**Technische Umsetzung:**
+- Analytics-Tracking implementieren (z.B. Server-Side Events)
+- Prisma Schema: `PageView` Model
+- Middleware für Tracking
+- Admin Dashboard: `/admin/analytics`
+- Charts/Graphs (Recharts oder ähnlich)
+- Export-Funktion (CSV)
+
+---
+
+### 4. MwSt. / Kleinunternehmer-Option
+**Status:** ⏳ Offen  
+**Priorität:** Hoch
+
+**Beschreibung:**
+Werkstätten können wählen, ob sie normale Preise (inkl. MwSt.) oder als Kleinunternehmer (ohne MwSt.) anzeigen.
+
+**Anforderungen:**
+- Auswahl in Workshop-Einstellungen:
+  - [ ] Normaler Betrieb → "inkl. MwSt." bei allen Preisen
+  - [ ] Kleinunternehmer → Hinweis "Keine Umsatzsteuer gemäß §19 UStG"
+- Anzeige der korrekten Texte:
+  - In Angeboten
+  - Auf Landing-Page
+  - In Preisberechnungen
+  - In Rechnungen/Dokumenten
+
+**Technische Umsetzung:**
+- Prisma Schema: Workshop Model → `taxMode` enum ('STANDARD', 'KLEINUNTERNEHMER')
+- Settings-Update in `/dashboard/workshop/settings`
+- Conditional Rendering in allen Preis-Komponenten
+- API Update: `/api/workshop/profile`
+- PDF-Generierung anpassen
+
+---
+
+### 5. Passwort-Sicherheitsanforderungen
+**Status:** ⏳ Offen  
+**Priorität:** Mittel
+
+**Beschreibung:**
+Stärkere Passwort-Anforderungen für Registrierung.
+
+**Anforderungen:**
+- Mindestens 8 Zeichen
+- Mindestens 1 Großbuchstabe
+- Mindestens 1 Sonderzeichen
+- Live-Validierung mit Fehlermeldung
+- Für Kunden- und Werkstatt-Registrierung
+
+**Technische Umsetzung:**
+- Validierung in Forms:
+  - `/register/customer`
+  - `/register/workshop`
+- Backend-Validierung in API:
+  - `/api/auth/register/customer`
+  - `/api/auth/register/workshop`
+- Passwort-Stärke-Indikator (optional)
+- Regex: `/^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/`
+
+---
+
+### 6. Motorrad-Räder ohne Motorrad Option
+**Status:** ⏳ Offen  
+**Priorität:** Niedrig
+
+**Beschreibung:**
+Bei Motorradreifen-Anfrage: Option, dass Kunde nur die Räder (ohne Motorrad) vorbeibringt.
+
+**Anforderungen:**
+- Checkbox in Motorrad-Anfrage: "Ich bringe nur die Räder (ohne Motorrad)"
+- Separate Angabe für:
+  - Vorderrad
+  - Hinterrad
+- Information muss in Anfrage sichtbar sein
+- Werkstatt sieht diese Info beim Angebot erstellen
+
+**Technische Umsetzung:**
+- Prisma Schema: TireRequest Model → `motorcycleWheelsOnly` boolean, `frontWheelOnly` boolean, `rearWheelOnly` boolean
+- Update Form: `/dashboard/customer/create-request/motorcycle`
+- API Update: `/api/tire-requests/motorcycle`
+- Anzeige in Werkstatt-Ansicht der Anfrage
+- Preisberechnung anpassen (falls relevant)
+
+---
+
+**Letzte Aktualisierung:** 4. Dezember 2025
 **Version:** 0.4.0 - Kunden-Bereich: Reifenanfrage-System implementiert
 **Fortschritt:** 35% abgeschlossen (Phase 1-3 fertig, Phase 4 in Arbeit)
+**Neue Features:** 6 geplant für Dezember 2025

@@ -30,7 +30,8 @@ export default function LoginPage() {
 
       if (result?.error && result.error !== 'undefined') {
         console.error('Login error:', result.error)
-        setError('Ungültige E-Mail oder Passwort')
+        // Zeige die tatsächliche Fehlermeldung von NextAuth an
+        setError(result.error)
         setLoading(false)
         return
       }

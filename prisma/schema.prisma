@@ -417,6 +417,7 @@ model Offer {
   declinedAt             DateTime? @map("declined_at")
   customerWantsBalancing Boolean?  @default(false) @map("customer_wants_balancing")
   customerWantsStorage   Boolean?  @default(false) @map("customer_wants_storage")
+  selectedTireOptionIds  String[]  @default([]) @map("selected_tire_option_ids") // IDs der vom Kunden ausgewählten TireOptions
   booking                Booking?
 
   createdAt DateTime @default(now())

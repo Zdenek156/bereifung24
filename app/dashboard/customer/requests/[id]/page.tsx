@@ -287,21 +287,16 @@ export default function RequestDetailPage() {
   }
 
   // Calculate installation fee and duration based on selected tires
-  // This is only used for OLD offers (installationFee = 0) or when using checkbox system
+  // IMMER neu berechnen basierend auf selectedQuantity (nicht den gespeicherten Wert verwenden)
   const calculateInstallationFeeAndDuration = (offer: Offer, selectedQuantity: number): { fee: number, duration: number } => {
-    // For offers with stored installationFee, just return it (already calculated correctly by workshop)
-    if (offer.installationFee > 0) {
-      return { 
-        fee: offer.installationFee, 
-        duration: offer.durationMinutes || 60 
-      }
-    }
-
-    // Legacy calculation for old offers without installationFee
     const service = workshopServices[offer.workshopId]
     if (!service) {
       console.warn(`Workshop ${offer.workshopId} hat keine Services konfiguriert.`)
-      return { fee: 0, duration: 60 }
+      // Fallback: Verwende gespeicherte Werte wenn keine Service-Info vorhanden
+      return { 
+        fee: offer.installationFee || 0, 
+        duration: offer.durationMinutes || 60 
+      }
     }
 
     const hasDisposal = request?.additionalNotes?.includes('Altreifenentsorgung gewünscht')
@@ -309,7 +304,7 @@ export default function RequestDetailPage() {
     let fee = 0
     let duration = 0
 
-    // Use the base price based on quantity (2 Reifen Paket für 2, 4 Reifen Paket für 4)
+    // Dynamisch das richtige Paket basierend auf selectedQuantity wählen
     if (selectedQuantity === 2) {
       // Für 2 Reifen: "2 Reifen wechseln" Paket verwenden
       fee = service.basePrice

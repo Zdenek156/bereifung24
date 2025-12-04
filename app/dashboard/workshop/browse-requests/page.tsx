@@ -379,9 +379,8 @@ export default function BrowseRequestsPage() {
     // Initialisiere mit einem leeren Reifenangebot
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     
-    // Determine default car tire type based on quantity
-    const defaultCarTireType: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO' = 
-      request.quantity === 4 ? 'ALL_FOUR' : 'FRONT_TWO'
+    // WICHTIG: Keine carTireType vorauswählen - Werkstatt muss manuell auswählen
+    // Dadurch startet Montagekosten bei 0 €
     
     setOfferForm({
       tireOptions: [{ 
@@ -390,10 +389,10 @@ export default function BrowseRequestsPage() {
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
-        carTireType: !isMotorcycle ? defaultCarTireType : undefined
+        carTireType: !isMotorcycle ? undefined : undefined // Keine Vorauswahl!
       }],
       description: '',
-      installationFee: calculatedInstallation,
+      installationFee: '0.00', // Start mit 0 € bis carTireType ausgewählt wird
       validDays: 7,
       durationMinutes: calculatedDuration,
       balancingPrice: service?.balancingPrice?.toFixed(2) || '',
@@ -499,12 +498,25 @@ export default function BrowseRequestsPage() {
     
     // Wenn carTireType geändert wird, berechne Installation neu (Autoreifen)
     if (field === 'carTireType' && selectedRequest) {
-      const newCarTireType = value as 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
-      const newQuantity = newCarTireType === 'ALL_FOUR' ? 4 : 2
+      // Prüfe ALLE tireOptions um zu entscheiden ob Vorne UND Hinten abgedeckt sind
+      const hasFront = updated.some(opt => opt.carTireType === 'FRONT_TWO' || opt.carTireType === 'ALL_FOUR')
+      const hasRear = updated.some(opt => opt.carTireType === 'REAR_TWO' || opt.carTireType === 'ALL_FOUR')
+      const hasAllFour = updated.some(opt => opt.carTireType === 'ALL_FOUR')
+      
+      // Bestimme Reifenanzahl basierend auf Kombinationen:
+      // - Wenn ALL_FOUR ausgewählt → 4 Reifen
+      // - Wenn FRONT_TWO UND REAR_TWO → 4 Reifen (Vorne + Hinten)
+      // - Wenn nur FRONT_TWO oder nur REAR_TWO → 2 Reifen
+      let totalQuantity = 0
+      if (hasAllFour || (hasFront && hasRear)) {
+        totalQuantity = 4
+      } else if (hasFront || hasRear) {
+        totalQuantity = 2
+      }
       
       // Finde Service
       const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
-      if (service) {
+      if (service && totalQuantity > 0) {
         let installation = 0
         let duration = 60
         
@@ -512,15 +524,15 @@ export default function BrowseRequestsPage() {
         const hasRunflat = selectedRequest.isRunflat
         
         if (service.servicePackages && service.servicePackages.length > 0) {
-          // Finde passendes Paket basierend auf Reifenanzahl
+          // Finde passendes Paket basierend auf Gesamtanzahl
           let selectedPackage
           
-          if (newQuantity === 4) {
+          if (totalQuantity === 4) {
             // 4 Reifen - suche "4 Reifen wechseln" Paket
             selectedPackage = service.servicePackages.find((p: any) => 
               p.name.includes('4') || p.name.toLowerCase().includes('alle')
             )
-          } else if (newQuantity === 2) {
+          } else if (totalQuantity === 2) {
             // 2 Reifen - suche "2 Reifen wechseln" Paket
             selectedPackage = service.servicePackages.find((p: any) => 
               p.name.includes('2')
@@ -539,12 +551,12 @@ export default function BrowseRequestsPage() {
           
           // Entsorgung separat addieren
           if (hasDisposal && service.disposalFee) {
-            installation += service.disposalFee * newQuantity
+            installation += service.disposalFee * totalQuantity
           }
           
           // Runflat separat addieren
           if (hasRunflat && service.runFlatSurcharge) {
-            installation += service.runFlatSurcharge * newQuantity
+            installation += service.runFlatSurcharge * totalQuantity
           }
         }
         
@@ -554,6 +566,15 @@ export default function BrowseRequestsPage() {
           tireOptions: updated,
           installationFee: installation.toFixed(2),
           durationMinutes: duration.toString()
+        })
+        return
+      } else if (totalQuantity === 0) {
+        // Keine Auswahl → Montage 0 €
+        setOfferForm({
+          ...offerForm,
+          tireOptions: updated,
+          installationFee: '0.00',
+          durationMinutes: '0'
         })
         return
       }
@@ -1296,16 +1317,24 @@ export default function BrowseRequestsPage() {
                           const isMixedTires = (selectedRequest.additionalNotes?.includes('Vorderachse:') || selectedRequest.additionalNotes?.includes('Vorderreifen:')) && 
                                                (selectedRequest.additionalNotes?.includes('Hinterachse:') || selectedRequest.additionalNotes?.includes('Hinterreifen:'))
                           
-                          // For non-mixed tires (4 identical tires), only show/use ALL_FOUR
+                          // For non-mixed tires (4 identical tires), show dropdown with ALL_FOUR option
                           if (!isMixedTires) {
                             return (
                               <div className="mt-3">
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Angebot für
+                                  Angebot für *
                                 </label>
-                                <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
-                                  🚗 Alle 4 Reifen
-                                </div>
+                                <select
+                                  value={option.carTireType || ''}
+                                  onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                  required
+                                >
+                                  <option value="">-- Bitte auswählen --</option>
+                                  <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
+                                  <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
+                                  <option value="REAR_TWO">🚗 2 Hinterreifen</option>
+                                </select>
                               </div>
                             )
                           }
@@ -1317,11 +1346,12 @@ export default function BrowseRequestsPage() {
                                 Angebot für *
                               </label>
                               <select
-                                value={option.carTireType || 'FRONT_TWO'}
+                                value={option.carTireType || ''}
                                 onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
                                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 required
                               >
+                                <option value="">-- Bitte auswählen --</option>
                                 <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
                                 <option value="REAR_TWO">🚗 2 Hinterreifen</option>
                               </select>
@@ -1354,16 +1384,24 @@ export default function BrowseRequestsPage() {
                     const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                     const hasRunflat = selectedRequest.isRunflat
                     
-                    // Bestimme Reifenanzahl basierend auf carTireType Auswahl
-                    const carTireType = offerForm.tireOptions[0]?.carTireType
-                    const quantity = carTireType === 'ALL_FOUR' ? 4 : 2
+                    // Bestimme Reifenanzahl basierend auf ALLEN carTireType Auswahlen
+                    const hasFront = offerForm.tireOptions.some(opt => opt.carTireType === 'FRONT_TWO' || opt.carTireType === 'ALL_FOUR')
+                    const hasRear = offerForm.tireOptions.some(opt => opt.carTireType === 'REAR_TWO' || opt.carTireType === 'ALL_FOUR')
+                    const hasAllFour = offerForm.tireOptions.some(opt => opt.carTireType === 'ALL_FOUR')
+                    
+                    let quantity = 0
+                    if (hasAllFour || (hasFront && hasRear)) {
+                      quantity = 4
+                    } else if (hasFront || hasRear) {
+                      quantity = 2
+                    }
                     
                     // Hole Service-Info für Aufschlüsselung
                     const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
                     
                     // Berechne Basis-Paket-Preis
                     let basePrice = 0
-                    if (service?.servicePackages && service.servicePackages.length > 0) {
+                    if (service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
                       const selectedPackage = quantity === 4 
                         ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
                         : service.servicePackages.find((p: any) => p.name.includes('2'))
@@ -1372,38 +1410,44 @@ export default function BrowseRequestsPage() {
                       }
                     }
                     
-                    const disposalFee = hasDisposal && service?.disposalFee ? service.disposalFee * quantity : 0
-                    const runflatFee = hasRunflat && service?.runFlatSurcharge ? service.runFlatSurcharge * quantity : 0
+                    const disposalFee = hasDisposal && service?.disposalFee && quantity > 0 ? service.disposalFee * quantity : 0
+                    const runflatFee = hasRunflat && service?.runFlatSurcharge && quantity > 0 ? service.runFlatSurcharge * quantity : 0
                     
                     // Wenn kein basePrice gefunden, nutze den Gesamtpreis minus Aufschläge
-                    if (basePrice === 0) {
+                    if (basePrice === 0 && quantity > 0) {
                       basePrice = parseFloat(offerForm.installationFee) - disposalFee - runflatFee
                     }
                     
                     return (
                       <div className="space-y-3">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-700">Reifenwechsel ({quantity} Reifen)</span>
-                            <span className="font-medium">{basePrice.toFixed(2)} €</span>
+                        {quantity === 0 ? (
+                          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">
+                            ⚠️ Bitte wählen Sie "Angebot für" aus (z.B. Vorderreifen oder Hinterreifen), um die Montagekosten zu berechnen
                           </div>
-                          {disposalFee > 0 && service?.disposalFee && (
+                        ) : (
+                          <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
-                              <span className="font-medium">{disposalFee.toFixed(2)} €</span>
+                              <span className="text-gray-700">Reifenwechsel ({quantity} Reifen)</span>
+                              <span className="font-medium">{basePrice.toFixed(2)} €</span>
                             </div>
-                          )}
-                          {runflatFee > 0 && service?.runFlatSurcharge && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-700">+ Runflat-Aufschlag ({quantity} × {service.runFlatSurcharge.toFixed(2)} €)</span>
-                              <span className="font-medium">{runflatFee.toFixed(2)} €</span>
+                            {disposalFee > 0 && service?.disposalFee && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
+                                <span className="font-medium">{disposalFee.toFixed(2)} €</span>
+                              </div>
+                            )}
+                            {runflatFee > 0 && service?.runFlatSurcharge && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-700">+ Runflat-Aufschlag ({quantity} × {service.runFlatSurcharge.toFixed(2)} €)</span>
+                                <span className="font-medium">{runflatFee.toFixed(2)} €</span>
+                              </div>
+                            )}
+                            <div className="border-t border-blue-300 pt-2 flex justify-between">
+                              <span className="font-semibold text-gray-900">Montage gesamt</span>
+                              <span className="text-lg font-bold text-gray-900">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
                             </div>
-                          )}
-                          <div className="border-t border-blue-300 pt-2 flex justify-between">
-                            <span className="font-semibold text-gray-900">Montage gesamt</span>
-                            <span className="text-lg font-bold text-gray-900">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
                           </div>
-                        </div>
+                        )}
                         <div className="pt-2 border-t border-blue-200">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Dauer</span>

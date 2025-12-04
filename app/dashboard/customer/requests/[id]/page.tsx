@@ -153,11 +153,24 @@ export default function RequestDetailPage() {
     setAcceptTerms(false)
     setWantsBalancing(false)
     setWantsStorage(false)
-    // Pre-select first option or provided option (including virtual options)
+    // Pre-select options
     if (offer) {
       const displayOptions = getDisplayOptions(offer)
       if (displayOptions.length > 0) {
-        setSelectedTireOptionIds(defaultTireOptionId ? [defaultTireOptionId] : [displayOptions[0].id])
+        if (defaultTireOptionId) {
+          // Specific option provided
+          setSelectedTireOptionIds([defaultTireOptionId])
+        } else {
+          // Auto-select: For motorcycles with multiple options (mixed tires), select all
+          const isMotorcycle = displayOptions.some(opt => opt.motorcycleTireType)
+          if (isMotorcycle && displayOptions.length > 1) {
+            // Select all motorcycle options (typically FRONT + REAR)
+            setSelectedTireOptionIds(displayOptions.map(opt => opt.id))
+          } else {
+            // Single option or car: select first
+            setSelectedTireOptionIds([displayOptions[0].id])
+          }
+        }
       } else {
         setSelectedTireOptionIds([])
       }

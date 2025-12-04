@@ -45,8 +45,7 @@ interface TireRequest {
 }
 
 interface TireOption {
-  brand: string
-  model: string
+  brandModel: string  // Kombiniert: z.B. "Continental PremiumContact 6"
   costPrice: string
   pricePerTire: string
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
@@ -100,7 +99,7 @@ export default function BrowseRequestsPage() {
   const [sepaMandateStatus, setSepaMandateStatus] = useState<string | null>(null)
   const [sepaMandateLoading, setSepaMandateLoading] = useState(true)
   const [offerForm, setOfferForm] = useState<OfferFormData>({
-    tireOptions: [{ brand: '', model: '', costPrice: '', pricePerTire: '' }],
+    tireOptions: [{ brandModel: '', costPrice: '', pricePerTire: '' }],
     description: '',
     installationFee: '',
     validDays: 7,
@@ -384,8 +383,7 @@ export default function BrowseRequestsPage() {
     
     setOfferForm({
       tireOptions: [{ 
-        brand: preferredBrand, 
-        model: '', 
+        brandModel: preferredBrand, 
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
@@ -425,8 +423,7 @@ export default function BrowseRequestsPage() {
         body: JSON.stringify({
           ...(validOptions.length > 0 && {
             tireOptions: validOptions.map(opt => ({
-              brand: opt.brand,
-              model: opt.model,
+              brandModel: opt.brandModel,
               pricePerTire: parseFloat(opt.pricePerTire),
               motorcycleTireType: opt.motorcycleTireType,
               carTireType: opt.carTireType
@@ -473,14 +470,13 @@ export default function BrowseRequestsPage() {
     
     setOfferForm({
       ...offerForm,
-      tireOptions: [...offerForm.tireOptions, { 
-        brand: '', 
-        model: '', 
+      tireOptions: [{ 
+        brandModel: '', 
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
         carTireType: !isMotorcycle ? defaultCarTireType : undefined
-      }]
+      }, ...offerForm.tireOptions]
     })
   }
 
@@ -1217,32 +1213,17 @@ export default function BrowseRequestsPage() {
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Marke *
-                            </label>
-                            <input
-                              type="text"
-                              value={option.brand}
-                              onChange={(e) => updateTireOption(index, 'brand', e.target.value)}
-                              placeholder="z.B. Continental"
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Modell *
-                            </label>
-                            <input
-                              type="text"
-                              value={option.model}
-                              onChange={(e) => updateTireOption(index, 'model', e.target.value)}
-                              placeholder="z.B. PremiumContact 6"
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            />
-                          </div>
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Reifen (Marke & Modell) *
+                          </label>
+                          <input
+                            type="text"
+                            value={option.brandModel}
+                            onChange={(e) => updateTireOption(index, 'brandModel', e.target.value)}
+                            placeholder="z.B. Continental PremiumContact 6"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

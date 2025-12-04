@@ -349,7 +349,21 @@ export function newOfferEmailTemplate(data: {
             <p><strong>Dimension:</strong> ${data.tireSpecs}</p>
             
             ${data.tireOptions.map(option => {
-              const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
+              // Berechne Anzahl basierend auf carTireType/motorcycleTireType
+              let tireCount = data.quantity
+              if (option.carTireType === 'FRONT_TWO' || option.carTireType === 'REAR_TWO') {
+                tireCount = 2
+              } else if (option.carTireType === 'ALL_FOUR') {
+                tireCount = 4
+              } else if (option.motorcycleTireType === 'FRONT' || option.motorcycleTireType === 'REAR') {
+                tireCount = 1
+              } else if (option.motorcycleTireType === 'BOTH') {
+                tireCount = 2
+              }
+              
+              const tiresTotal = option.pricePerTire * tireCount
+              const optionPrice = tiresTotal + data.installationFee
+              
               const tireTypeLabel = option.motorcycleTireType 
                 ? formatTireType(option.motorcycleTireType, true)
                 : option.carTireType 
@@ -360,11 +374,16 @@ export function newOfferEmailTemplate(data: {
                   <p style="margin: 0 0 5px 0;"><strong>Reifen:</strong> ${option.brand} ${option.model}</p>
                   ${tireTypeLabel ? `<p style="margin: 5px 0; background: #eff6ff; padding: 6px; border-radius: 4px; color: #1e40af; font-weight: 600; display: inline-block;">${tireTypeLabel}</p>` : ''}
                   <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 600; color: #1e40af;">${optionPrice.toFixed(2)} € <span style="font-size: 14px; color: #6b7280; font-weight: normal;">inkl. Montage</span></p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px; color: #9ca3af;">${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${data.installationFee.toFixed(2)} €</p>
                 </div>
               `
             }).join('')}
             
             ${data.tireOptions.length > 1 ? '<p style="color: #6b7280; font-size: 14px; margin-top: 15px;">Die Werkstatt bietet Ihnen mehrere Optionen zur Auswahl an.</p>' : ''}
+            
+            <p style="color: #9ca3af; font-size: 13px; margin-top: 15px; padding: 10px; background: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 4px;">
+              ℹ️ <strong>Hinweis bei Mischbereifung:</strong> Der Gesamtpreis kann sich ändern, wenn Sie weitere Reifen (z.B. auch Hinterreifen) auswählen. Konfigurieren Sie Ihr komplettes Angebot auf Bereifung24.de
+            </p>
           </div>
           
           <p>Schauen Sie sich das vollständige Angebot in Ihrem Dashboard an und nehmen Sie es an, wenn es Ihnen zusagt.</p>
@@ -397,16 +416,32 @@ Werkstatt: ${data.workshopName}
 Dimension: ${data.tireSpecs}
 
 ${data.tireOptions.map(option => {
-  const optionPrice = (option.pricePerTire * data.quantity) + data.installationFee
+  // Berechne Anzahl basierend auf carTireType/motorcycleTireType
+  let tireCount = data.quantity
+  if (option.carTireType === 'FRONT_TWO' || option.carTireType === 'REAR_TWO') {
+    tireCount = 2
+  } else if (option.carTireType === 'ALL_FOUR') {
+    tireCount = 4
+  } else if (option.motorcycleTireType === 'FRONT' || option.motorcycleTireType === 'REAR') {
+    tireCount = 1
+  } else if (option.motorcycleTireType === 'BOTH') {
+    tireCount = 2
+  }
+  
+  const tiresTotal = option.pricePerTire * tireCount
+  const optionPrice = tiresTotal + data.installationFee
+  
   const tireTypeLabel = option.motorcycleTireType 
     ? formatTireType(option.motorcycleTireType, true)
     : option.carTireType 
       ? formatTireType(option.carTireType, false)
       : ''
-  return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (inkl. Montage)`
+  return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${data.installationFee.toFixed(2)} €)`
 }).join('\n\n')}
 
 ${data.tireOptions.length > 1 ? '\nDie Werkstatt bietet Ihnen mehrere Optionen zur Auswahl an.' : ''}
+
+HINWEIS: Bei Mischbereifung kann sich der Gesamtpreis ändern, wenn Sie weitere Reifen auswählen. Konfigurieren Sie Ihr komplettes Angebot auf Bereifung24.de
 
 Sehen Sie sich das Angebot an: ${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${data.requestId}
 

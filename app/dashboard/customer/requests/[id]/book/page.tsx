@@ -787,10 +787,10 @@ export default function BookAppointmentPage() {
                   disabled={!selectedSlot || submitting}
                   className="w-full py-4 bg-primary-600 text-white rounded-lg font-bold text-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Wird gebucht...' : 'Verbindlich buchen'}
+                  {submitting ? 'Termin wird bestätigt...' : 'Termin bestätigen'}
                 </button>
                 <p className="text-sm text-gray-600 text-center mt-3">
-                  Mit der Buchung akzeptieren Sie die AGB der Werkstatt
+                  Mit der Terminbestätigung akzeptieren Sie die AGB der Werkstatt
                 </p>
               </div>
             )}

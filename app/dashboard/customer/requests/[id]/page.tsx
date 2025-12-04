@@ -18,6 +18,7 @@ interface WorkshopService {
   basePrice: number
   basePrice4: number | null
   disposalFee: number | null
+  runFlatSurcharge: number | null
   durationMinutes: number
   durationMinutes4: number | null
 }
@@ -286,20 +287,29 @@ export default function RequestDetailPage() {
   }
 
   // Calculate installation fee and duration based on selected tires
+  // This is only used for OLD offers (installationFee = 0) or when using checkbox system
   const calculateInstallationFeeAndDuration = (offer: Offer, selectedQuantity: number): { fee: number, duration: number } => {
+    // For offers with stored installationFee, just return it (already calculated correctly by workshop)
+    if (offer.installationFee > 0) {
+      return { 
+        fee: offer.installationFee, 
+        duration: offer.durationMinutes || 60 
+      }
+    }
+
+    // Legacy calculation for old offers without installationFee
     const service = workshopServices[offer.workshopId]
     if (!service) {
-      // If no service configured, use offer's installationFee or default to 0
-      // Only use offer.installationFee if it's greater than 0
-      const fee = offer.installationFee > 0 ? offer.installationFee : 0
-      console.warn(`Workshop ${offer.workshopId} hat keine Services konfiguriert. InstallationFee: ${fee}`)
-      return { fee, duration: offer.durationMinutes || 60 }
+      console.warn(`Workshop ${offer.workshopId} hat keine Services konfiguriert.`)
+      return { fee: 0, duration: 60 }
     }
 
     const hasDisposal = request?.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+    const hasRunflat = request?.isRunflat
     let fee = 0
     let duration = 0
 
+    // Use the base price
     if (selectedQuantity <= 2) {
       fee = service.basePrice
       duration = service.durationMinutes
@@ -311,6 +321,11 @@ export default function RequestDetailPage() {
     // Add disposal fee if requested
     if (hasDisposal && service.disposalFee) {
       fee += service.disposalFee * selectedQuantity
+    }
+
+    // Add runflat surcharge if requested
+    if (hasRunflat && service.runFlatSurcharge) {
+      fee += service.runFlatSurcharge * selectedQuantity
     }
 
     return { fee, duration }

@@ -17,6 +17,7 @@ export async function GET(
         basePrice: true,
         basePrice4: true,
         disposalFee: true,
+        runFlatSurcharge: true,
         durationMinutes: true,
         durationMinutes4: true,
         servicePackages: {
@@ -39,34 +40,25 @@ export async function GET(
       )
     }
 
-    // If service has packages, convert them to legacy format
+    // If service has packages, use them directly
     if (service.servicePackages && service.servicePackages.length > 0) {
       const packages = service.servicePackages
       
-      // Find relevant packages for TIRE_CHANGE
+      // Find base packages (without disposal)
       const twoTires = packages.find(p => p.packageType === 'two_tires')
       const fourTires = packages.find(p => p.packageType === 'four_tires')
-      const twoTiresDisposal = packages.find(p => p.packageType === 'two_tires_disposal')
-      const fourTiresDisposal = packages.find(p => p.packageType === 'four_tires_disposal')
       
-      // Calculate base prices and disposal fee
+      // Use package prices as base, disposal and runflat are separate
       const basePrice = twoTires?.price || service.basePrice
       const basePrice4 = fourTires?.price || service.basePrice4
       const durationMinutes = twoTires?.durationMinutes || service.durationMinutes
       const durationMinutes4 = fourTires?.durationMinutes || service.durationMinutes4
       
-      // Calculate disposal fee per tire
-      let disposalFee = service.disposalFee
-      if (twoTiresDisposal && twoTires) {
-        disposalFee = (twoTiresDisposal.price - twoTires.price) / 2
-      } else if (fourTiresDisposal && fourTires) {
-        disposalFee = (fourTiresDisposal.price - fourTires.price) / 4
-      }
-      
       return NextResponse.json({
         basePrice,
         basePrice4,
-        disposalFee,
+        disposalFee: service.disposalFee,
+        runFlatSurcharge: service.runFlatSurcharge,
         durationMinutes,
         durationMinutes4
       })
@@ -77,6 +69,7 @@ export async function GET(
       basePrice: service.basePrice,
       basePrice4: service.basePrice4,
       disposalFee: service.disposalFee,
+      runFlatSurcharge: service.runFlatSurcharge,
       durationMinutes: service.durationMinutes,
       durationMinutes4: service.durationMinutes4
     })

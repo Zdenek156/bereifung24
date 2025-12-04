@@ -1,8 +1,9 @@
 module.exports = {
   apps: [{
     name: 'bereifung24',
-    script: './start-with-env.sh',
-    cwd: '/var/www/bereifung24',
+    script: 'node_modules/next/dist/bin/next',
+    args: 'start',
+    cwd: './',
     instances: 1,
     autorestart: true,
     watch: false,

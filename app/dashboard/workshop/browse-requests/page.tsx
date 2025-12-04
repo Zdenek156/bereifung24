@@ -291,23 +291,26 @@ export default function BrowseRequestsPage() {
         calculatedInstallation = installation.toFixed(2)
         calculatedDuration = duration.toString()
       } else {
-        // Autoreifen-Wechsel: Nutze Service-Pakete wenn verfügbar
+        // Autoreifen-Wechsel: Nutze Service-Pakete
         let installation = 0
         let duration = 60
         
+        const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+        const hasRunflat = request.isRunflat
+        
         if (service.servicePackages && service.servicePackages.length > 0) {
-          // Finde passendes Paket basierend auf Reifenanzahl
+          // Finde passendes Paket basierend nur auf Reifenanzahl
           let selectedPackage
           
           if (request.quantity === 4) {
-            // 4 Reifen - suche Paket mit "4" im Namen
+            // 4 Reifen
             selectedPackage = service.servicePackages.find(p => 
               p.name.includes('4') || p.name.toLowerCase().includes('alle')
             )
           } else if (request.quantity === 2) {
-            // 2 Reifen - suche Paket mit "2" im Namen
+            // 2 Reifen
             selectedPackage = service.servicePackages.find(p => 
-              p.name.includes('2') && !p.name.toLowerCase().includes('entsorgung')
+              p.name.includes('2')
             )
           }
           
@@ -320,18 +323,30 @@ export default function BrowseRequestsPage() {
             installation = selectedPackage.price
             duration = selectedPackage.durationMinutes
           }
+          
+          // Entsorgung separat addieren
+          if (hasDisposal && service.disposalFee) {
+            installation += service.disposalFee * request.quantity
+          }
+          
+          // Runflat separat addieren
+          if (hasRunflat && service.runFlatSurcharge) {
+            installation += service.runFlatSurcharge * request.quantity
+          }
         } else {
           // Fallback auf alte Logik wenn keine Pakete definiert
           installation = request.quantity === 4 && service.basePrice4
             ? service.basePrice4
             : service.basePrice
           
-          // Addiere RunFlat und Entsorgung wenn nötig
-          if (request.isRunflat && service.runFlatSurcharge) {
-            installation += service.runFlatSurcharge * request.quantity
-          }
-          if (service.disposalFee) {
+          // Addiere Entsorgung wenn nötig
+          if (hasDisposal && service.disposalFee) {
             installation += service.disposalFee * request.quantity
+          }
+          
+          // Addiere RunFlat wenn nötig
+          if (hasRunflat && service.runFlatSurcharge) {
+            installation += service.runFlatSurcharge * request.quantity
           }
           
           // Wähle Dauer basierend auf Anzahl
@@ -1224,22 +1239,72 @@ export default function BrowseRequestsPage() {
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Service-Informationen</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-600 mb-1">Montagegebühr gesamt</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {offerForm.installationFee ? `${parseFloat(offerForm.installationFee).toFixed(2)} €` : 'Nicht konfiguriert'}
+                  
+                  {offerForm.installationFee && selectedRequest && (() => {
+                    const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                    const hasRunflat = selectedRequest.isRunflat
+                    const quantity = selectedRequest.quantity || 4
+                    
+                    // Hole Service-Info für Aufschlüsselung
+                    const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
+                    
+                    // Berechne Basis-Paket-Preis
+                    let basePrice = 0
+                    if (service?.servicePackages && service.servicePackages.length > 0) {
+                      const selectedPackage = quantity === 4 
+                        ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
+                        : service.servicePackages.find((p: any) => p.name.includes('2'))
+                      if (selectedPackage) {
+                        basePrice = selectedPackage.price
+                      }
+                    }
+                    
+                    const disposalFee = hasDisposal && service?.disposalFee ? service.disposalFee * quantity : 0
+                    const runflatFee = hasRunflat && service?.runFlatSurcharge ? service.runFlatSurcharge * quantity : 0
+                    
+                    // Wenn kein basePrice gefunden, nutze den Gesamtpreis minus Aufschläge
+                    if (basePrice === 0) {
+                      basePrice = parseFloat(offerForm.installationFee) - disposalFee - runflatFee
+                    }
+                    
+                    return (
+                      <div className="space-y-3">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Reifenwechsel ({quantity} Reifen)</span>
+                            <span className="font-medium">{basePrice.toFixed(2)} €</span>
+                          </div>
+                          {disposalFee > 0 && service?.disposalFee && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
+                              <span className="font-medium">{disposalFee.toFixed(2)} €</span>
+                            </div>
+                          )}
+                          {runflatFee > 0 && service?.runFlatSurcharge && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-700">+ Runflat-Aufschlag ({quantity} × {service.runFlatSurcharge.toFixed(2)} €)</span>
+                              <span className="font-medium">{runflatFee.toFixed(2)} €</span>
+                            </div>
+                          )}
+                          <div className="border-t border-blue-300 pt-2 flex justify-between">
+                            <span className="font-semibold text-gray-900">Montage gesamt</span>
+                            <span className="text-lg font-bold text-gray-900">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-blue-200">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Dauer</span>
+                            <span className="font-medium text-gray-900">
+                              {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600 mb-1">Dauer</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
-                      </div>
-                    </div>
-                  </div>
+                    )
+                  })()}
+                  
                   {!offerForm.installationFee && (
-                    <div className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                    <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
                       ⚠️ Bitte konfigurieren Sie zuerst Ihre Services in der Service-Verwaltung
                     </div>
                   )}

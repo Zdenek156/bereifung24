@@ -60,12 +60,11 @@ const availableServiceTypes = [
 ]
 
 // Package configurations for each service type
+// WICHTIG: NUR 2 PAKETE FÜR REIFENWECHSEL! Entsorgung über disposalFee-Feld!
 const packageConfigurations: { [key: string]: { type: string; name: string; description: string }[] } = {
   TIRE_CHANGE: [
     { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
-    { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' },
-    { type: 'two_tires_disposal', name: '2 Reifen + Entsorgung', description: '2 Reifen wechseln inkl. Entsorgung der Altreifen' },
-    { type: 'four_tires_disposal', name: '4 Reifen + Entsorgung', description: '4 Reifen wechseln inkl. Entsorgung der Altreifen' }
+    { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' }
   ],
   WHEEL_CHANGE: [
     { type: 'basic', name: 'Räderwechsel Standard', description: 'Umstecken der Kompletträder ohne Zusatzleistungen' },
@@ -134,6 +133,7 @@ export default function WorkshopServicesPage() {
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
   const [refrigerantPrice, setRefrigerantPrice] = useState<string>('')
   const [runFlatSurcharge, setRunFlatSurcharge] = useState<string>('')
+  const [disposalFee, setDisposalFee] = useState<string>('')
   
   // Package form state
   const [packages, setPackages] = useState<{ [key: string]: { price: string; duration: string; active: boolean } }>({})
@@ -166,6 +166,12 @@ export default function WorkshopServicesPage() {
     const initialPackages: { [key: string]: { price: string; duration: string; active: boolean } } = {}
     
     config.forEach(pkg => {
+      // Skip old disposal packages for TIRE_CHANGE
+      if (serviceType === 'TIRE_CHANGE' && 
+          (pkg.type === 'two_tires_disposal' || pkg.type === 'four_tires_disposal')) {
+        return
+      }
+      
       initialPackages[pkg.type] = {
         price: '',
         duration: '60',
@@ -233,9 +239,14 @@ export default function WorkshopServicesPage() {
         requestBody.refrigerantPricePer100ml = parseFloat(refrigerantPrice)
       }
 
-      // Add RunFlat surcharge for TIRE_CHANGE
-      if (selectedServiceType === 'TIRE_CHANGE' && runFlatSurcharge) {
-        requestBody.runFlatSurcharge = parseFloat(runFlatSurcharge)
+      // Add RunFlat surcharge and disposal fee for TIRE_CHANGE
+      if (selectedServiceType === 'TIRE_CHANGE') {
+        if (runFlatSurcharge) {
+          requestBody.runFlatSurcharge = parseFloat(runFlatSurcharge)
+        }
+        if (disposalFee) {
+          requestBody.disposalFee = parseFloat(disposalFee)
+        }
       }
       
       const response = await fetch(url, {
@@ -281,15 +292,26 @@ export default function WorkshopServicesPage() {
       setRefrigerantPrice(service.refrigerantPricePer100ml.toString())
     }
 
-    // Load RunFlat surcharge for tire change
-    if (service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge) {
-      setRunFlatSurcharge(service.runFlatSurcharge.toString())
+    // Load RunFlat surcharge and disposal fee for tire change
+    if (service.serviceType === 'TIRE_CHANGE') {
+      if (service.runFlatSurcharge) {
+        setRunFlatSurcharge(service.runFlatSurcharge.toString())
+      }
+      if (service.disposalFee) {
+        setDisposalFee(service.disposalFee.toString())
+      }
     }
     
-    // Load existing packages
+    // Load existing packages (filter out old disposal packages for TIRE_CHANGE)
     if (service.servicePackages && service.servicePackages.length > 0) {
       const loadedPackages: { [key: string]: { price: string; duration: string; active: boolean } } = {}
       service.servicePackages.forEach(pkg => {
+        // Skip old disposal packages for TIRE_CHANGE
+        if (service.serviceType === 'TIRE_CHANGE' && 
+            (pkg.packageType === 'two_tires_disposal' || pkg.packageType === 'four_tires_disposal')) {
+          return
+        }
+        
         loadedPackages[pkg.packageType] = {
           price: pkg.price.toString(),
           duration: pkg.durationMinutes.toString(),
@@ -369,6 +391,7 @@ export default function WorkshopServicesPage() {
     setPackages({})
     setRefrigerantPrice('')
     setRunFlatSurcharge('')
+    setDisposalFee('')
     setEditingService(null)
     setShowAddForm(false)
     setExpandedServices(new Set())
@@ -479,33 +502,61 @@ export default function WorkshopServicesPage() {
                 </div>
               )}
 
-              {/* RunFlat Surcharge for Tire Change */}
+              {/* RunFlat Surcharge and Disposal Fee for Tire Change */}
               {selectedServiceType === 'TIRE_CHANGE' && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    🔧 RunFlat-Reifen Aufpreis
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-3">
-                    Geben Sie den Aufpreis pro Reifen für RunFlat-Reifen an. Dieser wird automatisch beim Angebot dazugerechnet, wenn der Kunde RunFlat-Reifen hat.
-                  </p>
-                  <div className="max-w-xs">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Aufpreis pro RunFlat-Reifen (€)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={runFlatSurcharge}
-                      onChange={(e) => setRunFlatSurcharge(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      placeholder="z.B. 5.00"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Dieser Aufpreis wird pro Reifen berechnet (optional)
+                <>
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      🔧 RunFlat-Reifen Aufpreis
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Geben Sie den Aufpreis pro Reifen für RunFlat-Reifen an. Dieser wird automatisch beim Angebot dazugerechnet, wenn der Kunde RunFlat-Reifen hat.
                     </p>
+                    <div className="max-w-xs">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Aufpreis pro RunFlat-Reifen (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={runFlatSurcharge}
+                        onChange={(e) => setRunFlatSurcharge(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 5.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Dieser Aufpreis wird pro Reifen berechnet (optional)
+                      </p>
+                    </div>
                   </div>
-                </div>
+
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      ♻️ Altreifenentsorgung
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Geben Sie die Kosten für die Entsorgung pro Altreifen an. Diese werden automatisch berechnet, wenn der Kunde die Entsorgung wünscht.
+                    </p>
+                    <div className="max-w-xs">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Entsorgungsgebühr pro Reifen (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={disposalFee}
+                        onChange={(e) => setDisposalFee(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 3.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Dieser Betrag wird pro zu entsorgendem Reifen berechnet (optional)
+                      </p>
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Package Configuration */}
@@ -639,11 +690,20 @@ export default function WorkshopServicesPage() {
                       </div>
                     )}
 
-                    {/* RunFlat Surcharge Info for Tire Change */}
-                    {service.serviceType === 'TIRE_CHANGE' && service.runFlatSurcharge && (
-                      <div className="mb-3 text-sm text-gray-700 bg-blue-50 p-2 rounded">
-                        🔧 RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
-                      </div>
+                    {/* RunFlat Surcharge and Disposal Fee Info for Tire Change */}
+                    {service.serviceType === 'TIRE_CHANGE' && (
+                      <>
+                        {service.runFlatSurcharge && (
+                          <div className="mb-2 text-sm text-gray-700 bg-blue-50 p-2 rounded">
+                            🔧 RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
+                          </div>
+                        )}
+                        {service.disposalFee && (
+                          <div className="mb-3 text-sm text-gray-700 bg-green-50 p-2 rounded">
+                            ♻️ Altreifenentsorgung: {service.disposalFee.toFixed(2)} € pro Reifen
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* Display Packages Summary or Details */}

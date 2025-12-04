@@ -17,6 +17,11 @@ export async function GET(req: NextRequest) {
       include: {
         workshopVacations: {
           orderBy: { startDate: 'asc' }
+        },
+        employees: {
+          select: {
+            googleRefreshToken: true
+          }
         }
       }
     })
@@ -25,9 +30,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
     }
 
+    // Check if workshop has calendar OR any employee has calendar
+    const hasWorkshopCalendar = !!workshop.googleRefreshToken
+    const hasEmployeeCalendar = workshop.employees.some(emp => !!emp.googleRefreshToken)
+    const hasCalendar = hasWorkshopCalendar || hasEmployeeCalendar
+
     return NextResponse.json({ 
       vacations: workshop.workshopVacations,
-      hasCalendar: !!workshop.googleRefreshToken
+      hasCalendar
     })
   } catch (error) {
     console.error('Error fetching vacations:', error)

@@ -361,8 +361,10 @@ export function newOfferEmailTemplate(data: {
                 tireCount = 2
               }
               
+              // Berechne anteilige Montagekosten: (Montage / Gesamt-Reifen) * Diese-Reifen
+              const installationPerOption = (data.installationFee / data.quantity) * tireCount
               const tiresTotal = option.pricePerTire * tireCount
-              const optionPrice = tiresTotal + data.installationFee
+              const optionPrice = tiresTotal + installationPerOption
               
               const tireTypeLabel = option.motorcycleTireType 
                 ? formatTireType(option.motorcycleTireType, true)
@@ -374,7 +376,7 @@ export function newOfferEmailTemplate(data: {
                   <p style="margin: 0 0 5px 0;"><strong>Reifen:</strong> ${option.brand} ${option.model}</p>
                   ${tireTypeLabel ? `<p style="margin: 5px 0; background: #eff6ff; padding: 6px; border-radius: 4px; color: #1e40af; font-weight: 600; display: inline-block;">${tireTypeLabel}</p>` : ''}
                   <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 600; color: #1e40af;">${optionPrice.toFixed(2)} € <span style="font-size: 14px; color: #6b7280; font-weight: normal;">inkl. Montage</span></p>
-                  <p style="margin: 5px 0 0 0; font-size: 12px; color: #9ca3af;">${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${data.installationFee.toFixed(2)} €</p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px; color: #9ca3af;">${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${installationPerOption.toFixed(2)} €</p>
                 </div>
               `
             }).join('')}
@@ -428,15 +430,17 @@ ${data.tireOptions.map(option => {
     tireCount = 2
   }
   
+  // Berechne anteilige Montagekosten: (Montage / Gesamt-Reifen) * Diese-Reifen
+  const installationPerOption = (data.installationFee / data.quantity) * tireCount
   const tiresTotal = option.pricePerTire * tireCount
-  const optionPrice = tiresTotal + data.installationFee
+  const optionPrice = tiresTotal + installationPerOption
   
   const tireTypeLabel = option.motorcycleTireType 
     ? formatTireType(option.motorcycleTireType, true)
     : option.carTireType 
       ? formatTireType(option.carTireType, false)
       : ''
-  return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${data.installationFee.toFixed(2)} €)`
+  return `Reifen: ${option.brand} ${option.model}${tireTypeLabel ? '\n' + tireTypeLabel : ''}\nPreis: ${optionPrice.toFixed(2)} € (${tireCount} Reifen á ${option.pricePerTire.toFixed(2)} € + Montage ${installationPerOption.toFixed(2)} €)`
 }).join('\n\n')}
 
 ${data.tireOptions.length > 1 ? '\nDie Werkstatt bietet Ihnen mehrere Optionen zur Auswahl an.' : ''}

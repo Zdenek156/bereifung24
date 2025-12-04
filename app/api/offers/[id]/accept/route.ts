@@ -165,16 +165,27 @@ export async function POST(
         // Calculate installation fee based on quantity
         let installationFee = offer?.installationFee || 0
         if (workshopService) {
-          if (totalQuantity <= 2) {
+          if (totalQuantity === 2) {
+            // 2 Reifen: "2 Reifen wechseln" Paket
             installationFee = workshopService.basePrice
-          } else {
+          } else if (totalQuantity === 4) {
+            // 4 Reifen: "4 Reifen wechseln" Paket
             installationFee = workshopService.basePrice4 || workshopService.basePrice
+          } else {
+            // Fallback für andere Mengen
+            installationFee = workshopService.basePrice
           }
           
           // Add disposal fee if requested
           const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
           if (hasDisposal && workshopService.disposalFee) {
             installationFee += workshopService.disposalFee * totalQuantity
+          }
+          
+          // Add runflat surcharge if requested
+          const hasRunflat = offer?.tireRequest.isRunflat
+          if (hasRunflat && workshopService.runFlatSurcharge) {
+            installationFee += workshopService.runFlatSurcharge * totalQuantity
           }
         }
         
@@ -211,16 +222,27 @@ export async function POST(
         // Calculate installation fee based on quantity
         let installationFee = offer?.installationFee || 0
         if (workshopService) {
-          if (totalQuantity <= 2) {
+          if (totalQuantity === 2) {
+            // 2 Reifen: "2 Reifen wechseln" Paket
             installationFee = workshopService.basePrice
-          } else {
+          } else if (totalQuantity === 4) {
+            // 4 Reifen: "4 Reifen wechseln" Paket
             installationFee = workshopService.basePrice4 || workshopService.basePrice
+          } else {
+            // Fallback für andere Mengen
+            installationFee = workshopService.basePrice
           }
           
           // Add disposal fee if requested
           const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
           if (hasDisposal && workshopService.disposalFee) {
             installationFee += workshopService.disposalFee * totalQuantity
+          }
+          
+          // Add runflat surcharge if requested
+          const hasRunflat = offer?.tireRequest.isRunflat
+          if (hasRunflat && workshopService.runFlatSurcharge) {
+            installationFee += workshopService.runFlatSurcharge * totalQuantity
           }
         }
         

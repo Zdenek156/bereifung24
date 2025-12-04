@@ -496,6 +496,116 @@ export default function BrowseRequestsPage() {
   const updateTireOption = (index: number, field: keyof TireOption, value: string) => {
     const updated = [...offerForm.tireOptions]
     updated[index] = { ...updated[index], [field]: value }
+    
+    // Wenn carTireType geändert wird, berechne Installation neu (Autoreifen)
+    if (field === 'carTireType' && selectedRequest) {
+      const newCarTireType = value as 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
+      const newQuantity = newCarTireType === 'ALL_FOUR' ? 4 : 2
+      
+      // Finde Service
+      const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
+      if (service) {
+        let installation = 0
+        let duration = 60
+        
+        const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+        const hasRunflat = selectedRequest.isRunflat
+        
+        if (service.servicePackages && service.servicePackages.length > 0) {
+          // Finde passendes Paket basierend auf Reifenanzahl
+          let selectedPackage
+          
+          if (newQuantity === 4) {
+            // 4 Reifen - suche "4 Reifen wechseln" Paket
+            selectedPackage = service.servicePackages.find((p: any) => 
+              p.name.includes('4') || p.name.toLowerCase().includes('alle')
+            )
+          } else if (newQuantity === 2) {
+            // 2 Reifen - suche "2 Reifen wechseln" Paket
+            selectedPackage = service.servicePackages.find((p: any) => 
+              p.name.includes('2')
+            )
+          }
+          
+          // Fallback auf erstes Paket wenn nichts gefunden
+          if (!selectedPackage && service.servicePackages.length > 0) {
+            selectedPackage = service.servicePackages[0]
+          }
+          
+          if (selectedPackage) {
+            installation = selectedPackage.price
+            duration = selectedPackage.durationMinutes
+          }
+          
+          // Entsorgung separat addieren
+          if (hasDisposal && service.disposalFee) {
+            installation += service.disposalFee * newQuantity
+          }
+          
+          // Runflat separat addieren
+          if (hasRunflat && service.runFlatSurcharge) {
+            installation += service.runFlatSurcharge * newQuantity
+          }
+        }
+        
+        // Aktualisiere Formular mit neuen Werten
+        setOfferForm({
+          ...offerForm,
+          tireOptions: updated,
+          installationFee: installation.toFixed(2),
+          durationMinutes: duration.toString()
+        })
+        return
+      }
+    }
+    
+    // Wenn motorcycleTireType geändert wird, berechne Installation neu (Motorradreifen)
+    if (field === 'motorcycleTireType' && selectedRequest) {
+      const newMotorcycleTireType = value as 'FRONT' | 'REAR' | 'BOTH'
+      
+      // Finde Service
+      const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
+      if (service) {
+        let installation = 0
+        let duration = 60
+        
+        if (service.servicePackages && service.servicePackages.length > 0) {
+          // Finde passendes Paket
+          let selectedPackage
+          
+          if (newMotorcycleTireType === 'BOTH') {
+            // Beide Reifen - suche "Beide" Paket
+            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('beide'))
+          } else if (newMotorcycleTireType === 'FRONT') {
+            // Nur Vorderrad
+            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('vorderrad'))
+          } else if (newMotorcycleTireType === 'REAR') {
+            // Nur Hinterrad
+            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('hinterrad'))
+          }
+          
+          // Fallback auf erstes Paket wenn nichts gefunden
+          if (!selectedPackage && service.servicePackages.length > 0) {
+            selectedPackage = service.servicePackages[0]
+          }
+          
+          if (selectedPackage) {
+            installation = selectedPackage.price
+            duration = selectedPackage.durationMinutes
+          }
+        }
+        
+        // Aktualisiere Formular mit neuen Werten
+        setOfferForm({
+          ...offerForm,
+          tireOptions: updated,
+          installationFee: installation.toFixed(2),
+          durationMinutes: duration.toString()
+        })
+        return
+      }
+    }
+    
     setOfferForm({
       ...offerForm,
       tireOptions: updated
@@ -1243,7 +1353,10 @@ export default function BrowseRequestsPage() {
                   {offerForm.installationFee && selectedRequest && (() => {
                     const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                     const hasRunflat = selectedRequest.isRunflat
-                    const quantity = selectedRequest.quantity || 4
+                    
+                    // Bestimme Reifenanzahl basierend auf carTireType Auswahl
+                    const carTireType = offerForm.tireOptions[0]?.carTireType
+                    const quantity = carTireType === 'ALL_FOUR' ? 4 : 2
                     
                     // Hole Service-Info für Aufschlüsselung
                     const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')

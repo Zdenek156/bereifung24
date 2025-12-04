@@ -6,8 +6,7 @@ import { z } from 'zod'
 import { sendEmail, newOfferEmailTemplate } from '@/lib/email'
 
 const tireOptionSchema = z.object({
-  brand: z.string().min(1, 'Reifenmarke erforderlich'),
-  model: z.string().min(1, 'Reifenmodell erforderlich'),
+  brandModel: z.string().min(1, 'Reifenmarke und -modell erforderlich'),
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
   motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional(), // Für Motorradreifen - pro Reifenangebot
   carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional() // Für Autoreifen - pro Reifenangebot
@@ -154,8 +153,8 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brand : 'Service',
-        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].model : 'Räder umstecken',
+        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ')[0] : 'Service',
+        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ').slice(1).join(' ') || validatedData.tireOptions![0].brandModel : 'Räder umstecken',
         description: validatedData.description,
         pricePerTire: hasValidTireOptions ? validatedData.tireOptions![0].pricePerTire : 0,
         price: totalPrice,
@@ -169,13 +168,16 @@ export async function POST(
         status: 'PENDING',
         ...(hasValidTireOptions && {
           tireOptions: {
-            create: validatedData.tireOptions!.map(option => ({
-              brand: option.brand,
-              model: option.model,
-              pricePerTire: option.pricePerTire,
-              motorcycleTireType: option.motorcycleTireType,
-              carTireType: option.carTireType
-            }))
+            create: validatedData.tireOptions!.map(option => {
+              const parts = option.brandModel.split(' ')
+              return {
+                brand: parts[0] || option.brandModel,
+                model: parts.slice(1).join(' ') || '',
+                pricePerTire: option.pricePerTire,
+                motorcycleTireType: option.motorcycleTireType,
+                carTireType: option.carTireType
+              }
+            })
           }
         })
       },

@@ -407,7 +407,7 @@ export default function BrowseRequestsPage() {
 
     // Validierung: Bei normalen Reifenanfragen muss mindestens ein Reifenangebot vollständig ausgefüllt sein
     const validOptions = offerForm.tireOptions.filter(opt => 
-      opt.brand.trim() && opt.model.trim() && opt.pricePerTire.trim()
+      opt.brandModel.trim() && opt.pricePerTire.trim()
     )
     
     if (!isWheelChange && validOptions.length === 0) {

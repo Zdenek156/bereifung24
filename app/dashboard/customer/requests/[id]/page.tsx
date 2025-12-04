@@ -153,10 +153,20 @@ export default function RequestDetailPage() {
     setAcceptTerms(false)
     setWantsBalancing(false)
     setWantsStorage(false)
-    // Pre-select options
+    
+    // Pre-select options ONLY if none are selected yet or if switching offers
     if (offer) {
       const displayOptions = getDisplayOptions(offer)
       if (displayOptions.length > 0) {
+        // Check if user has already selected options for this specific offer
+        const hasExistingSelection = selectedTireOptionIds.length > 0 && 
+          selectedTireOptionIds.some(id => displayOptions.some(opt => opt.id === id))
+        
+        if (hasExistingSelection && !defaultTireOptionId) {
+          // Keep existing selection - don't override user's choice
+          return
+        }
+        
         if (defaultTireOptionId) {
           // Specific option provided
           setSelectedTireOptionIds([defaultTireOptionId])

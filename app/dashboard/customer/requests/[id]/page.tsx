@@ -309,13 +309,19 @@ export default function RequestDetailPage() {
     let fee = 0
     let duration = 0
 
-    // Use the base price
-    if (selectedQuantity <= 2) {
+    // Use the base price based on quantity (2 Reifen Paket für 2, 4 Reifen Paket für 4)
+    if (selectedQuantity === 2) {
+      // Für 2 Reifen: "2 Reifen wechseln" Paket verwenden
       fee = service.basePrice
       duration = service.durationMinutes
-    } else {
+    } else if (selectedQuantity === 4) {
+      // Für 4 Reifen: "4 Reifen wechseln" Paket verwenden
       fee = service.basePrice4 || service.basePrice
       duration = service.durationMinutes4 || service.durationMinutes
+    } else {
+      // Fallback für andere Mengen (sollte nicht vorkommen bei Autoreifen)
+      fee = service.basePrice
+      duration = service.durationMinutes
     }
 
     // Add disposal fee if requested

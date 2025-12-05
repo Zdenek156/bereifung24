@@ -6,7 +6,7 @@ const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings',
-  '/_next', '/favicon.ico', '/apple-icon', '/icon'
+  '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads'
 ]
 
 // This middleware runs before NextAuth can intercept calendar callbacks

@@ -57,6 +57,7 @@ export async function GET(
         ...offer,
         workshop: {
           companyName: offer.workshop.companyName,
+          logoUrl: offer.workshop.logoUrl,
           street: offer.workshop.user.street,
           zipCode: offer.workshop.user.zipCode,
           city: offer.workshop.user.city,

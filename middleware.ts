@@ -45,7 +45,7 @@ export const config = {
     '/api/gcal/callback',
     // Match auth routes (but calendar callback will be handled first)
     '/api/auth/:path*',
-    // Match all routes except _next/static, _next/image, favicon.ico
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Match all routes except _next/static, _next/image, favicon.ico, uploads
+    '/((?!_next/static|_next/image|favicon.ico|uploads).*)',
   ],
 }

@@ -403,7 +403,11 @@ export default function WorkshopSettings() {
       if (response.ok) {
         const data = await response.json()
         setMessage({ type: 'success', text: 'Logo erfolgreich hochgeladen!' })
-        fetchProfile() // Reload profile to show new logo
+        // Update profile with new logo URL
+        if (profile) {
+          setProfile({ ...profile, logoUrl: data.logoUrl })
+        }
+        await fetchProfile() // Reload profile to show new logo
       } else {
         const data = await response.json()
         setMessage({ type: 'error', text: data.error || 'Fehler beim Hochladen' })
@@ -432,7 +436,11 @@ export default function WorkshopSettings() {
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Logo erfolgreich gelöscht' })
-        fetchProfile() // Reload profile
+        // Update profile to remove logo
+        if (profile) {
+          setProfile({ ...profile, logoUrl: null })
+        }
+        await fetchProfile() // Reload profile
       } else {
         const data = await response.json()
         setMessage({ type: 'error', text: data.error || 'Fehler beim Löschen' })
@@ -785,9 +793,10 @@ export default function WorkshopSettings() {
                 {profile?.logoUrl ? (
                   <div className="relative">
                     <img 
-                      src={profile.logoUrl} 
+                      src={`${profile.logoUrl}?t=${Date.now()}`} 
                       alt="Werkstatt Logo" 
                       className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-white"
+                      key={profile.logoUrl}
                     />
                     <button
                       type="button"

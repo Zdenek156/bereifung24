@@ -43,6 +43,7 @@ interface Offer {
   selectedTireOptionIds?: string[]
   workshop: {
     companyName: string
+    logoUrl: string | null
     street: string
     zipCode: string
     city: string
@@ -1074,16 +1075,25 @@ export default function RequestDetailPage() {
                     )}
 
                     <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {offer.workshop.companyName}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {offer.workshop.street}, {offer.workshop.zipCode} {offer.workshop.city}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Tel: {offer.workshop.phone}
-                        </p>
+                      <div className="flex items-start gap-4">
+                        {offer.workshop.logoUrl && (
+                          <img 
+                            src={offer.workshop.logoUrl} 
+                            alt={`${offer.workshop.companyName} Logo`}
+                            className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white flex-shrink-0"
+                          />
+                        )}
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {offer.workshop.companyName}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {offer.workshop.street}, {offer.workshop.zipCode} {offer.workshop.city}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Tel: {offer.workshop.phone}
+                          </p>
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-3xl font-bold text-primary-600">

@@ -118,6 +118,7 @@ model Workshop {
   taxId       String?
   website     String?
   description String?
+  logoUrl     String? // Workshop Logo URL
 
   // Opening Hours (JSON String)
   openingHours String? // JSON: {"monday": "09:00-18:00", ...}

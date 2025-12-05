@@ -17,6 +17,7 @@ interface WorkshopProfile {
   taxId: string | null
   website: string | null
   description: string | null
+  logoUrl: string | null
   openingHours: string | null
   isVerified: boolean
   verifiedAt: string | null
@@ -82,6 +83,9 @@ export default function WorkshopSettings() {
   const [mandateLoading, setMandateLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [mandateError, setMandateError] = useState('')
+  
+  // Logo upload state
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -363,6 +367,79 @@ export default function WorkshopSettings() {
       setMandateError('Netzwerkfehler beim Erstellen des Mandats')
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Nur JPG, PNG und WebP Dateien sind erlaubt' })
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setMessage({ type: 'error', text: 'Datei ist zu groß. Maximal 5MB erlaubt.' })
+      return
+    }
+
+    setUploadingLogo(true)
+    setMessage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('logo', file)
+
+      const response = await fetch('/api/workshop/logo', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({ type: 'success', text: 'Logo erfolgreich hochgeladen!' })
+        fetchProfile() // Reload profile to show new logo
+      } else {
+        const data = await response.json()
+        setMessage({ type: 'error', text: data.error || 'Fehler beim Hochladen' })
+      }
+    } catch (error) {
+      console.error('Logo upload error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Hochladen des Logos' })
+    } finally {
+      setUploadingLogo(false)
+      // Reset file input
+      e.target.value = ''
+    }
+  }
+
+  const handleDeleteLogo = async () => {
+    if (!confirm('Möchten Sie Ihr Logo wirklich löschen?')) {
+      return
+    }
+
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/workshop/logo', {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Logo erfolgreich gelöscht' })
+        fetchProfile() // Reload profile
+      } else {
+        const data = await response.json()
+        setMessage({ type: 'error', text: data.error || 'Fehler beim Löschen' })
+      }
+    } catch (error) {
+      console.error('Logo delete error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Löschen des Logos' })
     }
   }
 
@@ -691,6 +768,73 @@ export default function WorkshopSettings() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">E-Mail kann nicht geändert werden</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Logo Upload */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Werkstatt-Logo</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Laden Sie Ihr Firmenlogo hoch. Es wird in Ihren Angeboten und auf Ihrer Landing Page angezeigt.
+            </p>
+            
+            <div className="flex items-start gap-6">
+              {/* Logo Preview */}
+              <div className="flex-shrink-0">
+                {profile?.logoUrl ? (
+                  <div className="relative">
+                    <img 
+                      src={profile.logoUrl} 
+                      alt="Werkstatt Logo" 
+                      className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDeleteLogo}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      title="Logo löschen"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Button */}
+              <div className="flex-1">
+                <input
+                  type="file"
+                  id="logo-upload"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="logo-upload"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  {profile?.logoUrl ? 'Neues Logo hochladen' : 'Logo hochladen'}
+                </label>
+                <p className="text-xs text-gray-500 mt-2">
+                  JPG, PNG oder WebP. Maximal 5MB. Empfohlen: Quadratisches Format (z.B. 500x500px)
+                </p>
+                {uploadingLogo && (
+                  <div className="mt-2 text-sm text-primary-600">
+                    Wird hochgeladen...
+                  </div>
+                )}
               </div>
             </div>
           </div>

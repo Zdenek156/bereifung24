@@ -45,6 +45,7 @@ export async function GET() {
       taxId: user.workshop.taxId,
       website: user.workshop.website,
       description: user.workshop.description,
+      logoUrl: user.workshop.logoUrl,
       openingHours: user.workshop.openingHours,
       isVerified: user.workshop.isVerified,
       verifiedAt: user.workshop.verifiedAt,

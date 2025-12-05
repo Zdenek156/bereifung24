@@ -154,7 +154,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
                 {landingPage.aboutTitle}
               </h2>
-              <div className="prose prose-lg max-w-none text-gray-700">
+              <div className="prose prose-lg max-w-none text-gray-700 text-center">
                 {landingPage.aboutText.split('\n').map((paragraph, idx) => (
                   paragraph.trim() && <p key={idx} className="mb-4">{paragraph}</p>
                 ))}

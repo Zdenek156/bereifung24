@@ -1483,19 +1483,19 @@ export default function BrowseRequestsPage() {
                           <>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-700">{isWheelChange ? 'Räder umstecken' : `Reifenwechsel (${quantity} Reifen)`}</span>
-                                <span className="font-medium">{basePrice.toFixed(2)} €</span>
+                                <span className="text-gray-700">Räder umstecken</span>
+                                <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>
-                              {isWheelChange && balancingIncluded > 0 && service?.balancingPrice && (
+                              {isWheelChange && customerWantsBalancing && service?.balancingPrice && (
                                 <div className="flex justify-between">
-                                  <span className="text-gray-700">+ Wuchten (4 × {service.balancingPrice.toFixed(2)} €)</span>
-                                  <span className="font-medium">{balancingIncluded.toFixed(2)} €</span>
+                                  <span className="text-gray-700">Wuchten (4 × {service.balancingPrice.toFixed(2)} €)</span>
+                                  <span className="font-medium">{(service.balancingPrice * 4).toFixed(2)} €</span>
                                 </div>
                               )}
-                              {isWheelChange && storageIncluded > 0 && (
+                              {isWheelChange && offerForm.storageAvailable && service?.storagePrice && (
                                 <div className="flex justify-between">
-                                  <span className="text-gray-700">+ Einlagerung</span>
-                                  <span className="font-medium">{storageIncluded.toFixed(2)} €</span>
+                                  <span className="text-gray-700">Einlagerung</span>
+                                  <span className="font-medium">{service.storagePrice.toFixed(2)} €</span>
                                 </div>
                               )}
                               {!isWheelChange && disposalFee > 0 && service?.disposalFee && (

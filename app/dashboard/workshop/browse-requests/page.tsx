@@ -1438,13 +1438,13 @@ export default function BrowseRequestsPage() {
                         // Bei Räder umstecken: Einfache Berechnung
                         basePrice = service.basePrice || 0
                         
-                        // Berechne Wuchten-Kosten (4 Räder)
+                        // Berechne Wuchten-Kosten (4 Räder) - nur wenn Kunde es wünscht
                         if (customerWantsBalancing && service.balancingPrice) {
                           balancingIncluded = service.balancingPrice * 4
                         }
                         
-                        // Berechne Einlagerungs-Kosten
-                        if (customerWantsStorage && service.storagePrice) {
+                        // Berechne Einlagerungs-Kosten - nur wenn Werkstatt Checkbox aktiviert hat
+                        if (offerForm.storageAvailable && service.storagePrice) {
                           storageIncluded = service.storagePrice
                         }
                       } else {
@@ -1478,9 +1478,9 @@ export default function BrowseRequestsPage() {
                                 <span className="text-gray-700">{isWheelChange ? 'Räder umstecken' : `Reifenwechsel (${quantity} Reifen)`}</span>
                                 <span className="font-medium">{basePrice.toFixed(2)} €</span>
                               </div>
-                              {isWheelChange && balancingIncluded > 0 && (
+                              {isWheelChange && balancingIncluded > 0 && service?.balancingPrice && (
                                 <div className="flex justify-between">
-                                  <span className="text-gray-700">+ Wuchten (4 Räder)</span>
+                                  <span className="text-gray-700">+ Wuchten (4 × {service.balancingPrice.toFixed(2)} €)</span>
                                   <span className="font-medium">{balancingIncluded.toFixed(2)} €</span>
                                 </div>
                               )}
@@ -1548,53 +1548,48 @@ export default function BrowseRequestsPage() {
                   )}
                 </div>
 
-                {selectedRequest.width === 0 && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Einlagerung anbieten
-                      </label>
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2 mb-3">
-                          <input
-                            type="checkbox"
-                            id="offerStorage"
-                            checked={offerForm.storageAvailable || false}
-                            onChange={(e) => {
-                              setOfferForm({ ...offerForm, storageAvailable: e.target.checked })
-                              if (!e.target.checked) {
-                                setOfferForm({ ...offerForm, storageAvailable: false, storagePrice: '' })
-                              }
-                            }}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor="offerStorage" className="text-sm text-gray-700">
-                            Ich biete Einlagerung an
-                          </label>
-                        </div>
-                        {offerForm.storageAvailable && (
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Preis pro Saison (€)
-                            </label>
+                {selectedRequest.width === 0 && (() => {
+                  const service = services.find((s: any) => s.serviceType === 'WHEEL_CHANGE')
+                  const storagePrice = service?.storagePrice || 0
+                  
+                  return (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Einlagerung anbieten
+                        </label>
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2">
                             <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={offerForm.storagePrice || ''}
-                              onChange={(e) => setOfferForm({ ...offerForm, storagePrice: e.target.value })}
-                              placeholder="z.B. 50.00"
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              type="checkbox"
+                              id="offerStorage"
+                              checked={offerForm.storageAvailable || false}
+                              onChange={(e) => {
+                                setOfferForm({ 
+                                  ...offerForm, 
+                                  storageAvailable: e.target.checked,
+                                  storagePrice: e.target.checked ? storagePrice.toString() : ''
+                                })
+                              }}
+                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                              Der Kunde kann beim Annehmen des Angebots wählen, ob er die Einlagerung möchte
-                            </p>
+                            <label htmlFor="offerStorage" className="text-sm text-gray-700">
+                              Ich biete Einlagerung an {storagePrice > 0 && `(${storagePrice.toFixed(2)} €/Saison)`}
+                            </label>
                           </div>
-                        )}
+                          {storagePrice === 0 && (
+                            <p className="text-xs text-amber-600 mt-2">
+                              ⚠️ Bitte konfigurieren Sie den Einlagerungspreis in der Service-Verwaltung
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-500 mt-2">
+                            Der Kunde kann beim Annehmen des Angebots wählen, ob er die Einlagerung möchte
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )
+                })()}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

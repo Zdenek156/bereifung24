@@ -954,33 +954,37 @@ export default function RequestDetailPage() {
                   <div className="mb-6 pb-6 border-b border-gray-200">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">Kosten</h3>
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
+                      {getServiceType() !== 'WHEEL_CHANGE' && (
                         <>
-                          {acceptedOffer.tireOptions
-                            .filter(option => 
-                              !acceptedOffer.selectedTireOptionIds || 
-                              acceptedOffer.selectedTireOptionIds.length === 0 || 
-                              acceptedOffer.selectedTireOptionIds.includes(option.id)
-                            )
-                            .map((option, idx) => {
-                              const quantity = getQuantityForTireOption(option)
-                              return (
-                                <div key={option.id} className="flex justify-between text-sm">
-                                  <span className="text-gray-700">{option.brand} {option.model} ({quantity}x)</span>
-                                  <span className="font-semibold">{(option.pricePerTire * quantity).toFixed(2)} €</span>
-                                </div>
-                              )
-                            })}
+                          {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
+                            <>
+                              {acceptedOffer.tireOptions
+                                .filter(option => 
+                                  !acceptedOffer.selectedTireOptionIds || 
+                                  acceptedOffer.selectedTireOptionIds.length === 0 || 
+                                  acceptedOffer.selectedTireOptionIds.includes(option.id)
+                                )
+                                .map((option, idx) => {
+                                  const quantity = getQuantityForTireOption(option)
+                                  return (
+                                    <div key={option.id} className="flex justify-between text-sm">
+                                      <span className="text-gray-700">{option.brand} {option.model} ({quantity}x)</span>
+                                      <span className="font-semibold">{(option.pricePerTire * quantity).toFixed(2)} €</span>
+                                    </div>
+                                  )
+                                })}
+                            </>
+                          ) : (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-700">Reifen ({request.quantity}x)</span>
+                              <span className="font-semibold">{(acceptedOffer.price - acceptedOffer.installationFee).toFixed(2)} €</span>
+                            </div>
+                          )}
                         </>
-                      ) : (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">Reifen ({request.quantity}x)</span>
-                          <span className="font-semibold">{(acceptedOffer.price - acceptedOffer.installationFee).toFixed(2)} €</span>
-                        </div>
                       )}
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-700">Montagekosten</span>
-                        <span className="font-semibold">{acceptedOffer.installationFee.toFixed(2)} €</span>
+                        <span className="text-gray-700">{getServiceType() === 'WHEEL_CHANGE' ? 'Räder umstecken (4 Räder)' : 'Montagekosten'}</span>
+                        <span className="font-semibold">{getServiceType() === 'WHEEL_CHANGE' ? acceptedOffer.price.toFixed(2) : acceptedOffer.installationFee.toFixed(2)} €</span>
                       </div>
                       <div className="pt-2 border-t border-gray-300 flex justify-between">
                         <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>

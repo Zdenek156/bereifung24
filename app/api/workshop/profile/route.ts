@@ -43,6 +43,7 @@ export async function GET() {
       // Workshop data
       companyName: user.workshop.companyName,
       taxId: user.workshop.taxId,
+      taxMode: user.workshop.taxMode,
       website: user.workshop.website,
       description: user.workshop.description,
       logoUrl: user.workshop.logoUrl,
@@ -112,6 +113,7 @@ export async function PATCH(request: Request) {
       // Workshop fields
       companyName,
       taxId,
+      taxMode,
       website,
       description,
       openingHours,
@@ -151,6 +153,7 @@ export async function PATCH(request: Request) {
       data: {
         companyName,
         taxId,
+        taxMode,
         website,
         description,
         openingHours,

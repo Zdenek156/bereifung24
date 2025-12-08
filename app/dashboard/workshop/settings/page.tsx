@@ -15,6 +15,7 @@ interface WorkshopProfile {
   city: string | null
   companyName: string
   taxId: string | null
+  taxMode: string
   website: string | null
   description: string | null
   logoUrl: string | null
@@ -96,6 +97,7 @@ export default function WorkshopSettings() {
     city: '',
     companyName: '',
     taxId: '',
+    taxMode: 'STANDARD',
     website: '',
     description: '',
     openingHours: '',
@@ -212,6 +214,7 @@ export default function WorkshopSettings() {
           city: data.city || '',
           companyName: data.companyName || '',
           taxId: data.taxId || '',
+          taxMode: data.taxMode || 'STANDARD',
           website: data.website || '',
           description: data.description || '',
           openingHours: data.openingHours || '',
@@ -878,6 +881,36 @@ export default function WorkshopSettings() {
                     placeholder="z.B. DE123456789"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Umsatzsteuer-Status
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="taxMode"
+                        value="STANDARD"
+                        checked={formData.taxMode === 'STANDARD'}
+                        onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Regelbesteuerung (Preise inkl. MwSt.)</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="taxMode"
+                        value="KLEINUNTERNEHMER"
+                        checked={formData.taxMode === 'KLEINUNTERNEHMER'}
+                        onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Kleinunternehmer gemäß §19 UStG (ohne MwSt.)</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div>

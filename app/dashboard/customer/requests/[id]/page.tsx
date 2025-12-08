@@ -985,6 +985,9 @@ export default function RequestDetailPage() {
                         <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
                         <span className="text-2xl font-bold text-primary-600">{acceptedOffer.price.toFixed(2)} €</span>
                       </div>
+                      <div className="text-xs text-gray-500 text-right mt-1">
+                        {acceptedOffer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                      </div>
                     </div>
                   </div>
 
@@ -1099,7 +1102,9 @@ export default function RequestDetailPage() {
                         <div className="text-3xl font-bold text-primary-600">
                           {offer.price.toFixed(2)} €
                         </div>
-                        <p className="text-xs text-gray-500">inkl. Montage</p>
+                        <p className="text-xs text-gray-500">
+                          inkl. Montage • {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                        </p>
                       </div>
                     </div>
 

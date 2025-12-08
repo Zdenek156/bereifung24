@@ -1364,30 +1364,47 @@ export default function BrowseRequestsPage() {
                   {offerForm.installationFee && selectedRequest && (() => {
                     const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                     const hasRunflat = selectedRequest.isRunflat
+                    const isWheelChange = selectedRequest.width === 0
                     
                     // Bestimme Reifenanzahl basierend auf ALLEN carTireType Auswahlen
-                    const hasFront = offerForm.tireOptions.some(opt => opt.carTireType === 'FRONT_TWO' || opt.carTireType === 'ALL_FOUR')
-                    const hasRear = offerForm.tireOptions.some(opt => opt.carTireType === 'REAR_TWO' || opt.carTireType === 'ALL_FOUR')
-                    const hasAllFour = offerForm.tireOptions.some(opt => opt.carTireType === 'ALL_FOUR')
-                    
                     let quantity = 0
-                    if (hasAllFour || (hasFront && hasRear)) {
+                    
+                    // Bei Räder umstecken immer 4 Räder
+                    if (isWheelChange) {
                       quantity = 4
-                    } else if (hasFront || hasRear) {
-                      quantity = 2
+                    } else {
+                      const hasFront = offerForm.tireOptions.some(opt => opt.carTireType === 'FRONT_TWO' || opt.carTireType === 'ALL_FOUR')
+                      const hasRear = offerForm.tireOptions.some(opt => opt.carTireType === 'REAR_TWO' || opt.carTireType === 'ALL_FOUR')
+                      const hasAllFour = offerForm.tireOptions.some(opt => opt.carTireType === 'ALL_FOUR')
+                      
+                      if (hasAllFour || (hasFront && hasRear)) {
+                        quantity = 4
+                      } else if (hasFront || hasRear) {
+                        quantity = 2
+                      }
                     }
                     
                     // Hole Service-Info für Aufschlüsselung
-                    const service = services.find((s: any) => s.serviceType === 'TIRE_CHANGE')
+                    const service = services.find((s: any) => s.serviceType === (isWheelChange ? 'WHEEL_CHANGE' : 'TIRE_CHANGE'))
                     
                     // Berechne Basis-Paket-Preis
                     let basePrice = 0
                     if (service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
-                      const selectedPackage = quantity === 4 
-                        ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
-                        : service.servicePackages.find((p: any) => p.name.includes('2'))
-                      if (selectedPackage) {
-                        basePrice = selectedPackage.price
+                      if (isWheelChange) {
+                        // Bei Räder umstecken: Nimm Standard-Paket (ohne Wuchten/Einlagerung)
+                        const standardPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('standard') || p.name.toLowerCase().includes('basis'))
+                        if (standardPackage) {
+                          basePrice = standardPackage.price
+                        } else if (service.basePrice) {
+                          basePrice = service.basePrice
+                        }
+                      } else {
+                        const selectedPackage = quantity === 4 
+                          ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
+                          : service.servicePackages.find((p: any) => p.name.includes('2'))
+                        if (selectedPackage) {
+                          basePrice = selectedPackage.price
+                        }
                       }
                     }
                     
@@ -1408,7 +1425,7 @@ export default function BrowseRequestsPage() {
                         ) : (
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-gray-700">Reifenwechsel ({quantity} Reifen)</span>
+                              <span className="text-gray-700">{isWheelChange ? 'Räder umstecken (4 Räder)' : `Reifenwechsel (${quantity} Reifen)`}</span>
                               <span className="font-medium">{basePrice.toFixed(2)} €</span>
                             </div>
                             {disposalFee > 0 && service?.disposalFee && (

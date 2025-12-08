@@ -1126,15 +1126,17 @@ export default function RequestDetailPage() {
                           
                           return (
                             <div>
-                              <p className="font-semibold text-lg text-gray-900 mb-2">
-                                {offer.tireBrand} {offer.tireModel}
-                              </p>
-                              {!isWheelChange && (
-                                <p className="text-sm text-gray-600 mb-2">Alle {request.quantity} Reifen</p>
+                              {!isWheelChange && offer.tireBrand && offer.tireModel && (
+                                <>
+                                  <p className="font-semibold text-lg text-gray-900 mb-2">
+                                    {offer.tireBrand} {offer.tireModel}
+                                  </p>
+                                  <p className="text-sm text-gray-600 mb-2">Alle {request.quantity} Reifen</p>
+                                </>
                               )}
                               
                               {/* Price breakdown */}
-                              <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
+                              <div className={`bg-primary-50 rounded-lg p-4 ${!isWheelChange ? 'mt-4 pt-4 border-t-2 border-gray-300' : ''}`}>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Preisübersicht:</h4>
                                 <div className="space-y-2 text-sm">
                                   {!isWheelChange && (

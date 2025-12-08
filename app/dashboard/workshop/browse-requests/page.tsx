@@ -1565,10 +1565,17 @@ export default function BrowseRequestsPage() {
                               id="offerStorage"
                               checked={offerForm.storageAvailable || false}
                               onChange={(e) => {
+                                const isChecked = e.target.checked
+                                const currentInstallation = parseFloat(offerForm.installationFee) || 0
+                                const newInstallation = isChecked 
+                                  ? currentInstallation + storagePrice 
+                                  : currentInstallation - storagePrice
+                                
                                 setOfferForm({ 
                                   ...offerForm, 
-                                  storageAvailable: e.target.checked,
-                                  storagePrice: e.target.checked ? storagePrice.toString() : ''
+                                  storageAvailable: isChecked,
+                                  storagePrice: isChecked ? storagePrice.toString() : '',
+                                  installationFee: newInstallation.toFixed(2)
                                 })
                               }}
                               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"

@@ -81,87 +81,87 @@
 
 ---
 
-## 🏭 Phase 5: Werkstatt-Bereich
-- [ ] **Dashboard** (Anfragen-Übersicht)
-- [ ] **Anfragen-Liste mit Filter:**
-  - [ ] Nach Entfernung
-  - [ ] Nach Zollgröße
-  - [ ] Nach Runflat
-  - [ ] Nach Reifentyp
-  - [ ] Nach Datum
-- [ ] **Angebot erstellen:**
-  - [ ] Reifenbezeichnung eingeben
-  - [ ] Hersteller angeben
-  - [ ] Preis festlegen
-  - [ ] Gültigkeitsdauer
-- [ ] **Angebotsübersicht:**
-  - [ ] Eigene Angebote
-  - [ ] Status (Offen/Angenommen/Abgelaufen)
-- [ ] **Termin-Verwaltung:**
-  - [ ] Google Calendar Synchronisation
-  - [ ] Zeitslot-Konfiguration
-  - [ ] Gebuchte Termine
-- [ ] **Werkstatt-Profil:**
-  - [ ] Stammdaten
-  - [ ] Bankverbindung (SEPA)
-  - [ ] PayPal E-Mail
-  - [ ] Öffnungszeiten
-- [ ] **Bewertungen ansehen**
-- [ ] **Provisionsübersicht:**
-  - [ ] Akzeptierte Angebote
-  - [ ] 5% Provision anzeigen
-  - [ ] Monatliche Abrechnungen
+## ✅ Phase 5: Werkstatt-Bereich (ABGESCHLOSSEN)
+- [x] **Dashboard** (Anfragen-Übersicht)
+- [x] **Anfragen-Liste mit Filter:**
+  - [x] Nach Entfernung
+  - [x] Nach Zollgröße
+  - [x] Nach Runflat
+  - [x] Nach Reifentyp
+  - [x] Nach Datum
+- [x] **Angebot erstellen:**
+  - [x] Reifenbezeichnung eingeben
+  - [x] Hersteller angeben
+  - [x] Preis festlegen
+  - [x] Gültigkeitsdauer
+- [x] **Angebotsübersicht:**
+  - [x] Eigene Angebote
+  - [x] Status (Offen/Angenommen/Abgelaufen)
+- [x] **Termin-Verwaltung:**
+  - [x] Google Calendar Synchronisation
+  - [x] Zeitslot-Konfiguration
+  - [x] Gebuchte Termine
+- [x] **Werkstatt-Profil:**
+  - [x] Stammdaten
+  - [x] Bankverbindung (SEPA)
+  - [x] PayPal E-Mail
+  - [x] Öffnungszeiten
+- [x] **Bewertungen ansehen**
+- [x] **Provisionsübersicht:**
+  - [x] Akzeptierte Angebote
+  - [x] 5% Provision anzeigen
+  - [x] Monatliche Abrechnungen
 
-**Status:** ⚪ Ausstehend
-
----
-
-## 👨‍💼 Phase 6: Admin-Bereich
-- [ ] **Dashboard mit Statistiken:**
-  - [ ] Gesamt-Anfragen
-  - [ ] Gesamt-Angebote
-  - [ ] Angenommene Angebote
-  - [ ] Provisions-Übersicht
-- [ ] **Anfragen-Verwaltung:**
-  - [ ] Alle Kundenanfragen
-  - [ ] Status-Übersicht
-- [ ] **Angebots-Verwaltung:**
-  - [ ] Alle abgegebenen Angebote
-  - [ ] Angenommene Angebote
-  - [ ] Auswertungen
-- [ ] **Provisions-Management:**
-  - [ ] Automatische 5% Berechnung
-  - [ ] Monatliche Übersichten
-  - [ ] SEPA-Lastschrift-Export
-  - [ ] Abrechnungshistorie
-- [ ] **User-Management:**
-  - [ ] Kunden verwalten
-  - [ ] Werkstätten verwalten
-  - [ ] Deaktivierung/Sperrung
-- [ ] **System-Einstellungen**
-
-**Status:** ⚪ Ausstehend
+**Status:** ✅ Abgeschlossen
 
 ---
 
-## 📧 Phase 7: E-Mail-System
-- [ ] **Kunden-E-Mails:**
-  - [ ] Registrierung-Bestätigung
-  - [ ] Neues Angebot erhalten
-  - [ ] Angebot angenommen (Bestätigung)
-  - [ ] Termin-Erinnerung
-  - [ ] Bewertungs-Anfrage
-- [ ] **Werkstatt-E-Mails:**
-  - [ ] Registrierung-Bestätigung
-  - [ ] Neue passende Anfrage
-  - [ ] Angebot angenommen
-  - [ ] Termin-Bestätigung
-  - [ ] Monatliche Provisionsabrechnung
-- [ ] **Admin-E-Mails:**
-  - [ ] Neue Registrierung
-  - [ ] Probleme/Meldungen
+## ✅ Phase 6: Admin-Bereich (ABGESCHLOSSEN)
+- [x] **Dashboard mit Statistiken:**
+  - [x] Gesamt-Anfragen
+  - [x] Gesamt-Angebote
+  - [x] Angenommene Angebote
+  - [x] Provisions-Übersicht
+- [x] **Anfragen-Verwaltung:**
+  - [x] Alle Kundenanfragen
+  - [x] Status-Übersicht
+- [x] **Angebots-Verwaltung:**
+  - [x] Alle abgegebenen Angebote
+  - [x] Angenommene Angebote
+  - [x] Auswertungen
+- [x] **Provisions-Management:**
+  - [x] Automatische 5% Berechnung
+  - [x] Monatliche Übersichten
+  - [x] SEPA-Lastschrift-Export
+  - [x] Abrechnungshistorie
+- [x] **User-Management:**
+  - [x] Kunden verwalten
+  - [x] Werkstätten verwalten
+  - [x] Deaktivierung/Sperrung
+- [x] **System-Einstellungen**
 
-**Status:** ⚪ Ausstehend
+**Status:** ✅ Abgeschlossen
+
+---
+
+## ✅ Phase 7: E-Mail-System (ABGESCHLOSSEN)
+- [x] **Kunden-E-Mails:**
+  - [x] Registrierung-Bestätigung
+  - [x] Neues Angebot erhalten
+  - [x] Angebot angenommen (Bestätigung)
+  - [x] Termin-Erinnerung
+  - [x] Bewertungs-Anfrage
+- [x] **Werkstatt-E-Mails:**
+  - [x] Registrierung-Bestätigung
+  - [x] Neue passende Anfrage
+  - [x] Angebot angenommen
+  - [x] Termin-Bestätigung
+  - [x] Monatliche Provisionsabrechnung
+- [x] **Admin-E-Mails:**
+  - [x] Neue Registrierung
+  - [x] Probleme/Meldungen
+
+**Status:** ✅ Abgeschlossen
 
 ---
 
@@ -305,10 +305,10 @@
 
 ## 📊 Aktueller Fortschritt
 
-**Gesamt-Fortschritt:** 15% ███░░░░░░░░░░░░░░░░░
+**Gesamt-Fortschritt:** 60% ████████████░░░░░░░░
 
-**Aktuelle Phase:** Phase 3 - Authentication & Rollen-System
-**Nächste Schritte:** Kunden-Bereich: Reifenanfrage-Formular entwickeln
+**Aktuelle Phase:** Phase 8 - Zahlungs-Integration
+**Nächste Schritte:** Feature 4 (MwSt.-Option) und Feature 2 (Bewertungssystem)
 
 ---
 
@@ -316,17 +316,17 @@
 
 | Meilenstein | Ziel | Status |
 |-------------|------|--------|
-| M1: MVP - Basis-Funktionen | Anfrage erstellen, Angebot abgeben, Annahme | 🟡 In Arbeit |
-| M2: Zahlungen & Termine | Terminbuchung, Zahlungsoptionen | ⚪ Ausstehend |
-| M3: Provisionen & Admin | Admin-Dashboard, Abrechnungen | ⚪ Ausstehend |
-| M4: Launch | Go-Live auf Subdomain | ⚪ Ausstehend |
+| M1: MVP - Basis-Funktionen | Anfrage erstellen, Angebot abgeben, Annahme | ✅ Abgeschlossen |
+| M2: Zahlungen & Termine | Terminbuchung, Zahlungsoptionen | ✅ Abgeschlossen |
+| M3: Provisionen & Admin | Admin-Dashboard, Abrechnungen | ✅ Abgeschlossen |
+| M4: Launch | Go-Live auf Subdomain | 🟡 In Arbeit |
 
 ---
 
 ## 🚀 Neue Features (Dezember 2025)
 
 ### 1. Workshop Logo Upload
-**Status:** ⏳ Offen  
+**Status:** ✅ Erledigt (08.12.2025)
 **Priorität:** Hoch
 
 **Beschreibung:**
@@ -478,7 +478,7 @@ Bei Motorradreifen-Anfrage: Option, dass Kunde nur die Räder (ohne Motorrad) vo
 
 ---
 
-**Letzte Aktualisierung:** 4. Dezember 2025
-**Version:** 0.4.0 - Kunden-Bereich: Reifenanfrage-System implementiert
-**Fortschritt:** 35% abgeschlossen (Phase 1-3 fertig, Phase 4 in Arbeit)
-**Neue Features:** 6 geplant für Dezember 2025
+**Letzte Aktualisierung:** 8. Dezember 2025
+**Version:** 0.7.0 - Phasen 1-7 abgeschlossen, Feature 1 implementiert
+**Fortschritt:** 60% abgeschlossen (Phase 1-7 fertig, Phase 8-14 offen)
+**Neue Features:** 1 von 6 erledigt, 5 offen für Dezember 2025

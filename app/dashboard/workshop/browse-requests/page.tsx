@@ -1462,13 +1462,45 @@ export default function BrowseRequestsPage() {
                     // Hole Service-Info für Aufschlüsselung
                     const service = services.find((s: any) => s.serviceType === (isWheelChange ? 'WHEEL_CHANGE' : 'TIRE_CHANGE'))
                     
-                    // Berechne Basis-Paket-Preis
+                    // Berechne Basis-Paket-Preis und erkenne Wuchten/Einlagerung
                     let basePrice = 0
+                    let balancingIncluded = 0
+                    let storageIncluded = 0
+                    const customerWantsBalancing = selectedRequest.additionalNotes?.includes('Wuchten')
+                    const customerWantsStorage = selectedRequest.additionalNotes?.includes('Einlagerung')
+                    
                     if (service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
                       if (isWheelChange) {
-                        // Bei Räder umstecken: Nimm Standard-Paket (ohne Wuchten/Einlagerung)
+                        // Bei Räder umstecken: Finde das gewählte Paket und berechne Einzelpreise
                         const standardPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('standard') || p.name.toLowerCase().includes('basis'))
-                        if (standardPackage) {
+                        let selectedPackageName = ''
+                        
+                        if (customerWantsBalancing && customerWantsStorage) {
+                          const komplettPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('komplett'))
+                          if (komplettPackage && standardPackage) {
+                            basePrice = standardPackage.price
+                            selectedPackageName = komplettPackage.name
+                            // Differenz zwischen Komplett und Standard = Wuchten + Einlagerung
+                            const extraCost = komplettPackage.price - standardPackage.price
+                            // Schätze 60% für Wuchten, 40% für Einlagerung
+                            balancingIncluded = extraCost * 0.6
+                            storageIncluded = extraCost * 0.4
+                          }
+                        } else if (customerWantsBalancing) {
+                          const balancingPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('wuchten') && !p.name.toLowerCase().includes('komplett'))
+                          if (balancingPackage && standardPackage) {
+                            basePrice = standardPackage.price
+                            selectedPackageName = balancingPackage.name
+                            balancingIncluded = balancingPackage.price - standardPackage.price
+                          }
+                        } else if (customerWantsStorage) {
+                          const storagePackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('einlagerung') && !p.name.toLowerCase().includes('komplett'))
+                          if (storagePackage && standardPackage) {
+                            basePrice = standardPackage.price
+                            selectedPackageName = storagePackage.name
+                            storageIncluded = storagePackage.price - standardPackage.price
+                          }
+                        } else if (standardPackage) {
                           basePrice = standardPackage.price
                         } else if (service.basePrice) {
                           basePrice = service.basePrice
@@ -1504,6 +1536,18 @@ export default function BrowseRequestsPage() {
                                 <span className="text-gray-700">{isWheelChange ? 'Räder umstecken (4 Räder)' : `Reifenwechsel (${quantity} Reifen)`}</span>
                                 <span className="font-medium">{basePrice.toFixed(2)} €</span>
                               </div>
+                              {isWheelChange && balancingIncluded > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-700">+ Wuchten (4 Räder)</span>
+                                  <span className="font-medium">{balancingIncluded.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {isWheelChange && storageIncluded > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-700">+ Einlagerung</span>
+                                  <span className="font-medium">{storageIncluded.toFixed(2)} €</span>
+                                </div>
+                              )}
                               {!isWheelChange && disposalFee > 0 && service?.disposalFee && (
                                 <div className="flex justify-between">
                                   <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
@@ -1551,7 +1595,7 @@ export default function BrowseRequestsPage() {
                       {customerWantsBalancing && (
                         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                           <p className="text-sm text-blue-900">
-                            ✓ <strong>Kunde wünscht Wuchten</strong> - Preis ist bereits im Service-Paket enthalten
+                            ✓ <strong>Kunde wünscht Wuchten</strong> - Im Angebot enthalten
                           </p>
                         </div>
                       )}
@@ -1559,8 +1603,54 @@ export default function BrowseRequestsPage() {
                       {customerWantsStorage && (
                         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                           <p className="text-sm text-blue-900">
-                            ✓ <strong>Kunde wünscht Einlagerung</strong> - Preis ist bereits im Service-Paket enthalten
+                            ✓ <strong>Kunde wünscht Einlagerung</strong> - Im Angebot enthalten
                           </p>
+                        </div>
+                      )}
+                      
+                      {!customerWantsStorage && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Einlagerung (optional anbieten)
+                          </label>
+                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-2 mb-3">
+                              <input
+                                type="checkbox"
+                                id="offerStorage"
+                                checked={offerForm.storageAvailable || false}
+                                onChange={(e) => {
+                                  setOfferForm({ ...offerForm, storageAvailable: e.target.checked })
+                                  if (!e.target.checked) {
+                                    setOfferForm({ ...offerForm, storageAvailable: false, storagePrice: '' })
+                                  }
+                                }}
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                              />
+                              <label htmlFor="offerStorage" className="text-sm text-gray-700">
+                                Einlagerung anbieten
+                              </label>
+                            </div>
+                            {offerForm.storageAvailable && (
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Preis pro Saison (€)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={offerForm.storagePrice || ''}
+                                  onChange={(e) => setOfferForm({ ...offerForm, storagePrice: e.target.value })}
+                                  placeholder="z.B. 50.00"
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Der Kunde kann beim Annehmen des Angebots wählen, ob er die Einlagerung möchte
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       
@@ -1602,52 +1692,6 @@ export default function BrowseRequestsPage() {
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                   Der Kunde kann beim Annehmen des Angebots wählen, ob er das Wuchten möchte
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {!customerWantsStorage && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Einlagerung (optional)
-                          </label>
-                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div className="flex items-center gap-2 mb-3">
-                              <input
-                                type="checkbox"
-                                id="offerStorage"
-                                checked={offerForm.storageAvailable || false}
-                                onChange={(e) => {
-                                  setOfferForm({ ...offerForm, storageAvailable: e.target.checked })
-                                  if (!e.target.checked) {
-                                    setOfferForm({ ...offerForm, storageAvailable: false, storagePrice: '' })
-                                  }
-                                }}
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                              />
-                              <label htmlFor="offerStorage" className="text-sm text-gray-700">
-                                Einlagerung anbieten
-                              </label>
-                            </div>
-                            {offerForm.storageAvailable && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Preis pro Saison (€)
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={offerForm.storagePrice || ''}
-                                  onChange={(e) => setOfferForm({ ...offerForm, storagePrice: e.target.value })}
-                                  placeholder="z.B. 50.00"
-                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Der Kunde kann beim Annehmen des Angebots wählen, ob er die Einlagerung möchte
                                 </p>
                               </div>
                             )}

@@ -1418,42 +1418,44 @@ export default function BrowseRequestsPage() {
                     
                     return (
                       <div className="space-y-3">
-                        {quantity === 0 ? (
+                        {!isWheelChange && quantity === 0 ? (
                           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">
                             ⚠️ Bitte wählen Sie "Angebot für" aus (z.B. Vorderreifen oder Hinterreifen), um die Montagekosten zu berechnen
                           </div>
-                        ) : (
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-700">{isWheelChange ? 'Räder umstecken (4 Räder)' : `Reifenwechsel (${quantity} Reifen)`}</span>
-                              <span className="font-medium">{basePrice.toFixed(2)} €</span>
-                            </div>
-                            {disposalFee > 0 && service?.disposalFee && (
+                        ) : (isWheelChange || quantity > 0) ? (
+                          <>
+                            <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
-                                <span className="font-medium">{disposalFee.toFixed(2)} €</span>
+                                <span className="text-gray-700">{isWheelChange ? 'Räder umstecken (4 Räder)' : `Reifenwechsel (${quantity} Reifen)`}</span>
+                                <span className="font-medium">{basePrice.toFixed(2)} €</span>
                               </div>
-                            )}
-                            {runflatFee > 0 && service?.runFlatSurcharge && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-700">+ Runflat-Aufschlag ({quantity} × {service.runFlatSurcharge.toFixed(2)} €)</span>
-                                <span className="font-medium">{runflatFee.toFixed(2)} €</span>
+                              {!isWheelChange && disposalFee > 0 && service?.disposalFee && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-700">+ Altreifenentsorgung ({quantity} × {service.disposalFee.toFixed(2)} €)</span>
+                                  <span className="font-medium">{disposalFee.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {!isWheelChange && runflatFee > 0 && service?.runFlatSurcharge && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-700">+ Runflat-Aufschlag ({quantity} × {service.runFlatSurcharge.toFixed(2)} €)</span>
+                                  <span className="font-medium">{runflatFee.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              <div className="border-t border-blue-300 pt-2 flex justify-between">
+                                <span className="font-semibold text-gray-900">Montage gesamt</span>
+                                <span className="text-lg font-bold text-gray-900">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
                               </div>
-                            )}
-                            <div className="border-t border-blue-300 pt-2 flex justify-between">
-                              <span className="font-semibold text-gray-900">Montage gesamt</span>
-                              <span className="text-lg font-bold text-gray-900">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
                             </div>
-                          </div>
-                        )}
-                        <div className="pt-2 border-t border-blue-200">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Dauer</span>
-                            <span className="font-medium text-gray-900">
-                              {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
-                            </span>
-                          </div>
-                        </div>
+                            <div className="pt-2 border-t border-blue-200">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Dauer</span>
+                                <span className="font-medium text-gray-900">
+                                  {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
                       </div>
                     )
                   })()}

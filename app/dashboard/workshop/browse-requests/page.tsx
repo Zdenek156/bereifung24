@@ -423,7 +423,7 @@ export default function BrowseRequestsPage() {
         carTireType: !isMotorcycle ? undefined : undefined // Keine Vorauswahl!
       }],
       description: '',
-      installationFee: '0.00', // Start mit 0 € bis carTireType ausgewählt wird
+      installationFee: calculatedInstallation || '0.00', // Verwende berechneten Wert
       validDays: 7,
       durationMinutes: calculatedDuration,
       balancingPrice: (isWheelChange && !request.additionalNotes?.includes('Wuchten') && service?.balancingPrice) 

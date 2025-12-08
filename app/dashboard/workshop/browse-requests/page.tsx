@@ -1616,7 +1616,6 @@ export default function BrowseRequestsPage() {
                             )}
                           </div>
                         </div>
-                      )}
                     </div>
                   </>
                 )}

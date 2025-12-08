@@ -297,6 +297,17 @@ export default function CreateRequestPage() {
         notesText = `${notesText}\nAltreifenentsorgung gewünscht`.trim()
       }
       
+      // Parse numbers with validation
+      const width = parseInt(formData.width)
+      const aspectRatio = parseInt(formData.aspectRatio)
+      const diameter = parseInt(formData.diameter)
+      
+      if (isNaN(width) || isNaN(aspectRatio) || isNaN(diameter)) {
+        setError('Bitte gültige Reifendimensionen angeben')
+        setLoading(false)
+        return
+      }
+
       const response = await fetch('/api/tire-requests', {
         method: 'POST',
         headers: {
@@ -304,9 +315,9 @@ export default function CreateRequestPage() {
         },
         body: JSON.stringify({
           season: formData.season,
-          width: parseInt(formData.width),
-          aspectRatio: parseInt(formData.aspectRatio),
-          diameter: parseInt(formData.diameter),
+          width: width,
+          aspectRatio: aspectRatio,
+          diameter: diameter,
           loadIndex: formData.loadIndex ? parseInt(formData.loadIndex) : undefined,
           speedRating: formData.speedRating || undefined,
           isRunflat: formData.isRunflat,

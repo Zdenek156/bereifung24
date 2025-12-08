@@ -274,10 +274,8 @@ export default function BrowseRequestsPage() {
           }
         }
         
-        // Addiere Einlagerung wenn gewünscht
-        if (needsStorage && service.storagePrice) {
-          installation += service.storagePrice
-        }
+        // WICHTIG: Einlagerung wird NICHT automatisch hinzugefügt!
+        // Die Werkstatt muss die Checkbox manuell aktivieren, dann wird der Preis dynamisch hinzugefügt
         
         calculatedInstallation = installation.toFixed(2)
         calculatedDuration = duration.toString()

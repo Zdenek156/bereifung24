@@ -250,69 +250,33 @@ export default function BrowseRequestsPage() {
     
     if (service) {
       if (isWheelChange) {
-        // Räder umstecken: Verwende Service-Pakete
-        let installation = 0
-        let duration = 60
+        // Räder umstecken: Einfache Berechnung mit Basis + Optionen
+        let installation = service.basePrice || 0
+        let duration = service.durationMinutes || 60
         
         const needsBalancing = request.additionalNotes?.includes('Wuchten')
         const needsStorage = request.additionalNotes?.includes('Einlagerung')
         
         console.log('Wheel change detected - Customer preferences:', { needsBalancing, needsStorage })
+        console.log('Service pricing:', { 
+          basePrice: service.basePrice, 
+          balancingPrice: service.balancingPrice, 
+          storagePrice: service.storagePrice,
+          durationMinutes: service.durationMinutes,
+          balancingMinutes: service.balancingMinutes
+        })
         
-        if (service.servicePackages && service.servicePackages.length > 0) {
-          // Finde passendes Paket basierend auf Kundenauswahl
-          let selectedPackage
-          
-          if (needsBalancing && needsStorage) {
-            // Komplett-Service
-            selectedPackage = service.servicePackages.find(p => 
-              p.name.toLowerCase().includes('komplett') || p.name.toLowerCase().includes('complete')
-            )
-          } else if (needsBalancing) {
-            // Mit Wuchten
-            selectedPackage = service.servicePackages.find(p => 
-              p.name.toLowerCase().includes('wuchten') && !p.name.toLowerCase().includes('komplett')
-            )
-          } else if (needsStorage) {
-            // Mit Einlagerung
-            selectedPackage = service.servicePackages.find(p => 
-              p.name.toLowerCase().includes('einlagerung') && !p.name.toLowerCase().includes('komplett')
-            )
-          } else {
-            // Standard ohne Extras
-            selectedPackage = service.servicePackages.find(p => 
-              p.name.toLowerCase().includes('standard') || p.name.toLowerCase().includes('basis')
-            )
-          }
-          
-          // Fallback auf erstes Paket
-          if (!selectedPackage && service.servicePackages.length > 0) {
-            selectedPackage = service.servicePackages[0]
-          }
-          
-          if (selectedPackage) {
-            installation = selectedPackage.price
-            duration = selectedPackage.durationMinutes
-          }
-        } else {
-          // Fallback auf basePrice wenn keine Pakete definiert
-          installation = service.basePrice
-          duration = service.durationMinutes
-          
-          // Addiere Wuchten wenn gewünscht
-          if (needsBalancing && service.balancingPrice) {
-            installation += service.balancingPrice * 4 // 4 Räder
-          }
-          
-          // Addiere Einlagerung wenn gewünscht
-          if (needsStorage && service.storagePrice) {
-            installation += service.storagePrice
-          }
-          
-          // Addiere Zeit für Wuchten
-          if (needsBalancing && service.balancingMinutes) {
+        // Addiere Wuchten wenn gewünscht (pro Rad, 4 Räder)
+        if (needsBalancing && service.balancingPrice) {
+          installation += service.balancingPrice * 4
+          if (service.balancingMinutes) {
             duration += service.balancingMinutes * 4
           }
+        }
+        
+        // Addiere Einlagerung wenn gewünscht
+        if (needsStorage && service.storagePrice) {
+          installation += service.storagePrice
         }
         
         calculatedInstallation = installation.toFixed(2)
@@ -1462,7 +1426,7 @@ export default function BrowseRequestsPage() {
                     // Hole Service-Info für Aufschlüsselung
                     const service = services.find((s: any) => s.serviceType === (isWheelChange ? 'WHEEL_CHANGE' : 'TIRE_CHANGE'))
                     
-                    // Berechne Basis-Paket-Preis und erkenne Wuchten/Einlagerung
+                    // Berechne Basis-Preis und optionale Zusätze
                     let basePrice = 0
                     let balancingIncluded = 0
                     let storageIncluded = 0
@@ -1471,39 +1435,17 @@ export default function BrowseRequestsPage() {
                     
                     if (service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
                       if (isWheelChange) {
-                        // Bei Räder umstecken: Finde das gewählte Paket und berechne Einzelpreise
-                        const standardPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('standard') || p.name.toLowerCase().includes('basis'))
-                        let selectedPackageName = ''
+                        // Bei Räder umstecken: Einfache Berechnung
+                        basePrice = service.basePrice || 0
                         
-                        if (customerWantsBalancing && customerWantsStorage) {
-                          const komplettPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('komplett'))
-                          if (komplettPackage && standardPackage) {
-                            basePrice = standardPackage.price
-                            selectedPackageName = komplettPackage.name
-                            // Differenz zwischen Komplett und Standard = Wuchten + Einlagerung
-                            const extraCost = komplettPackage.price - standardPackage.price
-                            // Schätze 60% für Wuchten, 40% für Einlagerung
-                            balancingIncluded = extraCost * 0.6
-                            storageIncluded = extraCost * 0.4
-                          }
-                        } else if (customerWantsBalancing) {
-                          const balancingPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('wuchten') && !p.name.toLowerCase().includes('komplett'))
-                          if (balancingPackage && standardPackage) {
-                            basePrice = standardPackage.price
-                            selectedPackageName = balancingPackage.name
-                            balancingIncluded = balancingPackage.price - standardPackage.price
-                          }
-                        } else if (customerWantsStorage) {
-                          const storagePackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('einlagerung') && !p.name.toLowerCase().includes('komplett'))
-                          if (storagePackage && standardPackage) {
-                            basePrice = standardPackage.price
-                            selectedPackageName = storagePackage.name
-                            storageIncluded = storagePackage.price - standardPackage.price
-                          }
-                        } else if (standardPackage) {
-                          basePrice = standardPackage.price
-                        } else if (service.basePrice) {
-                          basePrice = service.basePrice
+                        // Berechne Wuchten-Kosten (4 Räder)
+                        if (customerWantsBalancing && service.balancingPrice) {
+                          balancingIncluded = service.balancingPrice * 4
+                        }
+                        
+                        // Berechne Einlagerungs-Kosten
+                        if (customerWantsStorage && service.storagePrice) {
+                          storageIncluded = service.storagePrice
                         }
                       } else {
                         const selectedPackage = quantity === 4 

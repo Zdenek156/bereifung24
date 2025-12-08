@@ -153,8 +153,8 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ')[0] : 'Service',
-        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ').slice(1).join(' ') || validatedData.tireOptions![0].brandModel : 'Räder umstecken',
+        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ')[0] : '',
+        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ').slice(1).join(' ') || validatedData.tireOptions![0].brandModel : '',
         description: validatedData.description,
         pricePerTire: hasValidTireOptions ? validatedData.tireOptions![0].pricePerTire : 0,
         price: totalPrice,

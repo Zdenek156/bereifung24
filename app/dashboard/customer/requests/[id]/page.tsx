@@ -1121,36 +1121,45 @@ export default function RequestDetailPage() {
                         if (displayOptions.length === 0) {
                           const calculation = calculateSelectedTotal(offer)
                           const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                          const serviceType = getServiceType()
+                          const isWheelChange = serviceType === 'WHEEL_CHANGE'
+                          
                           return (
                             <div>
                               <p className="font-semibold text-lg text-gray-900 mb-2">
                                 {offer.tireBrand} {offer.tireModel}
                               </p>
-                              <p className="text-sm text-gray-600 mb-2">Alle {request.quantity} Reifen</p>
+                              {!isWheelChange && (
+                                <p className="text-sm text-gray-600 mb-2">Alle {request.quantity} Reifen</p>
+                              )}
                               
                               {/* Price breakdown */}
                               <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Preisübersicht:</h4>
                                 <div className="space-y-2 text-sm">
-                                  <div className="flex justify-between text-gray-700">
-                                    <span>Reifen ({calculation.totalQuantity} Stück)</span>
-                                    <span className="font-semibold">{calculation.tiresTotal.toFixed(2)} €</span>
-                                  </div>
+                                  {!isWheelChange && (
+                                    <div className="flex justify-between text-gray-700">
+                                      <span>Reifen ({calculation.totalQuantity} Stück)</span>
+                                      <span className="font-semibold">{calculation.tiresTotal.toFixed(2)} €</span>
+                                    </div>
+                                  )}
                                   <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
                                     <span>
-                                      Montagekosten ({calculation.totalQuantity} Reifen)
-                                      {hasDisposal && ' + Entsorgung'}
+                                      {isWheelChange ? 'Räder umstecken (4 Räder)' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
+                                      {!isWheelChange && hasDisposal && ' + Entsorgung'}
                                     </span>
-                                    <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
+                                    <span className="font-semibold">{isWheelChange ? calculation.totalPrice.toFixed(2) : calculation.installationFee.toFixed(2)} €</span>
                                   </div>
                                   <div className="flex justify-between text-xs text-gray-600">
                                     <span>⏱️ Dauer</span>
                                     <span>{calculation.duration} Minuten</span>
                                   </div>
-                                  <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
-                                    <span>Gesamtpreis</span>
-                                    <span>{calculation.totalPrice.toFixed(2)} €</span>
-                                  </div>
+                                  {!isWheelChange && (
+                                    <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
+                                      <span>Gesamtpreis</span>
+                                      <span>{calculation.totalPrice.toFixed(2)} €</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>

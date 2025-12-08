@@ -1511,12 +1511,16 @@ export default function BrowseRequestsPage() {
                                 </div>
                               )}
                               <div className="border-t-2 border-blue-400 pt-3 mt-3">
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-start">
                                   <span className="text-base font-bold text-gray-900">Gesamtpreis</span>
-                                  <span className="text-2xl font-bold text-primary-600">
-                                    {parseFloat(offerForm.installationFee).toFixed(2)} €
-                                    {workshopTaxMode === 'STANDARD' && <span className="text-sm font-normal text-gray-600 ml-1">inkl. MwSt.</span>}
-                                  </span>
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-primary-600">
+                                      {parseFloat(offerForm.installationFee).toFixed(2)} €
+                                    </div>
+                                    {workshopTaxMode === 'STANDARD' && (
+                                      <div className="text-xs text-gray-600 mt-1">inkl. MwSt.</div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

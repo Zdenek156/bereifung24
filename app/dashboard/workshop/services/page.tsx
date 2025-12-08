@@ -785,15 +785,7 @@ export default function WorkshopServicesPage() {
                 </div>
               )}
 
-              {/* No packages message for simple services */}
-              {!hasPackages && selectedServiceType && (
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <p className="text-sm text-yellow-800">
-                    ℹ️ Dieser Service-Typ verwendet noch das alte Format ohne Pakete. 
-                    Verwenden Sie die alte Service-Verwaltung oder warten Sie auf das Update.
-                  </p>
-                </div>
-              )}
+
 
               <div className="flex gap-3">
                 <button

@@ -119,6 +119,7 @@ model Workshop {
   website     String?
   description String?
   logoUrl     String? // Workshop Logo URL
+  taxMode     String  @default("STANDARD") // STANDARD (inkl. MwSt.), KLEINUNTERNEHMER (§19 UStG)
 
   // Opening Hours (JSON String)
   openingHours String? // JSON: {"monday": "09:00-18:00", ...}

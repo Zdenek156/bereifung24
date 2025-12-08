@@ -97,6 +97,7 @@ export async function GET(
       workshop: {
         id: offer.workshop.id,
         companyName: offer.workshop.companyName,
+        taxMode: offer.workshop.taxMode,
         street: offer.workshop.user.street || '',
         zipCode: offer.workshop.user.zipCode || '',
         city: offer.workshop.user.city || '',

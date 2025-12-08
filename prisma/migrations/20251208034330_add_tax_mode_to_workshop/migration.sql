@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "workshops" ADD COLUMN "taxMode" TEXT NOT NULL DEFAULT 'STANDARD';

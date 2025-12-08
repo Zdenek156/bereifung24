@@ -74,6 +74,7 @@ interface WorkshopService {
   durationMinutes4: number | null
   isActive: boolean
   balancingPrice: number | null
+  balancingMinutes: number | null
   storagePrice: number | null
   storageAvailable: boolean | null
   servicePackages?: ServicePackage[]

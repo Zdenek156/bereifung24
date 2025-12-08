@@ -1502,9 +1502,29 @@ export default function BrowseRequestsPage() {
                                   <span className="font-medium">{runflatFee.toFixed(2)} €</span>
                                 </div>
                               )}
-                              <div className="border-t-2 border-blue-400 pt-3 mt-2 flex justify-between items-center">
-                                <span className="text-base font-bold text-gray-900">Gesamtpreis</span>
-                                <span className="text-2xl font-bold text-primary-600">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
+                              <div className="border-t-2 border-blue-400 pt-3 mt-3">
+                                <div className="mb-2 text-xs text-gray-600 space-y-1">
+                                  <div>Berechnung:</div>
+                                  {baseInstallation > 0 && (
+                                    <div>• Montage: {baseInstallation.toFixed(2)} €</div>
+                                  )}
+                                  {balancingIncluded > 0 && (
+                                    <div>• Wuchten: {balancingIncluded.toFixed(2)} €</div>
+                                  )}
+                                  {storageIncluded > 0 && (
+                                    <div>• Einlagerung: {storageIncluded.toFixed(2)} €</div>
+                                  )}
+                                  {!isWheelChange && disposalFee > 0 && (
+                                    <div>• Entsorgung: {disposalFee.toFixed(2)} €</div>
+                                  )}
+                                  {!isWheelChange && runflatFee > 0 && (
+                                    <div>• Runflat: {runflatFee.toFixed(2)} €</div>
+                                  )}
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-base font-bold text-gray-900">Gesamtpreis</span>
+                                  <span className="text-2xl font-bold text-primary-600">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
+                                </div>
                               </div>
                             </div>
                             <div className="pt-2 border-t border-blue-200">
@@ -1573,49 +1593,6 @@ export default function BrowseRequestsPage() {
                         )}
                       </div>
                     </div>
-                    
-                    <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Wuchten (optional)
-                          </label>
-                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div className="flex items-center gap-2 mb-3">
-                              <input
-                                type="checkbox"
-                                id="offerBalancing"
-                                checked={!!offerForm.balancingPrice && parseFloat(offerForm.balancingPrice) > 0}
-                                onChange={(e) => {
-                                  if (!e.target.checked) {
-                                    setOfferForm({ ...offerForm, balancingPrice: '' })
-                                  }
-                                }}
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                              />
-                              <label htmlFor="offerBalancing" className="text-sm text-gray-700">
-                                Wuchten anbieten
-                              </label>
-                            </div>
-                            {(!!offerForm.balancingPrice || parseFloat(offerForm.balancingPrice || '0') > 0) && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Preis pro Rad (€)
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={offerForm.balancingPrice || ''}
-                                  onChange={(e) => setOfferForm({ ...offerForm, balancingPrice: e.target.value })}
-                                  placeholder="z.B. 10.00"
-                                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Der Kunde kann beim Annehmen des Angebots wählen, ob er das Wuchten möchte
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
                   </>
                 )}
 

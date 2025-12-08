@@ -44,6 +44,7 @@ interface Offer {
   workshop: {
     companyName: string
     logoUrl: string | null
+    taxMode?: string
     street: string
     zipCode: string
     city: string

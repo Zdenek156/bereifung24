@@ -193,6 +193,44 @@ export default function BrowseRequestsPage() {
     return labels[season] || season
   }
 
+  // Hilfsfunktion: Erkenne Service-Typ aus TireRequest
+  const detectServiceType = (request: TireRequest): string => {
+    const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
+    const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
+    const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+    const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+    const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
+    const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
+    const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
+    const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
+
+    if (isMotorcycle) return 'MOTORCYCLE_TIRE'
+    if (isWheelChange) return 'WHEEL_CHANGE'
+    if (isRepair) return 'TIRE_REPAIR'
+    if (isAlignment) return 'ALIGNMENT'
+    if (isBrakes) return 'BRAKE_SERVICE'
+    if (isBattery) return 'BATTERY_SERVICE'
+    if (isClimate) return 'CLIMATE_SERVICE'
+    if (isOtherService) return 'OTHER'
+    return 'TIRE_CHANGE'
+  }
+
+  // Hilfsfunktion: Service-Name aus Service-Typ ermitteln
+  const getServiceName = (serviceType: string): string => {
+    const names: Record<string, string> = {
+      'WHEEL_CHANGE': 'Räder umstecken',
+      'TIRE_CHANGE': 'Reifenmontage',
+      'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+      'TIRE_REPAIR': 'Reifen-Reparatur',
+      'ALIGNMENT': 'Achsvermessung / Spureinstellung',
+      'BRAKE_SERVICE': 'Bremsenwechsel',
+      'BATTERY_SERVICE': 'Batteriewechsel',
+      'CLIMATE_SERVICE': 'Klimaservice',
+      'OTHER': 'Sonstige Dienstleistung'
+    }
+    return names[serviceType] || serviceType
+  }
+
   const filteredRequests = requests.filter(req => {
     if (filter === 'new') return req.status === 'PENDING' && req.offers.length === 0
     if (filter === 'quoted') return req.offers.length > 0
@@ -1432,7 +1470,8 @@ export default function BrowseRequestsPage() {
                     }
                     
                     // Hole Service-Info für Aufschlüsselung
-                    const service = services.find((s: any) => s.serviceType === (isWheelChange ? 'WHEEL_CHANGE' : 'TIRE_CHANGE'))
+                    const detectedServiceType = detectServiceType(selectedRequest)
+                    const service = services.find((s: any) => s.serviceType === detectedServiceType)
                     
                     // Berechne Basis-Preis und optionale Zusätze
                     let basePrice = 0
@@ -1441,32 +1480,47 @@ export default function BrowseRequestsPage() {
                     const customerWantsBalancing = selectedRequest.additionalNotes?.includes('Wuchten')
                     const customerWantsStorage = selectedRequest.additionalNotes?.includes('Einlagerung')
                     
-                    if (service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
-                      if (isWheelChange) {
-                        // Bei Räder umstecken: Einfache Berechnung
-                        basePrice = service.basePrice || 0
-                        
-                        // Berechne Wuchten-Kosten (4 Räder) - nur wenn Kunde es wünscht
-                        if (customerWantsBalancing && service.balancingPrice) {
-                          balancingIncluded = service.balancingPrice * 4
-                        }
-                        
-                        // Berechne Einlagerungs-Kosten - nur wenn Werkstatt Checkbox aktiviert hat
-                        if (offerForm.storageAvailable && service.storagePrice) {
-                          storageIncluded = service.storagePrice
-                        }
-                      } else {
-                        const selectedPackage = quantity === 4 
-                          ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
-                          : service.servicePackages.find((p: any) => p.name.includes('2'))
-                        if (selectedPackage) {
-                          basePrice = selectedPackage.price
-                        }
+                    // Service-spezifische Preisberechnung
+                    if (detectedServiceType === 'WHEEL_CHANGE') {
+                      // Räder umstecken: Basis + optionale Zusätze
+                      basePrice = service?.basePrice || 0
+                      
+                      if (customerWantsBalancing && service?.balancingPrice) {
+                        balancingIncluded = service.balancingPrice * 4
                       }
+                      
+                      if (offerForm.storageAvailable && service?.storagePrice) {
+                        storageIncluded = service.storagePrice
+                      }
+                    } else if (detectedServiceType === 'TIRE_CHANGE' && service?.servicePackages && service.servicePackages.length > 0 && quantity > 0) {
+                      // Reifenmontage: Paket basierend auf Anzahl
+                      const selectedPackage = quantity === 4 
+                        ? service.servicePackages.find((p: any) => p.name.includes('4') || p.name.toLowerCase().includes('alle'))
+                        : service.servicePackages.find((p: any) => p.name.includes('2'))
+                      if (selectedPackage) {
+                        basePrice = selectedPackage.price
+                      }
+                    } else if (service?.servicePackages && service.servicePackages.length > 0) {
+                      // Andere Services (ALIGNMENT, BATTERY, BRAKES, etc.): Nutze erstes Paket oder Gesamtpreis
+                      // Bei diesen Services ist der Preis meist in einem einzelnen Paket oder direkt im Angebot
+                      const firstPackage = service.servicePackages[0]
+                      if (firstPackage) {
+                        basePrice = firstPackage.price
+                      } else {
+                        basePrice = parseFloat(offerForm.installationFee)
+                      }
+                    } else {
+                      // Fallback: Nutze basePrice oder Gesamtpreis
+                      basePrice = service?.basePrice || parseFloat(offerForm.installationFee)
                     }
                     
                     const disposalFee = hasDisposal && service?.disposalFee && quantity > 0 ? service.disposalFee * quantity : 0
                     const runflatFee = hasRunflat && service?.runFlatSurcharge && quantity > 0 ? service.runFlatSurcharge * quantity : 0
+                    
+                    // Für Services ohne Aufschläge: Nutze den eingegebenen Gesamtpreis als basePrice
+                    if (detectedServiceType !== 'TIRE_CHANGE' && detectedServiceType !== 'WHEEL_CHANGE' && basePrice === 0) {
+                      basePrice = parseFloat(offerForm.installationFee)
+                    }
                     
                     // Wenn kein basePrice gefunden, nutze den Gesamtpreis minus Aufschläge
                     if (basePrice === 0 && quantity > 0) {
@@ -1483,7 +1537,7 @@ export default function BrowseRequestsPage() {
                           <>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-700">{isWheelChange ? 'Räder umstecken' : 'Reifenmontage'}</span>
+                                <span className="text-gray-700">{getServiceName(detectedServiceType)}</span>
                                 <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>
                               {isWheelChange && customerWantsBalancing && service?.balancingPrice && (

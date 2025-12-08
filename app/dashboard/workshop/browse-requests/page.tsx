@@ -1483,7 +1483,7 @@ export default function BrowseRequestsPage() {
                           <>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-700">Räder umstecken</span>
+                                <span className="text-gray-700">{isWheelChange ? 'Räder umstecken' : 'Reifenmontage'}</span>
                                 <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>
                               {isWheelChange && customerWantsBalancing && service?.balancingPrice && (

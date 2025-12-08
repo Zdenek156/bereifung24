@@ -99,6 +99,7 @@ export default function BrowseRequestsPage() {
   const [services, setServices] = useState<WorkshopService[]>([])
   const [sepaMandateStatus, setSepaMandateStatus] = useState<string | null>(null)
   const [sepaMandateLoading, setSepaMandateLoading] = useState(true)
+  const [workshopTaxMode, setWorkshopTaxMode] = useState<string>('STANDARD')
   const [offerForm, setOfferForm] = useState<OfferFormData>({
     tireOptions: [{ brandModel: '', costPrice: '', pricePerTire: '' }],
     description: '',
@@ -124,6 +125,7 @@ export default function BrowseRequestsPage() {
     fetchServices()
     fetchRequests()
     fetchSepaMandateStatus()
+    fetchWorkshopProfile()
   }, [session, status, router])
 
   const fetchSepaMandateStatus = async () => {
@@ -142,6 +144,18 @@ export default function BrowseRequestsPage() {
       console.error('Error fetching SEPA mandate status:', error)
     } finally {
       setSepaMandateLoading(false)
+    }
+  }
+
+  const fetchWorkshopProfile = async () => {
+    try {
+      const response = await fetch('/api/workshop/profile')
+      if (response.ok) {
+        const data = await response.json()
+        setWorkshopTaxMode(data.taxMode || 'STANDARD')
+      }
+    } catch (error) {
+      console.error('Error fetching workshop profile:', error)
     }
   }
 
@@ -1497,27 +1511,12 @@ export default function BrowseRequestsPage() {
                                 </div>
                               )}
                               <div className="border-t-2 border-blue-400 pt-3 mt-3">
-                                <div className="mb-2 text-xs text-gray-600 space-y-1">
-                                  <div>Berechnung:</div>
-                                  {basePrice > 0 && (
-                                    <div>• {isWheelChange ? 'Räder umstecken' : 'Montage'}: {basePrice.toFixed(2)} €</div>
-                                  )}
-                                  {balancingIncluded > 0 && (
-                                    <div>• Wuchten: {balancingIncluded.toFixed(2)} €</div>
-                                  )}
-                                  {storageIncluded > 0 && (
-                                    <div>• Einlagerung: {storageIncluded.toFixed(2)} €</div>
-                                  )}
-                                  {!isWheelChange && disposalFee > 0 && (
-                                    <div>• Entsorgung: {disposalFee.toFixed(2)} €</div>
-                                  )}
-                                  {!isWheelChange && runflatFee > 0 && (
-                                    <div>• Runflat: {runflatFee.toFixed(2)} €</div>
-                                  )}
-                                </div>
                                 <div className="flex justify-between items-center">
                                   <span className="text-base font-bold text-gray-900">Gesamtpreis</span>
-                                  <span className="text-2xl font-bold text-primary-600">{parseFloat(offerForm.installationFee).toFixed(2)} €</span>
+                                  <span className="text-2xl font-bold text-primary-600">
+                                    {parseFloat(offerForm.installationFee).toFixed(2)} €
+                                    {workshopTaxMode === 'STANDARD' && <span className="text-sm font-normal text-gray-600 ml-1">inkl. MwSt.</span>}
+                                  </span>
                                 </div>
                               </div>
                             </div>

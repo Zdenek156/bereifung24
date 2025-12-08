@@ -49,7 +49,7 @@ const serviceTypeLabels: { [key: string]: string } = {
 
 const availableServiceTypes = [
   { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧', hasPackages: true },
-  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: true },
+  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: false },
   { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨', hasPackages: true },
   { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', hasPackages: true },
   { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏', hasPackages: true },
@@ -66,12 +66,7 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
     { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' }
   ],
-  WHEEL_CHANGE: [
-    { type: 'basic', name: 'Räderwechsel Standard', description: 'Umstecken der Kompletträder ohne Zusatzleistungen' },
-    { type: 'with_balancing', name: 'Räderwechsel + Wuchten', description: 'Umstecken + Auswuchten aller Räder' },
-    { type: 'with_storage', name: 'Räderwechsel + Einlagerung', description: 'Umstecken + Einlagerung der abmontierten Räder' },
-    { type: 'complete', name: 'Komplett-Service', description: 'Umstecken + Wuchten + Einlagerung' }
-  ],
+  // WHEEL_CHANGE uses simple pricing: basePrice + optional balancingPrice + optional storagePrice
   TIRE_REPAIR: [
     { type: 'foreign_object', name: 'Fremdkörper-Reparatur', description: 'Reparatur nach Fremdkörper (Nagel, Schraube, etc.)' },
     { type: 'valve_damage', name: 'Ventilschaden-Reparatur', description: 'Reparatur bei defektem Ventil' },
@@ -185,10 +180,19 @@ export default function WorkshopServicesPage() {
   const handleServiceTypeChange = (serviceType: string) => {
     setSelectedServiceType(serviceType)
     
-    // Initialize packages if service type supports them
-    const serviceConfig = availableServiceTypes.find(s => s.value === serviceType)
-    if (serviceConfig?.hasPackages) {
-      initializePackages(serviceType)
+    // Initialize WHEEL_CHANGE with simple structure
+    if (serviceType === 'WHEEL_CHANGE') {
+      setPackages({
+        base: { price: '', duration: '60', active: true },
+        balancing: { price: '', duration: '5', active: true },
+        storage: { price: '', duration: '0', active: true }
+      })
+    } else {
+      // Initialize packages if service type supports them
+      const serviceConfig = availableServiceTypes.find(s => s.value === serviceType)
+      if (serviceConfig?.hasPackages) {
+        initializePackages(serviceType)
+      }
     }
   }
 
@@ -232,6 +236,17 @@ export default function WorkshopServicesPage() {
         // For non-package services, include basic pricing
         basePrice: packagesData.length === 0 ? 0 : undefined,
         durationMinutes: packagesData.length === 0 ? 60 : undefined
+      }
+
+      // WHEEL_CHANGE: Simple pricing with base + optional balancing + optional storage
+      if (selectedServiceType === 'WHEEL_CHANGE') {
+        requestBody.basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
+        requestBody.durationMinutes = packages.base?.duration ? parseInt(packages.base.duration) : 60
+        requestBody.balancingPrice = packages.balancing?.price ? parseFloat(packages.balancing.price) : null
+        requestBody.balancingMinutes = packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
+        requestBody.storagePrice = packages.storage?.price ? parseFloat(packages.storage.price) : null
+        requestBody.storageAvailable = !!packages.storage?.price
+        requestBody.packages = undefined // No packages for WHEEL_CHANGE
       }
 
       // Add refrigerant price for CLIMATE_SERVICE
@@ -302,8 +317,28 @@ export default function WorkshopServicesPage() {
       }
     }
     
+    // Load WHEEL_CHANGE simple pricing
+    if (service.serviceType === 'WHEEL_CHANGE') {
+      setPackages({
+        base: { 
+          price: service.basePrice?.toString() || '', 
+          duration: service.durationMinutes?.toString() || '60', 
+          active: true 
+        },
+        balancing: { 
+          price: service.balancingPrice?.toString() || '', 
+          duration: service.balancingMinutes?.toString() || '5', 
+          active: true 
+        },
+        storage: { 
+          price: service.storagePrice?.toString() || '', 
+          duration: '0', 
+          active: true 
+        }
+      })
+    }
     // Load existing packages (filter out old disposal packages for TIRE_CHANGE)
-    if (service.servicePackages && service.servicePackages.length > 0) {
+    else if (service.servicePackages && service.servicePackages.length > 0) {
       const loadedPackages: { [key: string]: { price: string; duration: string; active: boolean } } = {}
       service.servicePackages.forEach(pkg => {
         // Skip old disposal packages for TIRE_CHANGE
@@ -559,8 +594,135 @@ export default function WorkshopServicesPage() {
                 </>
               )}
 
+              {/* Wheel Change Simple Configuration */}
+              {selectedServiceType === 'WHEEL_CHANGE' && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      🎡 Räderwechsel Basis-Service
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Geben Sie Preis und Dauer für das reine Umstecken der 4 Komplettäder an.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 max-w-md">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Basis-Preis (€) *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={packages.base?.price || ''}
+                          onChange={(e) => handlePackageChange('base', 'price', e.target.value)}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="z.B. 55.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Dauer (Min.) *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={packages.base?.duration || ''}
+                          onChange={(e) => handlePackageChange('base', 'duration', e.target.value)}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="z.B. 60"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      ⚖️ Wuchten (optional)
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Preis und zusätzliche Dauer pro Rad. Wird automatisch mit 4 multipliziert wenn Kunde Wuchten wählt.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 max-w-md">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Preis pro Rad (€)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={packages.balancing?.price || ''}
+                          onChange={(e) => handlePackageChange('balancing', 'price', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="z.B. 10.00"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zeit pro Rad (Min.)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={packages.balancing?.duration || ''}
+                          onChange={(e) => handlePackageChange('balancing', 'duration', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="z.B. 5"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      📦 Einlagerung (optional)
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Preis für die Einlagerung der abmontierten Räder bis zur nächsten Saison.
+                    </p>
+                    <div className="max-w-xs">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Einlagerungs-Preis (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={packages.storage?.price || ''}
+                        onChange={(e) => handlePackageChange('storage', 'price', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="z.B. 50.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Pro Saison (keine Extra-Dauer)</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-900">
+                      <strong>Beispiel-Berechnung:</strong><br/>
+                      Kunde wählt Wuchten + Einlagerung:<br/>
+                      • Basis: {packages.base?.price || '0'} € + {packages.base?.duration || '0'} Min<br/>
+                      • Wuchten: 4 × {packages.balancing?.price || '0'} € = {(parseFloat(packages.balancing?.price || '0') * 4).toFixed(2)} € + 4 × {packages.balancing?.duration || '0'} Min = {parseInt(packages.balancing?.duration || '0') * 4} Min<br/>
+                      • Einlagerung: {packages.storage?.price || '0'} €<br/>
+                      <strong>Gesamt: {(
+                        parseFloat(packages.base?.price || '0') +
+                        parseFloat(packages.balancing?.price || '0') * 4 +
+                        parseFloat(packages.storage?.price || '0')
+                      ).toFixed(2)} € / {
+                        parseInt(packages.base?.duration || '0') +
+                        parseInt(packages.balancing?.duration || '0') * 4
+                      } Min</strong>
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Package Configuration */}
-              {hasPackages && selectedServiceType && packageConfig.length > 0 && (
+              {hasPackages && selectedServiceType && selectedServiceType !== 'WHEEL_CHANGE' && packageConfig.length > 0 && (
                 <div className="bg-blue-50 p-6 rounded-lg space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Servicepakete konfigurieren

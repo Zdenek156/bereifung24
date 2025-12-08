@@ -429,12 +429,8 @@ export default function BrowseRequestsPage() {
       balancingPrice: (isWheelChange && !request.additionalNotes?.includes('Wuchten') && service?.balancingPrice) 
         ? service.balancingPrice.toFixed(2) 
         : '',
-      storagePrice: (isWheelChange && !request.additionalNotes?.includes('Einlagerung') && service?.storagePrice) 
-        ? service.storagePrice.toFixed(2) 
-        : '',
-      storageAvailable: (isWheelChange && !request.additionalNotes?.includes('Einlagerung') && service?.storageAvailable) 
-        ? service.storageAvailable 
-        : false
+      storagePrice: '',
+      storageAvailable: false // Checkbox standardmäßig deaktiviert - Werkstatt muss manuell aktivieren
     })
   }
 

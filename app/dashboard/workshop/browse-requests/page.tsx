@@ -1505,8 +1505,8 @@ export default function BrowseRequestsPage() {
                               <div className="border-t-2 border-blue-400 pt-3 mt-3">
                                 <div className="mb-2 text-xs text-gray-600 space-y-1">
                                   <div>Berechnung:</div>
-                                  {baseInstallation > 0 && (
-                                    <div>• Montage: {baseInstallation.toFixed(2)} €</div>
+                                  {basePrice > 0 && (
+                                    <div>• {isWheelChange ? 'Räder umstecken' : 'Montage'}: {basePrice.toFixed(2)} €</div>
                                   )}
                                   {balancingIncluded > 0 && (
                                     <div>• Wuchten: {balancingIncluded.toFixed(2)} €</div>

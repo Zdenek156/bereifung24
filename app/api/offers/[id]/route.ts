@@ -22,7 +22,18 @@ export async function GET(
       where: { id: params.id },
       include: {
         workshop: {
-          include: {
+          select: {
+            id: true,
+            companyName: true,
+            taxMode: true,
+            website: true,
+            description: true,
+            openingHours: true,
+            iban: true,
+            accountHolder: true,
+            paypalEmail: true,
+            paymentMethods: true,
+            calendarMode: true,
             user: {
               select: {
                 email: true,

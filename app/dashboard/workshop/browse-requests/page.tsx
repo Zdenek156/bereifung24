@@ -236,24 +236,39 @@ export default function BrowseRequestsPage() {
   }
 
   // Hilfsfunktion: Detaillierter Service-Name mit Beschreibung basierend auf Package-Namen
-  const getAlignmentDetailName = (packageName: string): string => {
-    // Generiere detaillierte Beschreibung basierend auf Package-Namen
+  const getServiceDetailName = (packageName: string, serviceType: string): string => {
     const lowerName = packageName.toLowerCase()
     
-    if (lowerName.includes('komplett')) {
-      return 'Komplett-Service (Achsvermessung, Spureinstellung und Prüfung aller Fahrwerk-/Achsteile)'
-    } else if (lowerName.includes('einstellung') && lowerName.includes('beide')) {
-      return 'Einstellung beide Achsen (Achsvermessung und Spureinstellung für Vorder- und Hinterachse)'
-    } else if (lowerName.includes('einstellung') && lowerName.includes('vorder')) {
-      return 'Einstellung Vorderachse (Achsvermessung und Spureinstellung)'
-    } else if (lowerName.includes('einstellung') && lowerName.includes('hinter')) {
-      return 'Einstellung Hinterachse (Achsvermessung und Spureinstellung)'
-    } else if (lowerName.includes('vermessung') && lowerName.includes('beide')) {
-      return 'Vermessung beide Achsen (Achsvermessung für Vorder- und Hinterachse, ohne Einstellung)'
-    } else if (lowerName.includes('vermessung') && lowerName.includes('vorder')) {
-      return 'Vermessung Vorderachse (Achsvermessung, ohne Einstellung)'
-    } else if (lowerName.includes('vermessung') && lowerName.includes('hinter')) {
-      return 'Vermessung Hinterachse (Achsvermessung, ohne Einstellung)'
+    // Achsvermessung
+    if (serviceType === 'ALIGNMENT_BOTH') {
+      if (lowerName.includes('komplett')) {
+        return 'Komplett-Service (Achsvermessung, Spureinstellung und Prüfung aller Fahrwerk-/Achsteile)'
+      } else if (lowerName.includes('einstellung') && lowerName.includes('beide')) {
+        return 'Einstellung beide Achsen (Achsvermessung und Spureinstellung für Vorder- und Hinterachse)'
+      } else if (lowerName.includes('einstellung') && lowerName.includes('vorder')) {
+        return 'Einstellung Vorderachse (Achsvermessung und Spureinstellung)'
+      } else if (lowerName.includes('einstellung') && lowerName.includes('hinter')) {
+        return 'Einstellung Hinterachse (Achsvermessung und Spureinstellung)'
+      } else if (lowerName.includes('vermessung') && lowerName.includes('beide')) {
+        return 'Vermessung beide Achsen (Achsvermessung für Vorder- und Hinterachse, ohne Einstellung)'
+      } else if (lowerName.includes('vermessung') && lowerName.includes('vorder')) {
+        return 'Vermessung Vorderachse (Achsvermessung, ohne Einstellung)'
+      } else if (lowerName.includes('vermessung') && lowerName.includes('hinter')) {
+        return 'Vermessung Hinterachse (Achsvermessung, ohne Einstellung)'
+      }
+    }
+    
+    // Klimaservice
+    if (serviceType === 'CLIMATE_SERVICE') {
+      if (lowerName.includes('premium')) {
+        return 'Klimaservice Premium (Desinfektion, Nachfüllen, Leckerkennung und Innenraumdesinfektion)'
+      } else if (lowerName.includes('comfort')) {
+        return 'Klimaservice Comfort (Desinfektion, Nachfüllen und Leckerkennung)'
+      } else if (lowerName.includes('basic')) {
+        return 'Klimaservice Basic (Desinfektion und Kältemittel nachfüllen)'
+      } else if (lowerName.includes('check') || lowerName.includes('inspektion')) {
+        return 'Klimaanlagen-Inspektion (Funktionsprüfung und Sichtprüfung)'
+      }
     }
     
     return packageName
@@ -419,13 +434,40 @@ export default function BrowseRequestsPage() {
                 p.name.toLowerCase().includes('hinter')
               ) || selectedPackage
             }
+          } else if (isClimate) {
+            // Klimaservice: Finde Paket basierend auf Service-Level
+            const notes = request.additionalNotes || ''
+            
+            if (notes.includes('Premium')) {
+              // Premium: Mit Innenraumdesinfektion
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('premium')
+              ) || selectedPackage
+            } else if (notes.includes('Comfort')) {
+              // Comfort: Mit Leckerkennung
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('comfort')
+              ) || selectedPackage
+            } else if (notes.includes('Basic')) {
+              // Basic: Desinfektion + Nachfüllen
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('basic')
+              ) || selectedPackage
+            } else if (notes.includes('Inspektion') || notes.includes('Prüfung')) {
+              // Nur Prüfung/Check
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('check') || 
+                p.name.toLowerCase().includes('inspektion') ||
+                p.name.toLowerCase().includes('prüfung')
+              ) || selectedPackage
+            }
           }
           
           calculatedInstallation = selectedPackage.price.toFixed(2)
           calculatedDuration = selectedPackage.durationMinutes.toString()
           
           // Speichere den Service-Namen für die Anzeige
-          if (isAlignment) {
+          if (isAlignment || isClimate || isBattery || isBrakes) {
             selectedServiceName = selectedPackage.name
           }
         } else if (service.basePrice && service.durationMinutes) {
@@ -1628,9 +1670,14 @@ export default function BrowseRequestsPage() {
                               <div className="flex justify-between">
                                 <span className="text-gray-700">
                                   {(() => {
-                                    if (detectedServiceType === 'ALIGNMENT_BOTH' && offerForm.serviceName) {
-                                      // Zeige detaillierte Beschreibung für Achsvermessung
-                                      return getAlignmentDetailName(offerForm.serviceName)
+                                    // Zeige detaillierte Beschreibung für Services mit Packages
+                                    if (offerForm.serviceName && (
+                                      detectedServiceType === 'ALIGNMENT_BOTH' || 
+                                      detectedServiceType === 'CLIMATE_SERVICE' ||
+                                      detectedServiceType === 'BATTERY_SERVICE' ||
+                                      detectedServiceType === 'BRAKE_SERVICE'
+                                    )) {
+                                      return getServiceDetailName(offerForm.serviceName, detectedServiceType)
                                     } else {
                                       return getServiceName(detectedServiceType)
                                     }

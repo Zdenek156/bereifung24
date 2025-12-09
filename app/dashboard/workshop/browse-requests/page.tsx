@@ -1691,7 +1691,7 @@ export default function BrowseRequestsPage() {
                   )}
                 </div>
 
-                {selectedRequest.width === 0 && (() => {
+                {selectedRequest && detectServiceType(selectedRequest) === 'WHEEL_CHANGE' && (() => {
                   const service = services.find((s: any) => s.serviceType === 'WHEEL_CHANGE')
                   const storagePrice = service?.storagePrice || 0
                   

@@ -207,7 +207,7 @@ export default function BrowseRequestsPage() {
     if (isMotorcycle) return 'MOTORCYCLE_TIRE'
     if (isWheelChange) return 'WHEEL_CHANGE'
     if (isRepair) return 'TIRE_REPAIR'
-    if (isAlignment) return 'ALIGNMENT'
+    if (isAlignment) return 'ALIGNMENT_BOTH'
     if (isBrakes) return 'BRAKE_SERVICE'
     if (isBattery) return 'BATTERY_SERVICE'
     if (isClimate) return 'CLIMATE_SERVICE'
@@ -223,6 +223,7 @@ export default function BrowseRequestsPage() {
       'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
       'TIRE_REPAIR': 'Reifen-Reparatur',
       'ALIGNMENT': 'Achsvermessung / Spureinstellung',
+      'ALIGNMENT_BOTH': 'Achsvermessung / Spureinstellung',
       'BRAKE_SERVICE': 'Bremsenwechsel',
       'BATTERY_SERVICE': 'Batteriewechsel',
       'CLIMATE_SERVICE': 'Klimaservice',
@@ -279,7 +280,7 @@ export default function BrowseRequestsPage() {
     } else if (isRepair) {
       service = services.find(s => s.serviceType === 'TIRE_REPAIR')
     } else if (isAlignment) {
-      service = services.find(s => s.serviceType === 'ALIGNMENT')
+      service = services.find(s => s.serviceType === 'ALIGNMENT_BOTH')
     } else if (isBrakes) {
       service = services.find(s => s.serviceType === 'BRAKE_SERVICE')
     } else if (isBattery) {

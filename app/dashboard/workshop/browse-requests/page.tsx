@@ -335,9 +335,15 @@ export default function BrowseRequestsPage() {
         calculatedInstallation = installation.toFixed(2)
         calculatedDuration = duration.toString()
       } else if (isRepair || isAlignment || isOtherService || isBrakes || isBattery || isClimate) {
-        // Andere einfache Services: Grundpreis
-        calculatedInstallation = service.basePrice.toFixed(2)
-        calculatedDuration = service.durationMinutes.toString()
+        // Andere Services: Nutze basePrice wenn vorhanden, sonst erstes Paket
+        if (service.servicePackages && service.servicePackages.length > 0) {
+          const firstPackage = service.servicePackages[0]
+          calculatedInstallation = firstPackage.price.toFixed(2)
+          calculatedDuration = firstPackage.durationMinutes.toString()
+        } else if (service.basePrice && service.durationMinutes) {
+          calculatedInstallation = service.basePrice.toFixed(2)
+          calculatedDuration = service.durationMinutes.toString()
+        }
       } else if (isMotorcycle) {
         // Motorradreifen: Verwende Paket-Preise
         // Prüfe ob Vorder- oder Hinterreifen oder beide benötigt werden

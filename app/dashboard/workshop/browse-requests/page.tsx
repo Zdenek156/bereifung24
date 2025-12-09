@@ -197,22 +197,24 @@ export default function BrowseRequestsPage() {
   // Hilfsfunktion: Erkenne Service-Typ aus TireRequest
   const detectServiceType = (request: TireRequest): string => {
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
-    const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
     const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
     const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
     const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
+    // WICHTIG: width-Check NACH allen additionalNotes-Checks, weil Alignment auch width=0 hat
+    const isWheelChange = !isMotorcycle && !isRepair && !isAlignment && !isBrakes && !isBattery && !isClimate && !isOtherService &&
+                          request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
 
     if (isMotorcycle) return 'MOTORCYCLE_TIRE'
-    if (isWheelChange) return 'WHEEL_CHANGE'
     if (isRepair) return 'TIRE_REPAIR'
     if (isAlignment) return 'ALIGNMENT_BOTH'
     if (isBrakes) return 'BRAKE_SERVICE'
     if (isBattery) return 'BATTERY_SERVICE'
     if (isClimate) return 'CLIMATE_SERVICE'
     if (isOtherService) return 'OTHER'
+    if (isWheelChange) return 'WHEEL_CHANGE'
     return 'TIRE_CHANGE'
   }
 

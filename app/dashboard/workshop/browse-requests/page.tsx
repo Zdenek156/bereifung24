@@ -232,6 +232,39 @@ export default function BrowseRequestsPage() {
     return names[serviceType] || serviceType
   }
 
+  // Hilfsfunktion: Detaillierter Service-Name aus additionalNotes für Achsvermessung
+  const getAlignmentDetailName = (request: TireRequest): string => {
+    const notes = request.additionalNotes || ''
+    
+    // Extrahiere die Leistung aus den additionalNotes
+    if (notes.includes('Achsvermessung mit Spureinstellung und Fahrwerk-/Achsteile Prüfung')) {
+      if (notes.includes('Beide Achsen')) {
+        return 'Komplett-Service (Vermessung + Einstellung + Prüfung beider Achsen)'
+      }
+      return 'Komplett-Service mit Fahrwerk-Prüfung'
+    } else if (notes.includes('Achsvermessung mit Spureinstellung')) {
+      if (notes.includes('Beide Achsen')) {
+        return 'Achsvermessung mit Spureinstellung (Beide Achsen)'
+      } else if (notes.includes('Vorderachse')) {
+        return 'Achsvermessung mit Spureinstellung (Vorderachse)'
+      } else if (notes.includes('Hinterachse')) {
+        return 'Achsvermessung mit Spureinstellung (Hinterachse)'
+      }
+      return 'Achsvermessung mit Spureinstellung'
+    } else if (notes.includes('Nur Achsvermessung')) {
+      if (notes.includes('Beide Achsen')) {
+        return 'Achsvermessung (Beide Achsen)'
+      } else if (notes.includes('Vorderachse')) {
+        return 'Achsvermessung (Vorderachse)'
+      } else if (notes.includes('Hinterachse')) {
+        return 'Achsvermessung (Hinterachse)'
+      }
+      return 'Achsvermessung'
+    }
+    
+    return 'Achsvermessung / Spureinstellung'
+  }
+
   const filteredRequests = requests.filter(req => {
     if (filter === 'new') return req.status === 'PENDING' && req.offers.length === 0
     if (filter === 'quoted') return req.offers.length > 0
@@ -335,11 +368,66 @@ export default function BrowseRequestsPage() {
         calculatedInstallation = installation.toFixed(2)
         calculatedDuration = duration.toString()
       } else if (isRepair || isAlignment || isOtherService || isBrakes || isBattery || isClimate) {
-        // Andere Services: Nutze basePrice wenn vorhanden, sonst erstes Paket
+        // Andere Services: Finde passendes Paket basierend auf Kundenanfrage
         if (service.servicePackages && service.servicePackages.length > 0) {
-          const firstPackage = service.servicePackages[0]
-          calculatedInstallation = firstPackage.price.toFixed(2)
-          calculatedDuration = firstPackage.durationMinutes.toString()
+          let selectedPackage = service.servicePackages[0] // Fallback
+          
+          if (isAlignment) {
+            // Achsvermessung: Finde Paket basierend auf Achse und Leistung
+            const notes = request.additionalNotes || ''
+            const isFrontOnly = notes.includes('Vorderachse') && !notes.includes('Beide Achsen')
+            const isRearOnly = notes.includes('Hinterachse') && !notes.includes('Beide Achsen')
+            const isBothAxles = notes.includes('Beide Achsen')
+            const hasAdjustment = notes.includes('mit Spureinstellung')
+            const hasInspection = notes.includes('Fahrwerk-/Achsteile Prüfung')
+            
+            if (hasInspection) {
+              // Komplett-Service mit Prüfung
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('komplett') || 
+                p.name.toLowerCase().includes('prüfung')
+              ) || selectedPackage
+            } else if (hasAdjustment && isBothAxles) {
+              // Einstellung beide Achsen
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('einstellung') && 
+                p.name.toLowerCase().includes('beide')
+              ) || selectedPackage
+            } else if (hasAdjustment && isFrontOnly) {
+              // Einstellung Vorderachse
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('einstellung') && 
+                p.name.toLowerCase().includes('vorder')
+              ) || selectedPackage
+            } else if (hasAdjustment && isRearOnly) {
+              // Einstellung Hinterachse
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('einstellung') && 
+                p.name.toLowerCase().includes('hinter')
+              ) || selectedPackage
+            } else if (isBothAxles) {
+              // Nur Vermessung beide Achsen
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('vermessung') && 
+                p.name.toLowerCase().includes('beide')
+              ) || selectedPackage
+            } else if (isFrontOnly) {
+              // Nur Vermessung Vorderachse
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('vermessung') && 
+                p.name.toLowerCase().includes('vorder')
+              ) || selectedPackage
+            } else if (isRearOnly) {
+              // Nur Vermessung Hinterachse
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('vermessung') && 
+                p.name.toLowerCase().includes('hinter')
+              ) || selectedPackage
+            }
+          }
+          
+          calculatedInstallation = selectedPackage.price.toFixed(2)
+          calculatedDuration = selectedPackage.durationMinutes.toString()
         } else if (service.basePrice && service.durationMinutes) {
           calculatedInstallation = service.basePrice.toFixed(2)
           calculatedDuration = service.durationMinutes.toString()
@@ -1537,7 +1625,11 @@ export default function BrowseRequestsPage() {
                           <>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-gray-700">{getServiceName(detectedServiceType)}</span>
+                                <span className="text-gray-700">
+                                  {detectedServiceType === 'ALIGNMENT_BOTH' 
+                                    ? getAlignmentDetailName(selectedRequest)
+                                    : getServiceName(detectedServiceType)}
+                                </span>
                                 <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>
                               {isWheelChange && customerWantsBalancing && service?.balancingPrice && (

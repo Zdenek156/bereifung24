@@ -273,10 +273,10 @@ export default function BrowseRequestsPage() {
     
     // Reifenreparatur
     if (serviceType === 'TIRE_REPAIR') {
-      if (lowerName.includes('loch') || lowerName.includes('einfach')) {
-        return 'Reifenreparatur Standard (Loch reparieren und abdichten)'
-      } else if (lowerName.includes('komplex') || lowerName.includes('erweitert')) {
-        return 'Reifenreparatur Komplex (Umfangreiche Reparatur mit Ausbau)'
+      if (lowerName.includes('fremdkörper') || lowerName.includes('loch') || lowerName.includes('panne')) {
+        return 'Reifenreparatur - Fremdkörper (Nagel/Schraube entfernen und Loch abdichten)'
+      } else if (lowerName.includes('ventil')) {
+        return 'Reifenreparatur - Ventilschaden (Ventil austauschen)'
       }
     }
     
@@ -470,13 +470,37 @@ export default function BrowseRequestsPage() {
                 p.name.toLowerCase().includes('prüfung')
               ) || selectedPackage
             }
+          } else if (isRepair) {
+            // Reifenreparatur: Finde Paket basierend auf Problem-Typ
+            const notes = request.additionalNotes || ''
+            
+            if (notes.includes('Reifenpanne') || notes.includes('Loch')) {
+              // Fremdkörper (Nagel, Schraube, etc.) → Nutze Package
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('fremdkörper') ||
+                p.name.toLowerCase().includes('loch') ||
+                p.name.toLowerCase().includes('panne')
+              ) || selectedPackage
+            } else if (notes.includes('Ventil defekt')) {
+              // Ventilschaden → Nutze Package
+              selectedPackage = service.servicePackages.find(p => 
+                p.name.toLowerCase().includes('ventil')
+              ) || selectedPackage
+            }
+            // Für "Sonstiges Problem" wird KEIN Package ausgewählt
+            // → calculatedInstallation/Duration bleiben leer
+            // → Werkstatt muss Preis/Dauer manuell eingeben
           }
           
-          calculatedInstallation = selectedPackage.price.toFixed(2)
-          calculatedDuration = selectedPackage.durationMinutes.toString()
+          // Nur Preis/Dauer setzen wenn ein Package gefunden wurde
+          // (Bei Repair "Sonstiges" bleibt es leer für manuelle Eingabe)
+          if (selectedPackage && selectedPackage.price > 0) {
+            calculatedInstallation = selectedPackage.price.toFixed(2)
+            calculatedDuration = selectedPackage.durationMinutes.toString()
+          }
           
-          // Speichere den Service-Namen für die Anzeige
-          if (isAlignment || isClimate || isBattery || isBrakes || isRepair) {
+          // Speichere den Service-Namen für die Anzeige (nur wenn Package vorhanden)
+          if ((isAlignment || isClimate || isBattery || isBrakes || isRepair) && selectedPackage) {
             selectedServiceName = selectedPackage.name
           }
         } else if (service.basePrice && service.durationMinutes) {

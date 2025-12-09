@@ -1267,7 +1267,7 @@ export default function BrowseRequestsPage() {
                           .replace(/Hinter(?:achse|reifen):\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
                           .replace(/Altreifenentsorgung gewünscht\n?/g, '')
                           .replace(/🏍️ MOTORRADREIFEN\n?/g, '')
-                          .replace(/🔧 REPARATUR\n?/g, '')
+                          .replace(/🔧 REIFENREPARATUR\n?/g, '')
                           .replace(/⚙️ ACHSVERMESSUNG\n?/g, '')
                           .replace(/🛠️ SONSTIGE DIENSTLEISTUNG\n?/g, '')
                           .replace(/🔴 BREMSENWECHSEL\n?/g, '')

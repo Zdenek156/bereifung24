@@ -201,7 +201,7 @@ export default function BrowseRequestsPage() {
     const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
-    const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
+    const isClimate = request.additionalNotes?.includes('KLIMASERVICE:')
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
     // WICHTIG: width-Check NACH allen additionalNotes-Checks, weil Alignment auch width=0 hat
     const isWheelChange = !isMotorcycle && !isRepair && !isAlignment && !isBrakes && !isBattery && !isClimate && !isOtherService &&

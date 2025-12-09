@@ -68,9 +68,8 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
   ],
   // WHEEL_CHANGE uses simple pricing: basePrice + optional balancingPrice + optional storagePrice
   TIRE_REPAIR: [
-    { type: 'foreign_object', name: 'Fremdkörper-Reparatur', description: 'Reparatur nach Fremdkörper (Nagel, Schraube, etc.)' },
-    { type: 'valve_damage', name: 'Ventilschaden-Reparatur', description: 'Reparatur bei defektem Ventil' },
-    { type: 'emergency', name: 'Notfall-Service', description: 'Express-Reparatur mit Sofort-Service' }
+    { type: 'foreign_object', name: 'Reifenpanne / Loch (Fremdkörper)', description: 'Reparatur nach Fremdkörper (Nagel, Schraube, etc.)' },
+    { type: 'valve_damage', name: 'Ventilschaden', description: 'Reparatur bei defektem Ventil' }
   ],
   MOTORCYCLE_TIRE: [
     { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel nur am Vorderrad' },

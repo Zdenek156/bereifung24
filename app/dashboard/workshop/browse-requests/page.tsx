@@ -1500,27 +1500,14 @@ export default function BrowseRequestsPage() {
                       if (selectedPackage) {
                         basePrice = selectedPackage.price
                       }
-                    } else if (service?.servicePackages && service.servicePackages.length > 0) {
-                      // Andere Services (ALIGNMENT, BATTERY, BRAKES, etc.): Nutze erstes Paket oder Gesamtpreis
-                      // Bei diesen Services ist der Preis meist in einem einzelnen Paket oder direkt im Angebot
-                      const firstPackage = service.servicePackages[0]
-                      if (firstPackage) {
-                        basePrice = firstPackage.price
-                      } else {
-                        basePrice = parseFloat(offerForm.installationFee)
-                      }
                     } else {
-                      // Fallback: Nutze basePrice oder Gesamtpreis
-                      basePrice = service?.basePrice || parseFloat(offerForm.installationFee)
+                      // Andere Services (ALIGNMENT, BATTERY, BRAKES, etc.): 
+                      // Nutze immer den eingegebenen Gesamtpreis, da diese Services verschiedene Pakete haben können
+                      basePrice = parseFloat(offerForm.installationFee) || 0
                     }
                     
                     const disposalFee = hasDisposal && service?.disposalFee && quantity > 0 ? service.disposalFee * quantity : 0
                     const runflatFee = hasRunflat && service?.runFlatSurcharge && quantity > 0 ? service.runFlatSurcharge * quantity : 0
-                    
-                    // Für Services ohne Aufschläge: Nutze den eingegebenen Gesamtpreis als basePrice
-                    if (detectedServiceType !== 'TIRE_CHANGE' && detectedServiceType !== 'WHEEL_CHANGE' && basePrice === 0) {
-                      basePrice = parseFloat(offerForm.installationFee)
-                    }
                     
                     // Wenn kein basePrice gefunden, nutze den Gesamtpreis minus Aufschläge
                     if (basePrice === 0 && quantity > 0) {

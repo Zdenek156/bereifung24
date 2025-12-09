@@ -241,15 +241,17 @@ export default function BrowseRequestsPage() {
     setSelectedRequest(request)
     setShowOfferForm(true)
     
-    // Erkenne Service-Typ aus additionalNotes
+    // Erkenne Service-Typ aus additionalNotes (WICHTIG: Prüfe additionalNotes VOR width check!)
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
-    const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
     const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
     const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
     const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
+    // Räder umstecken nur wenn width=0 UND KEIN anderer Service erkannt wurde
+    const isWheelChange = !isMotorcycle && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && 
+                          request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
     
     console.log('Request additionalNotes:', request.additionalNotes)
     console.log('Service detection:', {

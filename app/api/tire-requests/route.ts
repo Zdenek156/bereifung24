@@ -154,11 +154,17 @@ export async function POST(request: NextRequest) {
     // Find workshops within radius and send notification emails
     if (latitude && longitude) {
       try {
-        // Get all verified workshops with coordinates
+        // Get all verified workshops with coordinates that offer TIRE_CHANGE service
         // @ts-ignore - Prisma types need regeneration
         const workshops = await prisma.workshop.findMany({
           where: {
             isVerified: true,
+            workshopServices: {
+              some: {
+                serviceType: 'TIRE_CHANGE',
+                isActive: true
+              }
+            }
           },
           include: {
             user: true,

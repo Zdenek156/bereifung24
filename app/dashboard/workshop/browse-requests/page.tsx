@@ -197,7 +197,7 @@ export default function BrowseRequestsPage() {
   // Hilfsfunktion: Erkenne Service-Typ aus TireRequest
   const detectServiceType = (request: TireRequest): string => {
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
-    const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+    const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
     const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
@@ -271,6 +271,15 @@ export default function BrowseRequestsPage() {
       }
     }
     
+    // Reifenreparatur
+    if (serviceType === 'TIRE_REPAIR') {
+      if (lowerName.includes('loch') || lowerName.includes('einfach')) {
+        return 'Reifenreparatur Standard (Loch reparieren und abdichten)'
+      } else if (lowerName.includes('komplex') || lowerName.includes('erweitert')) {
+        return 'Reifenreparatur Komplex (Umfangreiche Reparatur mit Ausbau)'
+      }
+    }
+    
     return packageName
   }
 
@@ -286,7 +295,7 @@ export default function BrowseRequestsPage() {
     
     // Erkenne Service-Typ aus additionalNotes (WICHTIG: Prüfe additionalNotes VOR width check!)
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
-    const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+    const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
     const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
@@ -467,7 +476,7 @@ export default function BrowseRequestsPage() {
           calculatedDuration = selectedPackage.durationMinutes.toString()
           
           // Speichere den Service-Namen für die Anzeige
-          if (isAlignment || isClimate || isBattery || isBrakes) {
+          if (isAlignment || isClimate || isBattery || isBrakes || isRepair) {
             selectedServiceName = selectedPackage.name
           }
         } else if (service.basePrice && service.durationMinutes) {
@@ -1675,7 +1684,8 @@ export default function BrowseRequestsPage() {
                                       detectedServiceType === 'ALIGNMENT_BOTH' || 
                                       detectedServiceType === 'CLIMATE_SERVICE' ||
                                       detectedServiceType === 'BATTERY_SERVICE' ||
-                                      detectedServiceType === 'BRAKE_SERVICE'
+                                      detectedServiceType === 'BRAKE_SERVICE' ||
+                                      detectedServiceType === 'TIRE_REPAIR'
                                     )) {
                                       return getServiceDetailName(offerForm.serviceName, detectedServiceType)
                                     } else {

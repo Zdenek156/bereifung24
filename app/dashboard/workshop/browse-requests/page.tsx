@@ -291,7 +291,7 @@ export default function BrowseRequestsPage() {
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
-    const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
+    const isClimate = request.additionalNotes?.includes('KLIMASERVICE:')
     // Räder umstecken nur wenn width=0 UND KEIN anderer Service erkannt wurde
     const isWheelChange = !isMotorcycle && !isRepair && !isAlignment && !isOtherService && !isBrakes && !isBattery && !isClimate && 
                           request.width === 0 && request.aspectRatio === 0 && request.diameter === 0

@@ -1137,6 +1137,10 @@ export default function BrowseRequestsPage() {
                             <h3 className="text-xl font-bold text-primary-600">
                               ❄️ Klimaservice
                             </h3>
+                          ) : isRepair ? (
+                            <h3 className="text-xl font-bold text-primary-600">
+                              🔧 Reifenreparatur
+                            </h3>
                           ) : (
                             <h3 className="text-xl font-bold text-primary-600">
                               🚗 Autoreifen mit Montage
@@ -1389,10 +1393,10 @@ export default function BrowseRequestsPage() {
                   <>Für: 🔋 Batteriewechsel</>
                 ) : selectedRequest.additionalNotes?.includes('RÄDER UMSTECKEN') ? (
                   <>Für: 🔄 Räder umstecken (Sommer/Winter)</>
-                ) : selectedRequest.additionalNotes?.includes('🔧 REPARATUR') ? (
+                ) : selectedRequest.additionalNotes?.includes('🔧 REIFENREPARATUR') ? (
                   <>Für: 🔧 Reifenreparatur</>
                 ) : selectedRequest.width === 0 ? (
-                  <>Für: 🛠️ Service-Anfrage</>
+                  <>Für: 🔧 Reifenreparatur</>
                 ) : (
                   <>
                     {(() => {

@@ -1449,7 +1449,11 @@ export default function BrowseRequestsPage() {
                   {offerForm.installationFee && selectedRequest && (() => {
                     const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                     const hasRunflat = selectedRequest.isRunflat
-                    const isWheelChange = selectedRequest.width === 0
+                    
+                    // Hole Service-Info für Aufschlüsselung
+                    const detectedServiceType = detectServiceType(selectedRequest)
+                    const service = services.find((s: any) => s.serviceType === detectedServiceType)
+                    const isWheelChange = detectedServiceType === 'WHEEL_CHANGE'
                     
                     // Bestimme Reifenanzahl basierend auf ALLEN carTireType Auswahlen
                     let quantity = 0
@@ -1457,7 +1461,7 @@ export default function BrowseRequestsPage() {
                     // Bei Räder umstecken immer 4 Räder
                     if (isWheelChange) {
                       quantity = 4
-                    } else {
+                    } else if (detectedServiceType === 'TIRE_CHANGE') {
                       const hasFront = offerForm.tireOptions.some(opt => opt.carTireType === 'FRONT_TWO' || opt.carTireType === 'ALL_FOUR')
                       const hasRear = offerForm.tireOptions.some(opt => opt.carTireType === 'REAR_TWO' || opt.carTireType === 'ALL_FOUR')
                       const hasAllFour = offerForm.tireOptions.some(opt => opt.carTireType === 'ALL_FOUR')
@@ -1468,10 +1472,6 @@ export default function BrowseRequestsPage() {
                         quantity = 2
                       }
                     }
-                    
-                    // Hole Service-Info für Aufschlüsselung
-                    const detectedServiceType = detectServiceType(selectedRequest)
-                    const service = services.find((s: any) => s.serviceType === detectedServiceType)
                     
                     // Berechne Basis-Preis und optionale Zusätze
                     let basePrice = 0

@@ -61,6 +61,7 @@ interface OfferFormData {
   balancingPrice?: string
   storagePrice?: string
   storageAvailable?: boolean
+  serviceName?: string
 }
 
 interface WorkshopService {
@@ -428,6 +429,12 @@ export default function BrowseRequestsPage() {
           
           calculatedInstallation = selectedPackage.price.toFixed(2)
           calculatedDuration = selectedPackage.durationMinutes.toString()
+          
+          // Speichere den Service-Namen für die Anzeige
+          if (isAlignment && selectedPackage) {
+            // Für Achsvermessung: Zeige detaillierten Package-Namen
+            setOfferForm(prev => ({ ...prev, serviceName: selectedPackage.name }))
+          }
         } else if (service.basePrice && service.durationMinutes) {
           calculatedInstallation = service.basePrice.toFixed(2)
           calculatedDuration = service.durationMinutes.toString()
@@ -1626,9 +1633,11 @@ export default function BrowseRequestsPage() {
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-700">
-                                  {detectedServiceType === 'ALIGNMENT_BOTH' 
-                                    ? getAlignmentDetailName(selectedRequest)
-                                    : getServiceName(detectedServiceType)}
+                                  {detectedServiceType === 'ALIGNMENT_BOTH' && offerForm.serviceName
+                                    ? offerForm.serviceName
+                                    : detectedServiceType === 'ALIGNMENT_BOTH' 
+                                      ? getAlignmentDetailName(selectedRequest)
+                                      : getServiceName(detectedServiceType)}
                                 </span>
                                 <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>

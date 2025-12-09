@@ -198,7 +198,7 @@ export default function BrowseRequestsPage() {
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     const isWheelChange = request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
     const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
-    const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+    const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
     const isClimate = request.additionalNotes?.includes('❄️ KLIMASERVICE') || request.additionalNotes?.includes('🌡️ KLIMASERVICE')
@@ -244,7 +244,7 @@ export default function BrowseRequestsPage() {
     // Erkenne Service-Typ aus additionalNotes (WICHTIG: Prüfe additionalNotes VOR width check!)
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
-    const isAlignment = request.additionalNotes?.includes('⚙️ ACHSVERMESSUNG')
+    const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
     const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
     const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
     const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')

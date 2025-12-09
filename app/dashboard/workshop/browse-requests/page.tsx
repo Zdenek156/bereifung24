@@ -235,37 +235,28 @@ export default function BrowseRequestsPage() {
     return names[serviceType] || serviceType
   }
 
-  // Hilfsfunktion: Detaillierter Service-Name aus additionalNotes für Achsvermessung
-  const getAlignmentDetailName = (request: TireRequest): string => {
-    const notes = request.additionalNotes || ''
+  // Hilfsfunktion: Detaillierter Service-Name mit Beschreibung basierend auf Package-Namen
+  const getAlignmentDetailName = (packageName: string): string => {
+    // Generiere detaillierte Beschreibung basierend auf Package-Namen
+    const lowerName = packageName.toLowerCase()
     
-    // Extrahiere die Leistung aus den additionalNotes
-    if (notes.includes('Achsvermessung mit Spureinstellung und Fahrwerk-/Achsteile Prüfung')) {
-      if (notes.includes('Beide Achsen')) {
-        return 'Komplett-Service (Vermessung + Einstellung + Prüfung beider Achsen)'
-      }
-      return 'Komplett-Service mit Fahrwerk-Prüfung'
-    } else if (notes.includes('Achsvermessung mit Spureinstellung')) {
-      if (notes.includes('Beide Achsen')) {
-        return 'Achsvermessung mit Spureinstellung (Beide Achsen)'
-      } else if (notes.includes('Vorderachse')) {
-        return 'Achsvermessung mit Spureinstellung (Vorderachse)'
-      } else if (notes.includes('Hinterachse')) {
-        return 'Achsvermessung mit Spureinstellung (Hinterachse)'
-      }
-      return 'Achsvermessung mit Spureinstellung'
-    } else if (notes.includes('Nur Achsvermessung')) {
-      if (notes.includes('Beide Achsen')) {
-        return 'Achsvermessung (Beide Achsen)'
-      } else if (notes.includes('Vorderachse')) {
-        return 'Achsvermessung (Vorderachse)'
-      } else if (notes.includes('Hinterachse')) {
-        return 'Achsvermessung (Hinterachse)'
-      }
-      return 'Achsvermessung'
+    if (lowerName.includes('komplett')) {
+      return 'Komplett-Service (Achsvermessung, Spureinstellung und Prüfung aller Fahrwerk-/Achsteile)'
+    } else if (lowerName.includes('einstellung') && lowerName.includes('beide')) {
+      return 'Einstellung beide Achsen (Achsvermessung und Spureinstellung für Vorder- und Hinterachse)'
+    } else if (lowerName.includes('einstellung') && lowerName.includes('vorder')) {
+      return 'Einstellung Vorderachse (Achsvermessung und Spureinstellung)'
+    } else if (lowerName.includes('einstellung') && lowerName.includes('hinter')) {
+      return 'Einstellung Hinterachse (Achsvermessung und Spureinstellung)'
+    } else if (lowerName.includes('vermessung') && lowerName.includes('beide')) {
+      return 'Vermessung beide Achsen (Achsvermessung für Vorder- und Hinterachse, ohne Einstellung)'
+    } else if (lowerName.includes('vermessung') && lowerName.includes('vorder')) {
+      return 'Vermessung Vorderachse (Achsvermessung, ohne Einstellung)'
+    } else if (lowerName.includes('vermessung') && lowerName.includes('hinter')) {
+      return 'Vermessung Hinterachse (Achsvermessung, ohne Einstellung)'
     }
     
-    return 'Achsvermessung / Spureinstellung'
+    return packageName
   }
 
   const filteredRequests = requests.filter(req => {
@@ -1637,17 +1628,9 @@ export default function BrowseRequestsPage() {
                               <div className="flex justify-between">
                                 <span className="text-gray-700">
                                   {(() => {
-                                    console.log('Display logic:', {
-                                      detectedServiceType,
-                                      serviceName: offerForm.serviceName,
-                                      hasServiceName: !!offerForm.serviceName,
-                                      isAlignment: detectedServiceType === 'ALIGNMENT_BOTH'
-                                    })
-                                    
                                     if (detectedServiceType === 'ALIGNMENT_BOTH' && offerForm.serviceName) {
-                                      return offerForm.serviceName
-                                    } else if (detectedServiceType === 'ALIGNMENT_BOTH') {
-                                      return getAlignmentDetailName(selectedRequest)
+                                      // Zeige detaillierte Beschreibung für Achsvermessung
+                                      return getAlignmentDetailName(offerForm.serviceName)
                                     } else {
                                       return getServiceName(detectedServiceType)
                                     }

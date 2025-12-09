@@ -336,6 +336,7 @@ export default function BrowseRequestsPage() {
     
     let calculatedInstallation = ''
     let calculatedDuration = ''
+    let selectedServiceName = '' // Für Anzeige des Package-Namens
     
     if (service) {
       if (isWheelChange) {
@@ -431,9 +432,8 @@ export default function BrowseRequestsPage() {
           calculatedDuration = selectedPackage.durationMinutes.toString()
           
           // Speichere den Service-Namen für die Anzeige
-          if (isAlignment && selectedPackage) {
-            // Für Achsvermessung: Zeige detaillierten Package-Namen
-            setOfferForm(prev => ({ ...prev, serviceName: selectedPackage.name }))
+          if (isAlignment) {
+            selectedServiceName = selectedPackage.name
           }
         } else if (service.basePrice && service.durationMinutes) {
           calculatedInstallation = service.basePrice.toFixed(2)
@@ -584,7 +584,8 @@ export default function BrowseRequestsPage() {
         ? service.balancingPrice.toFixed(2) 
         : '',
       storagePrice: '',
-      storageAvailable: false // Checkbox standardmäßig deaktiviert - Werkstatt muss manuell aktivieren
+      storageAvailable: false, // Checkbox standardmäßig deaktiviert - Werkstatt muss manuell aktivieren
+      serviceName: selectedServiceName || undefined // Speichere den ausgewählten Package-Namen
     })
   }
 

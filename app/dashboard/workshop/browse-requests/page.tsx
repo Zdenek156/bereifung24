@@ -1634,11 +1634,22 @@ export default function BrowseRequestsPage() {
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-700">
-                                  {detectedServiceType === 'ALIGNMENT_BOTH' && offerForm.serviceName
-                                    ? offerForm.serviceName
-                                    : detectedServiceType === 'ALIGNMENT_BOTH' 
-                                      ? getAlignmentDetailName(selectedRequest)
-                                      : getServiceName(detectedServiceType)}
+                                  {(() => {
+                                    console.log('Display logic:', {
+                                      detectedServiceType,
+                                      serviceName: offerForm.serviceName,
+                                      hasServiceName: !!offerForm.serviceName,
+                                      isAlignment: detectedServiceType === 'ALIGNMENT_BOTH'
+                                    })
+                                    
+                                    if (detectedServiceType === 'ALIGNMENT_BOTH' && offerForm.serviceName) {
+                                      return offerForm.serviceName
+                                    } else if (detectedServiceType === 'ALIGNMENT_BOTH') {
+                                      return getAlignmentDetailName(selectedRequest)
+                                    } else {
+                                      return getServiceName(detectedServiceType)
+                                    }
+                                  })()}
                                 </span>
                                 <span className="font-medium">{isWheelChange && service?.basePrice ? service.basePrice.toFixed(2) : basePrice.toFixed(2)} €</span>
                               </div>

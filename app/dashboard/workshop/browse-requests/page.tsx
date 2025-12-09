@@ -1514,13 +1514,17 @@ export default function BrowseRequestsPage() {
                       basePrice = parseFloat(offerForm.installationFee) - disposalFee - runflatFee
                     }
                     
+                    // Prüfe ob Service-Info angezeigt werden soll
+                    const showServiceInfo = isWheelChange || quantity > 0 || 
+                      (detectedServiceType !== 'TIRE_CHANGE' && detectedServiceType !== 'WHEEL_CHANGE')
+                    
                     return (
                       <div className="space-y-3">
-                        {!isWheelChange && quantity === 0 ? (
+                        {!showServiceInfo && detectedServiceType === 'TIRE_CHANGE' ? (
                           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3">
                             ⚠️ Bitte wählen Sie "Angebot für" aus (z.B. Vorderreifen oder Hinterreifen), um die Montagekosten zu berechnen
                           </div>
-                        ) : (isWheelChange || quantity > 0) ? (
+                        ) : showServiceInfo ? (
                           <>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">

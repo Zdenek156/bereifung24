@@ -62,6 +62,7 @@ interface OfferFormData {
   storagePrice?: string
   storageAvailable?: boolean
   serviceName?: string
+  customPriceEnabled?: boolean
 }
 
 interface WorkshopService {
@@ -670,7 +671,8 @@ export default function BrowseRequestsPage() {
         : '',
       storagePrice: '',
       storageAvailable: false, // Checkbox standardmäßig deaktiviert - Werkstatt muss manuell aktivieren
-      serviceName: selectedServiceName || undefined // Speichere den ausgewählten Package-Namen
+      serviceName: selectedServiceName || undefined, // Speichere den ausgewählten Package-Namen
+      customPriceEnabled: false // Standardmäßig deaktiviert für Batterie/Bremsen
     })
   }
 
@@ -1846,37 +1848,126 @@ export default function BrowseRequestsPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {selectedRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') ? 'Preis (€) *' : 'Montagekosten (€) *'}
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={offerForm.installationFee}
-                      onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="0.00"
-                    />
+                {/* Price and Duration - with checkbox for Battery/Brake services */}
+                {selectedRequest && (detectServiceType(selectedRequest) === 'BATTERY_SERVICE' || detectServiceType(selectedRequest) === 'BRAKE_SERVICE') && (() => {
+                  const serviceType = detectServiceType(selectedRequest)
+                  const service = services.find((s: any) => s.serviceType === serviceType)
+                  const selectedPackage = service?.servicePackages?.[0]
+                  const packagePrice = selectedPackage?.price || 0
+                  const packageDuration = selectedPackage?.durationMinutes || 0
+                  
+                  return (
+                    <div className="space-y-4">
+                      {/* Display package price and duration */}
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">Paket-Preis</p>
+                            <p className="text-lg font-semibold text-gray-900">{packagePrice.toFixed(2)} €</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">Dauer</p>
+                            <p className="text-lg font-semibold text-gray-900">{packageDuration} Min.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Checkbox for custom pricing */}
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="customPriceEnabled"
+                            checked={offerForm.customPriceEnabled || false}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked
+                              setOfferForm({ 
+                                ...offerForm, 
+                                customPriceEnabled: isChecked,
+                                installationFee: isChecked ? offerForm.installationFee : packagePrice.toString(),
+                                durationMinutes: isChecked ? offerForm.durationMinutes : packageDuration.toString()
+                              })
+                            }}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="customPriceEnabled" className="text-sm text-gray-700">
+                            Bei einigen Fahrzeugen kann der Preis abweichen
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Manual price input fields (only visible when checkbox is checked) */}
+                      {offerForm.customPriceEnabled && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Montagekosten (€) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={offerForm.installationFee}
+                              onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
+                              required
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Dauer (Minuten) *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={offerForm.durationMinutes}
+                              onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
+                              required
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              placeholder="60"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                {/* Standard price and duration fields for other services */}
+                {selectedRequest && detectServiceType(selectedRequest) !== 'BATTERY_SERVICE' && detectServiceType(selectedRequest) !== 'BRAKE_SERVICE' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {selectedRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') ? 'Preis (€) *' : 'Montagekosten (€) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={offerForm.installationFee}
+                        onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dauer (Minuten) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={offerForm.durationMinutes}
+                        onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="60"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dauer (Minuten) *
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={offerForm.durationMinutes}
-                      onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="60"
-                    />
-                  </div>
-                </div>
+                )}
 
                 {selectedRequest && detectServiceType(selectedRequest) === 'WHEEL_CHANGE' && (() => {
                   const service = services.find((s: any) => s.serviceType === 'WHEEL_CHANGE')

@@ -1085,7 +1085,7 @@ export default function BrowseRequestsPage() {
               const isAlignment = request.additionalNotes?.includes('ACHSVERMESSUNG')
               const isBrakes = request.additionalNotes?.includes('BREMSENWECHSEL')
               const isBattery = request.additionalNotes?.includes('BATTERIEWECHSEL')
-              const isRepair = request.additionalNotes?.includes('🔧 REPARATUR')
+              const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
               const isWheelChange = request.additionalNotes?.includes('RÄDER UMSTECKEN')
               const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
 

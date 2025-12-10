@@ -104,6 +104,8 @@ export default function PricingPage() {
         serviceIncludeVat: settings.serviceIncludeVat ?? false
       }
       
+      console.log('Sending data:', dataToSave)
+      
       const response = await fetch('/api/workshop/pricing-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,7 +116,8 @@ export default function PricingPage() {
         alert('Einstellungen erfolgreich gespeichert!')
       } else {
         const error = await response.json()
-        alert(error.error || 'Fehler beim Speichern')
+        console.error('Validation error:', error)
+        alert(`Fehler beim Speichern: ${error.error || 'Unbekannter Fehler'}\n${error.details ? JSON.stringify(error.details) : ''}`)
       }
     } catch (error) {
       console.error('Error saving settings:', error)

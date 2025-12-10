@@ -90,9 +90,6 @@ export async function POST(request: NextRequest) {
         additionalNotes: [
           '🔧 SONSTIGE REIFENSERVICES',
           '',
-          'Gewünschte Services:',
-          ...selectedServices.map(s => `✓ ${s}`),
-          '',
           `Beschreibung: ${validatedData.serviceDescription}`,
           validatedData.additionalNotes ? `Zusätzliche Hinweise: ${validatedData.additionalNotes}` : '',
         ].filter(Boolean).join('\n'),

@@ -21,10 +21,10 @@ const pricingSettingsSchema = z.object({
   brakeFixedMarkup: z.number().min(0),
   brakePercentMarkup: z.number().min(0).max(100),
   brakeIncludeVat: z.boolean(),
-  serviceManualPricing: z.boolean(),
-  serviceFixedMarkup: z.number().min(0),
-  servicePercentMarkup: z.number().min(0).max(100),
-  serviceIncludeVat: z.boolean()
+  serviceManualPricing: z.boolean().optional(),
+  serviceFixedMarkup: z.number().min(0).optional(),
+  servicePercentMarkup: z.number().min(0).max(100).optional(),
+  serviceIncludeVat: z.boolean().optional()
 })
 
 // GET - Hole Preiskalkulation-Einstellungen

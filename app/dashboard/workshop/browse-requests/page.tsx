@@ -1115,7 +1115,7 @@ export default function BrowseRequestsPage() {
                             </h3>
                           ) : isRepair ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔧 Reparatur
+                              🔧 Reifenreparatur
                             </h3>
                           ) : isAlignment ? (
                             <h3 className="text-xl font-bold text-primary-600">
@@ -1136,10 +1136,6 @@ export default function BrowseRequestsPage() {
                           ) : isClimate ? (
                             <h3 className="text-xl font-bold text-primary-600">
                               ❄️ Klimaservice
-                            </h3>
-                          ) : isRepair ? (
-                            <h3 className="text-xl font-bold text-primary-600">
-                              🔧 Reifenreparatur
                             </h3>
                           ) : (
                             <h3 className="text-xl font-bold text-primary-600">

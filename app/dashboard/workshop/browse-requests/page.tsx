@@ -1265,11 +1265,15 @@ export default function BrowseRequestsPage() {
                           .replace(/🏍️ MOTORRADREIFEN\n?/g, '')
                           .replace(/🔧 REIFENREPARATUR\n?/g, '')
                           .replace(/⚙️ ACHSVERMESSUNG\n?/g, '')
+                          .replace(/📐 ACHSVERMESSUNG\n?/g, '')
                           .replace(/🛠️ SONSTIGE DIENSTLEISTUNG\n?/g, '')
+                          .replace(/🛠️ SONSTIGE REIFENSERVICES\n?/g, '')
                           .replace(/🔴 BREMSENWECHSEL\n?/g, '')
                           .replace(/🔋 BATTERIEWECHSEL\n?/g, '')
                           .replace(/❄️ KLIMASERVICE\n?/g, '')
                           .replace(/🌡️ KLIMASERVICE\n?/g, '')
+                          .replace(/KLIMASERVICE:\s*/g, '')
+                          .replace(/RÄDER UMSTECKEN\n?/g, '')
                           .trim()
                         
                         if (userNotes) {

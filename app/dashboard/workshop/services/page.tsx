@@ -102,9 +102,7 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'rear_pads_discs_handbrake', name: 'Hinterachse - Beläge + Scheiben + Handbremse', description: 'Komplettpaket hinten inkl. Handbremse' }
   ],
   BATTERY_SERVICE: [
-    { type: 'test', name: 'Batterie-Test', description: 'Überprüfung der Batterie und Ladesystem' },
-    { type: 'replacement', name: 'Batterie-Wechsel', description: 'Ausbau und Einbau einer neuen Batterie' },
-    { type: 'premium', name: 'Premium-Service', description: 'Wechsel + Diagnose + Codierung (für moderne Fahrzeuge)' }
+    { type: 'replacement', name: 'Batterie-Wechsel', description: 'Ausbau, Einbau und Registrierung der neuen Batterie' }
   ],
   OTHER_SERVICES: [
     { type: 'rdks', name: 'RDKS-Service', description: 'Reifendruckkontrollsystem prüfen/programmieren' },

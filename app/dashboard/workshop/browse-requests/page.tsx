@@ -909,13 +909,23 @@ export default function BrowseRequestsPage() {
       return
     }
 
+    // Determine category based on service type
+    let category = 'auto'
+    if (selectedRequest?.additionalNotes?.includes('🏍️ MOTORRADREIFEN')) {
+      category = 'moto'
+    } else if (selectedRequest?.additionalNotes?.includes('BATTERIE-SERVICE')) {
+      category = 'battery'
+    } else if (selectedRequest?.additionalNotes?.includes('BREMSEN-SERVICE')) {
+      category = 'brake'
+    }
+
     try {
       const response = await fetch('/api/workshop/calculate-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           costPrice: parseFloat(costPrice),
-          category: 'auto' // Assuming tire requests are for auto tires
+          category: category
         })
       })
 
@@ -1585,8 +1595,29 @@ export default function BrowseRequestsPage() {
                           </div>
                         )}
 
+                        {/* Brake Axle Selection */}
+                        {selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') && (
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Angebot für *
+                            </label>
+                            <select
+                              value={option.carTireType || ''}
+                              onChange={(e) => updateTireOption(index, 'carTireType', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              required
+                            >
+                              <option value="">-- Bitte auswählen --</option>
+                              <option value="FRONT_TWO">🔴 Vorderachse</option>
+                              <option value="REAR_TWO">🔴 Hinterachse</option>
+                            </select>
+                          </div>
+                        )}
+
                         {/* Car Tire Type Selection - per tire option */}
-                        {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (() => {
+                        {!selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && 
+                         !selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') &&
+                         !selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') && (() => {
                           // Check if it's mixed tires (different sizes front/rear)
                           const isMixedTires = (selectedRequest.additionalNotes?.includes('Vorderachse:') || selectedRequest.additionalNotes?.includes('Vorderreifen:')) && 
                                                (selectedRequest.additionalNotes?.includes('Hinterachse:') || selectedRequest.additionalNotes?.includes('Hinterreifen:'))

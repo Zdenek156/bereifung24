@@ -1083,7 +1083,7 @@ export default function BrowseRequestsPage() {
               const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
               const isClimate = request.additionalNotes?.includes('KLIMASERVICE')
               const isAlignment = request.additionalNotes?.includes('ACHSVERMESSUNG')
-              const isBrakes = request.additionalNotes?.includes('BREMSENWECHSEL')
+              const isBrakes = request.additionalNotes?.includes('BREMSEN-SERVICE')
               const isBattery = request.additionalNotes?.includes('BATTERIE-SERVICE')
               const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
               const isWheelChange = request.additionalNotes?.includes('RÄDER UMSTECKEN')
@@ -1123,15 +1123,15 @@ export default function BrowseRequestsPage() {
                             </h3>
                           ) : isOtherService ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🛠️ Sonstige Dienstleistung
+                              🛠️ Sonstiger Service
                             </h3>
                           ) : isBrakes ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔴 Bremsenwechsel
+                              🔴 Bremsen-Service
                             </h3>
                           ) : isBattery ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔋 Batteriewechsel
+                              🔋 Batterie-Service
                             </h3>
                           ) : isClimate ? (
                             <h3 className="text-xl font-bold text-primary-600">
@@ -1269,12 +1269,17 @@ export default function BrowseRequestsPage() {
                           .replace(/📐 ACHSVERMESSUNG\n?/g, '')
                           .replace(/🛠️ SONSTIGE DIENSTLEISTUNG\n?/g, '')
                           .replace(/🔴 BREMSENWECHSEL\n?/g, '')
+                          .replace(/BREMSEN-SERVICE\n?/g, '')
                           .replace(/🔋 BATTERIEWECHSEL\n?/g, '')
                           .replace(/BATTERIE-SERVICE\n?/g, '')
                           .replace(/❄️ KLIMASERVICE\n?/g, '')
                           .replace(/🌡️ KLIMASERVICE\n?/g, '')
                           .replace(/KLIMASERVICE:\s*/g, '')
                           .replace(/RÄDER UMSTECKEN\n?/g, '')
+                          .replace(/wheel_wash/g, 'Radwäsche')
+                          .replace(/valves/g, 'Ventile')
+                          .replace(/tire_storage/g, 'Reifeneinlagerung')
+                          .replace(/pressure_check/g, 'Druckkontrolle')
                           .trim()
                         
                         if (userNotes) {

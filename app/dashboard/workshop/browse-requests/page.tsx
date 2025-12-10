@@ -198,11 +198,11 @@ export default function BrowseRequestsPage() {
   const detectServiceType = (request: TireRequest): string => {
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
-    const isAlignment = request.additionalNotes?.includes('📐 ACHSVERMESSUNG')
-    const isBrakes = request.additionalNotes?.includes('🔴 BREMSENWECHSEL')
-    const isBattery = request.additionalNotes?.includes('🔋 BATTERIEWECHSEL')
-    const isClimate = request.additionalNotes?.includes('KLIMASERVICE:')
-    const isOtherService = request.additionalNotes?.includes('🛠️ SONSTIGE DIENSTLEISTUNG')
+    const isAlignment = request.additionalNotes?.includes('ACHSVERMESSUNG')
+    const isBrakes = request.additionalNotes?.includes('BREMSEN-SERVICE')
+    const isBattery = request.additionalNotes?.includes('BATTERIE-SERVICE')
+    const isClimate = request.additionalNotes?.includes('KLIMASERVICE')
+    const isOtherService = request.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES')
     // WICHTIG: width-Check NACH allen additionalNotes-Checks, weil Alignment auch width=0 hat
     const isWheelChange = !isMotorcycle && !isRepair && !isAlignment && !isBrakes && !isBattery && !isClimate && !isOtherService &&
                           request.width === 0 && request.aspectRatio === 0 && request.diameter === 0
@@ -1465,11 +1465,15 @@ export default function BrowseRequestsPage() {
 
             <form onSubmit={handleSubmitOffer} className="p-6">
               <div className="space-y-6">
-                {selectedRequest.width !== 0 && (
+                {(selectedRequest.width !== 0 || 
+                  selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ||
+                  selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE')) && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <label className="block text-sm font-medium text-gray-700">
-                        Reifenangebote *
+                        {selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ? 'Batterie-Angebote *' :
+                         selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') ? 'Bremsen-Angebote *' :
+                         'Reifenangebote *'}
                       </label>
                       <button
                         type="button"
@@ -1500,13 +1504,17 @@ export default function BrowseRequestsPage() {
                         
                         <div className="mb-3">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Reifen (Marke & Modell) *
+                            {selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ? 'Batterie (Marke & Modell) *' :
+                             selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') ? 'Bremsbeläge/Bremsscheiben (Marke & Modell) *' :
+                             'Reifen (Marke & Modell) *'}
                           </label>
                           <input
                             type="text"
                             value={option.brandModel}
                             onChange={(e) => updateTireOption(index, 'brandModel', e.target.value)}
-                            placeholder="z.B. Continental PremiumContact 6"
+                            placeholder={selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ? 'z.B. Varta Blue Dynamic E11' :
+                                       selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') ? 'z.B. Bosch Bremsbeläge + ATE Bremsscheiben' :
+                                       'z.B. Continental PremiumContact 6'}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>

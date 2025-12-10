@@ -490,11 +490,21 @@ export default function BrowseRequestsPage() {
             // Für "Sonstiges Problem" wird KEIN Package ausgewählt
             // → calculatedInstallation/Duration bleiben leer
             // → Werkstatt muss Preis/Dauer manuell eingeben
+          } else if (isBattery) {
+            // Batterie-Service: Nutze erstes/einziges Package falls vorhanden
+            if (service.servicePackages.length > 0) {
+              selectedPackage = service.servicePackages[0]
+            }
+          } else if (isBrakes) {
+            // Bremsen-Service: Nutze erstes/einziges Package falls vorhanden
+            if (service.servicePackages.length > 0) {
+              selectedPackage = service.servicePackages[0]
+            }
           }
           
           // Nur Preis/Dauer setzen wenn ein Package gefunden wurde
-          // (Bei Repair "Sonstiges" bleibt es leer für manuelle Eingabe)
-          if (selectedPackage && selectedPackage.price > 0) {
+          // (Bei Repair "Sonstiges" und OTHER services bleibt es leer für manuelle Eingabe)
+          if (selectedPackage && selectedPackage.price > 0 && !isOtherService) {
             calculatedInstallation = selectedPackage.price.toFixed(2)
             calculatedDuration = selectedPackage.durationMinutes.toString()
           }
@@ -502,6 +512,13 @@ export default function BrowseRequestsPage() {
           // Speichere den Service-Namen für die Anzeige (nur wenn Package vorhanden)
           if ((isAlignment || isClimate || isBattery || isBrakes || isRepair) && selectedPackage) {
             selectedServiceName = selectedPackage.name
+          }
+          
+          // OTHER services: Komplett manuelle Eingabe durch Werkstatt
+          if (isOtherService) {
+            calculatedInstallation = ''
+            calculatedDuration = ''
+            selectedServiceName = ''
           }
         } else if (service.basePrice && service.durationMinutes) {
           calculatedInstallation = service.basePrice.toFixed(2)
@@ -1393,10 +1410,10 @@ export default function BrowseRequestsPage() {
                   <>Für: ❄️ Klimaservice</>
                 ) : selectedRequest.additionalNotes?.includes('ACHSVERMESSUNG') ? (
                   <>Für: ⚙️ Achsvermessung / Spureinstellung</>
-                ) : selectedRequest.additionalNotes?.includes('BREMSENWECHSEL') ? (
-                  <>Für: 🔴 Bremsenwechsel</>
-                ) : selectedRequest.additionalNotes?.includes('BATTERIEWECHSEL') ? (
-                  <>Für: 🔋 Batteriewechsel</>
+                ) : selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') ? (
+                  <>Für: 🔴 Bremsen-Service</>
+                ) : selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ? (
+                  <>Für: 🔋 Batterie-Service</>
                 ) : selectedRequest.additionalNotes?.includes('RÄDER UMSTECKEN') ? (
                   <>Für: 🔄 Räder umstecken (Sommer/Winter)</>
                 ) : selectedRequest.additionalNotes?.includes('🔧 REIFENREPARATUR') ? (

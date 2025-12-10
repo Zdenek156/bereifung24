@@ -17,6 +17,16 @@ interface PricingSettings {
   motoFixedMarkup: number
   motoPercentMarkup: number
   motoIncludeVat: boolean
+  // Batterie
+  batteryManualPricing: boolean
+  batteryFixedMarkup: number
+  batteryPercentMarkup: number
+  batteryIncludeVat: boolean
+  // Bremsen
+  brakeManualPricing: boolean
+  brakeFixedMarkup: number
+  brakePercentMarkup: number
+  brakeIncludeVat: boolean
   // Andere Services
   serviceManualPricing: boolean
   serviceFixedMarkup: number
@@ -39,6 +49,14 @@ export default function PricingPage() {
     motoFixedMarkup: 0,
     motoPercentMarkup: 0,
     motoIncludeVat: false,
+    batteryManualPricing: true,
+    batteryFixedMarkup: 0,
+    batteryPercentMarkup: 0,
+    batteryIncludeVat: false,
+    brakeManualPricing: true,
+    brakeFixedMarkup: 0,
+    brakePercentMarkup: 0,
+    brakeIncludeVat: false,
     serviceManualPricing: true,
     serviceFixedMarkup: 0,
     servicePercentMarkup: 0,
@@ -336,6 +354,182 @@ export default function PricingPage() {
                     <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-orange-600">{calculateExample(150, settings.motoManualPricing, settings.motoFixedMarkup, settings.motoPercentMarkup, settings.motoIncludeVat).toFixed(2)} €</strong></p>
                     <p className="text-xs text-gray-500 mt-1">
                       {settings.motoIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Batterie */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Batterie-Service
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="mb-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.batteryManualPricing}
+                  onChange={(e) => setSettings({ ...settings, batteryManualPricing: e.target.checked })}
+                  className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900">
+                  Preise manuell im Angebot eingeben (keine automatische Kalkulation)
+                </span>
+              </label>
+            </div>
+
+            {!settings.batteryManualPricing && (
+              <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fester Aufschlag (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={settings.batteryFixedMarkup || ''}
+                      onChange={(e) => setSettings({ ...settings, batteryFixedMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="z.B. 15.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prozentualer Aufschlag (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={settings.batteryPercentMarkup || ''}
+                      onChange={(e) => setSettings({ ...settings, batteryPercentMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="z.B. 25"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.batteryIncludeVat}
+                      onChange={(e) => setSettings({ ...settings, batteryIncludeVat: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-900">
+                      Preise im Angebot <strong>mit MwSt.</strong> (19%) anzeigen
+                    </span>
+                  </label>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white p-3 rounded border">
+                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>80,00 €</strong></p>
+                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-green-600">{calculateExample(80, settings.batteryManualPricing, settings.batteryFixedMarkup, settings.batteryPercentMarkup, settings.batteryIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {settings.batteryIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bremsen */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Bremsen-Service
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="mb-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.brakeManualPricing}
+                  onChange={(e) => setSettings({ ...settings, brakeManualPricing: e.target.checked })}
+                  className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900">
+                  Preise manuell im Angebot eingeben (keine automatische Kalkulation)
+                </span>
+              </label>
+            </div>
+
+            {!settings.brakeManualPricing && (
+              <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fester Aufschlag (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={settings.brakeFixedMarkup || ''}
+                      onChange={(e) => setSettings({ ...settings, brakeFixedMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="z.B. 30.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prozentualer Aufschlag (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={settings.brakePercentMarkup || ''}
+                      onChange={(e) => setSettings({ ...settings, brakePercentMarkup: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="z.B. 30"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.brakeIncludeVat}
+                      onChange={(e) => setSettings({ ...settings, brakeIncludeVat: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-900">
+                      Preise im Angebot <strong>mit MwSt.</strong> (19%) anzeigen
+                    </span>
+                  </label>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white p-3 rounded border">
+                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>120,00 €</strong></p>
+                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-red-600">{calculateExample(120, settings.brakeManualPricing, settings.brakeFixedMarkup, settings.brakePercentMarkup, settings.brakeIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {settings.brakeIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
                     </p>
                   </div>
                 </div>

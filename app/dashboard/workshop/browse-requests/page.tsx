@@ -1428,6 +1428,8 @@ export default function BrowseRequestsPage() {
                   <>Für: 🔄 Räder umstecken (Sommer/Winter)</>
                 ) : selectedRequest.additionalNotes?.includes('🔧 REIFENREPARATUR') ? (
                   <>Für: 🔧 Reifenreparatur</>
+                ) : selectedRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') ? (
+                  <>Für: 🛠️ Sonstiger Service</>
                 ) : selectedRequest.width === 0 ? (
                   <>Für: 🔧 Reifenreparatur</>
                 ) : (
@@ -1842,6 +1844,38 @@ export default function BrowseRequestsPage() {
                       ⚠️ Bitte konfigurieren Sie zuerst Ihre Services in der Service-Verwaltung
                     </div>
                   )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {selectedRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') ? 'Preis (€) *' : 'Montagekosten (€) *'}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={offerForm.installationFee}
+                      onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dauer (Minuten) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={offerForm.durationMinutes}
+                      onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="60"
+                    />
+                  </div>
                 </div>
 
                 {selectedRequest && detectServiceType(selectedRequest) === 'WHEEL_CHANGE' && (() => {

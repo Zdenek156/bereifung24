@@ -95,10 +95,19 @@ export default function PricingPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // Add default values for service fields if they don't exist
+      const dataToSave = {
+        ...settings,
+        serviceManualPricing: settings.serviceManualPricing ?? true,
+        serviceFixedMarkup: settings.serviceFixedMarkup ?? 0,
+        servicePercentMarkup: settings.servicePercentMarkup ?? 0,
+        serviceIncludeVat: settings.serviceIncludeVat ?? false
+      }
+      
       const response = await fetch('/api/workshop/pricing-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(dataToSave)
       })
 
       if (response.ok) {

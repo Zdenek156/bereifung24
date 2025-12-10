@@ -82,7 +82,22 @@ export default function PricingPage() {
       if (response.ok) {
         const data = await response.json()
         if (data.settings) {
-          setSettings(data.settings)
+          // Ensure all fields have default values
+          setSettings({
+            ...data.settings,
+            batteryManualPricing: data.settings.batteryManualPricing ?? true,
+            batteryFixedMarkup: data.settings.batteryFixedMarkup ?? 0,
+            batteryPercentMarkup: data.settings.batteryPercentMarkup ?? 0,
+            batteryIncludeVat: data.settings.batteryIncludeVat ?? false,
+            brakeManualPricing: data.settings.brakeManualPricing ?? true,
+            brakeFixedMarkup: data.settings.brakeFixedMarkup ?? 0,
+            brakePercentMarkup: data.settings.brakePercentMarkup ?? 0,
+            brakeIncludeVat: data.settings.brakeIncludeVat ?? false,
+            serviceManualPricing: data.settings.serviceManualPricing ?? true,
+            serviceFixedMarkup: data.settings.serviceFixedMarkup ?? 0,
+            servicePercentMarkup: data.settings.servicePercentMarkup ?? 0,
+            serviceIncludeVat: data.settings.serviceIncludeVat ?? false
+          })
         }
       }
     } catch (error) {

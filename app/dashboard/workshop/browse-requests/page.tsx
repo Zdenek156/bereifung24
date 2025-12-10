@@ -497,21 +497,78 @@ export default function BrowseRequestsPage() {
               selectedPackage = service.servicePackages[0]
             }
           } else if (isBrakes) {
-            // Bremsen-Service: Nutze erstes/einziges Package falls vorhanden
-            if (service.servicePackages.length > 0) {
-              selectedPackage = service.servicePackages[0]
+            // Bremsen-Service: Finde Pakete basierend auf Kunden-Auswahl und addiere sie
+            const notes = request.additionalNotes || ''
+            
+            // Parse customer selections from additionalNotes
+            const frontAxleMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
+            const rearAxleMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
+            
+            const frontSelection = frontAxleMatch?.[1]?.trim() || ''
+            const rearSelection = rearAxleMatch?.[1]?.trim() || ''
+            
+            console.log('Brake service - Customer selections:', { frontSelection, rearSelection })
+            
+            let totalPrice = 0
+            let totalDuration = 0
+            const selectedPackageNames: string[] = []
+            
+            // Front axle package selection (skip if 'Keine Arbeiten')
+            if (frontSelection && frontSelection !== 'Keine Arbeiten') {
+              let frontPackage = null
+              
+              if (frontSelection === 'Nur Bremsbeläge') {
+                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+              } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
+              }
+              
+              if (frontPackage) {
+                totalPrice += frontPackage.price
+                totalDuration += frontPackage.durationMinutes
+                selectedPackageNames.push(frontPackage.name)
+                console.log('Front axle package found:', frontPackage.name, frontPackage.price, frontPackage.durationMinutes)
+              }
+            }
+            
+            // Rear axle package selection (skip if 'Keine Arbeiten')
+            if (rearSelection && rearSelection !== 'Keine Arbeiten') {
+              let rearPackage = null
+              
+              if (rearSelection === 'Nur Bremsbeläge') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
+              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
+              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
+              }
+              
+              if (rearPackage) {
+                totalPrice += rearPackage.price
+                totalDuration += rearPackage.durationMinutes
+                selectedPackageNames.push(rearPackage.name)
+                console.log('Rear axle package found:', rearPackage.name, rearPackage.price, rearPackage.durationMinutes)
+              }
+            }
+            
+            // Set calculated values
+            if (totalPrice > 0) {
+              calculatedInstallation = totalPrice.toFixed(2)
+              calculatedDuration = totalDuration.toString()
+              selectedServiceName = selectedPackageNames.join(' + ')
+              console.log('Brake service - Total:', { totalPrice, totalDuration, serviceName: selectedServiceName })
             }
           }
           
           // Nur Preis/Dauer setzen wenn ein Package gefunden wurde
           // (Bei Repair "Sonstiges" und OTHER services bleibt es leer für manuelle Eingabe)
-          if (selectedPackage && selectedPackage.price > 0 && !isOtherService) {
+          if (selectedPackage && selectedPackage.price > 0 && !isOtherService && !isBrakes) {
             calculatedInstallation = selectedPackage.price.toFixed(2)
             calculatedDuration = selectedPackage.durationMinutes.toString()
           }
           
           // Speichere den Service-Namen für die Anzeige (nur wenn Package vorhanden)
-          if ((isAlignment || isClimate || isBattery || isBrakes || isRepair) && selectedPackage) {
+          if ((isAlignment || isClimate || isBattery || isRepair) && selectedPackage) {
             selectedServiceName = selectedPackage.name
           }
           
@@ -1852,21 +1909,87 @@ export default function BrowseRequestsPage() {
                 {selectedRequest && (detectServiceType(selectedRequest) === 'BATTERY_SERVICE' || detectServiceType(selectedRequest) === 'BRAKE_SERVICE') && (() => {
                   const serviceType = detectServiceType(selectedRequest)
                   const service = services.find((s: any) => s.serviceType === serviceType)
-                  const selectedPackage = service?.servicePackages?.[0]
-                  const packagePrice = selectedPackage?.price || 0
-                  const packageDuration = selectedPackage?.durationMinutes || 0
+                  
+                  let packagePrice = 0
+                  let packageDuration = 0
+                  let packageDetails: Array<{name: string, price: number, duration: number}> = []
+                  
+                  if (serviceType === 'BRAKE_SERVICE') {
+                    // For brake service, calculate based on customer selections
+                    const notes = selectedRequest.additionalNotes || ''
+                    const frontAxleMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
+                    const rearAxleMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
+                    
+                    const frontSelection = frontAxleMatch?.[1]?.trim() || ''
+                    const rearSelection = rearAxleMatch?.[1]?.trim() || ''
+                    
+                    // Front axle (skip if 'Keine Arbeiten')
+                    if (frontSelection && frontSelection !== 'Keine Arbeiten' && service?.servicePackages) {
+                      let frontPackage = null
+                      
+                      if (frontSelection === 'Nur Bremsbeläge') {
+                        frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                      } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+                        frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
+                      }
+                      
+                      if (frontPackage) {
+                        packagePrice += frontPackage.price
+                        packageDuration += frontPackage.durationMinutes
+                        packageDetails.push({ name: frontPackage.name, price: frontPackage.price, duration: frontPackage.durationMinutes })
+                      }
+                    }
+                    
+                    // Rear axle (skip if 'Keine Arbeiten')
+                    if (rearSelection && rearSelection !== 'Keine Arbeiten' && service?.servicePackages) {
+                      let rearPackage = null
+                      
+                      if (rearSelection === 'Nur Bremsbeläge') {
+                        rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
+                      } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+                        rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
+                      } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+                        rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
+                      }
+                      
+                      if (rearPackage) {
+                        packagePrice += rearPackage.price
+                        packageDuration += rearPackage.durationMinutes
+                        packageDetails.push({ name: rearPackage.name, price: rearPackage.price, duration: rearPackage.durationMinutes })
+                      }
+                    }
+                  } else {
+                    // Battery service - use first package
+                    const selectedPackage = service?.servicePackages?.[0]
+                    packagePrice = selectedPackage?.price || 0
+                    packageDuration = selectedPackage?.durationMinutes || 0
+                    if (selectedPackage) {
+                      packageDetails.push({ name: selectedPackage.name, price: selectedPackage.price, duration: selectedPackage.durationMinutes })
+                    }
+                  }
                   
                   return (
                     <div className="space-y-4">
                       {/* Display package price and duration */}
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        {packageDetails.length > 0 && (
+                          <div className="mb-3 space-y-2">
+                            {packageDetails.map((detail, idx) => (
+                              <div key={idx} className="text-sm text-gray-700">
+                                <span className="font-medium">{detail.name}</span>
+                                <span className="text-gray-600"> • {detail.price.toFixed(2)} € • {detail.duration} Min.</span>
+                              </div>
+                            ))}
+                            {packageDetails.length > 1 && <hr className="border-gray-300 my-2" />}
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Paket-Preis</p>
+                            <p className="text-sm font-medium text-gray-700">{packageDetails.length > 1 ? 'Gesamt-Preis' : 'Paket-Preis'}</p>
                             <p className="text-lg font-semibold text-gray-900">{packagePrice.toFixed(2)} €</p>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Dauer</p>
+                            <p className="text-sm font-medium text-gray-700">{packageDetails.length > 1 ? 'Gesamt-Dauer' : 'Dauer'}</p>
                             <p className="text-lg font-semibold text-gray-900">{packageDuration} Min.</p>
                           </div>
                         </div>

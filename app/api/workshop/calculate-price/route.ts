@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!['auto', 'moto', 'service'].includes(category)) {
+    if (!['auto', 'moto', 'battery', 'brake', 'service'].includes(category)) {
       return NextResponse.json(
         { error: 'Ungültige Kategorie' },
         { status: 400 }
@@ -67,6 +67,18 @@ export async function POST(request: Request) {
         fixedMarkup = settings.motoFixedMarkup
         percentMarkup = settings.motoPercentMarkup
         includeVat = settings.motoIncludeVat
+        break
+      case 'battery':
+        isManual = settings.batteryManualPricing
+        fixedMarkup = settings.batteryFixedMarkup
+        percentMarkup = settings.batteryPercentMarkup
+        includeVat = settings.batteryIncludeVat
+        break
+      case 'brake':
+        isManual = settings.brakeManualPricing
+        fixedMarkup = settings.brakeFixedMarkup
+        percentMarkup = settings.brakePercentMarkup
+        includeVat = settings.brakeIncludeVat
         break
       case 'service':
         isManual = settings.serviceManualPricing

@@ -199,6 +199,18 @@ model PricingSettings {
   motoPercentMarkup Float   @default(0) @map("moto_percent_markup")
   motoIncludeVat    Boolean @default(false) @map("moto_include_vat")
 
+  // Batterie-Service
+  batteryManualPricing Boolean @default(true) @map("battery_manual_pricing")
+  batteryFixedMarkup   Float   @default(0) @map("battery_fixed_markup")
+  batteryPercentMarkup Float   @default(0) @map("battery_percent_markup")
+  batteryIncludeVat    Boolean @default(false) @map("battery_include_vat")
+
+  // Bremsen-Service
+  brakeManualPricing Boolean @default(true) @map("brake_manual_pricing")
+  brakeFixedMarkup   Float   @default(0) @map("brake_fixed_markup")
+  brakePercentMarkup Float   @default(0) @map("brake_percent_markup")
+  brakeIncludeVat    Boolean @default(false) @map("brake_include_vat")
+
   // Andere Services
   serviceManualPricing Boolean @default(true) @map("service_manual_pricing")
   serviceFixedMarkup   Float   @default(0) @map("service_fixed_markup")

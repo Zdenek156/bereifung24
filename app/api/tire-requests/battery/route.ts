@@ -176,10 +176,7 @@ export async function POST(request: NextRequest) {
             <h3>Kunde:</h3>
             <p>
               ${customer.user.firstName} ${customer.user.lastName}<br>
-              ${customer.user.street || 'Keine Adresse'}<br>
-              ${customer.user.zipCode || ''} ${customer.user.city || ''}<br>
-              E-Mail: ${customer.user.email}<br>
-              ${customer.user.phone ? `Telefon: ${customer.user.phone}` : 'Keine Telefonnummer'}
+              ${customer.user.zipCode || ''} ${customer.user.city || ''}
             </p>
             
             <h3>Fahrzeug:</h3>

@@ -472,12 +472,12 @@ export default function RequestDetailPage() {
     switch (serviceType) {
       case 'CLIMATE': return 'Klimaservice'
       case 'ALIGNMENT': return 'Achsvermessung'
-      case 'BRAKES': return 'Bremsenwechsel'
-      case 'BATTERY': return 'Batteriewechsel'
+      case 'BRAKES': return 'Bremsen-Service'
+      case 'BATTERY': return 'Batterie-Service'
       case 'WHEEL_CHANGE': return 'Räder umstecken'
       case 'REPAIR': return 'Reifenreparatur'
       case 'MOTORCYCLE': return 'Motorradreifen'
-      case 'OTHER_SERVICES': return 'Reifenservice'
+      case 'OTHER_SERVICES': return 'Sonstige Reifenservices'
       case 'TIRE_CHANGE': return 'Reifenwechsel'
       default: return 'Service'
     }
@@ -693,7 +693,6 @@ export default function RequestDetailPage() {
                   // Service request (wheel change, repair, etc.)
                   <>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Service</p>
                       <p className="text-2xl font-bold text-primary-600">{getServiceIcon()} {getServiceTitle()}</p>
                     </div>
 
@@ -704,28 +703,20 @@ export default function RequestDetailPage() {
                       </div>
                     )}
                   </>
-                ) : (
-                  // Regular tire request or motorcycle
+                ) : serviceType === 'MOTORCYCLE' ? (
+                  // Motorrad - kein Fahrzeug anzeigen, nur Dimension
                   <>
-                    {request.vehicle && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Fahrzeug</p>
-                        <p className="text-lg font-semibold">🚗 {request.vehicle.make} {request.vehicle.model} ({request.vehicle.year})</p>
-                      </div>
-                    )}
-
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Reifentyp</p>
-                      <p className="text-lg font-semibold">{getSeasonText(request.season)}</p>
+                      <p className="text-2xl font-bold text-primary-600">{getServiceIcon()} {getServiceTitle()}</p>
                     </div>
 
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Dimension</p>
-                      {serviceType === 'MOTORCYCLE' && request.additionalNotes ? (
+                      {request.additionalNotes ? (
                         // Motorradreifen: Extrahiere beide Dimensionen aus additionalNotes
                         (() => {
-                          const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
-                          const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/)
+                          const frontMatch = request.additionalNotes.match(/Vorderreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/);
+                          const rearMatch = request.additionalNotes.match(/Hinterreifen:\s*(\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?)/);
                           
                           return (
                             <div className="space-y-2">
@@ -747,40 +738,71 @@ export default function RequestDetailPage() {
                                 </p>
                               )}
                             </div>
-                          )
+                          );
                         })()
                       ) : (
-                        // Normale Autoreifen - check for mixed tires
-                        (() => {
-                          const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
-                          const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
-                          
-                          if (frontMatch && rearMatch) {
-                            return (
-                              <div className="space-y-2">
-                                <p className="text-lg font-bold text-primary-600">
-                                  Vorne: {frontMatch[1]}/{frontMatch[2]} R{frontMatch[3]}
-                                  {frontMatch[4] && ` ${frontMatch[4]}`}
-                                  {frontMatch[5] && ` ${frontMatch[5]}`}
-                                </p>
-                                <p className="text-lg font-bold text-primary-600">
-                                  Hinten: {rearMatch[1]}/{rearMatch[2]} R{rearMatch[3]}
-                                  {rearMatch[4] && ` ${rearMatch[4]}`}
-                                  {rearMatch[5] && ` ${rearMatch[5]}`}
-                                </p>
-                              </div>
-                            )
-                          }
-                          
-                          return (
-                            <p className="text-2xl font-bold text-primary-600">
-                              {request.width}/{request.aspectRatio} R{request.diameter}
-                              {request.loadIndex && ` ${request.loadIndex}`}
-                              {request.speedRating && ` ${request.speedRating}`}
-                            </p>
-                          )
-                        })()
+                        <p className="text-2xl font-bold text-primary-600">
+                          {request.width}/{request.aspectRatio} R{request.diameter}
+                          {request.loadIndex && ` ${request.loadIndex}`}
+                          {request.speedRating && ` ${request.speedRating}`}
+                        </p>
                       )}
+                    </div>
+
+                    {request.additionalNotes?.includes('Altreifenentsorgung gewünscht') && (
+                      <div>
+                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                          ♻️ Altreifenentsorgung
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Regular tire request (TIRE_CHANGE)
+                  <>
+                    {request.vehicle && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Fahrzeug</p>
+                        <p className="text-lg font-semibold">🚗 {request.vehicle.make} {request.vehicle.model} ({request.vehicle.year})</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Reifentyp</p>
+                      <p className="text-lg font-semibold">{getSeasonText(request.season)}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Dimension</p>
+                      {(() => {
+                        const frontMatch = request.additionalNotes?.match(/Vorderachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                        const rearMatch = request.additionalNotes?.match(/Hinterachse: (\d+)\/(\d+) R(\d+)(?:\s+(\d+))?(?:\s+([A-Z]+))?/)
+                        
+                        if (frontMatch && rearMatch) {
+                          return (
+                            <div className="space-y-2">
+                              <p className="text-lg font-bold text-primary-600">
+                                Vorne: {frontMatch[1]}/{frontMatch[2]} R{frontMatch[3]}
+                                {frontMatch[4] && ` ${frontMatch[4]}`}
+                                {frontMatch[5] && ` ${frontMatch[5]}`}
+                              </p>
+                              <p className="text-lg font-bold text-primary-600">
+                                Hinten: {rearMatch[1]}/{rearMatch[2]} R{rearMatch[3]}
+                                {rearMatch[4] && ` ${rearMatch[4]}`}
+                                {rearMatch[5] && ` ${rearMatch[5]}`}
+                              </p>
+                            </div>
+                          )
+                        }
+                        
+                        return (
+                          <p className="text-2xl font-bold text-primary-600">
+                            {request.width}/{request.aspectRatio} R{request.diameter}
+                            {request.loadIndex && ` ${request.loadIndex}`}
+                            {request.speedRating && ` ${request.speedRating}`}
+                          </p>
+                        )
+                      })()}
                     </div>
 
                     <div>

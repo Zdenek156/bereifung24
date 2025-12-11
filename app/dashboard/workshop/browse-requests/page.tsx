@@ -1963,9 +1963,17 @@ export default function BrowseRequestsPage() {
                     // Get currently selected axle from form
                     const currentAxle = offerForm.tireOptions[0]?.carTireType
                     
-                    // Front axle: Show if currently selected OR already has offer
-                    if (frontSelection && frontSelection !== 'Keine Arbeiten' && service?.servicePackages) {
-                      const shouldShowFront = currentAxle === 'FRONT_TWO' || hasFrontOffer
+                    // Check if customer wants both axles (both are NOT "Keine Arbeiten")
+                    const customerWantsFront = frontSelection && frontSelection !== 'Keine Arbeiten'
+                    const customerWantsRear = rearSelection && rearSelection !== 'Keine Arbeiten'
+                    const customerWantsBoth = customerWantsFront && customerWantsRear
+                    
+                    // If customer wants BOTH axles, show both packages always
+                    // If customer wants ONE axle, show only the selected one OR the one with existing offer
+                    
+                    // Front axle: Show if (customer wants both) OR (currently selected) OR (already has offer)
+                    if (customerWantsFront && service?.servicePackages) {
+                      const shouldShowFront = customerWantsBoth || currentAxle === 'FRONT_TWO' || hasFrontOffer
                       
                       if (shouldShowFront) {
                         let frontPackage = null
@@ -1984,9 +1992,9 @@ export default function BrowseRequestsPage() {
                       }
                     }
                     
-                    // Rear axle: Show if currently selected OR already has offer
-                    if (rearSelection && rearSelection !== 'Keine Arbeiten' && service?.servicePackages) {
-                      const shouldShowRear = currentAxle === 'REAR_TWO' || hasRearOffer
+                    // Rear axle: Show if (customer wants both) OR (currently selected) OR (already has offer)
+                    if (customerWantsRear && service?.servicePackages) {
+                      const shouldShowRear = customerWantsBoth || currentAxle === 'REAR_TWO' || hasRearOffer
                       
                       if (shouldShowRear) {
                         let rearPackage = null

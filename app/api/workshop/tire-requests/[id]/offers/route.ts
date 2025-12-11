@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { sendEmail, newOfferEmailTemplate } from '@/lib/email'
+import { sendEmail, newOfferEmailTemplate, newServiceOfferEmailTemplate } from '@/lib/email'
 
 const tireOptionSchema = z.object({
   brandModel: z.string().min(1, 'Reifenmarke und -modell erforderlich'),
@@ -244,27 +244,81 @@ export async function POST(
         }
       }
       
-      const firstOption = offer.tireOptions[0]
-      // Calculate with quantity from carTireType
-      const firstOptionQuantity = firstOption.carTireType ? 
-        getQuantityForCarTireType(firstOption.carTireType as 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO') : 
-        tireRequest.quantity
-      const firstOptionRunFlat = runFlatSurcharge * firstOptionQuantity
-      const totalOfferPrice = (firstOption.pricePerTire * firstOptionQuantity) + validatedData.installationFee + firstOptionRunFlat
-      const priceDisplay = offer.tireOptions.length > 1 
-        ? `ab ${totalOfferPrice.toFixed(2)} €`
-        : `${totalOfferPrice.toFixed(2)} €`
+      // Prüfe ob es eine Service-Anfrage ist (Bremsen, Batterie, etc.)
+      const isBrakeService = tireRequest.additionalNotes?.includes('BREMSEN-SERVICE')
+      const isBatteryService = tireRequest.additionalNotes?.includes('BATTERIE-SERVICE')
+      const isOtherService = tireRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES')
+      const isAnyServiceRequest = isBrakeService || isBatteryService || isOtherService
       
-      const emailTemplate = newOfferEmailTemplate({
-        customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
-        workshopName: offer.workshop.companyName,
-        tireOptions: offer.tireOptions,
-        tireSpecs: tireSpecs,
-        price: totalOfferPrice,
-        requestId: offer.tireRequestId,
-        quantity: tireRequest.quantity,
-        installationFee: validatedData.installationFee
-      })
+      let emailTemplate
+      
+      if (isAnyServiceRequest) {
+        // Service-Anfrage (Bremsen, Batterie, Sonstige)
+        let serviceType = 'Service'
+        let serviceDescription = ''
+        
+        if (isBrakeService) {
+          serviceType = 'Bremsen-Service'
+          // Extrahiere Bremsenpakete aus additionalNotes
+          const notes = tireRequest.additionalNotes || ''
+          const frontMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
+          const rearMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
+          
+          const packages: string[] = []
+          if (frontMatch && frontMatch[1] && frontMatch[1].trim() !== 'Keine Arbeiten') {
+            packages.push(`Vorderachse: ${frontMatch[1].trim()}`)
+          }
+          if (rearMatch && rearMatch[1] && rearMatch[1].trim() !== 'Keine Arbeiten') {
+            packages.push(`Hinterachse: ${rearMatch[1].trim()}`)
+          }
+          
+          serviceDescription = packages.join(' • ')
+        } else if (isBatteryService) {
+          serviceType = 'Batterie-Service'
+          serviceDescription = 'Batteriewechsel inkl. Überprüfung'
+        } else if (isOtherService) {
+          serviceType = 'Sonstige Services'
+          // Extrahiere Servicebeschreibung aus additionalNotes
+          const notes = tireRequest.additionalNotes || ''
+          const descMatch = notes.match(/Beschreibung:\s*(.+?)(?:\n|$)/s)
+          if (descMatch && descMatch[1]) {
+            serviceDescription = descMatch[1].trim()
+          }
+        }
+        
+        emailTemplate = newServiceOfferEmailTemplate({
+          customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+          workshopName: offer.workshop.companyName,
+          serviceType,
+          serviceDescription,
+          price: validatedData.installationFee,
+          durationMinutes: validatedData.durationMinutes || 60,
+          requestId: offer.tireRequestId
+        })
+      } else {
+        // Normale Reifenanfrage
+        const firstOption = offer.tireOptions[0]
+        // Calculate with quantity from carTireType
+        const firstOptionQuantity = firstOption.carTireType ? 
+          getQuantityForCarTireType(firstOption.carTireType as 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO') : 
+          tireRequest.quantity
+        const firstOptionRunFlat = runFlatSurcharge * firstOptionQuantity
+        const totalOfferPrice = (firstOption.pricePerTire * firstOptionQuantity) + validatedData.installationFee + firstOptionRunFlat
+        const priceDisplay = offer.tireOptions.length > 1 
+          ? `ab ${totalOfferPrice.toFixed(2)} €`
+          : `${totalOfferPrice.toFixed(2)} €`
+        
+        emailTemplate = newOfferEmailTemplate({
+          customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+          workshopName: offer.workshop.companyName,
+          tireOptions: offer.tireOptions,
+          tireSpecs: tireSpecs,
+          price: totalOfferPrice,
+          requestId: offer.tireRequestId,
+          quantity: tireRequest.quantity,
+          installationFee: validatedData.installationFee
+        })
+      }
 
       await sendEmail({
         to: offer.tireRequest.customer.user.email,

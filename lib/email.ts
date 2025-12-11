@@ -456,6 +456,102 @@ Ihr Bereifung24-Team
   return { subject, html, text }
 }
 
+export function newServiceOfferEmailTemplate(data: {
+  customerName: string
+  workshopName: string
+  serviceType: string
+  serviceDescription: string
+  price: number
+  durationMinutes: number
+  requestId: string
+}) {
+  const subject = `Neues Angebot für Ihre ${data.serviceType}-Anfrage`
+  
+  const html = `
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+        .offer-box { background: white; padding: 20px; margin: 20px 0; border-left: 4px solid #1e40af; border-radius: 4px; }
+        .price { font-size: 32px; font-weight: bold; color: #1e40af; margin: 10px 0; }
+        .button { display: inline-block; padding: 15px 30px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Neues Angebot verfügbar!</h1>
+        </div>
+        <div class="content">
+          <p>Hallo ${data.customerName},</p>
+          
+          <p>Sie haben ein neues Angebot für Ihre ${data.serviceType}-Anfrage erhalten!</p>
+          
+          <div class="offer-box">
+            <h2 style="margin-top: 0; color: #1e40af;">Angebot von ${data.workshopName}</h2>
+            
+            <p><strong>Service:</strong> ${data.serviceType}</p>
+            ${data.serviceDescription ? `<p style="color: #6b7280;">${data.serviceDescription}</p>` : ''}
+            
+            <div style="background: #f9fafb; padding: 15px; margin: 15px 0; border-radius: 4px; border: 1px solid #e5e7eb;">
+              <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: 600; color: #1e40af;">
+                ${data.price.toFixed(2)} € 
+                <span style="font-size: 14px; color: #6b7280; font-weight: normal;">inkl. Montage</span>
+              </p>
+              <p style="margin: 5px 0 0 0; font-size: 14px; color: #9ca3af;">
+                ⏱️ Dauer: ca. ${data.durationMinutes} Minuten
+              </p>
+            </div>
+          </div>
+          
+          <p>Schauen Sie sich das vollständige Angebot in Ihrem Dashboard an und nehmen Sie es an, wenn es Ihnen zusagt.</p>
+          
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${data.requestId}" class="button">
+              Angebot jetzt ansehen
+            </a>
+          </center>
+          
+          <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
+            <strong>Tipp:</strong> Vergleichen Sie mehrere Angebote, bevor Sie sich entscheiden!
+          </p>
+        </div>
+        <div class="footer">
+          <p>Bereifung24 - Ihre Online-Plattform für Reifenservice</p>
+          <p>Bei Fragen erreichen Sie uns unter info@bereifung24.de</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const text = `
+Hallo ${data.customerName},
+
+Sie haben ein neues Angebot erhalten!
+
+Werkstatt: ${data.workshopName}
+Service: ${data.serviceType}
+${data.serviceDescription ? `\n${data.serviceDescription}\n` : ''}
+Preis: ${data.price.toFixed(2)} € (inkl. Montage)
+Dauer: ca. ${data.durationMinutes} Minuten
+
+Sehen Sie sich das Angebot an: ${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${data.requestId}
+
+Beste Grüße,
+Ihr Bereifung24-Team
+  `
+
+  return { subject, html, text }
+}
+
 export function offerAcceptedEmailTemplate(data: {
   workshopName: string
   customerName: string

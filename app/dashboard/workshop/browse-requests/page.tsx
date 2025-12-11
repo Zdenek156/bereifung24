@@ -500,12 +500,47 @@ export default function BrowseRequestsPage() {
               selectedPackage = service.servicePackages[0]
             }
           } else if (isBrakes) {
-            // Bremsen-Service: Initialisierung mit 0€ - Werkstatt muss Achse auswählen
-            // Preis wird dann dynamisch berechnet wenn Achse gewählt wird
-            calculatedInstallation = '0.00'
-            calculatedDuration = '0'
+            // Bremsen-Service: Berechne Summe aller vom Kunden angefragten Pakete
+            const frontSelection = request.additionalNotes?.match(/Vorderachse:\s*([^\n]+)/)?.[1]?.trim()
+            const rearSelection = request.additionalNotes?.match(/Hinterachse:\s*([^\n]+)/)?.[1]?.trim()
+            
+            let totalBrakePrice = 0
+            let totalBrakeDuration = 0
+            
+            // Front axle
+            if (frontSelection && frontSelection !== 'Keine Arbeiten' && service.servicePackages) {
+              let frontPackage = null
+              if (frontSelection === 'Nur Bremsbeläge') {
+                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+              } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
+              }
+              if (frontPackage) {
+                totalBrakePrice += frontPackage.price
+                totalBrakeDuration += frontPackage.durationMinutes
+              }
+            }
+            
+            // Rear axle
+            if (rearSelection && rearSelection !== 'Keine Arbeiten' && service.servicePackages) {
+              let rearPackage = null
+              if (rearSelection === 'Nur Bremsbeläge') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben'))
+              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
+              }
+              if (rearPackage) {
+                totalBrakePrice += rearPackage.price
+                totalBrakeDuration += rearPackage.durationMinutes
+              }
+            }
+            
+            calculatedInstallation = totalBrakePrice.toFixed(2)
+            calculatedDuration = totalBrakeDuration.toString()
             selectedServiceName = ''
-            console.log('Brake service - Initialized with 0, waiting for axle selection')
+            console.log('Brake service - Initialized with total:', totalBrakePrice, 'duration:', totalBrakeDuration)
           }
           
           // Nur Preis/Dauer setzen wenn ein Package gefunden wurde

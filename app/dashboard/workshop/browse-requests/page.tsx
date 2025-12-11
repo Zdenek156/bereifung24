@@ -1980,108 +1980,63 @@ export default function BrowseRequestsPage() {
                   )}
                 </div>
 
-                {/* Price and Duration - with checkbox for Battery/Brake services */}
-                {selectedRequest && (detectServiceType(selectedRequest) === 'BATTERY_SERVICE' || detectServiceType(selectedRequest) === 'BRAKE_SERVICE') && (() => {
-                  const serviceType = detectServiceType(selectedRequest)
-                  const service = services.find((s: any) => s.serviceType === serviceType)
-                  
-                  // Force re-render when carTireType changes
-                  const currentAxle = offerForm.tireOptions[0]?.carTireType || 'none'
-                  
-                  let packagePrice = 0
-                  let packageDuration = 0
-                  let packageDetails: Array<{name: string, price: number, duration: number}> = []
-                  
-                  if (serviceType === 'BRAKE_SERVICE') {
-                    // For brake service, calculate based on:
-                    // 1. Currently selected axle in the form
-                    // 2. Existing offers for other axles
-                    const notes = selectedRequest.additionalNotes || ''
-                    const frontAxleMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
-                    const rearAxleMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
-                    
-                    const frontSelection = frontAxleMatch?.[1]?.trim() || ''
-                    const rearSelection = rearAxleMatch?.[1]?.trim() || ''
-                    
-                    // Check which axles already have offers
-                    const existingOffers = selectedRequest.offers || []
-                    const hasFrontOffer = existingOffers.some(offer => 
-                      offer.tireOptions?.some(opt => opt.carTireType === 'FRONT_TWO')
-                    )
-                    const hasRearOffer = existingOffers.some(offer => 
-                      offer.tireOptions?.some(opt => opt.carTireType === 'REAR_TWO')
-                    )
-                    
-                    // Get currently selected axle from form
-                    const currentAxle = offerForm.tireOptions[0]?.carTireType
-                    
-                    // Check if customer wants both axles (both are NOT "Keine Arbeiten")
-                    const customerWantsFront = frontSelection && frontSelection !== 'Keine Arbeiten'
-                    const customerWantsRear = rearSelection && rearSelection !== 'Keine Arbeiten'
-                    const customerWantsBoth = customerWantsFront && customerWantsRear
-                    
-                    // If customer wants BOTH axles, show both packages always
-                    // If customer wants ONE axle, show only the selected one OR the one with existing offer
-                    
-                    // Front axle: Show if (customer wants both) OR (currently selected) OR (already has offer)
-                    if (customerWantsFront && service?.servicePackages) {
-                      const shouldShowFront = customerWantsBoth || currentAxle === 'FRONT_TWO' || hasFrontOffer
-                      
-                      if (shouldShowFront) {
-                        let frontPackage = null
-                        
-                        if (frontSelection === 'Nur Bremsbeläge') {
-                          frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
-                        } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
-                          frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
-                        }
-                        
-                        if (frontPackage) {
-                          packagePrice += frontPackage.price
-                          packageDuration += frontPackage.durationMinutes
-                          packageDetails.push({ name: frontPackage.name, price: frontPackage.price, duration: frontPackage.durationMinutes })
-                        }
-                      }
-                    }
-                    
-                    // Rear axle: Show if (customer wants both) OR (currently selected) OR (already has offer)
-                    if (customerWantsRear && service?.servicePackages) {
-                      const shouldShowRear = customerWantsBoth || currentAxle === 'REAR_TWO' || hasRearOffer
-                      
-                      if (shouldShowRear) {
-                        let rearPackage = null
-                        
-                        if (rearSelection === 'Nur Bremsbeläge') {
-                          rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-                        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
-                          rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-                        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
-                          rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
-                        }
-                        
-                        if (rearPackage) {
-                          packagePrice += rearPackage.price
-                          packageDuration += rearPackage.durationMinutes
-                          packageDetails.push({ name: rearPackage.name, price: rearPackage.price, duration: rearPackage.durationMinutes })
-                        }
-                      }
-                    }
-                  } else {
-                    // Battery service - use first package
-                    const selectedPackage = service?.servicePackages?.[0]
-                    packagePrice = selectedPackage?.price || 0
-                    packageDuration = selectedPackage?.durationMinutes || 0
-                    if (selectedPackage) {
-                      packageDetails.push({ name: selectedPackage.name, price: selectedPackage.price, duration: selectedPackage.durationMinutes })
-                    }
-                  }
-                  
-                  // Brake/Battery service packages are now shown in the upper blue box
-                  // No need for the lower box anymore
-                  return null
-                })()}
-                  )
-                })()}
+                {/* Checkbox for manual price adjustment on Battery/Brake services */}
+                {selectedRequest && (detectServiceType(selectedRequest) === 'BATTERY_SERVICE' || detectServiceType(selectedRequest) === 'BRAKE_SERVICE') && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="customPriceEnabled"
+                        checked={offerForm.customPriceEnabled || false}
+                        onChange={(e) => {
+                          setOfferForm({ 
+                            ...offerForm, 
+                            customPriceEnabled: e.target.checked
+                          })
+                        }}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="customPriceEnabled" className="text-sm text-gray-700">
+                        Bei einigen Fahrzeugen kann der Preis abweichen
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual price input fields (only visible when checkbox is checked for Battery/Brake) */}
+                {selectedRequest && (detectServiceType(selectedRequest) === 'BATTERY_SERVICE' || detectServiceType(selectedRequest) === 'BRAKE_SERVICE') && offerForm.customPriceEnabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Angepasster Preis (€) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={offerForm.installationFee}
+                        onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Angepasste Dauer (Minuten) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={offerForm.durationMinutes}
+                        onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="60"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Standard price and duration fields for other services */}
                 {selectedRequest && detectServiceType(selectedRequest) !== 'BATTERY_SERVICE' && detectServiceType(selectedRequest) !== 'BRAKE_SERVICE' && (

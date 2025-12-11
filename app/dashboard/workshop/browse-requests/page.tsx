@@ -809,80 +809,17 @@ export default function BrowseRequestsPage() {
     const updated = [...offerForm.tireOptions]
     updated[index] = { ...updated[index], [field]: value }
     
-    // Wenn carTireType geändert wird, berechne Installation neu
+    // Wenn carTireType geändert wird, berechne Installation neu (NICHT für Brake Service)
     if (field === 'carTireType' && selectedRequest) {
-      // Check if this is a brake service - needs special cumulative calculation
       const isBrakeService = selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE')
       
+      // Skip price recalculation for brake service - price stays fixed at initialization
       if (isBrakeService) {
-        // For brake service: Calculate price based on selected axle + existing offers
-        const service = services.find((s: any) => s.serviceType === 'BRAKE_SERVICE')
-        if (service?.servicePackages) {
-          const notes = selectedRequest.additionalNotes || ''
-          const frontAxleMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
-          const rearAxleMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
-          
-          const frontSelection = frontAxleMatch?.[1]?.trim() || ''
-          const rearSelection = rearAxleMatch?.[1]?.trim() || ''
-          
-          // Check existing offers
-          const existingOffers = selectedRequest.offers || []
-          const hasFrontOffer = existingOffers.some(offer => 
-            offer.tireOptions?.some(opt => opt.carTireType === 'FRONT_TWO')
-          )
-          const hasRearOffer = existingOffers.some(offer => 
-            offer.tireOptions?.some(opt => opt.carTireType === 'REAR_TWO')
-          )
-          
-          const currentAxle = value as 'FRONT_TWO' | 'REAR_TWO'
-          let totalPrice = 0
-          let totalDuration = 0
-          
-          // Include front axle if selected now OR already has offer
-          if (frontSelection && frontSelection !== 'Keine Arbeiten') {
-            const shouldIncludeFront = currentAxle === 'FRONT_TWO' || hasFrontOffer
-            if (shouldIncludeFront) {
-              let frontPackage = null
-              if (frontSelection === 'Nur Bremsbeläge') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
-              } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
-              }
-              if (frontPackage) {
-                totalPrice += frontPackage.price
-                totalDuration += frontPackage.durationMinutes
-              }
-            }
-          }
-          
-          // Include rear axle if selected now OR already has offer
-          if (rearSelection && rearSelection !== 'Keine Arbeiten') {
-            const shouldIncludeRear = currentAxle === 'REAR_TWO' || hasRearOffer
-            if (shouldIncludeRear) {
-              let rearPackage = null
-              if (rearSelection === 'Nur Bremsbeläge') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
-              }
-              if (rearPackage) {
-                totalPrice += rearPackage.price
-                totalDuration += rearPackage.durationMinutes
-              }
-            }
-          }
-          
-          setOfferForm({
-            ...offerForm,
-            tireOptions: updated,
-            installationFee: totalPrice > 0 ? totalPrice.toFixed(2) : offerForm.installationFee,
-            durationMinutes: totalDuration > 0 ? totalDuration.toString() : offerForm.durationMinutes,
-            customPriceEnabled: false // Reset checkbox when changing axle
-          })
-          return
-        }
+        setOfferForm({
+          ...offerForm,
+          tireOptions: updated
+        })
+        return
       }
       
       // Regular car tire logic
@@ -2139,92 +2076,10 @@ export default function BrowseRequestsPage() {
                     }
                   }
                   
-                  return (
-                    <div key={`brake-price-${currentAxle}`} className="space-y-4">
-                      {/* Display package price and duration */}
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        {packageDetails.length > 0 && (
-                          <div className="mb-3 space-y-2">
-                            {packageDetails.map((detail, idx) => (
-                              <div key={idx} className="text-sm text-gray-700">
-                                <span className="font-medium">{detail.name}</span>
-                                <span className="text-gray-600"> • {detail.price.toFixed(2)} € • {detail.duration} Min.</span>
-                              </div>
-                            ))}
-                            {packageDetails.length > 1 && <hr className="border-gray-300 my-2" />}
-                          </div>
-                        )}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-700">{packageDetails.length > 1 ? 'Gesamt-Preis' : 'Paket-Preis'}</p>
-                            <p className="text-lg font-semibold text-gray-900">{packagePrice.toFixed(2)} €</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-700">{packageDetails.length > 1 ? 'Gesamt-Dauer' : 'Dauer'}</p>
-                            <p className="text-lg font-semibold text-gray-900">{packageDuration} Min.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Checkbox for custom pricing */}
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="customPriceEnabled"
-                            checked={offerForm.customPriceEnabled || false}
-                            onChange={(e) => {
-                              const isChecked = e.target.checked
-                              setOfferForm({ 
-                                ...offerForm, 
-                                customPriceEnabled: isChecked,
-                                installationFee: isChecked ? offerForm.installationFee : packagePrice.toString(),
-                                durationMinutes: isChecked ? offerForm.durationMinutes : packageDuration.toString()
-                              })
-                            }}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor="customPriceEnabled" className="text-sm text-gray-700">
-                            Bei einigen Fahrzeugen kann der Preis abweichen
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Manual price input fields (only visible when checkbox is checked) */}
-                      {offerForm.customPriceEnabled && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Montagekosten (€) *
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={offerForm.installationFee}
-                              onChange={(e) => setOfferForm({ ...offerForm, installationFee: e.target.value })}
-                              required
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Dauer (Minuten) *
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={offerForm.durationMinutes}
-                              onChange={(e) => setOfferForm({ ...offerForm, durationMinutes: e.target.value })}
-                              required
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                              placeholder="60"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  // Brake/Battery service packages are now shown in the upper blue box
+                  // No need for the lower box anymore
+                  return null
+                })()}
                   )
                 })()}
 

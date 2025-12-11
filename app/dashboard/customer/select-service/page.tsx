@@ -119,35 +119,35 @@ export default function SelectServicePage() {
               onClick={() => router.push(service.route)}
               disabled={!service.available}
               className={`
-                relative p-6 bg-white rounded-xl shadow-sm border-2 transition-all
+                group relative p-6 bg-white rounded-xl shadow-sm border-2 transition-all duration-300
                 ${service.available 
-                  ? 'border-gray-200 hover:border-primary-500 hover:shadow-md cursor-pointer' 
+                  ? 'border-gray-200 hover:border-primary-500 hover:shadow-md hover:scale-105 cursor-pointer' 
                   : 'border-gray-100 opacity-50 cursor-not-allowed'
                 }
               `}
             >
               <div className="flex flex-col items-center text-center">
                 {/* Icon */}
-                <div className="text-6xl mb-4">
+                <div className="text-5xl mb-2 transition-transform duration-300 group-hover:scale-110">
                   {service.icon}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
                   {service.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 mb-2">
                   {service.description}
                 </p>
 
                 {/* Arrow */}
                 {service.available && (
-                  <div className="mt-auto pt-4">
-                    <div className="inline-flex items-center gap-2 text-primary-600 font-medium">
+                  <div className="mt-auto pt-1">
+                    <div className="inline-flex items-center gap-2 text-primary-600 font-medium group-hover:gap-3 transition-all">
                       Anfrage erstellen
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </div>
@@ -155,7 +155,7 @@ export default function SelectServicePage() {
                 )}
 
                 {!service.available && (
-                  <div className="mt-auto pt-4">
+                  <div className="mt-auto pt-1">
                     <span className="text-sm text-gray-400">
                       Demnächst verfügbar
                     </span>

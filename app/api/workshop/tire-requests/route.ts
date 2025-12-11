@@ -90,7 +90,12 @@ export async function GET() {
           select: {
             id: true,
             status: true,
-            createdAt: true
+            createdAt: true,
+            tireOptions: {
+              select: {
+                carTireType: true
+              }
+            }
           }
         },
         _count: {

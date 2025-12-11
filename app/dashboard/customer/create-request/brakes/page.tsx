@@ -52,6 +52,17 @@ export default function BrakesServicePage() {
     }
   }
 
+  const handleVehicleChange = (vehicleId: string) => {
+    setFormData({ ...formData, vehicleId })
+    
+    if (vehicleId) {
+      const selectedVehicle = vehicles.find(v => v.id === vehicleId)
+      if (selectedVehicle?.vin) {
+        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin }))
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -159,7 +170,7 @@ export default function BrakesServicePage() {
             <div className="space-y-4">
               <select
                 value={formData.vehicleId}
-                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                onChange={(e) => handleVehicleChange(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Wählen Sie hier Ihr Fahrzeug aus (optional)</option>

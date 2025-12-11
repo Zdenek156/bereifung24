@@ -500,67 +500,12 @@ export default function BrowseRequestsPage() {
               selectedPackage = service.servicePackages[0]
             }
           } else if (isBrakes) {
-            // Bremsen-Service: Finde Pakete basierend auf Kunden-Auswahl und addiere sie
-            const notes = request.additionalNotes || ''
-            
-            // Parse customer selections from additionalNotes
-            const frontAxleMatch = notes.match(/Vorderachse:\s*(.+?)(?:\n|$)/)
-            const rearAxleMatch = notes.match(/Hinterachse:\s*(.+?)(?:\n|$)/)
-            
-            const frontSelection = frontAxleMatch?.[1]?.trim() || ''
-            const rearSelection = rearAxleMatch?.[1]?.trim() || ''
-            
-            console.log('Brake service - Customer selections:', { frontSelection, rearSelection })
-            
-            let totalPrice = 0
-            let totalDuration = 0
-            const selectedPackageNames: string[] = []
-            
-            // Front axle package selection (skip if 'Keine Arbeiten')
-            if (frontSelection && frontSelection !== 'Keine Arbeiten') {
-              let frontPackage = null
-              
-              if (frontSelection === 'Nur Bremsbeläge') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
-              } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
-              }
-              
-              if (frontPackage) {
-                totalPrice += frontPackage.price
-                totalDuration += frontPackage.durationMinutes
-                selectedPackageNames.push(frontPackage.name)
-                console.log('Front axle package found:', frontPackage.name, frontPackage.price, frontPackage.durationMinutes)
-              }
-            }
-            
-            // Rear axle package selection (skip if 'Keine Arbeiten')
-            if (rearSelection && rearSelection !== 'Keine Arbeiten') {
-              let rearPackage = null
-              
-              if (rearSelection === 'Nur Bremsbeläge') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben') && !p.name.includes('Handbremse'))
-              } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
-              }
-              
-              if (rearPackage) {
-                totalPrice += rearPackage.price
-                totalDuration += rearPackage.durationMinutes
-                selectedPackageNames.push(rearPackage.name)
-                console.log('Rear axle package found:', rearPackage.name, rearPackage.price, rearPackage.durationMinutes)
-              }
-            }
-            
-            // Set calculated values
-            if (totalPrice > 0) {
-              calculatedInstallation = totalPrice.toFixed(2)
-              calculatedDuration = totalDuration.toString()
-              selectedServiceName = selectedPackageNames.join(' + ')
-              console.log('Brake service - Total:', { totalPrice, totalDuration, serviceName: selectedServiceName })
-            }
+            // Bremsen-Service: Initialisierung mit 0€ - Werkstatt muss Achse auswählen
+            // Preis wird dann dynamisch berechnet wenn Achse gewählt wird
+            calculatedInstallation = '0.00'
+            calculatedDuration = '0'
+            selectedServiceName = ''
+            console.log('Brake service - Initialized with 0, waiting for axle selection')
           }
           
           // Nur Preis/Dauer setzen wenn ein Package gefunden wurde
@@ -1988,6 +1933,9 @@ export default function BrowseRequestsPage() {
                   const serviceType = detectServiceType(selectedRequest)
                   const service = services.find((s: any) => s.serviceType === serviceType)
                   
+                  // Force re-render when carTireType changes
+                  const currentAxle = offerForm.tireOptions[0]?.carTireType || 'none'
+                  
                   let packagePrice = 0
                   let packageDuration = 0
                   let packageDetails: Array<{name: string, price: number, duration: number}> = []
@@ -2069,7 +2017,7 @@ export default function BrowseRequestsPage() {
                   }
                   
                   return (
-                    <div className="space-y-4">
+                    <div key={`brake-price-${currentAxle}`} className="space-y-4">
                       {/* Display package price and duration */}
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         {packageDetails.length > 0 && (

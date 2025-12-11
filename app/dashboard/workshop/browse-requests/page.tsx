@@ -1823,8 +1823,43 @@ export default function BrowseRequestsPage() {
                       if (selectedPackage) {
                         basePrice = selectedPackage.price
                       }
+                    } else if (detectedServiceType === 'BRAKE_SERVICE' && service?.servicePackages) {
+                      // Brake Service: Calculate total of ALL customer-requested packages
+                      const frontSelection = selectedRequest.additionalNotes?.match(/Vorderachse:\s*([^\n]+)/)?.[1]?.trim()
+                      const rearSelection = selectedRequest.additionalNotes?.match(/Hinterachse:\s*([^\n]+)/)?.[1]?.trim()
+                      
+                      const customerWantsFront = frontSelection && frontSelection !== 'Keine Arbeiten'
+                      const customerWantsRear = rearSelection && rearSelection !== 'Keine Arbeiten'
+                      
+                      let totalBrakePrice = 0
+                      
+                      // Front axle price
+                      if (customerWantsFront) {
+                        let frontPackage = null
+                        if (frontSelection === 'Nur Bremsbeläge') {
+                          frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                        } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+                          frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
+                        }
+                        if (frontPackage) totalBrakePrice += frontPackage.price
+                      }
+                      
+                      // Rear axle price
+                      if (customerWantsRear) {
+                        let rearPackage = null
+                        if (rearSelection === 'Nur Bremsbeläge') {
+                          rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+                          rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Scheiben'))
+                        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+                          rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
+                        }
+                        if (rearPackage) totalBrakePrice += rearPackage.price
+                      }
+                      
+                      basePrice = totalBrakePrice
                     } else {
-                      // Andere Services (ALIGNMENT, BATTERY, BRAKES, etc.): 
+                      // Andere Services (ALIGNMENT, BATTERY, etc.): 
                       // Nutze immer den eingegebenen Gesamtpreis, da diese Services verschiedene Pakete haben können
                       basePrice = parseFloat(offerForm.installationFee) || 0
                     }

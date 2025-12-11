@@ -1850,48 +1850,38 @@ export default function BrowseRequestsPage() {
                         ) : showServiceInfo ? (
                           <>
                             <div className="space-y-2 text-sm">
-                              {/* Special handling for Brake Service - show individual packages */}
+                              {/* Special handling for Brake Service - show ALL packages customer requested */}
                               {detectedServiceType === 'BRAKE_SERVICE' ? (() => {
                                 const frontSelection = selectedRequest.additionalNotes?.match(/Vorderachse:\s*([^\n]+)/)?.[1]?.trim()
                                 const rearSelection = selectedRequest.additionalNotes?.match(/Hinterachse:\s*([^\n]+)/)?.[1]?.trim()
-                                const currentAxle = offerForm.tireOptions[0]?.carTireType
                                 
                                 const customerWantsFront = frontSelection && frontSelection !== 'Keine Arbeiten'
                                 const customerWantsRear = rearSelection && rearSelection !== 'Keine Arbeiten'
-                                const customerWantsBoth = customerWantsFront && customerWantsRear
                                 
                                 const packages: Array<{ name: string; price: number }> = []
                                 
-                                // Front axle
+                                // Front axle - ALWAYS show if customer wants it
                                 if (customerWantsFront && service?.servicePackages) {
-                                  const shouldShowFront = customerWantsBoth || currentAxle === 'FRONT_TWO'
-                                  
-                                  if (shouldShowFront) {
-                                    let frontPackage = null
-                                    if (frontSelection === 'Nur Bremsbeläge') {
-                                      frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
-                                    } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
-                                      frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
-                                    }
-                                    if (frontPackage) packages.push({ name: frontPackage.name, price: frontPackage.price })
+                                  let frontPackage = null
+                                  if (frontSelection === 'Nur Bremsbeläge') {
+                                    frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                                  } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+                                    frontPackage = service.servicePackages.find((p: any) => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
                                   }
+                                  if (frontPackage) packages.push({ name: frontPackage.name, price: frontPackage.price })
                                 }
                                 
-                                // Rear axle
+                                // Rear axle - ALWAYS show if customer wants it
                                 if (customerWantsRear && service?.servicePackages) {
-                                  const shouldShowRear = customerWantsBoth || currentAxle === 'REAR_TWO'
-                                  
-                                  if (shouldShowRear) {
-                                    let rearPackage = null
-                                    if (rearSelection === 'Nur Bremsbeläge') {
-                                      rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
-                                    } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
-                                      rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Scheiben'))
-                                    } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
-                                      rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
-                                    }
-                                    if (rearPackage) packages.push({ name: rearPackage.name, price: rearPackage.price })
+                                  let rearPackage = null
+                                  if (rearSelection === 'Nur Bremsbeläge') {
+                                    rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                                  } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+                                    rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Scheiben'))
+                                  } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+                                    rearPackage = service.servicePackages.find((p: any) => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
                                   }
+                                  if (rearPackage) packages.push({ name: rearPackage.name, price: rearPackage.price })
                                 }
                                 
                                 return (

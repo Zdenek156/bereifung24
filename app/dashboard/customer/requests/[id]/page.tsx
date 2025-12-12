@@ -197,8 +197,45 @@ export default function RequestDetailPage() {
     // Set the selected offer ID so we know which offer this belongs to
     setSelectedOfferId(offerId)
     
+    const serviceType = getServiceType()
+    const isBrakeService = serviceType === 'BRAKES'
+    
     setSelectedTireOptionIds(prev => {
-      // For car tires, check compatibility
+      // For brake services: Special logic for axle selection
+      if (isBrakeService && option.carTireType) {
+        const currentOffer = request?.offers.find(o => o.id === offerId)
+        const displayOptions = currentOffer ? getDisplayOptions(currentOffer) : []
+        const currentlySelected = prev.map(id => 
+          displayOptions.find(opt => opt.id === id)
+        ).filter(Boolean) as TireOption[]
+        
+        if (prev.includes(optionId)) {
+          // Remove option
+          return prev.filter(id => id !== optionId)
+        } else {
+          // Check if same axle is already selected
+          const sameAxleAlreadySelected = currentlySelected.some(selected => 
+            selected.carTireType === option.carTireType
+          )
+          
+          if (sameAxleAlreadySelected) {
+            const axleName = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' : 
+                           option.carTireType === 'REAR_TWO' ? 'Hinterachse' : 'diese Achse'
+            alert(`Sie können nicht zweimal die ${axleName} auswählen. Bitte wählen Sie maximal ein Paket pro Achse.`)
+            return prev
+          }
+          
+          // Can select up to 2 packages (one front, one rear)
+          if (currentlySelected.length >= 2) {
+            alert('Sie können maximal 2 Pakete auswählen (Vorderachse und Hinterachse)')
+            return prev
+          }
+          
+          return [...prev, optionId]
+        }
+      }
+      
+      // For car tires: Original logic
       if (option.carTireType) {
         const currentOffer = request?.offers.find(o => o.id === offerId)
         const displayOptions = currentOffer ? getDisplayOptions(currentOffer) : []
@@ -1203,7 +1240,13 @@ export default function RequestDetailPage() {
                               
                               // For service requests, use the option's brand and model as the label (these are the package names)
                               const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
-                              const tireTypeLabel = isServiceRequest ? option.brand :
+                              const isBrakeService = serviceType === 'BRAKES'
+                              
+                              // For brake services, show axle information
+                              const axleLabel = isBrakeService && option.carTireType === 'FRONT_TWO' ? 'Vorderachse' :
+                                              isBrakeService && option.carTireType === 'REAR_TWO' ? 'Hinterachse' : null
+                              
+                              const tireTypeLabel = isServiceRequest && !isBrakeService ? option.brand :
                                                    option.carTireType === 'ALL_FOUR' ? '🚗 Alle 4 Reifen' :
                                                    option.carTireType === 'FRONT_TWO' ? '🚗 2 Vorderreifen' :
                                                    option.carTireType === 'REAR_TWO' ? '🚗 2 Hinterreifen' :
@@ -1226,10 +1269,14 @@ export default function RequestDetailPage() {
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           {isServiceRequest ? (
-                                            // Service request: show brand as title and model as subtitle
+                                            // Service request: show brand as title and model/axle as subtitle
                                             <>
                                               <p className="font-semibold text-gray-900">{option.brand}</p>
-                                              {option.model && <p className="text-xs text-gray-600 mt-1">{option.model}</p>}
+                                              {isBrakeService && axleLabel ? (
+                                                <p className="text-xs text-blue-600 font-medium mt-1">🔧 {axleLabel}</p>
+                                              ) : option.model ? (
+                                                <p className="text-xs text-gray-600 mt-1">{option.model}</p>
+                                              ) : null}
                                             </>
                                           ) : (
                                             // Tire request: show brand + model as title and tire type as subtitle
@@ -1261,15 +1308,18 @@ export default function RequestDetailPage() {
                             const calculation = calculateSelectedTotal(offer)
                             const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                             const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
+                            const isBrakeService = serviceType === 'BRAKES'
                             return (
                             <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
                               <div className="space-y-2 text-sm">
                                 {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
                                   const qty = getQuantityForTireOption(option)
+                                  const axleInfo = isBrakeService && option.carTireType === 'FRONT_TWO' ? ' (Vorderachse)' :
+                                                  isBrakeService && option.carTireType === 'REAR_TWO' ? ' (Hinterachse)' : ''
                                   return (
                                     <div key={option.id} className="flex justify-between text-gray-700">
-                                      <span>• {option.brand}{isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
+                                      <span>• {option.brand}{axleInfo}{isServiceRequest && !isBrakeService ? '' : isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
                                       <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
                                     </div>
                                   )

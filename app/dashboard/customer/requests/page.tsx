@@ -175,13 +175,13 @@ export default function RequestsPage() {
                             // Service request - detect type by keyword in additionalNotes
                             <>
                               {request.additionalNotes?.includes('KLIMASERVICE') && '❄️ Klimaservice'}
-                              {request.additionalNotes?.includes('ACHSVERMESSUNG') && '📐 Achsvermessung / Spureinstellung'}
-                              {request.additionalNotes?.includes('BREMSENWECHSEL') && '🔴 Bremsenwechsel'}
-                              {request.additionalNotes?.includes('BATTERIEWECHSEL') && '🔋 Batteriewechsel'}
-                              {request.additionalNotes?.includes('RÄDER UMSTECKEN') && '🔄 Räder umstecken (Sommer/Winter)'}
+                              {request.additionalNotes?.includes('ACHSVERMESSUNG') && '📐 Achsvermessung'}
+                              {request.additionalNotes?.includes('BREMSEN-SERVICE') && '🛑 Bremsen-Service'}
+                              {request.additionalNotes?.includes('BATTERIE-SERVICE') && '🔋 Batterie-Service'}
+                              {request.additionalNotes?.includes('RÄDER UMSTECKEN') && '🔄 Räder umstecken'}
                               {request.additionalNotes?.includes('🔧 REPARATUR') && '🔧 Reifenreparatur'}
-                              {request.additionalNotes?.includes('🛠️') && '🛠️ Sonstige Reifendienstleistungen'}
-                              {!request.additionalNotes?.includes('KLIMASERVICE') && !request.additionalNotes?.includes('ACHSVERMESSUNG') && !request.additionalNotes?.includes('BREMSENWECHSEL') && !request.additionalNotes?.includes('BATTERIEWECHSEL') && !request.additionalNotes?.includes('RÄDER UMSTECKEN') && !request.additionalNotes?.includes('🔧 REPARATUR') && !request.additionalNotes?.includes('🛠️') && '🔧 Service-Anfrage'}
+                              {request.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') && '🔧 Sonstige Reifenservices'}
+                              {!request.additionalNotes?.includes('KLIMASERVICE') && !request.additionalNotes?.includes('ACHSVERMESSUNG') && !request.additionalNotes?.includes('BREMSEN-SERVICE') && !request.additionalNotes?.includes('BATTERIE-SERVICE') && !request.additionalNotes?.includes('RÄDER UMSTECKEN') && !request.additionalNotes?.includes('🔧 REPARATUR') && !request.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') && '🔧 Service-Anfrage'}
                             </>
                           ) : (
                             // Regular car tire request
@@ -258,7 +258,16 @@ export default function RequestsPage() {
                         )}
                         
                         <p className="text-sm text-gray-600 mt-1">
-                          {request.width === 0 ? 'Service-Anfrage' : request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? `Motorradreifen • ${request.quantity} Stück` : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
+                          {request.width === 0 ? (
+                            request.additionalNotes?.includes('BREMSEN-SERVICE') ? 'Bremsen-Service' :
+                            request.additionalNotes?.includes('BATTERIE-SERVICE') ? 'Batterie-Service' :
+                            request.additionalNotes?.includes('KLIMASERVICE') ? 'Klimaservice' :
+                            request.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES') ? 'Sonstige Reifenservices' :
+                            request.additionalNotes?.includes('ACHSVERMESSUNG') ? 'Achsvermessung' :
+                            request.additionalNotes?.includes('RÄDER UMSTECKEN') ? 'Räder umstecken' :
+                            request.additionalNotes?.includes('🔧 REPARATUR') ? 'Reifenreparatur' :
+                            'Service-Anfrage'
+                          ) : request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? `Motorradreifen • ${request.quantity} Stück` : `${request.quantity} Reifen`} • Erstellt am {formatDate(request.createdAt)}
                         </p>
                       </div>
                     </div>

@@ -477,14 +477,14 @@ export default function RequestDetailPage() {
       return 'TIRE_CHANGE' // Regular tire change
     }
     
-    // Other services - check by keywords
+    // Other services - check by keywords (updated to match current markers)
     if (notes.includes('KLIMASERVICE')) return 'CLIMATE'
     if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT'
-    if (notes.includes('BREMSENWECHSEL')) return 'BRAKES'
-    if (notes.includes('BATTERIEWECHSEL')) return 'BATTERY'
+    if (notes.includes('BREMSEN-SERVICE') || notes.includes('BREMSENWECHSEL')) return 'BRAKES'
+    if (notes.includes('BATTERIE-SERVICE') || notes.includes('BATTERIEWECHSEL')) return 'BATTERY'
     if (notes.includes('RÄDER UMSTECKEN')) return 'WHEEL_CHANGE'
     if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REPARATUR')) return 'REPAIR'
-    if (notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
+    if (notes.includes('🔧 SONSTIGE REIFENSERVICES') || notes.includes('SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
     
     return 'UNKNOWN'
   }

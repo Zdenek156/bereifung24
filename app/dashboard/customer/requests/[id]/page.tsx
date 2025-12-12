@@ -1145,10 +1145,11 @@ export default function RequestDetailPage() {
                           const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                           const serviceType = getServiceType()
                           const isWheelChange = serviceType === 'WHEEL_CHANGE'
+                          const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
                           
                           return (
                             <div>
-                              {!isWheelChange && offer.tireBrand && offer.tireModel && (
+                              {!isWheelChange && !isServiceRequest && offer.tireBrand && offer.tireModel && (
                                 <>
                                   <p className="font-semibold text-lg text-gray-900 mb-2">
                                     {offer.tireBrand} {offer.tireModel}
@@ -1158,10 +1159,10 @@ export default function RequestDetailPage() {
                               )}
                               
                               {/* Price breakdown */}
-                              <div className={`bg-primary-50 rounded-lg p-4 ${!isWheelChange ? 'mt-4 pt-4 border-t-2 border-gray-300' : ''}`}>
+                              <div className={`bg-primary-50 rounded-lg p-4 ${!isWheelChange && !isServiceRequest ? 'mt-4 pt-4 border-t-2 border-gray-300' : ''}`}>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Preisübersicht:</h4>
                                 <div className="space-y-2 text-sm">
-                                  {!isWheelChange && (
+                                  {!isWheelChange && !isServiceRequest && (
                                     <div className="flex justify-between text-gray-700">
                                       <span>Reifen ({calculation.totalQuantity} Stück)</span>
                                       <span className="font-semibold">{calculation.tiresTotal.toFixed(2)} €</span>
@@ -1169,16 +1170,18 @@ export default function RequestDetailPage() {
                                   )}
                                   <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
                                     <span>
-                                      {isWheelChange ? 'Räder umstecken (4 Räder)' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
-                                      {!isWheelChange && hasDisposal && ' + Entsorgung'}
+                                      {isWheelChange ? 'Räder umstecken (4 Räder)' : 
+                                       isServiceRequest ? 'Service-Durchführung' :
+                                       `Montagekosten (${calculation.totalQuantity} Reifen)`}
+                                      {!isWheelChange && !isServiceRequest && hasDisposal && ' + Entsorgung'}
                                     </span>
-                                    <span className="font-semibold">{isWheelChange ? calculation.totalPrice.toFixed(2) : calculation.installationFee.toFixed(2)} €</span>
+                                    <span className="font-semibold">{isWheelChange || isServiceRequest ? calculation.totalPrice.toFixed(2) : calculation.installationFee.toFixed(2)} €</span>
                                   </div>
                                   <div className="flex justify-between text-xs text-gray-600">
                                     <span>⏱️ Dauer</span>
                                     <span>{calculation.duration} Minuten</span>
                                   </div>
-                                  {!isWheelChange && (
+                                  {!isWheelChange && !isServiceRequest && (
                                     <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
                                       <span>Gesamtpreis</span>
                                       <span>{calculation.totalPrice.toFixed(2)} €</span>
@@ -1192,12 +1195,16 @@ export default function RequestDetailPage() {
 
                         return (
                         <>
-                          <p className="text-xs text-gray-600 mb-3">Wählen Sie die gewünschten Reifen:</p>
+                          <p className="text-xs text-gray-600 mb-3">Wählen Sie die gewünschten {serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE' ? 'Pakete' : 'Reifen'}:</p>
                           <div className="space-y-3">
                             {displayOptions.map((option, idx) => {
                               const quantity = getQuantityForTireOption(option)
                               const optionTirePrice = option.pricePerTire * quantity
-                              const tireTypeLabel = option.carTireType === 'ALL_FOUR' ? '🚗 Alle 4 Reifen' :
+                              
+                              // For service requests, use the option's brand and model as the label (these are the package names)
+                              const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
+                              const tireTypeLabel = isServiceRequest ? option.brand :
+                                                   option.carTireType === 'ALL_FOUR' ? '🚗 Alle 4 Reifen' :
                                                    option.carTireType === 'FRONT_TWO' ? '🚗 2 Vorderreifen' :
                                                    option.carTireType === 'REAR_TWO' ? '🚗 2 Hinterreifen' :
                                                    option.motorcycleTireType === 'BOTH' ? '🏍️ Beide Reifen' :
@@ -1218,11 +1225,22 @@ export default function RequestDetailPage() {
                                     <label htmlFor={`option-${option.id}`} className="flex-1 cursor-pointer">
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
-                                          <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
-                                          <p className="text-xs text-blue-600 font-medium mt-1">{tireTypeLabel}</p>
-                                          <p className="text-xs text-gray-600 mt-1">
-                                            {option.pricePerTire.toFixed(2)} € pro Reifen × {quantity} = {optionTirePrice.toFixed(2)} €
-                                          </p>
+                                          {isServiceRequest ? (
+                                            // Service request: show brand as title and model as subtitle
+                                            <>
+                                              <p className="font-semibold text-gray-900">{option.brand}</p>
+                                              {option.model && <p className="text-xs text-gray-600 mt-1">{option.model}</p>}
+                                            </>
+                                          ) : (
+                                            // Tire request: show brand + model as title and tire type as subtitle
+                                            <>
+                                              <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
+                                              <p className="text-xs text-blue-600 font-medium mt-1">{tireTypeLabel}</p>
+                                              <p className="text-xs text-gray-600 mt-1">
+                                                {option.pricePerTire.toFixed(2)} € pro Reifen × {quantity} = {optionTirePrice.toFixed(2)} €
+                                              </p>
+                                            </>
+                                          )}
                                         </div>
                                         <div className="text-right ml-4">
                                           <p className="text-lg font-bold text-primary-600">
@@ -1242,6 +1260,7 @@ export default function RequestDetailPage() {
                           {((selectedTireOptionIds.length > 0 && selectedOfferId === offer.id) || displayOptions.length === 0) && (() => {
                             const calculation = calculateSelectedTotal(offer)
                             const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                            const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
                             return (
                             <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
@@ -1250,15 +1269,15 @@ export default function RequestDetailPage() {
                                   const qty = getQuantityForTireOption(option)
                                   return (
                                     <div key={option.id} className="flex justify-between text-gray-700">
-                                      <span>• {option.brand} {option.model} ({qty} Stück)</span>
+                                      <span>• {option.brand}{isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
                                       <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
                                     </div>
                                   )
                                 })}
                                 <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
                                   <span>
-                                    Montagekosten ({calculation.totalQuantity} Reifen)
-                                    {hasDisposal && ' + Entsorgung'}
+                                    {isServiceRequest ? 'Service-Durchführung' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
+                                    {!isServiceRequest && hasDisposal && ' + Entsorgung'}
                                   </span>
                                   <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
                                 </div>

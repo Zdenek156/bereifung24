@@ -45,7 +45,6 @@ interface Offer {
         city: string | null
         zipCode: string | null
         street: string | null
-        houseNumber: string | null
       }
     }
   }
@@ -381,9 +380,9 @@ export default function WorkshopOffers() {
                     <p className="text-sm text-gray-900">
                       {offer.tireRequest.customer.user.firstName} {offer.tireRequest.customer.user.lastName}
                     </p>
-                    {(offer.tireRequest.customer.user.street || offer.tireRequest.customer.user.houseNumber) && (
+                    {offer.tireRequest.customer.user.street && (
                       <p className="text-sm text-gray-600">
-                        {offer.tireRequest.customer.user.street} {offer.tireRequest.customer.user.houseNumber}
+                        {offer.tireRequest.customer.user.street}
                       </p>
                     )}
                     {(offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (

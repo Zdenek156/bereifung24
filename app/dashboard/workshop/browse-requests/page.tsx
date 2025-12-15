@@ -770,11 +770,9 @@ export default function BrowseRequestsPage() {
         }
       }
       
-      // Setze die berechneten Werte für installationFee und duration
-      if (frontMontagePrice > 0 || rearMontagePrice > 0) {
-        calculatedInstallation = (frontMontagePrice + rearMontagePrice).toFixed(2)
-        calculatedDuration = (frontDuration + rearDuration).toString()
-      }
+      // Berechne Installation und Dauer NUR für tatsächlich vorhandene Optionen
+      let totalMontage = 0
+      let totalDuration = 0
       
       if (frontMontagePrice > 0) {
         initialTireOptions.push({
@@ -784,6 +782,8 @@ export default function BrowseRequestsPage() {
           carTireType: 'FRONT_TWO',
           montagePrice: frontMontagePrice
         })
+        totalMontage += frontMontagePrice
+        totalDuration += frontDuration
         // Speichere in State für addTireOption
         setBrakeServicePackages(prev => ({ ...prev, front: { price: frontMontagePrice, durationMinutes: frontDuration, name: frontSelection } }))
       }
@@ -796,8 +796,16 @@ export default function BrowseRequestsPage() {
           carTireType: 'REAR_TWO',
           montagePrice: rearMontagePrice
         })
+        totalMontage += rearMontagePrice
+        totalDuration += rearDuration
         // Speichere in State für addTireOption
         setBrakeServicePackages(prev => ({ ...prev, rear: { price: rearMontagePrice, durationMinutes: rearDuration, name: rearSelection } }))
+      }
+      
+      // Setze berechnete Werte
+      if (totalMontage > 0) {
+        calculatedInstallation = totalMontage.toFixed(2)
+        calculatedDuration = totalDuration.toString()
       }
     } else {
       // Pakete gefunden - verwende sie
@@ -805,6 +813,10 @@ export default function BrowseRequestsPage() {
         front: brakeServicePackages.front ? { name: brakeServicePackages.front.name, price: brakeServicePackages.front.price } : null,
         rear: brakeServicePackages.rear ? { name: brakeServicePackages.rear.name, price: brakeServicePackages.rear.price } : null
       })
+      
+      let totalMontage = 0
+      let totalDuration = 0
+      
       if (brakeServicePackages.front) {
         initialTireOptions.push({
           brandModel: '',
@@ -813,6 +825,8 @@ export default function BrowseRequestsPage() {
           carTireType: 'FRONT_TWO',
           montagePrice: brakeServicePackages.front.price
         })
+        totalMontage += brakeServicePackages.front.price
+        totalDuration += (brakeServicePackages.front.durationMinutes || 0)
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
@@ -822,7 +836,13 @@ export default function BrowseRequestsPage() {
           carTireType: 'REAR_TWO',
           montagePrice: brakeServicePackages.rear.price
         })
+        totalMontage += brakeServicePackages.rear.price
+        totalDuration += (brakeServicePackages.rear.durationMinutes || 0)
       }
+      
+      // Überschreibe die vorher berechneten Werte mit den tatsächlichen
+      calculatedInstallation = totalMontage.toFixed(2)
+      calculatedDuration = totalDuration.toString()
     }
     } else {
       // Standard: Ein leeres Reifenangebot
@@ -983,12 +1003,18 @@ export default function BrowseRequestsPage() {
     const updated = [...offerForm.tireOptions]
     updated[index] = { ...updated[index], [field]: value }
     
-    // Wenn carTireType geändert wird, berechne Installation neu (NICHT für Brake Service)
+    // Wenn carTireType geändert wird, berechne Installation neu
     if (field === 'carTireType' && selectedRequest) {
       const isBrakeService = selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE')
       
-      // Skip price recalculation for brake service - price stays fixed at initialization
-      if (isBrakeService) {
+      // Für Brake Service: Aktualisiere montagePrice basierend auf neuer Achse
+      if (isBrakeService && brakeServicePackages) {
+        const newCarTireType = value as string
+        if (newCarTireType === 'FRONT_TWO' && brakeServicePackages.front) {
+          updated[index].montagePrice = brakeServicePackages.front.price
+        } else if (newCarTireType === 'REAR_TWO' && brakeServicePackages.rear) {
+          updated[index].montagePrice = brakeServicePackages.rear.price
+        }
         setOfferForm({
           ...offerForm,
           tireOptions: updated

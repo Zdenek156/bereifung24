@@ -27,6 +27,7 @@ interface Offer {
     quantity: number
     zipCode: string
     needByDate: string
+    additionalNotes: string | null
     customer: {
       user: {
         firstName: string
@@ -272,10 +273,55 @@ export default function WorkshopOffers() {
                       {getStatusBadge(offer.status)}
                     </div>
                     <p className="text-sm text-gray-600">
-                      {offer.tireRequest.width}/{offer.tireRequest.aspectRatio} R{offer.tireRequest.diameter} • 
-                      {offer.tireRequest.season === 'SUMMER' ? ' Sommerreifen' : 
-                       offer.tireRequest.season === 'WINTER' ? ' Winterreifen' : ' Ganzjahresreifen'} • 
-                      {offer.tireRequest.quantity} Stück
+                      {(() => {
+                        const notes = offer.tireRequest.additionalNotes || ''
+                        
+                        // Bremsen-Service
+                        if (notes.includes('BREMSEN-SERVICE')) {
+                          const front = notes.match(/Vorderachse:\s*([^\n]+)/)?.[1]?.trim()
+                          const rear = notes.match(/Hinterachse:\s*([^\n]+)/)?.[1]?.trim()
+                          const parts = []
+                          if (front && front !== 'Keine Arbeiten') parts.push(`Vorne: ${front}`)
+                          if (rear && rear !== 'Keine Arbeiten') parts.push(`Hinten: ${rear}`)
+                          return `🔴 Bremsen-Service • ${parts.join(' • ')}`
+                        }
+                        
+                        // Batterie-Service
+                        if (notes.includes('BATTERIE-SERVICE')) {
+                          return '🔋 Batterie-Service'
+                        }
+                        
+                        // Klimaservice
+                        if (notes.includes('KLIMASERVICE')) {
+                          return '❄️ Klimaservice'
+                        }
+                        
+                        // Achsvermessung
+                        if (notes.includes('ACHSVERMESSUNG')) {
+                          return '⚙️ Achsvermessung / Spureinstellung'
+                        }
+                        
+                        // Räder umstecken
+                        if (notes.includes('RÄDER UMSTECKEN')) {
+                          return '🔄 Räder umstecken (Sommer/Winter)'
+                        }
+                        
+                        // Reifenreparatur
+                        if (notes.includes('🔧 REIFENREPARATUR') || offer.tireRequest.width === 0) {
+                          return '🔧 Reifenreparatur'
+                        }
+                        
+                        // Sonstiger Service
+                        if (notes.includes('🔧 SONSTIGE REIFENSERVICES')) {
+                          return '🛠️ Sonstiger Service'
+                        }
+                        
+                        // Standard: Reifen
+                        return `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter} • ${
+                          offer.tireRequest.season === 'SUMMER' ? 'Sommerreifen' : 
+                          offer.tireRequest.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'
+                        } • ${offer.tireRequest.quantity} Stück`
+                      })()}
                     </p>
                   </div>
                   <div className="text-right">

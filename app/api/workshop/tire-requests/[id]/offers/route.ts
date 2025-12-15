@@ -175,7 +175,8 @@ export async function POST(
                 model: parts.slice(1).join(' ') || '',
                 pricePerTire: option.pricePerTire,
                 motorcycleTireType: option.motorcycleTireType,
-                carTireType: option.carTireType
+                carTireType: option.carTireType,
+                montagePrice: (option as any).montagePrice // Speichere Montagepreis
               }
             })
           }

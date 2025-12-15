@@ -55,7 +55,6 @@ export async function GET() {
                     city: true,
                     zipCode: true,
                     street: true,
-                    houseNumber: true,
                   },
                 },
               },

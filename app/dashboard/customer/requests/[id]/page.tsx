@@ -433,13 +433,20 @@ export default function RequestDetailPage() {
     }
     
     const selectedOptions = displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id))
+    
+    // Determine if this is a service request
+    const serviceType = getServiceType()
+    const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
+    
     let totalQuantity = 0
     let tiresTotal = 0
 
     selectedOptions.forEach(option => {
       const qty = getQuantityForTireOption(option)
       totalQuantity += qty
-      tiresTotal += option.pricePerTire * qty
+      // For services, pricePerTire is already the complete package price
+      // For tires, it needs to be multiplied by quantity
+      tiresTotal += isServiceRequest ? option.pricePerTire : (option.pricePerTire * qty)
     })
 
     const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
@@ -1235,12 +1242,14 @@ export default function RequestDetailPage() {
                           <p className="text-xs text-gray-600 mb-3">Wählen Sie die gewünschten {serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE' ? 'Pakete' : 'Reifen'}:</p>
                           <div className="space-y-3">
                             {displayOptions.map((option, idx) => {
-                              const quantity = getQuantityForTireOption(option)
-                              const optionTirePrice = option.pricePerTire * quantity
-                              
                               // For service requests, use the option's brand and model as the label (these are the package names)
                               const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
                               const isBrakeService = serviceType === 'BRAKES'
+                              
+                              // For services, pricePerTire is the COMPLETE package price (not per item)
+                              // For tires, pricePerTire needs to be multiplied by quantity
+                              const quantity = getQuantityForTireOption(option)
+                              const optionPrice = isServiceRequest ? option.pricePerTire : (option.pricePerTire * quantity)
                               
                               // For brake services, show axle information
                               const axleLabel = isBrakeService && option.carTireType === 'FRONT_TWO' ? 'Vorderachse' :
@@ -1284,16 +1293,16 @@ export default function RequestDetailPage() {
                                               <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
                                               <p className="text-xs text-blue-600 font-medium mt-1">{tireTypeLabel}</p>
                                               <p className="text-xs text-gray-600 mt-1">
-                                                {option.pricePerTire.toFixed(2)} € pro Reifen × {quantity} = {optionTirePrice.toFixed(2)} €
+                                                {option.pricePerTire.toFixed(2)} € pro Reifen × {quantity} = {optionPrice.toFixed(2)} €
                                               </p>
                                             </>
                                           )}
                                         </div>
                                         <div className="text-right ml-4">
                                           <p className="text-lg font-bold text-primary-600">
-                                            {optionTirePrice.toFixed(2)} €
+                                            {optionPrice.toFixed(2)} €
                                           </p>
-                                          <p className="text-xs text-gray-500">{quantity} Stück</p>
+                                          {!isServiceRequest && <p className="text-xs text-gray-500">{quantity} Stück</p>}
                                         </div>
                                       </div>
                                     </label>
@@ -1317,10 +1326,12 @@ export default function RequestDetailPage() {
                                   const qty = getQuantityForTireOption(option)
                                   const axleInfo = isBrakeService && option.carTireType === 'FRONT_TWO' ? ' (Vorderachse)' :
                                                   isBrakeService && option.carTireType === 'REAR_TWO' ? ' (Hinterachse)' : ''
+                                  // For services, pricePerTire is the complete package price
+                                  const optionTotal = isServiceRequest ? option.pricePerTire : (option.pricePerTire * qty)
                                   return (
                                     <div key={option.id} className="flex justify-between text-gray-700">
                                       <span>• {option.brand}{axleInfo}{isServiceRequest && !isBrakeService ? '' : isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
-                                      <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
+                                      <span className="font-semibold">{optionTotal.toFixed(2)} €</span>
                                     </div>
                                   )
                                 })}
@@ -1339,10 +1350,12 @@ export default function RequestDetailPage() {
                                   <span>Gesamtpreis</span>
                                   <span>{calculation.totalPrice.toFixed(2)} €</span>
                                 </div>
-                                <p className="text-xs text-gray-600 mt-2">
-                                  ✓ Gesamt: {calculation.totalQuantity} Reifen
-                                  {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
-                                </p>
+                                {!isServiceRequest && (
+                                  <p className="text-xs text-gray-600 mt-2">
+                                    ✓ Gesamt: {calculation.totalQuantity} Reifen
+                                    {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             )

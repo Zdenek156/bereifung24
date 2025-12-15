@@ -512,7 +512,7 @@ export default function RequestDetailPage() {
         
         // Duration from workshopServices if available
         if (workshopServices[offer.workshopId]?.servicePackages) {
-          const servicePackages = workshopServices[offer.workshopId].servicePackages
+          const servicePackages = workshopServices[offer.workshopId].servicePackages!
           const matchingPackage = servicePackages.find(pkg => 
             (option.carTireType === 'FRONT_TWO' && pkg.name.toLowerCase().includes('vorderachse')) ||
             (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))

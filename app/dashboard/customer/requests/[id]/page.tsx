@@ -510,15 +510,17 @@ export default function RequestDetailPage() {
         const montagePriceValue = (option as any).montagePrice || 0
         totalMontage += montagePriceValue
         
-        // Duration from workshopServices if available
-        if (workshopServices[offer.workshopId]?.servicePackages) {
-          const servicePackages = workshopServices[offer.workshopId].servicePackages!
-          const matchingPackage = servicePackages.find(pkg => 
-            (option.carTireType === 'FRONT_TWO' && pkg.name.toLowerCase().includes('vorderachse')) ||
-            (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))
-          )
-          if (matchingPackage) {
-            totalDuration += matchingPackage.duration
+        // Duration: Berechne aus montagePrice (Brake Service Mapping)
+        // 60€ (Front Nur Beläge) = 60min, 80€ (Rear Nur Beläge) = 60min
+        // 110€ (Front Beläge+Scheiben) = 110min, 130€ (Rear Beläge+Scheiben) = 110min  
+        // 150€ (Rear Beläge+Scheiben+Handbremse) = 150min
+        if (montagePriceValue > 0) {
+          if (montagePriceValue === 60 || montagePriceValue === 80) {
+            totalDuration += 60
+          } else if (montagePriceValue === 110 || montagePriceValue === 130) {
+            totalDuration += 110
+          } else if (montagePriceValue === 150) {
+            totalDuration += 150
           }
         }
         
@@ -529,11 +531,6 @@ export default function RequestDetailPage() {
           montageCost: montagePriceValue
         })
       })
-      
-      // If no duration found from service packages, use offer's durationMinutes
-      if (totalDuration === 0 && offer.durationMinutes) {
-        totalDuration = offer.durationMinutes
-      }
       
       console.log('Brake service totals:', {
         tiresTotal,

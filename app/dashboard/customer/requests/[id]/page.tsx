@@ -511,16 +511,20 @@ export default function RequestDetailPage() {
         totalMontage += montagePriceValue
         
         // Duration: Berechne aus montagePrice (Brake Service Mapping)
-        // 60€ (Front Nur Beläge) = 60min, 80€ (Rear Nur Beläge) = 60min
-        // 110€ (Front Beläge+Scheiben) = 110min, 130€ (Rear Beläge+Scheiben) = 110min  
-        // 150€ (Rear Beläge+Scheiben+Handbremse) = 150min
+        // 60€ (Front Nur Beläge) = 60min, 80€ (Rear Nur Beläge) = 69min
+        // 110€ (Front Beläge+Scheiben) = 85min, 130€ (Rear Beläge+Scheiben) = 85min  
+        // 150€ (Rear Beläge+Scheiben+Handbremse) = 95min
         if (montagePriceValue > 0) {
-          if (montagePriceValue === 60 || montagePriceValue === 80) {
+          if (montagePriceValue === 60) {
             totalDuration += 60
-          } else if (montagePriceValue === 110 || montagePriceValue === 130) {
-            totalDuration += 110
+          } else if (montagePriceValue === 80) {
+            totalDuration += 69
+          } else if (montagePriceValue === 110) {
+            totalDuration += 85
+          } else if (montagePriceValue === 130) {
+            totalDuration += 85
           } else if (montagePriceValue === 150) {
-            totalDuration += 150
+            totalDuration += 95
           }
         }
         

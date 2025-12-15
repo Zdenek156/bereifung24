@@ -34,7 +34,16 @@ export async function GET() {
       include: {
         tireOptions: true,
         tireRequest: {
-          include: {
+          select: {
+            id: true,
+            season: true,
+            width: true,
+            aspectRatio: true,
+            diameter: true,
+            quantity: true,
+            zipCode: true,
+            needByDate: true,
+            additionalNotes: true,
             customer: {
               include: {
                 user: {

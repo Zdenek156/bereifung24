@@ -107,8 +107,8 @@ export default function RequestDetailPage() {
       
       if (response.ok) {
         setRequest(data.request)
-        // Load workshop services for all offers
-        await fetchWorkshopServices(data.request.offers)
+        // Load workshop services for all offers - pass the request to determine service type
+        await fetchWorkshopServices(data.request.offers, data.request)
       } else {
         alert('Anfrage nicht gefunden')
         router.push('/dashboard/customer/requests')
@@ -120,13 +120,13 @@ export default function RequestDetailPage() {
     }
   }
 
-  const fetchWorkshopServices = async (offers: Offer[]) => {
+  const fetchWorkshopServices = async (offers: Offer[], requestData: TireRequest) => {
     const services: Record<string, WorkshopService> = {}
     
     for (const offer of offers) {
       try {
-        // Determine service type from request notes
-        const isBrakeService = request?.additionalNotes?.includes('BREMSEN-SERVICE')
+        // Determine service type from request notes - use requestData parameter
+        const isBrakeService = requestData.additionalNotes?.includes('BREMSEN-SERVICE')
         const serviceType = isBrakeService ? 'BRAKE_SERVICE' : 'TIRE_CHANGE'
         
         const response = await fetch(`/api/workshop/${offer.workshopId}/services/${serviceType}`)

@@ -724,24 +724,24 @@ export default function BrowseRequestsPage() {
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     let initialTireOptions: any[] = []
     
-    // Für Bremsen-Service: Erstelle separate Einträge für jede Achse
+    // Für Bremsen-Service: Erstelle separate Einträge für jede Achse mit montagePrice
     if (isBrakes && (brakeServicePackages.front || brakeServicePackages.rear)) {
       if (brakeServicePackages.front) {
         initialTireOptions.push({
-          brandModel: brakeServicePackages.front.name || 'Vorderachse',
+          brandModel: '', // Leer - Werkstatt gibt Ersatzteile ein
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
-          montagePrice: brakeServicePackages.front.price
+          montagePrice: brakeServicePackages.front.price // Wird im Hintergrund gespeichert
         })
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: brakeServicePackages.rear.name || 'Hinterachse',
+          brandModel: '', // Leer - Werkstatt gibt Ersatzteile ein
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
-          montagePrice: brakeServicePackages.rear.price
+          montagePrice: brakeServicePackages.rear.price // Wird im Hintergrund gespeichert
         })
       }
     } else {

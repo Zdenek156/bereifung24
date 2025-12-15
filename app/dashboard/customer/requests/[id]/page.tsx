@@ -21,6 +21,7 @@ interface WorkshopService {
   runFlatSurcharge: number | null
   durationMinutes: number
   durationMinutes4: number | null
+  servicePackages?: Array<{ name: string; price: number; duration: number }>
 }
 
 interface Offer {
@@ -123,10 +124,27 @@ export default function RequestDetailPage() {
     
     for (const offer of offers) {
       try {
-        const response = await fetch(`/api/workshop/${offer.workshopId}/services/TIRE_CHANGE`)
+        // Determine service type from request notes
+        const isBrakeService = request?.additionalNotes?.includes('BREMSEN-SERVICE')
+        const serviceType = isBrakeService ? 'BRAKE_SERVICE' : 'TIRE_CHANGE'
+        
+        const response = await fetch(`/api/workshop/${offer.workshopId}/services/${serviceType}`)
         if (response.ok) {
           const data = await response.json()
-          services[offer.workshopId] = data
+          
+          // For brake service, also fetch service packages
+          if (isBrakeService && data.servicePackages) {
+            services[offer.workshopId] = {
+              ...data,
+              servicePackages: data.servicePackages.map((pkg: any) => ({
+                name: pkg.name,
+                price: pkg.price,
+                duration: pkg.durationMinutes
+              }))
+            }
+          } else {
+            services[offer.workshopId] = data
+          }
           console.log(`Workshop ${offer.workshopId} service loaded:`, data)
         } else {
           console.warn(`Workshop ${offer.workshopId} service not found (${response.status})`)
@@ -448,30 +466,69 @@ export default function RequestDetailPage() {
     // Determine if this is a service request
     const serviceType = getServiceType()
     const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
+    const isBrakeService = serviceType === 'BRAKES'
     
     let totalQuantity = 0
-    let tiresTotal = 0
+    let tiresTotal = 0 // Parts cost
+    let totalMontage = 0 // Montage cost
+    let totalDuration = 0
 
+    if (isBrakeService && workshopServices[offer.workshopId]?.servicePackages) {
+      // For brake service: calculate parts and montage separately
+      const servicePackages = workshopServices[offer.workshopId].servicePackages
+      
+      selectedOptions.forEach(option => {
+        const qty = getQuantityForTireOption(option)
+        totalQuantity += qty
+        
+        // Parts cost from option
+        tiresTotal += option.pricePerTire
+        
+        // Find matching montage package by name
+        const packageName = option.brand.toLowerCase()
+        const matchingPackage = servicePackages.find(pkg => 
+          pkg.name.toLowerCase().includes(packageName) ||
+          (option.carTireType === 'FRONT_TWO' && pkg.name.toLowerCase().includes('vorderachse')) ||
+          (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))
+        )
+        
+        if (matchingPackage) {
+          totalMontage += matchingPackage.price
+          totalDuration += matchingPackage.duration
+        }
+      })
+      
+      return {
+        totalQuantity,
+        tiresTotal, // Parts only
+        installationFee: totalMontage, // Montage only
+        duration: totalDuration,
+        totalPrice: tiresTotal + totalMontage
+      }
+    }
+
+    // For other services
     selectedOptions.forEach(option => {
       const qty = getQuantityForTireOption(option)
       totalQuantity += qty
-      // For services, pricePerTire is already the complete package price
-      // For tires, it needs to be multiplied by quantity
-      tiresTotal += isServiceRequest ? option.pricePerTire : (option.pricePerTire * qty)
+      
+      if (isServiceRequest) {
+        // For other services: pricePerTire is the complete package price
+        tiresTotal += option.pricePerTire
+      } else {
+        // For tires: multiply by quantity
+        tiresTotal += option.pricePerTire * qty
+      }
     })
 
     const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
     
-    // For brake service, package prices ARE the montage prices, so don't add fee again
-    const isBrakeService = serviceType === 'BRAKES'
-    const finalFee = isBrakeService ? 0 : fee
-    
     return {
       totalQuantity,
       tiresTotal,
-      installationFee: fee,
+      installationFee: isServiceRequest ? 0 : fee,
       duration,
-      totalPrice: tiresTotal + finalFee
+      totalPrice: tiresTotal + (isServiceRequest ? 0 : fee)
     }
   }
 

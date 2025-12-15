@@ -352,6 +352,17 @@ export default function RequestDetailPage() {
   // Calculate installation fee and duration based on selected tires
   // IMMER neu berechnen basierend auf selectedQuantity (nicht den gespeicherten Wert verwenden)
   const calculateInstallationFeeAndDuration = (offer: Offer, selectedQuantity: number): { fee: number, duration: number } => {
+    // For brake service, use the stored values from offer (already calculated correctly)
+    const serviceType = getServiceType()
+    const isBrakeService = serviceType === 'BRAKES'
+    
+    if (isBrakeService) {
+      return {
+        fee: offer.installationFee || 0,
+        duration: offer.durationMinutes || 60
+      }
+    }
+    
     const service = workshopServices[offer.workshopId]
     if (!service) {
       console.warn(`Workshop ${offer.workshopId} hat keine Services konfiguriert.`)

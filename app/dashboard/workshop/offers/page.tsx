@@ -18,6 +18,14 @@ interface Offer {
   acceptedAt: string | null
   declinedAt: string | null
   createdAt: string
+  tireOptions: Array<{
+    id: string
+    brand: string
+    model: string
+    pricePerTire: number
+    montagePrice: number | null
+    carTireType: string | null
+  }> | null
   tireRequest: {
     id: string
     season: string
@@ -100,6 +108,28 @@ export default function WorkshopOffers() {
         {labels[status as keyof typeof labels]}
       </span>
     )
+  }
+
+  // Berechne Gesamtpreis für angenommene Angebote (Ersatzteile + Montage)
+  const calculateTotalPrice = (offer: Offer) => {
+    // Für angenommene Bremsen-Service Angebote: Summiere alle ausgewählten Optionen
+    if (offer.status === 'ACCEPTED' && offer.tireOptions && offer.tireOptions.length > 0) {
+      const notes = offer.tireRequest.additionalNotes || ''
+      if (notes.includes('BREMSEN-SERVICE')) {
+        let total = 0
+        offer.tireOptions.forEach(option => {
+          // Ersatzteilpreis
+          total += option.pricePerTire
+          // Montagepreis
+          if (option.montagePrice) {
+            total += option.montagePrice
+          }
+        })
+        return total
+      }
+    }
+    // Fallback: Standard-Preis
+    return offer.price
   }
 
   const filteredOffers = offers.filter(offer => {
@@ -328,7 +358,7 @@ export default function WorkshopOffers() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary-600">
-                      {offer.price.toFixed(2)} €
+                      {calculateTotalPrice(offer).toFixed(2)} €
                     </p>
                     {offer.pricePerTire && offer.status !== 'ACCEPTED' && (
                       <p className="text-sm text-gray-500">

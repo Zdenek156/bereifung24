@@ -32,6 +32,7 @@ export async function GET() {
     const offers = await prisma.offer.findMany({
       where: { workshopId: user.workshop.id },
       include: {
+        tireOptions: true,
         tireRequest: {
           include: {
             customer: {
@@ -44,6 +45,8 @@ export async function GET() {
                     phone: true,
                     city: true,
                     zipCode: true,
+                    street: true,
+                    houseNumber: true,
                   },
                 },
               },

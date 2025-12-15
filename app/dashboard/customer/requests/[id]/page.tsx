@@ -106,6 +106,11 @@ export default function RequestDetailPage() {
       const data = await response.json()
       
       if (response.ok) {
+        console.log('Request data loaded:', {
+          id: data.request.id,
+          additionalNotes: data.request.additionalNotes,
+          isBrakeService: data.request.additionalNotes?.includes('BREMSEN-SERVICE')
+        })
         setRequest(data.request)
         // Load workshop services for all offers - pass the request to determine service type
         await fetchWorkshopServices(data.request.offers, data.request)
@@ -128,6 +133,12 @@ export default function RequestDetailPage() {
         // Determine service type from request notes - use requestData parameter
         const isBrakeService = requestData.additionalNotes?.includes('BREMSEN-SERVICE')
         const serviceType = isBrakeService ? 'BRAKE_SERVICE' : 'TIRE_CHANGE'
+        
+        console.log(`Fetching services for workshop ${offer.workshopId}:`, {
+          additionalNotes: requestData.additionalNotes,
+          isBrakeService,
+          serviceType
+        })
         
         console.log('Fetching service:', { 
           workshopId: offer.workshopId, 

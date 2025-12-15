@@ -51,6 +51,7 @@ interface TireOption {
   brandModel: string  // Kombiniert: z.B. "Continental PremiumContact 6"
   costPrice: string
   pricePerTire: string
+  montagePrice?: number // Montage price for service packages
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
   carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
 }
@@ -297,6 +298,9 @@ export default function BrowseRequestsPage() {
     setSelectedRequest(request)
     setShowOfferForm(true)
     
+    // Variable für gefundene Bremsen-Service-Pakete
+    let brakeServicePackages: { front: any, rear: any } = { front: null, rear: null }
+    
     // Erkenne Service-Typ aus additionalNotes (WICHTIG: Prüfe additionalNotes VOR width check!)
     const isMotorcycle = request.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
     const isRepair = request.additionalNotes?.includes('🔧 REIFENREPARATUR')
@@ -506,6 +510,8 @@ export default function BrowseRequestsPage() {
             
             let totalBrakePrice = 0
             let totalBrakeDuration = 0
+            let frontPackageFound = null
+            let rearPackageFound = null
             
             // Front axle
             if (frontSelection && frontSelection !== 'Keine Arbeiten' && service.servicePackages) {
@@ -523,6 +529,7 @@ export default function BrowseRequestsPage() {
                 )
               }
               if (frontPackage) {
+                frontPackageFound = frontPackage
                 totalBrakePrice += frontPackage.price
                 totalBrakeDuration += frontPackage.durationMinutes
               }
@@ -549,6 +556,7 @@ export default function BrowseRequestsPage() {
                 )
               }
               if (rearPackage) {
+                rearPackageFound = rearPackage
                 totalBrakePrice += rearPackage.price
                 totalBrakeDuration += rearPackage.durationMinutes
               }
@@ -557,9 +565,14 @@ export default function BrowseRequestsPage() {
             if (totalBrakePrice > 0) {
               calculatedInstallation = totalBrakePrice.toFixed(2)
               calculatedDuration = totalBrakeDuration.toString()
+              // Speichere Pakete für spätere Verwendung beim Initialisieren der tireOptions
+              brakeServicePackages = {
+                front: frontPackageFound,
+                rear: rearPackageFound
+              }
             }
             selectedServiceName = ''
-            console.log('Brake service - Initialized with total:', totalBrakePrice, 'duration:', totalBrakeDuration)
+            console.log('Brake service - Found packages:', { front: frontPackageFound?.name, rear: rearPackageFound?.name, totalPrice: totalBrakePrice, totalDuration: totalBrakeDuration })
           }
           
           // Nur Preis/Dauer setzen wenn ein Package gefunden wurde
@@ -707,20 +720,43 @@ export default function BrowseRequestsPage() {
       }
     }
 
-    // Initialisiere mit einem leeren Reifenangebot
+    // Initialisiere tireOptions basierend auf Service-Typ
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
+    let initialTireOptions: any[] = []
     
-    // WICHTIG: Keine carTireType vorauswählen - Werkstatt muss manuell auswählen
-    // Dadurch startet Montagekosten bei 0 €
-    
-    setOfferForm({
-      tireOptions: [{ 
+    // Für Bremsen-Service: Erstelle separate Einträge für jede Achse
+    if (isBrakes && (brakeServicePackages.front || brakeServicePackages.rear)) {
+      if (brakeServicePackages.front) {
+        initialTireOptions.push({
+          brandModel: brakeServicePackages.front.name || 'Vorderachse',
+          costPrice: '',
+          pricePerTire: '',
+          carTireType: 'FRONT_TWO',
+          montagePrice: brakeServicePackages.front.price
+        })
+      }
+      if (brakeServicePackages.rear) {
+        initialTireOptions.push({
+          brandModel: brakeServicePackages.rear.name || 'Hinterachse',
+          costPrice: '',
+          pricePerTire: '',
+          carTireType: 'REAR_TWO',
+          montagePrice: brakeServicePackages.rear.price
+        })
+      }
+    } else {
+      // Standard: Ein leeres Reifenangebot
+      initialTireOptions = [{ 
         brandModel: preferredBrand, 
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
         carTireType: !isMotorcycle ? undefined : undefined // Keine Vorauswahl!
-      }],
+      }]
+    }
+    
+    setOfferForm({
+      tireOptions: initialTireOptions,
       description: '',
       installationFee: calculatedInstallation || '0.00', // Verwende berechneten Wert
       validDays: 7,
@@ -762,7 +798,8 @@ export default function BrowseRequestsPage() {
               brandModel: opt.brandModel,
               pricePerTire: parseFloat(opt.pricePerTire),
               motorcycleTireType: opt.motorcycleTireType,
-              carTireType: opt.carTireType
+              carTireType: opt.carTireType,
+              montagePrice: opt.montagePrice // Speichere Montagepreis mit
             }))
           }),
           description: offerForm.description,

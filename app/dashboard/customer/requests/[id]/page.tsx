@@ -10,6 +10,7 @@ interface TireOption {
   brand: string
   model: string
   pricePerTire: number
+  montagePrice?: number // Montage price for service packages
   carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
 }
@@ -473,12 +474,10 @@ export default function RequestDetailPage() {
     let totalMontage = 0 // Montage cost
     let totalDuration = 0
 
-    if (isBrakeService && workshopServices[offer.workshopId]?.servicePackages) {
-      // For brake service: calculate parts and montage separately
-      const servicePackages = workshopServices[offer.workshopId].servicePackages
+    if (isBrakeService) {
+      // For brake service: use montagePrice from tireOptions
       console.log('Brake service calculation:', {
         workshopId: offer.workshopId,
-        servicePackages,
         selectedOptions
       })
       
@@ -486,28 +485,31 @@ export default function RequestDetailPage() {
         const qty = getQuantityForTireOption(option)
         totalQuantity += qty
         
-        // Parts cost from option
+        // Parts cost from option (pricePerTire)
         tiresTotal += option.pricePerTire
         
-        // Find matching montage package by name
-        const packageName = option.brand.toLowerCase()
-        const matchingPackage = servicePackages.find(pkg => 
-          pkg.name.toLowerCase().includes(packageName) ||
-          (option.carTireType === 'FRONT_TWO' && pkg.name.toLowerCase().includes('vorderachse')) ||
-          (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))
-        )
+        // Montage cost from option (montagePrice if available)
+        const montagePriceValue = (option as any).montagePrice || 0
+        totalMontage += montagePriceValue
         
-        console.log('Matching package:', {
-          optionBrand: option.brand,
-          carTireType: option.carTireType,
-          packageName,
-          matchingPackage
-        })
-        
-        if (matchingPackage) {
-          totalMontage += matchingPackage.price
-          totalDuration += matchingPackage.duration
+        // Duration from workshopServices if available
+        if (workshopServices[offer.workshopId]?.servicePackages) {
+          const servicePackages = workshopServices[offer.workshopId].servicePackages
+          const matchingPackage = servicePackages.find(pkg => 
+            (option.carTireType === 'FRONT_TWO' && pkg.name.toLowerCase().includes('vorderachse')) ||
+            (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))
+          )
+          if (matchingPackage) {
+            totalDuration += matchingPackage.duration
+          }
         }
+        
+        console.log('Brake service option:', {
+          brand: option.brand,
+          carTireType: option.carTireType,
+          partsCost: option.pricePerTire,
+          montageCost: montagePriceValue
+        })
       })
       
       console.log('Brake service totals:', {

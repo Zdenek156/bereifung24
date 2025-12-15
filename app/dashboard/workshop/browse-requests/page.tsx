@@ -789,6 +789,7 @@ export default function BrowseRequestsPage() {
 
     setSubmitting(true)
     try {
+      console.log('Creating offer with tireOptions:', offerForm.tireOptions)
       const response = await fetch(`/api/workshop/tire-requests/${selectedRequest.id}/offers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

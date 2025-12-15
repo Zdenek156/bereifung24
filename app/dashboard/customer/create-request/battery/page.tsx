@@ -62,7 +62,7 @@ export default function BatteryServicePage() {
     if (vehicleId) {
       const selectedVehicle = vehicles.find(v => v.id === vehicleId)
       if (selectedVehicle?.vin && identificationMethod === 'vin') {
-        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin }))
+        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin! }))
       }
     }
   }

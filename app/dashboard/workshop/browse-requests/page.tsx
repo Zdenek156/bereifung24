@@ -752,20 +752,20 @@ export default function BrowseRequestsPage() {
           frontDuration = 60
         } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
           frontMontagePrice = 110
-          frontDuration = 110
+          frontDuration = 85
         }
       }
       
       if (rearSelection && rearSelection !== 'Keine Arbeiten') {
         if (rearSelection === 'Nur Bremsbeläge') {
           rearMontagePrice = 80
-          rearDuration = 60
+          rearDuration = 69
         } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
           rearMontagePrice = 130
-          rearDuration = 110
+          rearDuration = 85
         } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
           rearMontagePrice = 150
-          rearDuration = 150
+          rearDuration = 95
         }
       }
       

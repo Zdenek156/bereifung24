@@ -564,9 +564,8 @@ export default function BrowseRequestsPage() {
             }
             
             if (totalBrakePrice > 0) {
-              calculatedInstallation = totalBrakePrice.toFixed(2)
-              calculatedDuration = totalBrakeDuration.toString()
               // Speichere Pakete für spätere Verwendung beim Initialisieren der tireOptions
+              // NICHT calculatedInstallation/calculatedDuration hier setzen - wird später basierend auf tatsächlichen Optionen berechnet
               const packages = {
                 front: frontPackageFound,
                 rear: rearPackageFound

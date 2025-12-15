@@ -511,9 +511,16 @@ export default function BrowseRequestsPage() {
             if (frontSelection && frontSelection !== 'Keine Arbeiten' && service.servicePackages) {
               let frontPackage = null
               if (frontSelection === 'Nur Bremsbeläge') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                frontPackage = service.servicePackages.find(p => 
+                  p.name.toLowerCase().includes('vorderachse') && 
+                  p.name.toLowerCase().includes('bremsbeläge') && 
+                  !p.name.toLowerCase().includes('scheiben')
+                )
               } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
-                frontPackage = service.servicePackages.find(p => p.name.includes('Vorderachse') && p.name.includes('Scheiben'))
+                frontPackage = service.servicePackages.find(p => 
+                  p.name.toLowerCase().includes('vorderachse') && 
+                  p.name.toLowerCase().includes('scheiben')
+                )
               }
               if (frontPackage) {
                 totalBrakePrice += frontPackage.price
@@ -525,11 +532,21 @@ export default function BrowseRequestsPage() {
             if (rearSelection && rearSelection !== 'Keine Arbeiten' && service.servicePackages) {
               let rearPackage = null
               if (rearSelection === 'Nur Bremsbeläge') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Bremsbeläge') && !p.name.includes('Scheiben'))
+                rearPackage = service.servicePackages.find(p => 
+                  p.name.toLowerCase().includes('hinterachse') && 
+                  p.name.toLowerCase().includes('bremsbeläge') && 
+                  !p.name.toLowerCase().includes('scheiben')
+                )
               } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Scheiben'))
+                rearPackage = service.servicePackages.find(p => 
+                  p.name.toLowerCase().includes('hinterachse') && 
+                  p.name.toLowerCase().includes('scheiben')
+                )
               } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
-                rearPackage = service.servicePackages.find(p => p.name.includes('Hinterachse') && p.name.includes('Handbremse'))
+                rearPackage = service.servicePackages.find(p => 
+                  p.name.toLowerCase().includes('hinterachse') && 
+                  p.name.toLowerCase().includes('handbremse')
+                )
               }
               if (rearPackage) {
                 totalBrakePrice += rearPackage.price
@@ -537,8 +554,10 @@ export default function BrowseRequestsPage() {
               }
             }
             
-            calculatedInstallation = totalBrakePrice.toFixed(2)
-            calculatedDuration = totalBrakeDuration.toString()
+            if (totalBrakePrice > 0) {
+              calculatedInstallation = totalBrakePrice.toFixed(2)
+              calculatedDuration = totalBrakeDuration.toString()
+            }
             selectedServiceName = ''
             console.log('Brake service - Initialized with total:', totalBrakePrice, 'duration:', totalBrakeDuration)
           }

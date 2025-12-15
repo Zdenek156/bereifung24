@@ -8,6 +8,7 @@ import { sendEmail, newOfferEmailTemplate, newServiceOfferEmailTemplate } from '
 const tireOptionSchema = z.object({
   brandModel: z.string().min(1, 'Reifenmarke und -modell erforderlich'),
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
+  montagePrice: z.number().optional(), // Montage price for service packages
   motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional(), // Für Motorradreifen - pro Reifenangebot
   carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional() // Für Autoreifen - pro Reifenangebot
 })

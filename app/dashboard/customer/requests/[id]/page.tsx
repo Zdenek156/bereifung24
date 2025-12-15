@@ -451,16 +451,12 @@ export default function RequestDetailPage() {
 
     const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
     
-    // For service requests, installationFee should NOT be added to totalPrice
-    // Package prices already include everything
-    const actualFee = isServiceRequest ? 0 : fee
-    
     return {
       totalQuantity,
       tiresTotal,
       installationFee: fee,
       duration,
-      totalPrice: tiresTotal + actualFee
+      totalPrice: tiresTotal + fee
     }
   }
 
@@ -1335,26 +1331,24 @@ export default function RequestDetailPage() {
                                   return (
                                     <div key={option.id} className="flex justify-between text-gray-700">
                                       <span>• {option.brand}{axleInfo}{isServiceRequest && !isBrakeService ? '' : isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
-                                      <span className="font-semibold">{optionTotal.toFixed(2)} €</span>
+                                      <span className="font-semibold">{optionTotal} €</span>
                                     </div>
                                   )
                                 })}
-                                {!isServiceRequest && (
-                                  <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
-                                    <span>
-                                      {`Montagekosten (${calculation.totalQuantity} Reifen)`}
-                                      {hasDisposal && ' + Entsorgung'}
-                                    </span>
-                                    <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
-                                  </div>
-                                )}
+                                <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
+                                  <span>
+                                    {isServiceRequest ? 'Montage' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
+                                    {!isServiceRequest && hasDisposal && ' + Entsorgung'}
+                                  </span>
+                                  <span className="font-semibold">{calculation.installationFee} €</span>
+                                </div>
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>⏱️ Dauer</span>
                                   <span>{calculation.duration} Minuten</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
                                   <span>Gesamtpreis</span>
-                                  <span>{calculation.totalPrice.toFixed(2)} €</span>
+                                  <span>{calculation.totalPrice} €</span>
                                 </div>
                                 {!isServiceRequest && (
                                   <p className="text-xs text-gray-600 mt-2">

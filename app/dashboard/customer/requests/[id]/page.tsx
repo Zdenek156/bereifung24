@@ -476,6 +476,11 @@ export default function RequestDetailPage() {
     if (isBrakeService && workshopServices[offer.workshopId]?.servicePackages) {
       // For brake service: calculate parts and montage separately
       const servicePackages = workshopServices[offer.workshopId].servicePackages
+      console.log('Brake service calculation:', {
+        workshopId: offer.workshopId,
+        servicePackages,
+        selectedOptions
+      })
       
       selectedOptions.forEach(option => {
         const qty = getQuantityForTireOption(option)
@@ -492,10 +497,23 @@ export default function RequestDetailPage() {
           (option.carTireType === 'REAR_TWO' && pkg.name.toLowerCase().includes('hinterachse'))
         )
         
+        console.log('Matching package:', {
+          optionBrand: option.brand,
+          carTireType: option.carTireType,
+          packageName,
+          matchingPackage
+        })
+        
         if (matchingPackage) {
           totalMontage += matchingPackage.price
           totalDuration += matchingPackage.duration
         }
+      })
+      
+      console.log('Brake service totals:', {
+        tiresTotal,
+        totalMontage,
+        totalDuration
       })
       
       return {

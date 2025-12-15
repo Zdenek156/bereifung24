@@ -132,6 +132,12 @@ export async function POST(
       return offer?.tireRequest.quantity || 4
     }
 
+    // Determine service type from additionalNotes
+    const isBrakeService = offer?.tireRequest.additionalNotes?.includes('BREMSEN-SERVICE')
+    const isBatteryService = offer?.tireRequest.additionalNotes?.includes('BATTERIE-SERVICE')
+    const isOtherService = offer?.tireRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES')
+    const isServiceRequest = isBrakeService || isBatteryService || isOtherService
+
     // Transaktion: Angebot annehmen, Booking erstellen und alle anderen ablehnen
     const result = await prisma.$transaction(async (tx) => {
       // Calculate final price based on selected tire options
@@ -139,8 +145,30 @@ export async function POST(
       let selectedOptionsForBooking: string[] = []
       let totalQuantity = 0
       
-      // If tire options were selected, calculate based on those
-      if (offer?.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length > 0) {
+      // For service requests (Brake, Battery, Other), the price is just the sum of selected packages
+      if (isServiceRequest && offer?.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length > 0) {
+        const selectedOptions = offer.tireOptions.filter((opt: any) => 
+          selectedTireOptionIds.includes(opt.id)
+        )
+        
+        // Sum up the package prices (pricePerTire is actually the full package price for services)
+        selectedOptions.forEach((option: any) => {
+          finalPrice += option.pricePerTire
+          selectedOptionsForBooking.push(option.id)
+        })
+        
+        // For service requests, installationFee is NOT added separately - it's already in the package prices
+        
+        console.log('Calculating price for service request:', {
+          serviceType: isBrakeService ? 'BRAKE' : isBatteryService ? 'BATTERY' : 'OTHER',
+          selectedPackages: selectedOptions.map((o: any) => ({
+            id: o.id,
+            name: `${o.brand} ${o.model}`,
+            price: o.pricePerTire
+          })),
+          finalPrice
+        })
+      } else if (offer?.tireOptions && offer.tireOptions.length > 0 && selectedTireOptionIds.length > 0) {
         const selectedOptions = offer.tireOptions.filter((opt: any) => 
           selectedTireOptionIds.includes(opt.id)
         )

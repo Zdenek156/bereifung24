@@ -283,7 +283,7 @@ export async function POST(
           serviceType = 'Sonstige Services'
           // Extrahiere Servicebeschreibung aus additionalNotes
           const notes = tireRequest.additionalNotes || ''
-          const descMatch = notes.match(/Beschreibung:\s*(.+?)(?:\n|$)/s)
+          const descMatch = notes.match(/Beschreibung:\s*(.+?)(?:\n|$)/)
           if (descMatch && descMatch[1]) {
             serviceDescription = descMatch[1].trim()
           }

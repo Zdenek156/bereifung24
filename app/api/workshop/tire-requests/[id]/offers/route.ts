@@ -171,13 +171,14 @@ export async function POST(
           tireOptions: {
             create: validatedData.tireOptions!.map(option => {
               const parts = option.brandModel.split(' ')
+              console.log('Creating tireOption with montagePrice:', option.montagePrice)
               return {
                 brand: parts[0] || option.brandModel,
                 model: parts.slice(1).join(' ') || '',
                 pricePerTire: option.pricePerTire,
                 motorcycleTireType: option.motorcycleTireType,
                 carTireType: option.carTireType,
-                montagePrice: (option as any).montagePrice // Speichere Montagepreis
+                montagePrice: option.montagePrice !== undefined ? option.montagePrice : null // Use validated montagePrice from schema
               }
             })
           }

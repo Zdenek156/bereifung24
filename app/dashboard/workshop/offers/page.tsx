@@ -357,12 +357,13 @@ export default function WorkshopOffers() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-primary-600">
-                      {calculateTotalPrice(offer).toFixed(2)} €
-                    </p>
-                    {offer.pricePerTire && offer.status !== 'ACCEPTED' && (
-                      <p className="text-sm text-gray-500">
-                        {offer.pricePerTire.toFixed(2)} € pro Reifen
+                    {offer.status === 'ACCEPTED' ? (
+                      <p className="text-2xl font-bold text-primary-600">
+                        {calculateTotalPrice(offer).toFixed(2)} €
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-600 italic">
+                        Preis wird nach Auswahl<br />durch Kunden festgelegt
                       </p>
                     )}
                   </div>

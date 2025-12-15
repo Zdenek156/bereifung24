@@ -10,6 +10,7 @@ type Vehicle = {
   make: string
   model: string
   year: number
+  vin?: string
 }
 
 export default function WheelChangePage() {

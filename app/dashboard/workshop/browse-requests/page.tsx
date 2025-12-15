@@ -106,6 +106,7 @@ export default function BrowseRequestsPage() {
   const [sepaMandateStatus, setSepaMandateStatus] = useState<string | null>(null)
   const [sepaMandateLoading, setSepaMandateLoading] = useState(true)
   const [workshopTaxMode, setWorkshopTaxMode] = useState<string>('STANDARD')
+  const [brakeServicePackages, setBrakeServicePackages] = useState<{ front: any, rear: any } | null>(null)
   const [offerForm, setOfferForm] = useState<OfferFormData>({
     tireOptions: [{ brandModel: '', costPrice: '', pricePerTire: '' }],
     description: '',
@@ -566,10 +567,16 @@ export default function BrowseRequestsPage() {
               calculatedInstallation = totalBrakePrice.toFixed(2)
               calculatedDuration = totalBrakeDuration.toString()
               // Speichere Pakete für spätere Verwendung beim Initialisieren der tireOptions
-              brakeServicePackages = {
+              const packages = {
                 front: frontPackageFound,
                 rear: rearPackageFound
               }
+              brakeServicePackages = packages
+              setBrakeServicePackages(packages) // Speichere im State für später
+              console.log('🔧 Brake packages set:', {
+                front: frontPackageFound ? `${frontPackageFound.name} - ${frontPackageFound.price}€` : 'NULL',
+                rear: rearPackageFound ? `${rearPackageFound.name} - ${rearPackageFound.price}€` : 'NULL'
+              })
             }
             selectedServiceName = ''
             console.log('Brake service - Found packages:', { front: frontPackageFound?.name, rear: rearPackageFound?.name, totalPrice: totalBrakePrice, totalDuration: totalBrakeDuration })
@@ -724,26 +731,99 @@ export default function BrowseRequestsPage() {
     const preferredBrand = request.preferredBrands?.split(',')[0] || ''
     let initialTireOptions: any[] = []
     
-    // Für Bremsen-Service: Erstelle separate Einträge für jede Achse mit montagePrice
-    if (isBrakes && (brakeServicePackages.front || brakeServicePackages.rear)) {
-      if (brakeServicePackages.front) {
+    // Für Bremsen-Service: Prüfe ob Pakete gefunden wurden
+    if (isBrakes) {
+      const hasBrakePackages = brakeServicePackages?.front || brakeServicePackages?.rear
+      
+      if (!hasBrakePackages) {
+      // FALLBACK: Wenn keine Pakete gefunden wurden, erstelle Optionen basierend auf additionalNotes
+      console.log('⚠️ Brake service packages NOT found, using fallback from additionalNotes')
+      const frontSelection = request.additionalNotes?.match(/Vorderachse:\s*([^\n]+)/)?.[1]?.trim()
+      const rearSelection = request.additionalNotes?.match(/Hinterachse:\s*([^\n]+)/)?.[1]?.trim()
+      
+      // Berechne montagePrice und Dauer basierend auf Service-Typ
+      let frontMontagePrice = 0
+      let frontDuration = 0
+      let rearMontagePrice = 0
+      let rearDuration = 0
+      
+      if (frontSelection && frontSelection !== 'Keine Arbeiten') {
+        if (frontSelection === 'Nur Bremsbeläge') {
+          frontMontagePrice = 60
+          frontDuration = 60
+        } else if (frontSelection === 'Bremsbeläge + Bremsscheiben') {
+          frontMontagePrice = 110
+          frontDuration = 110
+        }
+      }
+      
+      if (rearSelection && rearSelection !== 'Keine Arbeiten') {
+        if (rearSelection === 'Nur Bremsbeläge') {
+          rearMontagePrice = 80
+          rearDuration = 60
+        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben') {
+          rearMontagePrice = 130
+          rearDuration = 110
+        } else if (rearSelection === 'Bremsbeläge + Bremsscheiben + Handbremse') {
+          rearMontagePrice = 150
+          rearDuration = 150
+        }
+      }
+      
+      // Setze die berechneten Werte für installationFee und duration
+      if (frontMontagePrice > 0 || rearMontagePrice > 0) {
+        calculatedInstallation = (frontMontagePrice + rearMontagePrice).toFixed(2)
+        calculatedDuration = (frontDuration + rearDuration).toString()
+      }
+      
+      if (frontMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: '', // Leer - Werkstatt gibt Ersatzteile ein
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
-          montagePrice: brakeServicePackages.front.price // Wird im Hintergrund gespeichert
+          montagePrice: frontMontagePrice
+        })
+        // Speichere in State für addTireOption
+        setBrakeServicePackages(prev => ({ ...prev, front: { price: frontMontagePrice, durationMinutes: frontDuration, name: frontSelection } }))
+      }
+      
+      if (rearMontagePrice > 0) {
+        initialTireOptions.push({
+          brandModel: '',
+          costPrice: '',
+          pricePerTire: '',
+          carTireType: 'REAR_TWO',
+          montagePrice: rearMontagePrice
+        })
+        // Speichere in State für addTireOption
+        setBrakeServicePackages(prev => ({ ...prev, rear: { price: rearMontagePrice, durationMinutes: rearDuration, name: rearSelection } }))
+      }
+    } else {
+      // Pakete gefunden - verwende sie
+      console.log('Creating initial brake service options with packages:', {
+        front: brakeServicePackages.front ? { name: brakeServicePackages.front.name, price: brakeServicePackages.front.price } : null,
+        rear: brakeServicePackages.rear ? { name: brakeServicePackages.rear.name, price: brakeServicePackages.rear.price } : null
+      })
+      if (brakeServicePackages.front) {
+        initialTireOptions.push({
+          brandModel: '',
+          costPrice: '',
+          pricePerTire: '',
+          carTireType: 'FRONT_TWO',
+          montagePrice: brakeServicePackages.front.price
         })
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: '', // Leer - Werkstatt gibt Ersatzteile ein
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
-          montagePrice: brakeServicePackages.rear.price // Wird im Hintergrund gespeichert
+          montagePrice: brakeServicePackages.rear.price
         })
       }
+    }
     } else {
       // Standard: Ein leeres Reifenangebot
       initialTireOptions = [{ 
@@ -790,6 +870,12 @@ export default function BrowseRequestsPage() {
     setSubmitting(true)
     try {
       console.log('Creating offer with tireOptions:', offerForm.tireOptions)
+      console.log('Valid options with montagePrice:', validOptions.map(opt => ({
+        brand: opt.brandModel,
+        price: opt.pricePerTire,
+        montagePrice: opt.montagePrice,
+        carTireType: opt.carTireType
+      })))
       const response = await fetch(`/api/workshop/tire-requests/${selectedRequest.id}/offers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -833,6 +919,7 @@ export default function BrowseRequestsPage() {
 
   const addTireOption = () => {
     const isMotorcycle = selectedRequest?.additionalNotes?.includes('🏍️ MOTORRADREIFEN')
+    const isBrakes = selectedRequest?.additionalNotes?.includes('BREMSEN-SERVICE')
     let defaultTireType: 'FRONT' | 'REAR' | 'BOTH' | undefined = undefined
     const defaultCarTireType: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO' = 
       selectedRequest?.quantity === 4 ? 'ALL_FOUR' : 'FRONT_TWO'
@@ -842,6 +929,35 @@ export default function BrowseRequestsPage() {
       defaultTireType = 'BOTH'
     }
     
+    // For brake service: determine montagePrice based on carTireType
+    let montagePrice: number | undefined = undefined
+    let selectedCarTireType = defaultCarTireType
+    
+    if (isBrakes && brakeServicePackages) {
+      // Check which options already exist
+      const hasFrontOption = offerForm.tireOptions.some(opt => opt.carTireType === 'FRONT_TWO')
+      const hasRearOption = offerForm.tireOptions.some(opt => opt.carTireType === 'REAR_TWO')
+      
+      // If front exists but rear doesn't, and rear package is available, add rear option
+      if (hasFrontOption && !hasRearOption && brakeServicePackages.rear) {
+        selectedCarTireType = 'REAR_TWO'
+        montagePrice = brakeServicePackages.rear.price
+      }
+      // If rear exists but front doesn't, and front package is available, add front option
+      else if (hasRearOption && !hasFrontOption && brakeServicePackages.front) {
+        selectedCarTireType = 'FRONT_TWO'
+        montagePrice = brakeServicePackages.front.price
+      }
+      // Default: add another front option (or rear if only rear package exists)
+      else if (brakeServicePackages.front) {
+        selectedCarTireType = 'FRONT_TWO'
+        montagePrice = brakeServicePackages.front.price
+      } else if (brakeServicePackages.rear) {
+        selectedCarTireType = 'REAR_TWO'
+        montagePrice = brakeServicePackages.rear.price
+      }
+    }
+    
     setOfferForm({
       ...offerForm,
       tireOptions: [{ 
@@ -849,7 +965,12 @@ export default function BrowseRequestsPage() {
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
-        carTireType: !isMotorcycle ? defaultCarTireType : undefined
+        carTireType: !isMotorcycle ? selectedCarTireType : undefined,
+        montagePrice: montagePrice
+      }, ...offerForm.tireOptions]
+    })
+  }
+        montagePrice: montagePrice
       }, ...offerForm.tireOptions]
     })
   }

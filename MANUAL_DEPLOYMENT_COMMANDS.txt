@@ -9,7 +9,7 @@
 # =================================================================
 
 # Schritt 1: .env aktualisieren
-ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && cat >> .env << 'EOFMARKER'
+ssh root@167.235.24.110 "cd '/var/www/bereifung24' && cat >> .env << 'EOFMARKER'
 
 # GoCardless (SEPA Direct Debit) - LIVE MODE
 GOCARDLESS_ACCESS_TOKEN=\"live_WmP-dhJqZY7Amzn-J6TqYivdjL2OHefpmc0fYWrj\"
@@ -19,16 +19,16 @@ EOFMARKER
 "
 
 # Schritt 2: GoCardless Package installieren
-ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npm install gocardless-nodejs"
+ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npm install gocardless-nodejs"
 
 # Schritt 3: Database Migration
-ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npx prisma migrate deploy"
+ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npx prisma migrate deploy"
 
 # Schritt 4: App neu bauen
-ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && npm run build"
+ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npm run build"
 
-# Schritt 5: PM2 neu starten
-ssh root@167.235.24.110 "cd '/root/Bereifung24 Workspace' && pm2 restart bereifung24-app"
+# Schritt 5: PM2 neu starten (mit source für nvm)
+ssh root@167.235.24.110 "source ~/.nvm/nvm.sh && cd '/var/www/bereifung24' && pm2 restart bereifung24"
 
 # =================================================================
 # Fertig! Wenn alles funktioniert hat, sage mir Bescheid!

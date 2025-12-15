@@ -24,6 +24,7 @@ export default function SEPAMandatePage() {
   const [mandate, setMandate] = useState<MandateInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -81,6 +82,35 @@ export default function SEPAMandatePage() {
       setError('Netzwerkfehler')
     } finally {
       setCreating(false)
+    }
+  }
+
+  const cancelMandate = async () => {
+    if (!confirm('Möchten Sie Ihr SEPA-Mandat wirklich widerrufen? Zukünftige Provisionen müssen dann manuell überwiesen werden.')) {
+      return
+    }
+
+    setCancelling(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/workshop/sepa-mandate/cancel', {
+        method: 'POST'
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert('SEPA-Mandat wurde erfolgreich widerrufen')
+        await fetchMandateStatus() // Refresh status
+      } else {
+        setError(data.error || 'Fehler beim Widerrufen des Mandats')
+      }
+    } catch (err) {
+      console.error('Error cancelling mandate:', err)
+      setError('Netzwerkfehler')
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -185,6 +215,20 @@ export default function SEPAMandatePage() {
                     <span>Der Betrag wird automatisch 3 Tage später von Ihrem Konto abgebucht</span>
                   </li>
                 </ul>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="font-semibold text-gray-900 mb-3">Mandat verwalten</h3>
+                <button
+                  onClick={cancelMandate}
+                  disabled={cancelling}
+                  className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelling ? 'Wird widerrufen...' : 'SEPA-Mandat widerrufen'}
+                </button>
+                <p className="mt-2 text-xs text-gray-500">
+                  Nach dem Widerruf müssen Provisionen manuell überwiesen werden
+                </p>
               </div>
             </div>
           ) : (

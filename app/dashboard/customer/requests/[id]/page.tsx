@@ -530,6 +530,11 @@ export default function RequestDetailPage() {
         })
       })
       
+      // If no duration found from service packages, use offer's durationMinutes
+      if (totalDuration === 0 && offer.durationMinutes) {
+        totalDuration = offer.durationMinutes
+      }
+      
       console.log('Brake service totals:', {
         tiresTotal,
         totalMontage,
@@ -1314,9 +1319,6 @@ export default function RequestDetailPage() {
                           <p className="text-sm text-gray-600">
                             {offer.workshop.street}, {offer.workshop.zipCode} {offer.workshop.city}
                           </p>
-                          <p className="text-sm text-gray-600">
-                            Tel: {offer.workshop.phone}
-                          </p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -1324,7 +1326,7 @@ export default function RequestDetailPage() {
                           {offer.price.toFixed(2)} €
                         </div>
                         <p className="text-xs text-gray-500">
-                          inkl. Montage • {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                          Montage • {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
                         </p>
                       </div>
                     </div>
@@ -1527,11 +1529,16 @@ export default function RequestDetailPage() {
                                 )}
                                 <div className="flex justify-between text-xs text-gray-600 pt-2 border-t border-gray-300">
                                   <span>⏱️ Dauer</span>
-                                  <span>{calculation.duration} Minuten</span>
+                                  <span>{calculation.duration || 0} Minuten</span>
                                 </div>
-                                <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
-                                  <span>Gesamtpreis</span>
-                                  <span>{calculation.totalPrice} €</span>
+                                <div className="pt-2 border-t-2 border-primary-300">
+                                  <div className="flex justify-between text-lg font-bold text-primary-600">
+                                    <span>Gesamtpreis</span>
+                                    <div className="text-right">
+                                      <div>{calculation.totalPrice} €</div>
+                                      <div className="text-xs text-gray-500 font-normal">inkl. MwSt.</div>
+                                    </div>
+                                  </div>
                                 </div>
                                 {!isServiceRequest && (
                                   <p className="text-xs text-gray-600 mt-2">

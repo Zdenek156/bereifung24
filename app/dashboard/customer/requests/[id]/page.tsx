@@ -129,6 +129,13 @@ export default function RequestDetailPage() {
         const isBrakeService = requestData.additionalNotes?.includes('BREMSEN-SERVICE')
         const serviceType = isBrakeService ? 'BRAKE_SERVICE' : 'TIRE_CHANGE'
         
+        console.log('Fetching service:', { 
+          workshopId: offer.workshopId, 
+          additionalNotes: requestData.additionalNotes,
+          isBrakeService, 
+          serviceType 
+        })
+        
         const response = await fetch(`/api/workshop/${offer.workshopId}/services/${serviceType}`)
         if (response.ok) {
           const data = await response.json()

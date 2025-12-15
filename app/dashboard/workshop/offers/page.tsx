@@ -355,17 +355,13 @@ export default function WorkshopOffers() {
                       })()}
                     </p>
                   </div>
-                  <div className="text-right">
-                    {offer.status === 'ACCEPTED' ? (
+                  {offer.status === 'ACCEPTED' && (
+                    <div className="text-right">
                       <p className="text-2xl font-bold text-primary-600">
                         {calculateTotalPrice(offer).toFixed(2)} €
                       </p>
-                    ) : (
-                      <p className="text-sm text-gray-600 italic">
-                        Preis wird nach Auswahl<br />durch Kunden festgelegt
-                      </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {offer.description && (
@@ -412,24 +408,29 @@ export default function WorkshopOffers() {
                         Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
                       </p>
                     )}
+                    {offer.status !== 'ACCEPTED' && (
+                      <p className="text-sm text-gray-500 italic mt-2">
+                        Preis wird nach Auswahl durch Kunden festgelegt
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* Booking Code for Accepted Offers */}
                 {offer.status === 'ACCEPTED' && (
-                  <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-blue-900 mb-1">
+                        <p className="text-sm font-medium text-blue-900">
                           Buchungs-Code für telefonische Terminvereinbarung:
                         </p>
                         <p className="text-xs text-blue-700">
                           Der Kunde verwendet diesen Code, wenn er telefonisch einen Termin vereinbaren möchte
                         </p>
                       </div>
-                      <div className="text-center bg-white px-6 py-3 rounded-lg border-2 border-blue-300">
-                        <p className="text-xs text-gray-600 mb-1">Code</p>
-                        <p className="text-3xl font-bold font-mono text-blue-600">
+                      <div className="text-center bg-white px-4 py-2 rounded-lg border border-blue-300">
+                        <p className="text-xs text-gray-600">Code</p>
+                        <p className="text-xl font-bold font-mono text-blue-600">
                           {offer.tireRequest.id.slice(-4).toUpperCase()}
                         </p>
                       </div>

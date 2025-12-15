@@ -36,6 +36,8 @@ interface Offer {
         phone: string | null
         city: string | null
         zipCode: string | null
+        street: string | null
+        houseNumber: string | null
       }
     }
   }
@@ -328,7 +330,7 @@ export default function WorkshopOffers() {
                     <p className="text-2xl font-bold text-primary-600">
                       {offer.price.toFixed(2)} €
                     </p>
-                    {offer.pricePerTire && (
+                    {offer.pricePerTire && offer.status !== 'ACCEPTED' && (
                       <p className="text-sm text-gray-500">
                         {offer.pricePerTire.toFixed(2)} € pro Reifen
                       </p>
@@ -348,13 +350,20 @@ export default function WorkshopOffers() {
                     <p className="text-sm text-gray-900">
                       {offer.tireRequest.customer.user.firstName} {offer.tireRequest.customer.user.lastName}
                     </p>
+                    {(offer.tireRequest.customer.user.street || offer.tireRequest.customer.user.houseNumber) && (
+                      <p className="text-sm text-gray-600">
+                        {offer.tireRequest.customer.user.street} {offer.tireRequest.customer.user.houseNumber}
+                      </p>
+                    )}
+                    {(offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (
+                      <p className="text-sm text-gray-600">
+                        {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.email}</p>
                     {offer.tireRequest.customer.user.phone && (
                       <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.phone}</p>
                     )}
-                    <p className="text-sm text-gray-600">
-                      {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
-                    </p>
                   </div>
 
                   <div>

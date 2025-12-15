@@ -1134,21 +1134,58 @@ export default function RequestDetailPage() {
                         <>
                           {acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0 ? (
                             <>
-                              {acceptedOffer.tireOptions
-                                .filter(option => 
-                                  !acceptedOffer.selectedTireOptionIds || 
-                                  acceptedOffer.selectedTireOptionIds.length === 0 || 
-                                  acceptedOffer.selectedTireOptionIds.includes(option.id)
-                                )
-                                .map((option, idx) => {
-                                  const quantity = getQuantityForTireOption(option)
-                                  return (
-                                    <div key={option.id} className="flex justify-between text-sm">
-                                      <span className="text-gray-700">{option.brand} {option.model} ({quantity}x)</span>
-                                      <span className="font-semibold">{(option.pricePerTire * quantity).toFixed(2)} €</span>
-                                    </div>
+                              {getServiceType() === 'BRAKES' ? (
+                                /* Brake Service: Show parts and montage separately for each axle */
+                                acceptedOffer.tireOptions
+                                  .filter(option => 
+                                    !acceptedOffer.selectedTireOptionIds || 
+                                    acceptedOffer.selectedTireOptionIds.length === 0 || 
+                                    acceptedOffer.selectedTireOptionIds.includes(option.id)
                                   )
-                                })}
+                                  .map((option, idx) => {
+                                    const axleLabel = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' : 'Hinterachse'
+                                    const montagePriceValue = (option as any).montagePrice || 0
+                                    const packageName = montagePriceValue === 60 ? 'Bremsbeläge' :
+                                                       montagePriceValue === 110 ? 'Beläge + Scheiben' :
+                                                       montagePriceValue === 80 ? 'Bremsbeläge' :
+                                                       montagePriceValue === 130 ? 'Beläge + Scheiben' :
+                                                       montagePriceValue === 150 ? 'Beläge + Scheiben + Handbremse' : ''
+                                    
+                                    return (
+                                      <div key={option.id} className="space-y-1">
+                                        {/* Parts */}
+                                        <div className="flex justify-between text-sm">
+                                          <span className="text-gray-700">{option.brand} {axleLabel} {packageName}</span>
+                                          <span className="font-semibold">{option.pricePerTire.toFixed(2)} €</span>
+                                        </div>
+                                        {/* Montage */}
+                                        {montagePriceValue > 0 && (
+                                          <div className="flex justify-between text-sm pl-4">
+                                            <span className="text-gray-600">{axleLabel} Montage</span>
+                                            <span className="font-semibold">{montagePriceValue.toFixed(2)} €</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )
+                                  })
+                              ) : (
+                                /* Other services: standard display */
+                                acceptedOffer.tireOptions
+                                  .filter(option => 
+                                    !acceptedOffer.selectedTireOptionIds || 
+                                    acceptedOffer.selectedTireOptionIds.length === 0 || 
+                                    acceptedOffer.selectedTireOptionIds.includes(option.id)
+                                  )
+                                  .map((option, idx) => {
+                                    const quantity = getQuantityForTireOption(option)
+                                    return (
+                                      <div key={option.id} className="flex justify-between text-sm">
+                                        <span className="text-gray-700">{option.brand} {option.model} ({quantity}x)</span>
+                                        <span className="font-semibold">{(option.pricePerTire * quantity).toFixed(2)} €</span>
+                                      </div>
+                                    )
+                                  })
+                              )}
                             </>
                           ) : (
                             <div className="flex justify-between text-sm">
@@ -1158,10 +1195,13 @@ export default function RequestDetailPage() {
                           )}
                         </>
                       )}
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-700">{getServiceType() === 'WHEEL_CHANGE' ? 'Räder umstecken (4 Räder)' : 'Montagekosten'}</span>
-                        <span className="font-semibold">{getServiceType() === 'WHEEL_CHANGE' ? acceptedOffer.price.toFixed(2) : acceptedOffer.installationFee.toFixed(2)} €</span>
-                      </div>
+                      {/* Only show "Montagekosten" if NOT brake service (brake service shows montage per axle above) */}
+                      {getServiceType() !== 'BRAKES' && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">{getServiceType() === 'WHEEL_CHANGE' ? 'Räder umstecken (4 Räder)' : 'Montagekosten'}</span>
+                          <span className="font-semibold">{getServiceType() === 'WHEEL_CHANGE' ? acceptedOffer.price.toFixed(2) : acceptedOffer.installationFee.toFixed(2)} €</span>
+                        </div>
+                      )}
                       <div className="pt-2 border-t border-gray-300 flex justify-between">
                         <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
                         <span className="text-2xl font-bold text-primary-600">{acceptedOffer.price.toFixed(2)} €</span>

@@ -970,10 +970,6 @@ export default function BrowseRequestsPage() {
       }, ...offerForm.tireOptions]
     })
   }
-        montagePrice: montagePrice
-      }, ...offerForm.tireOptions]
-    })
-  }
 
   const removeTireOption = (index: number) => {
     if (offerForm.tireOptions.length <= 1) return

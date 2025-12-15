@@ -1434,19 +1434,30 @@ export default function RequestDetailPage() {
                               <div className="space-y-2 text-sm">
                                 {isBrakeService ? (
                                   <>
-                                    {/* Brake Service: Show package names with montage prices */}
+                                    {/* Brake Service: Show parts and montage as separate items */}
                                     {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
-                                      const axleLabel = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' :
-                                                       option.carTireType === 'REAR_TWO' ? 'Hinterachse' : ''
+                                      const axleLabel = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' : 'Hinterachse'
+                                      const montagePriceValue = (option as any).montagePrice || 0
+                                      const packageName = montagePriceValue === 60 ? 'Bremsbeläge' :
+                                                         montagePriceValue === 110 ? 'Beläge + Scheiben' :
+                                                         montagePriceValue === 80 ? 'Bremsbeläge' :
+                                                         montagePriceValue === 130 ? 'Beläge + Scheiben' :
+                                                         montagePriceValue === 150 ? 'Beläge + Scheiben + Handbremse' : ''
+                                      
                                       return (
                                         <div key={option.id}>
-                                          <div className="text-gray-700 text-sm">
-                                            <span>• {option.brand}</span>
+                                          {/* Ersatzteile */}
+                                          <div className="flex justify-between text-gray-700">
+                                            <span>• {option.brand} {axleLabel} {packageName}</span>
+                                            <span className="font-semibold">{option.pricePerTire.toFixed(2)} €</span>
                                           </div>
-                                          <div className="flex justify-between text-gray-700 pl-4 mt-1">
-                                            <span>{axleLabel} Montage</span>
-                                            <span className="font-semibold">{option.pricePerTire} €</span>
-                                          </div>
+                                          {/* Montage als separate Zeile */}
+                                          {montagePriceValue > 0 && (
+                                            <div className="flex justify-between text-gray-700 pl-4 mt-1">
+                                              <span>{axleLabel} Montage</span>
+                                              <span className="font-semibold">{montagePriceValue.toFixed(2)} €</span>
+                                            </div>
+                                          )}
                                         </div>
                                       )
                                     })}

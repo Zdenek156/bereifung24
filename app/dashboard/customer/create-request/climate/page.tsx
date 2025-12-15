@@ -10,6 +10,7 @@ type Vehicle = {
   make: string
   model: string
   year: number
+  vin?: string
 }
 
 export default function ClimateServicePage() {
@@ -56,7 +57,7 @@ export default function ClimateServicePage() {
     if (vehicleId) {
       const selectedVehicle = vehicles.find(v => v.id === vehicleId)
       if (selectedVehicle?.vin) {
-        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin }))
+        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin! }))
       }
     }
   }

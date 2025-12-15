@@ -10,6 +10,7 @@ type Vehicle = {
   make: string
   model: string
   year: number
+  vin?: string
 }
 
 export default function BrakesServicePage() {
@@ -58,7 +59,7 @@ export default function BrakesServicePage() {
     if (vehicleId) {
       const selectedVehicle = vehicles.find(v => v.id === vehicleId)
       if (selectedVehicle?.vin) {
-        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin }))
+        setFormData(prev => ({ ...prev, vehicleId, vin: selectedVehicle.vin! }))
       }
     }
   }

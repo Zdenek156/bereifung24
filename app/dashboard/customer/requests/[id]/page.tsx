@@ -451,12 +451,16 @@ export default function RequestDetailPage() {
 
     const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
     
+    // For brake service, package prices ARE the montage prices, so don't add fee again
+    const isBrakeService = serviceType === 'BRAKES'
+    const finalFee = isBrakeService ? 0 : fee
+    
     return {
       totalQuantity,
       tiresTotal,
       installationFee: fee,
       duration,
-      totalPrice: tiresTotal + fee
+      totalPrice: tiresTotal + finalFee
     }
   }
 
@@ -1322,27 +1326,49 @@ export default function RequestDetailPage() {
                             <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
                               <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
                               <div className="space-y-2 text-sm">
-                                {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
-                                  const qty = getQuantityForTireOption(option)
-                                  const axleInfo = isBrakeService && option.carTireType === 'FRONT_TWO' ? ' (Vorderachse)' :
-                                                  isBrakeService && option.carTireType === 'REAR_TWO' ? ' (Hinterachse)' : ''
-                                  // For services, pricePerTire is the complete package price
-                                  const optionTotal = isServiceRequest ? option.pricePerTire : (option.pricePerTire * qty)
-                                  return (
-                                    <div key={option.id} className="flex justify-between text-gray-700">
-                                      <span>• {option.brand}{axleInfo}{isServiceRequest && !isBrakeService ? '' : isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
-                                      <span className="font-semibold">{optionTotal} €</span>
+                                {isBrakeService ? (
+                                  <>
+                                    {/* Brake Service: Show package names with montage prices */}
+                                    {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
+                                      const axleLabel = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' :
+                                                       option.carTireType === 'REAR_TWO' ? 'Hinterachse' : ''
+                                      return (
+                                        <div key={option.id}>
+                                          <div className="text-gray-700 text-sm">
+                                            <span>• {option.brand}</span>
+                                          </div>
+                                          <div className="flex justify-between text-gray-700 pl-4 mt-1">
+                                            <span>{axleLabel} Montage</span>
+                                            <span className="font-semibold">{option.pricePerTire} €</span>
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Other services: Show packages with prices */}
+                                    {displayOptions.filter(opt => selectedTireOptionIds.includes(opt.id)).map(option => {
+                                      const qty = getQuantityForTireOption(option)
+                                      const optionTotal = isServiceRequest ? option.pricePerTire : (option.pricePerTire * qty)
+                                      return (
+                                        <div key={option.id} className="flex justify-between text-gray-700">
+                                          <span>• {option.brand}{isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
+                                          <span className="font-semibold">{optionTotal} €</span>
+                                        </div>
+                                      )
+                                    })}
+                                    {/* Show montage line for non-brake services */}
+                                    <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
+                                      <span>
+                                        {isServiceRequest ? 'Montage' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
+                                        {!isServiceRequest && hasDisposal && ' + Entsorgung'}
+                                      </span>
+                                      <span className="font-semibold">{calculation.installationFee} €</span>
                                     </div>
-                                  )
-                                })}
-                                <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
-                                  <span>
-                                    {isServiceRequest ? 'Montage' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
-                                    {!isServiceRequest && hasDisposal && ' + Entsorgung'}
-                                  </span>
-                                  <span className="font-semibold">{calculation.installationFee} €</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-600">
+                                  </>
+                                )}
+                                <div className="flex justify-between text-xs text-gray-600 pt-2 border-t border-gray-300">
                                   <span>⏱️ Dauer</span>
                                   <span>{calculation.duration} Minuten</span>
                                 </div>

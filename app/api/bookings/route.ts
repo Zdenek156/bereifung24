@@ -195,9 +195,46 @@ export async function POST(req: NextRequest) {
       }
     })
 
+    // If a PENDING booking exists, update it instead of creating a new one
+    if (existingBooking && existingBooking.status === 'PENDING') {
+      console.log(`Updating existing PENDING booking ${existingBooking.id} for request ${offer.tireRequestId}`)
+      
+      // Calculate duration
+      let estimatedDuration = 60
+      if (appointmentEndTime) {
+        const start = new Date(appointmentDate)
+        const end = new Date(appointmentEndTime)
+        estimatedDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
+      }
+      
+      const updatedBooking = await prisma.booking.update({
+        where: { id: existingBooking.id },
+        data: {
+          appointmentDate: new Date(appointmentDate),
+          appointmentTime,
+          estimatedDuration,
+          selectedTireOptionId,
+          customerNotes
+        },
+        include: {
+          workshop: true,
+          customer: {
+            include: {
+              user: true
+            }
+          },
+          tireRequest: true,
+          offer: true
+        }
+      })
+      
+      return NextResponse.json(updatedBooking, { status: 200 })
+    }
+    
+    // If CONFIRMED or COMPLETED booking exists, don't allow overwriting
     if (existingBooking) {
       return NextResponse.json(
-        { error: 'Für diese Anfrage existiert bereits eine Buchung' },
+        { error: 'Für diese Anfrage existiert bereits eine bestätigte Buchung' },
         { status: 400 }
       )
     }

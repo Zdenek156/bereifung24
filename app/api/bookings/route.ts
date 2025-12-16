@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate } from '@/lib/email'
-import { getBusySlots, generateAvailableSlots, createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
+import { getBusySlots, generateAvailableSlots, createCalendarEvent, updateCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 
 // GET /api/bookings - Get all bookings for current customer
 export async function GET(req: NextRequest) {
@@ -54,6 +54,25 @@ export async function GET(req: NextRequest) {
             aspectRatio: true,
             diameter: true,
             quantity: true,
+            additionalNotes: true,
+            vehicle: {
+              select: {
+                make: true,
+                model: true,
+                year: true,
+                licensePlate: true
+              }
+            }
+          }
+        },
+        selectedTireOption: {
+          select: {
+            id: true,
+            brand: true,
+            model: true,
+            pricePerTire: true,
+            montagePrice: true,
+            name: true
           }
         },
         review: {
@@ -89,7 +108,10 @@ export async function GET(req: NextRequest) {
         aspectRatio: booking.tireRequest.aspectRatio,
         diameter: booking.tireRequest.diameter,
         quantity: booking.tireRequest.quantity,
+        additionalNotes: booking.tireRequest.additionalNotes,
+        vehicle: booking.tireRequest.vehicle
       },
+      selectedTireOption: booking.selectedTireOption,
       review: booking.review ? {
         id: booking.review.id,
         rating: booking.review.rating,
@@ -221,16 +243,86 @@ export async function POST(req: NextRequest) {
           customerNotes: customerMessage || null
         },
         include: {
-          workshop: true,
+          workshop: {
+            include: {
+              user: true
+            }
+          },
           customer: {
             include: {
               user: true
             }
           },
-          tireRequest: true,
-          offer: true
+          tireRequest: {
+            include: {
+              vehicle: true
+            }
+          },
+          offer: {
+            include: {
+              tireOptions: true
+            }
+          }
         }
       })
+      
+      // Create/Update Google Calendar Event
+      if (existingBooking.googleEventId && offer.workshop.googleAccessToken && offer.workshop.googleRefreshToken && offer.workshop.googleCalendarId) {
+        // Update existing event
+        try {
+          const appointmentStart = new Date(appointmentDate)
+          const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
+          
+          const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
+          const eventSummary = selectedTireOption?.name || `${offer.tireBrand} ${offer.tireModel}`
+          
+          await updateCalendarEvent(
+            offer.workshop.googleAccessToken,
+            offer.workshop.googleRefreshToken,
+            offer.workshop.googleCalendarId,
+            existingBooking.googleEventId,
+            {
+              summary: eventSummary,
+              start: appointmentStart.toISOString(),
+              end: appointmentEnd.toISOString()
+            }
+          )
+          console.log('✅ Google Calendar event updated')
+        } catch (error) {
+          console.error('Failed to update calendar event:', error)
+        }
+      } else if (!existingBooking.googleEventId && offer.workshop.googleAccessToken && offer.workshop.googleRefreshToken && offer.workshop.googleCalendarId) {
+        // Create new event if it doesn't exist
+        try {
+          const appointmentStart = new Date(appointmentDate)
+          const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
+          
+          const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
+          const eventSummary = selectedTireOption?.name || `${offer.tireBrand} ${offer.tireModel}`
+          
+          const calendarEvent = await createCalendarEvent(
+            offer.workshop.googleAccessToken,
+            offer.workshop.googleRefreshToken,
+            offer.workshop.googleCalendarId,
+            {
+              summary: eventSummary,
+              description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+              start: appointmentStart.toISOString(),
+              end: appointmentEnd.toISOString(),
+              attendees: [{ email: offer.tireRequest.customer.user.email }]
+            }
+          )
+          
+          // Update booking with eventId
+          await prisma.booking.update({
+            where: { id: existingBooking.id },
+            data: { googleEventId: calendarEvent.id || null }
+          })
+          console.log('✅ Google Calendar event created')
+        } catch (error) {
+          console.error('Failed to create calendar event:', error)
+        }
+      }
       
       return NextResponse.json(updatedBooking, { status: 200 })
     }

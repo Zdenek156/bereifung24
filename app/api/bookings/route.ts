@@ -267,19 +267,25 @@ export async function POST(req: NextRequest) {
       })
       
       // Create/Update Google Calendar Event
-      if (existingBooking.googleEventId && offer.workshop.googleAccessToken && offer.workshop.googleRefreshToken && offer.workshop.googleCalendarId) {
-        // Update existing event
+      const workshopHasCalendar = !!(
+        offer.workshop.googleAccessToken && 
+        offer.workshop.googleRefreshToken && 
+        offer.workshop.googleCalendarId
+      )
+      
+      if (existingBooking.googleEventId && workshopHasCalendar) {
+        // Update existing event in workshop calendar
         try {
           const appointmentStart = new Date(appointmentDate)
           const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
           
           const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-          const eventSummary = selectedTireOption?.name || `${offer.tireBrand} ${offer.tireModel}`
+          const eventSummary = selectedTireOption?.brand || `${offer.tireBrand} ${offer.tireModel}`
           
           await updateCalendarEvent(
-            offer.workshop.googleAccessToken,
-            offer.workshop.googleRefreshToken,
-            offer.workshop.googleCalendarId,
+            offer.workshop.googleAccessToken!,
+            offer.workshop.googleRefreshToken!,
+            offer.workshop.googleCalendarId!,
             existingBooking.googleEventId,
             {
               summary: eventSummary,
@@ -287,40 +293,129 @@ export async function POST(req: NextRequest) {
               end: appointmentEnd.toISOString()
             }
           )
-          console.log('✅ Google Calendar event updated')
+          console.log('✅ Google Calendar event updated in workshop calendar')
         } catch (error) {
           console.error('Failed to update calendar event:', error)
         }
-      } else if (!existingBooking.googleEventId && offer.workshop.googleAccessToken && offer.workshop.googleRefreshToken && offer.workshop.googleCalendarId) {
-        // Create new event if it doesn't exist
-        try {
-          const appointmentStart = new Date(appointmentDate)
-          const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
-          
-          const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-          const eventSummary = selectedTireOption?.name || `${offer.tireBrand} ${offer.tireModel}`
-          
-          const calendarEvent = await createCalendarEvent(
-            offer.workshop.googleAccessToken,
-            offer.workshop.googleRefreshToken,
-            offer.workshop.googleCalendarId,
-            {
-              summary: eventSummary,
-              description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
-              start: appointmentStart.toISOString(),
-              end: appointmentEnd.toISOString(),
-              attendees: [{ email: offer.tireRequest.customer.user.email }]
+      } else if (!existingBooking.googleEventId) {
+        // No calendar event exists yet - create one
+        console.log('📅 No calendar event exists for this booking, creating one...')
+        console.log('Workshop has calendar:', workshopHasCalendar)
+        
+        const appointmentStart = new Date(appointmentDate)
+        const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
+        
+        if (workshopHasCalendar) {
+          // Create event in workshop calendar
+          try {
+            const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
+            const eventSummary = selectedTireOption?.brand || `${offer.tireBrand} ${offer.tireModel}`
+            
+            const calendarEvent = await createCalendarEvent(
+              offer.workshop.googleAccessToken!,
+              offer.workshop.googleRefreshToken!,
+              offer.workshop.googleCalendarId!,
+              {
+                summary: eventSummary,
+                description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+                start: appointmentStart.toISOString(),
+                end: appointmentEnd.toISOString(),
+                attendees: [{ email: offer.tireRequest.customer.user.email }]
+              }
+            )
+            
+            await prisma.booking.update({
+              where: { id: existingBooking.id },
+              data: { googleEventId: calendarEvent.id || null }
+            })
+            console.log('✅ Calendar event created in workshop calendar')
+          } catch (error) {
+            console.error('Failed to create workshop calendar event:', error)
+          }
+        } else {
+          // Workshop has no calendar - try employee calendar
+          console.log('⚠️ Workshop has no calendar, trying employee calendar...')
+          try {
+            const workshopWithEmployees = await prisma.workshop.findUnique({
+              where: { id: workshopId },
+              include: {
+                employees: {
+                  where: {
+                    googleCalendarId: { not: null },
+                    googleRefreshToken: { not: null }
+                  }
+                }
+              }
+            })
+            
+            if (workshopWithEmployees?.employees && workshopWithEmployees.employees.length > 0) {
+              const appointmentDateObj = new Date(appointmentDate)
+              const dayOfWeek = appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+              
+              // Find first employee working on this day
+              for (const employee of workshopWithEmployees.employees) {
+                if (!employee.workingHours) continue
+                
+                try {
+                  const hours = JSON.parse(employee.workingHours)
+                  const dayHours = hours[dayOfWeek]
+                  
+                  if (dayHours && dayHours.working && employee.googleRefreshToken && employee.googleCalendarId) {
+                    // Refresh token if needed
+                    let empAccessToken = employee.googleAccessToken
+                    if (!empAccessToken || (employee.googleTokenExpiry && new Date() > employee.googleTokenExpiry)) {
+                      console.log(`Refreshing token for employee ${employee.name}`)
+                      const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
+                      empAccessToken = newTokens.access_token || empAccessToken
+                      
+                      await prisma.employee.update({
+                        where: { id: employee.id },
+                        data: {
+                          googleAccessToken: empAccessToken,
+                          googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
+                        }
+                      })
+                    }
+                    
+                    if (empAccessToken) {
+                      const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
+                      const eventSummary = selectedTireOption?.brand || `${offer.tireBrand} ${offer.tireModel}`
+                      
+                      const calendarEvent = await createCalendarEvent(
+                        empAccessToken,
+                        employee.googleRefreshToken,
+                        employee.googleCalendarId,
+                        {
+                          summary: eventSummary,
+                          description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+                          start: appointmentStart.toISOString(),
+                          end: appointmentEnd.toISOString(),
+                          attendees: [{ email: offer.tireRequest.customer.user.email }]
+                        }
+                      )
+                      
+                      await prisma.booking.update({
+                        where: { id: existingBooking.id },
+                        data: { 
+                          googleEventId: calendarEvent.id || null,
+                          employeeId: employee.id
+                        }
+                      })
+                      console.log(`✅ Calendar event created in employee calendar (${employee.name})`)
+                      break
+                    }
+                  }
+                } catch (empError) {
+                  console.error(`Failed to create event for employee ${employee.id}:`, empError)
+                  continue
+                }
+              }
+            } else {
+              console.log('⚠️ No employees with calendar found')
             }
-          )
-          
-          // Update booking with eventId
-          await prisma.booking.update({
-            where: { id: existingBooking.id },
-            data: { googleEventId: calendarEvent.id || null }
-          })
-          console.log('✅ Google Calendar event created')
-        } catch (error) {
-          console.error('Failed to create calendar event:', error)
+          } catch (error) {
+            console.error('Failed to create employee calendar event:', error)
+          }
         }
       }
       

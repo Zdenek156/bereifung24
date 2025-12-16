@@ -581,9 +581,37 @@ export async function POST(req: NextRequest) {
         
         isSlotAvailable = conflicts.length === 0
       } else {
+        // Refresh token if needed for workshop
+        let workshopAccessToken = workshopForCheck.googleAccessToken
+        if (!workshopAccessToken || (workshopForCheck.googleTokenExpiry && new Date() > workshopForCheck.googleTokenExpiry)) {
+          console.log('Refreshing workshop token')
+          const newTokens = await refreshAccessToken(workshopForCheck.googleRefreshToken!)
+          workshopAccessToken = newTokens.access_token || workshopAccessToken
+          
+          const expiryDate = newTokens.expiry_date 
+            ? new Date(newTokens.expiry_date)
+            : new Date(Date.now() + 3600 * 1000)
+          
+          await prisma.workshop.update({
+            where: { id: workshopId },
+            data: {
+              googleAccessToken: workshopAccessToken,
+              googleTokenExpiry: expiryDate
+            }
+          })
+        }
+        
+        if (!workshopAccessToken) {
+          console.error('No workshop access token available')
+          return NextResponse.json(
+            { error: 'Kalender-Authentifizierung fehlgeschlagen' },
+            { status: 500 }
+          )
+        }
+        
         // Check Google Calendar + DB
         const calendarBusySlots = await getBusySlots(
-          workshopForCheck.googleAccessToken!,
+          workshopAccessToken,
           workshopForCheck.googleRefreshToken!,
           workshopForCheck.googleCalendarId,
           `${dateOnly}T00:00:00`,
@@ -852,10 +880,34 @@ export async function POST(req: NextRequest) {
             const hours = JSON.parse(employee.workingHours)
             const dayHours = hours[dayOfWeek]
             
-            if (dayHours && dayHours.working && employee.googleAccessToken && employee.googleRefreshToken && employee.googleCalendarId) {
+            if (dayHours && dayHours.working && employee.googleRefreshToken && employee.googleCalendarId) {
+              // Refresh token if needed
+              let empAccessToken = employee.googleAccessToken
+              if (!empAccessToken || (employee.googleTokenExpiry && new Date() > employee.googleTokenExpiry)) {
+                const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
+                empAccessToken = newTokens.access_token || empAccessToken
+                
+                const expiryDate = newTokens.expiry_date 
+                  ? new Date(newTokens.expiry_date)
+                  : new Date(Date.now() + 3600 * 1000)
+                
+                await prisma.employee.update({
+                  where: { id: employee.id },
+                  data: {
+                    googleAccessToken: empAccessToken,
+                    googleTokenExpiry: expiryDate
+                  }
+                })
+              }
+              
+              if (!empAccessToken) {
+                console.error(`No access token for employee ${employee.name}`)
+                continue
+              }
+              
               const { createCalendarEvent } = await import('@/lib/google-calendar')
               const calendarEvent = await createCalendarEvent(
-                employee.googleAccessToken,
+                empAccessToken,
                 employee.googleRefreshToken,
                 employee.googleCalendarId,
                 eventDetails

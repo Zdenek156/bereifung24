@@ -488,8 +488,8 @@ export default function BookAppointmentPage() {
                   <div className="flex items-center space-x-3">
                     <span className="text-4xl">{getServiceIcon()}</span>
                     <div>
-                      <p className="text-sm text-gray-600">{getServiceTitle()}</p>
-                      <p className="text-2xl font-bold text-gray-900">{offer.workshop.companyName}</p>
+                      <p className="text-sm text-gray-600">{offer.workshop.companyName}</p>
+                      <p className="text-2xl font-bold text-gray-900">{getServiceTitle()}</p>
                     </div>
                   </div>
                   {/* Show selected brake packages if available */}

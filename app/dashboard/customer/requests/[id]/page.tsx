@@ -499,10 +499,10 @@ export default function RequestDetailPage() {
         selectedOptions
       })
       
+      // For brake service: totalQuantity = number of brake packages (axles)
+      totalQuantity = selectedOptions.length
+      
       selectedOptions.forEach(option => {
-        const qty = getQuantityForTireOption(option)
-        totalQuantity += qty
-        
         // Parts cost from option (pricePerTire)
         tiresTotal += option.pricePerTire
         

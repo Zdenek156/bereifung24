@@ -737,7 +737,11 @@ export default function RequestDetailPage() {
                             )}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {offer.workshop.taxMode === 'NET' ? 'zzgl. MwSt.' : 'inkl. MwSt.'}
+                            {offer.workshop.taxMode === 'NET' 
+                              ? 'zzgl. MwSt.' 
+                              : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                              ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                              : 'inkl. MwSt.'}
                           </p>
                         </>
                       )

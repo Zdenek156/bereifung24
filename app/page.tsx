@@ -124,7 +124,7 @@ export default function HomePage() {
                 Bereifung24 ist <span className="font-bold text-primary-600">Deutschlands erste vollständig digitale Reifenservice-Plattform</span>, die Autofahrer und Werkstätten auf eine völlig neue Art verbindet. Während traditionelle Portale nur Reifenwechsel anbieten, decken wir das gesamte Spektrum ab – von Motorradreifen über Achsvermessung bis hin zu Klimaservice und Batteriewechsel.
               </p>
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
-                Die Plattform vereint <span className="font-bold text-primary-600">modernste Technologie mit höchster Benutzerfreundlichkeit</span>: Anfrage erstellen in 2 Minuten, mehrere Angebote vergleichen, Termin online buchen – alles ohne Telefonate. Geprüfte Werkstätten, transparente Bewertungen, sichere Datenverwaltung nach EU-DSGVO. So wird Reifenservice zum digitalen Erlebnis, das <span className="font-bold text-green-600">Zeit spart, Geld spart, CO₂ spart und Nerven schont</span>.
+                Die Plattform vereint <span className="font-bold text-primary-600">modernste Technologie mit höchster Benutzerfreundlichkeit</span>: Anfrage erstellen in 2 Minuten, mehrere Angebote vergleichen, Termin online buchen – alles ohne Telefonate. Geprüfte Werkstätten, transparente Bewertungen, sichere Datenverwaltung nach EU-DSGVO. So wird Reifenservice zum digitalen Erlebnis, das Zeit spart, Geld spart, <span className="font-bold text-green-600">CO₂ spart</span> und Nerven schont.
               </p>
             </div>
           </div>

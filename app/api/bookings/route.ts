@@ -454,24 +454,42 @@ export async function POST(req: NextRequest) {
       workshopForCheck.googleRefreshToken
     )
     
+    console.log('[BOOKING DEBUG] Calendar mode:', workshopForCheck.calendarMode)
+    console.log('[BOOKING DEBUG] Workshop has calendar:', workshopHasCalendarForCheck)
+    console.log('[BOOKING DEBUG] Will use employee calendars:', workshopForCheck.calendarMode === 'EMPLOYEE' || !workshopHasCalendarForCheck)
+    
     if (workshopForCheck.calendarMode === 'EMPLOYEE' || !workshopHasCalendarForCheck) {
       // Employee calendar mode OR workshop has no calendar - check employee calendars
       const dayOfWeek = appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
       
+      console.log('[BOOKING DEBUG] Day of week:', dayOfWeek)
+      console.log('[BOOKING DEBUG] Total employees:', workshopForCheck.employees.length)
+      
       const availableEmployees = workshopForCheck.employees.filter(emp => {
         // Must have calendar ID and refresh token (access token can be refreshed)
-        if (!emp.googleCalendarId || !emp.googleRefreshToken) return false
-        if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
+        if (!emp.googleCalendarId || !emp.googleRefreshToken) {
+          console.log(`[BOOKING DEBUG] Employee ${emp.name}: Missing calendar or refresh token`)
+          return false
+        }
+        if (emp.employeeVacations && emp.employeeVacations.length > 0) {
+          console.log(`[BOOKING DEBUG] Employee ${emp.name}: On vacation`)
+          return false
+        }
         
         if (emp.workingHours) {
           try {
             const hours = JSON.parse(emp.workingHours)
             const dayHours = hours[dayOfWeek]
-            if (!dayHours || !dayHours.working) return false
+            if (!dayHours || !dayHours.working) {
+              console.log(`[BOOKING DEBUG] Employee ${emp.name}: Not working on ${dayOfWeek}`)
+              return false
+            }
           } catch (e) {
+            console.log(`[BOOKING DEBUG] Employee ${emp.name}: Error parsing working hours`)
             return false
           }
         }
+        console.log(`[BOOKING DEBUG] Employee ${emp.name}: AVAILABLE`)
         return true
       })
 
@@ -486,31 +504,43 @@ export async function POST(req: NextRequest) {
       }
 
       // Check availability for all employees
+      console.log(`[BOOKING DEBUG] Checking ${availableEmployees.length} available employees`)
+      
       for (const employee of availableEmployees) {
         try {
+          console.log(`[BOOKING DEBUG] Checking employee ${employee.name}`)
+          
           // Refresh token if needed
           let accessToken = employee.googleAccessToken
+          console.log(`[BOOKING DEBUG] Employee ${employee.name} initial accessToken:`, accessToken ? `${accessToken.substring(0, 20)}...` : 'NULL')
+          
           if (!accessToken || (employee.googleTokenExpiry && new Date() > employee.googleTokenExpiry)) {
-            console.log(`Refreshing token for employee ${employee.name}`)
-            const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
-            accessToken = newTokens.access_token || accessToken
-            
-            // Update token in database
-            const expiryDate = newTokens.expiry_date 
-              ? new Date(newTokens.expiry_date)
-              : new Date(Date.now() + 3600 * 1000)
-            
-            await prisma.employee.update({
-              where: { id: employee.id },
-              data: {
-                googleAccessToken: accessToken,
-                googleTokenExpiry: expiryDate
-              }
-            })
+            console.log(`[BOOKING DEBUG] Refreshing token for employee ${employee.name}`)
+            try {
+              const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
+              accessToken = newTokens.access_token || accessToken
+              console.log(`[BOOKING DEBUG] Token refreshed for ${employee.name}, new token:`, accessToken ? `${accessToken.substring(0, 20)}...` : 'NULL')
+              
+              // Update token in database
+              const expiryDate = newTokens.expiry_date 
+                ? new Date(newTokens.expiry_date)
+                : new Date(Date.now() + 3600 * 1000)
+              
+              await prisma.employee.update({
+                where: { id: employee.id },
+                data: {
+                  googleAccessToken: accessToken,
+                  googleTokenExpiry: expiryDate
+                }
+              })
+            } catch (refreshError) {
+              console.error(`[BOOKING DEBUG] Token refresh failed for ${employee.name}:`, refreshError)
+              continue
+            }
           }
           
           if (!accessToken) {
-            console.error(`No access token available for employee ${employee.name}`)
+            console.error(`[BOOKING DEBUG] No access token available for employee ${employee.name}`)
             continue
           }
           

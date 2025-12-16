@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate } from '@/lib/email'
-import { getBusySlots, generateAvailableSlots } from '@/lib/google-calendar'
+import { getBusySlots, generateAvailableSlots, createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 
 // GET /api/bookings - Get all bookings for current customer
 export async function GET(req: NextRequest) {

@@ -375,25 +375,30 @@ export default function WorkshopOffers() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Kunde</h4>
                     <p className="text-sm text-gray-900">
                       {offer.tireRequest.customer.user.firstName} {offer.tireRequest.customer.user.lastName}
                     </p>
-                    {offer.tireRequest.customer.user.street && (
-                      <p className="text-sm text-gray-600">
-                        {offer.tireRequest.customer.user.street}
-                      </p>
-                    )}
                     {(offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (
                       <p className="text-sm text-gray-600">
                         {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
                       </p>
                     )}
-                    <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.email}</p>
-                    {offer.tireRequest.customer.user.phone && (
-                      <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.phone}</p>
+                    {/* Vollständige Kontaktdaten nur bei angenommenen Angeboten */}
+                    {offer.status === 'ACCEPTED' && (
+                      <>
+                        {offer.tireRequest.customer.user.street && (
+                          <p className="text-sm text-gray-600">
+                            {offer.tireRequest.customer.user.street}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.email}</p>
+                        {offer.tireRequest.customer.user.phone && (
+                          <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.phone}</p>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -413,15 +418,31 @@ export default function WorkshopOffers() {
                         Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
                       </p>
                     )}
-                    {offer.status === 'ACCEPTED' && offer.tireOptions && offer.selectedTireOptionIds && offer.selectedTireOptionIds.length > 0 && (
-                      <div className="mt-2">
-                        {offer.tireOptions
-                          .filter(option => offer.selectedTireOptionIds.includes(option.id))
-                          .map((option, index) => (
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hinweis</h4>
+                    {offer.tireOptions && offer.tireOptions.length > 0 && (
+                      <div>
+                        {offer.status === 'ACCEPTED' ? (
+                          // Bei angenommenen Angeboten: nur die vom Kunden ausgewählten
+                          offer.selectedTireOptionIds && offer.selectedTireOptionIds.length > 0 ? (
+                            offer.tireOptions
+                              .filter(option => offer.selectedTireOptionIds.includes(option.id))
+                              .map((option, index) => (
+                                <p key={index} className="text-sm text-gray-600">
+                                  {option.brand} {option.model}
+                                </p>
+                              ))
+                          ) : null
+                        ) : (
+                          // Bei offenen Angeboten: alle angebotenen Optionen
+                          offer.tireOptions.map((option, index) => (
                             <p key={index} className="text-sm text-gray-600">
-                              {option.brand} {option.model}
+                              {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : ''}: {option.brand} {option.model}
                             </p>
-                          ))}
+                          ))
+                        )}
                       </div>
                     )}
                   </div>

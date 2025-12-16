@@ -1228,7 +1228,27 @@ export default function RequestDetailPage() {
                       )}
                       <div className="pt-2 border-t border-gray-300 flex justify-between">
                         <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
-                        <span className="text-2xl font-bold text-primary-600">{acceptedOffer.price.toFixed(2)} €</span>
+                        <span className="text-2xl font-bold text-primary-600">
+                          {(() => {
+                            // Calculate actual total for accepted offer
+                            if (getServiceType() === 'BRAKES' && acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0) {
+                              const selectedOptions = acceptedOffer.tireOptions.filter(option => 
+                                !acceptedOffer.selectedTireOptionIds || 
+                                acceptedOffer.selectedTireOptionIds.length === 0 || 
+                                acceptedOffer.selectedTireOptionIds.includes(option.id)
+                              )
+                              let totalParts = 0
+                              let totalMontage = 0
+                              selectedOptions.forEach(option => {
+                                totalParts += option.pricePerTire
+                                totalMontage += (option as any).montagePrice || 0
+                              })
+                              return (totalParts + totalMontage).toFixed(2)
+                            }
+                            return acceptedOffer.price.toFixed(2)
+                          })()}
+                          {' '}€
+                        </span>
                       </div>
                       <div className="text-xs text-gray-500 text-right mt-1">
                         {acceptedOffer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}

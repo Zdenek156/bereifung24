@@ -421,7 +421,6 @@ export default function WorkshopOffers() {
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hinweis</h4>
                     {offer.tireOptions && offer.tireOptions.length > 0 && (
                       <div>
                         {offer.status === 'ACCEPTED' ? (
@@ -439,7 +438,7 @@ export default function WorkshopOffers() {
                           // Bei offenen Angeboten: alle angebotenen Optionen
                           offer.tireOptions.map((option, index) => (
                             <p key={index} className="text-sm text-gray-600">
-                              {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : ''}: {option.brand} {option.model}
+                              {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : ''} {option.brand} {option.model}
                             </p>
                           ))
                         )}

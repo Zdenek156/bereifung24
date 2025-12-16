@@ -417,7 +417,7 @@ export default function WorkshopOffers() {
                       <div className="mt-2">
                         {offer.tireOptions.map((option, index) => (
                           <p key={index} className="text-sm text-gray-600">
-                            {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : 'Achse'}: {option.brand} {option.model}
+                            {option.brand} {option.model}
                           </p>
                         ))}
                       </div>

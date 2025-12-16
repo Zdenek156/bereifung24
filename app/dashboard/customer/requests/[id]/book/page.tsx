@@ -277,8 +277,8 @@ export default function BookAppointmentPage() {
       return 'UNKNOWN'
     }
     
-    // Use serviceType field if available
-    if (request.serviceType) {
+    // Use serviceType field if available (and not UNKNOWN)
+    if (request.serviceType && request.serviceType !== 'UNKNOWN') {
       return request.serviceType
     }
     
@@ -289,7 +289,7 @@ export default function BookAppointmentPage() {
     const notes = request.additionalNotes || ''
     if (notes.includes('KLIMASERVICE')) return 'CLIMATE'
     if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT'
-    if (notes.includes('BREMSENWECHSEL')) return 'BRAKES'
+    if (notes.includes('BREMSEN-SERVICE') || notes.includes('BREMSENWECHSEL')) return 'BRAKE_SERVICE'
     if (notes.includes('BATTERIEWECHSEL')) return 'BATTERY'
     if (notes.includes('RÄDER UMSTECKEN')) return 'WHEEL_CHANGE'
     if (notes.includes('REIFENREPARATUR') || notes.includes('🔧 REPARATUR')) return 'REPAIR'

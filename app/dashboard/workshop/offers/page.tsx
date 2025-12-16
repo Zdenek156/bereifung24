@@ -299,9 +299,6 @@ export default function WorkshopOffers() {
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {offer.tireBrand} {offer.tireModel}
-                      </h3>
                       {getStatusBadge(offer.status)}
                     </div>
                     <p className="text-sm text-gray-600">

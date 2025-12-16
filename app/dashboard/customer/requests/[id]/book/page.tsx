@@ -38,6 +38,8 @@ interface TireOption {
   brand: string
   model: string
   pricePerTire: number
+  montagePrice?: number
+  carTireType?: string
 }
 
 interface Offer {
@@ -53,6 +55,7 @@ interface Offer {
   storageAvailable?: boolean | null
   customerWantsStorage?: boolean | null
   tireOptions?: TireOption[]
+  selectedTireOptionIds?: string[]
   workshop: Workshop
 }
 
@@ -405,6 +408,43 @@ export default function BookAppointmentPage() {
     return null
   }
 
+  // Calculate actual total price based on selected tire options
+  const calculateActualPrice = (): number => {
+    const serviceType = getServiceType()
+    const isBrakeService = serviceType === 'BRAKES'
+    
+    // If no tire options or none selected, use original offer price
+    if (!offer.tireOptions || offer.tireOptions.length === 0 || !offer.selectedTireOptionIds || offer.selectedTireOptionIds.length === 0) {
+      return offer.price
+    }
+    
+    const selectedOptions = offer.tireOptions.filter(opt => 
+      offer.selectedTireOptionIds!.includes(opt.id)
+    )
+    
+    if (isBrakeService) {
+      // For brake service: sum parts + montage costs
+      let totalParts = 0
+      let totalMontage = 0
+      
+      selectedOptions.forEach(option => {
+        totalParts += option.pricePerTire
+        totalMontage += (option as any).montagePrice || 0
+      })
+      
+      return parseFloat((totalParts + totalMontage).toFixed(2))
+    }
+    
+    // For other services with options
+    let total = 0
+    selectedOptions.forEach(option => {
+      total += option.pricePerTire
+    })
+    
+    return parseFloat(total.toFixed(2))
+  }
+
+  const actualPrice = calculateActualPrice()
   const tireSpecs = `${request.width}/${request.aspectRatio} R${request.diameter}`
 
   return (
@@ -450,7 +490,7 @@ export default function BookAppointmentPage() {
                   )}
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-600">Gesamtpreis</p>
-                    <p className="text-3xl font-bold text-primary-600">{offer.price.toFixed(2)} €</p>
+                    <p className="text-3xl font-bold text-primary-600">{actualPrice.toFixed(2)} €</p>
                   </div>
                 </div>
               ) : (
@@ -474,7 +514,7 @@ export default function BookAppointmentPage() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm text-gray-600">Preis (inkl. Montage)</p>
-                    <p className="text-3xl font-bold text-primary-600">{offer.price.toFixed(2)} €</p>
+                    <p className="text-3xl font-bold text-primary-600">{actualPrice.toFixed(2)} €</p>
                   </div>
                 </div>
               )}

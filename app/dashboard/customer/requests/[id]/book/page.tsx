@@ -483,7 +483,29 @@ export default function BookAppointmentPage() {
                       <p className="text-2xl font-bold text-gray-900">{getServiceTitle()}</p>
                     </div>
                   </div>
-                  {request.additionalNotes && (
+                  {/* Show selected brake packages if available */}
+                  {getServiceType() === 'BRAKES' && offer.tireOptions && offer.selectedTireOptionIds && offer.selectedTireOptionIds.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Ausgewählte Bremsenpakete:</p>
+                      <div className="space-y-2">
+                        {offer.tireOptions
+                          .filter(opt => offer.selectedTireOptionIds!.includes(opt.id))
+                          .map(option => {
+                            const axleLabel = option.carTireType === 'FRONT_TWO' ? 'Vorderachse' : 'Hinterachse'
+                            const montageCost = (option as any).montagePrice || 0
+                            return (
+                              <div key={option.id} className="text-sm text-gray-700">
+                                <div className="font-medium">{option.brand} {axleLabel}</div>
+                                <div className="text-xs text-gray-600">
+                                  Teile: {option.pricePerTire.toFixed(2)} € + Montage: {montageCost.toFixed(2)} € = {(option.pricePerTire + montageCost).toFixed(2)} €
+                                </div>
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </div>
+                  )}
+                  {request.additionalNotes && getServiceType() !== 'BRAKES' && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-sm text-gray-700 whitespace-pre-line">{request.additionalNotes}</p>
                     </div>

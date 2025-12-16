@@ -134,19 +134,6 @@ export default function BookAppointmentPage() {
         const offerData = await offerResponse.json()
         const requestData = await requestResponse.json()
         
-        console.log('🔍 DEBUG - Offer loaded:', {
-          offerId: offerData.offer.id,
-          price: offerData.offer.price,
-          selectedTireOptionIds: offerData.offer.selectedTireOptionIds,
-          tireOptionsCount: offerData.offer.tireOptions?.length
-        })
-        
-        console.log('📋 DEBUG - Request loaded:', {
-          requestId: requestData.request.id,
-          serviceType: requestData.request.serviceType,
-          additionalNotes: requestData.request.additionalNotes
-        })
-        
         setOffer(offerData.offer)
         setRequest(requestData.request)
         
@@ -273,7 +260,6 @@ export default function BookAppointmentPage() {
   // Helper function to detect service type from notes
   const getServiceType = () => {
     if (!request) {
-      console.warn('⚠️ getServiceType called but request is null')
       return 'UNKNOWN'
     }
     
@@ -436,33 +422,14 @@ export default function BookAppointmentPage() {
     const serviceType = getServiceType()
     const isBrakeService = serviceType === 'BRAKE_SERVICE'
     
-    console.log('💰 DEBUG - calculateActualPrice called:', {
-      serviceType,
-      isBrakeService,
-      hasOptions: !!offer.tireOptions,
-      optionsCount: offer.tireOptions?.length,
-      hasSelectedIds: !!offer.selectedTireOptionIds,
-      selectedIdsCount: offer.selectedTireOptionIds?.length,
-      selectedIds: offer.selectedTireOptionIds,
-      offerPrice: offer.price
-    })
-    
     // If no tire options or none selected, use original offer price
     if (!offer.tireOptions || offer.tireOptions.length === 0 || !offer.selectedTireOptionIds || offer.selectedTireOptionIds.length === 0) {
-      console.log('⚠️ Using fallback price:', offer.price)
       return offer.price
     }
     
     const selectedOptions = offer.tireOptions.filter(opt => 
       offer.selectedTireOptionIds!.includes(opt.id)
     )
-    
-    console.log('✅ Selected options:', selectedOptions.map(o => ({
-      id: o.id,
-      name: (o as any).name,
-      parts: o.pricePerTire,
-      montage: (o as any).montagePrice
-    })))
     
     if (isBrakeService) {
       // For brake service: sum parts + montage costs
@@ -474,9 +441,7 @@ export default function BookAppointmentPage() {
         totalMontage += (option as any).montagePrice || 0
       })
       
-      const total = parseFloat((totalParts + totalMontage).toFixed(2))
-      console.log('💵 Calculated total:', { totalParts, totalMontage, total })
-      return total
+      return parseFloat((totalParts + totalMontage).toFixed(2))
     }
     
     // For other services with options

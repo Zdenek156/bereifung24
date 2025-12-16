@@ -418,6 +418,7 @@ export default function WorkshopOffers() {
                   </div>
 
                   <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hinweis</h4>
                     {offer.tireOptions && offer.tireOptions.length > 0 && (
                       <div>
                         {offer.status === 'ACCEPTED' ? (

@@ -473,10 +473,10 @@ export default function RequestDetailPage() {
       const tiresTotal = offer.price - installationFee
       return {
         totalQuantity: request?.quantity || 4,
-        tiresTotal,
-        installationFee,
+        tiresTotal: parseFloat(tiresTotal.toFixed(2)),
+        installationFee: parseFloat(installationFee.toFixed(2)),
         duration,
-        totalPrice: tiresTotal + installationFee
+        totalPrice: parseFloat((tiresTotal + installationFee).toFixed(2))
       }
     }
     
@@ -544,10 +544,10 @@ export default function RequestDetailPage() {
       
       return {
         totalQuantity,
-        tiresTotal, // Parts only
-        installationFee: totalMontage, // Montage only
+        tiresTotal: parseFloat(tiresTotal.toFixed(2)), // Parts only
+        installationFee: parseFloat(totalMontage.toFixed(2)), // Montage only
         duration: totalDuration,
-        totalPrice: tiresTotal + totalMontage
+        totalPrice: parseFloat((tiresTotal + totalMontage).toFixed(2))
       }
     }
 
@@ -569,10 +569,10 @@ export default function RequestDetailPage() {
     
     return {
       totalQuantity,
-      tiresTotal,
-      installationFee: isServiceRequest ? 0 : fee,
+      tiresTotal: parseFloat(tiresTotal.toFixed(2)),
+      installationFee: isServiceRequest ? 0 : parseFloat(fee.toFixed(2)),
       duration,
-      totalPrice: tiresTotal + (isServiceRequest ? 0 : fee)
+      totalPrice: parseFloat((tiresTotal + (isServiceRequest ? 0 : fee)).toFixed(2))
     }
   }
 

@@ -71,8 +71,7 @@ export async function GET(req: NextRequest) {
             brand: true,
             model: true,
             pricePerTire: true,
-            montagePrice: true,
-            name: true
+            montagePrice: true
           }
         },
         review: {

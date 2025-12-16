@@ -172,30 +172,7 @@ export default function CustomerAppointments() {
     }
     return labels[season] || season
   }
-  const getServiceTitle = (booking: Booking) => {
-    const notes = booking.tireRequest.additionalNotes || ''
-    
-    // Check if it's a brake service
-    if (notes.includes('BREMSEN-SERVICE') || notes.includes('BREMSENWECHSEL')) {
-      return 'Bremsen Service'
-    }
-    
-    // Check other service types
-    if (notes.includes('KLIMASERVICE')) return 'Klimaservice'
-    if (notes.includes('ACHSVERMESSUNG')) return 'Achsvermessung'
-    if (notes.includes('BATTERIEWECHSEL')) return 'Batteriewechsel'
-    if (notes.includes('RÄDER UMSTECKEN')) return 'Räder umstecken'
-    if (notes.includes('REIFENREPARATUR')) return 'Reifenreparatur'
-    if (notes.includes('MOTORRADREIFEN') || notes.includes('🏍️')) return 'Motorradreifen'
-    if (notes.includes('SONSTIGE REIFENSERVICES')) return 'Reifenservice'
-    
-    // Default: tire change with dimensions
-    const { season, width, aspectRatio, diameter } = booking.tireRequest
-    if (width === '0' || width === 0 || !width) {
-      return 'Reifenservice'
-    }
-    return `${getSeasonLabel(season)} - ${width}/${aspectRatio} R${diameter}`
-  }
+
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { color: string, text: string }> = {
       CONFIRMED: { color: 'bg-blue-100 text-blue-800', text: 'Bestätigt' },

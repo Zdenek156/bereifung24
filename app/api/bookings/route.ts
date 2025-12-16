@@ -185,7 +185,8 @@ export async function POST(req: NextRequest) {
       where: { id: offerId },
       include: {
         tireRequest: true,
-        tireOptions: true
+        tireOptions: true,
+        workshop: true
       }
     })
 

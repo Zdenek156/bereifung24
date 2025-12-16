@@ -434,7 +434,7 @@ export default function BookAppointmentPage() {
   // Calculate actual total price based on selected tire options
   const calculateActualPrice = (): number => {
     const serviceType = getServiceType()
-    const isBrakeService = serviceType === 'BRAKES'
+    const isBrakeService = serviceType === 'BRAKE_SERVICE'
     
     console.log('💰 DEBUG - calculateActualPrice called:', {
       serviceType,
@@ -459,7 +459,7 @@ export default function BookAppointmentPage() {
     
     console.log('✅ Selected options:', selectedOptions.map(o => ({
       id: o.id,
-      name: o.name,
+      name: (o as any).name,
       parts: o.pricePerTire,
       montage: (o as any).montagePrice
     })))
@@ -585,60 +585,6 @@ export default function BookAppointmentPage() {
                 </div>
               )}
             </div>
-
-            {/* Reifenoptionen */}
-            {offer.tireOptions && offer.tireOptions.length > 1 && (
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Wählen Sie Ihre Reifenoption</h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Die Werkstatt bietet mehrere Reifenoptionen an. Wählen Sie die gewünschte Option für Ihren Termin.
-                </p>
-                <div className="space-y-3">
-                  {offer.tireOptions.map((option) => {
-                    const optionTotalPrice = (option.pricePerTire * request!.quantity) + offer.installationFee
-                    const isSelected = selectedTireOption?.id === option.id
-                    return (
-                      <button
-                        key={option.id}
-                        onClick={() => setSelectedTireOption(option)}
-                        className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary-600 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-1">
-                              <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
-                                isSelected ? 'border-primary-600' : 'border-gray-300'
-                              }`}>
-                                {isSelected && (
-                                  <div className="w-3 h-3 rounded-full bg-primary-600"></div>
-                                )}
-                              </div>
-                              <h3 className="text-lg font-bold text-gray-900">{option.brand} {option.model}</h3>
-                            </div>
-                            <p className="text-sm text-gray-600 ml-8">
-                              {option.pricePerTire.toFixed(2)} € pro Reifen × {request!.quantity} = {(option.pricePerTire * request!.quantity).toFixed(2)} €
-                            </p>
-                            <p className="text-sm text-gray-600 ml-8">
-                              + Montage: {offer.installationFee.toFixed(2)} €
-                            </p>
-                          </div>
-                          <div className="text-right ml-4">
-                            <p className="text-2xl font-bold text-primary-600">
-                              {optionTotalPrice.toFixed(2)} €
-                            </p>
-                            <p className="text-xs text-gray-500">Gesamt</p>
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Zahlungsmethode */}
             <div className="bg-white rounded-xl shadow-md p-6">

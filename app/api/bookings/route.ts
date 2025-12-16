@@ -207,6 +207,10 @@ export async function POST(req: NextRequest) {
         estimatedDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
       }
       
+      // Extract time from appointmentDate
+      const aptDate = new Date(appointmentDate)
+      const appointmentTime = `${String(aptDate.getHours()).padStart(2, '0')}:${String(aptDate.getMinutes()).padStart(2, '0')}`
+      
       const updatedBooking = await prisma.booking.update({
         where: { id: existingBooking.id },
         data: {
@@ -214,7 +218,7 @@ export async function POST(req: NextRequest) {
           appointmentTime,
           estimatedDuration,
           selectedTireOptionId,
-          customerNotes
+          customerNotes: customerMessage || null
         },
         include: {
           workshop: true,

@@ -413,6 +413,15 @@ export default function WorkshopOffers() {
                         Preis wird nach Auswahl durch Kunden festgelegt
                       </p>
                     )}
+                    {offer.status === 'ACCEPTED' && offer.tireOptions && offer.tireOptions.length > 0 && (
+                      <div className="mt-2">
+                        {offer.tireOptions.map((option, index) => (
+                          <p key={index} className="text-sm text-gray-600">
+                            {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : 'Achse'}: {option.brand} {option.model}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

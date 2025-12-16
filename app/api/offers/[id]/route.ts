@@ -105,6 +105,7 @@ export async function GET(
     // Format workshop data
     const formattedOffer = {
       ...offer,
+      selectedTireOptionIds: offer.selectedTireOptionIds || [],
       workshop: {
         id: offer.workshop.id,
         companyName: offer.workshop.companyName,

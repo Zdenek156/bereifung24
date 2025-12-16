@@ -707,11 +707,12 @@ export default function RequestDetailPage() {
                       const offer = request.offers.find(o => o.id === selectedOfferId)!
                       const calculation = calculateSelectedTotal(offer)
                       const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                      const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
                       return (
                         <>
                           <div className="flex justify-between pt-2 border-t border-primary-300">
                             <span className="font-medium">
-                              Montagekosten ({calculation.totalQuantity} Reifen)
+                              Montagekosten ({calculation.totalQuantity} {isBrakeService ? 'Achsen' : 'Reifen'})
                               {hasDisposal && ' + Entsorgung'}
                             </span>
                             <span className="font-semibold">
@@ -729,8 +730,14 @@ export default function RequestDetailPage() {
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 mt-1">
-                            ✓ Gesamt: {calculation.totalQuantity} Reifen
-                            {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
+                            {isBrakeService ? (
+                              `✓ Gesamt: ${calculation.totalQuantity} Achsen`
+                            ) : (
+                              `✓ Gesamt: ${calculation.totalQuantity} Reifen${hasDisposal ? ' ✓ inkl. Altreifenentsorgung' : ''}`
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {offer.workshop.taxMode === 'NET' ? 'zzgl. MwSt.' : 'inkl. MwSt.'}
                           </p>
                         </>
                       )

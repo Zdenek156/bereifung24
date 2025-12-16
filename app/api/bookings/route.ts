@@ -449,11 +449,17 @@ export async function POST(req: NextRequest) {
     // Check if slot is still available
     let isSlotAvailable = false
     
-    if (workshopForCheck.calendarMode === 'EMPLOYEE') {
-      // Employee calendar mode - check all employee calendars
+    const workshopHasCalendarForCheck = !!(
+      workshopForCheck.googleCalendarId && 
+      workshopForCheck.googleRefreshToken
+    )
+    
+    if (workshopForCheck.calendarMode === 'EMPLOYEE' || !workshopHasCalendarForCheck) {
+      // Employee calendar mode OR workshop has no calendar - check employee calendars
       const dayOfWeek = appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
       
       const availableEmployees = workshopForCheck.employees.filter(emp => {
+        // Must have calendar ID and refresh token (access token can be refreshed)
         if (!emp.googleCalendarId || !emp.googleRefreshToken) return false
         if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
         

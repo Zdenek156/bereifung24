@@ -687,7 +687,7 @@ export default function RequestDetailPage() {
                 <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
                   <h3 className="font-semibold text-gray-900 mb-3">
                     {request.additionalNotes?.includes('BREMSEN-SERVICE') 
-                      ? 'Ihre gewählten Hersteller:' 
+                      ? 'Ihre gewählten Bremsenpakete:' 
                       : 'Ihre gewählten Reifen:'}
                   </h3>
                   <div className="space-y-2 text-sm">
@@ -724,7 +724,16 @@ export default function RequestDetailPage() {
                             <span>{calculation.duration} Minuten</span>
                           </div>
                           <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
-                            <span>Gesamtpreis</span>
+                            <div>
+                              <div>Gesamtpreis</div>
+                              <div className="text-xs text-gray-500 font-normal mt-0.5">
+                                {offer.workshop.taxMode === 'NET' 
+                                  ? 'zzgl. MwSt.' 
+                                  : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                                  ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                                  : 'inkl. MwSt.'}
+                              </div>
+                            </div>
                             <span>
                               {calculation.totalPrice.toFixed(2)} €
                             </span>
@@ -735,13 +744,6 @@ export default function RequestDetailPage() {
                             ) : (
                               `✓ Gesamt: ${calculation.totalQuantity} Reifen${hasDisposal ? ' ✓ inkl. Altreifenentsorgung' : ''}`
                             )}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {offer.workshop.taxMode === 'NET' 
-                              ? 'zzgl. MwSt.' 
-                              : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
-                              ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
-                              : 'inkl. MwSt.'}
                           </p>
                         </>
                       )

@@ -183,7 +183,15 @@ export async function POST(req: NextRequest) {
     const offer = await prisma.offer.findUnique({
       where: { id: offerId },
       include: {
-        tireRequest: true,
+        tireRequest: {
+          include: {
+            customer: {
+              include: {
+                user: true
+              }
+            }
+          }
+        },
         tireOptions: true,
         workshop: true
       }

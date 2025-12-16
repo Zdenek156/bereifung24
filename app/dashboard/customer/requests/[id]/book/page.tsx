@@ -74,6 +74,7 @@ interface TireRequest {
   quantity: number
   needByDate: string
   additionalNotes?: string
+  serviceType?: string
 }
 
 export default function BookAppointmentPage() {
@@ -138,6 +139,12 @@ export default function BookAppointmentPage() {
           price: offerData.offer.price,
           selectedTireOptionIds: offerData.offer.selectedTireOptionIds,
           tireOptionsCount: offerData.offer.tireOptions?.length
+        })
+        
+        console.log('📋 DEBUG - Request loaded:', {
+          requestId: requestData.request.id,
+          serviceType: requestData.request.serviceType,
+          additionalNotes: requestData.request.additionalNotes
         })
         
         setOffer(offerData.offer)
@@ -261,7 +268,12 @@ export default function BookAppointmentPage() {
   const confirmManualBooking = () => {
     alert('Vielen Dank! Bitte rufen Sie die Werkstatt an, um Ihren Termin zu vereinbaren.')
     router.push('/dashboard/customer/requests')
-  }
+  }// Use serviceType field if available
+    if (request.serviceType) {
+      return request.serviceType
+    }
+    
+    
 
   // Helper function to detect service type from notes
   const getServiceType = () => {

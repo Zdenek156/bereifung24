@@ -132,6 +132,14 @@ export default function BookAppointmentPage() {
       if (offerResponse.ok && requestResponse.ok) {
         const offerData = await offerResponse.json()
         const requestData = await requestResponse.json()
+        
+        console.log('🔍 DEBUG - Offer loaded:', {
+          offerId: offerData.offer.id,
+          price: offerData.offer.price,
+          selectedTireOptionIds: offerData.offer.selectedTireOptionIds,
+          tireOptionsCount: offerData.offer.tireOptions?.length
+        })
+        
         setOffer(offerData.offer)
         setRequest(requestData.request)
         
@@ -413,14 +421,33 @@ export default function BookAppointmentPage() {
     const serviceType = getServiceType()
     const isBrakeService = serviceType === 'BRAKES'
     
+    console.log('💰 DEBUG - calculateActualPrice called:', {
+      serviceType,
+      isBrakeService,
+      hasOptions: !!offer.tireOptions,
+      optionsCount: offer.tireOptions?.length,
+      hasSelectedIds: !!offer.selectedTireOptionIds,
+      selectedIdsCount: offer.selectedTireOptionIds?.length,
+      selectedIds: offer.selectedTireOptionIds,
+      offerPrice: offer.price
+    })
+    
     // If no tire options or none selected, use original offer price
     if (!offer.tireOptions || offer.tireOptions.length === 0 || !offer.selectedTireOptionIds || offer.selectedTireOptionIds.length === 0) {
+      console.log('⚠️ Using fallback price:', offer.price)
       return offer.price
     }
     
     const selectedOptions = offer.tireOptions.filter(opt => 
       offer.selectedTireOptionIds!.includes(opt.id)
     )
+    
+    console.log('✅ Selected options:', selectedOptions.map(o => ({
+      id: o.id,
+      name: o.name,
+      parts: o.pricePerTire,
+      montage: (o as any).montagePrice
+    })))
     
     if (isBrakeService) {
       // For brake service: sum parts + montage costs
@@ -432,7 +459,9 @@ export default function BookAppointmentPage() {
         totalMontage += (option as any).montagePrice || 0
       })
       
-      return parseFloat((totalParts + totalMontage).toFixed(2))
+      const total = parseFloat((totalParts + totalMontage).toFixed(2))
+      console.log('💵 Calculated total:', { totalParts, totalMontage, total })
+      return total
     }
     
     // For other services with options

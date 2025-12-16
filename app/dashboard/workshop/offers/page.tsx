@@ -18,6 +18,7 @@ interface Offer {
   acceptedAt: string | null
   declinedAt: string | null
   createdAt: string
+  selectedTireOptionIds: string[]
   tireOptions: Array<{
     id: string
     brand: string
@@ -355,13 +356,17 @@ export default function WorkshopOffers() {
                       })()}
                     </p>
                   </div>
-                  {offer.status === 'ACCEPTED' && (
-                    <div className="text-right">
+                  <div className="text-right">
+                    {offer.status === 'ACCEPTED' ? (
                       <p className="text-2xl font-bold text-primary-600">
                         {calculateTotalPrice(offer).toFixed(2)} €
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">
+                        Preis wird nach Auswahl<br />durch Kunden festgelegt
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {offer.description && (
@@ -408,18 +413,15 @@ export default function WorkshopOffers() {
                         Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
                       </p>
                     )}
-                    {offer.status !== 'ACCEPTED' && (
-                      <p className="text-sm text-gray-500 italic mt-2">
-                        Preis wird nach Auswahl durch Kunden festgelegt
-                      </p>
-                    )}
-                    {offer.status === 'ACCEPTED' && offer.tireOptions && offer.tireOptions.length > 0 && (
+                    {offer.status === 'ACCEPTED' && offer.tireOptions && offer.selectedTireOptionIds && offer.selectedTireOptionIds.length > 0 && (
                       <div className="mt-2">
-                        {offer.tireOptions.map((option, index) => (
-                          <p key={index} className="text-sm text-gray-600">
-                            {option.brand} {option.model}
-                          </p>
-                        ))}
+                        {offer.tireOptions
+                          .filter(option => offer.selectedTireOptionIds.includes(option.id))
+                          .map((option, index) => (
+                            <p key={index} className="text-sm text-gray-600">
+                              {option.brand} {option.model}
+                            </p>
+                          ))}
                       </div>
                     )}
                   </div>

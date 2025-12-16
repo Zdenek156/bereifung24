@@ -31,8 +31,22 @@ export async function GET() {
     // Get all offers with related data
     const offers = await prisma.offer.findMany({
       where: { workshopId: user.workshop.id },
-      include: {
+      select: {
+        id: true,
+        tireBrand: true,
+        tireModel: true,
+        description: true,
+        price: true,
+        pricePerTire: true,
+        installationFee: true,
+        validUntil: true,
+        status: true,
+        acceptedAt: true,
+        declinedAt: true,
+        createdAt: true,
+        selectedTireOptionIds: true,
         tireOptions: true,
+        booking: true,
         tireRequest: {
           select: {
             id: true,
@@ -61,7 +75,6 @@ export async function GET() {
             },
           },
         },
-        booking: true,
       },
       orderBy: { createdAt: 'desc' },
     })

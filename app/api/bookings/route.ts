@@ -482,9 +482,35 @@ export async function POST(req: NextRequest) {
       // Check availability for all employees
       for (const employee of availableEmployees) {
         try {
+          // Refresh token if needed
+          let accessToken = employee.googleAccessToken
+          if (!accessToken || (employee.googleTokenExpiry && new Date() > employee.googleTokenExpiry)) {
+            console.log(`Refreshing token for employee ${employee.name}`)
+            const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
+            accessToken = newTokens.access_token || accessToken
+            
+            // Update token in database
+            const expiryDate = newTokens.expiry_date 
+              ? new Date(newTokens.expiry_date)
+              : new Date(Date.now() + 3600 * 1000)
+            
+            await prisma.employee.update({
+              where: { id: employee.id },
+              data: {
+                googleAccessToken: accessToken,
+                googleTokenExpiry: expiryDate
+              }
+            })
+          }
+          
+          if (!accessToken) {
+            console.error(`No access token available for employee ${employee.name}`)
+            continue
+          }
+          
           // Get busy slots from Google Calendar
           const calendarBusySlots = await getBusySlots(
-            employee.googleAccessToken!,
+            accessToken,
             employee.googleRefreshToken!,
             employee.googleCalendarId!,
             `${dateOnly}T00:00:00`,

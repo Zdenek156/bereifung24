@@ -685,15 +685,20 @@ export default function RequestDetailPage() {
               {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && 
                selectedTireOptionIds.length > 0 && (
                 <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
-                  <h3 className="font-semibold text-gray-900 mb-3">Ihre gewählten Reifen:</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    {request.additionalNotes?.includes('BREMSEN-SERVICE') 
+                      ? 'Ihre gewählten Hersteller:' 
+                      : 'Ihre gewählten Reifen:'}
+                  </h3>
                   <div className="space-y-2 text-sm">
                     {request.offers.find(o => o.id === selectedOfferId)!.tireOptions!
                       .filter(opt => selectedTireOptionIds.includes(opt.id))
                       .map(option => {
                         const qty = getQuantityForTireOption(option)
+                        const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
                         return (
                           <div key={option.id} className="flex justify-between text-gray-700 bg-white p-2 rounded">
-                            <span>• {option.brand} {option.model} ({qty} Stück)</span>
+                            <span>• {option.brand} {option.model}{!isBrakeService && ` (${qty} Stück)`}</span>
                             <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
                           </div>
                         )

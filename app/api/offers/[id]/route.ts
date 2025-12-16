@@ -21,6 +21,7 @@ export async function GET(
     const offer = await prisma.offer.findUnique({
       where: { id: params.id },
       include: {
+        tireOptions: true,
         workshop: {
           select: {
             id: true,

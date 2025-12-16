@@ -268,16 +268,19 @@ export default function BookAppointmentPage() {
   const confirmManualBooking = () => {
     alert('Vielen Dank! Bitte rufen Sie die Werkstatt an, um Ihren Termin zu vereinbaren.')
     router.push('/dashboard/customer/requests')
-  }// Use serviceType field if available
-    if (request.serviceType) {
-      return request.serviceType
-    }
-    
-    
+  }
 
   // Helper function to detect service type from notes
   const getServiceType = () => {
-    if (!request) return 'UNKNOWN'
+    if (!request) {
+      console.warn('⚠️ getServiceType called but request is null')
+      return 'UNKNOWN'
+    }
+    
+    // Use serviceType field if available
+    if (request.serviceType) {
+      return request.serviceType
+    }
     
     if (request.width !== 0 || request.aspectRatio !== 0 || request.diameter !== 0) {
       return 'TIRE_CHANGE' // Regular tire change

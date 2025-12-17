@@ -259,7 +259,8 @@ export async function GET(request: NextRequest) {
             dateObj,
             employeeWorkingHours,
             allEmployeeBusySlots,
-            duration
+            duration,
+            30 // 30-minute intervals for slot offerings
           )
           console.log(`   ✅ Generated ${employeeSlots.length} available slots: ${employeeSlots.join(', ')}`)
           
@@ -436,7 +437,8 @@ export async function GET(request: NextRequest) {
       dateObj,
       workingHours,
       allBusySlots,
-      duration
+      duration,
+      30 // 30-minute intervals for slot offerings
     )
     
     return NextResponse.json({ availableSlots })

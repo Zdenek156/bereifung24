@@ -196,6 +196,7 @@ export default function CustomerAppointments() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { color: string, text: string }> = {
+      PENDING: { color: 'bg-blue-100 text-blue-800', text: 'Bestätigt' },
       CONFIRMED: { color: 'bg-blue-100 text-blue-800', text: 'Bestätigt' },
       COMPLETED: { color: 'bg-green-100 text-green-800', text: 'Abgeschlossen' },
       CANCELLED: { color: 'bg-red-100 text-red-800', text: 'Storniert' },
@@ -425,7 +426,7 @@ export default function CustomerAppointments() {
                           Bewertung bearbeiten
                         </button>
                       </div>
-                    ) : booking.status === 'COMPLETED' ? (
+                    ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
                       <button
                         onClick={() => handleOpenReviewModal(booking)}
                         className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"

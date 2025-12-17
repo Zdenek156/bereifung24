@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
       SELECT DATE(viewed_at) as date, COUNT(*) as count
       FROM page_views
       WHERE viewed_at >= ${startDate}
-      ${page ? prisma.$queryRawUnsafe(`AND path = '${page}'`) : prisma.$queryRawUnsafe('')}
       GROUP BY DATE(viewed_at)
       ORDER BY date ASC
     `

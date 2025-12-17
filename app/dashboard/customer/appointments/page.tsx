@@ -209,7 +209,8 @@ export default function CustomerAppointments() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    // Convert UTC to local timezone (Europe/Berlin)
+    return date.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Berlin' })
   }
 
   if (status === 'loading' || loading) {

@@ -237,7 +237,8 @@ export function generateAvailableSlots(
   date: Date,
   workingHours: { from: string, to: string, working: boolean, breakFrom?: string, breakTo?: string },
   busySlots: Array<{ start: string, end: string }>,
-  slotDuration: number = 60 // minutes
+  slotDuration: number = 60, // minutes - how long the appointment takes
+  slotIncrement: number = 30 // minutes - interval between offered slots (e.g., 30 = slots every 30 min)
 ): string[] {
   if (!workingHours.working) {
     return []
@@ -345,8 +346,8 @@ export function generateAvailableSlots(
       availableSlots.push(`${hours}:${minutes}`)
     }
     
-    // Move to next slot
-    currentTime.setMinutes(currentTime.getMinutes() + slotDuration)
+    // Move to next slot using the increment (not the full duration)
+    currentTime.setMinutes(currentTime.getMinutes() + slotIncrement)
   }
   
   return availableSlots

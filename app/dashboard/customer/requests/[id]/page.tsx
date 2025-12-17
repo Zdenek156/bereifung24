@@ -52,6 +52,8 @@ interface Offer {
     zipCode: string
     city: string
     phone: string
+    averageRating?: number
+    reviewCount?: number
   }
 }
 
@@ -112,6 +114,8 @@ export default function RequestDetailPage() {
           additionalNotes: data.request.additionalNotes,
           isBrakeService: data.request.additionalNotes?.includes('BREMSEN-SERVICE')
         })
+        // Fetch workshop ratings for all offers
+        await fetchWorkshopRatings(data.request.offers)
         setRequest(data.request)
         // Load workshop services for all offers - pass the request to determine service type
         await fetchWorkshopServices(data.request.offers, data.request)
@@ -124,6 +128,72 @@ export default function RequestDetailPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchWorkshopRatings = async (offers: Offer[]) => {
+    for (const offer of offers) {
+      try {
+        const response = await fetch(`/api/reviews?workshopId=${offer.workshopId}`)
+        if (response.ok) {
+          const data = await response.json()
+          // Update the offer's workshop with rating data
+          offer.workshop.averageRating = data.averageRating
+          offer.workshop.reviewCount = data.totalReviews
+        }
+      } catch (error) {
+        console.error(`Error fetching ratings for workshop ${offer.workshopId}:`, error)
+      }
+    }
+  }
+
+  // Render star rating display
+  const renderStarRating = (rating?: number, reviewCount?: number) => {
+    if (!rating || rating === 0 || !reviewCount || reviewCount === 0) {
+      return null
+    }
+
+    const fullStars = Math.floor(rating)
+    const hasHalfStar = rating % 1 >= 0.5
+
+    return (
+      <div className="flex items-center gap-1 text-sm">
+        <div className="flex items-center">
+          {[...Array(5)].map((_, i) => {
+            if (i < fullStars) {
+              return (
+                <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                  <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                </svg>
+              )
+            } else if (i === fullStars && hasHalfStar) {
+              return (
+                <svg key={i} className="w-4 h-4 text-yellow-400" viewBox="0 0 20 20">
+                  <defs>
+                    <linearGradient id="half">
+                      <stop offset="50%" stopColor="currentColor" />
+                      <stop offset="50%" stopColor="#D1D5DB" stopOpacity="1" />
+                    </linearGradient>
+                  </defs>
+                  <path fill="url(#half)" d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                </svg>
+              )
+            } else {
+              return (
+                <svg key={i} className="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                  <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                </svg>
+              )
+            }
+          })}
+        </div>
+        <span className="text-gray-600 font-medium ml-1">
+          {rating.toFixed(1)}
+        </span>
+        <span className="text-gray-500">
+          ({reviewCount} {reviewCount === 1 ? 'Bewertung' : 'Bewertungen'})
+        </span>
+      </div>
+    )
   }
 
   const fetchWorkshopServices = async (offers: Offer[], requestData: TireRequest) => {
@@ -1356,7 +1426,8 @@ export default function RequestDetailPage() {
                           <h3 className="text-xl font-bold text-gray-900">
                             {offer.workshop.companyName}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          {renderStarRating(offer.workshop.averageRating, offer.workshop.reviewCount)}
+                          <p className="text-sm text-gray-600 mt-1">
                             {offer.workshop.street}, {offer.workshop.zipCode} {offer.workshop.city}
                           </p>
                         </div>

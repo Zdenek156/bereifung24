@@ -31,7 +31,37 @@ model AdminNotificationSetting {
 }
 
 // ============================================
-// USER MANAGEMENT
+// ADMIN API SETTINGS
+// ============================================
+
+model AdminApiSetting {
+  id    String  @id @default(cuid())
+  key   String  @unique // e.g., "GOCARDLESS_ACCESS_TOKEN", "GOOGLE_OAUTH_CLIENT_ID"
+  value String? // The actual API key/secret (encrypted in production)
+  description String? // What this key is for
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_api_settings")
+}
+
+// ============================================// ADMIN API SETTINGS
+// ============================================
+
+model AdminApiSetting {
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g., "GOCARDLESS_ACCESS_TOKEN", "GOOGLE_OAUTH_CLIENT_ID"
+  value       String? // The actual API key/secret
+  description String? // What this key is for
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_api_settings")
+}
+
+// ============================================// USER MANAGEMENT
 // ============================================
 
 model User {

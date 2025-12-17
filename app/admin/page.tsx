@@ -289,6 +289,17 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mb-4">GoCardless Status prüfen & synchronisieren</p>
             <div className="text-primary-600 font-medium">Zur Verwaltung →</div>
           </Link>
+
+          <Link href="/admin/api-settings" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-center w-12 h-12 bg-teal-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">API-Einstellungen</h3>
+            <p className="text-sm text-gray-600 mb-4">GoCardless, Google & andere API-Keys verwalten</p>
+            <div className="text-primary-600 font-medium">Einstellungen →</div>
+          </Link>
         </div>
 
         {/* Platform Stats */}

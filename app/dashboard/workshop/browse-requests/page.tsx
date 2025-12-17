@@ -775,7 +775,7 @@ export default function BrowseRequestsPage() {
       
       if (frontMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: `Vorderachse: ${frontSelection}`,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -789,7 +789,7 @@ export default function BrowseRequestsPage() {
       
       if (rearMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: `Hinterachse: ${rearSelection}`,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
@@ -818,7 +818,7 @@ export default function BrowseRequestsPage() {
       
       if (brakeServicePackages.front) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: `Vorderachse: ${brakeServicePackages.front.name}`,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -829,7 +829,7 @@ export default function BrowseRequestsPage() {
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: `Hinterachse: ${brakeServicePackages.rear.name}`,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',

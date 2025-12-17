@@ -32,7 +32,7 @@ export async function POST() {
     }
 
     // Get current status from GoCardless
-    const client = getGocardlessClient()
+    const client = await getGocardlessClient()
     const mandate = await client.mandates.find(workshop.gocardlessMandateId)
 
     console.log(`📋 Current GoCardless status: ${mandate.status}`)

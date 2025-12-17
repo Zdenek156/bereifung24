@@ -244,9 +244,13 @@ export async function POST(req: NextRequest) {
         estimatedDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
       }
       
-      // Extract time from appointmentDate
-      const aptDate = new Date(appointmentDate)
-      const appointmentTime = `${String(aptDate.getHours()).padStart(2, '0')}:${String(aptDate.getMinutes()).padStart(2, '0')}`
+      // Extract time from appointmentDate in Europe/Berlin timezone
+      const appointmentTime = new Date(appointmentDate).toLocaleTimeString('de-DE', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false, 
+        timeZone: 'Europe/Berlin' 
+      })
       
       const updatedBooking = await prisma.booking.update({
         where: { id: existingBooking.id },

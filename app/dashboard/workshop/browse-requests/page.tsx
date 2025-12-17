@@ -775,7 +775,7 @@ export default function BrowseRequestsPage() {
       
       if (frontMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: preferredBrand,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -790,7 +790,7 @@ export default function BrowseRequestsPage() {
       
       if (rearMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: preferredBrand,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
@@ -820,7 +820,7 @@ export default function BrowseRequestsPage() {
       
       if (brakeServicePackages.front) {
         initialTireOptions.push({
-          brandModel: preferredBrand,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -832,7 +832,7 @@ export default function BrowseRequestsPage() {
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: preferredBrand,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
@@ -850,7 +850,7 @@ export default function BrowseRequestsPage() {
     } else {
       // Standard: Ein leeres Reifenangebot
       initialTireOptions = [{ 
-        brandModel: preferredBrand, 
+        brandModel: '', 
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,

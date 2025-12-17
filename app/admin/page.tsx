@@ -311,8 +311,6 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mb-4">Seitenaufrufe und Besucherstatistik</p>
             <div className="text-primary-600 font-medium">Zu den Statistiken →</div>
           </Link>
-            <div className="text-primary-600 font-medium">Einstellungen →</div>
-          </Link>
         </div>
 
         {/* Platform Stats */}

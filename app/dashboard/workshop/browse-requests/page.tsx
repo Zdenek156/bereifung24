@@ -775,7 +775,7 @@ export default function BrowseRequestsPage() {
       
       if (frontMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: preferredBrand,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -790,7 +790,7 @@ export default function BrowseRequestsPage() {
       
       if (rearMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: preferredBrand,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
@@ -820,7 +820,7 @@ export default function BrowseRequestsPage() {
       
       if (brakeServicePackages.front) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: preferredBrand,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
@@ -832,7 +832,7 @@ export default function BrowseRequestsPage() {
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: '',
+          brandModel: preferredBrand,
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
@@ -1868,23 +1868,29 @@ export default function BrowseRequestsPage() {
                         </div>
 
                         {/* Motorcycle Tire Type Selection - per tire option */}
-                        {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (
-                          <div className="mt-3">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Angebot für *
-                            </label>
-                            <select
-                              value={option.motorcycleTireType || 'BOTH'}
-                              onChange={(e) => updateTireOption(index, 'motorcycleTireType', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                              required
-                            >
-                              <option value="BOTH">🏍️ Beide Reifen (Vorne + Hinten)</option>
-                              <option value="FRONT">🏍️ Nur Vorderreifen</option>
-                              <option value="REAR">🏍️ Nur Hinterreifen</option>
-                            </select>
-                          </div>
-                        )}
+                        {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (() => {
+                          const needsFront = selectedRequest.additionalNotes?.includes('✓ Vorderreifen')
+                          const needsRear = selectedRequest.additionalNotes?.includes('✓ Hinterreifen')
+                          const hasBoth = needsFront && needsRear
+                          
+                          return (
+                            <div className="mt-3">
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Angebot für *
+                              </label>
+                              <select
+                                value={option.motorcycleTireType || (hasBoth ? 'BOTH' : needsFront ? 'FRONT' : 'REAR')}
+                                onChange={(e) => updateTireOption(index, 'motorcycleTireType', e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                required
+                              >
+                                {hasBoth && <option value="BOTH">🏍️ Beide Reifen (Vorne + Hinten)</option>}
+                                {needsFront && <option value="FRONT">🏍️ Nur Vorderreifen</option>}
+                                {needsRear && <option value="REAR">🏍️ Nur Hinterreifen</option>}
+                              </select>
+                            </div>
+                          )
+                        })()}
 
                         {/* Brake Axle Selection */}
                         {selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') && (

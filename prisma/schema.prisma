@@ -291,6 +291,9 @@ model TireRequest {
   preferredBrands String? // Comma-separated brands
   specificBrand   String?
   additionalNotes String?
+  
+  // Motorcycle specific
+  mountOnMotorcycle Boolean @default(false) @map("mount_on_motorcycle") // For motorcycle tire requests: true = mount on whole motorcycle, false = wheels only (default)
 
   // Location
   zipCode   String

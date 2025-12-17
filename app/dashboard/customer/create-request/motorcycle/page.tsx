@@ -83,6 +83,7 @@ export default function MotorcycleTiresPage() {
     quantity: 'BOTH' as 'FRONT' | 'REAR' | 'BOTH',
     tireQuality: 'QUALITY' as 'QUALITY' | 'BUDGET',
     tireDisposal: true,
+    mountOnMotorcycle: false,
     preferredBrands: '',
     additionalNotes: '',
     needByDate: '',
@@ -258,6 +259,7 @@ export default function MotorcycleTiresPage() {
         radiusKm: formData.radiusKm,
         tireQuality: formData.tireQuality,
         tireDisposal: formData.tireDisposal,
+        mountOnMotorcycle: formData.mountOnMotorcycle,
         preferredBrands: formData.preferredBrands || undefined,
         additionalNotes: formData.additionalNotes || undefined
       }
@@ -317,6 +319,21 @@ export default function MotorcycleTiresPage() {
                 <p className="font-semibold mb-1">Reifendimensionen finden</p>
                 <p>Die Reifengröße finden Sie auf der Seitenwand Ihrer aktuellen Reifen. Format: <span className="font-mono">120/70 ZR17 (58W)</span></p>
                 <p className="mt-2">Vorder- und Hinterreifen haben bei Motorrädern oft unterschiedliche Größen!</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Info Box */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm text-green-800">
+                <p className="font-semibold mb-1">🏍️ Standard-Service: Nur Räder/Felgen</p>
+                <p>Standardmäßig wechseln wir die Reifen an Ihren <strong>ausgebauten Rädern/Felgen</strong>.</p>
+                <p className="mt-2">Sie bringen die Räder ohne Motorrad zur Werkstatt → schneller und günstiger!</p>
+                <p className="mt-2 font-medium">Möchten Sie das ganze Motorrad bringen? Wählen Sie unten die entsprechende Option.</p>
               </div>
             </div>
           </div>
@@ -782,6 +799,19 @@ export default function MotorcycleTiresPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Zusätzliche Optionen</h2>
             <div className="space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.mountOnMotorcycle}
+                  onChange={(e) => setFormData({ ...formData, mountOnMotorcycle: e.target.checked })}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div>
+                  <span className="block font-medium text-gray-900">🏍️ Ich bringe das ganze Motorrad (Montage am Motorrad)</span>
+                  <span className="block text-sm text-gray-600">Die Werkstatt baut die Räder aus und montiert sie wieder am Motorrad. Kann zusätzliche Kosten verursachen.</span>
+                </div>
+              </label>
+              
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"

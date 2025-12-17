@@ -72,12 +72,12 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'valve_damage', name: 'Ventilschaden', description: 'Reparatur bei defektem Ventil' }
   ],
   MOTORCYCLE_TIRE: [
-    { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel nur am Vorderrad' },
-    { type: 'rear', name: 'Hinterrad', description: 'Reifenwechsel nur am Hinterrad' },
-    { type: 'both', name: 'Beide Reifen', description: 'Kompletter Reifenwechsel vorne und hinten' },
+    { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel am ausgebauten Vorderrad (nur Felge)' },
+    { type: 'rear', name: 'Hinterrad', description: 'Reifenwechsel am ausgebauten Hinterrad (nur Felge)' },
+    { type: 'both', name: 'Beide Räder', description: 'Reifenwechsel an beiden ausgebauten Rädern (nur Felgen)' },
     { type: 'front_disposal', name: 'Vorderrad + Entsorgung', description: 'Vorderrad mit Altreifenentsorgung' },
     { type: 'rear_disposal', name: 'Hinterrad + Entsorgung', description: 'Hinterrad mit Altreifenentsorgung' },
-    { type: 'both_disposal', name: 'Beide + Entsorgung', description: 'Beide Reifen mit Altreifenentsorgung' }
+    { type: 'both_disposal', name: 'Beide + Entsorgung', description: 'Beide Räder mit Altreifenentsorgung' }
   ],
   ALIGNMENT_BOTH: [
     { type: 'measurement_front', name: 'Vermessung Vorderachse', description: 'Achsvermessung nur Vorderachse' },

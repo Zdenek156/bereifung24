@@ -1470,16 +1470,11 @@ export default function RequestDetailPage() {
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           {isServiceRequest ? (
-                                            // Service request: show brand as title and description/model as subtitle
+                                            // Service request: show brand + model as title
                                             <>
-                                              <p className="font-semibold text-gray-900">
-                                                {option.brand}
-                                                {option.description && ` - ${option.description}`}
-                                              </p>
+                                              <p className="font-semibold text-gray-900">{option.brand} {option.model}</p>
                                               {isBrakeService && axleLabel ? (
                                                 <p className="text-xs text-blue-600 font-medium mt-1">🔧 {axleLabel}</p>
-                                              ) : option.model ? (
-                                                <p className="text-xs text-gray-600 mt-1">{option.model}</p>
                                               ) : null}
                                             </>
                                           ) : (

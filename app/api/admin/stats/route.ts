@@ -38,22 +38,17 @@ export async function GET(req: NextRequest) {
     })
 
     // Get monthly revenue (accepted offers in current month)
-    const monthlyBookings = await prisma.booking.findMany({
+    const monthlyOffers = await prisma.offer.findMany({
       where: {
-        createdAt: {
+        status: 'ACCEPTED',
+        updatedAt: {
           gte: monthStart,
           lte: monthEnd
-        },
-        status: {
-          in: ['CONFIRMED', 'COMPLETED']
         }
-      },
-      include: {
-        offer: true
       }
     })
 
-    const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + booking.offer.price, 0)
+    const monthlyRevenue = monthlyOffers.reduce((sum, offer) => sum + offer.price, 0)
     const monthlyCommission = monthlyRevenue * 0.049 // 4,9% commission
 
     const result = {

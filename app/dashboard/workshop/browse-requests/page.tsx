@@ -604,42 +604,42 @@ export default function BrowseRequestsPage() {
           calculatedDuration = service.durationMinutes.toString()
         }
       } else if (isMotorcycle) {
-        // Motorradreifen: Verwende Paket-Preise
-        // Prüfe ob Vorder- oder Hinterreifen oder beide benötigt werden
+        // Motorradreifen: Berechne wie Bremsen-Service (Vorder + Hinter separat)
         const needsFront = request.additionalNotes?.includes('✓ Vorderreifen')
         const needsRear = request.additionalNotes?.includes('✓ Hinterreifen')
+        const hasDisposal = request.additionalNotes?.includes('Entsorgung')
         
-        let installation = 0
-        let duration = 60
+        let totalMotorcyclePrice = 0
+        let totalMotorcycleDuration = 0
         
         if (service.servicePackages && service.servicePackages.length > 0) {
-          // Finde passendes Paket
-          let selectedPackage
-          
-          if (needsFront && needsRear) {
-            // Beide Reifen - suche "Beide" Paket
-            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('beide'))
-          } else if (needsFront) {
-            // Nur Vorderrad
-            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('vorderrad') && !p.name.toLowerCase().includes('entsorgung'))
-          } else if (needsRear) {
-            // Nur Hinterrad
-            selectedPackage = service.servicePackages.find(p => p.name.toLowerCase().includes('hinterrad') && !p.name.toLowerCase().includes('entsorgung'))
+          // Vorderrad berechnen
+          if (needsFront) {
+            const frontPackage = service.servicePackages.find(p => 
+              p.name.toLowerCase().includes('vorderrad') && 
+              (hasDisposal ? p.name.toLowerCase().includes('entsorgung') : !p.name.toLowerCase().includes('entsorgung'))
+            )
+            if (frontPackage) {
+              totalMotorcyclePrice += frontPackage.price
+              totalMotorcycleDuration += frontPackage.durationMinutes
+            }
           }
           
-          // Fallback auf erstes Paket wenn nichts gefunden
-          if (!selectedPackage && service.servicePackages.length > 0) {
-            selectedPackage = service.servicePackages[0]
-          }
-          
-          if (selectedPackage) {
-            installation = selectedPackage.price
-            duration = selectedPackage.durationMinutes
+          // Hinterrad berechnen
+          if (needsRear) {
+            const rearPackage = service.servicePackages.find(p => 
+              p.name.toLowerCase().includes('hinterrad') && 
+              (hasDisposal ? p.name.toLowerCase().includes('entsorgung') : !p.name.toLowerCase().includes('entsorgung'))
+            )
+            if (rearPackage) {
+              totalMotorcyclePrice += rearPackage.price
+              totalMotorcycleDuration += rearPackage.durationMinutes
+            }
           }
         }
         
-        calculatedInstallation = installation.toFixed(2)
-        calculatedDuration = duration.toString()
+        calculatedInstallation = totalMotorcyclePrice.toFixed(2)
+        calculatedDuration = totalMotorcycleDuration.toString()
       } else {
         // Autoreifen-Wechsel: Nutze Service-Pakete
         let installation = 0
@@ -1731,6 +1731,37 @@ export default function BrowseRequestsPage() {
                   </>
                 )}
               </div>
+              
+              {/* mountOnMotorcycle Warning für Motorradreifen */}
+              {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && 
+               selectedRequest.additionalNotes?.includes('⚠️ MONTAGE AM GANZEN MOTORRAD ERFORDERLICH') && (
+                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-orange-600 text-lg">⚠️</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-orange-800">Montage am ganzen Motorrad</p>
+                      <p className="text-xs text-orange-700 mt-1">
+                        Der Kunde bringt das ganze Motorrad - nicht nur die ausgebauten Räder/Felgen.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && 
+               selectedRequest.additionalNotes?.includes('✓ Standard: Nur Räder/Felgen (ohne Motorrad)') && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 text-lg">✓</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-green-800">Standard-Service</p>
+                      <p className="text-xs text-green-700 mt-1">
+                        Der Kunde bringt nur die ausgebauten Räder/Felgen (ohne Motorrad).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmitOffer} className="p-6">

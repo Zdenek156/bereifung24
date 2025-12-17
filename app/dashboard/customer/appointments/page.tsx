@@ -17,9 +17,11 @@ interface TireOption {
   id: string
   brand: string
   model: string
+  description?: string
   name: string
   pricePerTire: number
   montagePrice: number
+  carTireType?: string
 }
 
 interface Vehicle {
@@ -46,6 +48,7 @@ interface Booking {
     vehicle?: Vehicle
   }
   selectedTireOption?: TireOption
+  selectedTireOptions?: TireOption[] // NEW: For brake service with multiple packages
   review?: {
     id: string
     rating: number
@@ -329,7 +332,24 @@ export default function CustomerAppointments() {
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
-                        <span>{booking.selectedTireOption ? booking.selectedTireOption.name : `${booking.tireRequest.quantity} Reifen`}</span>
+                        <div>
+                          {booking.selectedTireOptions && booking.selectedTireOptions.length > 0 ? (
+                            // Brake service with multiple packages
+                            <div className="space-y-1">
+                              {booking.selectedTireOptions.map((option, idx) => (
+                                <div key={option.id}>
+                                  {option.brand} {option.model}
+                                </div>
+                              ))}
+                            </div>
+                          ) : booking.selectedTireOption ? (
+                            // Single tire option
+                            <span>{booking.selectedTireOption.name}</span>
+                          ) : (
+                            // Fallback
+                            <span>{`${booking.tireRequest.quantity} Reifen`}</span>
+                          )}
+                        </div>
                       </div>
                       {booking.tireRequest.vehicle && (
                         <div className="flex items-center gap-2 text-gray-700">

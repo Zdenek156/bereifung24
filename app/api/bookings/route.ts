@@ -74,6 +74,22 @@ export async function GET(req: NextRequest) {
             montagePrice: true
           }
         },
+        offer: {
+          select: {
+            selectedTireOptionIds: true,
+            tireOptions: {
+              select: {
+                id: true,
+                brand: true,
+                model: true,
+                description: true,
+                pricePerTire: true,
+                montagePrice: true,
+                carTireType: true
+              }
+            }
+          }
+        },
         review: {
           select: {
             id: true,
@@ -92,6 +108,11 @@ export async function GET(req: NextRequest) {
       // Convert UTC date to Europe/Berlin timezone for correct display
       const berlinDate = new Date(booking.appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
       const berlinTime = berlinDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
+      
+      // Get selected tire options for brake service
+      const selectedTireOptions = booking.offer?.selectedTireOptionIds && booking.offer.selectedTireOptionIds.length > 0
+        ? booking.offer.tireOptions.filter((opt: any) => booking.offer.selectedTireOptionIds.includes(opt.id))
+        : []
       
       return {
         id: booking.id,
@@ -116,6 +137,7 @@ export async function GET(req: NextRequest) {
         vehicle: booking.tireRequest.vehicle
       },
       selectedTireOption: booking.selectedTireOption,
+      selectedTireOptions: selectedTireOptions, // NEW: For brake service with multiple packages
       review: booking.review ? {
         id: booking.review.id,
         rating: booking.review.rating,

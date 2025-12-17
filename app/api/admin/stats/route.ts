@@ -7,7 +7,10 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
+    console.log('Stats API - Session:', session ? `User: ${session.user.email}, Role: ${session.user.role}` : 'No session')
+
     if (!session || session.user.role !== 'ADMIN') {
+      console.log('Stats API - Unauthorized access attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -15,6 +18,8 @@ export async function GET(req: NextRequest) {
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+    console.log('Stats API - Fetching data for month:', monthStart.toISOString(), 'to', monthEnd.toISOString())
 
     // Count total customers
     const totalCustomers = await prisma.customer.count()
@@ -51,14 +56,18 @@ export async function GET(req: NextRequest) {
     const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + booking.offer.price, 0)
     const monthlyCommission = monthlyRevenue * 0.049 // 4,9% commission
 
-    return NextResponse.json({
+    const result = {
       totalCustomers,
       totalWorkshops,
       totalOffers,
       acceptedOffers,
       monthlyRevenue,
       monthlyCommission
-    })
+    }
+
+    console.log('Stats API - Returning data:', result)
+
+    return NextResponse.json(result)
 
   } catch (error) {
     console.error('Admin stats error:', error)

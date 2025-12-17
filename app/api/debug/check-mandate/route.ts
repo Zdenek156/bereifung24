@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     }
 
     // Hole aktuellen Status von GoCardless
-    const client = getGocardlessClient()
+    const client = await getGocardlessClient()
     const mandate = await client.mandates.find(workshop.gocardlessMandateId)
 
     // Update in Datenbank
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     }
 
     // Hole aktuellen Status von GoCardless
-    const client = getGocardlessClient()
+    const client = await getGocardlessClient()
     const mandate = await client.mandates.find(workshop.gocardlessMandateId)
 
     // Update in Datenbank

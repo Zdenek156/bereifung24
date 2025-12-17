@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getGocardlessClient } from '@/lib/gocardless'
+import { getApiSetting } from '@/lib/api-settings'
 
 export async function GET() {
   try {
@@ -37,7 +38,7 @@ export async function GET() {
     }
 
     // Get live status from GoCardless
-    const client = getGocardlessClient()
+    const client = await getGocardlessClient()
     let gcMandate = null
     let gcError = null
 
@@ -79,9 +80,9 @@ export async function GET() {
         error: gcError
       },
       debug: {
-        environment: process.env.GOCARDLESS_ENVIRONMENT,
-        hasToken: !!process.env.GOCARDLESS_ACCESS_TOKEN,
-        tokenPreview: process.env.GOCARDLESS_ACCESS_TOKEN?.substring(0, 10) + '...'
+        environment: await getApiSetting('GOCARDLESS_ENVIRONMENT', 'GOCARDLESS_ENVIRONMENT'),
+        hasToken: !!(await getApiSetting('GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ACCESS_TOKEN')),
+        tokenPreview: (await getApiSetting('GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ACCESS_TOKEN'))?.substring(0, 10) + '...'
       }
     })
 

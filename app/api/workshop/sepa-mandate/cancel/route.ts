@@ -33,7 +33,7 @@ export async function POST() {
     }
 
     // Cancel mandate on GoCardless
-    const client = getGocardlessClient()
+    const client = await getGocardlessClient()
     
     try {
       await client.mandates.cancel(workshop.gocardlessMandateId)

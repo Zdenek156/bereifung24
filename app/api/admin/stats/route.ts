@@ -21,6 +21,19 @@ export async function GET(req: NextRequest) {
 
     console.log('Stats API - Fetching data for month:', monthStart.toISOString(), 'to', monthEnd.toISOString())
 
+    // Get counts
+    const totalCustomers = await prisma.user.count({
+      where: { role: 'CUSTOMER' }
+    })
+
+    const totalWorkshops = await prisma.workshop.count()
+
+    const totalOffers = await prisma.offer.count()
+
+    const acceptedOffers = await prisma.offer.count({
+      where: { status: 'ACCEPTED' }
+    })
+
     // Get monthly revenue (accepted offers in current month)
     const monthlyOffers = await prisma.offer.findMany({
       where: {
@@ -36,6 +49,10 @@ export async function GET(req: NextRequest) {
     const monthlyCommission = monthlyRevenue * 0.049 // 4,9% commission
 
     const result = {
+      totalCustomers,
+      totalWorkshops,
+      totalOffers,
+      acceptedOffers,
       monthlyRevenue,
       monthlyCommission
     }

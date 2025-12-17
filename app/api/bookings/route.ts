@@ -88,12 +88,17 @@ export async function GET(req: NextRequest) {
     })
 
     // Format response
-    const formattedBookings = bookings.map((booking: any) => ({
-      id: booking.id,
-      appointmentDate: booking.appointmentDate.toISOString(),
-      appointmentTime: booking.appointmentTime,
-      estimatedDuration: booking.estimatedDuration,
-      status: booking.status,
+    const formattedBookings = bookings.map((booking: any) => {
+      // Convert UTC date to Europe/Berlin timezone for correct display
+      const berlinDate = new Date(booking.appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+      const berlinTime = berlinDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
+      
+      return {
+        id: booking.id,
+        appointmentDate: booking.appointmentDate.toISOString(),
+        appointmentTime: berlinTime,
+        estimatedDuration: booking.estimatedDuration,
+        status: booking.status,
       workshop: {
         companyName: booking.workshop.companyName,
         street: booking.workshop.user.street || '',
@@ -116,7 +121,8 @@ export async function GET(req: NextRequest) {
         rating: booking.review.rating,
         comment: booking.review.comment,
       } : null
-    }))
+      }
+    })
 
     return NextResponse.json(formattedBookings)
   } catch (error) {
@@ -189,7 +195,8 @@ export async function POST(req: NextRequest) {
               include: {
                 user: true
               }
-            }
+            },
+            vehicle: true
           }
         },
         tireOptions: true,
@@ -322,8 +329,15 @@ export async function POST(req: NextRequest) {
             // Event summary: Only service type
             const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
             
-            // Event description: Customer info + selected brand/service + price
-            const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}, ${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}`
+            // Build vehicle info if available
+            let vehicleInfo = ''
+            if (offer.tireRequest.vehicle) {
+              const v = offer.tireRequest.vehicle
+              vehicleInfo = `\nFahrzeug: ${v.make} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
+            }
+            
+            // Event description: Customer info + vehicle + selected brand/service + price
+            const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}\n${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}${vehicleInfo}`
             
             let serviceDetails = ''
             if (serviceType === 'BRAKE_SERVICE') {
@@ -412,8 +426,15 @@ export async function POST(req: NextRequest) {
                       // Event summary: Only service type
                       const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
                       
-                      // Event description: Customer info + selected brand/service + price
-                      const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}, ${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}`
+                      // Build vehicle info if available
+                      let vehicleInfo = ''
+                      if (offer.tireRequest.vehicle) {
+                        const v = offer.tireRequest.vehicle
+                        vehicleInfo = `\nFahrzeug: ${v.make} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
+                      }
+                      
+                      // Event description: Customer info + vehicle + selected brand/service + price
+                      const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}\n${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}${vehicleInfo}`
                       
                       let serviceDetails = ''
                       if (serviceType === 'BRAKE_SERVICE') {
@@ -1005,8 +1026,8 @@ export async function POST(req: NextRequest) {
     // Event summary: Only service type (no brand, no customer name)
     const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
     
-    // Event description: Customer info + selected brand/service + price
-    const customerInfo = `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\n${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}`
+    // Event description: Customer info + vehicle + selected brand/service + price
+    const customerInfo = `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\n${customerStreet}\n${zipCity}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}${vehicleInfo}`
     
     let serviceDetails = ''
     if (serviceType === 'BRAKE_SERVICE') {

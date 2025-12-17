@@ -857,3 +857,40 @@ model AdminLog {
 
   @@map("admin_logs")
 }
+
+// ============================================
+// PAGE VIEWS / ANALYTICS
+// ============================================
+
+model PageView {
+  id String @id @default(cuid())
+
+  // Page information
+  path      String // e.g., "/", "/dashboard/customer", "/lp/werkstatt-mueller"
+  fullUrl   String? // Full URL including query params
+  pageTitle String? // Page title
+
+  // User information
+  userId       String? // Logged-in user ID (optional)
+  userRole     String? // CUSTOMER, WORKSHOP, ADMIN (optional)
+  ipAddress    String? // IP address (anonymized for privacy)
+  userAgent    String? // Browser/device info
+  
+  // Referrer
+  referrer String? // Where did the user come from
+
+  // Workshop landing page tracking
+  workshopId String? // If viewing a workshop landing page
+  
+  // Session tracking
+  sessionId String? // Session identifier
+
+  // Timing
+  viewedAt  DateTime @default(now())
+  
+  @@index([path])
+  @@index([workshopId])
+  @@index([viewedAt])
+  @@index([userId])
+  @@map("page_views")
+}

@@ -305,7 +305,7 @@
 
 ## 📊 Aktueller Fortschritt
 
-**Gesamt-Fortschritt:** 60% ████████████░░░░░░░░
+**Gesamt-Fortschritt:** 83% ████████████████░░░░
 
 **Aktuelle Phase:** Phase 8 - Zahlungs-Integration
 **Nächste Schritte:** Feature 4 (MwSt.-Option) und Feature 2 (Bewertungssystem)
@@ -350,7 +350,7 @@ Werkstätten sollen in den Einstellungen ihr Logo hochladen können.
 ---
 
 ### 2. Bewertungsfunktion (5-Sterne-Rating)
-**Status:** ⏳ Offen  
+**Status:** ✅ Erledigt (17.12.2025)  
 **Priorität:** Hoch
 
 **Beschreibung:**
@@ -376,7 +376,7 @@ Kunden können Werkstätten nach Angebotsannahme mit 5 Sternen und Text bewerten
 ---
 
 ### 3. Analytics/Besucherstatistik im Admin-Bereich
-**Status:** ⏳ Offen  
+**Status:** ✅ Erledigt (17.12.2025)  
 **Priorität:** Mittel
 
 **Beschreibung:**
@@ -429,7 +429,7 @@ Werkstätten können wählen, ob sie normale Preise (inkl. MwSt.) oder als Klein
 ---
 
 ### 5. Passwort-Sicherheitsanforderungen
-**Status:** ⏳ Offen  
+**Status:** ✅ Erledigt (bereits implementiert)  
 **Priorität:** Mittel
 
 **Beschreibung:**
@@ -478,7 +478,7 @@ Bei Motorradreifen-Anfrage: Option, dass Kunde nur die Räder (ohne Motorrad) vo
 
 ---
 
-**Letzte Aktualisierung:** 8. Dezember 2025
-**Version:** 0.7.0 - Phasen 1-7 abgeschlossen, Feature 1 implementiert
-**Fortschritt:** 60% abgeschlossen (Phase 1-7 fertig, Phase 8-14 offen)
-**Neue Features:** 1 von 6 erledigt, 5 offen für Dezember 2025
+**Letzte Aktualisierung:** 17. Dezember 2025
+**Version:** 0.8.0 - Phasen 1-7 abgeschlossen, 4 Features implementiert
+**Fortschritt:** 83% abgeschlossen (Phase 1-7 fertig, 4 von 6 Features erledigt)
+**Neue Features:** 5 von 6 erledigt (Logo, Bewertungen, Analytics, MwSt., Passwort-Sicherheit), 1 offen

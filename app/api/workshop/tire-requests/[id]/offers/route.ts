@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { sendEmail, newOfferEmailTemplate, newServiceOfferEmailTemplate } from '@/lib/email'
 
 const tireOptionSchema = z.object({
-  brandModel: z.string().min(1, 'Reifenmarke und -modell erforderlich'),
+  brandModel: z.string(), // Kann leer sein bei Brake Service (Werkstatt trägt später ein)
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
   montagePrice: z.number().optional(), // Montage price for service packages
   motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional(), // Für Motorradreifen - pro Reifenangebot
@@ -155,8 +155,12 @@ export async function POST(
       data: {
         tireRequestId: params.id,
         workshopId: workshop.id,
-        tireBrand: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ')[0] : '',
-        tireModel: hasValidTireOptions ? validatedData.tireOptions![0].brandModel.split(' ').slice(1).join(' ') || validatedData.tireOptions![0].brandModel : '',
+        tireBrand: hasValidTireOptions && validatedData.tireOptions![0].brandModel 
+          ? validatedData.tireOptions![0].brandModel.split(' ')[0] 
+          : validatedData.tireOptions?.[0]?.description?.split(':')[0] || 'Service',
+        tireModel: hasValidTireOptions && validatedData.tireOptions![0].brandModel
+          ? validatedData.tireOptions![0].brandModel.split(' ').slice(1).join(' ') || validatedData.tireOptions![0].brandModel
+          : validatedData.tireOptions?.[0]?.description?.split(':')[1]?.trim() || '',
         description: validatedData.description,
         pricePerTire: hasValidTireOptions ? validatedData.tireOptions![0].pricePerTire : 0,
         price: totalPrice,

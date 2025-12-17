@@ -11,6 +11,115 @@ const reviewSchema = z.object({
   comment: z.string().optional(),
 })
 
+// GET /api/reviews - Fetch reviews by workshopId or customerId
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const workshopId = searchParams.get('workshopId')
+    const customerId = searchParams.get('customerId')
+    const bookingId = searchParams.get('bookingId')
+
+    // Fetch reviews for a specific workshop
+    if (workshopId) {
+      const reviews = await prisma.review.findMany({
+        where: { workshopId },
+        include: {
+          customer: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            }
+          },
+          booking: {
+            select: {
+              appointmentDate: true,
+              tireRequest: {
+                select: {
+                  season: true,
+                  width: true,
+                  aspectRatio: true,
+                  diameter: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // Calculate average rating
+      const avgRating = reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        : 0
+
+      return NextResponse.json({
+        reviews,
+        averageRating: Math.round(avgRating * 10) / 10,
+        totalReviews: reviews.length
+      })
+    }
+
+    // Fetch reviews by a specific customer
+    if (customerId) {
+      const reviews = await prisma.review.findMany({
+        where: { customerId },
+        include: {
+          workshop: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            }
+          },
+          booking: {
+            select: {
+              appointmentDate: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return NextResponse.json({ reviews })
+    }
+
+    // Fetch review for a specific booking
+    if (bookingId) {
+      const review = await prisma.review.findUnique({
+        where: { bookingId },
+        include: {
+          workshop: {
+            include: {
+              user: true
+            }
+          }
+        }
+      })
+
+      return NextResponse.json({ review })
+    }
+
+    return NextResponse.json(
+      { error: 'workshopId, customerId oder bookingId erforderlich' },
+      { status: 400 }
+    )
+
+  } catch (error) {
+    console.error('Reviews GET error:', error)
+    return NextResponse.json(
+      { error: 'Fehler beim Laden der Bewertungen' },
+      { status: 500 }
+    )
+  }
+}
+
 // POST /api/reviews - Create or update a review
 export async function POST(req: NextRequest) {
   try {

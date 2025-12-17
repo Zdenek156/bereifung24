@@ -3,22 +3,28 @@
 
 const gocardless = require('gocardless-nodejs')
 const constants = require('gocardless-nodejs/constants')
+import { getApiSetting } from './api-settings'
 
 // Lazy initialization to avoid startup errors if env vars are missing
 let _gocardlessClient: any = null
 
-export function getGocardlessClient() {
+export async function getGocardlessClient() {
   if (!_gocardlessClient) {
-    if (!process.env.GOCARDLESS_ACCESS_TOKEN) {
-      throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured')
+    // Try to get from database first, fallback to environment variable
+    const accessToken = await getApiSetting('GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ACCESS_TOKEN')
+    
+    if (!accessToken) {
+      throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured in database or environment')
     }
     
-    const environment = process.env.GOCARDLESS_ENVIRONMENT === 'live' 
+    // Get environment setting (sandbox or live)
+    const envSetting = await getApiSetting('GOCARDLESS_ENVIRONMENT', 'GOCARDLESS_ENVIRONMENT')
+    const environment = envSetting === 'live' 
       ? constants.Environments.Live 
       : constants.Environments.Sandbox
     
     _gocardlessClient = gocardless(
-      process.env.GOCARDLESS_ACCESS_TOKEN,
+      accessToken,
       environment
     )
   }
@@ -39,7 +45,8 @@ export async function createGoCardlessCustomer(data: {
   countryCode?: string
 }) {
   try {
-    const customer = await getGocardlessClient().customers.create({
+    const client = await getGocardlessClient()
+    const customer = await client.customers.create({
       email: data.email,
       given_name: data.firstName,
       family_name: data.lastName,
@@ -71,7 +78,8 @@ export async function createCustomerBankAccount(data: {
   countryCode?: string
 }) {
   try {
-    const bankAccount = await getGocardlessClient().customerBankAccounts.create({
+    const client = await getGocardlessClient()
+    const bankAccount = await client.customerBankAccounts.create({
       account_holder_name: data.accountHolderName,
       iban: data.iban,
       country_code: data.countryCode || 'DE',
@@ -99,7 +107,8 @@ export async function createMandate(data: {
   reference: string
 }) {
   try {
-    const mandate = await getGocardlessClient().mandates.create({
+    const client = await getGocardlessClient()
+    const mandate = await client.mandates.create({
       links: {
         customer: data.customerId,
         customer_bank_account: data.bankAccountId
@@ -123,7 +132,8 @@ export async function createMandate(data: {
  */
 export async function getMandateStatus(mandateId: string) {
   try {
-    const mandate = await getGocardlessClient().mandates.find(mandateId)
+    const client = await getGocardlessClient()
+    const mandate = await client.mandates.find(mandateId)
     return mandate
   } catch (error) {
     console.error('GoCardless Get Mandate Error:', error)
@@ -171,7 +181,8 @@ export async function createPayment(data: {
  */
 export async function getPaymentStatus(paymentId: string) {
   try {
-    const payment = await getGocardlessClient().payments.find(paymentId)
+    const client = await getGocardlessClient()
+    const payment = await client.payments.find(paymentId)
     return payment
   } catch (error) {
     console.error('GoCardless Get Payment Error:', error)
@@ -184,7 +195,8 @@ export async function getPaymentStatus(paymentId: string) {
  */
 export async function cancelPayment(paymentId: string) {
   try {
-    const payment = await getGocardlessClient().payments.cancel(paymentId)
+    const client = await getGocardlessClient()
+    const payment = await client.payments.cancel(paymentId)
     return payment
   } catch (error) {
     console.error('GoCardless Cancel Payment Error:', error)
@@ -197,7 +209,8 @@ export async function cancelPayment(paymentId: string) {
  */
 export async function cancelMandate(mandateId: string) {
   try {
-    const mandate = await getGocardlessClient().mandates.cancel(mandateId)
+    const client = await getGocardlessClient()
+    const mandate = await client.mandates.cancel(mandateId)
     return mandate
   } catch (error) {
     console.error('GoCardless Cancel Mandate Error:', error)
@@ -256,7 +269,8 @@ export async function createRedirectFlow(data: {
       }
     }
 
-    const redirectFlow = await getGocardlessClient().redirectFlows.create(createData)
+    const client = await getGocardlessClient()
+    const redirectFlow = await client.redirectFlows.create(createData)
 
     return redirectFlow
   } catch (error) {
@@ -273,7 +287,8 @@ export async function completeRedirectFlow(
   sessionToken: string
 ) {
   try {
-    const redirectFlow = await getGocardlessClient().redirectFlows.complete(
+    const client = await getGocardlessClient()
+    const redirectFlow = await client.redirectFlows.complete(
       redirectFlowId,
       { session_token: sessionToken }
     )

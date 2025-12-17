@@ -451,6 +451,7 @@ model TireOption {
   montagePrice Float? @map("montage_price") // Montage price for service packages (Brake, Battery, etc.)
   motorcycleTireType String? @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle tire options
   carTireType String? @map("car_tire_type") // ALL_FOUR, FRONT_TWO, or REAR_TWO for car tire options
+  description String? // Achsen-Info für Brake Service (z.B. "Vorderachse: Nur Bremsbeläge")
 
   bookings Booking[]
 

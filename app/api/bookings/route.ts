@@ -358,12 +358,14 @@ export async function POST(req: NextRequest) {
               }, 0)
               
               if (selectedPackages.length > 0) {
-                const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
-                serviceDetails = selectedPackages.map((pkg, index) => {
-                  const achse = achsen[index] || `${index + 1}. Achse`
+                serviceDetails = selectedPackages.map((pkg) => {
+                  // Verwende description für Achsen-Info (z.B. "Vorderachse: Nur Bremsbeläge")
+                  const achsenInfo = pkg.description || 'Brake Package'
                   const teileSumme = (pkg.pricePerTire || 0)
                   const montageSumme = (pkg.montagePrice || 0)
-                  return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+                  // Zeige Marke/Modell wenn vorhanden
+                  const brandInfo = pkg.brand && pkg.brand.trim() !== '' ? `\n  Marke: ${pkg.brand}${pkg.model ? ' ' + pkg.model : ''}` : ''
+                  return `${achsenInfo}${brandInfo}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
                 }).join('\n')
               } else {
                 serviceDetails = 'Bremsenwechsel'
@@ -474,12 +476,14 @@ export async function POST(req: NextRequest) {
                         }, 0)
                         
                         if (selectedPackages.length > 0) {
-                          const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
-                          serviceDetails = selectedPackages.map((pkg, index) => {
-                            const achse = achsen[index] || `${index + 1}. Achse`
+                          serviceDetails = selectedPackages.map((pkg) => {
+                            // Verwende description für Achsen-Info (z.B. "Vorderachse: Nur Bremsbeläge")
+                            const achsenInfo = pkg.description || 'Brake Package'
                             const teileSumme = (pkg.pricePerTire || 0)
                             const montageSumme = (pkg.montagePrice || 0)
-                            return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+                            // Zeige Marke/Modell wenn vorhanden
+                            const brandInfo = pkg.brand && pkg.brand.trim() !== '' ? `\n  Marke: ${pkg.brand}${pkg.model ? ' ' + pkg.model : ''}` : ''
+                            return `${achsenInfo}${brandInfo}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
                           }).join('\n')
                         } else {
                           serviceDetails = 'Bremsenwechsel'
@@ -1086,12 +1090,14 @@ export async function POST(req: NextRequest) {
       }, 0)
       
       if (selectedPackages.length > 0) {
-        const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
-        serviceDetails = selectedPackages.map((pkg, index) => {
-          const achse = achsen[index] || `${index + 1}. Achse`
+        serviceDetails = selectedPackages.map((pkg) => {
+          // Verwende description für Achsen-Info (z.B. "Vorderachse: Nur Bremsbeläge")
+          const achsenInfo = pkg.description || 'Brake Package'
           const teileSumme = (pkg.pricePerTire || 0)
           const montageSumme = (pkg.montagePrice || 0)
-          return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+          // Zeige Marke/Modell wenn vorhanden
+          const brandInfo = pkg.brand && pkg.brand.trim() !== '' ? `\n  Marke: ${pkg.brand}${pkg.model ? ' ' + pkg.model : ''}` : ''
+          return `${achsenInfo}${brandInfo}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
         }).join('\n')
       } else {
         serviceDetails = 'Bremsenwechsel'

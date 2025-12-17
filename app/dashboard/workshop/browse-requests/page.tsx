@@ -775,11 +775,12 @@ export default function BrowseRequestsPage() {
       
       if (frontMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: `Vorderachse: ${frontSelection}`,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
-          montagePrice: frontMontagePrice
+          montagePrice: frontMontagePrice,
+          description: `Vorderachse: ${frontSelection}`
         })
         totalMontage += frontMontagePrice
         totalDuration += frontDuration
@@ -789,11 +790,12 @@ export default function BrowseRequestsPage() {
       
       if (rearMontagePrice > 0) {
         initialTireOptions.push({
-          brandModel: `Hinterachse: ${rearSelection}`,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
-          montagePrice: rearMontagePrice
+          montagePrice: rearMontagePrice,
+          description: `Hinterachse: ${rearSelection}`
         })
         totalMontage += rearMontagePrice
         totalDuration += rearDuration
@@ -818,22 +820,24 @@ export default function BrowseRequestsPage() {
       
       if (brakeServicePackages.front) {
         initialTireOptions.push({
-          brandModel: `Vorderachse: ${brakeServicePackages.front.name}`,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'FRONT_TWO',
-          montagePrice: brakeServicePackages.front.price
+          montagePrice: brakeServicePackages.front.price,
+          description: `Vorderachse: ${brakeServicePackages.front.name}`
         })
         totalMontage += brakeServicePackages.front.price
         totalDuration += (brakeServicePackages.front.durationMinutes || 0)
       }
       if (brakeServicePackages.rear) {
         initialTireOptions.push({
-          brandModel: `Hinterachse: ${brakeServicePackages.rear.name}`,
+          brandModel: '',
           costPrice: '',
           pricePerTire: '',
           carTireType: 'REAR_TWO',
-          montagePrice: brakeServicePackages.rear.price
+          montagePrice: brakeServicePackages.rear.price,
+          description: `Hinterachse: ${brakeServicePackages.rear.name}`
         })
         totalMontage += brakeServicePackages.rear.price
         totalDuration += (brakeServicePackages.rear.durationMinutes || 0)
@@ -905,7 +909,8 @@ export default function BrowseRequestsPage() {
               pricePerTire: parseFloat(opt.pricePerTire),
               motorcycleTireType: opt.motorcycleTireType,
               carTireType: opt.carTireType,
-              montagePrice: opt.montagePrice // Speichere Montagepreis mit
+              montagePrice: opt.montagePrice,
+              description: opt.description // Achsen-Info für Brake Service
             }))
           }),
           description: offerForm.description,

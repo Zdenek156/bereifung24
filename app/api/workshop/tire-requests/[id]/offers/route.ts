@@ -10,7 +10,8 @@ const tireOptionSchema = z.object({
   pricePerTire: z.number().positive('Preis pro Reifen muss positiv sein'),
   montagePrice: z.number().optional(), // Montage price for service packages
   motorcycleTireType: z.enum(['FRONT', 'REAR', 'BOTH']).optional(), // Für Motorradreifen - pro Reifenangebot
-  carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional() // Für Autoreifen - pro Reifenangebot
+  carTireType: z.enum(['ALL_FOUR', 'FRONT_TWO', 'REAR_TWO']).optional(), // Für Autoreifen - pro Reifenangebot
+  description: z.string().optional() // Achsen-Info für Brake Service (z.B. "Vorderachse: Nur Bremsbeläge")
 })
 
 // Helper function to calculate quantity based on car tire type
@@ -178,7 +179,8 @@ export async function POST(
                 pricePerTire: option.pricePerTire,
                 motorcycleTireType: option.motorcycleTireType,
                 carTireType: option.carTireType,
-                montagePrice: option.montagePrice !== undefined ? option.montagePrice : null // Use validated montagePrice from schema
+                montagePrice: option.montagePrice !== undefined ? option.montagePrice : null,
+                description: option.description || null // Achsen-Info für Brake Service
               }
             })
           }

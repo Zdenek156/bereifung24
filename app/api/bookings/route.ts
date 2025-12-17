@@ -319,17 +319,25 @@ export async function POST(req: NextRequest) {
             // Determine service type for better event title
             const serviceType = offer.tireRequest.additionalNotes?.toUpperCase().includes('BREMSEN-SERVICE') ? 'BRAKE_SERVICE' : 'TIRE_SERVICE'
             
-            let eventSummary = ''
+            // Event summary: Only service type
+            const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
+            
+            // Event description: Customer info + selected brand/service + price
+            const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}, ${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}`
+            
+            let serviceDetails = ''
             if (serviceType === 'BRAKE_SERVICE') {
               const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-              eventSummary = selectedTireOption?.brand 
-                ? `Bremsenwechsel - ${selectedTireOption.brand}` 
+              serviceDetails = selectedTireOption?.brand 
+                ? `Hersteller: ${selectedTireOption.brand}` 
                 : 'Bremsenwechsel'
             } else {
-              eventSummary = offer.tireBrand && offer.tireModel 
-                ? `${offer.tireBrand} ${offer.tireModel}` 
+              serviceDetails = offer.tireBrand && offer.tireModel 
+                ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
                 : 'Reifenwechsel'
             }
+            
+            const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${offer.price.toFixed(2)} €`
             
             const calendarEvent = await createCalendarEvent(
               offer.workshop.googleAccessToken!,
@@ -337,7 +345,7 @@ export async function POST(req: NextRequest) {
               offer.workshop.googleCalendarId!,
               {
                 summary: eventSummary,
-                description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+                description: eventDescription,
                 start: appointmentStart.toISOString(),
                 end: appointmentEnd.toISOString(),
                 attendees: [{ email: offer.tireRequest.customer.user.email }]
@@ -401,17 +409,25 @@ export async function POST(req: NextRequest) {
                       // Determine service type for better event title
                       const serviceType = offer.tireRequest.additionalNotes?.toUpperCase().includes('BREMSEN-SERVICE') ? 'BRAKE_SERVICE' : 'TIRE_SERVICE'
                       
-                      let eventSummary = ''
+                      // Event summary: Only service type
+                      const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
+                      
+                      // Event description: Customer info + selected brand/service + price
+                      const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}, ${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}`
+                      
+                      let serviceDetails = ''
                       if (serviceType === 'BRAKE_SERVICE') {
                         const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-                        eventSummary = selectedTireOption?.brand 
-                          ? `Bremsenwechsel - ${selectedTireOption.brand}` 
+                        serviceDetails = selectedTireOption?.brand 
+                          ? `Hersteller: ${selectedTireOption.brand}` 
                           : 'Bremsenwechsel'
                       } else {
-                        eventSummary = offer.tireBrand && offer.tireModel 
-                          ? `${offer.tireBrand} ${offer.tireModel}` 
+                        serviceDetails = offer.tireBrand && offer.tireModel 
+                          ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
                           : 'Reifenwechsel'
                       }
+                      
+                      const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${offer.price.toFixed(2)} €`
                       
                       const calendarEvent = await createCalendarEvent(
                         empAccessToken,
@@ -419,7 +435,7 @@ export async function POST(req: NextRequest) {
                         employee.googleCalendarId,
                         {
                           summary: eventSummary,
-                          description: `Kunde: ${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
+                          description: eventDescription,
                           start: appointmentStart.toISOString(),
                           end: appointmentEnd.toISOString(),
                           attendees: [{ email: offer.tireRequest.customer.user.email }]
@@ -855,7 +871,7 @@ export async function POST(req: NextRequest) {
         offerId: offerId,
         tireRequestId: offer.tireRequestId,
         appointmentDate: new Date(appointmentDate),
-        appointmentTime: new Date(appointmentDate).toTimeString().substring(0, 5),
+        appointmentTime: new Date(appointmentDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' }),
         estimatedDuration: estimatedDuration,
         status: 'CONFIRMED',
         paymentMethod: paymentMethod || 'PAY_ONSITE',
@@ -886,7 +902,7 @@ export async function POST(req: NextRequest) {
       month: 'long',
       day: 'numeric'
     })
-    const appointmentTimeFormatted = new Date(appointmentDate).toTimeString().substring(0, 5)
+    const appointmentTimeFormatted = new Date(appointmentDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' })
 
     // Send confirmation email to customer
     try {
@@ -986,18 +1002,20 @@ export async function POST(req: NextRequest) {
     }
     
     // Create event title and description based on service type
-    let eventSummary = ''
-    let eventDescription = ''
+    // Event summary: Only service type (no brand, no customer name)
+    const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
     
+    // Event description: Customer info + selected brand/service + price
+    const customerInfo = `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\n${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}`
+    
+    let serviceDetails = ''
     if (serviceType === 'BRAKE_SERVICE') {
-      eventSummary = tireBrand 
-        ? `Bremsenwechsel - ${tireBrand}` 
-        : 'Bremsenwechsel'
-      eventDescription = `Bremsenwechsel${tireBrand ? ` mit ${tireBrand}` : ''}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}${vehicleInfo}\n\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`
+      serviceDetails = tireBrand ? `Hersteller: ${tireBrand}` : 'Bremsenwechsel'
     } else {
-      eventSummary = `Reifenwechsel - ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}`
-      eventDescription = `Reifenwechsel mit ${tireBrand} ${tireModel}\n\nKunde: ${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\nAdresse: ${customerAddress}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}${vehicleInfo}\n\nReifen: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €\n\n${customerMessage ? `Hinweise vom Kunden:\n${customerMessage}` : ''}`
+      serviceDetails = `Reifen: ${tireBrand} ${tireModel}\nGröße: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}`
     }
+    
+    const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €${customerMessage ? `\n\nHinweise vom Kunden:\n${customerMessage}` : ''}`
     
     const eventDetails = {
       summary: eventSummary,

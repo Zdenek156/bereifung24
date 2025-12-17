@@ -398,44 +398,42 @@ export default function CustomerAppointments() {
                   </div>
                 </div>
 
-                {/* Review Section for Past Bookings */}
-                {activeTab === 'past' && (
-                  <div className="border-t pt-4">
-                    {booking.review ? (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Ihre Bewertung</h4>
-                        <div className="flex items-center gap-2 mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg
-                              key={star}
-                              className={`w-5 h-5 ${star <= booking.review!.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        {booking.review.comment && (
-                          <p className="text-gray-700 text-sm">{booking.review.comment}</p>
-                        )}
-                        <button
-                          onClick={() => handleOpenReviewModal(booking)}
-                          className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
-                        >
-                          Bewertung bearbeiten
-                        </button>
+                {/* Review Section */}
+                <div className="border-t pt-4">
+                  {booking.review ? (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Ihre Bewertung</h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-5 h-5 ${star <= booking.review!.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
                       </div>
-                    ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
+                      {booking.review.comment && (
+                        <p className="text-gray-700 text-sm">{booking.review.comment}</p>
+                      )}
                       <button
                         onClick={() => handleOpenReviewModal(booking)}
-                        className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                        className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
                       >
-                        Werkstatt jetzt bewerten
+                        Bewertung bearbeiten
                       </button>
-                    ) : null}
-                  </div>
-                )}
+                    </div>
+                  ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
+                    <button
+                      onClick={() => handleOpenReviewModal(booking)}
+                      className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                    >
+                      Werkstatt jetzt bewerten
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}

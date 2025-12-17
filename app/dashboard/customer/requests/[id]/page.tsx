@@ -13,6 +13,7 @@ interface TireOption {
   montagePrice?: number // Montage price for service packages
   carTireType?: 'ALL_FOUR' | 'FRONT_TWO' | 'REAR_TWO'
   motorcycleTireType?: 'FRONT' | 'REAR' | 'BOTH'
+  description?: string // Achsen-Info für Brake Service
 }
 
 interface WorkshopService {
@@ -1469,9 +1470,12 @@ export default function RequestDetailPage() {
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           {isServiceRequest ? (
-                                            // Service request: show brand as title and model/axle as subtitle
+                                            // Service request: show brand as title and description/model as subtitle
                                             <>
-                                              <p className="font-semibold text-gray-900">{option.brand}</p>
+                                              <p className="font-semibold text-gray-900">
+                                                {option.brand}
+                                                {option.description && ` - ${option.description}`}
+                                              </p>
                                               {isBrakeService && axleLabel ? (
                                                 <p className="text-xs text-blue-600 font-medium mt-1">🔧 {axleLabel}</p>
                                               ) : option.model ? (

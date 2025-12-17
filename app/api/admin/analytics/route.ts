@@ -88,10 +88,10 @@ export async function GET(request: NextRequest) {
 
     // Get views by day (for chart)
     const viewsByDay = await prisma.$queryRaw<Array<{date: Date, count: bigint}>>`
-      SELECT DATE(viewed_at) as date, COUNT(*) as count
+      SELECT DATE("viewedAt") as date, COUNT(*) as count
       FROM page_views
-      WHERE viewed_at >= ${startDate}
-      GROUP BY DATE(viewed_at)
+      WHERE "viewedAt" >= ${startDate}
+      GROUP BY DATE("viewedAt")
       ORDER BY date ASC
     `
 

@@ -418,12 +418,6 @@ export default function CustomerAppointments() {
                       {booking.review.comment && (
                         <p className="text-gray-700 text-sm">{booking.review.comment}</p>
                       )}
-                      <button
-                        onClick={() => handleOpenReviewModal(booking)}
-                        className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        Bewertung bearbeiten
-                      </button>
                     </div>
                   ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
                     <button

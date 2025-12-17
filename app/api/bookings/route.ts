@@ -345,10 +345,22 @@ export async function POST(req: NextRequest) {
             
             let serviceDetails = ''
             if (serviceType === 'BRAKE_SERVICE') {
-              const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-              serviceDetails = selectedTireOption?.brand 
-                ? `Hersteller: ${selectedTireOption.brand}` 
-                : 'Bremsenwechsel'
+              // Get all selected brake packages
+              const selectedPackages = offer.tireOptions?.filter(opt => 
+                offer.selectedTireOptionIds?.includes(opt.id)
+              ) || []
+              
+              if (selectedPackages.length > 0) {
+                const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
+                serviceDetails = selectedPackages.map((pkg, index) => {
+                  const achse = achsen[index] || `${index + 1}. Achse`
+                  const teileSumme = (pkg.pricePerTire || 0)
+                  const montageSumme = (pkg.montagePrice || 0)
+                  return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+                }).join('\n')
+              } else {
+                serviceDetails = 'Bremsenwechsel'
+              }
             } else {
               serviceDetails = offer.tireBrand && offer.tireModel 
                 ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
@@ -442,10 +454,22 @@ export async function POST(req: NextRequest) {
                       
                       let serviceDetails = ''
                       if (serviceType === 'BRAKE_SERVICE') {
-                        const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
-                        serviceDetails = selectedTireOption?.brand 
-                          ? `Hersteller: ${selectedTireOption.brand}` 
-                          : 'Bremsenwechsel'
+                        // Get all selected brake packages
+                        const selectedPackages = offer.tireOptions?.filter(opt => 
+                          offer.selectedTireOptionIds?.includes(opt.id)
+                        ) || []
+                        
+                        if (selectedPackages.length > 0) {
+                          const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
+                          serviceDetails = selectedPackages.map((pkg, index) => {
+                            const achse = achsen[index] || `${index + 1}. Achse`
+                            const teileSumme = (pkg.pricePerTire || 0)
+                            const montageSumme = (pkg.montagePrice || 0)
+                            return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+                          }).join('\n')
+                        } else {
+                          serviceDetails = 'Bremsenwechsel'
+                        }
                       } else {
                         serviceDetails = offer.tireBrand && offer.tireModel 
                           ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
@@ -1035,7 +1059,22 @@ export async function POST(req: NextRequest) {
     
     let serviceDetails = ''
     if (serviceType === 'BRAKE_SERVICE') {
-      serviceDetails = tireBrand ? `Hersteller: ${tireBrand}` : 'Bremsenwechsel'
+      // Get all selected brake packages
+      const selectedPackages = completeOffer.tireOptions?.filter(opt => 
+        completeOffer.selectedTireOptionIds?.includes(opt.id)
+      ) || []
+      
+      if (selectedPackages.length > 0) {
+        const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
+        serviceDetails = selectedPackages.map((pkg, index) => {
+          const achse = achsen[index] || `${index + 1}. Achse`
+          const teileSumme = (pkg.pricePerTire || 0)
+          const montageSumme = (pkg.montagePrice || 0)
+          return `${achse}: ${pkg.brand}\n  Ersatzteile: ${teileSumme.toFixed(2)} €\n  Montage: ${montageSumme.toFixed(2)} €`
+        }).join('\n')
+      } else {
+        serviceDetails = 'Bremsenwechsel'
+      }
     } else {
       serviceDetails = `Reifen: ${tireBrand} ${tireModel}\nGröße: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}`
     }

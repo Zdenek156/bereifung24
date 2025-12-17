@@ -344,11 +344,18 @@ export async function POST(req: NextRequest) {
             const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}\n${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}${vehicleInfo}`
             
             let serviceDetails = ''
+            let calculatedPrice = offer.price
+            
             if (serviceType === 'BRAKE_SERVICE') {
               // Get all selected brake packages
               const selectedPackages = offer.tireOptions?.filter(opt => 
                 offer.selectedTireOptionIds?.includes(opt.id)
               ) || []
+              
+              // Calculate total price from selected packages
+              calculatedPrice = selectedPackages.reduce((sum, pkg) => {
+                return sum + (pkg.pricePerTire || 0) + (pkg.montagePrice || 0)
+              }, 0)
               
               if (selectedPackages.length > 0) {
                 const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
@@ -367,7 +374,7 @@ export async function POST(req: NextRequest) {
                 : 'Reifenwechsel'
             }
             
-            const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${offer.price.toFixed(2)} €`
+            const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${calculatedPrice.toFixed(2)} €`
             
             const calendarEvent = await createCalendarEvent(
               offer.workshop.googleAccessToken!,
@@ -453,11 +460,18 @@ export async function POST(req: NextRequest) {
                       const customerInfo = `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}\n${offer.tireRequest.customer.user.street || ''}\n${offer.tireRequest.customer.user.zipCode || ''} ${offer.tireRequest.customer.user.city || ''}\nTelefon: ${offer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${offer.tireRequest.customer.user.email}${vehicleInfo}`
                       
                       let serviceDetails = ''
+                      let calculatedPrice = offer.price
+                      
                       if (serviceType === 'BRAKE_SERVICE') {
                         // Get all selected brake packages
                         const selectedPackages = offer.tireOptions?.filter(opt => 
                           offer.selectedTireOptionIds?.includes(opt.id)
                         ) || []
+                        
+                        // Calculate total price from selected packages
+                        calculatedPrice = selectedPackages.reduce((sum, pkg) => {
+                          return sum + (pkg.pricePerTire || 0) + (pkg.montagePrice || 0)
+                        }, 0)
                         
                         if (selectedPackages.length > 0) {
                           const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
@@ -476,7 +490,7 @@ export async function POST(req: NextRequest) {
                           : 'Reifenwechsel'
                       }
                       
-                      const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${offer.price.toFixed(2)} €`
+                      const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${calculatedPrice.toFixed(2)} €`
                       
                       const calendarEvent = await createCalendarEvent(
                         empAccessToken,
@@ -1058,11 +1072,18 @@ export async function POST(req: NextRequest) {
     const customerInfo = `${completeOffer.tireRequest.customer.user.firstName} ${completeOffer.tireRequest.customer.user.lastName}\n${customerStreet}\n${zipCity}\nTelefon: ${completeOffer.tireRequest.customer.user.phone || 'Nicht angegeben'}\nEmail: ${completeOffer.tireRequest.customer.user.email}${vehicleInfo}`
     
     let serviceDetails = ''
+    let calculatedPrice = completeOffer.price
+    
     if (serviceType === 'BRAKE_SERVICE') {
       // Get all selected brake packages
       const selectedPackages = completeOffer.tireOptions?.filter(opt => 
         completeOffer.selectedTireOptionIds?.includes(opt.id)
       ) || []
+      
+      // Calculate total price from selected packages
+      calculatedPrice = selectedPackages.reduce((sum, pkg) => {
+        return sum + (pkg.pricePerTire || 0) + (pkg.montagePrice || 0)
+      }, 0)
       
       if (selectedPackages.length > 0) {
         const achsen = ['Vorderachse', 'Hinterachse', '3. Achse', '4. Achse']
@@ -1079,7 +1100,7 @@ export async function POST(req: NextRequest) {
       serviceDetails = `Reifen: ${tireBrand} ${tireModel}\nGröße: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}`
     }
     
-    const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${completeOffer.price.toFixed(2)} €${customerMessage ? `\n\nHinweise vom Kunden:\n${customerMessage}` : ''}`
+    const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${calculatedPrice.toFixed(2)} €${customerMessage ? `\n\nHinweise vom Kunden:\n${customerMessage}` : ''}`
     
     const eventDetails = {
       summary: eventSummary,

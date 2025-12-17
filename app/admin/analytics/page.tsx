@@ -141,7 +141,7 @@ export default function AdminAnalyticsPage() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Unique Visitors</p>
+                    <p className="text-sm font-medium text-gray-600">Eindeutige Besucher</p>
                     <p className="text-2xl font-bold text-gray-900">{analytics.uniqueVisitors.toLocaleString()}</p>
                   </div>
                 </div>

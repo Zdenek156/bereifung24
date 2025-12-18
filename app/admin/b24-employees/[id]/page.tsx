@@ -1,0 +1,495 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ArrowLeft, Save, Mail, Building2, Activity } from 'lucide-react'
+
+const AVAILABLE_RESOURCES = [
+  { value: 'customers', label: 'Kunden' },
+  { value: 'workshops', label: 'Werkstätten' },
+  { value: 'bookings', label: 'Buchungen' },
+  { value: 'offers', label: 'Angebote' },
+  { value: 'analytics', label: 'Analytics' },
+  { value: 'billing', label: 'Abrechnung' },
+  { value: 'email-templates', label: 'Email-Templates' },
+  { value: 'employees', label: 'Mitarbeiter' },
+  { value: 'settings', label: 'Einstellungen' },
+]
+
+interface Permission {
+  resource: string
+  canRead: boolean
+  canWrite: boolean
+  canDelete: boolean
+}
+
+interface Workshop {
+  id: string
+  companyName: string
+  city: string
+}
+
+interface ActivityLog {
+  id: string
+  action: string
+  resource?: string
+  resourceId?: string
+  details?: string
+  ipAddress?: string
+  createdAt: string
+}
+
+interface Employee {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phone?: string
+  position?: string
+  department?: string
+  isActive: boolean
+  emailVerified: boolean
+  lastLoginAt?: string
+  createdAt: string
+  permissions: Permission[]
+  assignedWorkshops: Workshop[]
+  activityLogs: ActivityLog[]
+}
+
+export default function EditEmployeePage() {
+  const router = useRouter()
+  const params = useParams()
+  const employeeId = params.id as string
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [employee, setEmployee] = useState<Employee | null>(null)
+
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    position: '',
+    department: '',
+    isActive: true,
+  })
+
+  const [permissions, setPermissions] = useState<Permission[]>(
+    AVAILABLE_RESOURCES.map(resource => ({
+      resource: resource.value,
+      canRead: false,
+      canWrite: false,
+      canDelete: false
+    }))
+  )
+
+  useEffect(() => {
+    fetchEmployee()
+  }, [employeeId])
+
+  const fetchEmployee = async () => {
+    try {
+      const response = await fetch(`/api/admin/b24-employees/${employeeId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEmployee(data)
+        
+        setFormData({
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone || '',
+          position: data.position || '',
+          department: data.department || '',
+          isActive: data.isActive,
+        })
+
+        // Merge permissions
+        const mergedPermissions = AVAILABLE_RESOURCES.map(resource => {
+          const existingPerm = data.permissions.find((p: Permission) => p.resource === resource.value)
+          return existingPerm || {
+            resource: resource.value,
+            canRead: false,
+            canWrite: false,
+            canDelete: false
+          }
+        })
+        setPermissions(mergedPermissions)
+      }
+    } catch (error) {
+      console.error('Error fetching employee:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handlePermissionChange = (resourceIndex: number, permission: 'canRead' | 'canWrite' | 'canDelete', checked: boolean) => {
+    const newPermissions = [...permissions]
+    newPermissions[resourceIndex][permission] = checked
+    setPermissions(newPermissions)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+
+    try {
+      const activePermissions = permissions.filter(
+        perm => perm.canRead || perm.canWrite || perm.canDelete
+      )
+
+      const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          permissions: activePermissions
+        })
+      })
+
+      if (response.ok) {
+        alert('Mitarbeiter wurde aktualisiert.')
+        router.push('/admin/b24-employees')
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error)
+      alert('Fehler beim Aktualisieren des Mitarbeiters')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSendSetupEmail = async () => {
+    // TODO: Implement resend setup email
+    alert('Setup-Email Funktion wird noch implementiert.')
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">Laden...</div>
+      </div>
+    )
+  }
+
+  if (!employee) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">Mitarbeiter nicht gefunden</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-6xl">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-2xl">
+                {employee.firstName} {employee.lastName}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-2 mt-1">
+                {employee.email}
+                {employee.emailVerified && (
+                  <Badge variant="outline" className="text-xs">Verifiziert</Badge>
+                )}
+              </CardDescription>
+            </div>
+            <Button variant="outline" onClick={() => router.push('/admin/b24-employees')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Zurück
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <Tabs defaultValue="details" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="details">Details & Rechte</TabsTrigger>
+              <TabsTrigger value="workshops">
+                <Building2 className="mr-2 h-4 w-4" />
+                Workshops ({employee.assignedWorkshops.length})
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                <Activity className="mr-2 h-4 w-4" />
+                Aktivitäten
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Persönliche Daten</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">Vorname *</Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="lastName">Nachname *</Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Telefon</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="position">Position</Label>
+                      <Input
+                        id="position"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="department">Abteilung</Label>
+                      <Input
+                        id="department"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isActive"
+                      checked={formData.isActive}
+                      onCheckedChange={(checked) => 
+                        setFormData({ ...formData, isActive: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="isActive" className="cursor-pointer">
+                      Mitarbeiter ist aktiv
+                    </Label>
+                  </div>
+                </div>
+
+                {/* Permissions */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Zugriffsrechte</h3>
+
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Bereich</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Lesen</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Schreiben</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Löschen</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {AVAILABLE_RESOURCES.map((resource, index) => (
+                          <tr key={resource.value} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">{resource.label}</td>
+                            <td className="px-4 py-3 text-center">
+                              <Checkbox
+                                checked={permissions[index].canRead}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(index, 'canRead', checked as boolean)
+                                }
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Checkbox
+                                checked={permissions[index].canWrite}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(index, 'canWrite', checked as boolean)
+                                }
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Checkbox
+                                checked={permissions[index].canDelete}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(index, 'canDelete', checked as boolean)
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Password Reset */}
+                {!employee.emailVerified && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800 mb-2">
+                      Dieser Mitarbeiter hat sein Passwort noch nicht festgelegt.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendSetupEmail}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Setup-Email erneut senden
+                    </Button>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push('/admin/b24-employees')}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Wird gespeichert...' : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Speichern
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="workshops">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Zugewiesene Werkstätten</h3>
+                  <Button variant="outline" size="sm">
+                    Werkstatt zuweisen
+                  </Button>
+                </div>
+
+                {employee.assignedWorkshops.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Keine Werkstätten zugewiesen
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {employee.assignedWorkshops.map(workshop => (
+                      <Card key={workshop.id}>
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium">{workshop.companyName}</h4>
+                              <p className="text-sm text-gray-600">{workshop.city}</p>
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              Details →
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Letzte Aktivitäten</h3>
+
+                {employee.activityLogs.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Keine Aktivitäten vorhanden
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {employee.activityLogs.map(log => (
+                      <div key={log.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{log.action}</p>
+                            {log.resource && (
+                              <p className="text-sm text-gray-600">
+                                {log.resource} {log.resourceId && `(${log.resourceId})`}
+                              </p>
+                            )}
+                            {log.details && (
+                              <p className="text-sm text-gray-500 mt-1">{log.details}</p>
+                            )}
+                          </div>
+                          <div className="text-right text-sm text-gray-500">
+                            {new Date(log.createdAt).toLocaleString('de-DE')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

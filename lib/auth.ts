@@ -28,6 +28,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email und Passwort erforderlich')
         }
 
+        // First, try to find regular user
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
@@ -38,36 +39,74 @@ export const authOptions: NextAuthOptions = {
           }
         })
 
-        if (!user) {
-          throw new Error('Benutzer nicht gefunden')
+        if (user) {
+          if (!user.isActive) {
+            throw new Error('Account ist deaktiviert')
+          }
+
+          // Prüfe ob E-Mail bestätigt wurde (nur für Kunden)
+          if (user.role === 'CUSTOMER' && !user.emailVerified) {
+            throw new Error('Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben dir einen Bestätigungslink gesendet.')
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            throw new Error('Ungültiges Passwort')
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            role: user.role,
+            customerId: user.customer?.id,
+            workshopId: user.workshop?.id,
+          }
         }
 
-        if (!user.isActive) {
-          throw new Error('Account ist deaktiviert')
+        // If not found, try B24 employee
+        const employee = await prisma.b24Employee.findUnique({
+          where: { email: credentials.email }
+        })
+
+        if (employee) {
+          if (!employee.isActive) {
+            throw new Error('Account ist deaktiviert')
+          }
+
+          if (!employee.emailVerified || !employee.password) {
+            throw new Error('Bitte setzen Sie zuerst Ihr Passwort über den Link in der Setup-Email.')
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            employee.password
+          )
+
+          if (!isPasswordValid) {
+            throw new Error('Ungültiges Passwort')
+          }
+
+          // Update last login
+          await prisma.b24Employee.update({
+            where: { id: employee.id },
+            data: { lastLoginAt: new Date() }
+          })
+
+          return {
+            id: employee.id,
+            email: employee.email,
+            name: `${employee.firstName} ${employee.lastName}`,
+            role: 'ADMIN', // B24 employees get ADMIN role
+            isB24Employee: true,
+          }
         }
 
-        // Prüfe ob E-Mail bestätigt wurde (nur für Kunden)
-        if (user.role === 'CUSTOMER' && !user.emailVerified) {
-          throw new Error('Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben dir einen Bestätigungslink gesendet.')
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          throw new Error('Ungültiges Passwort')
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          role: user.role,
-          customerId: user.customer?.id,
-          workshopId: user.workshop?.id,
-        }
+        throw new Error('Benutzer nicht gefunden')
       }
     })
   ],

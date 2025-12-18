@@ -203,6 +203,10 @@ model Workshop {
   googleRefreshToken String?   @map("googlerefreshtoken")
   googleTokenExpiry  DateTime? @map("googletokenexpiry")
 
+  // Bereifung24 Employee Assignment
+  assignedEmployeeId String? @map("assigned_employee_id")
+  assignedEmployee   B24Employee? @relation("WorkshopAssignment", fields: [assignedEmployeeId], references: [id])
+
   // Relations
   offers            Offer[]
   bookings          Booking[]
@@ -866,6 +870,82 @@ model WorkshopLandingPage {
   @@index([slug])
   @@index([isActive])
   @@map("workshop_landing_pages")
+}
+
+// ============================================
+// BEREIFUNG24 EMPLOYEES (Staff/Mitarbeiter)
+// ============================================
+
+model B24Employee {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  password  String? // Null until they set it via email link
+  
+  // Personal Info
+  firstName String
+  lastName  String
+  phone     String?
+  position  String? // e.g., "Account Manager", "Buchhalter", "Marketing Manager"
+  department String? // e.g., "Buchhaltung", "Marketing", "Vertrieb", "Support"
+  
+  // Status
+  isActive Boolean @default(true)
+  emailVerified Boolean @default(false)
+  
+  // Password Setup
+  setupToken String? @unique // Token for initial password setup
+  setupTokenExpiry DateTime? // Token expires after 24h
+  
+  // Login tracking
+  lastLoginAt DateTime?
+  
+  // Relations
+  permissions B24EmployeePermission[]
+  assignedWorkshops Workshop[] @relation("WorkshopAssignment")
+  activityLogs B24EmployeeActivityLog[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("b24_employees")
+}
+
+model B24EmployeePermission {
+  id         String @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  // Which admin page/section
+  resource String // e.g., "customers", "workshops", "analytics", "billing", "email-templates"
+  
+  // What they can do
+  canRead   Boolean @default(false)
+  canWrite  Boolean @default(false)
+  canDelete Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([employeeId, resource])
+  @@map("b24_employee_permissions")
+}
+
+model B24EmployeeActivityLog {
+  id         String @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  action     String // e.g., "workshop_assigned", "customer_contacted", "offer_reviewed"
+  resource   String? // e.g., "workshop", "customer", "offer"
+  resourceId String? // ID of the resource
+  details    String? @db.Text // JSON with additional details
+  ipAddress  String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([employeeId])
+  @@index([createdAt])
+  @@map("b24_employee_activity_logs")
 }
 
 // ============================================

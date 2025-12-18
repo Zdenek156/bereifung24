@@ -553,70 +553,46 @@ export default function BookAppointmentPage() {
 
             {/* Zahlungsmethode */}
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Zahlungsmethode</h2>
-              <div className="space-y-3">
-                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition-colors">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="PAY_ONSITE"
-                    checked={paymentMethod === 'PAY_ONSITE'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-4 h-4 text-primary-600"
-                  />
-                  <div className="ml-3">
-                    <p className="font-semibold">Zahlung vor Ort</p>
-                    <p className="text-sm text-gray-600">
-                      Bezahlen Sie direkt in der Werkstatt ({getPaymentMethods().join(', ')})
-                    </p>
-                  </div>
-                </label>
-                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition-colors opacity-50">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="PAY_ONLINE"
-                    disabled
-                    className="w-4 h-4 text-primary-600"
-                  />
-                  <div className="ml-3">
-                    <p className="font-semibold">Online-Zahlung</p>
-                    <p className="text-sm text-gray-600">Demnächst verfügbar</p>
-                  </div>
-                </label>
-              </div>
-
-              {/* Payment Details Box */}
-              {paymentMethod === 'PAY_ONSITE' && offer?.workshop && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Zahlungsmethoden</h2>
+              
+              {offer?.workshop && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                     <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    Zahlungsinformationen
+                    Verfügbare Zahlungsmethoden
                   </h4>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-gray-700">
-                      <span className="font-medium">Verfügbare Zahlungsmethoden:</span> {getPaymentMethods().join(', ')}
-                    </p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center text-gray-700">
+                      <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium">{getPaymentMethods().join(', ')}</span>
+                    </div>
+                    
                     {offer.workshop.iban && (
-                      <div className="pt-2 border-t border-blue-200">
-                        <p className="font-medium text-gray-900 mb-1">Bankverbindung für Vorabüberweisung:</p>
-                        <p className="text-gray-700">IBAN: {offer.workshop.iban}</p>
-                        {offer.workshop.accountHolder && (
-                          <p className="text-gray-700">Kontoinhaber: {offer.workshop.accountHolder}</p>
-                        )}
-                        <p className="text-xs text-gray-600 mt-1">
+                      <div className="pt-3 border-t border-blue-200">
+                        <p className="font-medium text-gray-900 mb-2">Bankverbindung für Vorabüberweisung:</p>
+                        <div className="bg-white rounded p-3 space-y-1">
+                          <p className="text-gray-700"><span className="font-medium">IBAN:</span> {offer.workshop.iban}</p>
+                          {offer.workshop.accountHolder && (
+                            <p className="text-gray-700"><span className="font-medium">Kontoinhaber:</span> {offer.workshop.accountHolder}</p>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
                           Die genaue Rechnungsnummer mit Verwendungszweck erhalten Sie von der Werkstatt.
                         </p>
                       </div>
                     )}
+                    
                     {offer.workshop.paypalEmail && (
-                      <div className="pt-2 border-t border-blue-200">
-                        <p className="text-gray-700">
-                          <span className="font-medium">PayPal:</span> {offer.workshop.paypalEmail}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                      <div className="pt-3 border-t border-blue-200">
+                        <p className="font-medium text-gray-900 mb-2">PayPal:</p>
+                        <div className="bg-white rounded p-3">
+                          <p className="text-gray-700">{offer.workshop.paypalEmail}</p>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
                           Die genaue Rechnungsnummer erhalten Sie von der Werkstatt.
                         </p>
                       </div>

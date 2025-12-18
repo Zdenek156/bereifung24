@@ -3,45 +3,13 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-
-interface DashboardStats {
-  openRequests: number
-  receivedOffers: number
-  completedBookings: number
-  savedVehicles: number
-}
+import NotificationBell from '@/components/NotificationBell'
 
 export default function CustomerDashboard() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [stats, setStats] = useState<DashboardStats>({
-    openRequests: 0,
-    receivedOffers: 0,
-    completedBookings: 0,
-    savedVehicles: 0
-  })
-  const [loading, setLoading] = useState(true)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Lade Dashboard-Statistiken
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard/stats')
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data)
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
 
   // Check URL parameters for success message
   useEffect(() => {
@@ -74,13 +42,16 @@ export default function CustomerDashboard() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Willkommen, {session?.user?.name || 'Kunde'}!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Willkommen, {session?.user?.name || 'Kunde'}!
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
+          </p>
+        </div>
+        <NotificationBell />
       </div>
       {/* Success Message */}
       {successMessage && (
@@ -108,107 +79,6 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* Welcome & Instructions Section */}
-      <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-8 mb-8 border border-primary-100">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              🎯 So funktioniert Bereifung24
-            </h2>
-            <p className="text-gray-700 mb-6">
-              Mit unserem Service erhalten Sie schnell und unkompliziert Angebote von Werkstätten in Ihrer Nähe. 
-              Vergleichen Sie Preise und wählen Sie das beste Angebot für sich aus.
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    1
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-1">Anfrage erstellen</h3>
-                    <p className="text-sm text-gray-600">
-                      Wählen Sie Ihre Reifengröße oder einen anderen Service aus. Die Anfrage ist komplett kostenlos und unverbindlich.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-1">Angebote erhalten</h3>
-                    <p className="text-sm text-gray-600">
-                      Werkstätten in Ihrer Nähe werden automatisch benachrichtigt und senden Ihnen passende Angebote zu.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-1">Vergleichen & auswählen</h3>
-                    <p className="text-sm text-gray-600">
-                      Schauen Sie sich alle Angebote in Ruhe an und wählen Sie das beste für sich aus.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    4
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-1">Termin vereinbaren</h3>
-                    <p className="text-sm text-gray-600">
-                      Buchen Sie direkt online einen passenden Termin bei der Werkstatt Ihrer Wahl.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">100% kostenlos</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Unverbindlich</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Schnell & einfach</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Call-to-Action Card */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-xl p-6 mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -235,143 +105,104 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Offene Anfragen</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-                ) : (
-                  stats.openRequests
-                )}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      {/* Welcome & Instructions Section */}
+      <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-6 border border-primary-100">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
-        </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">
+              So funktioniert Bereifung24
+            </h2>
+            <p className="text-gray-700 mb-4 text-sm">
+              Mit unserem Service erhalten Sie schnell und unkompliziert Angebote von Werkstätten in Ihrer Nähe. 
+              Vergleichen Sie Preise und wählen Sie das beste Angebot für sich aus.
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Anfrage erstellen</h3>
+                    <p className="text-xs text-gray-600">
+                      Wählen Sie Ihre Reifengröße oder einen anderen Service aus. Die Anfrage ist komplett kostenlos und unverbindlich.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Erhaltene Angebote</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-                ) : (
-                  stats.receivedOffers
-                )}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Angebote erhalten</h3>
+                    <p className="text-xs text-gray-600">
+                      Werkstätten in Ihrer Nähe werden automatisch benachrichtigt und senden Ihnen passende Angebote zu.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Termine</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-                ) : (
-                  stats.completedBookings
-                )}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Vergleichen & auswählen</h3>
+                    <p className="text-xs text-gray-600">
+                      Schauen Sie sich alle Angebote in Ruhe an und wählen Sie das beste für sich aus.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-600">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Fahrzeuge</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-                ) : (
-                  stats.savedVehicles
-                )}
-              </p>
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Termin vereinbaren</h3>
+                    <p className="text-xs text-gray-600">
+                      Buchen Sie direkt online einen passenden Termin bei der Werkstatt Ihrer Wahl.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Schnellzugriff</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={() => router.push('/dashboard/customer/requests')}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
+                <span className="font-medium">100% kostenlos</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Meine Anfragen</h3>
-                <p className="text-sm text-gray-600">Angebote vergleichen</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => router.push('/dashboard/customer/vehicles')}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
+                <span className="font-medium">Unverbindlich</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Fahrzeuge</h3>
-                <p className="text-sm text-gray-600">Verwaltung</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => router.push('/dashboard/customer/appointments')}
-            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Termine</h3>
-                <p className="text-sm text-gray-600">Übersicht</p>
+                <span className="font-medium">Schnell & einfach</span>
               </div>
             </div>
-          </button>
+          </div>
         </div>
       </div>
     </div>

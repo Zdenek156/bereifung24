@@ -845,7 +845,6 @@ export function newTireRequestEmailTemplate(data: {
   distance: string
   preferredBrands?: string
   additionalNotes?: string
-  customerCity?: string
   vehicleInfo?: string
   isRunflat?: boolean
   hasTireDisposal?: boolean
@@ -889,7 +888,6 @@ export function newTireRequestEmailTemplate(data: {
           
           <div class="highlight">
             <strong>📍 Entfernung: </strong>Ca. ${data.distance} von Ihrem Standort<br>
-            ${data.customerCity ? `<strong>🏙️ Stadt: </strong>${data.customerCity}<br>` : ''}
             <strong>📅 Benötigt bis: </strong>${data.needByDate}
           </div>
 

@@ -149,16 +149,8 @@ export async function POST(request: NextRequest) {
           subject: `Neue Anfrage: Räder umstecken - ${vehicleInfo}`,
           html: `
             <h2>Neue Anfrage für Räder umstecken</h2>
-            <p>Eine neue Anfrage wurde erstellt:</p>
-            
-            <h3>Kunde:</h3>
-            <p>
-              ${customer.user.firstName} ${customer.user.lastName}<br>
-              ${customer.user.street || ''}<br>
-              ${customer.user.zipCode || ''} ${customer.user.city || ''}<br>
-              Telefon: ${customer.user.phone || 'Nicht angegeben'}<br>
-              E-Mail: ${customer.user.email}
-            </p>
+            <p>Hallo ${workshop.companyName},</p>
+            <p>Es gibt eine neue Anfrage für Räder umstecken in Ihrer Nähe.</p>
             
             <h3>Fahrzeug:</h3>
             <p>${vehicleInfo}</p>

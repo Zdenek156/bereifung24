@@ -155,13 +155,8 @@ export async function POST(request: NextRequest) {
           subject: `Neue Anfrage: Klimaservice - ${vehicleInfo}`,
           html: `
             <h2>Neue Anfrage für Klimaservice</h2>
-            <p>Eine neue Anfrage wurde erstellt:</p>
-            
-            <h3>Kunde:</h3>
-            <p>
-              ${customer.user.firstName} ${customer.user.lastName}<br>
-              ${customer.user.zipCode || ''} ${customer.user.city || ''}
-            </p>
+            <p>Hallo ${workshop.companyName},</p>
+            <p>Es gibt eine neue Klimaservice-Anfrage in Ihrer Nähe.</p>
             
             <h3>Fahrzeug:</h3>
             <p>${vehicleInfo}</p>
@@ -196,6 +191,74 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error(`Failed to send email to workshop ${workshop.id}:`, emailError)
       }
+    }
+
+    // Send confirmation email to customer
+    try {
+      const serviceTypeLabels = {
+        check: 'Klimaanlagen-Inspektion (nur Prüfung)',
+        basic: 'Klimaservice Basic (Desinfektion + Nachfüllen)',
+        comfort: 'Klimaservice Comfort (+ Leckerkennung)',
+        premium: 'Klimaservice Premium (+ Innenraumdesinfektion)'
+      }
+
+      await sendEmail({
+        to: customer.user.email,
+        subject: 'Ihre Anfrage für Klimaanlagen-Service wurde erstellt',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9fafb; padding: 30px; }
+              .highlight { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .button { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>✅ Anfrage erfolgreich erstellt</h1>
+              </div>
+              <div class="content">
+                <p><strong>Hallo ${customer.user.firstName},</strong></p>
+                <p>Vielen Dank für Ihre Klimaanlagen-Service Anfrage! Wir haben Werkstätten in Ihrer Nähe informiert.</p>
+                
+                <div class="highlight">
+                  <h3 style="margin-top: 0;">📋 Ihre Anfrage im Überblick:</h3>
+                  <ul style="list-style: none; padding-left: 0;">
+                    <li><strong>Service:</strong> ${serviceTypeLabels[validatedData.serviceType]}</li>
+                    ${vehicleInfo !== 'Nicht angegeben' ? `<li><strong>Fahrzeug:</strong> ${vehicleInfo}</li>` : ''}
+                    ${validatedData.vin ? `<li><strong>FIN:</strong> ${validatedData.vin}</li>` : ''}
+                    ${validatedData.hasIssues && validatedData.issueDescription ? `<li><strong>Problembeschreibung:</strong> ${validatedData.issueDescription}</li>` : ''}
+                    <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>
+                  </ul>
+                </div>
+
+                <h3>⏱️ Wie geht es weiter?</h3>
+                <p>Werkstätten in Ihrer Nähe wurden über Ihre Anfrage informiert und können Ihnen nun Angebote erstellen. Sie erhalten eine E-Mail, sobald ein Angebot eingeht.</p>
+
+                <p style="text-align: center;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/requests" class="button">
+                    Meine Anfragen ansehen
+                  </a>
+                </p>
+
+                <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+                <p>Mit freundlichen Grüßen,<br><strong>Ihr Bereifung24 Team</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
+      })
+      console.log(`✅ Confirmation email sent to customer ${customer.user.email}`)
+    } catch (emailError) {
+      console.error('Failed to send confirmation email to customer:', emailError)
     }
 
     return NextResponse.json({

@@ -255,6 +255,7 @@ export default function OtherServicesPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Allgemeine Beschreibung Ihrer Anfrage * <span className="text-xs text-gray-500">(mind. 10 Zeichen)</span>
             </label>
+            <p className="text-xs text-gray-600 mb-2">💡 Je detaillierter Ihre Beschreibung, desto passender die Angebote. Geben Sie z.B. Fahrzeugtyp, spezielle Wünsche oder Zeitfenster an.</p>
             <textarea
               value={formData.serviceDescription}
               onChange={(e) => setFormData({ ...formData, serviceDescription: e.target.value })}
@@ -268,8 +269,13 @@ export default function OtherServicesPage() {
 
           {/* Benötigt bis */}
           <div>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bis wann benötigen Sie den Service? *
+              </label>
+              <p className="text-xs text-gray-600">⏰ Nach diesem Datum wird Ihre Anfrage automatisch für Werkstätten ausgeblendet. Wählen Sie ein realistisches Datum.</p>
+            </div>
             <DatePicker
-              label="Benötigt bis"
               selectedDate={formData.needByDate}
               onChange={(date) => setFormData({ ...formData, needByDate: date })}
               minDate={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}

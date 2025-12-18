@@ -52,9 +52,14 @@ interface EmailOptions {
   subject: string
   text?: string
   html: string
+  attachments?: Array<{
+    filename: string
+    content: string | Buffer
+    contentType?: string
+  }>
 }
 
-export async function sendEmail({ to, subject, text, html }: EmailOptions) {
+export async function sendEmail({ to, subject, text, html, attachments }: EmailOptions) {
   try {
     // Hole Email-Settings aus Datenbank
     const config = await getEmailSettings()
@@ -85,6 +90,7 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
       subject,
       text,
       html,
+      attachments,
     })
 
     console.log('📧 Email gesendet:', info.messageId)
@@ -93,6 +99,69 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
     console.error('❌ Email-Versand fehlgeschlagen:', error)
     throw error
   }
+}
+
+// Helper function to create ICS calendar file
+export function createICSFile(data: {
+  start: Date
+  end: Date
+  summary: string
+  description: string
+  location: string
+  organizerEmail: string
+  attendeeEmail?: string
+}): string {
+  const formatDate = (date: Date): string => {
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const hours = String(date.getUTCHours()).padStart(2, '0')
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0')
+    return `${year}${month}${day}T${hours}${minutes}${seconds}Z`
+  }
+
+  const escapeICS = (text: string): string => {
+    return text.replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
+  }
+
+  const now = new Date()
+  const uid = `${now.getTime()}@bereifung24.de`
+  
+  let icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Bereifung24//Booking System//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${formatDate(now)}`,
+    `DTSTART:${formatDate(data.start)}`,
+    `DTEND:${formatDate(data.end)}`,
+    `SUMMARY:${escapeICS(data.summary)}`,
+    `DESCRIPTION:${escapeICS(data.description)}`,
+    `LOCATION:${escapeICS(data.location)}`,
+    `ORGANIZER:mailto:${data.organizerEmail}`,
+  ]
+
+  if (data.attendeeEmail) {
+    icsContent.push(`ATTENDEE:mailto:${data.attendeeEmail}`)
+  }
+
+  icsContent.push(
+    'STATUS:CONFIRMED',
+    'SEQUENCE:0',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT1H',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Erinnerung: Termin in 1 Stunde',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  )
+
+  return icsContent.join('\r\n')
 }
 
 // Email-Templates
@@ -1021,6 +1090,9 @@ export function bookingConfirmationCustomerEmailTemplate(data: {
   bookingId: string
   workshopEmail?: string
   customerNotes?: string
+  appointmentStart?: Date
+  appointmentEnd?: Date
+  serviceType?: string
 }) {
   const paymentMethodText = data.paymentMethod === 'PAY_ONSITE' 
     ? 'Zahlung vor Ort' 
@@ -1117,6 +1189,11 @@ export function bookingConfirmationCustomerEmailTemplate(data: {
             </a>
           </center>
 
+          <p style="margin-top: 20px; text-align: center; color: #6b7280; font-size: 14px;">
+            💡 <strong>Tipp:</strong> Diese E-Mail enthält eine ICS-Kalenderdatei im Anhang. 
+            Öffnen Sie den Anhang, um den Termin automatisch in Ihren Kalender (Outlook, Google Kalender, Apple Kalender) einzutragen.
+          </p>
+
           <p style="margin-top: 30px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
             <strong>⏰ Wichtig:</strong> Bitte erscheinen Sie pünktlich zu Ihrem Termin. 
             Bei Verspätung oder Verhinderung kontaktieren Sie bitte die Werkstatt direkt.
@@ -1155,6 +1232,9 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
   bookingId: string
   customerNotes?: string
   vehicleInfo?: string
+  appointmentStart?: Date
+  appointmentEnd?: Date
+  serviceType?: string
 }) {
   const paymentMethodText = data.paymentMethod === 'PAY_ONSITE' 
     ? 'Zahlung vor Ort' 
@@ -1264,8 +1344,13 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
           <p style="margin-top: 30px; padding: 15px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 4px;">
             <strong>📋 Nächste Schritte:</strong><br>
             - Reifen bestellen (falls noch nicht vorrätig)<br>
-            - Termin im Kalender vormerken<br>
+            - ✅ <strong>Termin wurde bereits in Ihrem Google Kalender eingetragen</strong><br>
             - Bei Bedarf Kunde kontaktieren
+          </p>
+
+          <p style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 4px;">
+            <strong>📅 Google Kalender:</strong> Der Termin wurde automatisch in Ihren verbundenen Google Kalender eingetragen. 
+            Sie finden dort alle Details zum Auftrag inklusive Kundeninformationen und Fahrzeugdaten.
           </p>
         </div>
         <div class="footer">

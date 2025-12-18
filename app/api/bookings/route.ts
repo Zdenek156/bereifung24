@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate } from '@/lib/email'
+import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate, createICSFile } from '@/lib/email'
 import { getBusySlots, generateAvailableSlots, createCalendarEvent, updateCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 
 // GET /api/bookings - Get all bookings for current customer
@@ -993,6 +993,30 @@ export async function POST(req: NextRequest) {
     })
     const appointmentTimeFormatted = new Date(appointmentDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' })
 
+    // Prepare appointment times for ICS
+    const emailAppointmentStart = new Date(appointmentDate)
+    const emailAppointmentEnd = new Date(appointmentEndTime || new Date(emailAppointmentStart.getTime() + estimatedDuration * 60000))
+
+    // Determine service type for emails
+    const emailServiceType = completeOffer.tireRequest.additionalNotes?.toUpperCase().includes('BREMSEN-SERVICE') 
+      ? 'Bremsenwechsel' 
+      : completeOffer.tireRequest.additionalNotes?.toUpperCase().includes('BATTERIE')
+      ? 'Batteriewechsel'
+      : completeOffer.tireRequest.additionalNotes?.toUpperCase().includes('KLIMASERVICE')
+      ? 'Klimaservice'
+      : 'Reifenwechsel'
+
+    // Create ICS file for customer
+    const customerICS = createICSFile({
+      start: emailAppointmentStart,
+      end: emailAppointmentEnd,
+      summary: `${emailServiceType} - ${completeOffer.workshop.companyName}`,
+      description: `${emailServiceType} bei ${completeOffer.workshop.companyName}\\n\\nReifen: ${completeOffer.tireBrand} ${completeOffer.tireModel}\\nGröße: ${tireSize}\\nPreis: ${completeOffer.price.toFixed(2)} €\\n\\nBuchungsnummer: #${booking.id.substring(0, 8).toUpperCase()}${customerMessage ? `\\n\\nIhre Nachricht: ${customerMessage}` : ''}`,
+      location: `${completeOffer.workshop.companyName}, ${completeOffer.workshop.user.street}, ${completeOffer.workshop.user.zipCode} ${completeOffer.workshop.user.city}`,
+      organizerEmail: completeOffer.workshop.user.email,
+      attendeeEmail: completeOffer.tireRequest.customer.user.email
+    })
+
     // Send confirmation email to customer
     try {
       const customerEmailData = bookingConfirmationCustomerEmailTemplate({
@@ -1009,13 +1033,21 @@ export async function POST(req: NextRequest) {
         totalPrice: completeOffer.price,
         paymentMethod: paymentMethod || 'PAY_ONSITE',
         bookingId: booking.id,
-        customerNotes: customerMessage
+        customerNotes: customerMessage,
+        appointmentStart: emailAppointmentStart,
+        appointmentEnd: emailAppointmentEnd,
+        serviceType: emailServiceType
       })
 
       await sendEmail({
         to: completeOffer.tireRequest.customer.user.email,
         subject: customerEmailData.subject,
-        html: customerEmailData.html
+        html: customerEmailData.html,
+        attachments: [{
+          filename: 'termin.ics',
+          content: customerICS,
+          contentType: 'text/calendar; charset=utf-8; method=REQUEST'
+        }]
       })
     } catch (emailError) {
       console.error('Failed to send customer confirmation email:', emailError)
@@ -1029,6 +1061,13 @@ export async function POST(req: NextRequest) {
         // Use selected tire option or fallback to main offer data
         const tireBrand = selectedTireOption?.brand || completeOffer.tireBrand
         const tireModel = selectedTireOption?.model || completeOffer.tireModel
+        
+        // Build vehicle info if available
+        let vehicleInfo = ''
+        if (completeOffer.tireRequest.vehicle) {
+          const v = completeOffer.tireRequest.vehicle
+          vehicleInfo = `${v.make} ${v.model}${v.year ? ` (${v.year})` : ''}${v.licensePlate ? ` - ${v.licensePlate}` : ''}`
+        }
         
         const workshopEmailData = bookingConfirmationWorkshopEmailTemplate({
           workshopName: completeOffer.workshop.companyName,
@@ -1045,7 +1084,11 @@ export async function POST(req: NextRequest) {
           totalPrice: completeOffer.price,
           paymentMethod: paymentMethod || 'PAY_ONSITE',
           bookingId: booking.id,
-          customerNotes: customerMessage
+          customerNotes: customerMessage,
+          vehicleInfo,
+          appointmentStart: emailAppointmentStart,
+          appointmentEnd: emailAppointmentEnd,
+          serviceType: emailServiceType
         })
 
         await sendEmail({

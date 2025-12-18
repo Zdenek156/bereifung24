@@ -1633,6 +1633,83 @@ export default function BrowseRequestsPage() {
       {showOfferForm && selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {(() => {
+              // Prüfe ob Anfrage abgelaufen ist
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              const needByDate = new Date(selectedRequest.needByDate)
+              needByDate.setHours(0, 0, 0, 0)
+              const isExpired = needByDate < today
+              
+              // Prüfe ob bereits angenommen
+              const hasAcceptedOffer = selectedRequest.status === 'ACCEPTED' || 
+                                      selectedRequest.offers.some(offer => offer.status === 'ACCEPTED')
+              
+              if (isExpired || hasAcceptedOffer) {
+                return (
+                  <>
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold text-gray-900">
+                          {isExpired ? 'Anfrage abgelaufen' : 'Anfrage bereits vergeben'}
+                        </h2>
+                        <button
+                          onClick={() => {
+                            setShowOfferForm(false)
+                            setSelectedRequest(null)
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                        <div className="flex items-start gap-3">
+                          <svg className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <div>
+                            <h3 className="text-lg font-semibold text-orange-900 mb-2">
+                              {isExpired ? '⏰ Diese Anfrage ist abgelaufen' : '✅ Auftrag bereits vergeben'}
+                            </h3>
+                            <p className="text-orange-800">
+                              {isExpired 
+                                ? `Das gewünschte Datum (${new Date(selectedRequest.needByDate).toLocaleDateString('de-DE', { 
+                                    day: '2-digit', 
+                                    month: 'long', 
+                                    year: 'numeric' 
+                                  })}) ist bereits verstrichen. Der Kunde hat diese Anfrage möglicherweise anderweitig gelöst oder benötigt den Service nicht mehr.`
+                                : 'Der Kunde hat bereits ein Angebot von einer anderen Werkstatt angenommen. Diese Anfrage ist nicht mehr verfügbar.'}
+                            </p>
+                            <p className="text-sm text-orange-700 mt-3">
+                              Bitte sehen Sie sich andere verfügbare Anfragen an.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-6 flex justify-end">
+                        <button
+                          onClick={() => {
+                            setShowOfferForm(false)
+                            setSelectedRequest(null)
+                          }}
+                          className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                          Schließen
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )
+              }
+              
+              // Normale Anzeige wenn nicht abgelaufen
+              return (
+                <>
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Angebot erstellen</h2>
@@ -2403,6 +2480,9 @@ export default function BrowseRequestsPage() {
                 </button>
               </div>
             </form>
+                </>
+              )
+            })()}
           </div>
         </div>
       )}

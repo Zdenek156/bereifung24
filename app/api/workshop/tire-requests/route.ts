@@ -37,11 +37,17 @@ export async function GET() {
       )
     }
 
-    // Hole alle offenen Anfragen
+    // Hole alle offenen Anfragen (nur die, deren needByDate noch nicht abgelaufen ist)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Setze auf Mitternacht für korrekten Vergleich
+    
     const allRequests = await prisma.tireRequest.findMany({
       where: {
         status: {
           in: ['PENDING', 'OPEN', 'QUOTED'] // Anfragen die noch offen sind oder bereits Angebote haben
+        },
+        needByDate: {
+          gte: today // Nur Anfragen zeigen, deren Datum noch nicht abgelaufen ist
         }
       },
       select: {

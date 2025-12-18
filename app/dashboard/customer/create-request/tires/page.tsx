@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import DatePicker from '@/components/DatePicker'
 
 const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
 const ASPECT_RATIOS = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
@@ -977,20 +978,20 @@ export default function CreateRequestPage() {
               Standort & Zeitrahmen
             </h3>
             <div className="space-y-6">
+              {/* Benötigt bis */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Benötigt bis *
-                </label>
-                <input
-                  type="date"
-                  name="needByDate"
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bis wann benötigen Sie den Service? *
+                  </label>
+                  <p className="text-xs text-gray-600">⏰ Nach diesem Datum wird Ihre Anfrage automatisch für Werkstätten ausgeblendet. Wählen Sie ein realistisches Datum.</p>
+                </div>
+                <DatePicker
+                  selectedDate={formData.needByDate}
+                  onChange={(date) => setFormData({ ...formData, needByDate: date })}
+                  minDate={minDateString}
                   required
-                  value={formData.needByDate}
-                  onChange={handleChange}
-                  min={minDateString}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
-                <p className="mt-1 text-xs text-gray-500">Mindestens 7 Tage im Voraus</p>
               </div>
 
               <div>

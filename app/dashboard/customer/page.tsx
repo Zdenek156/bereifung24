@@ -12,7 +12,7 @@ interface DashboardStats {
 }
 
 export default function CustomerDashboard() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [stats, setStats] = useState<DashboardStats>({
@@ -25,18 +25,6 @@ export default function CustomerDashboard() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push('/login')
-      return
-    }
-
-    if (session.user.role !== 'CUSTOMER') {
-      router.push('/dashboard')
-      return
-    }
-
     // Lade Dashboard-Statistiken
     const fetchStats = async () => {
       try {
@@ -53,7 +41,7 @@ export default function CustomerDashboard() {
     }
 
     fetchStats()
-  }, [session, status, router])
+  }, [])
 
   // Check URL parameters for success message
   useEffect(() => {
@@ -83,285 +71,309 @@ export default function CustomerDashboard() {
     }
   }, [searchParams])
 
-  if (status === 'loading' || !session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Willkommen, {session.user.name || 'Kunde'}!
-              </h1>
-              <p className="mt-1 text-sm text-gray-600">Kunden-Dashboard</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Willkommen, {session?.user?.name || 'Kunde'}!
+        </h1>
+        <p className="mt-2 text-gray-600">
+          Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
+        </p>
+      </div>
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg shadow-md">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
             </div>
-            <button
-              onClick={() => {
-                fetch('/api/auth/signout', { method: 'POST' })
-                router.push('/login')
-              }}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Abmelden
-            </button>
+            <div className="ml-3">
+              <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="inline-flex text-green-400 hover:text-green-500 focus:outline-none"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg shadow-md">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700 font-medium">{successMessage}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setSuccessMessage(null)}
-                  className="inline-flex text-green-400 hover:text-green-500 focus:outline-none"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
+      {/* Welcome & Instructions Section */}
+      <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-8 mb-8 border border-primary-100">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
-        )}
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              🎯 So funktioniert Bereifung24
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Mit unserem Service erhalten Sie schnell und unkompliziert Angebote von Werkstätten in Ihrer Nähe. 
+              Vergleichen Sie Preise und wählen Sie das beste Angebot für sich aus.
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Anfrage erstellen</h3>
+                    <p className="text-sm text-gray-600">
+                      Wählen Sie Ihre Reifengröße oder einen anderen Service aus. Die Anfrage ist komplett kostenlos und unverbindlich.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        {/* Welcome & Instructions Section */}
-        <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-6 mb-8 border border-primary-100">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Angebote erhalten</h3>
+                    <p className="text-sm text-gray-600">
+                      Werkstätten in Ihrer Nähe werden automatisch benachrichtigt und senden Ihnen passende Angebote zu.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Vergleichen & auswählen</h3>
+                    <p className="text-sm text-gray-600">
+                      Schauen Sie sich alle Angebote in Ruhe an und wählen Sie das beste für sich aus.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Termin vereinbaren</h3>
+                    <p className="text-sm text-gray-600">
+                      Buchen Sie direkt online einen passenden Termin bei der Werkstatt Ihrer Wahl.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">
-                So kommen Sie zu Ihrem günstigen Reifenangebot
-              </h2>
-              <div className="space-y-2 text-gray-700">
-                <div className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                  <p className="pt-0.5">
-                    <strong>Anfrage erstellen:</strong> Wählen Sie die gewünschte Reifengröße aus Ihren gespeicherten Fahrzeugen oder geben Sie die Dimension manuell ein.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                  <p className="pt-0.5">
-                    <strong>Angebote erhalten:</strong> Werkstätten in Ihrer Nähe sehen Ihre Anfrage und senden Ihnen individuelle Angebote zu.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                  <p className="pt-0.5">
-                    <strong>Vergleichen & auswählen:</strong> Vergleichen Sie Preise und Leistungen und wählen Sie das beste Angebot für sich aus.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                  <p className="pt-0.5">
-                    <strong>Termin vereinbaren:</strong> Buchen Sie direkt einen Termin bei der Werkstatt Ihrer Wahl.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-sm text-primary-700 bg-primary-100 rounded-lg px-4 py-2 inline-block">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-medium">Kostenlos, unverbindlich und zeitsparend!</span>
+                <span className="font-medium">100% kostenlos</span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Prominent Call-to-Action Card */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
+                <span className="font-medium">Unverbindlich</span>
               </div>
-              <div className="text-white">
-                <h2 className="text-2xl font-bold mb-1">Neue Reifenanfrage erstellen</h2>
-                <p className="text-primary-100">Erstellen Sie jetzt eine Anfrage und erhalten Sie günstige Angebote von Werkstätten in Ihrer Nähe</p>
+              <div className="flex items-center gap-2 text-sm text-primary-700 bg-white rounded-lg px-4 py-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-medium">Schnell & einfach</span>
               </div>
             </div>
-            <button
-              onClick={() => router.push('/dashboard/customer/select-service')}
-              className="w-full lg:w-auto px-8 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-            >
-              Anfrage erstellen
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Call-to-Action Card */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-xl p-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div className="text-white">
+              <h2 className="text-xl font-bold mb-1">Jetzt Anfrage erstellen</h2>
+              <p className="text-primary-100">Finden Sie die besten Angebote in Ihrer Nähe</p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/dashboard/customer/select-service')}
+            className="w-full lg:w-auto px-8 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+          >
+            Service auswählen
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-600">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Offene Anfragen</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {loading ? (
+                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
+                ) : (
+                  stats.openRequests
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Meine Anfragen</h3>
-            <p className="text-sm text-gray-600 mb-4">Offene und abgeschlossene Anfragen anzeigen</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/requests')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Anfragen ansehen
-            </button>
           </div>
+        </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-600">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Erhaltene Angebote</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {loading ? (
+                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
+                ) : (
+                  stats.receivedOffers
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Meine Fahrzeuge</h3>
-            <p className="text-sm text-gray-600 mb-4">Fahrzeuge und Reifengrößen verwalten</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/vehicles')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Fahrzeuge verwalten
-            </button>
           </div>
+        </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Termine</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {loading ? (
+                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
+                ) : (
+                  stats.completedBookings
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Termine</h3>
-            <p className="text-sm text-gray-600 mb-4">Gebuchte Werkstatttermine verwalten</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/appointments')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Termine ansehen
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mb-4">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Meine Bewertungen</h3>
-            <p className="text-sm text-gray-600 mb-4">Werkstätten bewerten und Erfahrungen teilen</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/appointments')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Bewertungen verwalten
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-4">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Persönliche Daten</h3>
-            <p className="text-sm text-gray-600 mb-4">Rechnungsdaten und Einstellungen</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/settings')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Einstellungen öffnen
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
-              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Reifenhistorie</h3>
-            <p className="text-sm text-gray-600 mb-4">Alle gekauften Reifen anzeigen</p>
-            <button
-              onClick={() => router.push('/dashboard/customer/tire-history')}
-              className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Historie ansehen
-            </button>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-gray-600">Offene Anfragen</p>
-            <p className="mt-2 text-3xl font-bold text-primary-600">
-              {loading ? (
-                <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-              ) : (
-                stats.openRequests
-              )}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-gray-600">Erhaltene Angebote</p>
-            <p className="mt-2 text-3xl font-bold text-green-600">
-              {loading ? (
-                <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-              ) : (
-                stats.receivedOffers
-              )}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-gray-600">Abgeschlossene Aufträge</p>
-            <p className="mt-2 text-3xl font-bold text-blue-600">
-              {loading ? (
-                <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-              ) : (
-                stats.completedBookings
-              )}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-gray-600">Gespeicherte Fahrzeuge</p>
-            <p className="mt-2 text-3xl font-bold text-purple-600">
-              {loading ? (
-                <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
-              ) : (
-                stats.savedVehicles
-              )}
-            </p>
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-600">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Fahrzeuge</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {loading ? (
+                  <span className="inline-block animate-pulse bg-gray-200 rounded w-12 h-9"></span>
+                ) : (
+                  stats.savedVehicles
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Schnellzugriff</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => router.push('/dashboard/customer/requests')}
+            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Meine Anfragen</h3>
+                <p className="text-sm text-gray-600">Angebote vergleichen</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/dashboard/customer/vehicles')}
+            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Fahrzeuge</h3>
+                <p className="text-sm text-gray-600">Verwaltung</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/dashboard/customer/appointments')}
+            className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Termine</h3>
+                <p className="text-sm text-gray-600">Übersicht</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

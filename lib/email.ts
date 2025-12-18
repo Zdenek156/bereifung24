@@ -1,15 +1,51 @@
 import nodemailer from 'nodemailer'
+import { prisma } from '@/lib/prisma'
 
-// Email Transporter erstellen
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: false, // true für Port 465, false für andere Ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-})
+// Email Settings aus Datenbank holen
+async function getEmailSettings() {
+  try {
+    const settings = await prisma.adminApiSetting.findMany({
+      where: {
+        key: {
+          in: ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
+        }
+      }
+    })
+
+    const config: any = {}
+    settings.forEach(setting => {
+      switch (setting.key) {
+        case 'EMAIL_HOST':
+          config.host = setting.value
+          break
+        case 'EMAIL_PORT':
+          config.port = parseInt(setting.value || '587')
+          break
+        case 'EMAIL_USER':
+          config.user = setting.value
+          break
+        case 'EMAIL_PASSWORD':
+          config.password = setting.value
+          break
+        case 'EMAIL_FROM':
+          config.from = setting.value
+          break
+      }
+    })
+
+    return config
+  } catch (error) {
+    console.error('Fehler beim Laden der Email-Einstellungen aus DB:', error)
+    // Fallback zu Umgebungsvariablen
+    return {
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      user: process.env.EMAIL_USER,
+      password: process.env.EMAIL_PASSWORD,
+      from: process.env.EMAIL_FROM,
+    }
+  }
+}
 
 interface EmailOptions {
   to: string
@@ -20,8 +56,11 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, text, html }: EmailOptions) {
   try {
+    // Hole Email-Settings aus Datenbank
+    const config = await getEmailSettings()
+
     // Wenn Email nicht konfiguriert ist, logge nur
-    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
+    if (!config.host || !config.user) {
       console.log('📧 Email würde gesendet werden (nicht konfiguriert):')
       console.log(`   An: ${to}`)
       console.log(`   Betreff: ${subject}`)
@@ -29,8 +68,19 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
       return { success: true, messageId: 'development-mode' }
     }
 
+    // Transporter mit aktuellen Settings erstellen
+    const transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.port === 465, // true für Port 465, false für andere
+      auth: {
+        user: config.user,
+        pass: config.password,
+      },
+    })
+
     const info = await transporter.sendMail({
-      from: `"Bereifung24" <${process.env.EMAIL_FROM}>`,
+      from: `"Bereifung24" <${config.from}>`,
       to,
       subject,
       text,

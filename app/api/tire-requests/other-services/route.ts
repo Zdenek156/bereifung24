@@ -69,10 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceMap: { [key: string]: string } = {
-      'tpms': 'RDKS-Sensoren (Reifendruckkontrolle)',
-      'valve': 'Ventilwechsel',
-      'runflat': 'Runflat-Reifenmontage',
-      'other': validatedData.otherServiceDescription || 'Sonstiger Service'
+      'rdks': 'RDKS anlernen',
+      'valves': 'Ventile tauschen',
+      'wheel_wash': 'Räderwäsche',
+      'tire_storage': 'Reifen einlagern',
+      'balancing': 'Räder auswuchten',
+      'tire_check': 'Reifenzustandsprüfung',
+      'pressure_check': 'Reifendruck prüfen',
+      'other': validatedData.otherServiceDescription || 'Sonstiges'
     }
 
     const selectedServices = validatedData.services.map(s => serviceMap[s] || s)
@@ -148,7 +152,6 @@ export async function POST(request: NextRequest) {
               <ul>
                 <li><strong>Services:</strong> ${selectedServices.join(', ')}</li>
                 <li><strong>Beschreibung:</strong> ${validatedData.serviceDescription}</li>
-                <li><strong>PLZ/Ort:</strong> ${customer.user.zipCode} ${customer.user.city || ''}</li>
                 <li><strong>Benötigt bis:</strong> ${new Date(validatedData.needByDate).toLocaleDateString('de-DE')}</li>
               </ul>
               

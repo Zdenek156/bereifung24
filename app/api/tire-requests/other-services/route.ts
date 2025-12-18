@@ -212,8 +212,8 @@ export async function POST(request: NextRequest) {
                 <h3>⏱️ Wie geht es weiter?</h3>
                 <p>Werkstätten in Ihrer Nähe wurden über Ihre Anfrage informiert und können Ihnen nun Angebote erstellen. Sie erhalten eine E-Mail, sobald ein Angebot eingeht.</p>
 
-                <p style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/requests" class="button">
+                <p style="text-align: center; margin: 30px 0;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/requests" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
                     Meine Anfragen ansehen
                   </a>
                 </p>

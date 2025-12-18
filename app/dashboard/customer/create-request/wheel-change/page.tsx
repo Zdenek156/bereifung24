@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import DatePicker from '@/components/DatePicker'
 
 type Vehicle = {
   id: string
@@ -221,16 +222,17 @@ export default function WheelChangePage() {
 
           {/* Benötigt bis */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis *
-            </label>
-            <input
-              type="date"
-              value={formData.preferredDate}
-              onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
-              placeholder="Hier Datum auswählen"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bis wann benötigen Sie den Service? *
+              </label>
+              <p className="text-xs text-gray-600">⏰ Nach diesem Datum wird Ihre Anfrage automatisch für Werkstätten ausgeblendet. Wählen Sie ein realistisches Datum.</p>
+            </div>
+            <DatePicker
+              selectedDate={formData.preferredDate}
+              onChange={(date) => setFormData({ ...formData, preferredDate: date })}
+              minDate={new Date().toISOString().split('T')[0]}
+              required
             />
           </div>
 

@@ -48,6 +48,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function WorkshopLandingPage({ params }: PageProps) {
   console.log('Looking for slug:', params.slug)
   
+  // Ignore test/admin routes
+  if (params.slug === 'test-calendar' || params.slug.startsWith('dashboard') || params.slug.startsWith('admin')) {
+    notFound()
+    return null
+  }
+  
   const landingPage = await prisma.workshopLandingPage.findUnique({
     where: { slug: params.slug },
     include: {

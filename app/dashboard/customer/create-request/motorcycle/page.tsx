@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import DatePicker from '@/components/DatePicker'
 
 // Motorrad-spezifische Dimensionen (erweitert für alle gängigen Größen)
 const MOTO_WIDTHS = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360, 380, 400]
@@ -843,19 +844,18 @@ export default function MotorcycleTiresPage() {
 
           {/* Benötigt bis */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis *
-            </label>
-            <input
-              type="date"
-              value={formData.needByDate}
-              onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bis wann benötigen Sie den Service? *
+              </label>
+              <p className="text-xs text-gray-600">⏰ Nach diesem Datum wird Ihre Anfrage automatisch für Werkstätten ausgeblendet. Wählen Sie ein realistisches Datum.</p>
+            </div>
+            <DatePicker
+              selectedDate={formData.needByDate}
+              onChange={(date) => setFormData({ ...formData, needByDate: date })}
+              minDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
-              placeholder="Hier Datum auswählen"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-            <p className="mt-1 text-xs text-gray-500">Frühestens in 7 Tagen</p>
           </div>
 
           {/* Suchradius */}

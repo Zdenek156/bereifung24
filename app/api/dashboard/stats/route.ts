@@ -64,12 +64,16 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({
+    const result = {
       openRequests,
       receivedOffers,
       upcomingAppointments,
       savedVehicles
-    })
+    }
+
+    console.log('[Dashboard Stats]', { customerId, userId, result })
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
     return NextResponse.json(

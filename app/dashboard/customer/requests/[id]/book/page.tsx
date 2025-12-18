@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import DatePicker from '@/components/DatePicker'
 
 interface Employee {
   id: string
@@ -705,19 +706,15 @@ export default function BookAppointmentPage() {
               ) : (
                 <>
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Wählen Sie ein Datum
-                    </label>
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => {
-                        setSelectedDate(e.target.value)
+                    <DatePicker
+                      selectedDate={selectedDate}
+                      onChange={(date) => {
+                        setSelectedDate(date)
                         setSelectedSlot(null)
                       }}
-                      min={getMinDate()}
-                      max={getMaxDate()}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      minDate={getMinDate()}
+                      label="Wählen Sie ein Datum"
+                      required
                     />
                   </div>
 

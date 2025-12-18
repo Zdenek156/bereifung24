@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import DatePicker from '@/components/DatePicker'
 
 interface Vehicle {
   id: string
@@ -267,19 +268,13 @@ export default function OtherServicesPage() {
 
           {/* Benötigt bis */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Benötigt bis *
-            </label>
-            <input
-              type="date"
-              value={formData.needByDate}
-              onChange={(e) => setFormData({ ...formData, needByDate: e.target.value })}
-              min={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+            <DatePicker
+              label="Benötigt bis"
+              selectedDate={formData.needByDate}
+              onChange={(date) => setFormData({ ...formData, needByDate: date })}
+              minDate={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               required
-              placeholder="Hier Datum auswählen"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-            <p className="mt-1 text-xs text-gray-500">Frühestens morgen</p>
           </div>
 
           {/* Suchradius */}

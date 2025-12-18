@@ -184,8 +184,25 @@ export default function EditEmployeePage() {
   }
 
   const handleSendSetupEmail = async () => {
-    // TODO: Implement resend setup email
-    alert('Setup-Email Funktion wird noch implementiert.')
+    if (!confirm('Möchten Sie eine neue Setup-Email versenden?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/b24-employees/${employeeId}/send-setup-email`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        alert('Setup-Email wurde erfolgreich versendet.')
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error sending setup email:', error)
+      alert('Fehler beim Versenden der Setup-Email')
+    }
   }
 
   if (loading) {

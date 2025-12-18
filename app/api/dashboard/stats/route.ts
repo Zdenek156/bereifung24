@@ -26,17 +26,15 @@ export async function GET() {
 
     const customerId = customer.id
 
-    // Zähle offene Anfragen (Status: OPEN oder OFFERS_RECEIVED)
+    // Zähle offene Anfragen
     const openRequests = await prisma.tireRequest.count({
       where: {
         customerId: customerId,
-        status: {
-          in: ['OPEN', 'OFFERS_RECEIVED']
-        }
+        status: 'OPEN'
       }
     })
 
-    // Zähle erhaltene Angebote (nur Anfragen mit OFFERS_RECEIVED Status)
+    // Zähle Anfragen mit erhaltenen Angeboten
     const receivedOffers = await prisma.tireRequest.count({
       where: {
         customerId: customerId,

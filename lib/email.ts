@@ -611,8 +611,18 @@ export function offerAcceptedEmailTemplate(data: {
   price: number
   customerPhone?: string
   customerEmail: string
+  customerStreet?: string
+  customerZipCode?: string
+  customerCity?: string
+  vehicleInfo?: string
+  serviceType?: 'TIRE' | 'BRAKE' | 'BATTERY' | 'OTHER'
+  serviceDetails?: string
+  additionalNotes?: string
 }) {
   const subject = `Ihr Angebot wurde angenommen - ${data.customerName}`
+  
+  const isTireService = !data.serviceType || data.serviceType === 'TIRE'
+  const showTireSpecs = isTireService && data.tireSpecs && !data.tireSpecs.startsWith('0/')
   
   const html = `
     <!DOCTYPE html>
@@ -646,17 +656,36 @@ export function offerAcceptedEmailTemplate(data: {
           <div class="info-box">
             <h2 style="margin-top: 0; color: #059669;">Angebotsinformationen</h2>
             
-            <p><strong>Reifen:</strong> ${data.tireBrand} ${data.tireModel}</p>
-            <p><strong>Dimension:</strong> ${data.tireSpecs}</p>
+            ${showTireSpecs ? `
+              <p><strong>Reifen:</strong> ${data.tireBrand} ${data.tireModel}</p>
+              <p><strong>Dimension:</strong> ${data.tireSpecs}</p>
+            ` : ''}
+            
+            ${data.serviceType && data.serviceType !== 'TIRE' ? `
+              <p><strong>Service:</strong> ${data.serviceType === 'BRAKE' ? 'Bremsen-Service' : data.serviceType === 'BATTERY' ? 'Batterie-Service' : 'Sonstige Reifenservices'}</p>
+              ${data.serviceDetails ? `<p><strong>Details:</strong> ${data.serviceDetails}</p>` : ''}
+            ` : ''}
+            
+            ${data.vehicleInfo ? `<p><strong>Fahrzeug:</strong> ${data.vehicleInfo}</p>` : ''}
+            
             <div class="highlight">${data.price.toFixed(2)} €</div>
-            <p style="color: #6b7280; font-size: 14px;">inkl. Montage</p>
+            <p style="color: #6b7280; font-size: 14px;">${showTireSpecs ? 'inkl. Montage' : 'Gesamtpreis'}</p>
+            
+            ${data.additionalNotes ? `<p style="margin-top: 15px; padding: 10px; background: #f3f4f6; border-radius: 4px;"><strong>Zusätzliche Hinweise:</strong><br>${data.additionalNotes.replace(/\n/g, '<br>')}</p>` : ''}
           </div>
           
           <div class="customer-info">
-            <h3 style="margin-top: 0; color: #059669;">Kundenkontakt</h3>
+            <h3 style="margin-top: 0; color: #059669;">Kundenkontakt & Adresse</h3>
             <p><strong>Name:</strong> ${data.customerName}</p>
             <p><strong>E-Mail:</strong> <a href="mailto:${data.customerEmail}">${data.customerEmail}</a></p>
             ${data.customerPhone ? `<p><strong>Telefon:</strong> ${data.customerPhone}</p>` : ''}
+            ${data.customerStreet || data.customerZipCode || data.customerCity ? `
+              <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #d1d5db;">
+                <strong>Adresse:</strong><br>
+                ${data.customerStreet || ''}<br>
+                ${data.customerZipCode || ''} ${data.customerCity || ''}
+              </p>
+            ` : ''}
           </div>
           
           <p><strong>Nächste Schritte:</strong></p>
@@ -686,14 +715,19 @@ Glückwunsch ${data.workshopName}!
 
 Ihr Angebot wurde angenommen:
 
-Reifen: ${data.tireBrand} ${data.tireModel}
-Dimension: ${data.tireSpecs}
+${showTireSpecs ? `Reifen: ${data.tireBrand} ${data.tireModel}\nDimension: ${data.tireSpecs}\n` : ''}
+${data.serviceType && data.serviceType !== 'TIRE' ? `Service: ${data.serviceType === 'BRAKE' ? 'Bremsen-Service' : data.serviceType === 'BATTERY' ? 'Batterie-Service' : 'Sonstige Reifenservices'}\n` : ''}
+${data.serviceDetails ? `Details: ${data.serviceDetails}\n` : ''}
+${data.vehicleInfo ? `Fahrzeug: ${data.vehicleInfo}\n` : ''}
 Preis: ${data.price.toFixed(2)} €
+${data.additionalNotes ? `\nZusätzliche Hinweise:\n${data.additionalNotes}\n` : ''}
 
-Kundenkontakt:
+Kundenkontakt & Adresse:
 Name: ${data.customerName}
 E-Mail: ${data.customerEmail}
-${data.customerPhone ? `Telefon: ${data.customerPhone}` : ''}
+${data.customerPhone ? `Telefon: ${data.customerPhone}\n` : ''}
+${data.customerStreet ? `Straße: ${data.customerStreet}\n` : ''}
+${data.customerZipCode || data.customerCity ? `Ort: ${data.customerZipCode || ''} ${data.customerCity || ''}\n` : ''}
 
 Der Kunde wird nun einen Termin buchen. Sie erhalten eine weitere Benachrichtigung.
 

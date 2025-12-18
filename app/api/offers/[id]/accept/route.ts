@@ -44,7 +44,8 @@ export async function POST(
               include: {
                 user: true
               }
-            }
+            },
+            vehicle: true
           }
         },
         tireOptions: true,
@@ -399,6 +400,35 @@ export async function POST(
       // Prüfe ob Werkstatt Benachrichtigungen für akzeptierte Angebote aktiviert hat
       if (offer.workshop.emailNotifyOfferAccepted) {
         const tireSpecs = `${offer.tireRequest.width}/${offer.tireRequest.aspectRatio} R${offer.tireRequest.diameter}`
+        
+        // Determine service type and extract details
+        let serviceType: 'TIRE' | 'BRAKE' | 'BATTERY' | 'OTHER' = 'TIRE'
+        let serviceDetails = ''
+        
+        if (offer.tireRequest.additionalNotes) {
+          if (offer.tireRequest.additionalNotes.includes('BREMSEN-SERVICE')) {
+            serviceType = 'BRAKE'
+          } else if (offer.tireRequest.additionalNotes.includes('BATTERIE-SERVICE')) {
+            serviceType = 'BATTERY'
+          } else if (offer.tireRequest.additionalNotes.includes('🔧 SONSTIGE REIFENSERVICES')) {
+            serviceType = 'OTHER'
+          }
+          
+          // Extract service details from notes
+          if (serviceType !== 'TIRE') {
+            const notesLines = offer.tireRequest.additionalNotes.split('\n')
+            serviceDetails = notesLines.filter(line => 
+              line && !line.includes('SERVICE') && !line.startsWith('Zusätzliche Hinweise')
+            ).join(' ').trim()
+          }
+        }
+        
+        // Get vehicle info if available
+        let vehicleInfo = ''
+        if (offer.tireRequest.vehicle) {
+          vehicleInfo = `${offer.tireRequest.vehicle.make} ${offer.tireRequest.vehicle.model} (${offer.tireRequest.vehicle.year})`
+        }
+        
         const emailTemplate = offerAcceptedEmailTemplate({
           workshopName: offer.workshop.companyName,
           customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
@@ -407,7 +437,14 @@ export async function POST(
           tireSpecs: tireSpecs,
           price: offer.price,
           customerPhone: offer.tireRequest.customer.user.phone || undefined,
-          customerEmail: offer.tireRequest.customer.user.email
+          customerEmail: offer.tireRequest.customer.user.email,
+          customerStreet: offer.tireRequest.customer.user.street || undefined,
+          customerZipCode: offer.tireRequest.customer.user.zipCode || undefined,
+          customerCity: offer.tireRequest.customer.user.city || undefined,
+          vehicleInfo: vehicleInfo || undefined,
+          serviceType,
+          serviceDetails: serviceDetails || undefined,
+          additionalNotes: offer.tireRequest.additionalNotes || undefined
         })
 
         await sendEmail({

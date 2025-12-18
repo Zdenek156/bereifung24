@@ -100,6 +100,8 @@ export default function BookAppointmentPage() {
   const [calendarUnavailable, setCalendarUnavailable] = useState(false)
   const [showManualBooking, setShowManualBooking] = useState(false)
   const [slotErrorMessage, setSlotErrorMessage] = useState<string>('')
+  const [existingBooking, setExistingBooking] = useState<any>(null)
+  const [checkingBooking, setCheckingBooking] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -124,6 +126,24 @@ export default function BookAppointmentPage() {
     }
   }, [selectedDate, offer])
 
+  const checkExistingBooking = async () => {
+    try {
+      const response = await fetch('/api/bookings')
+      if (response.ok) {
+        const data = await response.json()
+        const booking = data.bookings?.find((b: any) => b.tireRequestId === requestId)
+        if (booking) {
+          setExistingBooking(booking)
+          setShowManualBooking(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing booking:', error)
+    } finally {
+      setCheckingBooking(false)
+    }
+  }
+
   const fetchOfferDetails = async () => {
     try {
       const [offerResponse, requestResponse] = await Promise.all([
@@ -142,6 +162,9 @@ export default function BookAppointmentPage() {
         if (offerData.offer.tireOptions && offerData.offer.tireOptions.length > 0) {
           setSelectedTireOption(offerData.offer.tireOptions[0])
         }
+        
+        // Check if booking already exists
+        await checkExistingBooking()
       } else {
         alert('Fehler beim Laden der Details')
         router.push(`/dashboard/customer/requests/${requestId}`)
@@ -178,9 +201,11 @@ export default function BookAppointmentPage() {
         const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
         console.error('Failed to fetch slots:', errorData)
         
-        if (response.status === 400 || response.status === 401) {
+        // Calendar is unavailable if workshop doesn't have it connected or there's an error
+        if (response.status === 400 || response.status === 401 || response.status === 404) {
           setCalendarUnavailable(true)
-          setSlotErrorMessage(errorData.message || 'Kalender nicht verfügbar')
+          setShowManualBooking(true)
+          setSlotErrorMessage(errorData.message || 'Online-Terminbuchung nicht verfügbar')
         } else {
           setSlotErrorMessage(errorData.message || errorData.error || 'Fehler beim Laden der Zeiten')
         }
@@ -254,7 +279,11 @@ export default function BookAppointmentPage() {
   }
 
   const confirmManualBooking = () => {
-    alert('Vielen Dank! Bitte rufen Sie die Werkstatt an, um Ihren Termin zu vereinbaren.')
+    if (existingBooking) {
+      alert('Sie haben bereits einen Termin für diese Anfrage gebucht. Für Änderungen rufen Sie bitte die Werkstatt an.')
+    } else {
+      alert('Vielen Dank! Bitte rufen Sie die Werkstatt an, um Ihren Termin zu vereinbaren.')
+    }
     router.push('/dashboard/customer/requests')
   }
 
@@ -406,7 +435,7 @@ export default function BookAppointmentPage() {
     })
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || loading || checkingBooking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -606,7 +635,92 @@ export default function BookAppointmentPage() {
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Termin auswählen</h2>
               
-              {calendarUnavailable ? (
+              {existingBooking ? (
+                <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-6">
+                  <div className="flex items-start mb-4">
+                    <svg className="w-6 h-6 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        Sie haben bereits einen Termin gebucht
+                      </h3>
+                      <p className="text-gray-700 mb-4">
+                        Für diese Anfrage wurde bereits ein Termin vereinbart. Für Änderungen oder Stornierungen rufen Sie bitte die Werkstatt direkt an.
+                      </p>
+                      {existingBooking.appointmentDate && (
+                        <div className="bg-white rounded-lg p-4 mb-4">
+                          <p className="text-sm text-gray-600 mb-1">Ihr gebuchter Termin:</p>
+                          <p className="text-lg font-bold text-primary-600">
+                            {new Date(existingBooking.appointmentDate).toLocaleDateString('de-DE', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {offer && (
+                    <div className="bg-white rounded-lg p-4 mb-4">
+                      <h4 className="font-bold text-gray-900 mb-3">Werkstatt Kontaktdaten:</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span className="font-semibold">{offer.workshop.companyName}</span>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-primary-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <a href={`tel:${offer.workshop.phone}`} className="text-primary-600 font-bold text-lg hover:text-primary-700">
+                            {offer.workshop.phone}
+                          </a>
+                        </div>
+
+                        {offer.workshop.email && (
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-gray-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <a href={`mailto:${offer.workshop.email}`} className="text-primary-600 hover:text-primary-700">
+                              {offer.workshop.email}
+                            </a>
+                          </div>
+                        )}
+
+                        {offer.workshop.street && (
+                          <div className="flex items-start">
+                            <svg className="w-5 h-5 text-gray-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <div>
+                              <div>{offer.workshop.street}</div>
+                              <div>{offer.workshop.zipCode} {offer.workshop.city}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={confirmManualBooking}
+                    className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold hover:bg-primary-700 transition-colors"
+                  >
+                    Zurück zu meinen Anfragen
+                  </button>
+                </div>
+              ) : calendarUnavailable ? (
                 <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
                   <div className="flex items-start mb-4">
                     <svg className="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -769,7 +883,7 @@ export default function BookAppointmentPage() {
             </div>
 
             {/* Buchungs-Button */}
-            {!calendarUnavailable && (
+            {!calendarUnavailable && !existingBooking && (
               <div className="bg-white rounded-xl shadow-md p-6">
                 <button
                   onClick={handleBooking}

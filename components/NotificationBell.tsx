@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 interface DashboardStats {
   openRequests: number
   receivedOffers: number
-  completedBookings: number
+  upcomingAppointments: number
   savedVehicles: number
 }
 
@@ -15,7 +15,7 @@ export default function NotificationBell() {
   const [stats, setStats] = useState<DashboardStats>({
     openRequests: 0,
     receivedOffers: 0,
-    completedBookings: 0,
+    upcomingAppointments: 0,
     savedVehicles: 0
   })
   const [loading, setLoading] = useState(true)
@@ -57,7 +57,7 @@ export default function NotificationBell() {
     }
   }, [isOpen])
 
-  const totalNotifications = stats.openRequests + stats.receivedOffers + stats.completedBookings
+  const totalNotifications = stats.openRequests + stats.receivedOffers + stats.upcomingAppointments
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -166,14 +166,14 @@ export default function NotificationBell() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-gray-900">Bevorstehende Termine</h4>
-                      <span className="text-2xl font-bold text-blue-600">{stats.completedBookings}</span>
+                      <span className="text-2xl font-bold text-blue-600">{stats.upcomingAppointments}</span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {stats.completedBookings === 0 
+                      {stats.upcomingAppointments === 0 
                         ? 'Keine anstehenden Termine' 
-                        : stats.completedBookings === 1
+                        : stats.upcomingAppointments === 1
                         ? '1 Termin geplant'
-                        : `${stats.completedBookings} Termine geplant`
+                        : `${stats.upcomingAppointments} Termine geplant`
                       }
                     </p>
                   </div>

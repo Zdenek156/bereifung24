@@ -36,22 +36,26 @@ export async function GET() {
       }
     })
 
-    // Zähle erhaltene Angebote
-    const receivedOffers = await prisma.offer.count({
+    // Zähle erhaltene Angebote (nur Anfragen mit OFFERS_RECEIVED Status)
+    const receivedOffers = await prisma.tireRequest.count({
       where: {
-        tireRequest: {
-          customerId: customerId
-        }
+        customerId: customerId,
+        status: 'OFFERS_RECEIVED'
       }
     })
 
-    // Zähle abgeschlossene Aufträge (Bookings mit Status COMPLETED)
-    const completedBookings = await prisma.booking.count({
+    // Zähle bevorstehende Termine (Bookings mit Status CONFIRMED oder PENDING, Datum in der Zukunft)
+    const upcomingAppointments = await prisma.booking.count({
       where: {
         tireRequest: {
           customerId: customerId
         },
-        status: 'COMPLETED'
+        status: {
+          in: ['CONFIRMED', 'PENDING']
+        },
+        appointmentDate: {
+          gte: new Date()
+        }
       }
     })
 
@@ -65,7 +69,7 @@ export async function GET() {
     return NextResponse.json({
       openRequests,
       receivedOffers,
-      completedBookings,
+      upcomingAppointments,
       savedVehicles
     })
   } catch (error) {

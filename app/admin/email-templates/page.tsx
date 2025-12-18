@@ -175,6 +175,18 @@ export default function EmailTemplatesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="mb-4">
+        <Link
+          href="/admin"
+          className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Zurück zum Dashboard
+        </Link>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Email Templates</h1>
         <div className="flex gap-3">

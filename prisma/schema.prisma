@@ -47,6 +47,28 @@ model AdminApiSetting {
 }
 
 // ============================================
+// EMAIL TEMPLATES
+// ============================================
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., "BOOKING_CONFIRMATION_CUSTOMER", "BOOKING_CONFIRMATION_WORKSHOP"
+  name        String   // Display name: "Terminbestätigung - Kunde"
+  description String?  // What this template is used for
+  subject     String   // Email subject line with placeholders
+  htmlContent String   @db.Text // HTML email content with placeholders
+  
+  // Placeholders documentation (JSON array of available placeholders)
+  placeholders String  @db.Text // JSON: [{"key": "customerName", "description": "Name des Kunden"}]
+  
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("email_templates")
+}
+
+// ============================================
 // USER MANAGEMENT
 // ============================================
 

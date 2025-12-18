@@ -1,6 +1,71 @@
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/prisma'
 
+// Helper function to get template from database by key
+export async function getEmailTemplate(templateKey: string) {
+  try {
+    const template = await prisma.emailTemplate.findUnique({
+      where: { key: templateKey, isActive: true }
+    })
+    return template
+  } catch (error) {
+    console.error(`Error loading email template ${templateKey}:`, error)
+    return null
+  }
+}
+
+// Helper function to replace placeholders in template
+export function replacePlaceholders(content: string, data: Record<string, any>): string {
+  let result = content
+  
+  // Replace all {{key}} placeholders with actual values
+  Object.keys(data).forEach(key => {
+    const regex = new RegExp(`{{${key}}}`, 'g')
+    const value = data[key] !== null && data[key] !== undefined ? String(data[key]) : ''
+    result = result.replace(regex, value)
+  })
+  
+  return result
+}
+
+// Send email using template from database
+export async function sendTemplateEmail(
+  templateKey: string, 
+  to: string, 
+  data: Record<string, any>,
+  attachments?: Array<{
+    filename: string
+    content: string | Buffer
+    contentType?: string
+  }>
+) {
+  try {
+    // Get template from database
+    const template = await getEmailTemplate(templateKey)
+    
+    if (!template) {
+      console.error(`Email template ${templateKey} not found or inactive`)
+      // Fallback: If template not found, throw error
+      throw new Error(`Email template ${templateKey} not found`)
+    }
+
+    // Replace placeholders in subject and content
+    const subject = replacePlaceholders(template.subject, data)
+    const html = replacePlaceholders(template.htmlContent, data)
+
+    // Send email
+    return await sendEmail({
+      to,
+      subject,
+      html,
+      attachments
+    })
+  } catch (error) {
+    console.error('Error sending template email:', error)
+    throw error
+  }
+}
+
 // Email Settings aus Datenbank holen
 async function getEmailSettings() {
   try {

@@ -28,7 +28,7 @@ export function replacePlaceholders(content: string, data: Record<string, any>):
   return result
 }
 
-// Send email using template from database
+// Send email using template from database (with fallback to hard-coded templates)
 export async function sendTemplateEmail(
   templateKey: string, 
   to: string, 
@@ -37,21 +37,30 @@ export async function sendTemplateEmail(
     filename: string
     content: string | Buffer
     contentType?: string
-  }>
+  }>,
+  fallbackTemplate?: { subject: string, html: string }
 ) {
   try {
-    // Get template from database
+    // Try to get template from database first
     const template = await getEmailTemplate(templateKey)
     
-    if (!template) {
-      console.error(`Email template ${templateKey} not found or inactive`)
-      // Fallback: If template not found, throw error
+    let subject: string
+    let html: string
+
+    if (template) {
+      // Use database template
+      subject = replacePlaceholders(template.subject, data)
+      html = replacePlaceholders(template.htmlContent, data)
+    } else if (fallbackTemplate) {
+      // Use provided fallback template (hard-coded)
+      console.log(`⚠️ Using fallback template for ${templateKey} (not found in DB)`)
+      subject = fallbackTemplate.subject
+      html = fallbackTemplate.html
+    } else {
+      // No template available
+      console.error(`Email template ${templateKey} not found and no fallback provided`)
       throw new Error(`Email template ${templateKey} not found`)
     }
-
-    // Replace placeholders in subject and content
-    const subject = replacePlaceholders(template.subject, data)
-    const html = replacePlaceholders(template.htmlContent, data)
 
     // Send email
     return await sendEmail({

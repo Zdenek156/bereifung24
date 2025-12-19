@@ -752,75 +752,121 @@ export default function RequestDetailPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Angebot annehmen</h2>
             
             <div className="space-y-4 mb-6">
-              {/* Show selected tire options summary */}
-              {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && 
-               selectedTireOptionIds.length > 0 && (
-                <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    {request.additionalNotes?.includes('BREMSEN-SERVICE') 
-                      ? 'Ihre gewählten Bremsenpakete:' 
-                      : 'Ihre gewählten Reifen:'}
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    {request.offers.find(o => o.id === selectedOfferId)!.tireOptions!
-                      .filter(opt => selectedTireOptionIds.includes(opt.id))
-                      .map(option => {
-                        const qty = getQuantityForTireOption(option)
-                        const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
-                        return (
-                          <div key={option.id} className="flex justify-between text-gray-700 bg-white p-2 rounded">
-                            <span>• {option.brand} {option.model}{!isBrakeService && ` (${qty} Stück)`}</span>
-                            <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
-                          </div>
-                        )
-                      })}
-                    {(() => {
-                      const offer = request.offers.find(o => o.id === selectedOfferId)!
-                      const calculation = calculateSelectedTotal(offer)
-                      const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
-                      const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
-                      return (
-                        <>
-                          <div className="flex justify-between pt-2 border-t border-primary-300">
-                            <span className="font-medium">
-                              Montagekosten ({calculation.totalQuantity} {isBrakeService ? 'Achsen' : 'Reifen'})
-                              {hasDisposal && ' + Entsorgung'}
-                            </span>
-                            <span className="font-semibold">
-                              {calculation.installationFee.toFixed(2)} €
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-600 pt-1">
-                            <span>⏱️ Dauer</span>
-                            <span>{calculation.duration} Minuten</span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
-                            <div>
-                              <div>Gesamtpreis</div>
-                              <div className="text-xs text-gray-500 font-normal mt-0.5">
-                                {offer.workshop.taxMode === 'NET' 
-                                  ? 'zzgl. MwSt.' 
-                                  : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
-                                  ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
-                                  : 'inkl. MwSt.'}
+              {/* Show selected tire options summary OR wheel change price details */}
+              {selectedOfferId && request.offers.find(o => o.id === selectedOfferId) && (
+                <>
+                  {/* For offers with tire options (car tires, brake service, etc.) */}
+                  {selectedTireOptionIds.length > 0 && (
+                    <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        {request.additionalNotes?.includes('BREMSEN-SERVICE') 
+                          ? 'Ihre gewählten Bremsenpakete:' 
+                          : 'Ihre gewählten Reifen:'}
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {request.offers.find(o => o.id === selectedOfferId)!.tireOptions!
+                          .filter(opt => selectedTireOptionIds.includes(opt.id))
+                          .map(option => {
+                            const qty = getQuantityForTireOption(option)
+                            const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
+                            return (
+                              <div key={option.id} className="flex justify-between text-gray-700 bg-white p-2 rounded">
+                                <span>• {option.brand} {option.model}{!isBrakeService && ` (${qty} Stück)`}</span>
+                                <span className="font-semibold">{(option.pricePerTire * qty).toFixed(2)} €</span>
                               </div>
-                            </div>
-                            <span>
-                              {calculation.totalPrice.toFixed(2)} €
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {isBrakeService ? (
-                              `✓ Gesamt: ${calculation.totalQuantity} Achsen`
-                            ) : (
-                              `✓ Gesamt: ${calculation.totalQuantity} Reifen${hasDisposal ? ' ✓ inkl. Altreifenentsorgung' : ''}`
-                            )}
-                          </p>
-                        </>
-                      )
-                    })()}
-                  </div>
-                </div>
+                            )
+                          })}
+                        {(() => {
+                          const offer = request.offers.find(o => o.id === selectedOfferId)!
+                          const calculation = calculateSelectedTotal(offer)
+                          const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                          const isBrakeService = request.additionalNotes?.includes('BREMSEN-SERVICE')
+                          return (
+                            <>
+                              <div className="flex justify-between pt-2 border-t border-primary-300">
+                                <span className="font-medium">
+                                  Montagekosten ({calculation.totalQuantity} {isBrakeService ? 'Achsen' : 'Reifen'})
+                                  {hasDisposal && ' + Entsorgung'}
+                                </span>
+                                <span className="font-semibold">
+                                  {calculation.installationFee.toFixed(2)} €
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs text-gray-600 pt-1">
+                                <span>⏱️ Dauer</span>
+                                <span>{calculation.duration} Minuten</span>
+                              </div>
+                              <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
+                                <div>
+                                  <div>Gesamtpreis</div>
+                                  <div className="text-xs text-gray-500 font-normal mt-0.5">
+                                    {offer.workshop.taxMode === 'NET' 
+                                      ? 'zzgl. MwSt.' 
+                                      : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                                      ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                                      : 'inkl. MwSt.'}
+                                  </div>
+                                </div>
+                                <span>
+                                  {calculation.totalPrice.toFixed(2)} €
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {isBrakeService ? (
+                                  `✓ Gesamt: ${calculation.totalQuantity} Achsen`
+                                ) : (
+                                  `✓ Gesamt: ${calculation.totalQuantity} Reifen${hasDisposal ? ' ✓ inkl. Altreifenentsorgung' : ''}`
+                                )}
+                              </p>
+                            </>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* For wheel change and other services without tire options */}
+                  {selectedTireOptionIds.length === 0 && (
+                    <div className="border-2 border-primary-300 rounded-lg p-4 bg-primary-50">
+                      <h3 className="font-semibold text-gray-900 mb-3">Leistungen</h3>
+                      <div className="space-y-2 text-sm">
+                        {(() => {
+                          const offer = request.offers.find(o => o.id === selectedOfferId)!
+                          const isWheelChange = request.additionalNotes?.includes('RÄDER UMSTECKEN')
+                          return (
+                            <>
+                              <div className="flex justify-between text-gray-700 bg-white p-2 rounded">
+                                <span>• {isWheelChange ? 'Räder umstecken (4 Räder)' : 'Montage'}</span>
+                                <span className="font-semibold">{offer.installationFee?.toFixed(2) || offer.price.toFixed(2)} €</span>
+                              </div>
+                              {offer.durationMinutes && (
+                                <div className="flex justify-between text-xs text-gray-600 pt-1">
+                                  <span>⏱️ Dauer</span>
+                                  <span>{offer.durationMinutes} Minuten</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
+                                <div>
+                                  <div>Gesamtpreis</div>
+                                  <div className="text-xs text-gray-500 font-normal mt-0.5">
+                                    {offer.workshop.taxMode === 'NET' 
+                                      ? 'zzgl. MwSt.' 
+                                      : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                                      ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                                      : 'inkl. MwSt.'}
+                                  </div>
+                                </div>
+                                <span>
+                                  {offer.price.toFixed(2)} €
+                                </span>
+                              </div>
+                            </>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
               
               {/* Optional Services for Wheel Change */}

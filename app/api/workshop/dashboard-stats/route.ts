@@ -221,11 +221,12 @@ export async function GET() {
       // Erkenne Service-Typ aus additionalNotes
       const isWheelChange = req.additionalNotes?.includes('RÄDER UMSTECKEN')
       const serviceName = isWheelChange ? 'Räder umstecken' : 'Reifenwechsel'
+      const sizeInfo = isWheelChange ? '' : ` (${req.width}/${req.diameter})`
       
       recentActivities.push({
         id: req.id,
         type: 'request',
-        message: `Neue Anfrage für ${serviceName} (${req.width}/${req.diameter})`,
+        message: `Neue Anfrage für ${serviceName}${sizeInfo}`,
         time: formatTimeAgo(req.createdAt)
       })
     }

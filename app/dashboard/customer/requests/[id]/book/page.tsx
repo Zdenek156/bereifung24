@@ -551,6 +551,13 @@ export default function BookAppointmentPage() {
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-600">Gesamtpreis</p>
                     <p className="text-3xl font-bold text-primary-600">{actualPrice.toFixed(2)} €</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {offer.workshop.taxMode === 'NET' 
+                        ? 'zzgl. MwSt.' 
+                        : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                        ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                        : 'inkl. MwSt.'}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -575,6 +582,13 @@ export default function BookAppointmentPage() {
                   <div className="col-span-2">
                     <p className="text-sm text-gray-600">Preis (inkl. Montage)</p>
                     <p className="text-3xl font-bold text-primary-600">{actualPrice.toFixed(2)} €</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {offer.workshop.taxMode === 'NET' 
+                        ? 'zzgl. MwSt.' 
+                        : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                        ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                        : 'inkl. MwSt.'}
+                    </p>
                   </div>
                 </div>
               )}

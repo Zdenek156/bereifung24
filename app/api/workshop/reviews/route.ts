@@ -53,6 +53,8 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     })
 
+    console.log(`Found ${reviews.length} reviews for workshop ${user.workshop.id}`)
+
     // Calculate average rating
     const avgRating = reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length

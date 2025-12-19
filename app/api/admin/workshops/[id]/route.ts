@@ -4,6 +4,60 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, workshopVerifiedEmailTemplate } from '@/lib/email'
 
+// PUT - Update workshop data including assigned employee
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { assignedEmployeeId, ...otherData } = body
+
+    // Filter out undefined/null values
+    const updateData: any = {}
+    if (assignedEmployeeId !== undefined) {
+      updateData.assignedEmployeeId = assignedEmployeeId || null
+    }
+    
+    // Add other fields that might be updated
+    if (otherData.companyName) updateData.companyName = otherData.companyName
+    if (otherData.street) updateData.street = otherData.street
+    if (otherData.zip) updateData.zip = otherData.zip
+    if (otherData.city) updateData.city = otherData.city
+    if (otherData.phone) updateData.phone = otherData.phone
+    if (otherData.email) updateData.email = otherData.email
+    if (otherData.website) updateData.website = otherData.website
+
+    const workshop = await prisma.workshop.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        assignedEmployee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            position: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(workshop)
+
+  } catch (error) {
+    console.error('Workshop update error:', error)
+    return NextResponse.json({ error: 'Failed to update workshop' }, { status: 500 })
+  }
+}
+
 // PATCH - Update workshop verification status
 export async function PATCH(
   req: NextRequest,

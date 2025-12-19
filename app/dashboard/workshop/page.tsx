@@ -39,21 +39,40 @@ export default function WorkshopDashboard() {
   })
   const [loading, setLoading] = useState(true)
 
+  const [activities, setActivities] = useState<RecentActivity[]>([])
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Placeholder für echte API-Calls
-        // TODO: Implementiere echte Statistik-Abfrage
+        const response = await fetch('/api/workshop/dashboard-stats')
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats')
+        }
+        const data = await response.json()
+        
         setStats({
-          newRequests: 12,
-          pendingOffers: 8,
-          acceptedOffers: 5,
-          upcomingAppointments: 7,
-          totalRevenue: 2450,
-          averageRating: 4.7,
-          totalReviews: 28,
-          conversionRate: 38
+          newRequests: data.newRequests || 0,
+          pendingOffers: data.pendingOffers || 0,
+          acceptedOffers: data.acceptedOffers || 0,
+          upcomingAppointments: data.upcomingAppointments || 0,
+          totalRevenue: data.totalRevenue || 0,
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0,
+          conversionRate: data.conversionRate || 0
         })
+
+        // Formatiere Aktivitäten mit Icons und Farben
+        if (data.recentActivities && data.recentActivities.length > 0) {
+          const formattedActivities = data.recentActivities.map((activity: any) => ({
+            id: activity.id,
+            type: activity.type,
+            message: activity.message,
+            time: activity.time,
+            icon: getActivityIcon(activity.type),
+            color: getActivityColor(activity.type)
+          }))
+          setActivities(formattedActivities)
+        }
       } catch (error) {
         console.error('Error fetching stats:', error)
       } finally {
@@ -112,56 +131,52 @@ export default function WorkshopDashboard() {
     }
   ]
 
-  const recentActivities: RecentActivity[] = [
-    {
-      id: '1',
-      type: 'request',
-      message: 'Neue Anfrage für Reifenwechsel (205/55 R16)',
-      time: 'Vor 15 Minuten',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'bg-blue-100 text-blue-600'
-    },
-    {
-      id: '2',
-      type: 'offer_accepted',
-      message: 'Ihr Angebot wurde angenommen - Bremsenwechsel BMW 3er',
-      time: 'Vor 1 Stunde',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'bg-green-100 text-green-600'
-    },
-    {
-      id: '3',
-      type: 'appointment',
-      message: 'Neuer Termin gebucht für morgen 14:00 Uhr',
-      time: 'Vor 2 Stunden',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      color: 'bg-purple-100 text-purple-600'
-    },
-    {
-      id: '4',
-      type: 'review',
-      message: 'Neue 5-Sterne Bewertung von Max Müller',
-      time: 'Vor 3 Stunden',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-      ),
-      color: 'bg-yellow-100 text-yellow-600'
+  // Hilfsfunktionen für Icons und Farben
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'request':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      case 'offer_accepted':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      case 'appointment':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      case 'review':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        )
+      default:
+        return null
     }
-  ]
+  }
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'request':
+        return 'bg-blue-100 text-blue-600'
+      case 'offer_accepted':
+        return 'bg-green-100 text-green-600'
+      case 'appointment':
+        return 'bg-purple-100 text-purple-600'
+      case 'review':
+        return 'bg-yellow-100 text-yellow-600'
+      default:
+        return 'bg-gray-100 text-gray-600'
+    }
+  }
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -334,19 +349,28 @@ export default function WorkshopDashboard() {
         {/* Aktivitäts-Feed */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Letzte Aktivitäten</h2>
-          <div className="space-y-3">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className={`flex-shrink-0 w-10 h-10 ${activity.color} rounded-lg flex items-center justify-center`}>
-                  {activity.icon}
+          {activities.length > 0 ? (
+            <div className="space-y-3">
+              {activities.map((activity) => (
+                <div key={activity.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className={`flex-shrink-0 w-10 h-10 ${activity.color} rounded-lg flex items-center justify-center`}>
+                    {activity.icon}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm text-gray-900">{activity.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  </div>
                 </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-sm text-gray-900">{activity.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm">Noch keine Aktivitäten vorhanden</p>
+            </div>
+          )}
           <div className="mt-4 pt-4 border-t border-gray-100 text-center">
             <Link href="/dashboard/workshop/browse-requests" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
               Alle Aktivitäten anzeigen →

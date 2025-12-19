@@ -185,6 +185,60 @@ export default function CustomerAppointments() {
     return `${getSeasonLabel(season)} - ${width}/${aspectRatio} R${diameter}`
   }
 
+  const getServiceDetails = (booking: Booking) => {
+    const notes = booking.tireRequest.additionalNotes || ''
+    
+    // For brake service with multiple packages
+    if (booking.selectedTireOptions && booking.selectedTireOptions.length > 0) {
+      return (
+        <div className="space-y-1">
+          {booking.selectedTireOptions.map((option) => (
+            <div key={option.id}>
+              {option.brand} {option.model}
+            </div>
+          ))}
+        </div>
+      )
+    }
+    
+    // For services with a single tire option/package
+    if (booking.selectedTireOption) {
+      return <span>{booking.selectedTireOption.name}</span>
+    }
+    
+    // For non-tire services (wheel change, repair, etc.)
+    if (notes.includes('RÄDER UMSTECKEN')) {
+      return <span>Räder umstecken (4 Räder)</span>
+    }
+    if (notes.includes('REIFENREPARATUR')) {
+      return <span>Reifenreparatur</span>
+    }
+    if (notes.includes('ACHSVERMESSUNG')) {
+      return <span>Achsvermessung</span>
+    }
+    if (notes.includes('KLIMASERVICE')) {
+      return <span>Klimaservice</span>
+    }
+    if (notes.includes('BATTERIEWECHSEL')) {
+      return <span>Batteriewechsel</span>
+    }
+    if (notes.includes('BREMSEN-SERVICE') || notes.includes('BREMSENWECHSEL')) {
+      return <span>Bremsen-Service</span>
+    }
+    if (notes.includes('SONSTIGE REIFENSERVICES')) {
+      return <span>Sonstiger Reifenservice</span>
+    }
+    
+    // For tire changes: show tire size and quantity
+    const { width, aspectRatio, diameter, quantity } = booking.tireRequest
+    if (width && width !== '0' && width !== 0) {
+      return <span>{width}/{aspectRatio} R{diameter} - {quantity} Reifen</span>
+    }
+    
+    // Fallback for services without tire dimensions
+    return <span>Service</span>
+  }
+
   const getSeasonLabel = (season: string) => {
     const labels: Record<string, string> = {
       SUMMER: 'Sommerreifen',
@@ -334,22 +388,7 @@ export default function CustomerAppointments() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                         <div>
-                          {booking.selectedTireOptions && booking.selectedTireOptions.length > 0 ? (
-                            // Brake service with multiple packages
-                            <div className="space-y-1">
-                              {booking.selectedTireOptions.map((option, idx) => (
-                                <div key={option.id}>
-                                  {option.brand} {option.model}
-                                </div>
-                              ))}
-                            </div>
-                          ) : booking.selectedTireOption ? (
-                            // Single tire option
-                            <span>{booking.selectedTireOption.name}</span>
-                          ) : (
-                            // Fallback
-                            <span>{`${booking.tireRequest.quantity} Reifen`}</span>
-                          )}
+                          {getServiceDetails(booking)}
                         </div>
                       </div>
                       {booking.tireRequest.vehicle && (

@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Save, Mail, Building2, Activity } from 'lucide-react'
+import { ArrowLeft, Save, Mail, Building2, Activity, TrendingUp } from 'lucide-react'
 
 const AVAILABLE_RESOURCES = [
   { value: 'customers', label: 'Kunden' },
@@ -52,6 +52,50 @@ interface ActivityLog {
   createdAt: string
 }
 
+interface Analytics {
+  employee: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    position?: string
+    department?: string
+  }
+  workshops: {
+    total: number
+    active: number
+    verified: number
+    list: Workshop[]
+  }
+  commissions: {
+    total: number
+    totalAmount: number
+    paidAmount: number
+    pendingAmount: number
+    byWorkshop: Array<{
+      workshopId: string
+      workshopName: string
+      totalCommissions: number
+      totalAmount: number
+      paidAmount: number
+      pendingAmount: number
+    }>
+    byMonth: Array<{
+      month: string
+      count: number
+      amount: number
+      paidAmount: number
+    }>
+  }
+  recentBookings: Array<{
+    id: string
+    appointmentDate: string
+    status: string
+    workshopName: string
+    createdAt: string
+  }>
+}
+
 interface Employee {
   id: string
   email: string
@@ -77,6 +121,8 @@ export default function EditEmployeePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [employee, setEmployee] = useState<Employee | null>(null)
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -134,6 +180,21 @@ export default function EditEmployeePage() {
       console.error('Error fetching employee:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoadingAnalytics(true)
+      const response = await fetch(`/api/admin/b24-employees/${employeeId}/analytics`)
+      if (response.ok) {
+        const data = await response.json()
+        setAnalytics(data)
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error)
+    } finally {
+      setLoadingAnalytics(false)
     }
   }
 
@@ -251,6 +312,10 @@ export default function EditEmployeePage() {
               <TabsTrigger value="workshops">
                 <Building2 className="mr-2 h-4 w-4" />
                 Workshops ({employee.assignedWorkshops.length})
+              </TabsTrigger>
+              <TabsTrigger value="analytics" onClick={() => !analytics && fetchAnalytics()}>
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Analytics
               </TabsTrigger>
               <TabsTrigger value="activity">
                 <Activity className="mr-2 h-4 w-4" />
@@ -465,6 +530,237 @@ export default function EditEmployeePage() {
                         </CardContent>
                       </Card>
                     ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <div className="space-y-6">
+                {loadingAnalytics ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Lade Analytics...</p>
+                  </div>
+                ) : analytics ? (
+                  <>
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-gray-600">
+                            Zugewiesene Werkstätten
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold">{analytics.workshops.total}</p>
+                          <p className="text-sm text-gray-500">
+                            {analytics.workshops.active} aktiv, {analytics.workshops.verified} verifiziert
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-gray-600">
+                            Gesamt Provisionen
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold">{analytics.commissions.total}</p>
+                          <p className="text-sm text-gray-500">
+                            {analytics.commissions.totalAmount.toLocaleString('de-DE', { 
+                              style: 'currency', 
+                              currency: 'EUR' 
+                            })}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-gray-600">
+                            Bezahlt
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-green-600">
+                            {analytics.commissions.paidAmount.toLocaleString('de-DE', { 
+                              style: 'currency', 
+                              currency: 'EUR' 
+                            })}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {((analytics.commissions.paidAmount / analytics.commissions.totalAmount) * 100).toFixed(1)}%
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-gray-600">
+                            Ausstehend
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {analytics.commissions.pendingAmount.toLocaleString('de-DE', { 
+                              style: 'currency', 
+                              currency: 'EUR' 
+                            })}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {((analytics.commissions.pendingAmount / analytics.commissions.totalAmount) * 100).toFixed(1)}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Commissions by Workshop */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Provisionen nach Werkstatt</CardTitle>
+                        <CardDescription>
+                          Umsatzübersicht der zugewiesenen Werkstätten
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {analytics.commissions.byWorkshop.length === 0 ? (
+                          <p className="text-center text-gray-500 py-4">Keine Provisionen vorhanden</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {analytics.commissions.byWorkshop.map(item => (
+                              <div key={item.workshopId} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h4 className="font-medium">{item.workshopName}</h4>
+                                  <Badge variant="outline">
+                                    {item.totalCommissions} Provisionen
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div>
+                                    <p className="text-gray-600">Gesamt</p>
+                                    <p className="font-semibold">
+                                      {item.totalAmount.toLocaleString('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR' 
+                                      })}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">Bezahlt</p>
+                                    <p className="font-semibold text-green-600">
+                                      {item.paidAmount.toLocaleString('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR' 
+                                      })}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">Ausstehend</p>
+                                    <p className="font-semibold text-orange-600">
+                                      {item.pendingAmount.toLocaleString('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR' 
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Monthly Overview */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Monatliche Übersicht</CardTitle>
+                        <CardDescription>
+                          Provisionen nach Monat
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {analytics.commissions.byMonth.length === 0 ? (
+                          <p className="text-center text-gray-500 py-4">Keine Daten vorhanden</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {analytics.commissions.byMonth.map(item => (
+                              <div key={item.month} className="flex items-center justify-between border-b pb-2">
+                                <div>
+                                  <p className="font-medium">
+                                    {new Date(item.month + '-01').toLocaleDateString('de-DE', { 
+                                      year: 'numeric', 
+                                      month: 'long' 
+                                    })}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{item.count} Provisionen</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold">
+                                    {item.amount.toLocaleString('de-DE', { 
+                                      style: 'currency', 
+                                      currency: 'EUR' 
+                                    })}
+                                  </p>
+                                  <p className="text-sm text-green-600">
+                                    {item.paidAmount.toLocaleString('de-DE', { 
+                                      style: 'currency', 
+                                      currency: 'EUR' 
+                                    })} bezahlt
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Recent Bookings */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Letzte Buchungen</CardTitle>
+                        <CardDescription>
+                          Aktuelle Buchungen von zugewiesenen Werkstätten
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {analytics.recentBookings.length === 0 ? (
+                          <p className="text-center text-gray-500 py-4">Keine Buchungen vorhanden</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {analytics.recentBookings.map(booking => (
+                              <div key={booking.id} className="flex items-center justify-between border-b pb-2">
+                                <div>
+                                  <p className="font-medium">{booking.workshopName}</p>
+                                  <p className="text-sm text-gray-600">
+                                    Termin: {new Date(booking.appointmentDate).toLocaleString('de-DE')}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <Badge variant={
+                                    booking.status === 'CONFIRMED' ? 'default' :
+                                    booking.status === 'COMPLETED' ? 'default' :
+                                    booking.status === 'CANCELLED' ? 'secondary' :
+                                    'outline'
+                                  }>
+                                    {booking.status}
+                                  </Badge>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(booking.createdAt).toLocaleDateString('de-DE')}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Klicke auf den Analytics Tab um Daten zu laden</p>
                   </div>
                 )}
               </div>

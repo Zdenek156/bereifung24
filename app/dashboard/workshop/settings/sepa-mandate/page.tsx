@@ -175,7 +175,7 @@ export default function SEPAMandatePage() {
                   <p className="font-semibold text-gray-900">
                     {mandate.mandate.status === 'active' && '✓ Aktiv'}
                     {mandate.mandate.status === 'pending_submission' && '⏳ Wird aktiviert...'}
-                    {mandate.mandate.status === 'submitted' && '📝 Eingereicht'}
+                    {mandate.mandate.status === 'submitted' && 'Eingereicht'}
                   </p>
                 </div>
 

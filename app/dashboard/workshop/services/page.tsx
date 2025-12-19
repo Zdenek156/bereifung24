@@ -48,15 +48,15 @@ const serviceTypeLabels: { [key: string]: string } = {
 }
 
 const availableServiceTypes = [
-  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🔧', hasPackages: true },
-  { value: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🎡', hasPackages: false },
-  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔨', hasPackages: true },
-  { value: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', hasPackages: true },
-  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '🔧📏', hasPackages: true },
-  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️', hasPackages: true },
-  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '🛑', hasPackages: true },
-  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '🔋', hasPackages: true },
-  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '🛠️', hasPackages: true }
+  { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '', hasPackages: true },
+  { value: 'WHEEL_CHANGE', label: 'Räder umstecken', icon: '', hasPackages: true },
+  { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '', hasPackages: true },
+  { value: 'MOTORCYCLE_TIRE', label: 'Motorrad-Reifenwechsel', icon: '', hasPackages: true },
+  { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '', hasPackages: true },
+  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '', hasPackages: true },
+  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '', hasPackages: true },
+  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '', hasPackages: true },
+  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '', hasPackages: true }
 ]
 
 // Package configurations for each service type
@@ -508,7 +508,7 @@ export default function WorkshopServicesPage() {
               {selectedServiceType === 'CLIMATE_SERVICE' && (
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    ⚠️ Hinweis zur Kältemittelbefüllung
+                    Hinweis zur Kältemittelbefüllung
                   </h3>
                   <p className="text-sm text-gray-700 mb-3">
                     Wenn die Klimaanlage nicht voll ist, können zusätzliche Kosten für die Befüllung entstehen.
@@ -539,7 +539,7 @@ export default function WorkshopServicesPage() {
                 <>
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      🔧 RunFlat-Reifen Aufpreis
+                      RunFlat-Reifen Aufpreis
                     </h3>
                     <p className="text-sm text-gray-700 mb-3">
                       Geben Sie den Aufpreis pro Reifen für RunFlat-Reifen an. Dieser wird automatisch beim Angebot dazugerechnet, wenn der Kunde RunFlat-Reifen hat.
@@ -676,7 +676,7 @@ export default function WorkshopServicesPage() {
 
                   <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      📦 Einlagerung (optional)
+                      Einlagerung (optional)
                     </h3>
                     <p className="text-sm text-gray-700 mb-3">
                       Preis für die Einlagerung der abmontierten Räder bis zur nächsten Saison.
@@ -846,7 +846,7 @@ export default function WorkshopServicesPage() {
                       <>
                         {service.runFlatSurcharge && (
                           <div className="mb-2 text-sm text-gray-700 bg-blue-50 p-2 rounded">
-                            🔧 RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
+                            RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
                           </div>
                         )}
                         {service.disposalFee && (

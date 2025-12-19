@@ -1396,35 +1396,35 @@ export default function BrowseRequestsPage() {
                             </h3>
                           ) : isWheelChange ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔄 Räder umstecken
+                              Räder umstecken
                             </h3>
                           ) : isRepair ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔧 Reifenreparatur
+                              Reifenreparatur
                             </h3>
                           ) : isAlignment ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              ⚙️ Achsvermessung
+                              Achsvermessung
                             </h3>
                           ) : isOtherService ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🛠️ Sonstiger Service
+                              Sonstiger Service
                             </h3>
                           ) : isBrakes ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔴 Bremsen-Service
+                              Bremsen-Service
                             </h3>
                           ) : isBattery ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🔋 Batterie-Service
+                              Batterie-Service
                             </h3>
                           ) : isClimate ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              ❄️ Klimaservice
+                              Klimaservice
                             </h3>
                           ) : (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🚗 Autoreifen mit Montage
+                              Autoreifen mit Montage
                             </h3>
                           )}
                           
@@ -1466,9 +1466,6 @@ export default function BrowseRequestsPage() {
               if (frontMatch && rearMatch) {
                 return (
                   <p>
-                    {request.season === 'SUMMER' && '☀️ '}
-                    {request.season === 'WINTER' && '❄️ '}
-                    {request.season === 'ALL_SEASON' && '🌤️ '}
                     Vorne: {frontMatch[1]}/{frontMatch[2]} R{frontMatch[3]}
                     {frontMatch[4] && ` ${frontMatch[4]}`}
                     {frontMatch[5] && ` ${frontMatch[5]}`}
@@ -1482,9 +1479,6 @@ export default function BrowseRequestsPage() {
               
               return (
                 <p>
-                  {request.season === 'SUMMER' && '☀️ '}
-                  {request.season === 'WINTER' && '❄️ '}
-                  {request.season === 'ALL_SEASON' && '🌤️ '}
                   {request.width}/{request.aspectRatio} R{request.diameter}
                   {request.loadIndex && ` ${request.loadIndex}`}
                   {request.speedRating && ` ${request.speedRating}`}

@@ -266,7 +266,7 @@ export default function WorkshopAppointments() {
                     </p>
                     <p className="text-sm text-gray-600">{apt.customer.user.email}</p>
                     {apt.customer.user.phone && (
-                      <p className="text-sm text-gray-600">📞 {apt.customer.user.phone}</p>
+                      <p className="text-sm text-gray-600">{apt.customer.user.phone}</p>
                     )}
                     {apt.customer.user.street && (
                       <p className="text-sm text-gray-600">

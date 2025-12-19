@@ -64,13 +64,17 @@ export default function WorkshopReviews() {
 
   const fetchReviews = async () => {
     try {
+      console.log('Fetching reviews...')
       const response = await fetch('/api/workshop/reviews')
+      console.log('Response status:', response.status, response.statusText)
+      
       if (response.ok) {
         const data = await response.json()
         console.log('Reviews data:', data)
         setReviewsData(data)
       } else {
-        console.error('Failed to fetch reviews:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('Failed to fetch reviews:', response.status, response.statusText, errorText)
       }
     } catch (error) {
       console.error('Error fetching reviews:', error)

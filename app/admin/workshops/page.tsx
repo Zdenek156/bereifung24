@@ -8,6 +8,7 @@ import { WorkshopCRMDialog } from '@/components/WorkshopCRMDialog'
 
 interface Workshop {
   id: string
+  customerNumber: string
   companyName: string
   isVerified: boolean
   createdAt: string
@@ -68,7 +69,14 @@ export default function WorkshopManagementPage() {
     }
   }
 
-  const toggleVerification = async (workshopId: string, currentStatus: boolean) => {
+  const toggleVerification = async (workshopId: string, currentStatus: boolean, workshopName: string) => {
+    const action = currentStatus ? 'sperren' : 'freischalten'
+    const confirmed = window.confirm(
+      `Möchtest du die Werkstatt "${workshopName}" wirklich ${action}?${currentStatus ? '\n\nDie Werkstatt kann keine Anfragen mehr empfangen und keine Angebote erstellen.' : ''}` 
+    )
+    
+    if (!confirmed) return
+
     try {
       const response = await fetch(`/api/admin/workshops/${workshopId}`, {
         method: 'PATCH',
@@ -128,6 +136,7 @@ export default function WorkshopManagementPage() {
       if (!searchTerm) return true
       const term = searchTerm.toLowerCase()
       return (
+        workshop.customerNumber.toLowerCase().includes(term) ||
         workshop.companyName.toLowerCase().includes(term) ||
         workshop.user.email.toLowerCase().includes(term) ||
         workshop.user.city.toLowerCase().includes(term)
@@ -177,7 +186,7 @@ export default function WorkshopManagementPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Firmenname, E-Mail oder Stadt..."
+                placeholder="Kundennummer, Firmenname, E-Mail oder Stadt..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -295,6 +304,9 @@ export default function WorkshopManagementPage() {
                         <h3 className="text-xl font-bold text-gray-900">
                           {workshop.companyName}
                         </h3>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                          {workshop.customerNumber}
+                        </span>
                         {workshop.isVerified ? (
                           <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                             Freigeschaltet
@@ -361,22 +373,36 @@ export default function WorkshopManagementPage() {
                       >
                         CRM / Notizen
                       </button>
-                      <button
-                        onClick={() => toggleVerification(workshop.id, workshop.isVerified)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          workshop.isVerified
-                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                        }`}
-                      >
-                        {workshop.isVerified ? 'Sperren' : 'Freischalten'}
-                      </button>
-                      <button
-                        onClick={() => deleteWorkshop(workshop.id, workshop.companyName)}
-                        className="px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
-                      >
-                        Löschen
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleVerification(workshop.id, workshop.isVerified, workshop.companyName)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            workshop.isVerified
+                              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                              : 'bg-green-500 text-white hover:bg-green-600'
+                          }`}
+                          title={workshop.isVerified ? 'Werkstatt sperren' : 'Werkstatt freischalten'}
+                        >
+                          {workshop.isVerified ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => deleteWorkshop(workshop.id, workshop.companyName)}
+                          className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                          title="Werkstatt löschen"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

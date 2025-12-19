@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
 
       return {
         id: workshop.id,
+        customerNumber: workshop.customerNumber,
         companyName: workshop.companyName,
         isVerified: workshop.isVerified,
         createdAt: workshop.createdAt,

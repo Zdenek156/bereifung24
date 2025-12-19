@@ -64,6 +64,27 @@ export async function POST(request: Request) {
     // SEPA-Mandatsreferenz generieren
     const sepaMandateRef = `B24-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
 
+    // Kundennummer generieren (KD-YYYYMMDD-XXX)
+    const today = new Date()
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '')
+    
+    // Zähler für heute ermitteln
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const todayEnd = new Date(todayStart)
+    todayEnd.setDate(todayEnd.getDate() + 1)
+    
+    const workshopsToday = await prisma.workshop.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lt: todayEnd
+        }
+      }
+    })
+    
+    const counter = (workshopsToday + 1).toString().padStart(3, '0')
+    const customerNumber = `KD-${dateStr}-${counter}`
+
     // User und Workshop erstellen
     const user = await prisma.user.create({
       data: {
@@ -80,6 +101,7 @@ export async function POST(request: Request) {
         role: 'WORKSHOP',
         workshop: {
           create: {
+            customerNumber: customerNumber,
             companyName: validatedData.companyName,
             website: validatedData.website,
             description: validatedData.description,

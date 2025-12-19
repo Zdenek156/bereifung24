@@ -37,6 +37,9 @@ export default function WorkshopReviews() {
   const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [starFilter, setStarFilter] = useState<number | null>(null)
+  const [respondingTo, setRespondingTo] = useState<string | null>(null)
+  const [responseText, setResponseText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -115,6 +118,39 @@ export default function WorkshopReviews() {
   const filteredReviews = reviewsData?.reviews.filter(review => 
     starFilter === null || review.rating === starFilter
   ) || []
+
+  const handleRespondToReview = async (reviewId: string) => {
+    if (!responseText.trim()) {
+      alert('Bitte geben Sie eine Antwort ein')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch(`/api/workshop/reviews/${reviewId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ response: responseText }),
+      })
+
+      if (response.ok) {
+        // Refresh reviews to show the new response
+        await fetchReviews()
+        setRespondingTo(null)
+        setResponseText('')
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Speichern der Antwort')
+      }
+    } catch (error) {
+      console.error('Error submitting response:', error)
+      alert('Fehler beim Speichern der Antwort')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (status === 'loading' || loading) {
     return (
@@ -300,8 +336,41 @@ export default function WorkshopReviews() {
                     </div>
                     <p className="text-blue-800">{review.workshopResponse}</p>
                   </div>
+                ) : respondingTo === review.id ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      placeholder="Schreiben Sie Ihre Antwort..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                      rows={4}
+                      disabled={submitting}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleRespondToReview(review.id)}
+                        disabled={submitting}
+                        className="flex-1 py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {submitting ? 'Wird gesendet...' : 'Antwort senden'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRespondingTo(null)
+                          setResponseText('')
+                        }}
+                        disabled={submitting}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <button className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                  <button
+                    onClick={() => setRespondingTo(review.id)}
+                    className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  >
                     Auf Bewertung antworten
                   </button>
                 )}

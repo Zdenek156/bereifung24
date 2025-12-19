@@ -122,7 +122,8 @@ export async function GET() {
             createdAt: true,
             season: true,
             width: true,
-            diameter: true
+            diameter: true,
+            additionalNotes: true
           }
         }),
         // Neuestes akzeptiertes Angebot
@@ -217,10 +218,14 @@ export async function GET() {
     
     if (recentActivitiesData[0]) {
       const req = recentActivitiesData[0]
+      // Erkenne Service-Typ aus additionalNotes
+      const isWheelChange = req.additionalNotes?.includes('RÄDER UMSTECKEN')
+      const serviceName = isWheelChange ? 'Räder umstecken' : 'Reifenwechsel'
+      
       recentActivities.push({
         id: req.id,
         type: 'request',
-        message: `Neue Anfrage für Reifenwechsel (${req.width}/${req.diameter})`,
+        message: `Neue Anfrage für ${serviceName} (${req.width}/${req.diameter})`,
         time: formatTimeAgo(req.createdAt)
       })
     }
@@ -293,11 +298,28 @@ export async function GET() {
 // Hilfsfunktionen
 function formatTimeAgo(date: Date): string {
   const now = new Date()
-  const diff = now.getTime() - new Date(date).getTime()
+  const targetDate = new Date(date)
+  const diff = now.getTime() - targetDate.getTime()
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
 
+  // Zukünftige Termine (negative Differenz)
+  if (diff < 0) {
+    const absMinutes = Math.abs(minutes)
+    const absHours = Math.abs(hours)
+    const absDays = Math.abs(days)
+
+    if (absMinutes < 60) {
+      return `In ${absMinutes} Minute${absMinutes !== 1 ? 'n' : ''}`
+    } else if (absHours < 24) {
+      return `In ${absHours} Stunde${absHours !== 1 ? 'n' : ''}`
+    } else {
+      return `In ${absDays} Tag${absDays !== 1 ? 'en' : ''}`
+    }
+  }
+
+  // Vergangene Ereignisse
   if (minutes < 60) {
     return `Vor ${minutes} Minute${minutes !== 1 ? 'n' : ''}`
   } else if (hours < 24) {

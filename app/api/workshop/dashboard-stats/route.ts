@@ -6,13 +6,16 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  console.log('🔵 Dashboard Stats API aufgerufen')
+  
   try {
+    console.log('🔍 Hole Session...')
     const session = await getServerSession(authOptions)
 
-    console.log('Dashboard Stats - Session:', session ? { id: session.user.id, email: session.user.email, role: session.user.role } : 'NO SESSION')
+    console.log('📊 Dashboard Stats - Session:', session ? { id: session.user.id, email: session.user.email, role: session.user.role } : 'NO SESSION')
 
     if (!session || session.user.role !== 'WORKSHOP') {
-      console.log('Dashboard Stats - Unauthorized:', { hasSession: !!session, role: session?.user?.role })
+      console.log('❌ Dashboard Stats - Unauthorized:', { hasSession: !!session, role: session?.user?.role })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -267,11 +270,18 @@ export async function GET() {
 
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Error fetching workshop dashboard stats:', error)
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('❌ CRITICAL ERROR in dashboard-stats:', error)
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('❌ Error message:', error instanceof Error ? error.message : String(error))
+    console.error('❌ Error type:', typeof error)
+    console.error('❌ Error constructor:', error?.constructor?.name)
+    
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : String(error),
+        type: error?.constructor?.name || typeof error
+      },
       { status: 500 }
     )
   }

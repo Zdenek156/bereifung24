@@ -80,9 +80,9 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Benachrichtigungen</h3>
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+          <div className="p-3 border-b border-gray-200">
+            <h3 className="text-base font-bold text-gray-900">Benachrichtigungen</h3>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
@@ -98,24 +98,24 @@ export default function NotificationBell() {
                     router.push('/dashboard/customer/requests')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Erhaltene Angebote</h4>
-                      <span className="text-2xl font-bold text-green-600">{stats.receivedOffers}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Erhaltene Angebote</h4>
+                      {stats.receivedOffers > 0 && <span className="text-lg font-bold text-green-600 flex-shrink-0">{stats.receivedOffers}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.receivedOffers === 0 
                         ? 'Keine neuen Angebote' 
                         : stats.receivedOffers === 1
-                        ? '1 neues Angebot verfügbar'
-                        : `${stats.receivedOffers} neue Angebote verfügbar`
+                        ? '1 neues Angebot'
+                        : `${stats.receivedOffers} neue Angebote`
                       }
                     </p>
                   </div>
@@ -127,24 +127,24 @@ export default function NotificationBell() {
                     router.push('/dashboard/customer/requests')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Offene Anfragen</h4>
-                      <span className="text-2xl font-bold text-primary-600">{stats.openRequests}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Offene Anfragen</h4>
+                      {stats.openRequests > 0 && <span className="text-lg font-bold text-primary-600 flex-shrink-0">{stats.openRequests}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.openRequests === 0 
                         ? 'Keine offenen Anfragen' 
                         : stats.openRequests === 1
-                        ? '1 Anfrage wartet auf Angebote'
-                        : `${stats.openRequests} Anfragen warten auf Angebote`
+                        ? '1 Anfrage offen'
+                        : `${stats.openRequests} Anfragen offen`
                       }
                     </p>
                   </div>
@@ -156,21 +156,21 @@ export default function NotificationBell() {
                     router.push('/dashboard/customer/appointments')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Bevorstehende Termine</h4>
-                      <span className="text-2xl font-bold text-blue-600">{stats.upcomingAppointments}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Bevorstehende Termine</h4>
+                      {stats.upcomingAppointments > 0 && <span className="text-lg font-bold text-blue-600 flex-shrink-0">{stats.upcomingAppointments}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.upcomingAppointments === 0 
-                        ? 'Keine anstehenden Termine' 
+                        ? 'Keine Termine' 
                         : stats.upcomingAppointments === 1
                         ? '1 Termin geplant'
                         : `${stats.upcomingAppointments} Termine geplant`

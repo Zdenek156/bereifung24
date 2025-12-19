@@ -80,9 +80,9 @@ export default function WorkshopNotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Benachrichtigungen</h3>
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+          <div className="p-3 border-b border-gray-200">
+            <h3 className="text-base font-bold text-gray-900">Benachrichtigungen</h3>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
@@ -98,24 +98,24 @@ export default function WorkshopNotificationBell() {
                     router.push('/dashboard/workshop/browse-requests')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Neue Anfragen</h4>
-                      <span className="text-2xl font-bold text-blue-600">{stats.newRequests}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Neue Anfragen</h4>
+                      {stats.newRequests > 0 && <span className="text-lg font-bold text-blue-600 flex-shrink-0">{stats.newRequests}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.newRequests === 0 
-                        ? 'Keine neuen Anfragen in Ihrer Nähe' 
+                        ? 'Keine neuen Anfragen' 
                         : stats.newRequests === 1
-                        ? '1 neue Anfrage verfügbar'
-                        : `${stats.newRequests} neue Anfragen verfügbar`
+                        ? '1 neue Anfrage'
+                        : `${stats.newRequests} neue Anfragen`
                       }
                     </p>
                   </div>
@@ -127,24 +127,24 @@ export default function WorkshopNotificationBell() {
                     router.push('/dashboard/workshop/offers')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Angenommene Angebote</h4>
-                      <span className="text-2xl font-bold text-green-600">{stats.acceptedOffers}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Angenommene Angebote</h4>
+                      {stats.acceptedOffers > 0 && <span className="text-lg font-bold text-green-600 flex-shrink-0">{stats.acceptedOffers}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.acceptedOffers === 0 
-                        ? 'Keine neu angenommenen Angebote' 
+                        ? 'Keine angenommenen Angebote' 
                         : stats.acceptedOffers === 1
-                        ? '1 Angebot wurde angenommen'
-                        : `${stats.acceptedOffers} Angebote wurden angenommen`
+                        ? '1 Angebot angenommen'
+                        : `${stats.acceptedOffers} Angebote angenommen`
                       }
                     </p>
                   </div>
@@ -156,24 +156,24 @@ export default function WorkshopNotificationBell() {
                     router.push('/dashboard/workshop/appointments')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Anstehende Termine</h4>
-                      <span className="text-2xl font-bold text-purple-600">{stats.upcomingAppointments}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Anstehende Termine</h4>
+                      {stats.upcomingAppointments > 0 && <span className="text-lg font-bold text-purple-600 flex-shrink-0">{stats.upcomingAppointments}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.upcomingAppointments === 0 
-                        ? 'Keine Termine in den nächsten 7 Tagen' 
+                        ? 'Keine Termine (7 Tage)' 
                         : stats.upcomingAppointments === 1
-                        ? '1 Termin in den nächsten 7 Tagen'
-                        : `${stats.upcomingAppointments} Termine in den nächsten 7 Tagen`
+                        ? '1 Termin (7 Tage)'
+                        : `${stats.upcomingAppointments} Termine (7 Tage)`
                       }
                     </p>
                   </div>
@@ -185,24 +185,24 @@ export default function WorkshopNotificationBell() {
                     router.push('/dashboard/workshop/reviews')
                     setIsOpen(false)
                   }}
-                  className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
+                  className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900">Neue Bewertungen</h4>
-                      <span className="text-2xl font-bold text-yellow-600">{stats.pendingReviews}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">Neue Bewertungen</h4>
+                      {stats.pendingReviews > 0 && <span className="text-lg font-bold text-yellow-600 flex-shrink-0">{stats.pendingReviews}</span>}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {stats.pendingReviews === 0 
                         ? 'Keine neuen Bewertungen' 
                         : stats.pendingReviews === 1
-                        ? '1 neue Bewertung erhalten'
-                        : `${stats.pendingReviews} neue Bewertungen erhalten`
+                        ? '1 neue Bewertung'
+                        : `${stats.pendingReviews} neue Bewertungen`
                       }
                     </p>
                   </div>

@@ -42,16 +42,13 @@ export async function GET() {
           },
         },
         booking: {
-          include: {
+          select: {
+            appointmentDate: true,
             tireRequest: {
               select: {
                 additionalNotes: true,
               },
             },
-          },
-          select: {
-            appointmentDate: true,
-            tireRequest: true,
           },
         },
       },

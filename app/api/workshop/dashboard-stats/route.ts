@@ -25,7 +25,7 @@ export async function GET() {
 
     // Parallelisiere alle Datenbankabfragen für Performance
     const [
-      newRequestsCount,
+      allOffersCount,
       pendingOffersCount,
       acceptedOffersCount,
       upcomingAppointmentsCount,
@@ -33,15 +33,12 @@ export async function GET() {
       reviewsData,
       recentActivitiesData
     ] = await Promise.all([
-      // Neue Anfragen (in Reichweite, noch kein Angebot von uns)
-      prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(DISTINCT tr.id)::bigint as count
-        FROM "TireRequest" tr
-        LEFT JOIN "Offer" o ON o."tireRequestId" = tr.id AND o."workshopId" = ${workshopId}
-        WHERE tr.status IN ('PENDING', 'OPEN', 'QUOTED')
-          AND tr."needByDate" >= CURRENT_DATE
-          AND o.id IS NULL
-      `.then(result => Number(result[0].count)),
+      // Alle Angebote des Workshops (für neue Anfragen)
+      prisma.offer.count({
+        where: {
+          workshopId: workshopId
+        }
+      }),
 
       // Ausstehende Angebote (von uns gesendet, noch nicht akzeptiert/abgelehnt)
       prisma.offer.count({
@@ -184,12 +181,24 @@ export async function GET() {
       ])
     ])
 
-    // Berechne Konversionsrate
-    const totalOffers = await prisma.offer.count({
-      where: { workshopId: workshopId }
+    // Berechne "Neue Anfragen" = Angebote wo der Workshop noch nicht gesendet hat
+    // Das ist die gleiche Logik wie auf der Browse-Requests Seite
+    const allRequestsAvailable = await prisma.tireRequest.count({
+      where: {
+        status: {
+          in: ['PENDING', 'OPEN', 'QUOTED']
+        },
+        needByDate: {
+          gte: new Date()
+        }
+      }
     })
-    const conversionRate = totalOffers > 0 
-      ? Math.round((acceptedOffersCount / totalOffers) * 100) 
+
+    const newRequestsCount = Math.max(0, allRequestsAvailable - allOffersCount)
+
+    // Berechne Konversionsrate
+    const conversionRate = allOffersCount > 0 
+      ? Math.round((acceptedOffersCount / allOffersCount) * 100) 
       : 0
 
     // Formatiere Aktivitäten

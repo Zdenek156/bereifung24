@@ -37,16 +37,21 @@ export async function GET() {
             user: {
               select: {
                 firstName: true,
-                lastName: true,
-                city: true,
               },
             },
           },
         },
         booking: {
           include: {
+            tireRequest: {
+              select: {
+                additionalNotes: true,
+              },
+            },
+          },
+          select: {
+            appointmentDate: true,
             tireRequest: true,
-            offer: true,
           },
         },
       },

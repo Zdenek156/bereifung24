@@ -15,21 +15,12 @@ interface Review {
   customer: {
     user: {
       firstName: string
-      lastName: string
-      city: string | null
     }
   }
   booking: {
     appointmentDate: string
     tireRequest: {
-      season: string
-      width: number
-      aspectRatio: number
-      diameter: number
-    }
-    offer: {
-      tireBrand: string
-      tireModel: string
+      additionalNotes: string | null
     }
   }
 }
@@ -45,6 +36,7 @@ export default function WorkshopReviews() {
   const router = useRouter()
   const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [starFilter, setStarFilter] = useState<number | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -92,6 +84,37 @@ export default function WorkshopReviews() {
     if (rating >= 3) return 'text-yellow-600'
     return 'text-red-600'
   }
+
+  const getServiceName = (additionalNotes: string | null) => {
+    if (!additionalNotes) return 'Service'
+    
+    // Extract service type from emoji prefix
+    if (additionalNotes.includes('🔧 SONSTIGE REIFENSERVICES')) {
+      return 'Sonstige Reifenservices'
+    } else if (additionalNotes.includes('🔄 RÄDERWECHSEL')) {
+      return 'Räderwechsel'
+    } else if (additionalNotes.includes('🛞 REIFENWECHSEL')) {
+      return 'Reifenwechsel'
+    } else if (additionalNotes.includes('🔧 REIFENREPARATUR')) {
+      return 'Reifenreparatur'
+    } else if (additionalNotes.includes('🏍️ MOTORRADREIFEN')) {
+      return 'Motorradreifen'
+    } else if (additionalNotes.includes('📐 ACHSVERMESSUNG')) {
+      return 'Achsvermessung'
+    } else if (additionalNotes.includes('❄️ KLIMASERVICE')) {
+      return 'Klimaservice'
+    } else if (additionalNotes.includes('🔴 BREMSENSERVICE')) {
+      return 'Bremsenservice'
+    } else if (additionalNotes.includes('🔋 BATTERIESERVICE')) {
+      return 'Batterieservice'
+    }
+    
+    return 'Service'
+  }
+
+  const filteredReviews = reviewsData?.reviews.filter(review => 
+    starFilter === null || review.rating === starFilter
+  ) || []
 
   if (status === 'loading' || loading) {
     return (
@@ -164,6 +187,41 @@ export default function WorkshopReviews() {
           </div>
         )}
 
+        {/* Star Filter */}
+        {reviewsData && reviewsData.totalReviews > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Filter nach Bewertung</h2>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setStarFilter(null)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  starFilter === null
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Alle
+              </button>
+              {[5, 4, 3, 2, 1].map(stars => {
+                const count = reviewsData.reviews.filter(r => r.rating === stars).length
+                return (
+                  <button
+                    key={stars}
+                    onClick={() => setStarFilter(stars)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      starFilter === stars
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {stars} ⭐ ({count})
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Reviews List */}
         {!reviewsData || reviewsData.reviews.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -175,21 +233,26 @@ export default function WorkshopReviews() {
               Sie haben noch keine Kundenbewertungen erhalten.
             </p>
           </div>
+        ) : filteredReviews.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Keine Bewertungen mit {starFilter} Sternen</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Versuchen Sie einen anderen Filter.
+            </p>
+          </div>
         ) : (
           <div className="space-y-4">
-            {reviewsData.reviews.map((review) => (
+            {filteredReviews.map((review) => (
               <div key={review.id} className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
                       <p className="font-semibold text-gray-900">
-                        {review.customer.user.firstName} {review.customer.user.lastName}
+                        {review.customer.user.firstName}
                       </p>
-                      {review.customer.user.city && (
-                        <span className="text-sm text-gray-500">
-                          aus {review.customer.user.city}
-                        </span>
-                      )}
                     </div>
                     <p className="text-sm text-gray-500">
                       {new Date(review.createdAt).toLocaleDateString('de-DE', {
@@ -211,12 +274,7 @@ export default function WorkshopReviews() {
 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    <span className="font-medium">Service:</span> {review.booking.offer.tireBrand} {review.booking.offer.tireModel}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {review.booking.tireRequest.width}/{review.booking.tireRequest.aspectRatio} R{review.booking.tireRequest.diameter} • 
-                    {review.booking.tireRequest.season === 'SUMMER' ? ' Sommerreifen' : 
-                     review.booking.tireRequest.season === 'WINTER' ? ' Winterreifen' : ' Ganzjahresreifen'}
+                    <span className="font-medium">Service:</span> {getServiceName(review.booking.tireRequest.additionalNotes)}
                   </p>
                   <p className="text-sm text-gray-600">
                     Termin: {new Date(review.booking.appointmentDate).toLocaleDateString('de-DE')}

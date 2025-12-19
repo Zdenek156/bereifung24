@@ -87,7 +87,7 @@ export async function GET() {
           }
         },
         _sum: {
-          totalPrice: true
+          price: true
         }
       }),
 
@@ -264,7 +264,7 @@ export async function GET() {
       pendingOffers: pendingOffersCount,
       acceptedOffers: acceptedOffersCount,
       upcomingAppointments: upcomingAppointmentsCount,
-      totalRevenue: revenueData._sum.totalPrice || 0,
+      totalRevenue: revenueData._sum.price || 0,
       averageRating: reviewsData._avg.rating || 0,
       totalReviews: reviewsData._count.id,
       conversionRate: conversionRate,

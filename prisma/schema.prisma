@@ -217,6 +217,7 @@ model Workshop {
   workshopServices  WorkshopService[]
   pricingSettings   PricingSettings?
   landingPage       WorkshopLandingPage?
+  crmData           WorkshopCRM?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -946,6 +947,95 @@ model B24EmployeeActivityLog {
   @@index([employeeId])
   @@index([createdAt])
   @@map("b24_employee_activity_logs")
+}
+
+// ============================================
+// WORKSHOP CRM / SALES TRACKING
+// ============================================
+
+model WorkshopCRM {
+  id         String @id @default(cuid())
+  workshopId String
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  // Sales Status
+  leadStatus String @default("NEUKONTAKT") // NEUKONTAKT, INTERESSIERT, VERHANDLUNG, AKTIV, INAKTIV
+  potential  String? // HOCH, MITTEL, NIEDRIG
+  estimatedMonthlyRevenue Decimal? @db.Decimal(10, 2)
+  
+  // Contact Person
+  mainContactName     String?
+  mainContactPosition String?
+  mainContactPhone    String?
+  mainContactEmail    String?
+  decisionMaker       Boolean @default(false)
+  
+  // Competition
+  otherPlatforms String? @db.Text // Comma-separated or JSON
+  
+  // Next Steps
+  nextContactDate DateTime?
+  nextContactType String? // TELEFON, BESUCH, EMAIL
+  followUpNotes   String? @db.Text
+  
+  // Contract Status
+  contractStatus String? // KEIN_VERTRAG, ANGEBOT_GESENDET, VERHANDLUNG, VERTRAG_AKTIV
+  contractStartDate DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  interactions WorkshopInteraction[]
+  notes        WorkshopNote[]
+  
+  @@unique([workshopId])
+  @@map("workshop_crm")
+}
+
+model WorkshopInteraction {
+  id        String @id @default(cuid())
+  crmId     String
+  crm       WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
+  
+  employeeId String?
+  employeeName String // Name of B24 employee who made contact
+  
+  type      String // TELEFON, BESUCH, EMAIL, MEETING
+  date      DateTime
+  duration  Int? // Duration in minutes
+  
+  summary   String @db.Text
+  outcome   String? // POSITIV, NEUTRAL, NEGATIV, FOLLOW_UP_NEEDED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([crmId])
+  @@index([date])
+  @@map("workshop_interactions")
+}
+
+model WorkshopNote {
+  id        String @id @default(cuid())
+  crmId     String
+  crm       WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
+  
+  employeeId String?
+  employeeName String // Name of B24 employee who created note
+  
+  category  String? // ALLGEMEIN, WICHTIG, ANFORDERUNG, PROBLEM, CHANCE
+  title     String?
+  content   String @db.Text
+  
+  isPinned  Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([crmId])
+  @@index([createdAt])
+  @@map("workshop_notes")
 }
 
 // ============================================

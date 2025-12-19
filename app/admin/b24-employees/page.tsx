@@ -146,7 +146,7 @@ export default function B24EmployeesPage() {
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Zurück
+                Zurück zum Dashboard
               </Button>
               <Button onClick={() => router.push('/admin/b24-employees/new')}>
                 <Plus className="mr-2 h-4 w-4" />

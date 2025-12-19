@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { WorkshopCRMDialog } from '@/components/WorkshopCRMDialog'
 
 interface Workshop {
   id: string
@@ -34,6 +35,8 @@ export default function WorkshopManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'verified' | 'pending'>('all')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
+  const [crmDialogOpen, setCrmDialogOpen] = useState(false)
+  const [selectedWorkshop, setSelectedWorkshop] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -350,6 +353,15 @@ export default function WorkshopManagementPage() {
                     {/* Actions */}
                     <div className="ml-4 flex flex-col gap-2">
                       <button
+                        onClick={() => {
+                          setSelectedWorkshop({ id: workshop.id, name: workshop.companyName })
+                          setCrmDialogOpen(true)
+                        }}
+                        className="px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        CRM / Notizen
+                      </button>
+                      <button
                         onClick={() => toggleVerification(workshop.id, workshop.isVerified)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                           workshop.isVerified
@@ -373,6 +385,16 @@ export default function WorkshopManagementPage() {
           </div>
         )}
       </main>
+
+      {/* CRM Dialog */}
+      {selectedWorkshop && (
+        <WorkshopCRMDialog
+          open={crmDialogOpen}
+          onOpenChange={setCrmDialogOpen}
+          workshopId={selectedWorkshop.id}
+          workshopName={selectedWorkshop.name}
+        />
+      )}
     </div>
   )
 }

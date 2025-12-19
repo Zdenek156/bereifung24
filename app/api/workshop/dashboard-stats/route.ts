@@ -7,7 +7,10 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions)
 
+    console.log('Dashboard Stats - Session:', session ? { id: session.user.id, email: session.user.email, role: session.user.role } : 'NO SESSION')
+
     if (!session || session.user.role !== 'WORKSHOP') {
+      console.log('Dashboard Stats - Unauthorized:', { hasSession: !!session, role: session?.user?.role })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

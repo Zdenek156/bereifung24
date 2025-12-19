@@ -77,11 +77,14 @@ export async function GET() {
         }
       }),
 
-      // Umsatz (aus abgeschlossenen Buchungen)
-      prisma.booking.aggregate({
+      // Umsatz (aus abgeschlossenen Buchungen - über Offers)
+      prisma.offer.aggregate({
         where: {
           workshopId: workshopId,
-          status: 'COMPLETED'
+          status: 'ACCEPTED',
+          booking: {
+            status: 'COMPLETED'
+          }
         },
         _sum: {
           totalPrice: true

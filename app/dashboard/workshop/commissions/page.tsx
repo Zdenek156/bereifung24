@@ -29,6 +29,7 @@ interface Commission {
       width: number
       aspectRatio: number
       diameter: number
+      additionalNotes: string | null
     }
   }
 }
@@ -99,6 +100,42 @@ export default function WorkshopCommissions() {
         {labels[status as keyof typeof labels]}
       </span>
     )
+  }
+
+  const getServiceDescription = (commission: Commission) => {
+    const notes = commission.booking.tireRequest.additionalNotes || ''
+    const width = commission.booking.tireRequest.width
+    
+    // Erkenne Service-Typen aus additionalNotes
+    if (notes.includes('RÄDER UMSTECKEN')) {
+      return 'Räder umstecken'
+    }
+    if (notes.includes('REIFENREPARATUR')) {
+      return 'Reifenreparatur'
+    }
+    if (notes.includes('ACHSVERMESSUNG')) {
+      return 'Achsvermessung'
+    }
+    if (notes.includes('BREMSEN-SERVICE')) {
+      return 'Bremsen-Service'
+    }
+    if (notes.includes('BATTERIE-SERVICE')) {
+      return 'Batterie-Service'
+    }
+    if (notes.includes('KLIMASERVICE')) {
+      return 'Klimaservice'
+    }
+    if (notes.includes('SONSTIGE REIFENSERVICES') || notes.includes('SONSTIGE DIENSTLEISTUNG')) {
+      return 'Sonstiger Service'
+    }
+    
+    // Wenn width = 0 und kein erkannter Service, dann generischer Service
+    if (width === 0) {
+      return 'Service'
+    }
+    
+    // Standard: Reifengröße anzeigen
+    return `${commission.booking.tireRequest.width}/${commission.booking.tireRequest.aspectRatio} R${commission.booking.tireRequest.diameter}`
   }
 
   const filteredCommissions = commissionsData?.commissions.filter(comm => {
@@ -282,7 +319,7 @@ export default function WorkshopCommissions() {
                         {comm.booking.customer.user.firstName} {comm.booking.customer.user.lastName}
                       </p>
                       <p className="text-gray-500">
-                        {comm.booking.tireRequest.width}/{comm.booking.tireRequest.aspectRatio} R{comm.booking.tireRequest.diameter}
+                        {getServiceDescription(comm)}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

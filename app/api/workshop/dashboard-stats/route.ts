@@ -266,8 +266,10 @@ export async function GET() {
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching workshop dashboard stats:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

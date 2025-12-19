@@ -152,6 +152,7 @@ model Workshop {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Business Info
+  customerNumber String  @unique @map("customer_number") // Eindeutige Kundennummer (z.B. KD-20231219-001)
   companyName String
   taxId       String?
   website     String?

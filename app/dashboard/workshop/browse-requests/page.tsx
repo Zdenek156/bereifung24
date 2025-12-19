@@ -1392,7 +1392,7 @@ export default function BrowseRequestsPage() {
                         <div className="flex items-center gap-3 mb-2">
                           {isMotorcycle ? (
                             <h3 className="text-xl font-bold text-primary-600">
-                              🏍️ Motorradreifen
+                              Motorradreifen
                             </h3>
                           ) : isWheelChange ? (
                             <h3 className="text-xl font-bold text-primary-600">

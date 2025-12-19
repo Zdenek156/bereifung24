@@ -1481,7 +1481,6 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">✅</span>
                         <span className="block text-base font-semibold text-gray-900">
                           Angebot angenommen
                         </span>
@@ -1504,7 +1503,6 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">📅</span>
                         <span className="block text-base font-semibold text-gray-900">
                           Neue Terminbuchungen
                         </span>
@@ -1527,7 +1525,6 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">⭐</span>
                         <span className="block text-base font-semibold text-gray-900">
                           Neue Bewertungen
                         </span>
@@ -1573,7 +1570,6 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">💰</span>
                         <span className="block text-base font-semibold text-gray-900">
                           Monatliche Provisionsabrechnungen
                         </span>
@@ -1665,13 +1661,13 @@ export default function WorkshopSettings() {
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">🏢 Werkstatt-Kalender</div>
+                        <div className="font-medium text-gray-900">Werkstatt-Kalender</div>
                         <div className="text-sm text-gray-600">
                           Ein gemeinsamer Kalender für die gesamte Werkstatt
                         </div>
                         {employees.some(emp => emp.calendarConnected) && (
                           <div className="text-xs text-red-600 mt-1">
-                            ⚠️ Nicht verfügbar - Mitarbeiter-Kalender bereits verbunden
+                            Nicht verfügbar - Mitarbeiter-Kalender bereits verbunden
                           </div>
                         )}
                       </div>
@@ -1693,13 +1689,13 @@ export default function WorkshopSettings() {
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">👥 Mitarbeiter-Kalender</div>
+                        <div className="font-medium text-gray-900">Mitarbeiter-Kalender</div>
                         <div className="text-sm text-gray-600">
                           Separate Kalender für jeden Mitarbeiter mit individuellen Arbeitszeiten
                         </div>
                         {workshopCalendarConnected && (
                           <div className="text-xs text-red-600 mt-1">
-                            ⚠️ Nicht verfügbar - Werkstatt-Kalender bereits verbunden
+                            Nicht verfügbar - Werkstatt-Kalender bereits verbunden
                           </div>
                         )}
                       </div>

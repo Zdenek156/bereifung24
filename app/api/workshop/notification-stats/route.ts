@@ -19,30 +19,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Workshop not found' }, { status: 404 })
     }
 
-    // Get workshop location for radius search
-    const workshop = await prisma.workshop.findUnique({
-      where: { id: workshopId },
-      select: {
-        latitude: true,
-        longitude: true,
-        serviceRadius: true
-      }
-    })
-
-    if (!workshop || !workshop.latitude || !workshop.longitude) {
-      return NextResponse.json({
-        newRequests: 0,
-        acceptedOffers: 0,
-        upcomingAppointments: 0,
-        pendingReviews: 0
-      })
-    }
-
     const now = new Date()
     const sevenDaysFromNow = new Date()
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7)
 
-    // Count new requests in area (created in last 24 hours, no offers from this workshop yet)
+    // Count new requests (created in last 24 hours, no offers from this workshop yet)
     const twentyFourHoursAgo = new Date()
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
 

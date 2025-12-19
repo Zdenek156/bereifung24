@@ -312,37 +312,37 @@ export default function WorkshopOffers() {
                           const parts = []
                           if (front && front !== 'Keine Arbeiten') parts.push(`Vorne: ${front}`)
                           if (rear && rear !== 'Keine Arbeiten') parts.push(`Hinten: ${rear}`)
-                          return `🔴 Bremsen-Service • ${parts.join(' • ')}`
+                          return `Bremsen-Service • ${parts.join(' • ')}`
                         }
                         
                         // Batterie-Service
                         if (notes.includes('BATTERIE-SERVICE')) {
-                          return '🔋 Batterie-Service'
+                          return 'Batterie-Service'
                         }
                         
                         // Klimaservice
                         if (notes.includes('KLIMASERVICE')) {
-                          return '❄️ Klimaservice'
+                          return 'Klimaservice'
                         }
                         
                         // Achsvermessung
                         if (notes.includes('ACHSVERMESSUNG')) {
-                          return '⚙️ Achsvermessung / Spureinstellung'
+                          return 'Achsvermessung / Spureinstellung'
                         }
                         
                         // Räder umstecken
                         if (notes.includes('RÄDER UMSTECKEN')) {
-                          return '🔄 Räder umstecken (Sommer/Winter)'
+                          return 'Räder umstecken (Sommer/Winter)'
                         }
                         
                         // Reifenreparatur
-                        if (notes.includes('🔧 REIFENREPARATUR') || offer.tireRequest.width === 0) {
-                          return '🔧 Reifenreparatur'
+                        if (notes.includes('REIFENREPARATUR') || offer.tireRequest.width === 0) {
+                          return 'Reifenreparatur'
                         }
                         
                         // Sonstiger Service
-                        if (notes.includes('🔧 SONSTIGE REIFENSERVICES')) {
-                          return '🛠️ Sonstiger Service'
+                        if (notes.includes('SONSTIGE REIFENSERVICES')) {
+                          return 'Sonstiger Service'
                         }
                         
                         // Standard: Reifen

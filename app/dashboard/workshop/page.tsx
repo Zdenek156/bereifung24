@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import NotificationBell from '@/components/NotificationBell'
 
 export default function WorkshopDashboard() {
   const { data: session } = useSession()
@@ -48,7 +49,7 @@ export default function WorkshopDashboard() {
     },
     {
       id: 'services',
-      title: 'Services',
+      title: 'Service Verwaltung',
       description: 'Konfigurieren Sie Ihre angebotenen Dienstleistungen und Service-Pakete.',
       details: 'Definieren Sie welche Services Sie anbieten (Reifen, Bremsen, Klima, etc.), erstellen Sie Service-Pakete, setzen Sie Mindestpreise und verwalten Sie Zusatzoptionen wie Entsorgung oder Express-Service.',
       icon: (
@@ -62,7 +63,7 @@ export default function WorkshopDashboard() {
     },
     {
       id: 'pricing',
-      title: 'Preise',
+      title: 'Preiskalkulation',
       description: 'Verwalten Sie Ihre Preisgestaltung für verschiedene Services und Leistungen.',
       details: 'Legen Sie Basispreise fest, definieren Sie Aufschläge für Reifengrößen, Fahrzeugtypen oder zusätzliche Services. Konfigurieren Sie Montagepreise, Express-Zuschläge und Entsorgungsgebühren.',
       icon: (
@@ -160,33 +161,16 @@ export default function WorkshopDashboard() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Willkommen, {session?.user?.name || 'Werkstatt'}!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Verwalten Sie Ihre Werkstatt und finden Sie neue Kunden über die Bereifung24-Plattform.
-        </p>
-      </div>
-
-      {/* Quick Stats (optional - kann später mit echten Daten gefüllt werden) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Offene Anfragen</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">-</div>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Willkommen, {session?.user?.name || 'Werkstatt'}!
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Verwalten Sie Ihre Werkstatt und finden Sie neue Kunden über die Bereifung24-Plattform.
+          </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Ausstehende Angebote</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">-</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Anstehende Termine</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">-</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Bewertungen</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">-</div>
-        </div>
+        <NotificationBell />
       </div>
 
       {/* Feature Sections */}

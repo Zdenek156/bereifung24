@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import NotificationBell from '@/components/NotificationBell'
+import WorkshopNotificationBell from '@/components/WorkshopNotificationBell'
 
 export default function WorkshopDashboard() {
   const { data: session } = useSession()
@@ -170,7 +170,7 @@ export default function WorkshopDashboard() {
             Verwalten Sie Ihre Werkstatt und finden Sie neue Kunden über die Bereifung24-Plattform.
           </p>
         </div>
-        <NotificationBell />
+        <WorkshopNotificationBell />
       </div>
 
       {/* Feature Sections */}

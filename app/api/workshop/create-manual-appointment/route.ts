@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       where: { userId: session.user.id },
       include: {
         employees: {
-          where: { onVacation: false },
           include: {
             employeeVacations: true,
           }

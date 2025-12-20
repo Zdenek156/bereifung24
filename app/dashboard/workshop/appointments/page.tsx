@@ -47,6 +47,8 @@ export default function WorkshopAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('upcoming')
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -118,18 +120,123 @@ export default function WorkshopAppointments() {
     if (filter === 'all') return true
     if (filter === 'upcoming') {
       // Show all upcoming appointments except COMPLETED and CANCELLED
-      return apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED' && isUpcoming(apt.appointmentDate)
+      return apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
     }
     if (filter === 'completed') return apt.status === 'COMPLETED'
     if (filter === 'cancelled') return apt.status === 'CANCELLED'
+    return true
+  }).filter(apt => {
+    // Additional date filter if a date is selected
+    if (selectedDate) {
+      const aptDate = new Date(apt.appointmentDate).toISOString().split('T')[0]
+      return aptDate === selectedDate
+    }
     return true
   })
 
   const stats = {
     total: appointments.length,
-    upcoming: appointments.filter(a => a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && isUpcoming(a.appointmentDate)).length,
+    upcoming: appointments.filter(a => a.status !== 'COMPLETED' && a.status !== 'CANCELLED').length,
     completed: appointments.filter(a => a.status === 'COMPLETED').length,
     cancelled: appointments.filter(a => a.status === 'CANCELLED').length,
+  }
+
+  // Calendar functions
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    return { daysInMonth, startingDayOfWeek, year, month }
+  }
+
+  const getAppointmentsForDate = (date: string) => {
+    return appointments.filter(apt => {
+      const aptDate = new Date(apt.appointmentDate).toISOString().split('T')[0]
+      return aptDate === date && apt.status !== 'CANCELLED'
+    })
+  }
+
+  const renderCalendar = (monthOffset: number) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + monthOffset, 1)
+    const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(date)
+    const monthName = date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+    
+    const days = []
+    const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1 // Monday = 0
+    
+    // Empty cells for days before month starts
+    for (let i = 0; i < adjustedStartDay; i++) {
+      days.push(<div key={`empty-${i}`} className="aspect-square" />)
+    }
+    
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const dayAppointments = getAppointmentsForDate(dateStr)
+      const isToday = dateStr === new Date().toISOString().split('T')[0]
+      const isSelected = dateStr === selectedDate
+      const isPast = new Date(dateStr) < new Date(new Date().setHours(0, 0, 0, 0))
+      
+      days.push(
+        <button
+          key={day}
+          onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
+          className={`aspect-square p-1 rounded-lg border relative transition-all ${
+            isSelected
+              ? 'bg-primary-600 text-white border-primary-700 shadow-lg'
+              : isToday
+              ? 'bg-blue-50 border-blue-300 hover:bg-blue-100'
+              : isPast
+              ? 'bg-gray-50 text-gray-400 border-gray-200'
+              : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+          }`}
+          title={dayAppointments.length > 0 ? `${dayAppointments.length} Termin(e)` : undefined}
+        >
+          <div className="text-sm font-medium">{day}</div>
+          {dayAppointments.length > 0 && (
+            <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5`}>
+              {dayAppointments.slice(0, 3).map((apt, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isSelected ? 'bg-white' : apt.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-blue-500'
+                  }`}
+                  title={`${apt.appointmentTime} - ${apt.customer.user.firstName} ${apt.customer.user.lastName}`}
+                />
+              ))}
+            </div>
+          )}
+        </button>
+      )
+    }
+    
+    return (
+      <div className="flex-1">
+        <h3 className="text-center font-semibold text-gray-900 mb-3">{monthName}</h3>
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+            <div key={day} className="text-center text-xs font-medium text-gray-600 py-1">
+              {day}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days}
+        </div>
+      </div>
+    )
+  }
+
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  }
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
   }
 
   if (status === 'loading' || loading) {
@@ -163,6 +270,65 @@ export default function WorkshopAppointments() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Calendar View */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Terminkalender</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={prevMonth}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setCurrentMonth(new Date())}
+                className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Heute
+              </button>
+              <button
+                onClick={nextMonth}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex gap-6">
+            {renderCalendar(0)}
+            <div className="hidden lg:block w-px bg-gray-200" />
+            <div className="hidden lg:block flex-1">
+              {renderCalendar(1)}
+            </div>
+          </div>
+          
+          <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Bestätigt</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Sonstige</span>
+            </div>
+          </div>
+          
+          {selectedDate && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                Termine für <strong>{new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                {' '}werden unten angezeigt. Klicken Sie erneut auf das Datum um den Filter zu entfernen.
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow p-4">

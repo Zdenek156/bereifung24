@@ -220,7 +220,7 @@ export default function WorkshopAppointments() {
         <h3 className="text-center text-sm font-bold text-gray-900 mb-1.5">{monthName}</h3>
         <div className="grid grid-cols-7 gap-0.5 mb-1">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-gray-600 py-0.5">
+            <div key={day} className="w-7 text-center text-xs font-medium text-gray-600 py-0.5">
               {day}
             </div>
           ))}

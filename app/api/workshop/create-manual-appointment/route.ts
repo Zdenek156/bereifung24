@@ -150,17 +150,92 @@ export async function POST(request: Request) {
       }
     }
 
+    // Erstelle einen Dummy-Customer für manuelle Termine (oder verwende bestehenden)
+    // Wir suchen nach einem Customer mit dieser Email oder erstellen einen temporären
+    let customer
+    if (customerEmail) {
+      customer = await prisma.customer.findFirst({
+        where: { user: { email: customerEmail } }
+      })
+    }
+    
+    // Falls kein Customer gefunden, erstelle einen System-Customer für manuelle Termine
+    if (!customer) {
+      const systemUser = await prisma.user.findFirst({
+        where: { email: 'system@bereifung24.de' }
+      })
+      
+      if (systemUser) {
+        customer = await prisma.customer.findFirst({
+          where: { userId: systemUser.id }
+        })
+      }
+      
+      // Falls kein System-User existiert, erstelle einen
+      if (!customer) {
+        const newSystemUser = await prisma.user.create({
+          data: {
+            email: 'system@bereifung24.de',
+            password: 'SYSTEM_USER_NO_LOGIN',
+            firstName: 'System',
+            lastName: 'Manuelle Termine',
+            role: 'CUSTOMER',
+            isActive: false,
+            emailVerified: new Date(),
+            phone: '',
+            street: '',
+            zipCode: '',
+            city: ''
+          }
+        })
+        
+        customer = await prisma.customer.create({
+          data: {
+            userId: newSystemUser.id
+          }
+        })
+      }
+    }
+
+    // Erstelle eine minimale TireRequest für manuelle Termine
+    const tireRequest = await prisma.tireRequest.create({
+      data: {
+        customerId: customer.id,
+        serviceType: 'OTHER',
+        status: 'ACCEPTED',
+        description: serviceDescription || 'Manuell erstellter Termin',
+        desiredDate: appointmentDateTime,
+        urgency: 'NORMAL',
+        customerNotes: notes
+      }
+    })
+
+    // Erstelle ein minimales Offer
+    const offer = await prisma.offer.create({
+      data: {
+        tireRequestId: tireRequest.id,
+        workshopId: workshop.id,
+        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Tage gültig
+        status: 'ACCEPTED',
+        totalPrice: 0,
+        serviceDescription: serviceDescription || 'Manuell erstellter Termin'
+      }
+    })
+
     // Erstelle Booking in der Datenbank
     const booking = await prisma.booking.create({
       data: {
+        tireRequestId: tireRequest.id,
+        offerId: offer.id,
+        customerId: customer.id,
         workshopId: workshop.id,
         appointmentDate: appointmentDateTime,
         appointmentTime: time,
         status: 'CONFIRMED',
         employeeId: employee.id,
         googleEventId: googleEventId,
-        // Speichere zusätzliche Infos in notes oder erstelle neue Felder
-        notes: JSON.stringify({
+        // Speichere zusätzliche Infos in customerNotes
+        customerNotes: JSON.stringify({
           manualEntry: true,
           customerName,
           customerPhone,
@@ -176,11 +251,8 @@ export async function POST(request: Request) {
             user: true
           }
         },
-        employee: {
-          include: {
-            user: true
-          }
-        }
+        employee: true,
+        tireRequest: true
       }
     })
 

@@ -163,14 +163,15 @@ export default function WorkshopAppointments() {
   const renderCalendar = (monthOffset: number) => {
     const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + monthOffset, 1)
     const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(date)
-    const monthName = date.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
+    const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+    const monthName = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
     
     const days = []
     const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1 // Monday = 0
     
     // Empty cells for days before month starts
     for (let i = 0; i < adjustedStartDay; i++) {
-      days.push(<div key={`empty-${i}`} className="aspect-square" />)
+      days.push(<div key={`empty-${i}`} className="w-7 h-7" />)
     }
     
     // Days of the month
@@ -185,18 +186,18 @@ export default function WorkshopAppointments() {
         <button
           key={day}
           onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
-          className={`aspect-square p-0 rounded text-[10px] relative transition-colors ${
+          className={`w-7 h-7 flex items-center justify-center rounded text-xs font-medium relative transition-colors ${
             isSelected
-              ? 'bg-primary-600 text-white border-primary-700 font-semibold'
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
               : isToday
-              ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 font-semibold'
+              ? 'ring-1.5 ring-primary-400 text-primary-600 hover:bg-primary-50'
               : isPast
-              ? 'bg-gray-50 text-gray-400 border-gray-200'
-              : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-primary-300'
+              ? 'text-gray-300 cursor-not-allowed'
+              : 'text-gray-900 cursor-pointer hover:bg-primary-50'
           }`}
           title={dayAppointments.length > 0 ? `${dayAppointments.length} Termin(e)` : undefined}
         >
-          <div className="flex items-center justify-center h-full">{day}</div>
+          {day}
           {dayAppointments.length > 0 && (
             <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-0.5`}>
               {dayAppointments.slice(0, 3).map((apt, i) => (
@@ -216,15 +217,15 @@ export default function WorkshopAppointments() {
     
     return (
       <div className="flex-1 min-w-0">
-        <h3 className="text-center text-xs font-semibold text-gray-700 mb-1">{monthName}</h3>
-        <div className="grid grid-cols-7 gap-px mb-px">
+        <h3 className="text-center text-sm font-bold text-gray-900 mb-1.5">{monthName}</h3>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="text-center text-[10px] font-medium text-gray-500 py-0.5">
+            <div key={day} className="text-center text-xs font-medium text-gray-600 py-0.5">
               {day}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-px">
+        <div className="grid grid-cols-7 gap-0.5">
           {days}
         </div>
       </div>
@@ -271,33 +272,30 @@ export default function WorkshopAppointments() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Calendar View */}
-        <div className="bg-white rounded-lg shadow p-3 mb-6">
+        <div className="bg-white border-2 border-gray-300 rounded-lg p-2 mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-gray-900">Terminkalender</h2>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={prevMonth}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setCurrentMonth(new Date())}
-                className="px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
-              >
-                Heute
-              </button>
-              <button
-                onClick={nextMonth}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={prevMonth}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentMonth(new Date())}
+              className="px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Heute
+            </button>
+            <button
+              onClick={nextMonth}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
           
           <div className="flex gap-2">

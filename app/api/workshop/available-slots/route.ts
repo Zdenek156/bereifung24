@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     }
 
     // Bestimme Wochentag
-    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'lowercase' })
+    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     
     // Sammle alle verfügbaren Mitarbeiter für diesen Tag
     const availableEmployees = workshop.employees.filter(emp => {
@@ -50,8 +50,12 @@ export async function GET(request: Request) {
       
       if (isOnVacation) return false
       
-      // Prüfe Arbeitszeiten
-      const workingHour = emp.workingHours.find((wh: any) => wh.dayOfWeek === dayOfWeek)
+      // Prüfe Arbeitszeiten (workingHours ist ein JSON-String)
+      if (!emp.workingHours) return false
+      const workingHours = typeof emp.workingHours === 'string' 
+        ? JSON.parse(emp.workingHours) 
+        : emp.workingHours
+      const workingHour = workingHours.find((wh: any) => wh.dayOfWeek === dayOfWeek)
       return workingHour && workingHour.isWorking
     })
 

@@ -70,11 +70,16 @@ export async function POST(request: Request) {
     }
 
     // Bestimme Wochentag
-    const dayOfWeek = appointmentDateTime.toLocaleDateString('en-US', { weekday: 'lowercase' })
+    const dayOfWeek = appointmentDateTime.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     
     // Finde verfügbare Mitarbeiter
     const availableEmployees = workshop.employees.filter(emp => {
-      const workingHour = emp.workingHours.find((wh: any) => wh.dayOfWeek === dayOfWeek)
+      // workingHours ist ein JSON-String
+      if (!emp.workingHours) return false
+      const workingHours = typeof emp.workingHours === 'string' 
+        ? JSON.parse(emp.workingHours) 
+        : emp.workingHours
+      const workingHour = workingHours.find((wh: any) => wh.dayOfWeek === dayOfWeek)
       return workingHour && workingHour.isWorking
     })
 

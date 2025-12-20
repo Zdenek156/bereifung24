@@ -163,7 +163,7 @@ export default function WorkshopAppointments() {
   const renderCalendar = (monthOffset: number) => {
     const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + monthOffset, 1)
     const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(date)
-    const monthName = date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+    const monthName = date.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
     
     const days = []
     const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1 // Monday = 0
@@ -185,7 +185,7 @@ export default function WorkshopAppointments() {
         <button
           key={day}
           onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
-          className={`aspect-square p-0.5 rounded border text-xs relative transition-colors ${
+          className={`aspect-square p-0 rounded text-[10px] relative transition-colors ${
             isSelected
               ? 'bg-primary-600 text-white border-primary-700 font-semibold'
               : isToday
@@ -216,15 +216,15 @@ export default function WorkshopAppointments() {
     
     return (
       <div className="flex-1 min-w-0">
-        <h3 className="text-center text-sm font-semibold text-gray-700 mb-2">{monthName}</h3>
-        <div className="grid grid-cols-7 gap-0.5 mb-1">
+        <h3 className="text-center text-xs font-semibold text-gray-700 mb-1">{monthName}</h3>
+        <div className="grid grid-cols-7 gap-px mb-px">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+            <div key={day} className="text-center text-[10px] font-medium text-gray-500 py-0.5">
               {day}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-7 gap-px">
           {days}
         </div>
       </div>
@@ -271,36 +271,36 @@ export default function WorkshopAppointments() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Calendar View */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">Terminkalender</h2>
+        <div className="bg-white rounded-lg shadow p-3 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-gray-900">Terminkalender</h2>
             <div className="flex items-center gap-1">
               <button
                 onClick={prevMonth}
-                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
               >
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
                 onClick={() => setCurrentMonth(new Date())}
-                className="px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                className="px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
               >
                 Heute
               </button>
               <button
                 onClick={nextMonth}
-                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
               >
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {renderCalendar(0)}
             <div className="hidden md:block w-px bg-gray-200" />
             <div className="hidden md:block flex-1 min-w-0">

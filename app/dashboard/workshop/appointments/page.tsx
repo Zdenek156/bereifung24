@@ -69,7 +69,16 @@ export default function WorkshopAppointments() {
       const response = await fetch('/api/workshop/appointments')
       if (response.ok) {
         const data = await response.json()
+        console.log('Loaded appointments:', data.length)
+        console.log('Appointments data:', data.map((apt: any) => ({
+          id: apt.id,
+          status: apt.status,
+          date: apt.appointmentDate,
+          customer: apt.customer?.user?.email
+        })))
         setAppointments(data)
+      } else {
+        console.error('Failed to fetch appointments:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -99,12 +108,18 @@ export default function WorkshopAppointments() {
   }
 
   const isUpcoming = (date: string) => {
-    return new Date(date) >= new Date()
+    const appointmentDate = new Date(date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return appointmentDate >= today
   }
 
   const filteredAppointments = appointments.filter(apt => {
     if (filter === 'all') return true
-    if (filter === 'upcoming') return apt.status === 'CONFIRMED' && isUpcoming(apt.appointmentDate)
+    if (filter === 'upcoming') {
+      // Show all upcoming appointments except COMPLETED and CANCELLED
+      return apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED' && isUpcoming(apt.appointmentDate)
+    }
     if (filter === 'completed') return apt.status === 'COMPLETED'
     if (filter === 'cancelled') return apt.status === 'CANCELLED'
     return true
@@ -112,7 +127,7 @@ export default function WorkshopAppointments() {
 
   const stats = {
     total: appointments.length,
-    upcoming: appointments.filter(a => a.status === 'CONFIRMED' && isUpcoming(a.appointmentDate)).length,
+    upcoming: appointments.filter(a => a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && isUpcoming(a.appointmentDate)).length,
     completed: appointments.filter(a => a.status === 'COMPLETED').length,
     cancelled: appointments.filter(a => a.status === 'CANCELLED').length,
   }

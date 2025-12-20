@@ -26,8 +26,7 @@ export async function GET(request: Request) {
         employees: {
           where: { onVacation: false },
           include: {
-            vacations: true,
-            workingHours: true,
+            employeeVacations: true,
           }
         }
       }
@@ -43,7 +42,7 @@ export async function GET(request: Request) {
     // Sammle alle verfügbaren Mitarbeiter für diesen Tag
     const availableEmployees = workshop.employees.filter(emp => {
       // Prüfe ob Urlaub
-      const isOnVacation = emp.vacations.some(v => {
+      const isOnVacation = emp.employeeVacations.some(v => {
         const start = new Date(v.startDate)
         const end = new Date(v.endDate)
         const checkDate = new Date(date)

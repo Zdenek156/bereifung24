@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         employees: {
           where: { onVacation: false },
           include: {
-            workingHours: true,
+            employeeVacations: true,
           }
         }
       }

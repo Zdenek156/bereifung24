@@ -50,13 +50,15 @@ export async function GET(request: Request) {
       
       if (isOnVacation) return false
       
-      // Prüfe Arbeitszeiten (workingHours ist ein JSON-String)
+      // Prüfe Arbeitszeiten (workingHours ist ein JSON-String mit Objekt)
       if (!emp.workingHours) return false
       const workingHours = typeof emp.workingHours === 'string' 
         ? JSON.parse(emp.workingHours) 
         : emp.workingHours
-      const workingHour = workingHours.find((wh: any) => wh.dayOfWeek === dayOfWeek)
-      return workingHour && workingHour.isWorking
+      
+      // workingHours ist ein Objekt wie { monday: { from: '08:00', to: '17:00', working: true }, ... }
+      const workingHour = workingHours[dayOfWeek]
+      return workingHour && workingHour.working
     })
 
     if (availableEmployees.length === 0) {

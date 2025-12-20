@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Appointments</title>
+</head>
+<body>
+  <h1>Checking Appointments...</h1>
+  <pre id="output">Loading...</pre>
+
+  <script>
+    async function checkAppointments() {
+      const output = document.getElementById('output');
+      
+      try {
+        const response = await fetch('/api/workshop/appointments');
+        
+        if (!response.ok) {
+          output.textContent = `Error: ${response.status} ${response.statusText}`;
+          return;
+        }
+        
+        const appointments = await response.json();
+        
+        let text = `Total Appointments: ${appointments.length}\n\n`;
+        
+        const statusCounts = {};
+        const now = new Date();
+        
+        appointments.forEach(apt => {
+          statusCounts[apt.status] = (statusCounts[apt.status] || 0) + 1;
+          
+          const date = new Date(apt.appointmentDate);
+          const isPast = date < now;
+          
+          text += `ID: ${apt.id.substring(0, 8)}...\n`;
+          text += `  Status: ${apt.status}\n`;
+          text += `  Date: ${date.toISOString().split('T')[0]} ${isPast ? '(PAST)' : '(FUTURE)'}\n`;
+          text += `  Customer: ${apt.customer?.user?.email || 'N/A'}\n`;
+          text += `\n`;
+        });
+        
+        text += '\n=== Status Summary ===\n';
+        Object.entries(statusCounts).forEach(([status, count]) => {
+          text += `${status}: ${count}\n`;
+        });
+        
+        // Check filter logic
+        text += '\n=== Filter Results ===\n';
+        const upcoming = appointments.filter(a => {
+          const date = new Date(a.appointmentDate);
+          date.setHours(0, 0, 0, 0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return a.status === 'CONFIRMED' && date >= today;
+        });
+        text += `Anstehend (CONFIRMED + future): ${upcoming.length}\n`;
+        text += `Abgeschlossen (COMPLETED): ${appointments.filter(a => a.status === 'COMPLETED').length}\n`;
+        text += `Storniert (CANCELLED): ${appointments.filter(a => a.status === 'CANCELLED').length}\n`;
+        
+        output.textContent = text;
+      } catch (error) {
+        output.textContent = `Error: ${error.message}`;
+      }
+    }
+    
+    checkAppointments();
+  </script>
+</body>
+</html>

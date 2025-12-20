@@ -1,0 +1,19 @@
+Erstelle eine App mit Flutter.
+
+Für Android und iOS.
+
+Basierung auf dem gesamten Projekt Bereifung24 gesteuert über APIs.
+
+1. Ein Onboarding mit 3 Screens wo Bereifung24 erklärt wird.
+2. Datenbank wird die bereits vorhandene genutzt.
+3. Anmeldung normal über Passwort oder über Google.
+4. Ein Button neue Anfrage erstellen.
+5. Push-benachrichtigungen sollen möglich sein für Angebot erhalten, Bewertung abgeben 1 Tag nach Angebotsabgabe (Kunde kann das in den Einstellungen abschalten können).
+6. Design und Farbe wie die Internetseite
+7. Logo und App Icon wie Internetseite "B24"
+
+Für Kunden wichtig sind die Sparten:
+1. Meine Anfragen
+2. Termine
+3. Fahrzeuge
+4. Einstellungen

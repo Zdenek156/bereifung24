@@ -185,24 +185,24 @@ export default function WorkshopAppointments() {
         <button
           key={day}
           onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
-          className={`aspect-square p-1 rounded-lg border relative transition-all ${
+          className={`aspect-square p-0.5 rounded border text-xs relative transition-colors ${
             isSelected
-              ? 'bg-primary-600 text-white border-primary-700 shadow-lg'
+              ? 'bg-primary-600 text-white border-primary-700 font-semibold'
               : isToday
-              ? 'bg-blue-50 border-blue-300 hover:bg-blue-100'
+              ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 font-semibold'
               : isPast
               ? 'bg-gray-50 text-gray-400 border-gray-200'
-              : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+              : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-primary-300'
           }`}
           title={dayAppointments.length > 0 ? `${dayAppointments.length} Termin(e)` : undefined}
         >
-          <div className="text-sm font-medium">{day}</div>
+          <div className="flex items-center justify-center h-full">{day}</div>
           {dayAppointments.length > 0 && (
-            <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5`}>
+            <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-0.5`}>
               {dayAppointments.slice(0, 3).map((apt, i) => (
                 <div
                   key={i}
-                  className={`w-1.5 h-1.5 rounded-full ${
+                  className={`w-1 h-1 rounded-full ${
                     isSelected ? 'bg-white' : apt.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-blue-500'
                   }`}
                   title={`${apt.appointmentTime} - ${apt.customer.user.firstName} ${apt.customer.user.lastName}`}
@@ -215,16 +215,16 @@ export default function WorkshopAppointments() {
     }
     
     return (
-      <div className="flex-1">
-        <h3 className="text-center font-semibold text-gray-900 mb-3">{monthName}</h3>
-        <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="flex-1 min-w-0">
+        <h3 className="text-center text-sm font-semibold text-gray-700 mb-2">{monthName}</h3>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-gray-600 py-1">
+            <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
               {day}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {days}
         </div>
       </div>
@@ -271,60 +271,58 @@ export default function WorkshopAppointments() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Calendar View */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Terminkalender</h2>
-            <div className="flex items-center gap-2">
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">Terminkalender</h2>
+            <div className="flex items-center gap-1">
               <button
                 onClick={prevMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
                 onClick={() => setCurrentMonth(new Date())}
-                className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
               >
                 Heute
               </button>
               <button
                 onClick={nextMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
           </div>
           
-          <div className="flex gap-6">
+          <div className="flex gap-3">
             {renderCalendar(0)}
-            <div className="hidden lg:block w-px bg-gray-200" />
-            <div className="hidden lg:block flex-1">
+            <div className="hidden md:block w-px bg-gray-200" />
+            <div className="hidden md:block flex-1 min-w-0">
               {renderCalendar(1)}
             </div>
           </div>
           
-          <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
               <span>Bestätigt</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
               <span>Sonstige</span>
             </div>
           </div>
           
           {selectedDate && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                Termine für <strong>{new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                {' '}werden unten angezeigt. Klicken Sie erneut auf das Datum um den Filter zu entfernen.
-              </p>
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+              Termine für <strong>{new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+              {' '}werden unten angezeigt. Klicken Sie erneut um den Filter zu entfernen.
             </div>
           )}
         </div>

@@ -201,12 +201,18 @@ export async function POST(request: Request) {
     const tireRequest = await prisma.tireRequest.create({
       data: {
         customerId: customer.id,
-        serviceType: 'OTHER',
         status: 'ACCEPTED',
-        description: serviceDescription || 'Manuell erstellter Termin',
-        desiredDate: appointmentDateTime,
-        urgency: 'NORMAL',
-        customerNotes: notes
+        // Pflichtfelder für TireRequest
+        season: 'ALL_SEASON',
+        width: 205,
+        aspectRatio: 55,
+        diameter: 16,
+        quantity: 4,
+        zipCode: workshop.zipCode,
+        city: workshop.city,
+        needByDate: appointmentDateTime,
+        // Optional aber hilfreich
+        additionalNotes: serviceDescription || 'Manuell erstellter Termin'
       }
     })
 

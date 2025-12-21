@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getSalesUser } from '@/lib/sales-auth';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -10,16 +9,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const employee = await prisma.b24Employee.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!employee || !employee.isActive) {
+    const employee = await getSalesUser();
+    
+    if (!employee) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

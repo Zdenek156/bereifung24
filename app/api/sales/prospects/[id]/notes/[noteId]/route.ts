@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
+import { getSalesUser } from '@/lib/sales-auth';
 
 // PATCH - Update Note
 export async function PATCH(
@@ -9,9 +8,10 @@ export async function PATCH(
   { params }: { params: { id: string; noteId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'b24_employee') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const employee = await getSalesUser();
+
+    if (!employee) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -47,9 +47,10 @@ export async function DELETE(
   { params }: { params: { id: string; noteId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'b24_employee') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const employee = await getSalesUser();
+
+    if (!employee) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     await prisma.prospectNote.delete({

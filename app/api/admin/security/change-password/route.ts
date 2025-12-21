@@ -7,8 +7,16 @@ import prisma from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
+    
+    console.log('Session in change-password:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      hasUserId: !!session?.user?.id,
+      role: session?.user?.role
+    })
 
     if (!session || !session.user || !session.user.id || session.user.role !== 'ADMIN') {
+      console.log('Unauthorized - returning 401')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -32,6 +32,7 @@ export default function SecurityPage() {
   const [activeTab, setActiveTab] = useState<Tab>('account')
   const [loading, setLoading] = useState(false)
   const [securityData, setSecurityData] = useState<SecurityData | null>(null)
+  const [hasPassword, setHasPassword] = useState(false)
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState('')
@@ -62,6 +63,7 @@ export default function SecurityPage() {
       const data = await response.json()
       if (response.ok) {
         setSecurityData(data)
+        setHasPassword(data.hasPassword || false)
       }
     } catch (error) {
       console.error('Error fetching security data:', error)
@@ -209,20 +211,31 @@ export default function SecurityPage() {
                   
                   {/* Passwort ändern */}
                   <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Passwort ändern</h3>
-                    <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Aktuelles Passwort (leer lassen wenn noch nicht gesetzt)
-                        </label>
-                        <input
-                          type="password"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                          placeholder="Nur ausfüllen wenn bereits ein Passwort existiert"
-                        />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      {hasPassword ? 'Passwort ändern' : 'Passwort erstmalig setzen'}
+                    </h3>
+                    {!hasPassword && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          ℹ️ Sie sind über Google OAuth angemeldet und haben noch kein Passwort gesetzt.
+                        </p>
                       </div>
+                    )}
+                    <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                      {hasPassword && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Aktuelles Passwort
+                          </label>
+                          <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                      )}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Neues Passwort (min. 8 Zeichen)

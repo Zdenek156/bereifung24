@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     let serviceName = 'Manuell erstellter Termin'
     
     if (serviceId) {
-      selectedService = await prisma.service.findUnique({
+      selectedService = await prisma.servicePackage.findUnique({
         where: { id: serviceId }
       })
       
@@ -49,13 +49,6 @@ export async function POST(request: Request) {
       }
     } else if (customDuration) {
       duration = customDuration
-    }
-
-    if (!date || !time) {
-      return NextResponse.json(
-        { error: 'Datum und Uhrzeit sind erforderlich' },
-        { status: 400 }
-      )
     }
 
     // Hole Workshop-Daten
@@ -249,7 +242,7 @@ export async function POST(request: Request) {
         workshopId: workshop.id,
         validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Tage gültig
         status: 'ACCEPTED',
-        price: selectedService?.basePrice || 0,
+        price: selectedService?.price || 0,
         tireBrand: 'N/A',
         tireModel: serviceName,
         description: serviceDescription || serviceName,

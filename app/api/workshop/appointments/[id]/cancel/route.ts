@@ -80,55 +80,31 @@ export async function POST(
       }
     }
 
-    if (isManualEntry) {
-      // Manueller Termin: Vollständige Löschung
-      console.log('🗑️  Deleting manual appointment completely:', appointmentId)
-      
-      // Lösche in richtiger Reihenfolge (wegen Foreign Keys)
-      await prisma.booking.delete({
-        where: { id: appointmentId }
-      })
-
-      // Lösche Offer
-      if (booking.offer) {
-        await prisma.offer.delete({
-          where: { id: booking.offer.id }
-        })
+    // Beide Termintypen: Status auf CANCELLED setzen
+    console.log('❌ Cancelling appointment:', appointmentId, 'Manual:', isManualEntry)
+    
+    const notePrefix = isManualEntry 
+      ? 'Manueller Termin storniert'
+      : 'Kunden-Termin storniert'
+    
+    const updatedBooking = await prisma.booking.update({
+      where: { id: appointmentId },
+      data: {
+        status: 'CANCELLED',
+        workshopNotes: reason 
+          ? `${notePrefix} - ${reason}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
+          : `${notePrefix}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
       }
+    })
 
-      // Lösche TireRequest
-      if (booking.tireRequest) {
-        await prisma.tireRequest.delete({
-          where: { id: booking.tireRequest.id }
-        })
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Manueller Termin wurde vollständig gelöscht',
-        deleted: true
-      })
-    } else {
-      // Kunden-Termin: Nur Status auf CANCELLED setzen
-      console.log('❌ Cancelling customer appointment:', appointmentId)
-      
-      const updatedBooking = await prisma.booking.update({
-        where: { id: appointmentId },
-        data: {
-          status: 'CANCELLED',
-          workshopNotes: reason 
-            ? `Stornierungsgrund: ${reason}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
-            : booking.workshopNotes
-        }
-      })
-
-      return NextResponse.json({
-        success: true,
-        message: 'Termin wurde storniert. Das Angebot bleibt bestehen.',
-        cancelled: true,
-        booking: updatedBooking
-      })
-    }
+    return NextResponse.json({
+      success: true,
+      message: isManualEntry 
+        ? 'Manueller Termin wurde storniert'
+        : 'Kunden-Termin wurde storniert. Das Angebot bleibt für die Provision bestehen.',
+      cancelled: true,
+      booking: updatedBooking
+    })
     
   } catch (error) {
     console.error('Error cancelling appointment:', error)

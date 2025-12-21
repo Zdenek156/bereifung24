@@ -1497,7 +1497,7 @@ export default function RequestDetailPage() {
                                 <div>Montage{hasDisposal && ' + Entsorgung'}: {calculation.installationFee.toFixed(2)} €</div>
                               </div>
                               <div className="text-3xl font-bold text-primary-600">
-                                {offer.price.toFixed(2)} €
+                                {calculation.totalPrice.toFixed(2)} €
                               </div>
                               <p className="text-xs text-gray-500 mt-1">
                                 {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}

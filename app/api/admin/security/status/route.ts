@@ -10,8 +10,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // User aus DB holen um zu prüfen ob Passwort gesetzt ist
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { password: true }
+    })
+
     // Dummy data - würde aus echter Datenbank/Logs kommen
     const securityData = {
+      hasPassword: !!user?.password,
       lastLogins: [],
       failedAttempts: 3,
       activeSessions: 1,

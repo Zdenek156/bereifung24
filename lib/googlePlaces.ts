@@ -1,0 +1,306 @@
+/**
+ * Google Places API Integration for Sales CRM
+ * 
+ * Features:
+ * - Nearby Search for car repair shops
+ * - Place Details enrichment
+ * - Photo URL generation
+ * - Deduplication logic
+ */
+
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const PLACES_API_BASE = 'https://maps.googleapis.com/maps/api/place';
+
+export interface PlaceSearchParams {
+  location: string; // "lat,lng" or address
+  radius?: number; // in meters (default: 10000 = 10km)
+  keyword?: string; // Additional search keyword
+}
+
+export interface PlaceResult {
+  place_id: string;
+  name: string;
+  formatted_address: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  rating?: number;
+  user_ratings_total?: number;
+  price_level?: number;
+  types: string[];
+  photos?: Array<{
+    photo_reference: string;
+    height: number;
+    width: number;
+  }>;
+  opening_hours?: {
+    open_now?: boolean;
+    weekday_text?: string[];
+  };
+  business_status?: string;
+}
+
+export interface PlaceDetails {
+  place_id: string;
+  name: string;
+  formatted_address: string;
+  formatted_phone_number?: string;
+  international_phone_number?: string;
+  website?: string;
+  rating?: number;
+  user_ratings_total?: number;
+  price_level?: number;
+  opening_hours?: {
+    open_now?: boolean;
+    periods?: Array<{
+      close: { day: number; time: string };
+      open: { day: number; time: string };
+    }>;
+    weekday_text?: string[];
+  };
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  photos?: Array<{
+    photo_reference: string;
+    height: number;
+    width: number;
+  }>;
+  types: string[];
+  business_status?: string;
+  reviews?: Array<{
+    author_name: string;
+    rating: number;
+    text: string;
+    time: number;
+  }>;
+}
+
+/**
+ * Search for nearby car repair shops
+ */
+export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<PlaceResult[]> {
+  try {
+    // Geocode if location is an address
+    let location = params.location;
+    if (!location.includes(',')) {
+      location = await geocodeAddress(params.location);
+    }
+
+    const radius = params.radius || 10000; // 10km default
+    const keyword = params.keyword || 'Reifenservice Werkstatt';
+    
+    // Build search URL
+    const searchUrl = new URL(`${PLACES_API_BASE}/nearbysearch/json`);
+    searchUrl.searchParams.set('location', location);
+    searchUrl.searchParams.set('radius', radius.toString());
+    searchUrl.searchParams.set('type', 'car_repair');
+    searchUrl.searchParams.set('keyword', keyword);
+    searchUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+
+    const response = await fetch(searchUrl.toString());
+    const data = await response.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      throw new Error(`Google Places API error: ${data.status} - ${data.error_message || ''}`);
+    }
+
+    return data.results || [];
+  } catch (error) {
+    console.error('Error searching nearby workshops:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get detailed information about a place
+ */
+export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
+  try {
+    const detailsUrl = new URL(`${PLACES_API_BASE}/details/json`);
+    detailsUrl.searchParams.set('place_id', placeId);
+    detailsUrl.searchParams.set('fields', [
+      'place_id',
+      'name',
+      'formatted_address',
+      'formatted_phone_number',
+      'international_phone_number',
+      'website',
+      'rating',
+      'user_ratings_total',
+      'price_level',
+      'opening_hours',
+      'geometry',
+      'photos',
+      'types',
+      'business_status',
+      'reviews'
+    ].join(','));
+    detailsUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+
+    const response = await fetch(detailsUrl.toString());
+    const data = await response.json();
+
+    if (data.status !== 'OK') {
+      console.error(`Place details error for ${placeId}:`, data.status);
+      return null;
+    }
+
+    return data.result;
+  } catch (error) {
+    console.error('Error fetching place details:', error);
+    return null;
+  }
+}
+
+/**
+ * Generate photo URL from photo reference
+ */
+export function getPhotoUrl(photoReference: string, maxWidth: number = 400): string {
+  return `${PLACES_API_BASE}/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
+}
+
+/**
+ * Geocode an address to lat,lng
+ */
+async function geocodeAddress(address: string): Promise<string> {
+  try {
+    const geocodeUrl = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+    geocodeUrl.searchParams.set('address', address);
+    geocodeUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+
+    const response = await fetch(geocodeUrl.toString());
+    const data = await response.json();
+
+    if (data.status !== 'OK' || !data.results.length) {
+      throw new Error(`Geocoding failed: ${data.status}`);
+    }
+
+    const location = data.results[0].geometry.location;
+    return `${location.lat},${location.lng}`;
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    throw error;
+  }
+}
+
+/**
+ * Parse address components from Google Places
+ */
+export function parseAddressComponents(formattedAddress: string): {
+  street: string;
+  city: string;
+  postalCode: string;
+  state: string;
+  country: string;
+} {
+  // Beispiel: "Hauptstraße 123, 10115 Berlin, Deutschland"
+  const parts = formattedAddress.split(',').map(p => p.trim());
+  
+  let street = '';
+  let city = '';
+  let postalCode = '';
+  let state = '';
+  let country = 'DE';
+
+  if (parts.length >= 3) {
+    street = parts[0];
+    
+    // PLZ und Stadt (z.B. "10115 Berlin")
+    const cityPart = parts[1];
+    const plzMatch = cityPart.match(/(\d{5})\s+(.+)/);
+    if (plzMatch) {
+      postalCode = plzMatch[1];
+      city = plzMatch[2];
+    } else {
+      city = cityPart;
+    }
+    
+    // Land
+    if (parts[2]) {
+      country = parts[2] === 'Deutschland' ? 'DE' : parts[2];
+    }
+  }
+
+  return { street, city, postalCode, state, country };
+}
+
+/**
+ * Calculate lead score based on Google Places data
+ */
+export function calculateLeadScore(place: PlaceResult | PlaceDetails): number {
+  let score = 50; // Base score
+
+  // Rating bonus
+  if (place.rating) {
+    if (place.rating >= 4.5) score += 20;
+    else if (place.rating >= 4.0) score += 15;
+    else if (place.rating >= 3.5) score += 10;
+    else if (place.rating < 3.0) score -= 10;
+  }
+
+  // Review count bonus
+  if (place.user_ratings_total) {
+    if (place.user_ratings_total >= 100) score += 15;
+    else if (place.user_ratings_total >= 50) score += 10;
+    else if (place.user_ratings_total >= 20) score += 5;
+  }
+
+  // Has website bonus
+  if ('website' in place && place.website) score += 10;
+
+  // Has phone bonus
+  if ('formatted_phone_number' in place && place.formatted_phone_number) score += 10;
+
+  // Has photos bonus
+  if (place.photos && place.photos.length > 0) score += 5;
+
+  // Business status check
+  if (place.business_status === 'OPERATIONAL') score += 5;
+  else if (place.business_status === 'CLOSED_PERMANENTLY') score = 0;
+
+  // Ensure score is within 0-100
+  return Math.max(0, Math.min(100, score));
+}
+
+/**
+ * Check if place is likely a tire/car service shop
+ */
+export function isTireServiceShop(place: PlaceResult | PlaceDetails): boolean {
+  const name = place.name.toLowerCase();
+  const types = place.types || [];
+  
+  const tireKeywords = [
+    'reifen',
+    'tire',
+    'pneu',
+    'rad',
+    'wheel',
+    'kfz',
+    'auto',
+    'car',
+    'werkstatt',
+    'service',
+    'garage'
+  ];
+
+  // Check name
+  const hasKeywordInName = tireKeywords.some(keyword => name.includes(keyword));
+  
+  // Check types
+  const relevantTypes = [
+    'car_repair',
+    'car_dealer',
+    'car_wash',
+    'gas_station'
+  ];
+  const hasRelevantType = types.some(type => relevantTypes.includes(type));
+
+  return hasKeywordInName || hasRelevantType;
+}

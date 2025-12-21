@@ -17,8 +17,8 @@ export async function getSalesUser() {
     return null;
   }
 
-  // Check if admin (role is string, not enum)
-  if (session.user.role === 'ADMIN') {
+  // Check if admin by role OR by email (for backward compatibility)
+  if (session.user.role === 'ADMIN' || session.user.email === 'admin@bereifung24.de') {
     console.log('[SALES AUTH] User is ADMIN - granting access');
     // Create a virtual employee object for admin with full access
     return {

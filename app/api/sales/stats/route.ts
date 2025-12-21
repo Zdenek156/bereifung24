@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getSalesUser } from '@/lib/sales-auth';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -10,16 +9,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const employee = await prisma.b24Employee.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!employee || !employee.isActive) {
+    const employee = await getSalesUser();
+    
+    if (!employee) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -61,14 +53,21 @@ export async function GET(request: Request) {
       }),
       
       prisma.prospectWorkshop.count({
-        where: {
+        where: employee.isAdmin ? {
+          status: { not: 'WON' }
+        } : {
           assignedToId: employee.id,
           status: { not: 'WON' }
         }
       }),
       
       prisma.prospectTask.count({
-        where: {
+        where: employee.isAdmin ? {
+          completed: false,
+          dueDate: {
+            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
+          }
+        } : {
           assignedToId: employee.id,
           completed: false,
           dueDate: {
@@ -98,7 +97,7 @@ export async function GET(request: Request) {
 
     // Recent activity
     const recentInteractions = await prisma.prospectInteraction.findMany({
-      where: {
+      where: employee.isAdmin ? {} : {
         createdById: employee.id
       },
       orderBy: { createdAt: 'desc' },
@@ -116,7 +115,12 @@ export async function GET(request: Request) {
 
     // Upcoming tasks
     const upcomingTasks = await prisma.prospectTask.findMany({
-      where: {
+      where: employee.isAdmin ? {
+        completed: false,
+        dueDate: {
+          gte: new Date()
+        }
+      } : {
         assignedToId: employee.id,
         completed: false,
         dueDate: {

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { searchNearbyWorkshops, getPlaceDetails, getPhotoUrl, parseAddressComponents, calculateLeadScore, isTireServiceShop } from '@/lib/googlePlaces';
 import { prisma } from '@/lib/prisma';
+import { getSalesUser } from '@/lib/sales-auth';
 
 /**
  * POST /api/sales/search-places
@@ -11,18 +10,10 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const employee = await getSalesUser();
 
-    // Check if user is B24 employee
-    const employee = await prisma.b24Employee.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!employee || !employee.isActive) {
-      return NextResponse.json({ error: 'Forbidden - Only B24 employees allowed' }, { status: 403 });
+    if (!employee) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();

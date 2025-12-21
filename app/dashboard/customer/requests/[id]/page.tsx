@@ -1487,19 +1487,15 @@ export default function RequestDetailPage() {
                           const calculation = calculateSelectedTotal(offer)
                           const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
                           
-                          // Always show breakdown for simple offers
                           return (
                             <>
-                              <div className="text-sm text-gray-600 mb-1 space-y-0.5">
-                                {calculation.tiresTotal > 0 && (
-                                  <div>Reifen: {calculation.tiresTotal.toFixed(2)} €</div>
-                                )}
-                                <div>Montage{hasDisposal && ' + Entsorgung'}: {calculation.installationFee.toFixed(2)} €</div>
-                              </div>
                               <div className="text-3xl font-bold text-primary-600">
-                                {calculation.totalPrice.toFixed(2)} €
+                                {calculation.installationFee.toFixed(2)} €
                               </div>
                               <p className="text-xs text-gray-500 mt-1">
+                                Montage{hasDisposal && ' + Entsorgung'}
+                              </p>
+                              <p className="text-xs text-gray-500">
                                 {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
                               </p>
                             </>

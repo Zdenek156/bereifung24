@@ -41,8 +41,10 @@ export async function POST(request: Request) {
           where: { googlePlaceId: place.place_id }
         });
 
-        // Parse address
-        const addressParts = parseAddressComponents(place.formatted_address);
+        // Parse address (handle undefined formatted_address)
+        const addressParts = place.formatted_address 
+          ? parseAddressComponents(place.formatted_address)
+          : { street: '', city: '', postalCode: '', state: '', country: 'DE' };
 
         // Calculate lead score
         const leadScore = calculateLeadScore(place);

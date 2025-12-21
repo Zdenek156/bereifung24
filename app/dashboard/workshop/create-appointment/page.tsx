@@ -17,6 +17,7 @@ export default function CreateAppointmentPage() {
   
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
+  const [duration, setDuration] = useState(60) // Dauer in Minuten, Standard 60
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   
@@ -80,6 +81,7 @@ export default function CreateAppointmentPage() {
         body: JSON.stringify({
           date: selectedDate,
           time: selectedTime,
+          duration,
           customerName: customerName.trim() || null,
           customerPhone: customerPhone.trim() || null,
           customerEmail: customerEmail.trim() || null,
@@ -189,6 +191,28 @@ export default function CreateAppointmentPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Dauer-Auswahl */}
+            <div>
+              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+                Termin-Dauer *
+              </label>
+              <select
+                id="duration"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                required
+              >
+                <option value={30}>30 Minuten</option>
+                <option value={60}>1 Stunde</option>
+                <option value={90}>1,5 Stunden</option>
+                <option value={120}>2 Stunden</option>
+                <option value={150}>2,5 Stunden</option>
+                <option value={180}>3 Stunden</option>
+                <option value={240}>4 Stunden</option>
+              </select>
             </div>
 
             <div className="border-t border-gray-200 pt-6">

@@ -7,10 +7,20 @@ import { authOptions } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { path, fullUrl, pageTitle, referrer, workshopId } = body
+    let { path, fullUrl, pageTitle, referrer, workshopSlug } = body
 
     // Get session if user is logged in
     const session = await getServerSession(authOptions)
+
+    // If workshop slug provided, get the actual workshop ID
+    let workshopId: string | null = null
+    if (workshopSlug) {
+      const workshop = await prisma.workshop.findFirst({
+        where: { landingPageSlug: workshopSlug },
+        select: { id: true }
+      })
+      workshopId = workshop?.id || null
+    }
 
     // Get IP address (anonymized for privacy - only first 3 octets)
     const forwardedFor = request.headers.get('x-forwarded-for')

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import SessionWrapper from './components/SessionWrapper'
 import CookieBanner from '@/components/CookieBanner'
+import Analytics from './components/Analytics'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="de" translate="no">
       <body className={`${inter.className} notranslate`}>
         <SessionWrapper>
+          <Analytics />
           {children}
           <CookieBanner />
         </SessionWrapper>

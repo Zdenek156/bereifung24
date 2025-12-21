@@ -26,6 +26,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'email-templates', label: 'Email-Templates' },
   { value: 'employees', label: 'Mitarbeiter' },
   { value: 'settings', label: 'Einstellungen' },
+  { value: 'sales-crm', label: 'Sales CRM' },
 ]
 
 interface Permission {

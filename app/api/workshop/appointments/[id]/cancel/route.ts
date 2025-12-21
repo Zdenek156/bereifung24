@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { google } from 'googleapis'
+import { sendTemplateEmail, replacePlaceholders } from '@/lib/email'
 
 export async function POST(
   request: Request,
@@ -15,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
-    const { reason } = await request.json()
+    const { reason, reasonType } = await request.json()
     const appointmentId = params.id
 
     // Hole Booking mit allen Beziehungen
@@ -87,21 +88,114 @@ export async function POST(
       ? 'Manueller Termin storniert'
       : 'Kunden-Termin storniert'
     
+    // Übersetze Stornierungsgrund
+    const reasonTypeLabels: Record<string, string> = {
+      'customer_cancelled': 'Kunde hat abgesagt',
+      'workshop_unavailable': 'Werkstatt nicht verfügbar',
+      'technical_issue': 'Technisches Problem',
+      'parts_unavailable': 'Fahrzeugteile nicht verfügbar',
+      'reschedule_needed': 'Neuer Termin erforderlich',
+      'other': 'Sonstiges'
+    }
+    
+    const reasonLabel = reasonType ? reasonTypeLabels[reasonType] || reasonType : ''
+    const fullReason = reasonLabel + (reason ? `: ${reason}` : '')
+    
     const updatedBooking = await prisma.booking.update({
       where: { id: appointmentId },
       data: {
         status: 'CANCELLED',
-        workshopNotes: reason 
-          ? `${notePrefix} - ${reason}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
+        workshopNotes: fullReason 
+          ? `${notePrefix} - ${fullReason}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
           : `${notePrefix}${booking.workshopNotes ? '\n\n' + booking.workshopNotes : ''}`
       }
     })
+
+    // Sende Email an Kunden bei Kunden-Terminen
+    if (!isManualEntry && booking.customer && booking.customer.user.email) {
+      try {
+        const appointmentDate = new Date(booking.appointmentDate).toLocaleDateString('de-DE', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+
+        // Template-Daten vorbereiten
+        const templateData = {
+          customerFirstName: booking.customer.user.firstName,
+          customerLastName: booking.customer.user.lastName,
+          workshopName: booking.workshop.name,
+          appointmentDate,
+          appointmentTime: booking.appointmentTime,
+          reasonLabel,
+          additionalMessageBlock: reason 
+            ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` 
+            : '',
+          rescheduleMessage: reasonType === 'reschedule_needed'
+            ? '<p>Bitte kontaktieren Sie die Werkstatt, um einen neuen Termin zu vereinbaren.</p>'
+            : '<p>Bei Fragen können Sie sich gerne an die Werkstatt wenden.</p>',
+          workshopContactInfo: [
+            booking.workshop.phone ? `<p>Tel: ${booking.workshop.phone}</p>` : '',
+            booking.workshop.email ? `<p>Email: ${booking.workshop.email}</p>` : ''
+          ].filter(Boolean).join('\n')
+        }
+
+        // Verwende Template-System (mit Fallback)
+        await sendTemplateEmail(
+          'appointment_cancelled',
+          booking.customer.user.email,
+          templateData,
+          undefined, // keine Anhänge
+          {
+            // Fallback falls Template nicht in DB vorhanden
+            subject: `Termin storniert - ${booking.workshop.name}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #dc2626;">Terminabsage</h2>
+                <p>Sehr geehrte/r ${booking.customer.user.firstName} ${booking.customer.user.lastName},</p>
+                
+                <p>leider muss Ihr Termin bei <strong>${booking.workshop.name}</strong> storniert werden.</p>
+                
+                <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 5px 0;"><strong>Termin:</strong> ${appointmentDate}, ${booking.appointmentTime} Uhr</p>
+                  <p style="margin: 5px 0;"><strong>Grund:</strong> ${reasonLabel}</p>
+                  ${reason ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` : ''}
+                </div>
+
+                ${reasonType === 'reschedule_needed' ? `
+                  <p>Bitte kontaktieren Sie die Werkstatt, um einen neuen Termin zu vereinbaren.</p>
+                ` : `
+                  <p>Bei Fragen können Sie sich gerne an die Werkstatt wenden.</p>
+                `}
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                  <p><strong>${booking.workshop.name}</strong></p>
+                  ${booking.workshop.phone ? `<p>Tel: ${booking.workshop.phone}</p>` : ''}
+                  ${booking.workshop.email ? `<p>Email: ${booking.workshop.email}</p>` : ''}
+                </div>
+
+                <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">
+                  Mit freundlichen Grüßen<br/>
+                  Ihr Bereifung24 Team
+                </p>
+              </div>
+            `
+          }
+        )
+
+        console.log('✅ Cancellation email sent to customer:', booking.customer.user.email)
+      } catch (emailError) {
+        console.error('❌ Error sending cancellation email:', emailError)
+        // Fahre trotzdem fort - Email-Fehler soll nicht die Stornierung blockieren
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: isManualEntry 
         ? 'Manueller Termin wurde storniert'
-        : 'Kunden-Termin wurde storniert. Das Angebot bleibt für die Provision bestehen.',
+        : 'Kunden-Termin wurde storniert. Der Kunde wurde per Email benachrichtigt.',
       cancelled: true,
       booking: updatedBooking
     })

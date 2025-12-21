@@ -705,14 +705,14 @@ export default function WorkshopAppointments() {
                   </div>
                 )}
 
-                {/* Stornieren Button - nur für bestätigte Termine */}
-                {apt.status === 'CONFIRMED' && (
+                {/* Stornieren Button - für ausstehende und bestätigte Termine */}
+                {(apt.status === 'CONFIRMED' || apt.status === 'PENDING') && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => handleCancelAppointment(apt.id)}
                       className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
                     >
-                      Termin stornieren
+                      Termin {apt.status === 'PENDING' ? 'ablehnen' : 'stornieren'}
                     </button>
                   </div>
                 )}

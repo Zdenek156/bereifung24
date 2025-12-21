@@ -71,7 +71,7 @@ export async function GET(
             { createdAt: 'desc' }
           ]
         },
-        convertedToWorkshop: {
+        convertedWorkshop: {
           select: {
             id: true,
             name: true,

@@ -493,22 +493,53 @@ export default function WorkshopAppointments() {
 
                   <div>
                     {apt.tireRequest && apt.offer ? (
-                      <>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Reifen</h4>
-                        <p className="text-sm text-gray-900 font-medium">
-                          {apt.offer.tireBrand} {apt.offer.tireModel}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {apt.tireRequest.width}/{apt.tireRequest.aspectRatio} R{apt.tireRequest.diameter}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {apt.tireRequest.season === 'SUMMER' ? 'Sommerreifen' : 
-                           apt.tireRequest.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Menge: {apt.tireRequest.quantity} Stück
-                        </p>
-                      </>
+                      (() => {
+                        // Prüfe ob es ein manueller Termin ist (customerNotes als JSON)
+                        let isManualEntry = false
+                        try {
+                          if (apt.customerNotes) {
+                            const customerData = JSON.parse(apt.customerNotes)
+                            isManualEntry = customerData.manualEntry === true
+                          }
+                        } catch {}
+
+                        // Wenn es ein manueller Termin ist, zeige Service-Info statt Reifen-Dummy-Daten
+                        if (isManualEntry) {
+                          return (
+                            <>
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
+                              <p className="text-sm text-gray-900 font-medium">
+                                {apt.offer.tireModel}
+                              </p>
+                              {apt.offer.description && apt.offer.description !== apt.offer.tireModel && (
+                                <p className="text-sm text-gray-600">
+                                  {apt.offer.description}
+                                </p>
+                              )}
+                            </>
+                          )
+                        }
+
+                        // Normaler Reifen-Termin
+                        return (
+                          <>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Reifen</h4>
+                            <p className="text-sm text-gray-900 font-medium">
+                              {apt.offer.tireBrand} {apt.offer.tireModel}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {apt.tireRequest.width}/{apt.tireRequest.aspectRatio} R{apt.tireRequest.diameter}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {apt.tireRequest.season === 'SUMMER' ? 'Sommerreifen' : 
+                               apt.tireRequest.season === 'WINTER' ? 'Winterreifen' : 'Ganzjahresreifen'}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Menge: {apt.tireRequest.quantity} Stück
+                            </p>
+                          </>
+                        )
+                      })()
                     ) : apt.notes ? (
                       (() => {
                         try {
@@ -542,12 +573,44 @@ export default function WorkshopAppointments() {
                   </div>
                 </div>
 
-                {apt.customerNotes && (
-                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 mb-1">Kundennotiz:</p>
-                    <p className="text-sm text-blue-800">{apt.customerNotes}</p>
-                  </div>
-                )}
+                {apt.customerNotes && (() => {
+                  try {
+                    const customerData = JSON.parse(apt.customerNotes)
+                    
+                    // Wenn es ein manueller Termin ist, zeige die Details schön formatiert
+                    if (customerData.manualEntry) {
+                      return (
+                        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm font-medium text-blue-900 mb-2">Termin-Details:</p>
+                          <div className="space-y-1 text-sm text-blue-800">
+                            {customerData.serviceDescription && (
+                              <p><span className="font-medium">Service:</span> {customerData.serviceDescription}</p>
+                            )}
+                            {customerData.vehicleInfo && (
+                              <p><span className="font-medium">Fahrzeug:</span> {customerData.vehicleInfo}</p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+                    
+                    // Normale Kundennotiz
+                    return (
+                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 mb-1">Kundennotiz:</p>
+                        <p className="text-sm text-blue-800">{apt.customerNotes}</p>
+                      </div>
+                    )
+                  } catch {
+                    // Falls JSON.parse fehlschlägt, zeige als Text
+                    return (
+                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 mb-1">Kundennotiz:</p>
+                        <p className="text-sm text-blue-800">{apt.customerNotes}</p>
+                      </div>
+                    )
+                  }
+                })()}
 
                 {apt.notes && (() => {
                   try {

@@ -208,8 +208,8 @@ export async function POST(request: Request) {
         aspectRatio: 55,
         diameter: 16,
         quantity: 4,
-        zipCode: workshop.zipCode,
-        city: workshop.city,
+        zipCode: workshop.zipCode || '00000',
+        city: workshop.city || 'N/A',
         needByDate: appointmentDateTime,
         // Optional aber hilfreich
         additionalNotes: serviceDescription || 'Manuell erstellter Termin'

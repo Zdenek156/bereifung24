@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const {
       date,
       time,
+      duration = 60, // Standard: 60 Minuten
       customerName,
       customerPhone,
       customerEmail,
@@ -121,10 +122,9 @@ export async function POST(request: Request) {
 
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
 
-        // Berechne End-Zeit (z.B. 1 Stunde später)
-        const [hours, minutes] = time.split(':').map(Number)
+        // Berechne End-Zeit basierend auf Dauer
         const endDateTime = new Date(appointmentDateTime)
-        endDateTime.setHours(hours + 1, minutes, 0)
+        endDateTime.setMinutes(endDateTime.getMinutes() + duration)
 
         const event = await calendar.events.insert({
           calendarId: employee.googleCalendarId,
@@ -223,8 +223,11 @@ export async function POST(request: Request) {
         workshopId: workshop.id,
         validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Tage gültig
         status: 'ACCEPTED',
-        totalPrice: 0,
-        serviceDescription: serviceDescription || 'Manuell erstellter Termin'
+        price: 0,
+        tireBrand: 'N/A',
+        tireModel: 'Manueller Termin',
+        description: serviceDescription || 'Manuell erstellter Termin',
+        durationMinutes: duration
       }
     })
 

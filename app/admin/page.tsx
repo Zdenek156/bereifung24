@@ -350,6 +350,17 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mb-4">Seitenaufrufe und Besucherstatistik</p>
             <div className="text-primary-600 font-medium">Zu den Statistiken →</div>
           </Link>
+
+          <Link href="/admin/server-info" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Server-Übersicht</h3>
+            <p className="text-sm text-gray-600 mb-4">CPU, RAM, Festplatte & Performance-Metriken</p>
+            <div className="text-primary-600 font-medium">Zur Übersicht →</div>
+          </Link>
         </div>
 
         {/* Recent Activity */}

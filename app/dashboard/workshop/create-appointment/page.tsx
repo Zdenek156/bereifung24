@@ -248,7 +248,7 @@ export default function CreateAppointmentPage() {
                   <option value="">Bitte wählen...</option>
                   {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} ({service.durationMinutes} Min, {service.basePrice.toFixed(2)}€)
+                      {service.name} ({service.durationMinutes} Min)
                     </option>
                   ))}
                   <option value="manual">➕ Manuelle Eingabe</option>

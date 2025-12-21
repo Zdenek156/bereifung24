@@ -44,7 +44,21 @@ export async function GET(request: Request) {
       )
     }
 
-    return NextResponse.json({ services: user.workshop.workshopServices })
+    // Sammle alle aktiven ServicePackages aus allen WorkshopServices
+    const allPackages = user.workshop.workshopServices
+      .filter(ws => ws.isActive)
+      .flatMap(ws => 
+        ws.servicePackages
+          .filter(pkg => pkg.isActive)
+          .map(pkg => ({
+            id: pkg.id,
+            name: pkg.name,
+            basePrice: pkg.price,
+            durationMinutes: pkg.durationMinutes
+          }))
+      )
+
+    return NextResponse.json({ services: allPackages })
   } catch (error) {
     console.error('Services fetch error:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')

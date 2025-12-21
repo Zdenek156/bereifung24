@@ -91,8 +91,9 @@ export async function POST(request: Request) {
             status: 'NEW',
             priority: leadScore >= 75 ? 'HIGH' : leadScore >= 50 ? 'MEDIUM' : 'LOW',
             source: 'google_places',
-            assignedToId: assignToMe ? employee.id : null,
-            assignedAt: assignToMe ? new Date() : null
+            // Only assign if employee is not admin
+            assignedToId: (assignToMe && !employee.isAdmin) ? employee.id : null,
+            assignedAt: (assignToMe && !employee.isAdmin) ? new Date() : null
           }
         });
 
@@ -103,29 +104,31 @@ export async function POST(request: Request) {
           leadScore: prospect.leadScore
         });
 
-        // Create initial note
-        await prisma.prospectNote.create({
-          data: {
-            prospectId: prospect.id,
-            content: `Prospect imported from Google Places.\n\nRating: ${prospect.rating || 'N/A'}/5 (${prospect.reviewCount} reviews)\nLead Score: ${prospect.leadScore}/100`,
-            createdById: employee.id,
-            isPinned: false
-          }
-        });
+        // Create initial note (only if employee is not admin)
+        if (!employee.isAdmin) {
+          await prisma.prospectNote.create({
+            data: {
+              prospectId: prospect.id,
+              content: `Prospect imported from Google Places.\n\nRating: ${prospect.rating || 'N/A'}/5 (${prospect.reviewCount} reviews)\nLead Score: ${prospect.leadScore}/100`,
+              createdById: employee.id,
+              isPinned: false
+            }
+          });
 
-        // Create initial task
-        await prisma.prospectTask.create({
-          data: {
-            prospectId: prospect.id,
-            title: 'Erstkontakt herstellen',
-            description: `Telefonisch oder per E-Mail Kontakt aufnehmen und Interesse an Bereifung24 prüfen.`,
-            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-            priority: prospect.priority,
-            status: 'PENDING',
-            assignedToId: assignToMe ? employee.id : null,
-            createdById: employee.id
-          }
-        });
+          // Create initial task
+          await prisma.prospectTask.create({
+            data: {
+              prospectId: prospect.id,
+              title: 'Erstkontakt herstellen',
+              description: `Telefonisch oder per E-Mail Kontakt aufnehmen und Interesse an Bereifung24 prüfen.`,
+              dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+              priority: prospect.priority,
+              status: 'PENDING',
+              assignedToId: assignToMe ? employee.id : null,
+              createdById: employee.id
+            }
+          });
+        }
 
       } catch (error: any) {
         console.error(`Error importing place ${placeId}:`, error);

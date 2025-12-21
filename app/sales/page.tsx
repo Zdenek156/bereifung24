@@ -125,11 +125,22 @@ export default function SalesDashboardPage() {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sales Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Werkstatt-Akquise & Lead-Management
-              </p>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/admin"
+                className="text-gray-400 hover:text-gray-600"
+                title="Zurück zum Dashboard"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Sales Dashboard</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Werkstatt-Akquise & Lead-Management
+                </p>
+              </div>
             </div>
             <div className="flex space-x-3">
               <Link

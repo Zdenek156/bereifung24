@@ -218,18 +218,12 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, account }) {
       if (user) {
-        // Initial sign in
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          include: { customer: true, workshop: true }
-        })
-
-        if (dbUser) {
-          token.role = dbUser.role
-          token.id = dbUser.id
-          token.customerId = dbUser.customer?.id
-          token.workshopId = dbUser.workshop?.id
-        }
+        // Initial sign in - user comes from authorize()
+        token.role = user.role
+        token.id = user.id
+        token.customerId = user.customerId
+        token.workshopId = user.workshopId
+        token.isB24Employee = user.isB24Employee
       }
       return token
     },

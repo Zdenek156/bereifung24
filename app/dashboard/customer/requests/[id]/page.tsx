@@ -1463,9 +1463,12 @@ export default function RequestDetailPage() {
                       <div className="flex items-start gap-4">
                         {offer.workshop.logoUrl && (
                           <img 
-                            src={offer.workshop.logoUrl} 
+                            src={`${offer.workshop.logoUrl}?t=${Date.now()}`}
                             alt={`${offer.workshop.companyName} Logo`}
                             className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white flex-shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
                           />
                         )}
                         <div>
@@ -1479,12 +1482,44 @@ export default function RequestDetailPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-3xl font-bold text-primary-600">
-                          {offer.price.toFixed(2)} €
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Montage • {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
-                        </p>
+                        {(() => {
+                          const calculation = calculateSelectedTotal(offer)
+                          const displayOptions = getDisplayOptions(offer)
+                          const serviceType = getServiceType()
+                          const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
+                          const hasDisposal = request.additionalNotes?.includes('Altreifenentsorgung gewünscht')
+                          
+                          // Show breakdown if there are no tire options (simple offer)
+                          if (displayOptions.length === 0 && !isServiceRequest) {
+                            return (
+                              <>
+                                <div className="text-lg text-gray-600 mb-1">
+                                  {calculation.tiresTotal > 0 && (
+                                    <div>Reifen: {calculation.tiresTotal.toFixed(2)} €</div>
+                                  )}
+                                  <div>Montage{hasDisposal && ' + Entsorgung'}: {calculation.installationFee.toFixed(2)} €</div>
+                                </div>
+                                <div className="text-3xl font-bold text-primary-600">
+                                  {offer.price.toFixed(2)} €
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                                </p>
+                              </>
+                            )
+                          }
+                          
+                          return (
+                            <>
+                              <div className="text-3xl font-bold text-primary-600">
+                                {offer.price.toFixed(2)} €
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                              </p>
+                            </>
+                          )
+                        })()}
                       </div>
                     </div>
 

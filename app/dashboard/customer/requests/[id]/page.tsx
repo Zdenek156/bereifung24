@@ -636,7 +636,9 @@ export default function RequestDetailPage() {
       }
     })
 
-    const { fee, duration } = calculateInstallationFeeAndDuration(offer, totalQuantity)
+    // If no options selected, use request quantity for installation fee calculation
+    const quantityForFee = totalQuantity > 0 ? totalQuantity : (request?.quantity || 4)
+    const { fee, duration } = calculateInstallationFeeAndDuration(offer, quantityForFee)
     
     return {
       totalQuantity,

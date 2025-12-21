@@ -74,8 +74,12 @@ export async function GET(
         convertedWorkshop: {
           select: {
             id: true,
-            name: true,
-            city: true
+            companyName: true,
+            user: {
+              select: {
+                city: true
+              }
+            }
           }
         }
       }

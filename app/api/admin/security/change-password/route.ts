@@ -19,14 +19,21 @@ export async function POST(request: Request) {
       where: { id: session.user.id }
     })
 
-    if (!user || !user.password) {
+    if (!user) {
       return NextResponse.json({ error: 'User nicht gefunden' }, { status: 404 })
     }
 
-    // Aktuelles Passwort verifizieren
-    const isValid = await bcrypt.compare(currentPassword, user.password)
-    if (!isValid) {
-      return NextResponse.json({ error: 'Aktuelles Passwort ist falsch' }, { status: 400 })
+    // Wenn User ein Passwort hat, verifizieren
+    if (user.password) {
+      const isValid = await bcrypt.compare(currentPassword, user.password)
+      if (!isValid) {
+        return NextResponse.json({ error: 'Aktuelles Passwort ist falsch' }, { status: 400 })
+      }
+    } else {
+      // Kein aktuelles Passwort nötig für OAuth-User, die erstmalig ein Passwort setzen
+      if (currentPassword && currentPassword.trim() !== '') {
+        return NextResponse.json({ error: 'Sie haben noch kein Passwort gesetzt' }, { status: 400 })
+      }
     }
 
     // Neues Passwort hashen

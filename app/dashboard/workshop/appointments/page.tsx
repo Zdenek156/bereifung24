@@ -49,6 +49,9 @@ export default function WorkshopAppointments() {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('upcoming')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -65,6 +68,37 @@ export default function WorkshopAppointments() {
 
     fetchAppointments()
   }, [session, status, router])
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    setCancellingId(appointmentId)
+    setShowCancelDialog(true)
+  }
+
+  const confirmCancelAppointment = async () => {
+    if (!cancellingId) return
+
+    try {
+      const response = await fetch(`/api/workshop/appointments/${cancellingId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: cancelReason })
+      })
+
+      if (response.ok) {
+        // Aktualisiere die Terminliste
+        await fetchAppointments()
+        setShowCancelDialog(false)
+        setCancellingId(null)
+        setCancelReason('')
+      } else {
+        const data = await response.json()
+        alert('Fehler beim Stornieren: ' + (data.error || 'Unbekannter Fehler'))
+      }
+    } catch (error) {
+      console.error('Error cancelling appointment:', error)
+      alert('Fehler beim Stornieren des Termins')
+    }
+  }
 
   const fetchAppointments = async () => {
     try {
@@ -651,11 +685,82 @@ export default function WorkshopAppointments() {
                     Abgeschlossen am: {new Date(apt.completedAt).toLocaleDateString('de-DE')}
                   </div>
                 )}
+
+                {/* Stornieren Button - nur für bestätigte Termine */}
+                {apt.status === 'CONFIRMED' && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => handleCancelAppointment(apt.id)}
+                      className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                    >
+                      Termin stornieren
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* Stornierungsdialog */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Termin stornieren
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Möchten Sie diesen Termin wirklich stornieren? 
+              {(() => {
+                const apt = appointments.find(a => a.id === cancellingId)
+                if (!apt) return null
+                
+                try {
+                  const customerData = JSON.parse(apt.customerNotes || '{}')
+                  if (customerData.manualEntry) {
+                    return ' Der manuelle Termin wird vollständig gelöscht.'
+                  }
+                } catch {}
+                
+                return ' Das Angebot bleibt bestehen und die Provision ist weiterhin fällig.'
+              })()}
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Stornierungsgrund (optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={3}
+                placeholder="z.B. Kunde hat abgesagt..."
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelDialog(false)
+                  setCancellingId(null)
+                  setCancelReason('')
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={confirmCancelAppointment}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              >
+                Stornieren
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

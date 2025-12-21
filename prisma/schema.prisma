@@ -35,9 +35,9 @@ model AdminNotificationSetting {
 // ============================================
 
 model AdminApiSetting {
-  id    String  @id @default(cuid())
-  key   String  @unique // e.g., "GOCARDLESS_ACCESS_TOKEN", "GOOGLE_OAUTH_CLIENT_ID"
-  value String? // The actual API key/secret (encrypted in production)
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g., "GOCARDLESS_ACCESS_TOKEN", "GOOGLE_OAUTH_CLIENT_ID"
+  value       String? // The actual API key/secret (encrypted in production)
   description String? // What this key is for
 
   createdAt DateTime @default(now())
@@ -51,19 +51,19 @@ model AdminApiSetting {
 // ============================================
 
 model EmailTemplate {
-  id          String   @id @default(cuid())
-  key         String   @unique // e.g., "BOOKING_CONFIRMATION_CUSTOMER", "BOOKING_CONFIRMATION_WORKSHOP"
-  name        String   // Display name: "Terminbestätigung - Kunde"
-  description String?  // What this template is used for
-  subject     String   // Email subject line with placeholders
-  htmlContent String   @db.Text // HTML email content with placeholders
-  
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g., "BOOKING_CONFIRMATION_CUSTOMER", "BOOKING_CONFIRMATION_WORKSHOP"
+  name        String // Display name: "Terminbestätigung - Kunde"
+  description String? // What this template is used for
+  subject     String // Email subject line with placeholders
+  htmlContent String  @db.Text // HTML email content with placeholders
+
   // Placeholders documentation (JSON array of available placeholders)
-  placeholders String  @db.Text // JSON: [{"key": "customerName", "description": "Name des Kunden"}]
-  
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  placeholders String @db.Text // JSON: [{"key": "customerName", "description": "Name des Kunden"}]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("email_templates")
 }
@@ -153,12 +153,12 @@ model Workshop {
 
   // Business Info
   customerNumber String  @unique @map("customer_number") // Eindeutige Kundennummer (z.B. KD-20231219-001)
-  companyName String
-  taxId       String?
-  website     String?
-  description String?
-  logoUrl     String? // Workshop Logo URL
-  taxMode     String  @default("STANDARD") // STANDARD (inkl. MwSt.), KLEINUNTERNEHMER (§19 UStG)
+  companyName    String
+  taxId          String?
+  website        String?
+  description    String?
+  logoUrl        String? // Workshop Logo URL
+  taxMode        String  @default("STANDARD") // STANDARD (inkl. MwSt.), KLEINUNTERNEHMER (§19 UStG)
 
   // Opening Hours (JSON String)
   openingHours String? // JSON: {"monday": "09:00-18:00", ...}
@@ -175,16 +175,16 @@ model Workshop {
 
   // PayPal
   paypalEmail String?
-  
+
   // GoCardless Integration
-  gocardlessCustomerId     String?   @unique // GoCardless Customer ID
-  gocardlessMandateId      String?   @unique // GoCardless Mandate ID
-  gocardlessMandateStatus  String?   // pending_submission, submitted, active, cancelled, failed, expired
-  gocardlessMandateRef     String?   @unique // Eindeutige Mandate Reference
+  gocardlessCustomerId       String?   @unique // GoCardless Customer ID
+  gocardlessMandateId        String?   @unique // GoCardless Mandate ID
+  gocardlessMandateStatus    String? // pending_submission, submitted, active, cancelled, failed, expired
+  gocardlessMandateRef       String?   @unique // Eindeutige Mandate Reference
   gocardlessMandateCreatedAt DateTime?
-  gocardlessBankAccountId  String?   // GoCardless Bank Account ID
-  gocardlessSessionToken   String?   @map("gocardless_session_token") // Temporary session token for redirect flow
-  gocardlessRedirectFlowId String?   @map("gocardless_redirect_flow_id") // Temporary redirect flow ID
+  gocardlessBankAccountId    String? // GoCardless Bank Account ID
+  gocardlessSessionToken     String?   @map("gocardless_session_token") // Temporary session token for redirect flow
+  gocardlessRedirectFlowId   String?   @map("gocardless_redirect_flow_id") // Temporary redirect flow ID
 
   // Payment Methods (JSON String)
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
@@ -205,7 +205,7 @@ model Workshop {
   googleTokenExpiry  DateTime? @map("googletokenexpiry")
 
   // Bereifung24 Employee Assignment
-  assignedEmployeeId String? @map("assigned_employee_id")
+  assignedEmployeeId String?      @map("assigned_employee_id")
   assignedEmployee   B24Employee? @relation("WorkshopAssignment", fields: [assignedEmployeeId], references: [id])
 
   // Relations
@@ -219,6 +219,9 @@ model Workshop {
   pricingSettings   PricingSettings?
   landingPage       WorkshopLandingPage?
   crmData           WorkshopCRM?
+
+  // Sales CRM - Converted from Prospect
+  prospectSource ProspectWorkshop? @relation("ConvertedFromProspect")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -319,7 +322,7 @@ model TireRequest {
   preferredBrands String? // Comma-separated brands
   specificBrand   String?
   additionalNotes String?
-  
+
   // Motorcycle specific
   mountOnMotorcycle Boolean @default(false) @map("mount_on_motorcycle") // For motorcycle tire requests: true = mount on whole motorcycle, false = wheels only (default)
 
@@ -356,7 +359,7 @@ model Vehicle {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   // Vehicle Details
-  vehicleType  String   @default("CAR") // CAR, MOTORCYCLE, TRAILER
+  vehicleType  String  @default("CAR") // CAR, MOTORCYCLE, TRAILER
   make         String
   model        String
   year         Int
@@ -369,9 +372,9 @@ model Vehicle {
   inspectionReminderDays Int?      @default(30) // Days before inspection to send reminder
 
   // Tire Sizes (stored as JSON)
-  summerTires     String? // JSON string with tire dimensions
-  winterTires     String? // JSON string with tire dimensions
-  allSeasonTires  String? // JSON string with tire dimensions
+  summerTires    String? // JSON string with tire dimensions
+  winterTires    String? // JSON string with tire dimensions
+  allSeasonTires String? // JSON string with tire dimensions
 
   // Current Tires
   currentTires VehicleTire[]
@@ -458,14 +461,14 @@ model Offer {
   tireOptions TireOption[]
 
   // Pricing
-  price            Float // Total price (for compatibility)
-  pricePerTire     Float?
-  installationFee  Float?
-  durationMinutes  Int? // Geschätzte Dauer für den Service
-  balancingPrice   Float?   @map("balancingprice") // Wuchten-Preis für Wheel Change
-  storagePrice     Float?   @map("storageprice") // Einlagerung-Preis für Wheel Change
-  storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
-  motorcycleTireType String? @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle offers
+  price              Float // Total price (for compatibility)
+  pricePerTire       Float?
+  installationFee    Float?
+  durationMinutes    Int? // Geschätzte Dauer für den Service
+  balancingPrice     Float?   @map("balancingprice") // Wuchten-Preis für Wheel Change
+  storagePrice       Float?   @map("storageprice") // Einlagerung-Preis für Wheel Change
+  storageAvailable   Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
+  motorcycleTireType String?  @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle offers
 
   // Validity
   validUntil DateTime
@@ -492,13 +495,13 @@ model TireOption {
   offerId String @map("offer_id")
   offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
 
-  brand        String
-  model        String
-  pricePerTire Float  @map("price_per_tire")
-  montagePrice Float? @map("montage_price") // Montage price for service packages (Brake, Battery, etc.)
+  brand              String
+  model              String
+  pricePerTire       Float   @map("price_per_tire")
+  montagePrice       Float?  @map("montage_price") // Montage price for service packages (Brake, Battery, etc.)
   motorcycleTireType String? @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle tire options
-  carTireType String? @map("car_tire_type") // ALL_FOUR, FRONT_TWO, or REAR_TWO for car tire options
-  description String? // Achsen-Info für Brake Service (z.B. "Vorderachse: Nur Bremsbeläge")
+  carTireType        String? @map("car_tire_type") // ALL_FOUR, FRONT_TWO, or REAR_TWO for car tire options
+  description        String? // Achsen-Info für Brake Service (z.B. "Vorderachse: Nur Bremsbeläge")
 
   bookings Booking[]
 
@@ -629,13 +632,13 @@ model Commission {
   orderTotal       Float // Gesamtbetrag des Auftrags (Brutto)
   commissionRate   Float @default(4.9) // Prozentsatz (4,9%)
   commissionAmount Float // Berechnete Provision (Brutto)
-  
+
   // Tax Calculation (für Rechnung)
-  taxRate          Float @default(19.0) // MwSt-Satz (19%)
-  taxAmount        Float? // MwSt-Betrag auf Provision
-  netAmount        Float? // Provision Netto (ohne MwSt)
-  grossAmount      Float? // Provision Brutto (= commissionAmount)
-  
+  taxRate     Float  @default(19.0) // MwSt-Satz (19%)
+  taxAmount   Float? // MwSt-Betrag auf Provision
+  netAmount   Float? // Provision Netto (ohne MwSt)
+  grossAmount Float? // Provision Brutto (= commissionAmount)
+
   // Billing Period
   billingPeriodStart DateTime? // Start des Abrechnungszeitraums
   billingPeriodEnd   DateTime? // Ende des Abrechnungszeitraums
@@ -653,17 +656,17 @@ model Commission {
   // SEPA/GoCardless Details
   sepaReference String? // Legacy SEPA Referenz
   sepaStatus    String? // Legacy SEPA Status
-  
+
   // GoCardless Integration
-  gocardlessPaymentId     String? @unique // GoCardless Payment ID
+  gocardlessPaymentId     String?   @unique // GoCardless Payment ID
   gocardlessPaymentStatus String? // pending_submission, submitted, confirmed, paid_out, failed, cancelled
   gocardlessChargeDate    DateTime? // Geplantes Abbuchungsdatum
   gocardlessPayoutId      String? // GoCardless Payout ID (wenn ausgezahlt)
-  
+
   // Invoice/Document
-  invoiceNumber    String? @unique // Rechnungsnummer (z.B. RE-2024-001)
-  invoiceUrl       String? // Link zur generierten PDF-Rechnung
-  invoiceSentAt    DateTime? // Wann wurde Rechnung versendet
+  invoiceNumber String?   @unique // Rechnungsnummer (z.B. RE-2024-001)
+  invoiceUrl    String? // Link zur generierten PDF-Rechnung
+  invoiceSentAt DateTime? // Wann wurde Rechnung versendet
 
   notes String?
 
@@ -879,72 +882,79 @@ model WorkshopLandingPage {
 // ============================================
 
 model B24Employee {
-  id        String  @id @default(cuid())
-  email     String  @unique
-  password  String? // Null until they set it via email link
-  
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String? // Null until they set it via email link
+
   // Personal Info
-  firstName String
-  lastName  String
-  phone     String?
-  position  String? // e.g., "Account Manager", "Buchhalter", "Marketing Manager"
+  firstName  String
+  lastName   String
+  phone      String?
+  position   String? // e.g., "Account Manager", "Buchhalter", "Marketing Manager"
   department String? // e.g., "Buchhaltung", "Marketing", "Vertrieb", "Support"
-  
+
   // Status
-  isActive Boolean @default(true)
+  isActive      Boolean @default(true)
   emailVerified Boolean @default(false)
-  
+
   // Password Setup
-  setupToken String? @unique // Token for initial password setup
+  setupToken       String?   @unique // Token for initial password setup
   setupTokenExpiry DateTime? // Token expires after 24h
-  
+
   // Login tracking
   lastLoginAt DateTime?
-  
+
   // Relations
-  permissions B24EmployeePermission[]
-  assignedWorkshops Workshop[] @relation("WorkshopAssignment")
-  activityLogs B24EmployeeActivityLog[]
-  
+  permissions       B24EmployeePermission[]
+  assignedWorkshops Workshop[]               @relation("WorkshopAssignment")
+  activityLogs      B24EmployeeActivityLog[]
+
+  // Sales CRM Relations
+  assignedProspects   ProspectWorkshop[]    @relation("AssignedProspects")
+  createdInteractions ProspectInteraction[] @relation("InteractionCreator")
+  assignedTasks       ProspectTask[]        @relation("AssignedTasks")
+  createdTasks        ProspectTask[]        @relation("TaskCreator")
+  createdNotes        ProspectNote[]        @relation("NoteCreator")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("b24_employees")
 }
 
 model B24EmployeePermission {
-  id         String @id @default(cuid())
+  id         String      @id @default(cuid())
   employeeId String
   employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
+
   // Which admin page/section
   resource String // e.g., "customers", "workshops", "analytics", "billing", "email-templates"
-  
+
   // What they can do
   canRead   Boolean @default(false)
   canWrite  Boolean @default(false)
   canDelete Boolean @default(false)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([employeeId, resource])
   @@map("b24_employee_permissions")
 }
 
 model B24EmployeeActivityLog {
-  id         String @id @default(cuid())
+  id         String      @id @default(cuid())
   employeeId String
   employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
+
   action     String // e.g., "workshop_assigned", "customer_contacted", "offer_reviewed"
   resource   String? // e.g., "workshop", "customer", "offer"
   resourceId String? // ID of the resource
   details    String? @db.Text // JSON with additional details
   ipAddress  String?
-  
+
   createdAt DateTime @default(now())
-  
+
   @@index([employeeId])
   @@index([createdAt])
   @@map("b24_employee_activity_logs")
@@ -955,85 +965,85 @@ model B24EmployeeActivityLog {
 // ============================================
 
 model WorkshopCRM {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   workshopId String
   workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  
+
   // Sales Status
-  leadStatus String @default("NEUKONTAKT") // NEUKONTAKT, INTERESSIERT, VERHANDLUNG, AKTIV, INAKTIV
-  potential  String? // HOCH, MITTEL, NIEDRIG
+  leadStatus              String   @default("NEUKONTAKT") // NEUKONTAKT, INTERESSIERT, VERHANDLUNG, AKTIV, INAKTIV
+  potential               String? // HOCH, MITTEL, NIEDRIG
   estimatedMonthlyRevenue Decimal? @db.Decimal(10, 2)
-  
+
   // Contact Person
   mainContactName     String?
   mainContactPosition String?
   mainContactPhone    String?
   mainContactEmail    String?
   decisionMaker       Boolean @default(false)
-  
+
   // Competition
   otherPlatforms String? @db.Text // Comma-separated or JSON
-  
+
   // Next Steps
   nextContactDate DateTime?
   nextContactType String? // TELEFON, BESUCH, EMAIL
-  followUpNotes   String? @db.Text
-  
+  followUpNotes   String?   @db.Text
+
   // Contract Status
-  contractStatus String? // KEIN_VERTRAG, ANGEBOT_GESENDET, VERHANDLUNG, VERTRAG_AKTIV
+  contractStatus    String? // KEIN_VERTRAG, ANGEBOT_GESENDET, VERHANDLUNG, VERTRAG_AKTIV
   contractStartDate DateTime?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   interactions WorkshopInteraction[]
   notes        WorkshopNote[]
-  
+
   @@unique([workshopId])
   @@map("workshop_crm")
 }
 
 model WorkshopInteraction {
-  id        String @id @default(cuid())
-  crmId     String
-  crm       WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
-  
-  employeeId String?
+  id    String      @id @default(cuid())
+  crmId String
+  crm   WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
+
+  employeeId   String?
   employeeName String // Name of B24 employee who made contact
-  
-  type      String // TELEFON, BESUCH, EMAIL, MEETING
-  date      DateTime
-  duration  Int? // Duration in minutes
-  
-  summary   String @db.Text
-  outcome   String? // POSITIV, NEUTRAL, NEGATIV, FOLLOW_UP_NEEDED
-  
+
+  type     String // TELEFON, BESUCH, EMAIL, MEETING
+  date     DateTime
+  duration Int? // Duration in minutes
+
+  summary String  @db.Text
+  outcome String? // POSITIV, NEUTRAL, NEGATIV, FOLLOW_UP_NEEDED
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([crmId])
   @@index([date])
   @@map("workshop_interactions")
 }
 
 model WorkshopNote {
-  id        String @id @default(cuid())
-  crmId     String
-  crm       WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
-  
-  employeeId String?
+  id    String      @id @default(cuid())
+  crmId String
+  crm   WorkshopCRM @relation(fields: [crmId], references: [id], onDelete: Cascade)
+
+  employeeId   String?
   employeeName String // Name of B24 employee who created note
-  
-  category  String? // ALLGEMEIN, WICHTIG, ANFORDERUNG, PROBLEM, CHANCE
-  title     String?
-  content   String @db.Text
-  
-  isPinned  Boolean @default(false)
-  
+
+  category String? // ALLGEMEIN, WICHTIG, ANFORDERUNG, PROBLEM, CHANCE
+  title    String?
+  content  String  @db.Text
+
+  isPinned Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([crmId])
   @@index([createdAt])
   @@map("workshop_notes")
@@ -1067,26 +1077,262 @@ model PageView {
   pageTitle String? // Page title
 
   // User information
-  userId       String? // Logged-in user ID (optional)
-  userRole     String? // CUSTOMER, WORKSHOP, ADMIN (optional)
-  ipAddress    String? // IP address (anonymized for privacy)
-  userAgent    String? // Browser/device info
-  
+  userId    String? // Logged-in user ID (optional)
+  userRole  String? // CUSTOMER, WORKSHOP, ADMIN (optional)
+  ipAddress String? // IP address (anonymized for privacy)
+  userAgent String? // Browser/device info
+
   // Referrer
   referrer String? // Where did the user come from
 
   // Workshop landing page tracking
   workshopId String? // If viewing a workshop landing page
-  
+
   // Session tracking
   sessionId String? // Session identifier
 
   // Timing
-  viewedAt  DateTime @default(now())
-  
+  viewedAt DateTime @default(now())
+
   @@index([path])
   @@index([workshopId])
   @@index([viewedAt])
   @@index([userId])
   @@map("page_views")
 }
+
+// ============================================
+// SALES CRM - PROSPECT MANAGEMENT
+// ============================================
+
+// Potenzielle Werkstatt aus Google Places
+model ProspectWorkshop {
+  id String @id @default(cuid())
+
+  // Google Places Daten
+  googlePlaceId String  @unique @map("google_place_id")
+  name          String
+  address       String
+  city          String
+  postalCode    String  @map("postal_code")
+  state         String? // Bundesland
+  country       String  @default("DE")
+  phone         String?
+  website       String?
+  email         String?
+
+  // Google Places Ratings
+  rating      Float?
+  reviewCount Int?   @default(0) @map("review_count")
+  priceLevel  Int?   @map("price_level") // 0-4 (Google Places price level)
+
+  // Media
+  photoUrls String[] @map("photo_urls") // Array von Photo URLs
+
+  // Location
+  latitude  Float
+  longitude Float
+
+  // Google Places Metadata
+  placeTypes   String[] @map("place_types") // ["car_repair", "car_dealer", etc.]
+  openingHours Json?    @map("opening_hours") // Google Places opening hours structure
+
+  // Sales Pipeline
+  status           ProspectStatus @default(NEW)
+  priority         Priority       @default(MEDIUM)
+  estimatedRevenue Float?         @map("estimated_revenue") // Geschätzter Jahresumsatz
+
+  // Lead Scoring
+  leadScore Int? @default(50) @map("lead_score") // 0-100
+
+  // Zuständigkeit
+  assignedToId String?      @map("assigned_to_id") // B24Employee ID
+  assignedTo   B24Employee? @relation("AssignedProspects", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedAt   DateTime?    @map("assigned_at")
+
+  // Tracking
+  source           String // "google_places", "manual", "referral", "website"
+  firstContactDate DateTime? @map("first_contact_date")
+  lastContactDate  DateTime? @map("last_contact_date")
+  nextFollowUpDate DateTime? @map("next_follow_up_date")
+
+  // Conversion
+  convertedToWorkshopId String?   @unique @map("converted_to_workshop_id")
+  convertedWorkshop     Workshop? @relation("ConvertedFromProspect", fields: [convertedToWorkshopId], references: [id], onDelete: SetNull)
+  convertedAt           DateTime? @map("converted_at")
+  conversionValue       Float?    @map("conversion_value") // Tatsächlicher Wert bei Conversion
+
+  // Loss Tracking
+  lostReason String? @map("lost_reason") // Grund warum verloren
+
+  // Relations
+  interactions ProspectInteraction[]
+  tasks        ProspectTask[]
+  notes        ProspectNote[]
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([postalCode])
+  @@index([city])
+  @@index([leadScore])
+  @@index([nextFollowUpDate])
+  @@map("prospect_workshops")
+}
+
+enum ProspectStatus {
+  NEW // Neu gefunden
+  CONTACTED // Erstkontakt gemacht
+  QUALIFIED // Qualifiziert (hat Potenzial)
+  MEETING_SCHEDULED // Termin vereinbart
+  DEMO_COMPLETED // Demo durchgeführt
+  PROPOSAL_SENT // Angebot verschickt
+  NEGOTIATING // In Verhandlung
+  VERBAL_AGREEMENT // Mündliche Zusage
+  CONTRACT_SENT // Vertrag verschickt
+  WON // Gewonnen → Workshop erstellt
+  LOST // Verloren
+  NOT_INTERESTED // Kein Interesse
+  NOT_REACHABLE // Nicht erreichbar
+  CALLBACK // Follow-up geplant
+  ON_HOLD // Pausiert
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Interaktionen/Kontakthistorie
+model ProspectInteraction {
+  id String @id @default(cuid())
+
+  prospectId String           @map("prospect_id")
+  prospect   ProspectWorkshop @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  type    InteractionType
+  channel ContactChannel
+  subject String
+  notes   String          @db.Text
+  outcome String? // Ergebnis der Interaktion
+
+  // Duration for calls/meetings (in minutes)
+  duration Int?
+
+  // Sentiment Analysis
+  sentiment String? // "positive", "neutral", "negative"
+
+  // Next Steps
+  nextSteps String? @map("next_steps") @db.Text
+
+  // Attachments
+  attachments String[] // URLs zu hochgeladenen Dateien
+
+  createdById String      @map("created_by_id")
+  createdBy   B24Employee @relation("InteractionCreator", fields: [createdById], references: [id])
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([prospectId])
+  @@index([createdById])
+  @@index([createdAt])
+  @@map("prospect_interactions")
+}
+
+enum InteractionType {
+  CALL // Telefonat
+  EMAIL // E-Mail
+  MEETING // Persönliches Treffen
+  DEMO // Produkt-Demo
+  NOTE // Notiz/Memo
+  PROPOSAL // Angebot versendet
+  CONTRACT // Vertrag
+  FOLLOW_UP // Follow-up Kontakt
+}
+
+enum ContactChannel {
+  PHONE
+  EMAIL
+  IN_PERSON // Persönlich
+  VIDEO_CALL // Video-Call
+  WHATSAPP
+  SMS
+  LINKEDIN
+  OTHER
+}
+
+// Tasks/Follow-ups für Prospects
+model ProspectTask {
+  id String @id @default(cuid())
+
+  prospectId String           @map("prospect_id")
+  prospect   ProspectWorkshop @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?  @db.Text
+  dueDate     DateTime @map("due_date")
+
+  priority Priority   @default(MEDIUM)
+  status   TaskStatus @default(PENDING)
+
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at")
+
+  // Reminder
+  reminderDate DateTime? @map("reminder_date")
+  reminderSent Boolean   @default(false) @map("reminder_sent")
+
+  assignedToId String      @map("assigned_to_id")
+  assignedTo   B24Employee @relation("AssignedTasks", fields: [assignedToId], references: [id])
+
+  createdById String      @map("created_by_id")
+  createdBy   B24Employee @relation("TaskCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([prospectId])
+  @@index([assignedToId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("prospect_tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Notizen zu Prospects
+model ProspectNote {
+  id String @id @default(cuid())
+
+  prospectId String           @map("prospect_id")
+  prospect   ProspectWorkshop @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  content  String  @db.Text
+  isPinned Boolean @default(false) @map("is_pinned") // Wichtige Notizen anpinnen
+
+  createdById String      @map("created_by_id")
+  createdBy   B24Employee @relation("NoteCreator", fields: [createdById], references: [id])
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([prospectId])
+  @@index([createdById])
+  @@map("prospect_notes")
+}
+
+// Erweitere B24Employee Model für Sales-Beziehungen
+// (Diese Relations müssen zum existierenden B24Employee Model hinzugefügt werden)
+// assignedProspects     ProspectWorkshop[]      @relation("AssignedProspects")
+// createdInteractions   ProspectInteraction[]   @relation("InteractionCreator")
+// assignedTasks         ProspectTask[]          @relation("AssignedTasks")
+// createdTasks          ProspectTask[]          @relation("TaskCreator")
+// createdNotes          ProspectNote[]          @relation("NoteCreator")

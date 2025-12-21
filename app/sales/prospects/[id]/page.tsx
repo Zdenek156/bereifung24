@@ -137,12 +137,20 @@ const interactionTypeLabels: Record<string, string> = {
   FOLLOW_UP: 'Follow-up'
 };
 
+interface B24Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export default function ProspectDetailPage({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [prospect, setProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [employees, setEmployees] = useState<B24Employee[]>([]);
   
   // Forms state
   const [showInteractionForm, setShowInteractionForm] = useState(false);
@@ -159,8 +167,21 @@ export default function ProspectDetailPage({ params }: { params: { id: string } 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchProspect();
+      fetchEmployees();
     }
   }, [status, params.id]);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/admin/b24-employees');
+      if (response.ok) {
+        const data = await response.json();
+        setEmployees(data.employees || []);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
 
   const fetchProspect = async () => {
     setLoading(true);
@@ -192,6 +213,22 @@ export default function ProspectDetailPage({ params }: { params: { id: string } 
       }
     } catch (error) {
       console.error('Error updating status:', error);
+    }
+  };
+
+  const updateAssignee = async (assignedToId: string | null) => {
+    try {
+      const response = await fetch(`/api/sales/prospects/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignedToId: assignedToId || null })
+      });
+
+      if (response.ok) {
+        fetchProspect();
+      }
+    } catch (error) {
+      console.error('Error updating assignee:', error);
     }
   };
 
@@ -403,14 +440,24 @@ export default function ProspectDetailPage({ params }: { params: { id: string } 
                   </div>
                 )}
 
-                {prospect.assignedTo && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    {prospect.assignedTo.firstName} {prospect.assignedTo.lastName}
-                  </div>
-                )}
+                {/* Assigned To Dropdown */}
+                <div className="flex items-center space-x-2">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <select
+                    value={prospect.assignedTo?.id || ''}
+                    onChange={(e) => updateAssignee(e.target.value || null)}
+                    className="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  >
+                    <option value="">Nicht zugewiesen</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.firstName} {emp.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

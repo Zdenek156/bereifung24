@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     const {
       date,
       time,
-      duration = 60, // Standard: 60 Minuten
+      serviceId = null, // Service ID wenn ausgewählt
+      customDuration = null, // Manuelle Dauer wenn "Manuelle Eingabe" gewählt
       customerName,
       customerPhone,
       customerEmail,
@@ -24,6 +25,31 @@ export async function POST(request: Request) {
       vehicleInfo,
       notes
     } = body
+
+    if (!date || !time) {
+      return NextResponse.json(
+        { error: 'Datum und Uhrzeit sind erforderlich' },
+        { status: 400 }
+      )
+    }
+
+    // Lade Service-Daten wenn serviceId vorhanden
+    let selectedService = null
+    let duration = 60 // Standard
+    let serviceName = 'Manuell erstellter Termin'
+    
+    if (serviceId) {
+      selectedService = await prisma.service.findUnique({
+        where: { id: serviceId }
+      })
+      
+      if (selectedService) {
+        duration = selectedService.durationMinutes
+        serviceName = selectedService.name
+      }
+    } else if (customDuration) {
+      duration = customDuration
+    }
 
     if (!date || !time) {
       return NextResponse.json(
@@ -223,10 +249,10 @@ export async function POST(request: Request) {
         workshopId: workshop.id,
         validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Tage gültig
         status: 'ACCEPTED',
-        price: 0,
+        price: selectedService?.basePrice || 0,
         tireBrand: 'N/A',
-        tireModel: 'Manueller Termin',
-        description: serviceDescription || 'Manuell erstellter Termin',
+        tireModel: serviceName,
+        description: serviceDescription || serviceName,
         durationMinutes: duration
       }
     })

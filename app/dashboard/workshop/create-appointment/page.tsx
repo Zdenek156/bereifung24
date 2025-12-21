@@ -11,15 +11,25 @@ interface TimeSlot {
   available: boolean
 }
 
+interface Service {
+  id: string
+  name: string
+  basePrice: number
+  durationMinutes: number
+}
+
 export default function CreateAppointmentPage() {
   const { data: session } = useSession()
   const router = useRouter()
   
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
-  const [duration, setDuration] = useState(60) // Dauer in Minuten, Standard 60
+  const [selectedServiceId, setSelectedServiceId] = useState('') // 'manual' oder Service-ID
+  const [customDuration, setCustomDuration] = useState(60) // Für manuelle Eingabe
+  const [services, setServices] = useState<Service[]>([])
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [loadingServices, setLoadingServices] = useState(true)
   
   // Optionale Felder
   const [customerName, setCustomerName] = useState('')
@@ -32,12 +42,31 @@ export default function CreateAppointmentPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  // Lade Services beim Start
+  useEffect(() => {
+    loadServices()
+  }, [])
+
   // Lade verfügbare Zeitslots wenn Datum ausgewählt wurde
   useEffect(() => {
     if (selectedDate) {
       loadAvailableSlots()
     }
   }, [selectedDate])
+
+  const loadServices = async () => {
+    try {
+      const response = await fetch('/api/workshop/services')
+      if (response.ok) {
+        const data = await response.json()
+        setServices(data.services || [])
+      }
+    } catch (err) {
+      console.error('Error loading services:', err)
+    } finally {
+      setLoadingServices(false)
+    }
+  }
 
   const loadAvailableSlots = async () => {
     setLoadingSlots(true)
@@ -68,6 +97,11 @@ export default function CreateAppointmentPage() {
       setError('Bitte wählen Sie ein Datum und eine Uhrzeit aus')
       return
     }
+
+    if (!selectedServiceId) {
+      setError('Bitte wählen Sie einen Service aus')
+      return
+    }
     
     setSubmitting(true)
     setError('')
@@ -81,7 +115,8 @@ export default function CreateAppointmentPage() {
         body: JSON.stringify({
           date: selectedDate,
           time: selectedTime,
-          duration,
+          serviceId: selectedServiceId === 'manual' ? null : selectedServiceId,
+          customDuration: selectedServiceId === 'manual' ? customDuration : null,
           customerName: customerName.trim() || null,
           customerPhone: customerPhone.trim() || null,
           customerEmail: customerEmail.trim() || null,
@@ -193,27 +228,56 @@ export default function CreateAppointmentPage() {
               )}
             </div>
 
-            {/* Dauer-Auswahl */}
+            {/* Service-Auswahl */}
             <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
-                Termin-Dauer *
+              <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
+                Service *
               </label>
-              <select
-                id="duration"
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                required
-              >
-                <option value={30}>30 Minuten</option>
-                <option value={60}>1 Stunde</option>
-                <option value={90}>1,5 Stunden</option>
-                <option value={120}>2 Stunden</option>
-                <option value={150}>2,5 Stunden</option>
-                <option value={180}>3 Stunden</option>
-                <option value={240}>4 Stunden</option>
-              </select>
+              {loadingServices ? (
+                <div className="text-center py-2">
+                  <span className="text-sm text-gray-500">Lade Services...</span>
+                </div>
+              ) : (
+                <select
+                  id="service"
+                  value={selectedServiceId}
+                  onChange={(e) => setSelectedServiceId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Bitte wählen...</option>
+                  {services.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} ({service.durationMinutes} Min, {service.basePrice.toFixed(2)}€)
+                    </option>
+                  ))}
+                  <option value="manual">➕ Manuelle Eingabe</option>
+                </select>
+              )}
             </div>
+
+            {/* Manuelle Dauer-Eingabe (nur wenn "Manuelle Eingabe" gewählt) */}
+            {selectedServiceId === 'manual' && (
+              <div>
+                <label htmlFor="customDuration" className="block text-sm font-medium text-gray-700 mb-2">
+                  Dauer in Minuten *
+                </label>
+                <input
+                  type="number"
+                  id="customDuration"
+                  value={customDuration}
+                  onChange={(e) => setCustomDuration(Number(e.target.value))}
+                  min="15"
+                  step="15"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="z.B. 60"
+                  required
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Empfohlen: Vielfache von 15 Minuten
+                </p>
+              </div>
+            )}
 
             <div className="border-t border-gray-200 pt-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">

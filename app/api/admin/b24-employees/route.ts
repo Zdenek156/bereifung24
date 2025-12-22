@@ -2,17 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requirePermission } from '@/lib/permissions'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
 // GET - List all B24 employees
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'employees' read access or ADMIN
+    const permissionError = await requirePermission('employees', 'read')
+    if (permissionError) return permissionError
 
     const employees = await prisma.b24Employee.findMany({
       include: {
@@ -38,11 +37,9 @@ export async function GET(request: NextRequest) {
 // POST - Create new employee
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'employees' write access or ADMIN
+    const permissionError = await requirePermission('employees', 'write')
+    if (permissionError) return permissionError
 
     const body = await request.json()
     const { email, firstName, lastName, phone, position, department, permissions } = body

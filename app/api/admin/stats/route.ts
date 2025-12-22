@@ -2,17 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 export async function GET(req: NextRequest) {
   try {
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
+
     const session = await getServerSession(authOptions)
-
     console.log('Stats API - Session:', session ? `User: ${session.user.email}, Role: ${session.user.role}` : 'No session')
-
-    if (!session || session.user.role !== 'ADMIN') {
-      console.log('Stats API - Unauthorized access attempt')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Get current month start and end
     const now = new Date()

@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // GET /api/admin/analytics - Get page view statistics
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Nicht autorisiert' },
-        { status: 401 }
-      )
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
     const { searchParams } = new URL(request.url)
     const timeRange = searchParams.get('timeRange') || '7d' // 24h, 7d, 30d, 90d, year, all

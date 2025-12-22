@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, workshopVerifiedEmailTemplate } from '@/lib/email'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // PUT - Update workshop data including assigned employee
 export async function PUT(
@@ -10,11 +11,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
     const body = await req.json()
     const { assignedEmployeeId, ...otherData } = body
@@ -64,11 +62,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
     const body = await req.json()
     const { isVerified } = body
@@ -122,11 +117,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
     // Hole die Werkstatt mit User ID
     const workshop = await prisma.workshop.findUnique({

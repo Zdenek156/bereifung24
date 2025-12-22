@@ -17,16 +17,9 @@ export async function GET(request: NextRequest) {
     const employees = await prisma.b24Employee.findMany({
       include: {
         permissions: true,
-        assignedWorkshops: {
-          select: {
-            id: true,
-            companyName: true,
-            city: true,
-          }
-        },
         _count: {
           select: {
-            assignedWorkshops: true
+            assignedProspects: true
           }
         }
       },

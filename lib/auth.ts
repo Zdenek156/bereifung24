@@ -101,8 +101,9 @@ export const authOptions: NextAuthOptions = {
             id: employee.id,
             email: employee.email,
             name: `${employee.firstName} ${employee.lastName}`,
-            role: 'ADMIN', // B24 employees get ADMIN role
+            role: 'B24_EMPLOYEE', // B24 employees get their own role
             isB24Employee: true,
+            b24EmployeeId: employee.id,
           }
         }
 
@@ -224,6 +225,7 @@ export const authOptions: NextAuthOptions = {
         token.customerId = user.customerId
         token.workshopId = user.workshopId
         token.isB24Employee = user.isB24Employee
+        token.b24EmployeeId = user.b24EmployeeId
       }
       return token
     },
@@ -233,6 +235,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.customerId = token.customerId as string | undefined
         session.user.workshopId = token.workshopId as string | undefined
+        session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
       }
       return session
     }

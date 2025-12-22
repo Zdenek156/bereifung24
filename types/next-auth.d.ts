@@ -9,6 +9,7 @@ declare module 'next-auth' {
       role: string
       customerId?: string
       workshopId?: string
+      b24EmployeeId?: string
     }
   }
 
@@ -17,6 +18,7 @@ declare module 'next-auth' {
     customerId?: string
     workshopId?: string
     isB24Employee?: boolean
+    b24EmployeeId?: string
   }
 }
 
@@ -27,5 +29,6 @@ declare module 'next-auth/jwt' {
     customerId?: string
     workshopId?: string
     isB24Employee?: boolean
+    b24EmployeeId?: string
   }
 }

@@ -6,6 +6,41 @@ import { prisma } from '@/lib/prisma'
 type PermissionAction = 'read' | 'write' | 'delete'
 
 /**
+ * Check if user has read permission for a resource (client-side friendly)
+ * Returns true if user is ADMIN or B24_EMPLOYEE with read permission
+ */
+export async function canAccessResource(
+  resource: string
+): Promise<boolean> {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user) {
+    return false
+  }
+
+  // ADMINs have full access
+  if (session.user.role === 'ADMIN') {
+    return true
+  }
+
+  // B24_EMPLOYEE: Check read permission
+  if (session.user.role === 'B24_EMPLOYEE' && session.user.b24EmployeeId) {
+    const permission = await prisma.b24EmployeePermission.findUnique({
+      where: {
+        employeeId_resource: {
+          employeeId: session.user.b24EmployeeId,
+          resource
+        }
+      }
+    })
+
+    return permission?.canRead ?? false
+  }
+
+  return false
+}
+
+/**
  * Check if user has permission to access a resource
  * Returns true if user is ADMIN or B24_EMPLOYEE with the required permission
  */

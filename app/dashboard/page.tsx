@@ -25,6 +25,7 @@ export default function DashboardPage() {
         router.push('/dashboard/workshop')
         break
       case 'ADMIN':
+      case 'B24_EMPLOYEE':
         router.push('/admin')
         break
       default:

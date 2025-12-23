@@ -11,7 +11,17 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check permissions
+    const isAdmin = session.user.role === 'ADMIN'
+    const isEmployee = session.user.role === 'B24_EMPLOYEE'
+    const isSelf = isEmployee && session.user.b24EmployeeId === params.id
+
+    // B24_EMPLOYEE can only view themselves, ADMIN can view anyone
+    if (!isAdmin && !isSelf) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,7 +33,11 @@ export async function GET(
           select: {
             id: true,
             companyName: true,
-            city: true,
+            user: {
+              select: {
+                city: true,
+              }
+            }
           }
         },
         activityLogs: {

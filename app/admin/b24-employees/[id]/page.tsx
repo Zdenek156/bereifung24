@@ -18,23 +18,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArrowLeft, Save, Mail, Building2, Activity, TrendingUp } from 'lucide-react'
 
 const AVAILABLE_RESOURCES = [
-  { value: 'customers', label: 'Kunden' },
-  { value: 'workshops', label: 'Werkstätten' },
-  { value: 'bookings', label: 'Buchungen' },
-  { value: 'offers', label: 'Angebote' },
+  { value: 'workshops', label: 'Werkstattverwaltung' },
+  { value: 'customers', label: 'Kundenverwaltung' },
+  { value: 'email', label: 'E-Mail Versand' },
+  { value: 'bookings', label: 'Buchungsverwaltung' },
+  { value: 'commissions', label: 'Provisionsverwaltung' },
+  { value: 'notifications', label: 'Benachrichtigungen' },
+  { value: 'territories', label: 'Gebietsverwaltung' },
+  { value: 'cleanup', label: 'Datenbank Bereinigung' },
+  { value: 'sepa-mandates', label: 'SEPA-Mandate' },
+  { value: 'api-settings', label: 'API-Einstellungen' },
+  { value: 'email-settings', label: 'Email-Einstellungen' },
+  { value: 'email-templates', label: 'Email Templates' },
+  { value: 'b24-employees', label: 'Mitarbeiterverwaltung' },
   { value: 'analytics', label: 'Analytics' },
-  { value: 'billing', label: 'Abrechnung' },
-  { value: 'email-templates', label: 'Email-Templates' },
-  { value: 'employees', label: 'Mitarbeiter' },
-  { value: 'settings', label: 'Einstellungen' },
-  { value: 'sales-crm', label: 'Sales CRM' },
+  { value: 'server-info', label: 'Server-Übersicht' },
+  { value: 'security', label: 'Sicherheit & Account' },
+  { value: 'sales', label: 'Sales CRM' },
 ]
 
 interface Permission {
   resource: string
-  canRead: boolean
-  canWrite: boolean
-  canDelete: boolean
+  hasAccess: boolean
 }
 
 interface Workshop {
@@ -138,9 +143,7 @@ export default function EditEmployeePage() {
   const [permissions, setPermissions] = useState<Permission[]>(
     AVAILABLE_RESOURCES.map(resource => ({
       resource: resource.value,
-      canRead: false,
-      canWrite: false,
-      canDelete: false
+      hasAccess: false
     }))
   )
 
@@ -168,11 +171,9 @@ export default function EditEmployeePage() {
         // Merge permissions
         const mergedPermissions = AVAILABLE_RESOURCES.map(resource => {
           const existingPerm = data.permissions.find((p: Permission) => p.resource === resource.value)
-          return existingPerm || {
+          return {
             resource: resource.value,
-            canRead: false,
-            canWrite: false,
-            canDelete: false
+            hasAccess: existingPerm ? (existingPerm.canRead || existingPerm.canWrite || existingPerm.canDelete) : false
           }
         })
         setPermissions(mergedPermissions)
@@ -206,9 +207,9 @@ export default function EditEmployeePage() {
     })
   }
 
-  const handlePermissionChange = (resourceIndex: number, permission: 'canRead' | 'canWrite' | 'canDelete', checked: boolean) => {
+  const handlePermissionChange = (resourceIndex: number, checked: boolean) => {
     const newPermissions = [...permissions]
-    newPermissions[resourceIndex][permission] = checked
+    newPermissions[resourceIndex].hasAccess = checked
     setPermissions(newPermissions)
   }
 
@@ -218,8 +219,13 @@ export default function EditEmployeePage() {
 
     try {
       const activePermissions = permissions.filter(
-        perm => perm.canRead || perm.canWrite || perm.canDelete
-      )
+        perm => perm.hasAccess
+      ).map(perm => ({
+        resource: perm.resource,
+        canRead: true,
+        canWrite: true,
+        canDelete: true
+      }))
 
       const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
         method: 'PUT',
@@ -411,42 +417,27 @@ export default function EditEmployeePage() {
                       Mitarbeiter ist aktiv
                     </Label>
                   </div>
-                </div>
-
-                {/* Permissions */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Zugriffsrechte</h3>
+                  <p className="text-sm text-gray-600">
+                    Wählen Sie aus, welche Seiten und Funktionen dieser Mitarbeiter sehen und nutzen kann.
+                  </p>
 
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Bereich</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Lesen</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Schreiben</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Löschen</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Seite / Bereich</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Zugriff erlauben</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {AVAILABLE_RESOURCES.map((resource, index) => (
                           <tr key={resource.value} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">{resource.label}</td>
+                            <td className="px-4 py-3 text-sm font-medium">{resource.label}</td>
                             <td className="px-4 py-3 text-center">
                               <Checkbox
-                                checked={permissions[index].canRead}
+                                checked={permissions[index].hasAccess}
                                 onCheckedChange={(checked) => 
-                                  handlePermissionChange(index, 'canRead', checked as boolean)
-                                }
-                              />
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <Checkbox
-                                checked={permissions[index].canWrite}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(index, 'canWrite', checked as boolean)
-                                }
-                              />
-                            </td>
+                                  handlePermissionChange(index
                             <td className="px-4 py-3 text-center">
                               <Checkbox
                                 checked={permissions[index].canDelete}

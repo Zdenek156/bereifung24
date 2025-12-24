@@ -437,12 +437,7 @@ export default function EditEmployeePage() {
                               <Checkbox
                                 checked={permissions[index].hasAccess}
                                 onCheckedChange={(checked) => 
-                                  handlePermissionChange(index
-                            <td className="px-4 py-3 text-center">
-                              <Checkbox
-                                checked={permissions[index].canDelete}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(index, 'canDelete', checked as boolean)
+                                  handlePermissionChange(index, checked as boolean)
                                 }
                               />
                             </td>

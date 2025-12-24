@@ -21,7 +21,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'workshops', label: 'Werkstattverwaltung' },
   { value: 'customers', label: 'Kundenverwaltung' },
   { value: 'email', label: 'E-Mail Versand' },
-  { value: 'bookings', label: 'Buchungsverwaltung' },
+  { value: 'billing', label: 'Monatliche Abrechnung' },
   { value: 'commissions', label: 'Provisionsverwaltung' },
   { value: 'notifications', label: 'Benachrichtigungen' },
   { value: 'territories', label: 'Gebietsverwaltung' },

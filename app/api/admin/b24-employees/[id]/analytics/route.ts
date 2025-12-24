@@ -36,10 +36,10 @@ export async function GET(
             id: true,
             companyName: true,
             createdAt: true,
+            isVerified: true,
             user: {
               select: {
-                isActive: true,
-                isVerified: true
+                isActive: true
               }
             }
           }

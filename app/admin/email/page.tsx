@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-type RecipientGroup = 'all_workshops' | 'all_customers' | 'workshops_no_revenue' | 'customers_no_requests'
+type RecipientGroup = 'all_workshops' | 'all_customers' | 'all_employees' | 'workshops_no_revenue' | 'customers_no_requests'
 
 export default function AdminEmailPage() {
   const [recipientGroup, setRecipientGroup] = useState<RecipientGroup>('all_customers')
@@ -20,6 +20,7 @@ export default function AdminEmailPage() {
   const recipientOptions = [
     { value: 'all_workshops', label: 'Alle Werkstätten', icon: '🏭' },
     { value: 'all_customers', label: 'Alle Kunden', icon: '👥' },
+    { value: 'all_employees', label: 'Alle Mitarbeiter', icon: '👔' },
     { value: 'workshops_no_revenue', label: 'Werkstätten ohne Umsatz', icon: '💤' },
     { value: 'customers_no_requests', label: 'Kunden ohne Anfragen', icon: '📝' }
   ]

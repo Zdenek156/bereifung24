@@ -97,6 +97,20 @@ export async function GET(request: NextRequest) {
           }))
         break
 
+      case 'all_employees':
+        const employees = await prisma.b24Employee.findMany({
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        })
+        recipients = employees.map(e => ({
+          email: e.email,
+          name: `${e.firstName} ${e.lastName}`
+        }))
+        break
+
       case 'customers_no_requests':
         const customersNoRequests = await prisma.customer.findMany({
           include: {

@@ -131,6 +131,20 @@ export async function POST(request: NextRequest) {
           }))
         break
 
+      case 'all_employees':
+        const employees = await prisma.b24Employee.findMany({
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        })
+        recipients = employees.map(e => ({
+          email: e.email,
+          name: `${e.firstName} ${e.lastName}`
+        }))
+        break
+
       default:
         return NextResponse.json(
           { error: 'Ungültige Empfängergruppe' },

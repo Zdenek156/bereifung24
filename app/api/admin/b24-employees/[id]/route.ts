@@ -119,7 +119,11 @@ export async function PUT(
           select: {
             id: true,
             companyName: true,
-            city: true,
+            user: {
+              select: {
+                city: true,
+              }
+            }
           }
         }
       }

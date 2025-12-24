@@ -9,8 +9,11 @@ export default function AdminEmailPage() {
   const [recipientGroup, setRecipientGroup] = useState<RecipientGroup>('all_customers')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [testEmail, setTestEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [testLoading, setTestLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [testSuccess, setTestSuccess] = useState(false)
   const [error, setError] = useState('')
   const [stats, setStats] = useState<{
     recipientCount: number
@@ -86,6 +89,52 @@ export default function AdminEmailPage() {
     }
   }
 
+  const handleTestEmail = async () => {
+    setError('')
+    setTestSuccess(false)
+    
+    if (!testEmail.trim()) {
+      setError('Bitte geben Sie eine Test-E-Mail-Adresse ein')
+      return
+    }
+
+    if (!subject.trim() || !message.trim()) {
+      setError('Bitte füllen Sie Betreff und Nachricht aus')
+      return
+    }
+
+    setTestLoading(true)
+
+    try {
+      const response = await fetch('/api/admin/email/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          testEmail,
+          subject,
+          message
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Fehler beim Senden der Test-E-Mail')
+        setTestLoading(false)
+        return
+      }
+
+      setTestSuccess(true)
+      setTimeout(() => setTestSuccess(false), 5000)
+    } catch (err) {
+      setError('Ein Fehler ist aufgetreten')
+    } finally {
+      setTestLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -106,6 +155,18 @@ export default function AdminEmailPage() {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <span className="font-medium">E-Mails erfolgreich versendet!</span>
+            </div>
+          </div>
+        )}
+
+        {/* Test Email Success */}
+        {testSuccess && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">Test-E-Mail erfolgreich versendet!</span>
             </div>
           </div>
         )}
@@ -192,6 +253,41 @@ export default function AdminEmailPage() {
               />
               <p className="mt-2 text-sm text-gray-500">
                 Die Nachricht wird als HTML-formatierte E-Mail versendet.
+              </p>
+            </div>
+
+            {/* Test Email Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">🧪 Test-E-Mail versenden</h3>
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="test@example.com"
+                />
+                <button
+                  type="button"
+                  onClick={handleTestEmail}
+                  disabled={testLoading || !subject.trim() || !message.trim()}
+                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {testLoading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sende...
+                    </span>
+                  ) : (
+                    'Test senden'
+                  )}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Senden Sie eine Test-E-Mail, um die Vorschau zu prüfen bevor Sie an alle versenden
               </p>
             </div>
 

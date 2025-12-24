@@ -80,9 +80,7 @@ export default function NewEmployeePage() {
     setLoading(true)
 
     try {
-      // Filter out permissions that have at least one true value
-      const activePermissions = permissions.filter(
-        perm => permissions with access and convert to API format
+      // Filter permissions with access and convert to API format
       const activePermissions = permissions
         .filter(perm => perm.hasAccess)
         .map(perm => ({
@@ -90,7 +88,9 @@ export default function NewEmployeePage() {
           canRead: true,
           canWrite: true,
           canDelete: true
-        })const response = await fetch('/api/admin/b24-employees', {
+        }))
+
+      const response = await fetch('/api/admin/b24-employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

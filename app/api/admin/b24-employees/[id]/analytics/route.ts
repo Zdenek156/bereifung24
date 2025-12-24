@@ -35,9 +35,13 @@ export async function GET(
           select: {
             id: true,
             companyName: true,
-            isActive: true,
-            isVerified: true,
-            createdAt: true
+            createdAt: true,
+            user: {
+              select: {
+                isActive: true,
+                isVerified: true
+              }
+            }
           }
         }
       }

@@ -916,6 +916,11 @@ model B24Employee {
   createdTasks        ProspectTask[]        @relation("TaskCreator")
   createdNotes        ProspectNote[]        @relation("NoteCreator")
 
+  // KVP Relations
+  submittedImprovements ImprovementSuggestion[] @relation("ImprovementSubmitter")
+  assignedImprovements  ImprovementSuggestion[] @relation("ImprovementAssignee")
+  improvementComments   ImprovementComment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1336,3 +1341,79 @@ model ProspectNote {
 // assignedTasks         ProspectTask[]          @relation("AssignedTasks")
 // createdTasks          ProspectTask[]          @relation("TaskCreator")
 // createdNotes          ProspectNote[]          @relation("NoteCreator")
+
+// ============================================
+// KVP - KONTINUIERLICHER VERBESSERUNGSPROZESS
+// ============================================
+
+model ImprovementSuggestion {
+  id String @id @default(cuid())
+
+  title       String  @db.VarChar(200)
+  description String  @db.Text
+  category    String  @db.VarChar(50) // z.B. "UI/UX", "Performance", "Prozess", "Feature"
+  priority    ImprovementPriority @default(MEDIUM)
+  status      ImprovementStatus   @default(NEW)
+
+  // Zeitplan
+  estimatedEffort String? @db.VarChar(50) // z.B. "1 Tag", "1 Woche", "1 Monat"
+  plannedDate     DateTime? // Geplante Umsetzung
+  completedDate   DateTime? // Tatsächliche Umsetzung
+
+  // Beziehungen
+  submittedById String      @map("submitted_by_id")
+  submittedBy   B24Employee @relation("ImprovementSubmitter", fields: [submittedById], references: [id])
+
+  assignedToId String?      @map("assigned_to_id")
+  assignedTo   B24Employee? @relation("ImprovementAssignee", fields: [assignedToId], references: [id])
+
+  // Kommentare und Feedback
+  comments ImprovementComment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([submittedById])
+  @@index([assignedToId])
+  @@map("improvement_suggestions")
+}
+
+model ImprovementComment {
+  id String @id @default(cuid())
+
+  suggestionId String                 @map("suggestion_id")
+  suggestion   ImprovementSuggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+
+  content      String   @db.Text
+  isStatusNote Boolean  @default(false) @map("is_status_note") // true = System-Notiz bei Statusänderung
+
+  authorId String      @map("author_id")
+  author   B24Employee @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([suggestionId])
+  @@index([authorId])
+  @@map("improvement_comments")
+}
+
+enum ImprovementStatus {
+  NEW          // Neu eingereicht
+  IN_REVIEW    // In Prüfung
+  APPROVED     // Genehmigt
+  IN_PROGRESS  // In Umsetzung
+  COMPLETED    // Abgeschlossen
+  REJECTED     // Abgelehnt
+  ON_HOLD      // Zurückgestellt
+}
+
+enum ImprovementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

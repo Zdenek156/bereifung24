@@ -34,6 +34,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'server-info', label: 'Server-Übersicht' },
   { value: 'security', label: 'Sicherheit & Account' },
   { value: 'sales', label: 'Sales CRM' },
+  { value: 'kvp', label: 'KVP - Verbesserungsvorschläge' },
 ]
 
 interface Permission {

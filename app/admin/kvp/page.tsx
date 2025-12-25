@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ArrowLeft } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -186,11 +187,21 @@ export default function KVPPage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-2xl">KVP - Kontinuierlicher Verbesserungsprozess</CardTitle>
-              <CardDescription>
-                Verbesserungsvorschläge für Bereifung24 einreichen und verwalten
-              </CardDescription>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => router.push('/admin')}
+                variant="outline"
+                size="sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Zurück
+              </Button>
+              <div>
+                <CardTitle className="text-2xl">KVP - Kontinuierlicher Verbesserungsprozess</CardTitle>
+                <CardDescription>
+                  Verbesserungsvorschläge für Bereifung24 einreichen und verwalten
+                </CardDescription>
+              </div>
             </div>
             <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
               <DialogTrigger asChild>

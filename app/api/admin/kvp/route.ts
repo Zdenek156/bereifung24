@@ -75,9 +75,17 @@ export async function POST(request: NextRequest) {
   try {
     // Check permission - requires 'kvp' write access
     const permissionError = await requirePermission('kvp', 'write')
-    if (permissionError) return permissionError
+    if (permissionError) {
+      console.log('[KVP POST] Permission denied for kvp write')
+      return permissionError
+    }
 
     const session = await getServerSession(authOptions)
+    console.log('[KVP POST] Session:', { 
+      userId: session?.user?.id, 
+      role: session?.user?.role, 
+      b24EmployeeId: session?.user?.b24EmployeeId 
+    })
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

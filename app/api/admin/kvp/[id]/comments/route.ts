@@ -49,7 +49,28 @@ export async function POST(
       }
     })
 
-    // TODO: Send notification to submitter and assignee
+    // Get suggestion details for notification
+    const suggestion = await prisma.improvementSuggestion.findUnique({
+      where: { id: params.id },
+      select: {
+        title: true,
+        submittedById: true,
+        assignedToId: true
+      }
+    })
+
+    // Send notification to submitter and assignee
+    if (suggestion) {
+      const { notifyNewComment } = await import('@/lib/kvp-notifications')
+      notifyNewComment({
+        suggestionId: params.id,
+        suggestionTitle: suggestion.title,
+        commentText: content.trim(),
+        authorName: `${comment.author.firstName} ${comment.author.lastName}`,
+        submitterId: suggestion.submittedById,
+        assigneeId: suggestion.assignedToId
+      }).catch(err => console.error('Failed to send notification:', err))
+    }
 
     return NextResponse.json(comment, { status: 201 })
   } catch (error) {

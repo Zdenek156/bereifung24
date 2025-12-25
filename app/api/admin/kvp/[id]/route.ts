@@ -161,7 +161,18 @@ export async function PUT(
         }
       })
 
-      // TODO: Send notification to submitter and assignee
+      // Send notification to submitter and assignee
+      const { notifyStatusChange } = await import('@/lib/kvp-notifications')
+      const changerName = session.user.name || 'System'
+      notifyStatusChange({
+        suggestionId: params.id,
+        title: suggestion.title,
+        oldStatus: currentSuggestion.status,
+        newStatus: status,
+        changedBy: changerName,
+        submitterId: currentSuggestion.submittedById,
+        assigneeId: suggestion.assignedToId
+      }).catch(err => console.error('Failed to send notification:', err))
     }
 
     return NextResponse.json(suggestion)

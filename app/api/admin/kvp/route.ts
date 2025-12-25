@@ -181,7 +181,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // TODO: Send notification to admins/reviewers
+    // Send notification to admins/reviewers
+    const { notifyAdminsOfNewSuggestion } = await import('@/lib/kvp-notifications')
+    notifyAdminsOfNewSuggestion({
+      suggestionId: suggestion.id,
+      title: suggestion.title,
+      category: suggestion.category,
+      priority: suggestion.priority,
+      submitterName: `${suggestion.submittedBy.firstName} ${suggestion.submittedBy.lastName}`
+    }).catch(err => console.error('Failed to send notification:', err))
 
     return NextResponse.json(suggestion, { status: 201 })
   } catch (error) {

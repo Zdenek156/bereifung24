@@ -32,7 +32,8 @@ export async function GET() {
     'analytics',
     'server-info',
     'security',
-    'sales'
+    'sales',
+    'kvp'
   ]
 
   // ADMINs have access to everything

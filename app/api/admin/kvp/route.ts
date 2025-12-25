@@ -73,19 +73,33 @@ export async function GET(request: NextRequest) {
 // POST - Create new improvement suggestion
 export async function POST(request: NextRequest) {
   try {
-    // Check permission - requires 'kvp' write access
-    const permissionError = await requirePermission('kvp', 'write')
-    if (permissionError) {
-      console.log('[KVP POST] Permission denied for kvp write')
-      return permissionError
-    }
-
     const session = await getServerSession(authOptions)
-    console.log('[KVP POST] Session:', { 
+    console.log('[KVP POST] Session check:', { 
+      hasSession: !!session,
       userId: session?.user?.id, 
       role: session?.user?.role, 
       b24EmployeeId: session?.user?.b24EmployeeId 
     })
+    
+    if (!session?.user) {
+      console.log('[KVP POST] No session found - returning 401')
+      return NextResponse.json(
+        { error: 'Unauthorized - Please log in' },
+        { status: 401 }
+      )
+    }
+    
+    // ADMINs can always create suggestions
+    if (session.user.role !== 'ADMIN') {
+      // For non-admins, check permission
+      const permissionError = await requirePermission('kvp', 'write')
+      if (permissionError) {
+        console.log('[KVP POST] Permission denied for non-admin')
+        return permissionError
+      }
+    } else {
+      console.log('[KVP POST] Admin user - bypassing permission check')
+    }
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

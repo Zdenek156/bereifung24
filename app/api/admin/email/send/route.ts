@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     let recipients: { email: string; name: string }[] = []
 
     switch (recipientGroup) {
-      case 'all_workshops':
-        const workshops = await prisma.workshop.findMany({
+      case 'workshops_no_revenue':
+        const allWorkshops = await prisma.workshop.findMany({
           include: {
             user: {
               select: {
@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
                 firstName: true,
                 lastName: true
               }
-            }
+            },
+            commissions: true
           },
           where: {
             user: {
@@ -44,10 +45,38 @@ export async function POST(request: NextRequest) {
             }
           }
         })
-        recipients = workshops.map(w => ({
-          email: w.user.email,
-          name: w.companyName
-        }))
+        recipients = allWorkshops
+          .filter(w => w.commissions.length === 0)
+          .map(w => ({
+            email: w.user.email,
+            name: w.companyName
+          }))
+        break
+
+      case 'workshops_with_revenue':
+        const workshopsWithRevenue = await prisma.workshop.findMany({
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            },
+            commissions: true
+          },
+          where: {
+            user: {
+              isActive: true
+            }
+          }
+        })
+        recipients = workshopsWithRevenue
+          .filter(w => w.commissions.length > 0)
+          .map(w => ({
+            email: w.user.email,
+            name: w.companyName
+          }))
         break
 
       case 'all_customers':
@@ -73,8 +102,8 @@ export async function POST(request: NextRequest) {
         }))
         break
 
-      case 'workshops_no_revenue':
-        const workshopsNoRevenue = await prisma.workshop.findMany({
+      case 'customers_with_pending_offers':
+        const customersWithOffers = await prisma.customer.findMany({
           include: {
             user: {
               select: {
@@ -83,10 +112,12 @@ export async function POST(request: NextRequest) {
                 lastName: true
               }
             },
-            bookings: {
-              where: {
-                status: {
-                  in: ['CONFIRMED', 'COMPLETED']
+            tireRequests: {
+              include: {
+                offers: {
+                  where: {
+                    status: 'PENDING'
+                  }
                 }
               }
             }
@@ -97,11 +128,11 @@ export async function POST(request: NextRequest) {
             }
           }
         })
-        recipients = workshopsNoRevenue
-          .filter(w => w.bookings.length === 0)
-          .map(w => ({
-            email: w.user.email,
-            name: w.companyName
+        recipients = customersWithOffers
+          .filter(c => c.tireRequests.some(tr => tr.offers.length > 0))
+          .map(c => ({
+            email: c.user.email,
+            name: `${c.user.firstName} ${c.user.lastName}`
           }))
         break
 

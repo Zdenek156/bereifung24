@@ -5,6 +5,16 @@
 
 ---
 
+## ⚠️ WICHTIG: Zu überprüfen nach Feiertagen
+- [ ] **SEPA-Mandate Status prüfen** (ab 27.12.2025)
+  - Mandat "Test Reifen Werkstatt" ist auf `pending_submission` seit 17.12.2025
+  - Grund: Weihnachtsfeiertage - Banken arbeiten nicht
+  - Normale Verarbeitung dauert 3-5 Werktage
+  - Automatische Aktivierung durch GoCardless Webhook erwartet
+  - Button "Alle synchronisieren" auf `/admin/sepa-mandates` nutzen um Status zu aktualisieren
+
+---
+
 ## ✅ Phase 1: Projekt-Setup & Grundlagen (ABGESCHLOSSEN)
 - [x] Repository eingerichtet
 - [x] Next.js 14 Projekt erstellen

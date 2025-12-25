@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     if (!employeeId && session.user.role === 'ADMIN') {
       // For admins without B24Employee entry, create one
       const adminEmployee = await prisma.b24Employee.findFirst({
-        where: { userId: session.user.id }
+        where: { email: session.user.email }
       })
       
       if (adminEmployee) {
@@ -122,10 +122,11 @@ export async function POST(request: NextRequest) {
         // Create B24Employee for admin
         const newEmployee = await prisma.b24Employee.create({
           data: {
-            userId: session.user.id,
             firstName: session.user.name?.split(' ')[0] || 'Admin',
             lastName: session.user.name?.split(' ').slice(1).join(' ') || 'User',
-            email: session.user.email || ''
+            email: session.user.email || '',
+            emailVerified: true,
+            isActive: true
           }
         })
         employeeId = newEmployee.id

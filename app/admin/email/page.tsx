@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-type RecipientGroup = 'all_workshops' | 'all_customers' | 'all_employees' | 'workshops_no_revenue' | 'customers_no_requests'
+type RecipientGroup = 'workshops_no_revenue' | 'workshops_with_revenue' | 'customers_no_requests' | 'customers_with_pending_offers' | 'all_customers' | 'all_employees'
 
 export default function AdminEmailPage() {
   const [recipientGroup, setRecipientGroup] = useState<RecipientGroup>('all_customers')
@@ -21,11 +21,12 @@ export default function AdminEmailPage() {
   } | null>(null)
 
   const recipientOptions = [
-    { value: 'all_workshops', label: 'Alle Werkstätten', icon: '🏭' },
-    { value: 'all_customers', label: 'Alle Kunden', icon: '👥' },
-    { value: 'all_employees', label: 'Alle Mitarbeiter', icon: '👔' },
     { value: 'workshops_no_revenue', label: 'Werkstätten ohne Umsatz', icon: '💤' },
-    { value: 'customers_no_requests', label: 'Kunden ohne Anfragen', icon: '📝' }
+    { value: 'workshops_with_revenue', label: 'Werkstätten mit Umsatz', icon: '🏭' },
+    { value: 'customers_no_requests', label: 'Kunden ohne Anfragen', icon: '📝' },
+    { value: 'customers_with_pending_offers', label: 'Kunden mit offenen Angeboten', icon: '⏳' },
+    { value: 'all_customers', label: 'Alle Kunden', icon: '👥' },
+    { value: 'all_employees', label: 'Alle Mitarbeiter', icon: '👔' }
   ]
 
   const fetchRecipientStats = async (group: RecipientGroup) => {

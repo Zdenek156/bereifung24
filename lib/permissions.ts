@@ -112,22 +112,27 @@ export async function requirePermission(
   resource: string,
   action: PermissionAction
 ): Promise<NextResponse | null> {
+  console.log(`[requirePermission] Checking ${resource}:${action}`)
   const { allowed, user } = await hasPermission(resource, action)
+  console.log(`[requirePermission] Result - allowed: ${allowed}, user role: ${user?.role}`)
 
   if (!allowed) {
     if (!user) {
+      console.log(`[requirePermission] No user found - returning 401`)
       return NextResponse.json(
         { error: 'Unauthorized - Please log in' },
         { status: 401 }
       )
     }
 
+    console.log(`[requirePermission] User exists but insufficient permissions - returning 403`)
     return NextResponse.json(
       { error: 'Insufficient permissions', resource, action },
       { status: 403 }
     )
   }
 
+  console.log(`[requirePermission] Permission granted`)
   // Permission granted
   return null
 }

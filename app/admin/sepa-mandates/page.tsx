@@ -18,6 +18,7 @@ export default function SepaMandatesPage() {
   const [mandates, setMandates] = useState<SepaMandateInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState<string | null>(null)
+  const [bulkSyncing, setBulkSyncing] = useState(false)
 
   const fetchMandates = async () => {
     setLoading(true)
@@ -29,6 +30,28 @@ export default function SepaMandatesPage() {
       console.error('Error fetching mandates:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const syncAllMandates = async () => {
+    setBulkSyncing(true)
+    try {
+      const response = await fetch('/api/admin/sepa-mandates/sync', {
+        method: 'POST'
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        alert(`✅ ${result.synced} von ${result.total} Mandaten aktualisiert`)
+        fetchMandates()
+      } else {
+        alert('❌ Fehler beim Synchronisieren')
+      }
+    } catch (error) {
+      console.error('Error syncing all mandates:', error)
+      alert('❌ Fehler beim Synchronisieren')
+    } finally {
+      setBulkSyncing(false)
     }
   }
 
@@ -109,16 +132,28 @@ export default function SepaMandatesPage() {
               GoCardless Mandate-Status für alle Werkstätten
             </p>
           </div>
-          <button 
-            onClick={fetchMandates} 
-            disabled={loading}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
-          >
-            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Aktualisieren
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={syncAllMandates} 
+              disabled={bulkSyncing || loading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              <svg className={`w-4 h-4 ${bulkSyncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {bulkSyncing ? 'Synchronisiere...' : 'Alle synchronisieren'}
+            </button>
+            <button 
+              onClick={fetchMandates} 
+              disabled={loading}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Aktualisieren
+            </button>
+          </div>
         </div>
       </div>
 

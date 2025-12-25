@@ -921,6 +921,10 @@ model B24Employee {
   assignedImprovements  ImprovementSuggestion[] @relation("ImprovementAssignee")
   improvementComments   ImprovementComment[]
 
+  // File Management Relations
+  createdFolders FileFolder[]
+  uploadedFiles  FileUpload[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1416,4 +1420,55 @@ enum ImprovementPriority {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+// ============================================
+// FILE MANAGEMENT / DOCUMENT CLOUD
+// ============================================
+
+model FileFolder {
+  id          String   @id @default(cuid())
+  name        String
+  parentId    String?
+  parent      FileFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders  FileFolder[] @relation("FolderHierarchy")
+  
+  files       FileUpload[]
+  
+  createdById String
+  createdBy   B24Employee @relation(fields: [createdById], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([parentId])
+  @@index([createdById])
+  @@map("file_folders")
+}
+
+model FileUpload {
+  id            String   @id @default(cuid())
+  name          String   // Original filename
+  storagePath   String   @unique // Path on server filesystem
+  mimeType      String
+  size          Int      // Size in bytes
+  
+  folderId      String?
+  folder        FileFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  
+  uploadedById  String
+  uploadedBy    B24Employee @relation(fields: [uploadedById], references: [id])
+  
+  description   String?
+  
+  downloads     Int      @default(0)
+  lastDownloadAt DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([folderId])
+  @@index([uploadedById])
+  @@index([createdAt])
+  @@map("file_uploads")
 }

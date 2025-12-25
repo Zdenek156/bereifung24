@@ -219,3 +219,24 @@ export async function getUserPermissions(): Promise<Record<string, { canRead: bo
 
   return {}
 }
+
+// Available resources that can be assigned permissions
+export const AVAILABLE_RESOURCES = [
+  'customers',
+  'workshops',
+  'analytics',
+  'billing',
+  'email-templates',
+  'email',
+  'territories',
+  'commissions',
+  'security',
+  'api-settings',
+  'sepa-mandates',
+  'notifications',
+  'cleanup',
+  'b24-employees',
+  'sales-crm',
+  'kvp',
+  'files' // Document Management / Cloud Storage
+] as const

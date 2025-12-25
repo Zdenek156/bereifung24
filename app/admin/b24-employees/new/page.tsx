@@ -35,6 +35,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'security', label: 'Sicherheit & Account' },
   { value: 'sales', label: 'Sales CRM' },
   { value: 'kvp', label: 'KVP - Verbesserungsvorschläge' },
+  { value: 'files', label: 'Dateiverwaltung' },
 ]
 
 interface Permission {

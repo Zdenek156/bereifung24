@@ -78,9 +78,41 @@ export async function POST(request: NextRequest) {
     if (permissionError) return permissionError
 
     const session = await getServerSession(authOptions)
-    if (!session?.user?.b24EmployeeId) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    // Get employee ID - for ADMIN users, we need to find or create a B24Employee entry
+    let employeeId = session.user.b24EmployeeId
+    
+    if (!employeeId && session.user.role === 'ADMIN') {
+      // For admins without B24Employee entry, create one
+      const adminEmployee = await prisma.b24Employee.findFirst({
+        where: { userId: session.user.id }
+      })
+      
+      if (adminEmployee) {
+        employeeId = adminEmployee.id
+      } else {
+        // Create B24Employee for admin
+        const newEmployee = await prisma.b24Employee.create({
+          data: {
+            userId: session.user.id,
+            firstName: session.user.name?.split(' ')[0] || 'Admin',
+            lastName: session.user.name?.split(' ').slice(1).join(' ') || 'User',
+            email: session.user.email || ''
+          }
+        })
+        employeeId = newEmployee.id
+      }
+    }
+    
+    if (!employeeId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No employee profile found' },
         { status: 401 }
       )
     }
@@ -111,7 +143,7 @@ export async function POST(request: NextRequest) {
         priority: priority || 'MEDIUM',
         estimatedEffort,
         plannedDate: plannedDate ? new Date(plannedDate) : null,
-        submittedById: session.user.b24EmployeeId,
+        submittedById: employeeId,
         status: 'NEW'
       },
       include: {

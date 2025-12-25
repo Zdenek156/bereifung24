@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { gocardless } from '@/lib/gocardless'
+import { getGocardlessClient } from '@/lib/gocardless'
 
 export async function POST(request: Request) {
   try {
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     console.log(`🔄 Syncing ${workshops.length} pending mandates...`)
 
     const results = []
+    const gocardless = await getGocardlessClient()
 
     for (const workshop of workshops) {
       try {

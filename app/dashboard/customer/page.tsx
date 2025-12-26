@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
+import WeatherWidget from '@/components/WeatherWidget'
 
 export default function CustomerDashboard() {
   const { data: session } = useSession()
@@ -103,6 +104,11 @@ export default function CustomerDashboard() {
             </svg>
           </button>
         </div>
+      </div>
+
+      {/* Weather Widget */}
+      <div className="mb-8">
+        <WeatherWidget />
       </div>
 
       {/* Welcome & Instructions Section */}

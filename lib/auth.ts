@@ -58,6 +58,17 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Ungültiges Passwort')
           }
 
+          // For ADMIN users, check if they also have a B24Employee profile
+          let b24EmployeeId: string | undefined
+          if (user.role === 'ADMIN') {
+            const employee = await prisma.b24Employee.findUnique({
+              where: { email: user.email }
+            })
+            if (employee) {
+              b24EmployeeId = employee.id
+            }
+          }
+
           return {
             id: user.id,
             email: user.email,
@@ -65,6 +76,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             customerId: user.customer?.id,
             workshopId: user.workshop?.id,
+            b24EmployeeId,
           }
         }
 

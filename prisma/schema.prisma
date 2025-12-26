@@ -130,16 +130,49 @@ model Customer {
   emailNotifyOffers Boolean @default(true) // Benachrichtigung bei neuen Angeboten
 
   // Relations
-  tireRequests TireRequest[]
-  bookings     Booking[]
-  reviews      Review[]
-  tireRatings  TireRating[]
-  vehicles     Vehicle[]
+  tireRequests      TireRequest[]
+  bookings          Booking[]
+  reviews           Review[]
+  tireRatings       TireRating[]
+  vehicles          Vehicle[]
+  weatherAlert      WeatherAlert?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("customers")
+}
+
+// ============================================
+// WEATHER ALERT (Tire Change Reminder)
+// ============================================
+
+model WeatherAlert {
+  id         String @id @default(cuid())
+  customerId String @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Settings
+  isEnabled            Boolean @default(false) // Ob Benachrichtigungen aktiviert sind
+  temperatureThreshold Int     @default(7) // Temperatur-Schwelle in °C (z.B. 7°C)
+  daysInAdvance        Int     @default(3) // Wie viele Tage im Voraus benachrichtigen (1-7)
+  showOnDashboard      Boolean @default(true) // Widget auf Dashboard anzeigen
+
+  // Season Tracking
+  lastAlertSeason String? // WINTER_2024, SUMMER_2024 - verhindert doppelte Benachrichtigung
+  lastAlertDate   DateTime?
+
+  // Location (falls abweichend von User-Adresse)
+  useCustomLocation Boolean @default(false)
+  customZipCode     String?
+  customCity        String?
+  customLatitude    Float?
+  customLongitude   Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("weather_alerts")
 }
 
 // ============================================

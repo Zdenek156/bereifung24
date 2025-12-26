@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
-// Free Weather API - OpenWeatherMap (requires API key in .env)
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || ''
+import { getApiSetting } from '@/lib/api-settings'
 
 interface WeatherData {
   current: {
@@ -24,43 +22,38 @@ interface WeatherData {
 
 async function fetchWeatherData(lat: number, lon: number, threshold: number): Promise<WeatherData> {
   try {
-    // Fetch current weather
-    const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=de&appid=${OPENWEATHER_API_KEY}`
-    const currentRes = await fetch(currentUrl)
-    const currentData = await currentRes.json()
+    // Get API key from database (managed in admin panel)
+    const WEATHERAPI_KEY = await getApiSetting('WEATHERAPI_KEY', 'WEATHERAPI_KEY')
+    
+    if (!WEATHERAPI_KEY) {
+      throw new Error('WeatherAPI key not configured. Please add it in admin settings.')
+    }
 
-    // Fetch 5-day forecast
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&lang=de&appid=${OPENWEATHER_API_KEY}`
-    const forecastRes = await fetch(forecastUrl)
-    const forecastData = await forecastRes.json()
+    // WeatherAPI.com provides current weather + 7-day forecast in a single call
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${lat},${lon}&days=7&lang=de`
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      throw new Error(`WeatherAPI error: ${response.status}`)
+    }
+    
+    const data = await response.json()
 
     // Process current weather
     const current = {
-      temperature: currentData.main.temp,
-      condition: currentData.weather[0].description,
-      humidity: currentData.main.humidity,
-      windSpeed: Math.round(currentData.wind.speed * 3.6) // m/s to km/h
+      temperature: data.current.temp_c,
+      condition: data.current.condition.text,
+      humidity: data.current.humidity,
+      windSpeed: Math.round(data.current.wind_kph)
     }
 
-    // Process forecast (group by day and get min/max)
-    const dailyForecast: { [key: string]: any } = {}
-    
-    forecastData.list.forEach((item: any) => {
-      const date = item.dt_txt.split(' ')[0]
-      if (!dailyForecast[date]) {
-        dailyForecast[date] = {
-          date,
-          minTemp: item.main.temp_min,
-          maxTemp: item.main.temp_max,
-          condition: item.weather[0].description
-        }
-      } else {
-        dailyForecast[date].minTemp = Math.min(dailyForecast[date].minTemp, item.main.temp_min)
-        dailyForecast[date].maxTemp = Math.max(dailyForecast[date].maxTemp, item.main.temp_max)
-      }
-    })
-
-    const forecast = Object.values(dailyForecast).slice(0, 7)
+    // Process forecast
+    const forecast = data.forecast.forecastday.map((day: any) => ({
+      date: day.date,
+      minTemp: day.day.mintemp_c,
+      maxTemp: day.day.maxtemp_c,
+      condition: day.day.condition.text
+    }))
 
     // Generate recommendation
     let recommendation = ''

@@ -84,6 +84,7 @@ function getDescriptionForKey(key: string): string {
     'GOCARDLESS_ENVIRONMENT': 'GoCardless Umgebung (sandbox oder live)',
     'GOOGLE_OAUTH_CLIENT_ID': 'Google OAuth Client ID für Calendar Integration',
     'GOOGLE_OAUTH_CLIENT_SECRET': 'Google OAuth Client Secret',
+    'WEATHERAPI_KEY': 'WeatherAPI.com API Key für Wetter-basierte Reifenwechsel-Erinnerungen (1M Calls/Monat kostenlos)',
   }
   return descriptions[key] || ''
 }

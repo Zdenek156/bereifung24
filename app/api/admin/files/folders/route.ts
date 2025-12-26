@@ -11,7 +11,31 @@ export async function POST(request: NextRequest) {
     if (permissionError) return permissionError
 
     const session = await getServerSession(authOptions)
-    if (!session?.user?.b24EmployeeId) {
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Get or find employee ID
+    let employeeId = session.user.b24EmployeeId
+    if (!employeeId && session.user.role === 'ADMIN') {
+      // Admin without b24EmployeeId - find or create B24Employee
+      const employee = await prisma.b24Employee.findUnique({
+        where: { email: session.user.email! }
+      })
+      if (employee) {
+        employeeId = employee.id
+      } else {
+        return NextResponse.json(
+          { error: 'Admin employee profile not found. Please re-login.' },
+          { status: 401 }
+        )
+      }
+    }
+
+    if (!employeeId) {
       return NextResponse.json(
         { error: 'Employee profile required' },
         { status: 401 }
@@ -47,7 +71,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         parentId: parentId || null,
-        createdById: session.user.b24EmployeeId
+        createdById: employeeId
       },
       include: {
         createdBy: {

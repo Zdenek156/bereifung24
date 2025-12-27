@@ -172,6 +172,8 @@ const allNavigationItems: NavigationItem[] = [
       </svg>
     )
   },
+  {
+    name: 'E-Mail Einstellungen',
     description: 'SMTP-Konfiguration für Email-Versand',
     color: 'bg-purple-100',
     textColor: 'text-primary-600',

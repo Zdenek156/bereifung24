@@ -66,12 +66,20 @@ export default function SuppliersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Auto-add https:// to website if no protocol specified
+    let websiteUrl = formData.website.trim()
+    if (websiteUrl && !websiteUrl.match(/^https?:\/\//i)) {
+      websiteUrl = 'https://' + websiteUrl
+    }
+    
     try {
       const response = await fetch('/api/admin/procurement/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          website: websiteUrl,
           paymentTermDays: parseInt(formData.paymentTermDays)
         })
       })
@@ -185,10 +193,11 @@ export default function SuppliersPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
                 <input
-                  type="url"
+                  type="text"
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="www.beispiel.de"
                 />
               </div>
               <div>

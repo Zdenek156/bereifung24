@@ -24,6 +24,10 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
+  const [showRatingModal, setShowRatingModal] = useState(false)
+  const [ratingSupplier, setRatingSupplier] = useState<Supplier | null>(null)
+  const [newRating, setNewRating] = useState(0)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -91,8 +95,12 @@ export default function SuppliersPage() {
         notes: formData.notes
       }
       
-      const response = await fetch('/api/admin/procurement/suppliers', {
-        method: 'POST',
+      const url = editingSupplier 
+        ? `/api/admin/procurement/suppliers?id=${editingSupplier.id}`
+        : '/api/admin/procurement/suppliers'
+      
+      const response = await fetch(url, {
+        method: editingSupplier ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(supplierData)
       })
@@ -100,8 +108,9 @@ export default function SuppliersPage() {
       const data = await response.json()
       
       if (response.ok) {
-        alert('Lieferant erstellt!')
+        alert(editingSupplier ? 'Lieferant aktualisiert!' : 'Lieferant erstellt!')
         setShowAddForm(false)
+        setEditingSupplier(null)
         setFormData({
           name: '',
           email: '',
@@ -129,6 +138,76 @@ export default function SuppliersPage() {
     }
   }
 
+  const handleEdit = (supplier: Supplier) => {
+    setEditingSupplier(supplier)
+    setFormData({
+      name: supplier.name,
+      email: supplier.email,
+      phone: supplier.phone || '',
+      website: '',
+      category: supplier.category,
+      contactPerson: '',
+      street: '',
+      postalCode: '',
+      city: '',
+      country: 'Deutschland',
+      taxId: '',
+      iban: '',
+      paymentTermDays: '30',
+      notes: ''
+    })
+    setShowAddForm(true)
+  }
+
+  const handleRate = (supplier: Supplier) => {
+    setRatingSupplier(supplier)
+    setNewRating(supplier.rating || 0)
+    setShowRatingModal(true)
+  }
+
+  const submitRating = async () => {
+    if (!ratingSupplier) return
+
+    try {
+      const response = await fetch(`/api/admin/procurement/suppliers?id=${ratingSupplier.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: newRating })
+      })
+
+      if (response.ok) {
+        alert('Bewertung gespeichert!')
+        setShowRatingModal(false)
+        setRatingSupplier(null)
+        fetchSuppliers()
+      } else {
+        alert('Fehler beim Speichern der Bewertung')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Fehler beim Speichern der Bewertung')
+    }
+  }
+
+  const handleToggleActive = async (supplier: Supplier) => {
+    try {
+      const response = await fetch(`/api/admin/procurement/suppliers?id=${supplier.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !supplier.isActive })
+      })
+
+      if (response.ok) {
+        fetchSuppliers()
+      } else {
+        alert('Fehler beim Aktualisieren des Status')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Fehler beim Aktualisieren des Status')
+    }
+  }
+
   if (status === 'loading') {
     return <div className="flex items-center justify-center min-h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
@@ -149,7 +228,28 @@ export default function SuppliersPage() {
                 Zurück
               </Link>
               <button
-                onClick={() => setShowAddForm(!showAddForm)}
+                onClick={() => {
+                  setShowAddForm(!showAddForm)
+                  if (showAddForm) {
+                    setEditingSupplier(null)
+                    setFormData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                      website: '',
+                      category: 'HARDWARE',
+                      contactPerson: '',
+                      street: '',
+                      postalCode: '',
+                      city: '',
+                      country: 'Deutschland',
+                      taxId: '',
+                      iban: '',
+                      paymentTermDays: '30',
+                      notes: ''
+                    })
+                  }
+                }}
                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
               >
                 {showAddForm ? 'Abbrechen' : 'Neuer Lieferant'}
@@ -162,7 +262,9 @@ export default function SuppliersPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showAddForm && (
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Neuer Lieferant</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {editingSupplier ? 'Lieferant bearbeiten' : 'Neuer Lieferant'}
+            </h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -279,7 +381,7 @@ export default function SuppliersPage() {
             </div>
 
             <button type="submit" className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-              Lieferant erstellen
+              {editingSupplier ? 'Lieferant aktualisieren' : 'Lieferant erstellen'}
             </button>
           </form>
         )}
@@ -294,13 +396,14 @@ export default function SuppliersPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestellungen</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bewertung</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aktionen</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">Lädt...</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500">Lädt...</td></tr>
               ) : suppliers.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">Keine Lieferanten gefunden</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500">Keine Lieferanten gefunden</td></tr>
               ) : (
                 suppliers.map((supplier) => (
                   <tr key={supplier.id} className="hover:bg-gray-50">
@@ -315,9 +418,28 @@ export default function SuppliersPage() {
                       {supplier.rating ? `${supplier.rating.toFixed(1)} ⭐` : '-'}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`px-2 py-1 text-xs rounded-full ${supplier.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <button
+                        onClick={() => handleToggleActive(supplier)}
+                        className={`px-2 py-1 text-xs rounded-full cursor-pointer ${supplier.isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                      >
                         {supplier.isActive ? 'Aktiv' : 'Inaktiv'}
-                      </span>
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right space-x-2">
+                      <button
+                        onClick={() => handleRate(supplier)}
+                        className="text-yellow-600 hover:text-yellow-900"
+                        title="Bewerten"
+                      >
+                        ⭐
+                      </button>
+                      <button
+                        onClick={() => handleEdit(supplier)}
+                        className="text-emerald-600 hover:text-emerald-900"
+                        title="Bearbeiten"
+                      >
+                        Bearbeiten
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -326,6 +448,56 @@ export default function SuppliersPage() {
           </table>
         </div>
       </main>
+
+      {/* Rating Modal */}
+      {showRatingModal && ratingSupplier && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Lieferant bewerten: {ratingSupplier.name}
+            </h3>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Bewertung (1-5 Sterne)
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setNewRating(star)}
+                    className={`text-3xl ${star <= newRating ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-400`}
+                  >
+                    ⭐
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                Aktuelle Bewertung: {newRating} von 5 Sternen
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={submitRating}
+                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+              >
+                Bewertung speichern
+              </button>
+              <button
+                onClick={() => {
+                  setShowRatingModal(false)
+                  setRatingSupplier(null)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -33,21 +33,24 @@ interface Asset {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  EQUIPMENT: 'Ausstattung & Geräte',
-  VEHICLES: 'Fahrzeuge',
-  IT_HARDWARE: 'IT-Hardware',
-  MACHINERY: 'Maschinen',
+  COMPUTER: 'Computer/Laptops',
+  MONITOR: 'Monitore',
+  PERIPHERALS: 'Peripherie',
+  SOFTWARE: 'Software',
   FURNITURE: 'Möbel',
-  BUILDING: 'Gebäude',
+  VEHICLE: 'Fahrzeuge',
+  PHONE: 'Telefone',
+  NETWORK: 'Netzwerk',
+  SERVER: 'Server',
   OTHER: 'Sonstige'
 }
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: 'Aktiv',
-  MAINTENANCE: 'Wartung',
-  DISPOSED: 'Ausgesondert',
-  SOLD: 'Verkauft',
-  LOST: 'Verloren'
+  INACTIVE: 'Inaktiv',
+  IN_REPAIR: 'In Reparatur',
+  DISPOSED: 'Ausgemustert',
+  SOLD: 'Verkauft'
 }
 
 const COST_CENTER_LABELS: Record<string, string> = {
@@ -381,7 +384,7 @@ export default function AssetsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           asset.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                          asset.status === 'MAINTENANCE' ? 'bg-yellow-100 text-yellow-800' :
+                          asset.status === 'IN_REPAIR' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {STATUS_LABELS[asset.status]}
@@ -442,7 +445,7 @@ function AssetModal({
   const [formData, setFormData] = useState({
     name: asset?.name || '',
     description: asset?.description || '',
-    category: asset?.category || 'EQUIPMENT',
+    category: asset?.category || 'COMPUTER',
     acquisitionCost: asset?.acquisitionCost || 0,
     acquisitionDate: asset?.acquisitionDate?.split('T')[0] || new Date().toISOString().split('T')[0],
     usefulLife: asset?.usefulLife || 3,

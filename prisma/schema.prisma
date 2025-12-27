@@ -113,6 +113,16 @@ model User {
   // Relations based on role
   customer Customer?
   workshop Workshop?
+  
+  // Procurement Relations
+  suppliersCreated      Supplier[]           @relation
+  procurementRequests   ProcurementRequest[] @relation
+  approvedRequests      ProcurementRequest[] @relation("ApprovedRequests")
+  purchaseOrders        PurchaseOrder[]      @relation
+  receivedOrders        PurchaseOrder[]      @relation("ReceivedOrders")
+  createdAssets         Asset[]              @relation("CreatedAssets")
+  assignedAssets        Asset[]              @relation
+  investmentPlans       InvestmentPlan[]
 
   @@map("users")
 }
@@ -1504,4 +1514,453 @@ model FileUpload {
   @@index([uploadedById])
   @@index([createdAt])
   @@map("file_uploads")
+}
+
+// ============================================
+// PROCUREMENT & INVESTMENT MANAGEMENT
+// ============================================
+
+// Lieferanten / Suppliers
+model Supplier {
+  id               String   @id @default(cuid())
+  name             String
+  address          String?
+  zipCode          String?
+  city             String?
+  country          String?  @default("Deutschland")
+  email            String?
+  phone            String?
+  website          String?
+  
+  // Tax & Banking
+  taxId            String?  // USt-IdNr.
+  vatId            String?  // Steuernummer
+  iban             String?
+  bic              String?
+  bankName         String?
+  
+  // Payment Terms
+  paymentTerms     String?  @default("30 Tage netto") // z.B. "14 Tage 2% Skonto, 30 Tage netto"
+  
+  // Categories
+  categories       String[] // ["BUERO", "IT", "FAHRZEUGE", "MARKETING", "SONSTIGES"]
+  
+  // Rating
+  rating           Int      @default(0) // 0-5 Sterne
+  notes            String?  @db.Text
+  
+  // Relations
+  orders           PurchaseOrder[]
+  requests         ProcurementRequest[]
+  
+  // Metadata
+  isActive         Boolean  @default(true)
+  createdById      String
+  createdBy        User     @relation(fields: [createdById], references: [id])
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([name])
+  @@index([isActive])
+  @@map("suppliers")
+}
+
+// Bedarfsanforderungen / Procurement Requests
+model ProcurementRequest {
+  id               String   @id @default(cuid())
+  requestNumber    String   @unique // z.B. "ANF-2025-001"
+  
+  // Requester
+  requestedById    String
+  requestedBy      User     @relation(fields: [requestedById], references: [id])
+  
+  // Request Details
+  title            String
+  description      String?  @db.Text
+  category         ProcurementCategory
+  estimatedPrice   Float    // Geschätzter Preis in EUR
+  
+  // Priority & Classification
+  urgency          UrgencyLevel @default(NORMAL)
+  costCenter       CostCenter
+  
+  // Supplier
+  supplierId       String?
+  supplier         Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierName     String?   // Falls noch kein Lieferant im System
+  
+  // Approval Workflow
+  status           RequestStatus @default(PENDING)
+  approvedById     String?
+  approvedBy       User?     @relation("ApprovedRequests", fields: [approvedById], references: [id])
+  approvedAt       DateTime?
+  rejectionReason  String?   @db.Text
+  
+  // Link to Order
+  orderId          String?   @unique
+  order            PurchaseOrder? @relation(fields: [orderId], references: [id])
+  
+  // Link to Investment
+  investmentItemId String?
+  investmentItem   InvestmentItem? @relation(fields: [investmentItemId], references: [id])
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([requestNumber])
+  @@index([requestedById])
+  @@index([status])
+  @@index([costCenter])
+  @@map("procurement_requests")
+}
+
+// Bestellungen / Purchase Orders
+model PurchaseOrder {
+  id                String   @id @default(cuid())
+  orderNumber       String   @unique // z.B. "PO-2025-001"
+  
+  // Supplier
+  supplierId        String
+  supplier          Supplier @relation(fields: [supplierId], references: [id])
+  
+  // Order Details
+  items             OrderItem[]
+  totalNet          Float    // Gesamt netto
+  totalVat          Float    // Gesamt MwSt
+  totalGross        Float    // Gesamt brutto
+  
+  // Status
+  status            OrderStatus @default(DRAFT)
+  
+  // Ordering
+  orderedById       String
+  orderedBy         User     @relation(fields: [orderedById], references: [id])
+  orderedAt         DateTime?
+  
+  // Delivery
+  deliveryAddress   String?  @db.Text
+  expectedDelivery  DateTime?
+  actualDelivery    DateTime?
+  receivedById      String?
+  receivedBy        User?    @relation("ReceivedOrders", fields: [receivedById], references: [id])
+  receivedAt        DateTime?
+  
+  // Invoice & Payment
+  invoiceNumber     String?
+  invoiceDate       DateTime?
+  invoiceReceived   Boolean  @default(false)
+  paymentDue        DateTime?
+  paid              Boolean  @default(false)
+  paidAt            DateTime?
+  paidAmount        Float?
+  
+  // Notes
+  notes             String?  @db.Text
+  internalNotes     String?  @db.Text
+  
+  // Links
+  request           ProcurementRequest?
+  assets            Asset[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([orderNumber])
+  @@index([supplierId])
+  @@index([status])
+  @@index([orderedAt])
+  @@map("purchase_orders")
+}
+
+// Bestellpositionen / Order Items
+model OrderItem {
+  id          String        @id @default(cuid())
+  orderId     String
+  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  position    Int           // Positionsnummer
+  description String
+  quantity    Int
+  unit        String        @default("Stück") // Stück, kg, Liter, etc.
+  
+  priceNet    Float         // Einzelpreis netto
+  vatRate     Float         // MwSt-Satz (0.19 oder 0.07)
+  
+  totalNet    Float         // Gesamt netto
+  totalVat    Float         // Gesamt MwSt
+  totalGross  Float         // Gesamt brutto
+  
+  notes       String?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// Anlagenvermögen / Assets
+model Asset {
+  id                  String   @id @default(cuid())
+  assetNumber         String   @unique // z.B. "ASS-2025-001"
+  
+  // Asset Details
+  name                String
+  description         String?  @db.Text
+  category            AssetCategory
+  
+  // Acquisition
+  acquisitionCost     Float    // Anschaffungskosten
+  acquisitionDate     DateTime
+  orderId             String?
+  order               PurchaseOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  
+  // Depreciation (AfA)
+  usefulLife          Int      // Nutzungsdauer in Jahren
+  afaMethod           AfaMethod @default(LINEAR)
+  annualDepreciation  Float    // Jährliche AfA
+  
+  // Current Value
+  bookValue           Float    // Aktueller Buchwert
+  fullyDepreciated    Boolean  @default(false)
+  
+  // Location & Assignment
+  costCenter          CostCenter
+  location            String?  // z.B. "Büro München, Raum 301"
+  assignedToId        String?
+  assignedTo          User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Additional Info
+  serialNumber        String?
+  manufacturer        String?
+  model               String?
+  
+  // Status
+  status              AssetStatus @default(ACTIVE)
+  disposalDate        DateTime?
+  disposalReason      String?   @db.Text
+  
+  // Relations
+  depreciationEntries DepreciationEntry[]
+  
+  // Metadata
+  createdById         String
+  createdBy           User     @relation("CreatedAssets", fields: [createdById], references: [id])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([assetNumber])
+  @@index([category])
+  @@index([costCenter])
+  @@index([status])
+  @@map("assets")
+}
+
+// Abschreibungsbuchungen / Depreciation Entries
+model DepreciationEntry {
+  id         String   @id @default(cuid())
+  assetId    String
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  year       Int
+  month      Int?     // Optional für monatliche AfA
+  amount     Float    // Abschreibungsbetrag
+  bookValue  Float    // Buchwert nach Abschreibung
+  
+  notes      String?
+  
+  createdAt  DateTime @default(now())
+  
+  @@unique([assetId, year, month])
+  @@index([assetId])
+  @@index([year])
+  @@map("depreciation_entries")
+}
+
+// Investitionsplanung / Investment Planning
+model InvestmentPlan {
+  id           String   @id @default(cuid())
+  year         Int      @unique
+  
+  // Budget per Cost Center
+  totalBudget  Float    @default(0)
+  spent        Float    @default(0)
+  reserved     Float    @default(0) // Genehmigte aber noch nicht bestellte Anfragen
+  
+  // Relations
+  items        InvestmentItem[]
+  budgets      CostCenterBudget[]
+  
+  // Metadata
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([year])
+  @@map("investment_plans")
+}
+
+// Budget pro Kostenstelle
+model CostCenterBudget {
+  id             String         @id @default(cuid())
+  planId         String
+  plan           InvestmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  costCenter     CostCenter
+  budget         Float
+  spent          Float          @default(0)
+  reserved       Float          @default(0)
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  @@unique([planId, costCenter])
+  @@index([planId])
+  @@map("cost_center_budgets")
+}
+
+// Investitionsposten / Investment Items
+model InvestmentItem {
+  id              String          @id @default(cuid())
+  planId          String
+  plan            InvestmentPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  // Details
+  title           String
+  description     String?         @db.Text
+  costCenter      CostCenter
+  
+  // Cost
+  estimatedCost   Float
+  actualCost      Float?
+  
+  // Planning
+  priority        InvestmentPriority @default(MEDIUM)
+  type            InvestmentType
+  quarter         Int?            // 1, 2, 3, 4
+  plannedMonth    Int?            // 1-12
+  
+  // Status
+  status          InvestmentStatus @default(PLANNED)
+  
+  // Relations
+  requests        ProcurementRequest[]
+  
+  // ROI Calculation (optional)
+  expectedSavings Float?          // Erwartete jährliche Einsparung
+  paybackPeriod   Float?          // Amortisationsdauer in Jahren
+  
+  notes           String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([planId])
+  @@index([costCenter])
+  @@index([status])
+  @@map("investment_items")
+}
+
+// ============================================
+// ENUMS FOR PROCUREMENT
+// ============================================
+
+enum ProcurementCategory {
+  GWG              // Geringwertige Wirtschaftsgüter (bis 800€)
+  SAMMELPOSTEN     // 250-1000€
+  ANLAGEVERMOEGEN  // ab 1000€
+  VERBRAUCH        // Verbrauchsmaterial
+  SOFTWARE         // Software/Lizenzen
+  DIENSTLEISTUNG   // Dienstleistungen
+  SONSTIGES        // Sonstiges
+}
+
+enum UrgencyLevel {
+  LOW
+  NORMAL
+  HIGH
+  EMERGENCY
+}
+
+enum CostCenter {
+  MARKETING
+  SUPPORT
+  IT
+  BUCHHALTUNG
+  PERSONAL
+  ALLGEMEIN
+}
+
+enum RequestStatus {
+  PENDING          // Ausstehend
+  APPROVED         // Genehmigt
+  REJECTED         // Abgelehnt
+  ORDERED          // Bestellt
+  COMPLETED        // Abgeschlossen
+  CANCELLED        // Storniert
+}
+
+enum OrderStatus {
+  DRAFT            // Entwurf
+  SENT             // Versendet
+  CONFIRMED        // Bestätigt
+  PARTIALLY_DELIVERED // Teilweise geliefert
+  DELIVERED        // Geliefert
+  INVOICED         // Rechnung erhalten
+  PAID             // Bezahlt
+  CANCELLED        // Storniert
+}
+
+enum AssetCategory {
+  COMPUTER         // Computer/Laptops
+  MONITOR          // Monitore
+  PERIPHERALS      // Peripherie (Drucker, Scanner, etc.)
+  SOFTWARE         // Software
+  FURNITURE        // Büromöbel
+  VEHICLE          // Fahrzeuge
+  PHONE            // Telefone/Smartphones
+  NETWORK          // Netzwerkgeräte
+  SERVER           // Server
+  OTHER            // Sonstiges
+}
+
+enum AfaMethod {
+  LINEAR           // Lineare Abschreibung
+  DEGRESSIV        // Degressive Abschreibung
+  SOFORT           // Sofortabschreibung (GWG)
+}
+
+enum AssetStatus {
+  ACTIVE           // Aktiv in Nutzung
+  INACTIVE         // Nicht in Nutzung
+  IN_REPAIR        // In Reparatur
+  DISPOSED         // Ausgemustert
+  SOLD             // Verkauft
+}
+
+enum InvestmentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum InvestmentType {
+  REPLACEMENT      // Ersatzinvestition
+  EXPANSION        // Erweiterungsinvestition
+  RATIONALIZATION  // Rationalisierungsinvestition
+  STRATEGIC        // Strategische Investition
+}
+
+enum InvestmentStatus {
+  PLANNED          // Geplant
+  APPROVED         // Genehmigt
+  IN_PROGRESS      // In Bearbeitung
+  COMPLETED        // Abgeschlossen
+  CANCELLED        // Abgebrochen
+  POSTPONED        // Verschoben
 }

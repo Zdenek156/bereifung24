@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       totalBudget: Number(investmentPlan.totalBudget),
       costCenterBudgets: investmentPlan.budgets.map(ccb => ({
         costCenter: ccb.costCenter,
-        allocatedBudget: Number(ccb.allocatedBudget),
+        allocatedBudget: Number(ccb.budget),
         spent: Number(ccb.spent)
       }))
     }
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
             deleteMany: {},
             create: costCenterBudgets.map((ccb: any) => ({
               costCenter: ccb.costCenter,
-              allocatedBudget: ccb.allocatedBudget,
+              budget: ccb.allocatedBudget,
               spent: 0
             }))
           }
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
           budgets: {
             create: costCenterBudgets.map((ccb: any) => ({
               costCenter: ccb.costCenter,
-              allocatedBudget: ccb.allocatedBudget,
+              budget: ccb.allocatedBudget,
               spent: 0
             }))
           }

@@ -212,7 +212,7 @@ export default function ProcurementDashboard() {
             <p className="text-sm text-gray-600">Lieferantenstammdaten pflegen</p>
           </Link>
 
-          <Link href="/admin/procurement/assets" className="bg-gray-200 rounded-lg shadow p-6 opacity-60 cursor-not-allowed">
+          <div className="bg-gray-200 rounded-lg shadow p-6 opacity-60 cursor-not-allowed">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Anlagenvermögen</h3>
               <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +220,7 @@ export default function ProcurementDashboard() {
               </svg>
             </div>
             <p className="text-sm text-gray-600">Bald verfügbar</p>
-          </Link>
+          </div>
         </div>
       </main>
     </div>

@@ -27,6 +27,7 @@ const costCenters = [
 export default function BudgetPage() {
   const router = useRouter()
   const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
   const [budget, setBudget] = useState<BudgetData>({
     year: currentYear,
     totalBudget: 50000,
@@ -40,15 +41,26 @@ export default function BudgetPage() {
 
   useEffect(() => {
     fetchBudget()
-  }, [])
+  }, [selectedYear])
 
   const fetchBudget = async () => {
+    setLoading(true)
     try {
-      const response = await fetch(`/api/admin/procurement/budget?year=${currentYear}`)
+      const response = await fetch(`/api/admin/procurement/budget?year=${selectedYear}`)
       if (response.ok) {
         const data = await response.json()
         if (data) {
           setBudget(data)
+        } else {
+          // Neues Budget für das Jahr
+          setBudget({
+            year: selectedYear,
+            totalBudget: 50000,
+            costCenterBudgets: costCenters.map(cc => ({
+              costCenter: cc.value,
+              allocatedBudget: 10000
+            }))
+          })
         }
       }
     } catch (error) {
@@ -110,13 +122,29 @@ export default function BudgetPage() {
           <Link href="/admin/procurement" className="text-primary-600 hover:text-primary-700 mb-4 inline-block">
             ← Zurück zum Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Budget {currentYear}</h1>
-          <p className="text-gray-600 mt-2">Gesamtbudget und Kostenstellen-Zuteilung verwalten</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Budget-Verwaltung</h1>
+              <p className="text-gray-600 mt-2">Gesamtbudget und Kostenstellen-Zuteilung verwalten</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Jahr auswählen</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              >
+                {[currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Gesamtbudget */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Gesamtbudget</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Gesamtbudget {selectedYear}</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Jährliches Gesamtbudget (€)
@@ -124,7 +152,7 @@ export default function BudgetPage() {
             <input
               type="number"
               value={budget.totalBudget}
-              onChange={(e) => setBudget({ ...budget, totalBudget: Number(e.target.value) })}
+              onChange={(e) => setBudget({ ...budget, totalBudget: Number(e.target.value), year: selectedYear })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
               step="1000"
               min="0"

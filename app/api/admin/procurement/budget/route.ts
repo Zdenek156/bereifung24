@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const investmentPlan = await prisma.investmentPlan.findFirst({
       where: { year },
       include: {
-        costCenterBudgets: true
+        budgets: true
       }
     })
 
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     const formatted = {
       year: investmentPlan.year,
       totalBudget: Number(investmentPlan.totalBudget),
-      costCenterBudgets: investmentPlan.costCenterBudgets.map(ccb => ({
+      costCenterBudgets: investmentPlan.budgets.map(ccb => ({
         costCenter: ccb.costCenter,
         allocatedBudget: Number(ccb.allocatedBudget),
         spent: Number(ccb.spent)
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         where: { id: existing.id },
         data: {
           totalBudget,
-          costCenterBudgets: {
+          budgets: {
             deleteMany: {},
             create: costCenterBudgets.map((ccb: any) => ({
               costCenter: ccb.costCenter,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
           }
         },
         include: {
-          costCenterBudgets: true
+          budgets: true
         }
       })
     } else {
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
           year,
           totalBudget,
           createdById: session.user.id,
-          costCenterBudgets: {
+          budgets: {
             create: costCenterBudgets.map((ccb: any) => ({
               costCenter: ccb.costCenter,
               allocatedBudget: ccb.allocatedBudget,
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
           }
         },
         include: {
-          costCenterBudgets: true
+          budgets: true
         }
       })
     }

@@ -212,15 +212,15 @@ export default function ProcurementDashboard() {
             <p className="text-sm text-gray-600">Lieferantenstammdaten pflegen</p>
           </Link>
 
-          <div className="bg-gray-200 rounded-lg shadow p-6 opacity-60 cursor-not-allowed">
+          <Link href="/admin/procurement/assets" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Anlagenvermögen</h3>
               <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
               </svg>
             </div>
-            <p className="text-sm text-gray-600">Bald verfügbar</p>
-          </div>
+            <p className="text-sm text-gray-600">Anlagen verwalten und AfA berechnen</p>
+          </Link>
         </div>
       </main>
     </div>

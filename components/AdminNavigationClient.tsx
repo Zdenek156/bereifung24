@@ -173,7 +173,8 @@ const allNavigationItems: NavigationItem[] = [
     )
   },
   {
-    name: 'E-Mail Einstellungen',
+    href: '/admin/email-settings',
+    title: 'SMTP-Konfiguration',
     description: 'SMTP-Konfiguration für Email-Versand',
     color: 'bg-purple-100',
     textColor: 'text-primary-600',

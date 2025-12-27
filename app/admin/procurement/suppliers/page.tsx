@@ -94,7 +94,7 @@ export default function SuppliersPage() {
         email: formData.email,
         phone: formData.phone,
         website: websiteUrl,
-        categories: [formData.category], // Schema expects array
+        categories: [formData.category || 'HARDWARE'], // Schema expects array, ensure not null
         address: formData.street,
         zipCode: formData.postalCode,
         city: formData.city,
@@ -149,17 +149,23 @@ export default function SuppliersPage() {
   }
 
   const handleEdit = (supplier: Supplier) => {
+    console.log('Editing supplier:', supplier)
+    console.log('Categories:', supplier.categories)
+    
     setEditingSupplier(supplier)
     
     // Extract payment term days from text like "30 Tage netto"
     const paymentDays = supplier.paymentTerms?.match(/\d+/)?.[0] || '30'
+    
+    const category = supplier.categories?.[0] || 'HARDWARE'
+    console.log('Selected category:', category)
     
     setFormData({
       name: supplier.name,
       email: supplier.email,
       phone: supplier.phone || '',
       website: supplier.website || '',
-      category: supplier.categories?.[0] || 'HARDWARE',
+      category: category,
       contactPerson: supplier.contactPerson || '',
       street: supplier.address || '',
       postalCode: supplier.zipCode || '',

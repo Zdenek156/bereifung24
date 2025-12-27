@@ -171,7 +171,7 @@ export default function ProcurementDashboard() {
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">Kein Budget für {new Date().getFullYear()} festgelegt</p>
               <Link 
-                href="/admin/procurement/investment-plan"
+                href="/admin/procurement/budget"
                 className="text-emerald-600 hover:text-emerald-700 font-medium"
               >
                 Budget jetzt festlegen →

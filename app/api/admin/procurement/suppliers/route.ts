@@ -50,11 +50,28 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
+    // Extract only valid fields for Prisma schema
+    const supplierData: any = {
+      name: body.name,
+      categories: body.categories || [],
+      createdById: session.user.id
+    }
+    
+    // Optional fields
+    if (body.email) supplierData.email = body.email
+    if (body.phone) supplierData.phone = body.phone
+    if (body.website) supplierData.website = body.website
+    if (body.address) supplierData.address = body.address
+    if (body.zipCode) supplierData.zipCode = body.zipCode
+    if (body.city) supplierData.city = body.city
+    if (body.country) supplierData.country = body.country
+    if (body.taxId) supplierData.taxId = body.taxId
+    if (body.iban) supplierData.iban = body.iban
+    if (body.paymentTerms) supplierData.paymentTerms = body.paymentTerms
+    if (body.notes) supplierData.notes = body.notes
+    
     const supplier = await prisma.supplier.create({
-      data: {
-        ...body,
-        createdById: session.user.id
-      }
+      data: supplierData
     })
 
     return NextResponse.json(supplier, { status: 201 })

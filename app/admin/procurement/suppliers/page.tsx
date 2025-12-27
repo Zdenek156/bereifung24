@@ -1,0 +1,303 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+
+interface Supplier {
+  id: string
+  name: string
+  email: string
+  phone: string
+  category: string
+  isActive: boolean
+  rating: number
+  _count: {
+    orders: number
+  }
+}
+
+export default function SuppliersPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    website: '',
+    category: 'HARDWARE',
+    contactPerson: '',
+    street: '',
+    postalCode: '',
+    city: '',
+    country: 'Deutschland',
+    taxId: '',
+    iban: '',
+    paymentTermDays: '30',
+    notes: ''
+  })
+
+  useEffect(() => {
+    if (status === 'loading') return
+    if (!session || session.user.role !== 'ADMIN') {
+      router.push('/admin')
+      return
+    }
+    fetchSuppliers()
+  }, [session, status, router])
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch('/api/admin/procurement/suppliers')
+      const data = await response.json()
+      if (response.ok) {
+        setSuppliers(data)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('/api/admin/procurement/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          paymentTermDays: parseInt(formData.paymentTermDays)
+        })
+      })
+      if (response.ok) {
+        alert('Lieferant erstellt!')
+        setShowAddForm(false)
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          website: '',
+          category: 'HARDWARE',
+          contactPerson: '',
+          street: '',
+          postalCode: '',
+          city: '',
+          country: 'Deutschland',
+          taxId: '',
+          iban: '',
+          paymentTermDays: '30',
+          notes: ''
+        })
+        fetchSuppliers()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Fehler beim Erstellen')
+    }
+  }
+
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    </div>
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Lieferanten</h1>
+              <p className="mt-1 text-sm text-gray-600">Lieferanten verwalten</p>
+            </div>
+            <div className="flex gap-3">
+              <Link href="/admin/procurement" className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                Zurück
+              </Link>
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+              >
+                {showAddForm ? 'Abbrechen' : 'Neuer Lieferant'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {showAddForm && (
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6 space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Neuer Lieferant</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
+                <select
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="HARDWARE">Hardware</option>
+                  <option value="SOFTWARE">Software</option>
+                  <option value="BUEROAUSSTATTUNG">Büroausstattung</option>
+                  <option value="IT_DIENSTLEISTUNG">IT-Dienstleistung</option>
+                  <option value="VERBRAUCHSMATERIAL">Verbrauchsmaterial</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">E-Mail *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ansprechpartner</label>
+                <input
+                  type="text"
+                  value={formData.contactPerson}
+                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Straße</label>
+                <input
+                  type="text"
+                  value={formData.street}
+                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">PLZ</label>
+                <input
+                  type="text"
+                  value={formData.postalCode}
+                  onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stadt</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Land</label>
+                <input
+                  type="text"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Zahlungsziel (Tage)</label>
+                <input
+                  type="number"
+                  value={formData.paymentTermDays}
+                  onChange={(e) => setFormData({ ...formData, paymentTermDays: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+              Lieferant erstellen
+            </button>
+          </form>
+        )}
+
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategorie</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontakt</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestellungen</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bewertung</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">Lädt...</td></tr>
+              ) : suppliers.length === 0 ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">Keine Lieferanten gefunden</td></tr>
+              ) : (
+                suppliers.map((supplier) => (
+                  <tr key={supplier.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{supplier.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{supplier.category}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div>{supplier.email}</div>
+                      {supplier.phone && <div className="text-xs text-gray-400">{supplier.phone}</div>}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{supplier._count.orders}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {supplier.rating ? `${supplier.rating.toFixed(1)} ⭐` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`px-2 py-1 text-xs rounded-full ${supplier.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {supplier.isActive ? 'Aktiv' : 'Inaktiv'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  )
+}

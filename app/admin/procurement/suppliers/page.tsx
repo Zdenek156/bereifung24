@@ -9,10 +9,20 @@ interface Supplier {
   id: string
   name: string
   email: string
-  phone: string
-  category: string
+  phone: string | null
+  website: string | null
+  categories: string[]
+  contactPerson: string | null
+  address: string | null
+  zipCode: string | null
+  city: string | null
+  country: string | null
+  taxId: string | null
+  iban: string | null
+  paymentTerms: string | null
+  notes: string | null
   isActive: boolean
-  rating: number
+  rating: number | null
   _count: {
     orders: number
   }
@@ -140,21 +150,25 @@ export default function SuppliersPage() {
 
   const handleEdit = (supplier: Supplier) => {
     setEditingSupplier(supplier)
+    
+    // Extract payment term days from text like "30 Tage netto"
+    const paymentDays = supplier.paymentTerms?.match(/\d+/)?.[0] || '30'
+    
     setFormData({
       name: supplier.name,
       email: supplier.email,
       phone: supplier.phone || '',
-      website: '',
-      category: supplier.category,
-      contactPerson: '',
-      street: '',
-      postalCode: '',
-      city: '',
-      country: 'Deutschland',
-      taxId: '',
-      iban: '',
-      paymentTermDays: '30',
-      notes: ''
+      website: supplier.website || '',
+      category: supplier.categories?.[0] || 'HARDWARE',
+      contactPerson: supplier.contactPerson || '',
+      street: supplier.address || '',
+      postalCode: supplier.zipCode || '',
+      city: supplier.city || '',
+      country: supplier.country || 'Deutschland',
+      taxId: supplier.taxId || '',
+      iban: supplier.iban || '',
+      paymentTermDays: paymentDays,
+      notes: supplier.notes || ''
     })
     setShowAddForm(true)
   }
@@ -408,7 +422,7 @@ export default function SuppliersPage() {
                 suppliers.map((supplier) => (
                   <tr key={supplier.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{supplier.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{supplier.category}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{supplier.categories?.[0] || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <div>{supplier.email}</div>
                       {supplier.phone && <div className="text-xs text-gray-400">{supplier.phone}</div>}

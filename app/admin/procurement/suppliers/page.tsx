@@ -74,15 +74,31 @@ export default function SuppliersPage() {
     }
     
     try {
+      // Map form fields to Prisma schema fields
+      const supplierData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        website: websiteUrl,
+        categories: [formData.category], // Schema expects array
+        address: formData.street,
+        zipCode: formData.postalCode,
+        city: formData.city,
+        country: formData.country,
+        taxId: formData.taxId,
+        iban: formData.iban,
+        paymentTerms: `${formData.paymentTermDays} Tage netto`,
+        notes: formData.notes
+      }
+      
       const response = await fetch('/api/admin/procurement/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          website: websiteUrl,
-          paymentTermDays: parseInt(formData.paymentTermDays)
-        })
+        body: JSON.stringify(supplierData)
       })
+      
+      const data = await response.json()
+      
       if (response.ok) {
         alert('Lieferant erstellt!')
         setShowAddForm(false)
@@ -103,10 +119,13 @@ export default function SuppliersPage() {
           notes: ''
         })
         fetchSuppliers()
+      } else {
+        console.error('API Error:', data)
+        alert(`Fehler: ${data.error || 'Unbekannter Fehler'}`)
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('Fehler beim Erstellen')
+      alert('Fehler beim Erstellen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'))
     }
   }
 

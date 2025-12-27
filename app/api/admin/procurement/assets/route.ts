@@ -10,7 +10,15 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
+    console.log('Assets API - Session:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      role: session?.user?.role,
+      email: session?.user?.email
+    })
+    
     if (!session?.user || session.user.role !== 'ADMIN') {
+      console.log('Assets API - Unauthorized:', { session, user: session?.user })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

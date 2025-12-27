@@ -210,7 +210,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Website (optional)</label>
                 <input
                   type="text"
                   value={formData.website}

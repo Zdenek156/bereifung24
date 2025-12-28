@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Save, Info } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Leaf, Save, Info, CheckCircle, XCircle } from 'lucide-react';
 
 interface CO2Settings {
   workshopsToCompare: number;
@@ -22,6 +21,7 @@ interface CO2Settings {
 export default function CO2TrackingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [settings, setSettings] = useState<CO2Settings>({
     workshopsToCompare: 3,
     co2PerKmCombustion: 140,
@@ -56,6 +56,7 @@ export default function CO2TrackingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setMessage(null);
 
     try {
       const response = await fetch('/api/admin/co2-settings', {
@@ -65,12 +66,13 @@ export default function CO2TrackingPage() {
       });
 
       if (response.ok) {
-        toast.success('CO₂-Einstellungen erfolgreich gespeichert!');
+        setMessage({ type: 'success', text: 'CO₂-Einstellungen erfolgreich gespeichert!' });
+        setTimeout(() => setMessage(null), 5000);
       } else {
-        toast.error('Fehler beim Speichern der Einstellungen');
+        setMessage({ type: 'error', text: 'Fehler beim Speichern der Einstellungen' });
       }
     } catch (error) {
-      toast.error('Fehler beim Speichern');
+      setMessage({ type: 'error', text: 'Fehler beim Speichern' });
       console.error(error);
     } finally {
       setSaving(false);
@@ -110,6 +112,24 @@ export default function CO2TrackingPage() {
             </p>
           </div>
         </div>
+
+        {/* Success/Error Message */}
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg border ${
+            message.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-center gap-2">
+              {message.type === 'success' ? (
+                <CheckCircle className="h-5 w-5" />
+              ) : (
+                <XCircle className="h-5 w-5" />
+              )}
+              <span>{message.text}</span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Berechnungsgrundlagen */}

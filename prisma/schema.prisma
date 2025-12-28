@@ -382,6 +382,10 @@ model TireRequest {
   // Status
   status String @default("PENDING") // PENDING, QUOTED, ACCEPTED, COMPLETED, CANCELLED
 
+  // CO2 Tracking
+  savedCO2Grams      Int?    // Gespeicherte CO₂-Menge in Gramm
+  calculationMethod  String? // 'STANDARD' oder 'PERSONAL'
+
   // Relations
   offers  Offer[]
   booking Booking?
@@ -418,6 +422,11 @@ model Vehicle {
   summerTires    String? // JSON string with tire dimensions
   winterTires    String? // JSON string with tire dimensions
   allSeasonTires String? // JSON string with tire dimensions
+
+  // Fuel & Consumption (for CO2 calculation)
+  fuelType            FuelType @default(UNKNOWN)
+  fuelConsumption     Float? // L/100km für Verbrenner
+  electricConsumption Float? // kWh/100km für E-Autos
 
   // Current Tires
   currentTires VehicleTire[]
@@ -1963,4 +1972,34 @@ enum InvestmentStatus {
   COMPLETED        // Abgeschlossen
   CANCELLED        // Abgebrochen
   POSTPONED        // Verschoben
+}
+
+// ============================================
+// CO2 TRACKING SYSTEM
+// ============================================
+
+model CO2Settings {
+  id                    String   @id @default(cuid())
+  workshopsToCompare    Int      @default(3) // Anzahl Werkstätten, die Kunde sonst besuchen würde
+  co2PerKmCombustion    Int      @default(140) // g CO₂/km für Verbrenner (Durchschnitt)
+  co2PerKmElectric      Int      @default(50) // g CO₂/km für E-Autos (Strommix DE)
+  co2PerLiterFuel       Int      @default(2330) // g CO₂/Liter Benzin/Diesel
+  co2PerKWhElectric     Int      @default(420) // g CO₂/kWh Strom (DE Mix)
+  fuelPricePerLiter     Float    @default(1.65) // €/Liter (Benzin)
+  dieselPricePerLiter   Float    @default(1.55) // €/Liter (Diesel)
+  electricPricePerKWh   Float    @default(0.35) // €/kWh (Strom)
+  updatedAt             DateTime @updatedAt
+
+  @@map("co2_settings")
+}
+
+enum FuelType {
+  UNKNOWN
+  PETROL // Benzin
+  DIESEL // Diesel
+  ELECTRIC // Elektro
+  HYBRID // Hybrid
+  PLUGIN_HYBRID // Plugin-Hybrid
+  LPG // Autogas
+  CNG // Erdgas
 }

@@ -29,6 +29,10 @@ const vehicleSchema = z.object({
   nextInspectionDate: z.string().optional(),
   inspectionReminder: z.boolean().optional(),
   inspectionReminderDays: z.number().min(1).max(90).optional(),
+  // Fuel/Electric consumption (for CO₂ calculation)
+  fuelType: z.enum(['UNKNOWN', 'PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID', 'PLUGIN_HYBRID', 'LPG', 'CNG']).optional(),
+  fuelConsumption: z.number().min(0).max(50).optional(), // L/100km
+  electricConsumption: z.number().min(0).max(100).optional(), // kWh/100km
   summerTires: tireSpecSchema.optional(),
   winterTires: tireSpecSchema.optional(),
   allSeasonTires: tireSpecSchema.optional(),
@@ -231,6 +235,10 @@ export async function POST(req: NextRequest) {
       nextInspectionDate: inspectionDate,
       inspectionReminder: validated.inspectionReminder || false,
       inspectionReminderDays: validated.inspectionReminderDays || 30,
+      // Fuel/Electric consumption (for CO₂ calculation)
+      fuelType: validated.fuelType || 'UNKNOWN',
+      fuelConsumption: validated.fuelConsumption || null,
+      electricConsumption: validated.electricConsumption || null,
     }
 
     // Store tire data in dedicated columns

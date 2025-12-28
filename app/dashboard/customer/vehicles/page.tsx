@@ -312,9 +312,35 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
+                  {/* Fuel Type Display */}
+                  {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
+                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200'}`}>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold">⛽ Kraftstoff:</span>{' '}
+                        {(vehicle as any).fuelType === 'PETROL' && 'Benzin'}
+                        {(vehicle as any).fuelType === 'DIESEL' && 'Diesel'}
+                        {(vehicle as any).fuelType === 'ELECTRIC' && 'Elektrisch'}
+                        {(vehicle as any).fuelType === 'HYBRID' && 'Hybrid'}
+                        {(vehicle as any).fuelType === 'PLUGIN_HYBRID' && 'Plug-in Hybrid'}
+                        {(vehicle as any).fuelType === 'LPG' && 'Autogas (LPG)'}
+                        {(vehicle as any).fuelType === 'CNG' && 'Erdgas (CNG)'}
+                        {(vehicle as any).fuelConsumption && (
+                          <span className="ml-1">
+                            ({(vehicle as any).fuelConsumption} L/100km)
+                          </span>
+                        )}
+                        {(vehicle as any).electricConsumption && (
+                          <span className="ml-1">
+                            ({(vehicle as any).electricConsumption} kWh/100km)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Inspection Date Display */}
                   {vehicle.nextInspectionDate && (
-                    <div className={`${vehicle.vin ? '' : 'mt-4 pt-4 border-t border-gray-200'}`}>
+                    <div className={`${vehicle.vin || ((vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN') ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200'}`}>
                       <p className="text-sm text-gray-600">
                         <span className="font-semibold">Nächster TÜV:</span>{' '}
                         {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
@@ -375,6 +401,10 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
     nextInspectionDate: vehicle.nextInspectionDate ? new Date(vehicle.nextInspectionDate).toISOString().substring(0, 7) : '',
     inspectionReminder: vehicle.inspectionReminder || false,
     inspectionReminderDays: (vehicle.inspectionReminderDays || 30).toString(),
+    // Fuel/Electric Data (for CO₂ calculation)
+    fuelType: (vehicle as any).fuelType || 'UNKNOWN',
+    fuelConsumption: (vehicle as any).fuelConsumption?.toString() || '',
+    electricConsumption: (vehicle as any).electricConsumption?.toString() || '',
     // Summer Tires (For motorcycles: all tire sizes stored here regardless of season)
     hasSummerTires: !!vehicle.summerTires,
     summerDifferentSizes: vehicle.summerTires?.hasDifferentSizes || false,
@@ -606,6 +636,17 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
         }
       }
 
+      // Add fuel type and consumption
+      if (formData.fuelType) {
+        payload.fuelType = formData.fuelType
+      }
+      if (formData.fuelConsumption) {
+        payload.fuelConsumption = parseFloat(formData.fuelConsumption)
+      }
+      if (formData.electricConsumption) {
+        payload.electricConsumption = parseFloat(formData.electricConsumption)
+      }
+
       const res = await fetch(`/api/vehicles/${vehicle.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -789,6 +830,83 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       </div>
                     )}
                   </>
+                )}
+              </div>
+            </div>
+
+            {/* Fuel and Consumption (for CO₂ tracking) */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-2xl mr-2">⛽</span>
+                Kraftstoff & Verbrauch
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kraftstoffart *
+                  </label>
+                  <select
+                    name="fuelType"
+                    value={formData.fuelType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="UNKNOWN">Unbekannt</option>
+                    <option value="PETROL">Benzin</option>
+                    <option value="DIESEL">Diesel</option>
+                    <option value="ELECTRIC">Elektrisch</option>
+                    <option value="HYBRID">Hybrid</option>
+                    <option value="PLUGIN_HYBRID">Plug-in Hybrid</option>
+                    <option value="LPG">Autogas (LPG)</option>
+                    <option value="CNG">Erdgas (CNG)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
+                </div>
+
+                {(formData.fuelType === 'PETROL' || formData.fuelType === 'DIESEL' || 
+                  formData.fuelType === 'LPG' || formData.fuelType === 'CNG' || 
+                  formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kraftstoffverbrauch (L/100km)
+                    </label>
+                    <input
+                      type="number"
+                      name="fuelConsumption"
+                      min="0"
+                      max="50"
+                      step="0.1"
+                      value={formData.fuelConsumption}
+                      onChange={handleChange}
+                      placeholder="z.B. 6.5"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
+                  </div>
+                )}
+
+                {(formData.fuelType === 'ELECTRIC' || formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stromverbrauch (kWh/100km)
+                    </label>
+                    <input
+                      type="number"
+                      name="electricConsumption"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.electricConsumption}
+                      onChange={handleChange}
+                      placeholder="z.B. 18.5"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1210,6 +1328,9 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
     nextInspectionDate: '',
     inspectionReminder: false,
     inspectionReminderDays: '30',
+    fuelType: 'UNKNOWN',
+    fuelConsumption: '',
+    electricConsumption: '',
     // Summer Tires
     hasSummerTires: false,
     summerDifferentSizes: false,
@@ -1443,6 +1564,17 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
         }
       }
 
+      // Add fuel type and consumption
+      if (formData.fuelType) {
+        payload.fuelType = formData.fuelType
+      }
+      if (formData.fuelConsumption) {
+        payload.fuelConsumption = parseFloat(formData.fuelConsumption)
+      }
+      if (formData.electricConsumption) {
+        payload.electricConsumption = parseFloat(formData.electricConsumption)
+      }
+
       const res = await fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1626,6 +1758,83 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       </div>
                     )}
                   </>
+                )}
+              </div>
+            </div>
+
+            {/* Fuel and Consumption (for CO₂ tracking) */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-2xl mr-2">⛽</span>
+                Kraftstoff & Verbrauch
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kraftstoffart *
+                  </label>
+                  <select
+                    name="fuelType"
+                    value={formData.fuelType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="UNKNOWN">Unbekannt</option>
+                    <option value="PETROL">Benzin</option>
+                    <option value="DIESEL">Diesel</option>
+                    <option value="ELECTRIC">Elektrisch</option>
+                    <option value="HYBRID">Hybrid</option>
+                    <option value="PLUGIN_HYBRID">Plug-in Hybrid</option>
+                    <option value="LPG">Autogas (LPG)</option>
+                    <option value="CNG">Erdgas (CNG)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
+                </div>
+
+                {(formData.fuelType === 'PETROL' || formData.fuelType === 'DIESEL' || 
+                  formData.fuelType === 'LPG' || formData.fuelType === 'CNG' || 
+                  formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kraftstoffverbrauch (L/100km)
+                    </label>
+                    <input
+                      type="number"
+                      name="fuelConsumption"
+                      min="0"
+                      max="50"
+                      step="0.1"
+                      value={formData.fuelConsumption}
+                      onChange={handleChange}
+                      placeholder="z.B. 6.5"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
+                  </div>
+                )}
+
+                {(formData.fuelType === 'ELECTRIC' || formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stromverbrauch (kWh/100km)
+                    </label>
+                    <input
+                      type="number"
+                      name="electricConsumption"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.electricConsumption}
+                      onChange={handleChange}
+                      placeholder="z.B. 18.5"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
+                  </div>
                 )}
               </div>
             </div>

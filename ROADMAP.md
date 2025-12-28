@@ -567,7 +567,235 @@ Kunden-Dashboard Widget zur Reifensuche und -information über die offizielle EU
 
 ---
 
+### 8. CO₂-Einsparungs-Tracking-System
+**Status:** 🚧 In Arbeit  
+**Priorität:** Hoch
+
+**Beschreibung:**
+Kunden können im Dashboard sehen, wie viel CO₂ sie durch die Nutzung von Bereifung24 einsparen, indem sie nicht zu mehreren Werkstätten fahren müssen. Das System berechnet die eingesparte Fahrtstrecke basierend auf dem Standort und zeigt eine personalisierte Umweltbilanz.
+
+**Geschäftlicher Mehrwert:**
+- Starkes Alleinstellungsmerkmal (USP) für umweltbewusste Kunden
+- Emotionale Kundenbindung durch sichtbaren Umweltbeitrag
+- Marketing-Material: "Mit jedem Angebot X kg CO₂ gespart"
+- Differenzierung von Mitbewerbern
+- Moderne, nachhaltigkeitsorientierte Markenpositionierung
+
+---
+
+#### Phase 1: Basis CO₂-Tracking mit Standard-Werten
+**Ziel:** Automatische Berechnung bei jeder Anfrage mit durchschnittlichen Verbrauchswerten
+
+**Datenbank-Schema:**
+- [ ] Prisma Schema erweitern:
+  ```prisma
+  model CO2Settings {
+    id                      String   @id @default(cuid())
+    workshopsToCompare      Int      @default(3)    // Anzahl Werkstätten, die Kunde sonst besuchen würde
+    co2PerKmCombustion      Int      @default(140)  // g CO₂/km für Verbrenner (Durchschnitt)
+    co2PerKmElectric        Int      @default(50)   // g CO₂/km für E-Autos (Strommix DE)
+    co2PerLiterFuel         Int      @default(2330) // g CO₂/Liter Benzin
+    co2PerKWhElectric       Int      @default(420)  // g CO₂/kWh Strom (DE Mix)
+    updatedAt               DateTime @updatedAt
+  }
+
+  model TireRequest {
+    // ... existing fields
+    savedCO2Grams          Int?     // Gespeicherte CO₂-Menge in Gramm
+    calculationMethod      String?  // 'STANDARD' oder 'PERSONAL'
+  }
+
+  enum FuelType {
+    UNKNOWN
+    PETROL      // Benzin
+    DIESEL      // Diesel
+    ELECTRIC    // Elektro
+    HYBRID      // Hybrid
+    PLUGIN_HYBRID
+    LPG         // Autogas
+    CNG         // Erdgas
+  }
+
+  model Vehicle {
+    // ... existing fields
+    fuelType              FuelType  @default(UNKNOWN)
+    fuelConsumption       Float?    // L/100km für Verbrenner
+    electricConsumption   Float?    // kWh/100km für E-Autos
+  }
+  ```
+
+**Backend-Implementation:**
+- [ ] `lib/co2Calculator.ts` erstellen:
+  - [ ] `calculateCO2Savings()` - Hauptfunktion
+  - [ ] `calculateDistance()` - Haversine-Formel für Geo-Distanz
+  - [ ] `findNearestWorkshops()` - N nächste Werkstätten finden
+  - [ ] `getTotalAvoidedDistance()` - Summe aller vermiedenen Fahrten × 2 (Hin/Rück)
+
+**Berechnungs-Algorithmus:**
+```typescript
+// 1. Finde die N nächsten Werkstätten zum Kunden
+// 2. Berechne Distanz zu jeder Werkstatt
+// 3. Summe = (Distanz_WS1 + Distanz_WS2 + ... + Distanz_WSN) × 2 (Hin+Rück)
+// 4. CO₂ = Summe × CO₂-pro-km-Faktor
+// 5. Speichere bei TireRequest.savedCO2Grams
+```
+
+**API Endpoints:**
+- [ ] `/api/admin/co2-settings` (GET/POST) - Admin konfiguriert Werte
+- [ ] `/api/co2/calculate` (POST) - Berechnung bei Anfrageerstellung
+
+**Admin-Interface:**
+- [ ] Admin-Seite `/admin/co2-tracking` erstellen:
+  - [ ] Einstellung: Anzahl Werkstätten (Standard: 3)
+  - [ ] Einstellung: CO₂/km für Verbrenner (Standard: 140g)
+  - [ ] Einstellung: CO₂/km für E-Autos (Standard: 50g)
+  - [ ] Einstellung: CO₂/Liter Kraftstoff (Standard: 2330g)
+  - [ ] Einstellung: CO₂/kWh Strom (Standard: 420g)
+  - [ ] Speichern-Button
+  - [ ] Info-Tooltips mit Erklärungen
+
+**Integration in Anfrageerstellung:**
+- [ ] Bei TireRequest-Erstellung CO₂ automatisch berechnen
+- [ ] In `/api/tire-requests/create` Integration
+- [ ] Wert in `savedCO2Grams` speichern
+- [ ] Methode als 'STANDARD' markieren
+
+**Kunden-Dashboard Widget:**
+- [ ] Neue Komponente: `app/dashboard/customer/components/CO2SavingsWidget.tsx`
+- [ ] Design:
+  - Grünes Blatt-Icon oder CO₂-Symbol
+  - Große Zahl: "X.XX kg CO₂ gespart"
+  - Subtext: "Durch Y Anfragen über Bereifung24"
+  - Vergleich: "Das entspricht Z gefahrenen km"
+- [ ] API Call: `/api/customer/co2-stats` (GET)
+- [ ] Aggregation aller TireRequests des Kunden
+
+---
+
+#### Phase 2: Persönliche Verbrauchswerte (Fahrzeugverwaltung)
+**Ziel:** Präzise Berechnungen basierend auf individuellem Fahrzeugverbrauch
+
+**Fahrzeugverwaltung erweitern:**
+- [ ] Formular `/dashboard/customer/vehicles` aktualisieren:
+  - [ ] Dropdown: Kraftstoffart (Benzin/Diesel/Elektro/Hybrid/etc.)
+  - [ ] Input: Durchschnittsverbrauch
+    - Bei Verbrenner: "Verbrauch (L/100km)"
+    - Bei Elektro: "Verbrauch (kWh/100km)"
+  - [ ] Optional-Checkbox: "Standardwerte verwenden"
+  - [ ] Hilfetext: "Finden Sie im Bordcomputer oder Fahrzeugschein"
+
+**Berechnungs-Logik erweitern:**
+- [ ] `lib/co2Calculator.ts` aktualisieren:
+  - [ ] Check: Hat Fahrzeug persönlichen Verbrauch?
+  - [ ] JA → Berechne mit persönlichen Werten:
+    ```typescript
+    // Für Verbrenner:
+    co2 = (distance_km / 100) × fuelConsumption_L × co2PerLiter_g
+    
+    // Für E-Autos:
+    co2 = (distance_km / 100) × electricConsumption_kWh × co2PerKWh_g
+    ```
+  - [ ] NEIN → Verwende Standard CO₂/km-Wert
+  - [ ] Markiere Methode: 'PERSONAL' oder 'STANDARD'
+
+**API Updates:**
+- [ ] `/api/vehicles` - Neue Felder speichern
+- [ ] `/api/co2/calculate` - Fahrzeug-Daten einbeziehen
+
+**Dashboard Anpassung:**
+- [ ] Widget zeigt an: "Basierend auf Ihrem [Fahrzeugname]"
+- [ ] Tooltip: "Mit Ihrem persönlichen Verbrauch berechnet"
+
+---
+
+#### Phase 3: Erweiterte Dashboard-Darstellung
+**Ziel:** Umfassende Umweltbilanz mit gespartem Kraftstoff und Geld
+
+**Dashboard Widget erweitern:**
+- [ ] Komponente `CO2SavingsWidget.tsx` ausbauen:
+  - [ ] **Hauptanzeige:**
+    - Große Zahl: "X.XX kg CO₂ gespart"
+    - Icon: Grünes Blatt
+  
+  - [ ] **Detail-Karten (Unterhalb):**
+    - 📊 "Y.Y Liter Kraftstoff gespart" (bei Verbrennern)
+    - 📊 "Y.Y kWh Strom gespart" (bei E-Autos)
+    - 💰 "~Z.ZZ € gespart" (Kraftstoffkosten)
+    - 🚗 "~W km vermiedene Fahrten"
+  
+  - [ ] **Vergleichs-Visualisierung:**
+    - "Das entspricht X Bäumen, die ein Jahr wachsen"
+    - "Das entspricht Y km Autofahrt"
+    - "So viel CO₂ wie Z Ladungen Smartphone"
+
+**Berechnungs-Erweiterung:**
+- [ ] `lib/co2Calculator.ts` erweitern:
+  - [ ] `calculateSavedFuel()` - Gespartes Benzin/Diesel in Liter
+  - [ ] `calculateSavedElectricity()` - Gesparter Strom in kWh
+  - [ ] `calculateSavedMoney()` - Geldwert basierend auf:
+    - Benzinpreis (Admin-Einstellung, z.B. 1.65 €/L)
+    - Strompreis (Admin-Einstellung, z.B. 0.35 €/kWh)
+  - [ ] `getComparisonFacts()` - Vergleichswerte generieren
+
+**Admin-Settings erweitern:**
+- [ ] `/admin/co2-tracking` zusätzliche Einstellungen:
+  - [ ] Benzinpreis (€/Liter) - Standard: 1.65 €
+  - [ ] Dieselpreis (€/Liter) - Standard: 1.55 €
+  - [ ] Strompreis (€/kWh) - Standard: 0.35 €
+  - [ ] Aktivieren/Deaktivieren einzelner Anzeigen
+
+**API Erweiterung:**
+- [ ] `/api/customer/co2-stats` erweiterte Response:
+  ```typescript
+  {
+    totalCO2SavedGrams: number,
+    totalFuelSavedLiters: number,    // Nur bei Verbrennern
+    totalElectricitySavedKWh: number, // Nur bei E-Autos
+    totalMoneySaved: number,          // in Euro
+    totalDistanceAvoided: number,     // in km
+    numberOfRequests: number,
+    comparisons: {
+      equivalentTrees: number,
+      equivalentCarKm: number,
+      equivalentPhoneCharges: number
+    }
+  }
+  ```
+
+**UI-Elemente:**
+- [ ] Progress-Ring oder Gauge für CO₂-Reduktion
+- [ ] Timeline: CO₂-Einsparung über Zeit (Chart)
+- [ ] "Teilen"-Button: Social Media Share (optional)
+- [ ] "Zertifikat herunterladen" (optional, PDF)
+
+---
+
+**Implementierungs-Reihenfolge:**
+1. ✅ Schema-Definition und Datenbank-Migration
+2. ✅ CO₂-Calculator Bibliothek entwickeln
+3. ✅ Admin-Interface für Einstellungen
+4. ✅ Integration in Anfrageerstellung
+5. ✅ Basis-Widget im Kunden-Dashboard
+6. ✅ Fahrzeugverwaltung mit Verbrauchsangaben
+7. ✅ Erweiterte Berechnungen (Kraftstoff/Geld)
+8. ✅ Vollständiges Dashboard-Widget mit allen Metriken
+
+**Testing-Checkpoints:**
+- [ ] Test 1: Berechnung mit Standard-Werten validieren
+- [ ] Test 2: Berechnung mit persönlichen Werten prüfen
+- [ ] Test 3: Admin-Settings Änderungen testen
+- [ ] Test 4: Widget-Darstellung auf Mobile
+- [ ] Test 5: Performance bei vielen Anfragen (100+)
+
+**Dokumentation:**
+- [ ] README-Sektion mit Berechnungslogik
+- [ ] API-Dokumentation für CO₂-Endpoints
+- [ ] Admin-Handbuch für CO₂-Einstellungen
+- [ ] Kunden-FAQ: "Wie wird meine CO₂-Ersparnis berechnet?"
+
+---
+
 **Letzte Aktualisierung:** 28. Dezember 2025
-**Version:** 0.8.0 - Phasen 1-7 abgeschlossen, 4 Features implementiert
-**Fortschritt:** 83% abgeschlossen (Phase 1-7 fertig, 4 von 6 Features erledigt)
-**Neue Features:** 5 von 6 erledigt (Logo, Bewertungen, Analytics, MwSt., Passwort-Sicherheit), 1 offen
+**Version:** 0.8.1 - CO₂-Tracking-System hinzugefügt
+**Fortschritt:** 83% abgeschlossen (Phase 1-7 fertig, 5 von 7 Features)
+**Neue Features:** 5 erledigt, 2 in Arbeit (EPREL Tire Finder, CO₂-Tracking)

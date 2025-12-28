@@ -433,49 +433,6 @@ export default function CO2TrackingPage() {
               </div>
             </CardContent>
           </Card>
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={settings.fuelPricePerLiter}
-                    onChange={(e) => handleChange('fuelPricePerLiter', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="dieselPricePerLiter" className="flex items-center gap-2">
-                    Dieselpreis
-                    <span className="text-xs text-gray-500">(€/L)</span>
-                  </Label>
-                  <Input
-                    id="dieselPricePerLiter"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={settings.dieselPricePerLiter}
-                    onChange={(e) => handleChange('dieselPricePerLiter', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="electricPricePerKWh" className="flex items-center gap-2">
-                    Strompreis
-                    <span className="text-xs text-gray-500">(€/kWh)</span>
-                  </Label>
-                  <Input
-                    id="electricPricePerKWh"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={settings.electricPricePerKWh}
-                    onChange={(e) => handleChange('electricPricePerKWh', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Save Button */}
           <div className="flex justify-end">

@@ -37,7 +37,8 @@ export async function GET() {
       'security',
       'sales',
       'kvp',
-      'files'
+      'files',
+      'co2-tracking'
     ]
 
     // ADMINs have access to everything

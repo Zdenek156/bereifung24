@@ -568,7 +568,7 @@ Kunden-Dashboard Widget zur Reifensuche und -information über die offizielle EU
 ---
 
 ### 8. CO₂-Einsparungs-Tracking-System
-**Status:** 🚧 In Arbeit  
+**Status:** 🚧 In Arbeit - Phase 1 ✅ Abgeschlossen (28.12.2025)
 **Priorität:** Hoch
 
 **Beschreibung:**
@@ -583,11 +583,11 @@ Kunden können im Dashboard sehen, wie viel CO₂ sie durch die Nutzung von Bere
 
 ---
 
-#### Phase 1: Basis CO₂-Tracking mit Standard-Werten
+#### ✅ Phase 1: Basis CO₂-Tracking mit Standard-Werten (ABGESCHLOSSEN)
 **Ziel:** Automatische Berechnung bei jeder Anfrage mit durchschnittlichen Verbrauchswerten
 
 **Datenbank-Schema:**
-- [ ] Prisma Schema erweitern:
+- [x] Prisma Schema erweitern:
   ```prisma
   model CO2Settings {
     id                      String   @id @default(cuid())
@@ -625,11 +625,11 @@ Kunden können im Dashboard sehen, wie viel CO₂ sie durch die Nutzung von Bere
   ```
 
 **Backend-Implementation:**
-- [ ] `lib/co2Calculator.ts` erstellen:
-  - [ ] `calculateCO2Savings()` - Hauptfunktion
-  - [ ] `calculateDistance()` - Haversine-Formel für Geo-Distanz
-  - [ ] `findNearestWorkshops()` - N nächste Werkstätten finden
-  - [ ] `getTotalAvoidedDistance()` - Summe aller vermiedenen Fahrten × 2 (Hin/Rück)
+- [x] `lib/co2Calculator.ts` erstellen:
+  - [x] `calculateCO2Savings()` - Hauptfunktion
+  - [x] `calculateDistance()` - Haversine-Formel für Geo-Distanz
+  - [x] `findNearestWorkshops()` - N nächste Werkstätten finden
+  - [x] `getTotalAvoidedDistance()` - Summe aller vermiedenen Fahrten × 2 (Hin/Rück)
 
 **Berechnungs-Algorithmus:**
 ```typescript
@@ -641,34 +641,34 @@ Kunden können im Dashboard sehen, wie viel CO₂ sie durch die Nutzung von Bere
 ```
 
 **API Endpoints:**
-- [ ] `/api/admin/co2-settings` (GET/POST) - Admin konfiguriert Werte
-- [ ] `/api/co2/calculate` (POST) - Berechnung bei Anfrageerstellung
+- [x] `/api/admin/co2-settings` (GET/POST) - Admin konfiguriert Werte
+- [x] `/api/co2/calculate` (POST) - Berechnung bei Anfrageerstellung
 
 **Admin-Interface:**
-- [ ] Admin-Seite `/admin/co2-tracking` erstellen:
-  - [ ] Einstellung: Anzahl Werkstätten (Standard: 3)
-  - [ ] Einstellung: CO₂/km für Verbrenner (Standard: 140g)
-  - [ ] Einstellung: CO₂/km für E-Autos (Standard: 50g)
-  - [ ] Einstellung: CO₂/Liter Kraftstoff (Standard: 2330g)
-  - [ ] Einstellung: CO₂/kWh Strom (Standard: 420g)
-  - [ ] Speichern-Button
-  - [ ] Info-Tooltips mit Erklärungen
+- [x] Admin-Seite `/admin/co2-tracking` erstellen:
+  - [x] Einstellung: Anzahl Werkstätten (Standard: 3)
+  - [x] Einstellung: CO₂/km für Verbrenner (Standard: 140g)
+  - [x] Einstellung: CO₂/km für E-Autos (Standard: 50g)
+  - [x] Einstellung: CO₂/Liter Kraftstoff (Standard: 2330g)
+  - [x] Einstellung: CO₂/kWh Strom (Standard: 420g)
+  - [x] Speichern-Button
+  - [x] Info-Tooltips mit Erklärungen
 
 **Integration in Anfrageerstellung:**
-- [ ] Bei TireRequest-Erstellung CO₂ automatisch berechnen
-- [ ] In `/api/tire-requests/create` Integration
-- [ ] Wert in `savedCO2Grams` speichern
-- [ ] Methode als 'STANDARD' markieren
+- [x] Bei TireRequest-Erstellung CO₂ automatisch berechnen
+- [x] In `/api/tire-requests/create` Integration
+- [x] Wert in `savedCO2Grams` speichern
+- [x] Methode als 'STANDARD' markieren
 
 **Kunden-Dashboard Widget:**
-- [ ] Neue Komponente: `app/dashboard/customer/components/CO2SavingsWidget.tsx`
-- [ ] Design:
+- [x] Neue Komponente: `app/dashboard/customer/components/CO2SavingsWidget.tsx`
+- [x] Design:
   - Grünes Blatt-Icon oder CO₂-Symbol
   - Große Zahl: "X.XX kg CO₂ gespart"
   - Subtext: "Durch Y Anfragen über Bereifung24"
   - Vergleich: "Das entspricht Z gefahrenen km"
-- [ ] API Call: `/api/customer/co2-stats` (GET)
-- [ ] Aggregation aller TireRequests des Kunden
+- [x] API Call: `/api/customer/co2-stats` (GET)
+- [x] Aggregation aller TireRequests des Kunden
 
 ---
 

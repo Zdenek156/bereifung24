@@ -215,13 +215,42 @@ function calculatePersonalCO2(
   } else if (fuelConsumption) {
     // Verbrenner: L/100km → CO2
     const litersUsed = (distanceKm / 100) * fuelConsumption;
-    const savedCO2Grams = Math.round(litersUsed * settings.co2PerLiterFuel);
     
-    // Preis basierend auf Kraftstoffart
-    const pricePerLiter =
-      fuelType === 'DIESEL'
-        ? settings.dieselPricePerLiter
-        : settings.fuelPricePerLiter;
+    // Kraftstoffspezifischer CO2-Faktor
+    let co2PerLiter: number;
+    let pricePerLiter: number;
+    
+    switch (fuelType) {
+      case 'PETROL':
+        co2PerLiter = settings.co2PerLiterPetrol || settings.co2PerLiterFuel;
+        pricePerLiter = settings.petrolPricePerLiter || settings.fuelPricePerLiter;
+        break;
+      case 'DIESEL':
+        co2PerLiter = settings.co2PerLiterDiesel || settings.co2PerLiterFuel;
+        pricePerLiter = settings.dieselPricePerLiter || settings.fuelPricePerLiter;
+        break;
+      case 'LPG':
+        co2PerLiter = settings.co2PerLiterLPG || settings.co2PerLiterFuel;
+        pricePerLiter = settings.lpgPricePerLiter || settings.fuelPricePerLiter;
+        break;
+      case 'CNG':
+        // CNG wird in kg gemessen
+        co2PerLiter = settings.co2PerKgCNG || settings.co2PerLiterFuel;
+        pricePerLiter = settings.cngPricePerKg || settings.fuelPricePerLiter;
+        break;
+      case 'HYBRID':
+      case 'PLUGIN_HYBRID':
+        // Hybrid: Verwende Benzin als Basis (konservativ)
+        co2PerLiter = settings.co2PerLiterPetrol || settings.co2PerLiterFuel;
+        pricePerLiter = settings.petrolPricePerLiter || settings.fuelPricePerLiter;
+        break;
+      default:
+        // Fallback auf Legacy-Wert
+        co2PerLiter = settings.co2PerLiterFuel;
+        pricePerLiter = settings.fuelPricePerLiter;
+    }
+    
+    const savedCO2Grams = Math.round(litersUsed * co2PerLiter);
     const moneySaved = litersUsed * pricePerLiter;
 
     return {

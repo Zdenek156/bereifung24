@@ -37,6 +37,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'sales', label: 'Sales CRM' },
   { value: 'kvp', label: 'KVP - Verbesserungsvorschläge' },
   { value: 'files', label: 'Dateiverwaltung' },
+  { value: 'co2-tracking', label: 'CO₂-Tracking' },
 ]
 
 interface Permission {

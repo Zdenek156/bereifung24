@@ -488,7 +488,86 @@ Bei Motorradreifen-Anfrage: Option, dass Kunde nur die Räder (ohne Motorrad) vo
 
 ---
 
-**Letzte Aktualisierung:** 17. Dezember 2025
+### 7. Reifen-Finder Widget mit EPREL API
+**Status:** ⏳ Wartend auf API-Key  
+**Priorität:** Mittel
+
+**Beschreibung:**
+Kunden-Dashboard Widget zur Reifensuche und -information über die offizielle EU EPREL-Datenbank.
+
+**API-Zugang:**
+- EPREL Public API Key beantragt: https://eprel.ec.europa.eu/screen/requestpublicapikey
+- Wartend auf Genehmigung (ca. 5-7 Werktage)
+- API bietet vollständigen Zugriff auf EU-Reifendatenbank mit Label-Informationen
+
+**Features:**
+1. **Suchfunktionen:**
+   - Schnellsuche nach Dimension (z.B. 205/55 R16)
+   - Filter nach Hersteller/Marke
+   - Filter nach Saison (Sommer/Winter/Ganzjahr)
+   - Filter nach EU-Label-Kriterien
+
+2. **EU-Label Informationen:**
+   - Nasshaftungsklasse (A-E)
+   - Rollwiderstandsklasse (A-E) 
+   - Geräuschentwicklung (dB + Klasse A-C)
+   - Zusatzsymbole (3PMSF Schneeflocke, Eis-Symbol)
+
+3. **Praktische Filter:**
+   - Fahrzeugtyp (PKW, SUV, Transporter, E-Auto)
+   - Einsatzgebiet (Stadt, Autobahn, Offroad)
+   - Umweltaspekte (CO₂-Reduktion)
+   - Sicherheitspriorität (beste Nasshaftung)
+
+4. **Anfrage-Integration:**
+   - "Anfrage stellen" Button bei jedem Reifen
+   - Automatische Übernahme der Reifendaten
+   - Direkte Weiterleitung an Werkstätten
+
+**Technische Umsetzung (nach API-Key Erhalt):**
+- Prisma Schema: 
+  ```prisma
+  model TireData {
+    manufacturer    String
+    model          String
+    dimension      String  // "205/55R16"
+    loadIndex      String
+    speedRating    String
+    season         TireSeason
+    wetGripClass   String  // A-E
+    fuelEfficiency String  // A-E
+    noiseLevel     Int     // dB
+    noiseClass     String  // A-C
+    has3PMSF       Boolean
+    hasIceGrip     Boolean
+    isEVOptimized  Boolean
+  }
+  ```
+- API Routes:
+  - `/api/tire-finder/search` - Suche über EPREL API
+  - `/api/tire-finder/details` - Detailansicht
+  - `/api/tire-finder/inquiry` - Anfrage erstellen
+- Frontend:
+  - `/dashboard/customer/tire-finder` - Hauptseite
+  - Widget auf Customer Dashboard
+- EPREL API Integration:
+  - Caching-Strategie (Redis/In-Memory)
+  - Rate-Limiting beachten
+  - Fehlerbehandlung bei API-Ausfällen
+
+**Implementierungs-Phasen:**
+1. Phase 1 (nach API-Key): Basis-Suchfunktion mit EPREL-Daten
+2. Phase 2: Erweiterte Filter und Vergleichsfunktion
+3. Phase 3: Favoriten und Preis-Alerts (optional)
+
+**Voraussetzungen:**
+- ⏳ EPREL API Key Genehmigung abwarten
+- ⏳ API-Dokumentation studieren
+- ⏳ Test-Zugriff validieren
+
+---
+
+**Letzte Aktualisierung:** 28. Dezember 2025
 **Version:** 0.8.0 - Phasen 1-7 abgeschlossen, 4 Features implementiert
 **Fortschritt:** 83% abgeschlossen (Phase 1-7 fertig, 4 von 6 Features erledigt)
 **Neue Features:** 5 von 6 erledigt (Logo, Bewertungen, Analytics, MwSt., Passwort-Sicherheit), 1 offen

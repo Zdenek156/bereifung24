@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { geocodeAddress } from '@/lib/geocoding'
 import { sendEmail, newTireRequestEmailTemplate } from '@/lib/email'
+import { calculateCO2Savings } from '@/lib/co2Calculator'
 
 const tireRequestSchema = z.object({
   season: z.enum(['SUMMER', 'WINTER', 'ALL_SEASON']),
@@ -150,6 +151,31 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
       },
     })
+
+    // Calculate CO2 savings if coordinates available
+    if (latitude && longitude) {
+      try {
+        const co2Result = await calculateCO2Savings(
+          latitude,
+          longitude,
+          validatedData.vehicleId
+        );
+        
+        // Update tire request with CO2 data
+        await prisma.tireRequest.update({
+          where: { id: tireRequest.id },
+          data: {
+            savedCO2Grams: co2Result.savedCO2Grams,
+            calculationMethod: co2Result.calculationMethod,
+          },
+        });
+        
+        console.log(`🌱 CO2 savings calculated: ${co2Result.savedCO2Grams}g (${co2Result.calculationMethod})`);
+      } catch (error) {
+        console.error('Failed to calculate CO2 savings:', error);
+        // Continue even if CO2 calculation fails
+      }
+    }
 
     // Find workshops within radius and send notification emails
     if (latitude && longitude) {

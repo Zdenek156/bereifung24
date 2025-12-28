@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import WeatherWidget from '@/components/WeatherWidget'
+import CO2SavingsWidget from './components/CO2SavingsWidget'
 
 export default function CustomerDashboard() {
   const { data: session } = useSession()
@@ -109,6 +110,11 @@ export default function CustomerDashboard() {
       {/* Weather Widget */}
       <div className="mb-8">
         <WeatherWidget />
+      </div>
+
+      {/* CO2 Savings Widget */}
+      <div className="mb-8">
+        <CO2SavingsWidget />
       </div>
 
       {/* Welcome & Instructions Section */}

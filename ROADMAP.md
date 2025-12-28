@@ -555,8 +555,19 @@ Kunden-Dashboard Widget zur Reifensuche und -information über die offizielle EU
   - Rate-Limiting beachten
   - Fehlerbehandlung bei API-Ausfällen
 
+**Datenschutz & Compliance:**
+- ✅ **Datenschutz-Checkliste erstellt:** Siehe `EPREL_COMPLIANCE_CHECKLIST.md`
+- ✅ **Keine personenbezogenen Daten:** EPREL enthält nur Produktinformationen
+- ✅ **Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse)
+- ⏳ **API-Key Sicherheit:** In Umgebungsvariablen speichern (nach Erhalt)
+- ⏳ **Datenschutzerklärung:** Abschnitt "EPREL API Nutzung" hinzufügen
+- ⏳ **Caching:** Max. 24h Cache mit automatischer Löschung
+- ⏳ **Rate Limiting:** Pro-User Limits implementieren
+- ⏳ **Serverseitig:** Alle EPREL Calls nur vom Backend
+- ✅ **Risikobewertung:** NIEDRIG (nur Produktdaten, keine personenbezogenen Daten)
+
 **Implementierungs-Phasen:**
-1. Phase 1 (nach API-Key): Basis-Suchfunktion mit EPREL-Daten
+1. Phase 1 (nach API-Key): Basis-Suchfunktion mit EPREL-Daten + Datenschutz-Compliance
 2. Phase 2: Erweiterte Filter und Vergleichsfunktion
 3. Phase 3: Favoriten und Preis-Alerts (optional)
 
@@ -564,6 +575,7 @@ Kunden-Dashboard Widget zur Reifensuche und -information über die offizielle EU
 - ⏳ EPREL API Key Genehmigung abwarten
 - ⏳ API-Dokumentation studieren
 - ⏳ Test-Zugriff validieren
+- ✅ Datenschutz-Compliance geplant
 
 ---
 

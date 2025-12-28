@@ -40,7 +40,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ settings });
+    // Ensure all fields have values (for migration compatibility)
+    const completeSettings = {
+      ...settings,
+      co2PerLiterPetrol: settings.co2PerLiterPetrol ?? 2320,
+      co2PerLiterDiesel: settings.co2PerLiterDiesel ?? 2640,
+      co2PerLiterLPG: settings.co2PerLiterLPG ?? 1640,
+      co2PerKgCNG: settings.co2PerKgCNG ?? 1990,
+      co2PerKWhElectric: settings.co2PerKWhElectric ?? 420,
+      petrolPricePerLiter: settings.petrolPricePerLiter ?? 1.75,
+      dieselPricePerLiter: settings.dieselPricePerLiter ?? 1.65,
+      lpgPricePerLiter: settings.lpgPricePerLiter ?? 0.80,
+      cngPricePerKg: settings.cngPricePerKg ?? 1.10,
+      electricPricePerKWh: settings.electricPricePerKWh ?? 0.35,
+    };
+
+    return NextResponse.json({ settings: completeSettings });
   } catch (error) {
     console.error('Error fetching CO2 settings:', error);
     return NextResponse.json(

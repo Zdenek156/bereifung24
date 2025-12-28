@@ -32,6 +32,9 @@ const vehicleUpdateSchema = z.object({
   summerTires: tireSpecSchema.optional(),
   winterTires: tireSpecSchema.optional(),
   allSeasonTires: tireSpecSchema.optional(),
+  fuelType: z.enum(['UNKNOWN', 'PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID', 'PLUGIN_HYBRID', 'LPG', 'CNG']).optional(),
+  fuelConsumption: z.number().min(0).max(50).optional(),
+  electricConsumption: z.number().min(0).max(100).optional(),
 })
 
 // PUT /api/vehicles/[id] - Update a vehicle
@@ -91,6 +94,9 @@ export async function PUT(
       nextInspectionDate: inspectionDate,
       inspectionReminder: validated.inspectionReminder,
       inspectionReminderDays: validated.inspectionReminderDays,
+      fuelType: validated.fuelType || 'UNKNOWN',
+      fuelConsumption: validated.fuelConsumption || null,
+      electricConsumption: validated.electricConsumption || null,
     }
 
     // Store tire data in dedicated columns

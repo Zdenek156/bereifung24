@@ -24,11 +24,18 @@ export async function GET(request: NextRequest) {
           workshopsToCompare: 3,
           co2PerKmCombustion: 140,
           co2PerKmElectric: 50,
-          co2PerLiterFuel: 2330,
+          co2PerLiterPetrol: 2320,
+          co2PerLiterDiesel: 2640,
+          co2PerLiterLPG: 1640,
+          co2PerKgCNG: 1990,
           co2PerKWhElectric: 420,
-          fuelPricePerLiter: 1.65,
-          dieselPricePerLiter: 1.55,
+          co2PerLiterFuel: 2330, // Legacy
+          petrolPricePerLiter: 1.75,
+          dieselPricePerLiter: 1.65,
+          lpgPricePerLiter: 0.80,
+          cngPricePerKg: 1.10,
           electricPricePerKWh: 0.35,
+          fuelPricePerLiter: 1.65, // Legacy
         },
       });
     }
@@ -57,11 +64,19 @@ export async function POST(request: NextRequest) {
       workshopsToCompare,
       co2PerKmCombustion,
       co2PerKmElectric,
-      co2PerLiterFuel,
+      co2PerLiterPetrol,
+      co2PerLiterDiesel,
+      co2PerLiterLPG,
+      co2PerKgCNG,
       co2PerKWhElectric,
-      fuelPricePerLiter,
+      petrolPricePerLiter,
       dieselPricePerLiter,
+      lpgPricePerLiter,
+      cngPricePerKg,
       electricPricePerKWh,
+      // Legacy fields
+      co2PerLiterFuel,
+      fuelPricePerLiter,
     } = body;
 
     // Validierung
@@ -69,10 +84,15 @@ export async function POST(request: NextRequest) {
       workshopsToCompare < 1 ||
       co2PerKmCombustion < 0 ||
       co2PerKmElectric < 0 ||
-      co2PerLiterFuel < 0 ||
+      co2PerLiterPetrol < 0 ||
+      co2PerLiterDiesel < 0 ||
+      co2PerLiterLPG < 0 ||
+      co2PerKgCNG < 0 ||
       co2PerKWhElectric < 0 ||
-      fuelPricePerLiter < 0 ||
+      petrolPricePerLiter < 0 ||
       dieselPricePerLiter < 0 ||
+      lpgPricePerLiter < 0 ||
+      cngPricePerKg < 0 ||
       electricPricePerKWh < 0
     ) {
       return NextResponse.json(
@@ -93,11 +113,19 @@ export async function POST(request: NextRequest) {
           workshopsToCompare,
           co2PerKmCombustion,
           co2PerKmElectric,
-          co2PerLiterFuel,
+          co2PerLiterPetrol,
+          co2PerLiterDiesel,
+          co2PerLiterLPG,
+          co2PerKgCNG,
           co2PerKWhElectric,
-          fuelPricePerLiter,
+          petrolPricePerLiter,
           dieselPricePerLiter,
+          lpgPricePerLiter,
+          cngPricePerKg,
           electricPricePerKWh,
+          // Update legacy fields if provided
+          co2PerLiterFuel: co2PerLiterFuel ?? existing.co2PerLiterFuel,
+          fuelPricePerLiter: fuelPricePerLiter ?? existing.fuelPricePerLiter,
         },
       });
     } else {
@@ -107,11 +135,18 @@ export async function POST(request: NextRequest) {
           workshopsToCompare,
           co2PerKmCombustion,
           co2PerKmElectric,
-          co2PerLiterFuel,
+          co2PerLiterPetrol,
+          co2PerLiterDiesel,
+          co2PerLiterLPG,
+          co2PerKgCNG,
           co2PerKWhElectric,
-          fuelPricePerLiter,
+          petrolPricePerLiter,
           dieselPricePerLiter,
+          lpgPricePerLiter,
+          cngPricePerKg,
           electricPricePerKWh,
+          co2PerLiterFuel: co2PerLiterFuel ?? 2330,
+          fuelPricePerLiter: fuelPricePerLiter ?? 1.65,
         },
       });
     }

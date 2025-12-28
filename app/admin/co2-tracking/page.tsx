@@ -10,13 +10,24 @@ import { Leaf, Save, Info, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 
 interface CO2Settings {
   workshopsToCompare: number;
+  // Durchschnittswerte (Fallback)
   co2PerKmCombustion: number;
   co2PerKmElectric: number;
-  co2PerLiterFuel: number;
+  // Kraftstoffspezifische CO₂-Faktoren
+  co2PerLiterPetrol: number;
+  co2PerLiterDiesel: number;
+  co2PerLiterLPG: number;
+  co2PerKgCNG: number;
   co2PerKWhElectric: number;
-  fuelPricePerLiter: number;
+  // Kraftstoffpreise
+  petrolPricePerLiter: number;
   dieselPricePerLiter: number;
+  lpgPricePerLiter: number;
+  cngPricePerKg: number;
   electricPricePerKWh: number;
+  // Legacy fields
+  co2PerLiterFuel?: number;
+  fuelPricePerLiter?: number;
 }
 
 export default function CO2TrackingPage() {
@@ -27,10 +38,15 @@ export default function CO2TrackingPage() {
     workshopsToCompare: 3,
     co2PerKmCombustion: 140,
     co2PerKmElectric: 50,
-    co2PerLiterFuel: 2330,
+    co2PerLiterPetrol: 2320,
+    co2PerLiterDiesel: 2640,
+    co2PerLiterLPG: 1640,
+    co2PerKgCNG: 1990,
     co2PerKWhElectric: 420,
-    fuelPricePerLiter: 1.65,
-    dieselPricePerLiter: 1.55,
+    petrolPricePerLiter: 1.75,
+    dieselPricePerLiter: 1.65,
+    lpgPricePerLiter: 0.80,
+    cngPricePerKg: 1.10,
     electricPricePerKWh: 0.35,
   });
 
@@ -176,9 +192,9 @@ export default function CO2TrackingPage() {
           {/* CO₂-Emissionsfaktoren */}
           <Card>
             <CardHeader>
-              <CardTitle>CO₂-Emissionsfaktoren</CardTitle>
+              <CardTitle>CO₂-Emissionsfaktoren (Fallback)</CardTitle>
               <CardDescription>
-                Durchschnittliche CO₂-Emissionen pro Kilometer und Energieeinheit
+                Durchschnittswerte pro Kilometer - werden nur verwendet wenn kein Fahrzeug mit Verbrauchsdaten bekannt ist
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -218,22 +234,89 @@ export default function CO2TrackingPage() {
                     Deutscher Strommix 2024: ~50 g/km
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
+          {/* Kraftstoffspezifische CO₂-Faktoren */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Kraftstoffspezifische CO₂-Faktoren</CardTitle>
+              <CardDescription>
+                Emissionsfaktoren pro Liter/kg/kWh - für präzise Berechnungen mit individuellem Fahrzeugverbrauch
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="co2PerLiterFuel" className="flex items-center gap-2">
-                    CO₂ pro Liter Kraftstoff
+                  <Label htmlFor="co2PerLiterPetrol" className="flex items-center gap-2">
+                    CO₂ pro Liter Benzin
                     <span className="text-xs text-gray-500">(g CO₂/L)</span>
                   </Label>
                   <Input
-                    id="co2PerLiterFuel"
+                    id="co2PerLiterPetrol"
                     type="number"
                     min="0"
-                    value={settings.co2PerLiterFuel}
-                    onChange={(e) => handleChange('co2PerLiterFuel', e.target.value)}
+                    value={settings.co2PerLiterPetrol}
+                    onChange={(e) => handleChange('co2PerLiterPetrol', e.target.value)}
                     className="mt-1"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Benzin/Diesel: ~2330 g/L
+                    Standard: 2320 g/L
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="co2PerLiterDiesel" className="flex items-center gap-2">
+                    CO₂ pro Liter Diesel
+                    <span className="text-xs text-gray-500">(g CO₂/L)</span>
+                  </Label>
+                  <Input
+                    id="co2PerLiterDiesel"
+                    type="number"
+                    min="0"
+                    value={settings.co2PerLiterDiesel}
+                    onChange={(e) => handleChange('co2PerLiterDiesel', e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard: 2640 g/L (+14% vs. Benzin)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="co2PerLiterLPG" className="flex items-center gap-2">
+                    CO₂ pro Liter LPG (Autogas)
+                    <span className="text-xs text-gray-500">(g CO₂/L)</span>
+                  </Label>
+                  <Input
+                    id="co2PerLiterLPG"
+                    type="number"
+                    min="0"
+                    value={settings.co2PerLiterLPG}
+                    onChange={(e) => handleChange('co2PerLiterLPG', e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard: 1640 g/L (-29% vs. Benzin)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="co2PerKgCNG" className="flex items-center gap-2">
+                    CO₂ pro kg CNG (Erdgas)
+                    <span className="text-xs text-gray-500">(g CO₂/kg)</span>
+                  </Label>
+                  <Input
+                    id="co2PerKgCNG"
+                    type="number"
+                    min="0"
+                    value={settings.co2PerKgCNG}
+                    onChange={(e) => handleChange('co2PerKgCNG', e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard: 1990 g/kg
                   </p>
                 </div>
 
@@ -263,18 +346,93 @@ export default function CO2TrackingPage() {
             <CardHeader>
               <CardTitle>Kraftstoffpreise</CardTitle>
               <CardDescription>
-                Aktuelle Preise für die Berechnung der monetären Einsparungen
+                Aktuelle Preise für die Berechnung der monetären Einsparungen durch vermiedene Fahrten
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="fuelPricePerLiter" className="flex items-center gap-2">
+                  <Label htmlFor="petrolPricePerLiter" className="flex items-center gap-2">
                     Benzinpreis
                     <span className="text-xs text-gray-500">(€/L)</span>
                   </Label>
                   <Input
-                    id="fuelPricePerLiter"
+                    id="petrolPricePerLiter"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.petrolPricePerLiter}
+                    onChange={(e) => handleChange('petrolPricePerLiter', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="dieselPricePerLiter" className="flex items-center gap-2">
+                    Dieselpreis
+                    <span className="text-xs text-gray-500">(€/L)</span>
+                  </Label>
+                  <Input
+                    id="dieselPricePerLiter"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.dieselPricePerLiter}
+                    onChange={(e) => handleChange('dieselPricePerLiter', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="lpgPricePerLiter" className="flex items-center gap-2">
+                    LPG-Preis (Autogas)
+                    <span className="text-xs text-gray-500">(€/L)</span>
+                  </Label>
+                  <Input
+                    id="lpgPricePerLiter"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.lpgPricePerLiter}
+                    onChange={(e) => handleChange('lpgPricePerLiter', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="cngPricePerKg" className="flex items-center gap-2">
+                    CNG-Preis (Erdgas)
+                    <span className="text-xs text-gray-500">(€/kg)</span>
+                  </Label>
+                  <Input
+                    id="cngPricePerKg"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.cngPricePerKg}
+                    onChange={(e) => handleChange('cngPricePerKg', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="electricPricePerKWh" className="flex items-center gap-2">
+                    Strompreis
+                    <span className="text-xs text-gray-500">(€/kWh)</span>
+                  </Label>
+                  <Input
+                    id="electricPricePerKWh"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.electricPricePerKWh}
+                    onChange={(e) => handleChange('electricPricePerKWh', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
                     type="number"
                     step="0.01"
                     min="0"

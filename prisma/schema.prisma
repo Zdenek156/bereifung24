@@ -1981,13 +1981,31 @@ enum InvestmentStatus {
 model CO2Settings {
   id                    String   @id @default(cuid())
   workshopsToCompare    Int      @default(3) // Anzahl Werkstätten, die Kunde sonst besuchen würde
+  
+  // Durchschnittswerte pro km (Fallback wenn kein Fahrzeug bekannt)
   co2PerKmCombustion    Int      @default(140) // g CO₂/km für Verbrenner (Durchschnitt)
   co2PerKmElectric      Int      @default(50) // g CO₂/km für E-Autos (Strommix DE)
-  co2PerLiterFuel       Int      @default(2330) // g CO₂/Liter Benzin/Diesel
+  
+  // Kraftstoffspezifische CO₂-Faktoren (für präzise Berechnung mit Verbrauchsdaten)
+  co2PerLiterPetrol     Int      @default(2320) // g CO₂/Liter Benzin
+  co2PerLiterDiesel     Int      @default(2640) // g CO₂/Liter Diesel
+  co2PerLiterLPG        Int      @default(1640) // g CO₂/Liter LPG (Autogas)
+  co2PerKgCNG           Int      @default(1990) // g CO₂/kg CNG (Erdgas)
   co2PerKWhElectric     Int      @default(420) // g CO₂/kWh Strom (DE Mix)
-  fuelPricePerLiter     Float    @default(1.65) // €/Liter (Benzin)
-  dieselPricePerLiter   Float    @default(1.55) // €/Liter (Diesel)
+  
+  // Legacy field (kept for backwards compatibility)
+  co2PerLiterFuel       Int      @default(2330) // g CO₂/Liter (Durchschnitt Benzin/Diesel)
+  
+  // Kraftstoffpreise für monetäre Einsparungsberechnung
+  petrolPricePerLiter   Float    @default(1.75) // €/Liter (Benzin)
+  dieselPricePerLiter   Float    @default(1.65) // €/Liter (Diesel)
+  lpgPricePerLiter      Float    @default(0.80) // €/Liter (LPG)
+  cngPricePerKg         Float    @default(1.10) // €/kg (CNG)
   electricPricePerKWh   Float    @default(0.35) // €/kWh (Strom)
+  
+  // Legacy field (kept for backwards compatibility)
+  fuelPricePerLiter     Float    @default(1.65) // €/Liter (Durchschnitt)
+  
   updatedAt             DateTime @updatedAt
 
   @@map("co2_settings")

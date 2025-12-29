@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, offerAcceptedEmailTemplate } from '@/lib/email'
+import { calculateCO2ForRequest } from '@/lib/co2Calculator'
 
 // POST - Kunde nimmt Angebot an
 export async function POST(
@@ -394,6 +395,16 @@ export async function POST(
 
       return acceptedOffer
     })
+
+    // Calculate and save CO2 after offer acceptance
+    try {
+      console.log(`🌱 Calculating CO2 savings for accepted offer (request: ${offer.tireRequestId})`)
+      await calculateCO2ForRequest(offer.tireRequestId)
+      console.log(`✅ CO2 savings calculated and saved`)
+    } catch (co2Error) {
+      console.error('CO2 calculation failed:', co2Error)
+      // Continue even if CO2 calculation fails
+    }
 
     // Email an Werkstatt senden
     try {

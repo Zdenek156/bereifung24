@@ -8,6 +8,14 @@ interface CO2Stats {
   totalCO2SavedGrams: number;
   totalCO2SavedKg: number;
   numberOfRequests: number;
+  totalMoneySaved?: number;
+  breakdown?: {
+    averageDistancePerWorkshop: number;
+    workshopsCompared: number;
+    totalKmSaved: number;
+    averageFuelConsumption?: number;
+    fuelType?: string;
+  };
   comparisons: {
     equivalentCarKm: number;
     equivalentTrees: number;
@@ -95,7 +103,53 @@ export default function CO2SavingsWidget() {
             gespart durch {stats.numberOfRequests}{' '}
             {stats.numberOfRequests === 1 ? 'Anfrage' : 'Anfragen'} über Bereifung24
           </p>
+          {stats.totalMoneySaved && stats.totalMoneySaved > 0 && (
+            <div className="flex items-center justify-center gap-1 mt-2 text-amber-700">
+              <Euro className="h-4 w-4" />
+              <span className="font-semibold">{stats.totalMoneySaved.toFixed(2)} €</span>
+              <span className="text-sm text-gray-600">Kraftstoffkosten gespart</span>
+            </div>
+          )}
         </div>
+
+        {/* Breakdown Details */}
+        {stats.breakdown && (
+          <div className="bg-white/60 rounded-lg p-3 space-y-2 border border-green-200">
+            <div className="text-xs font-semibold text-green-800 mb-2">
+              📊 Berechnungsdetails:
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-gray-600">Vermiedene Fahrten:</span>
+                <div className="font-semibold text-gray-800">
+                  {stats.breakdown.workshopsCompared} Werkstätten
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-600">Eingesparte Kilometer:</span>
+                <div className="font-semibold text-gray-800">
+                  {stats.breakdown.totalKmSaved.toFixed(1)} km
+                </div>
+              </div>
+              {stats.breakdown.averageFuelConsumption && (
+                <>
+                  <div>
+                    <span className="text-gray-600">Ø Verbrauch:</span>
+                    <div className="font-semibold text-gray-800">
+                      {stats.breakdown.averageFuelConsumption.toFixed(1)} L/100km
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Kraftstoff:</span>
+                    <div className="font-semibold text-gray-800">
+                      {stats.breakdown.fuelType || 'Benzin'}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Vergleiche */}
         <div className="grid grid-cols-1 gap-2 pt-3 border-t border-green-200">

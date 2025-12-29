@@ -24,10 +24,14 @@ ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npm install gocardless-nod
 # Schritt 3: Database Migration
 ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npx prisma migrate deploy"
 
-# Schritt 4: App neu bauen
+# KRITISCH: Schritt 4: Prisma Client regenerieren (nach Schema-Änderungen)
+# ⚠️ NIEMALS VERGESSEN! Ohne diesen Schritt kennt Prisma neue Felder nicht!
+ssh root@167.235.24.110 "source ~/.nvm/nvm.sh && cd '/var/www/bereifung24' && npx prisma generate"
+
+# Schritt 5: App neu bauen
 ssh root@167.235.24.110 "cd '/var/www/bereifung24' && npm run build"
 
-# Schritt 5: PM2 neu starten (mit source für nvm)
+# Schritt 6: PM2 neu starten (mit source für nvm)
 ssh root@167.235.24.110 "source ~/.nvm/nvm.sh && cd '/var/www/bereifung24' && pm2 restart bereifung24"
 
 # =================================================================

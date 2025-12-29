@@ -340,7 +340,7 @@ export async function getCustomerCO2Stats(customerId: string) {
     },
   });
 
-  const settings = await getCO2Settings();
+  const settings = await prisma.cO2Settings.findFirst();
   if (!settings) {
     throw new Error('CO2 Settings nicht gefunden');
   }

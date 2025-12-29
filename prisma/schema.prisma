@@ -522,6 +522,9 @@ model Offer {
   storageAvailable   Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
   motorcycleTireType String?  @map("motorcycle_tire_type") // FRONT, REAR, or BOTH for motorcycle offers
 
+  // Distance
+  distanceKm Float? @map("distance_km") // Distance from customer to workshop in kilometers
+
   // Validity
   validUntil DateTime
 

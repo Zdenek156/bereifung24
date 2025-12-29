@@ -179,8 +179,9 @@ export default function CO2SavingsWidget() {
         {/* Info */}
         <div className="bg-white/50 rounded-lg p-3 mt-3">
           <p className="text-xs text-gray-600 leading-relaxed">
-            💡 <strong>So sparen Sie CO₂:</strong> Anstatt zu mehreren Werkstätten zu fahren,
-            holen Sie Angebote bequem online ein. Das spart Fahrten und schützt die Umwelt!
+            💡 <strong>So sparen Sie CO₂:</strong> Anstatt zu {stats.breakdown?.workshopsCompared || 3} Werkstätten 
+            zu fahren um Preise zu vergleichen, bekommen Sie Angebote online. Das spart unnötige Fahrten 
+            und schützt die Umwelt!
           </p>
         </div>
       </CardContent>

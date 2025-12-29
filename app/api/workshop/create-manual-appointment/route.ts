@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { google } from 'googleapis'
+import { calculateDistance } from '@/lib/distanceCalculator'
 
 export async function POST(request: Request) {
   try {
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     const workshop = await prisma.workshop.findUnique({
       where: { userId: session.user.id },
       include: {
+        user: true,
         employees: {
           include: {
             employeeVacations: true,
@@ -227,13 +229,31 @@ export async function POST(request: Request) {
         aspectRatio: 55,
         diameter: 16,
         quantity: 4,
-        zipCode: workshop.zipCode || '00000',
-        city: workshop.city || 'N/A',
+        zipCode: workshop.user.zipCode || workshop.zipCode || '00000',
+        city: workshop.user.city || workshop.city || 'N/A',
+        latitude: workshop.user.latitude,
+        longitude: workshop.user.longitude,
         needByDate: appointmentDateTime,
         // Optional aber hilfreich
         additionalNotes: serviceDescription || 'Manuell erstellter Termin'
       }
     })
+
+    // Calculate distance if coordinates available
+    let distanceKm: number | undefined
+    if (
+      tireRequest.latitude && 
+      tireRequest.longitude && 
+      workshop.user.latitude && 
+      workshop.user.longitude
+    ) {
+      distanceKm = calculateDistance(
+        tireRequest.latitude,
+        tireRequest.longitude,
+        workshop.user.latitude,
+        workshop.user.longitude
+      )
+    }
 
     // Erstelle ein minimales Offer
     const offer = await prisma.offer.create({
@@ -246,7 +266,8 @@ export async function POST(request: Request) {
         tireBrand: 'N/A',
         tireModel: serviceName,
         description: serviceDescription || serviceName,
-        durationMinutes: duration
+        durationMinutes: duration,
+        distanceKm: distanceKm
       }
     })
 

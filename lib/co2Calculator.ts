@@ -1,9 +1,16 @@
 /**
  * CO2 Calculator for Bereifung24
  * Berechnet CO2-Einsparungen durch vermiedene Fahrten zu Werkstätten
+ * 
+ * NEUE LOGIK (Stand: 29.12.2025):
+ * - Fall 1 (Anfrage abgelaufen): Kunde hätte alle 3 nächsten Werkstätten besucht
+ *   → kmSaved = (distance1 + distance2 + distance3) × 2
+ * - Fall 2 (Angebot angenommen): 2 nächste + gewählte Werkstatt
+ *   → kmSaved = (Summe aller 3 - distanceGewählte) × 2
  */
 
 import { PrismaClient } from '@prisma/client';
+import { findNearestWorkshops as findNearest } from './distanceCalculator';
 
 const prisma = new PrismaClient();
 
@@ -43,15 +50,54 @@ function toRad(degrees: number): number {
 }
 
 /**
- * Findet die N nächsten Werkstätten zum Kundenstandort
+ * Berechnet die CO2-Einsparung für eine TireRequest
+ * @param tireRequestId ID der Anfrage
+ * @returns CO2-Berechnungsergebnis
  */
-export async function findNearestWorkshops(
-  customerLat: number,
-  customerLon: number,
-  count: number
-): Promise<Array<{ id: string; distance: number }>> {
-  // Hole alle aktiven und verifizierten Werkstätten mit Koordinaten
-  const workshops = await prisma.workshop.findMany({
+export async function calculateCO2ForRequest(
+  tireRequestId: string
+): Promise<CO2CalculationResult> {
+  const tireRequest = await prisma.tireRequest.findUnique({
+    where: { id: tireRequestId },
+    include: {
+      customer: {
+        include: {
+          vehicles: true
+        }
+      },
+      offers: {
+        where: {
+          status: 'ACCEPTED'
+        },
+        include: {
+          workshop: {
+            include: {
+              user: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!tireRequest) {
+    throw new Error('Anfrage nicht gefunden');
+  }
+
+  if (!tireRequest.latitude || !tireRequest.longitude) {
+    throw new Error('Kundenstandort fehlt');
+  }
+
+  // Hole CO2-Einstellungen
+  const settings = await prisma.cO2Settings.findFirst();
+  if (!settings) {
+    throw new Error('CO2 Settings nicht gefunden');
+  }
+
+  const { workshopsToCompare } = settings;
+
+  // Hole alle verifizierten Werkstätten mit Koordinaten
+  const allWorkshops = await prisma.workshop.findMany({
     where: {
       user: {
         isActive: true,
@@ -71,44 +117,80 @@ export async function findNearestWorkshops(
     },
   });
 
-  // Berechne Distanz zu jeder Werkstatt
-  const workshopsWithDistance = workshops
-    .map((workshop) => ({
-      id: workshop.id,
-      distance: calculateDistance(
-        customerLat,
-        customerLon,
-        workshop.user.latitude!,
-        workshop.user.longitude!
-      ),
-    }))
-    .sort((a, b) => a.distance - b.distance) // Sortiere nach Distanz
-    .slice(0, count); // Nimm die N nächsten
+  const acceptedOffer = tireRequest.offers[0];
+  let distanceAvoided: number;
 
-  return workshopsWithDistance;
-}
+  if (acceptedOffer && acceptedOffer.distanceKm) {
+    // FALL 2: Angebot angenommen
+    // Finde die 2 nächsten Werkstätten
+    const nearest2 = findNearest(
+      tireRequest.latitude,
+      tireRequest.longitude,
+      allWorkshops,
+      2
+    );
 
-/**
- * Berechnet die gesamte vermiedene Fahrtstrecke (Hin und Zurück zu N Werkstätten)
- */
-export async function calculateAvoidedDistance(
-  customerLat: number,
-  customerLon: number,
-  workshopsToCompare: number
-): Promise<number> {
-  const nearestWorkshops = await findNearestWorkshops(
-    customerLat,
-    customerLon,
-    workshopsToCompare
-  );
+    // Finde die gewählte Werkstatt
+    const chosenWorkshop = allWorkshops.find(ws => ws.id === acceptedOffer.workshopId);
+    
+    if (!chosenWorkshop) {
+      throw new Error('Gewählte Werkstatt nicht gefunden');
+    }
 
-  // Summe aller Distanzen × 2 (Hin und Zurück)
-  const totalDistance = nearestWorkshops.reduce(
-    (sum, workshop) => sum + workshop.distance * 2,
-    0
-  );
+    // Kombiniere: 2 nächste + gewählte (unique)
+    const workshopIds = new Set([
+      ...nearest2.map(w => w.id),
+      chosenWorkshop.id
+    ]);
 
-  return totalDistance;
+    // Wenn gewählte bereits in nearest2, nur 3 unique Werkstätten
+    let workshops = [...nearest2];
+    if (!nearest2.find(w => w.id === chosenWorkshop.id)) {
+      workshops.push({
+        id: chosenWorkshop.id,
+        distance: acceptedOffer.distanceKm,
+        latitude: chosenWorkshop.user.latitude,
+        longitude: chosenWorkshop.user.longitude
+      });
+    }
+
+    // Begrenze auf workshopsToCompare (normalerweise 3)
+    workshops = workshops.slice(0, workshopsToCompare);
+
+    // Berechne Ersparnis: Summe aller 3 - gewählte
+    const totalDistance = workshops.reduce((sum, w) => sum + w.distance, 0);
+    distanceAvoided = (totalDistance - acceptedOffer.distanceKm) * 2;
+
+  } else {
+    // FALL 1: Anfrage abgelaufen (kein Angebot angenommen)
+    // Finde die N nächsten Werkstätten
+    const nearestN = findNearest(
+      tireRequest.latitude,
+      tireRequest.longitude,
+      allWorkshops,
+      workshopsToCompare
+    );
+
+    // Summe aller Distanzen × 2 (Hin und Zurück)
+    const totalDistance = nearestN.reduce((sum, w) => sum + w.distance, 0);
+    distanceAvoided = totalDistance * 2;
+  }
+
+  // Hole Fahrzeug-Daten wenn vorhanden
+  const vehicle = tireRequest.customer?.vehicles?.[0];
+
+  // Entscheide: Persönliche oder Standard-Berechnung
+  const hasPersonalData =
+    vehicle &&
+    vehicle.fuelType !== 'UNKNOWN' &&
+    ((vehicle.fuelType === 'ELECTRIC' && vehicle.electricConsumption) ||
+      (vehicle.fuelType !== 'ELECTRIC' && vehicle.fuelConsumption));
+
+  if (hasPersonalData && vehicle) {
+    return calculatePersonalCO2(vehicle, distanceAvoided, settings);
+  } else {
+    return calculateStandardCO2(distanceAvoided, settings);
+  }
 }
 
 interface CO2CalculationResult {
@@ -120,55 +202,15 @@ interface CO2CalculationResult {
 }
 
 /**
- * Hauptfunktion: Berechnet CO2-Einsparung für eine Anfrage
+ * DEPRECATED: Alte Funktion - Wird nicht mehr verwendet
+ * Nutze stattdessen: calculateCO2ForRequest()
  */
 export async function calculateCO2Savings(
   customerLat: number,
   customerLon: number,
   vehicleId?: string
 ): Promise<CO2CalculationResult> {
-  // Hole CO2-Einstellungen
-  const settings = await prisma.cO2Settings.findFirst();
-  if (!settings) {
-    throw new Error('CO2 Settings nicht gefunden. Bitte Admin-Einstellungen konfigurieren.');
-  }
-
-  const { workshopsToCompare } = settings;
-
-  // Berechne vermiedene Distanz
-  const distanceAvoided = await calculateAvoidedDistance(
-    customerLat,
-    customerLon,
-    workshopsToCompare
-  );
-
-  // Hole Fahrzeug-Daten wenn vorhanden
-  let vehicle = null;
-  if (vehicleId) {
-    vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId },
-      select: {
-        fuelType: true,
-        fuelConsumption: true,
-        electricConsumption: true,
-      },
-    });
-  }
-
-  // Entscheide: Persönliche oder Standard-Berechnung
-  const hasPersonalData =
-    vehicle &&
-    vehicle.fuelType !== 'UNKNOWN' &&
-    ((vehicle.fuelType === 'ELECTRIC' && vehicle.electricConsumption) ||
-      (vehicle.fuelType !== 'ELECTRIC' && vehicle.fuelConsumption));
-
-  if (hasPersonalData && vehicle) {
-    // PERSONAL: Präzise Berechnung mit Fahrzeugdaten
-    return calculatePersonalCO2(vehicle, distanceAvoided, settings);
-  } else {
-    // STANDARD: Durchschnittswerte
-    return calculateStandardCO2(distanceAvoided, settings);
-  }
+  throw new Error('DEPRECATED: Use calculateCO2ForRequest() instead');
 }
 
 /**
@@ -273,39 +315,58 @@ export async function getCustomerCO2Stats(customerId: string) {
   const requests = await prisma.tireRequest.findMany({
     where: {
       customerId,
-      savedCO2Grams: { not: null },
     },
     select: {
+      id: true,
       savedCO2Grams: true,
       calculationMethod: true,
+      latitude: true,
+      longitude: true,
+      offers: {
+        where: {
+          status: 'ACCEPTED'
+        },
+        select: {
+          distanceKm: true,
+          workshopId: true
+        }
+      },
       vehicle: {
         select: {
           fuelType: true,
           fuelConsumption: true,
         },
       },
-      nearestWorkshopKm: true,
     },
   });
 
-  const totalCO2SavedGrams = requests.reduce(
-    (sum, req) => sum + (req.savedCO2Grams || 0),
-    0
-  );
+  // Berechne CO2 für alle Anfragen mit der neuen Logik
+  let totalCO2SavedGrams = 0;
+  let totalKmSaved = 0;
+  let totalFuelSaved = 0;
+  let totalMoneySaved = 0;
+
+  const settings = await getCO2Settings();
+  if (!settings) {
+    throw new Error('CO2 Settings nicht gefunden');
+  }
+
+  for (const request of requests) {
+    try {
+      if (request.latitude && request.longitude) {
+        const result = await calculateCO2ForRequest(request.id);
+        totalCO2SavedGrams += result.savedCO2Grams;
+        totalKmSaved += result.distanceAvoided;
+        totalFuelSaved += result.fuelSaved || 0;
+        totalMoneySaved += result.moneySaved || 0;
+      }
+    } catch (error) {
+      console.error(`Error calculating CO2 for request ${request.id}:`, error);
+      // Continue with other requests
+    }
+  }
 
   const totalCO2SavedKg = totalCO2SavedGrams / 1000;
-
-  // Calculate aggregated data
-  const settings = await getCO2Settings();
-  const avgWorkshopsCompared = settings?.workshopsToCompare || 3;
-  
-  // Calculate average distance from requests with workshop distance
-  const requestsWithDistance = requests.filter(req => req.nearestWorkshopKm);
-  const avgDistance = requestsWithDistance.length > 0
-    ? requestsWithDistance.reduce((sum, req) => sum + (req.nearestWorkshopKm || 0), 0) / requestsWithDistance.length
-    : 12; // fallback
-
-  const totalKmSaved = requests.length * avgDistance * 2 * avgWorkshopsCompared;
 
   // Calculate fuel consumption stats
   const requestsWithFuel = requests.filter(req => req.vehicle?.fuelConsumption);
@@ -335,19 +396,18 @@ export async function getCustomerCO2Stats(customerId: string) {
     'PLUGIN_HYBRID': 'Plug-in Hybrid',
   };
 
-  // Estimate money saved (rough calculation)
-  const totalMoneySaved = avgFuelConsumption && totalKmSaved > 0
-    ? (totalKmSaved * avgFuelConsumption / 100) * (settings?.fuelPricePerLiter || 1.65)
-    : undefined;
+  const avgDistance = totalKmSaved > 0 && requests.length > 0
+    ? (totalKmSaved / (requests.length * 2 * settings.workshopsToCompare))
+    : 0;
 
   return {
     totalCO2SavedGrams,
     totalCO2SavedKg: Math.round(totalCO2SavedKg * 100) / 100,
     numberOfRequests: requests.length,
-    totalMoneySaved: totalMoneySaved ? Math.round(totalMoneySaved * 100) / 100 : undefined,
+    totalMoneySaved: totalMoneySaved > 0 ? Math.round(totalMoneySaved * 100) / 100 : undefined,
     breakdown: {
       averageDistancePerWorkshop: Math.round(avgDistance * 10) / 10,
-      workshopsCompared: avgWorkshopsCompared,
+      workshopsCompared: settings.workshopsToCompare,
       totalKmSaved: Math.round(totalKmSaved * 10) / 10,
       averageFuelConsumption: avgFuelConsumption ? Math.round(avgFuelConsumption * 10) / 10 : undefined,
       fuelType: mostCommonFuelType ? fuelTypeMap[mostCommonFuelType] : undefined,

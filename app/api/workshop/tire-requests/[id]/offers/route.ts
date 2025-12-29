@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendEmail, newOfferEmailTemplate, newServiceOfferEmailTemplate } from '@/lib/email'
+import { calculateDistance } from '@/lib/distanceCalculator'
 
 const tireOptionSchema = z.object({
   brandModel: z.string(), // Kann leer sein bei Brake Service (Werkstatt trägt später ein)
@@ -51,7 +52,10 @@ export async function POST(
     }
 
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: session.user.id },
+      include: {
+        user: true
+      }
     })
 
     if (!workshop) {
@@ -74,6 +78,23 @@ export async function POST(
         { error: 'Anfrage nicht gefunden' },
         { status: 404 }
       )
+    }
+
+    // Calculate distance from customer to workshop
+    let distanceKm: number | undefined
+    if (
+      tireRequest.latitude && 
+      tireRequest.longitude && 
+      workshop.user.latitude && 
+      workshop.user.longitude
+    ) {
+      distanceKm = calculateDistance(
+        tireRequest.latitude,
+        tireRequest.longitude,
+        workshop.user.latitude,
+        workshop.user.longitude
+      )
+      console.log(`Calculated distance: ${distanceKm}km from customer to workshop`)
     }
 
     // Hole Workshop-Service für RunFlat-Aufpreis (nur bei RunFlat-Reifen)
@@ -170,6 +191,7 @@ export async function POST(
         storagePrice: validatedData.storagePrice,
         storageAvailable: validatedData.storageAvailable,
         motorcycleTireType: validatedData.tireOptions?.[0]?.motorcycleTireType || null, // Keep for backward compatibility
+        distanceKm: distanceKm,
         validUntil: validUntil,
         status: 'PENDING',
         ...(hasValidTireOptions && {

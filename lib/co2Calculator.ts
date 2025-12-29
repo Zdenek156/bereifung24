@@ -340,29 +340,53 @@ export async function getCustomerCO2Stats(customerId: string) {
     },
   });
 
-  // Berechne CO2 für alle Anfragen mit der neuen Logik
-  let totalCO2SavedGrams = 0;
-  let totalKmSaved = 0;
-  let totalFuelSaved = 0;
-  let totalMoneySaved = 0;
-
   const settings = await getCO2Settings();
   if (!settings) {
     throw new Error('CO2 Settings nicht gefunden');
   }
 
+  // Use saved CO2 values if available, otherwise calculate simple estimate
+  let totalCO2SavedGrams = 0;
+  let totalKmSaved = 0;
+  let totalFuelSaved = 0;
+  let totalMoneySaved = 0;
+
   for (const request of requests) {
-    try {
-      if (request.latitude && request.longitude) {
-        const result = await calculateCO2ForRequest(request.id);
-        totalCO2SavedGrams += result.savedCO2Grams;
-        totalKmSaved += result.distanceAvoided;
-        totalFuelSaved += result.fuelSaved || 0;
-        totalMoneySaved += result.moneySaved || 0;
+    // Use already calculated CO2 if available
+    if (request.savedCO2Grams) {
+      totalCO2SavedGrams += request.savedCO2Grams;
+    }
+
+    // Estimate km saved based on offers
+    if (request.latitude && request.longitude) {
+      let kmForThisRequest = 0;
+      
+      if (request.offers.length > 0 && request.offers[0].distanceKm) {
+        // Has accepted offer with distance
+        const acceptedDistance = request.offers[0].distanceKm;
+        // Assume 2 other workshops at similar distance
+        kmForThisRequest = acceptedDistance * 2 * (settings.workshopsToCompare - 1);
+      } else {
+        // No offer or no distance, use default estimate
+        kmForThisRequest = 25 * 2 * settings.workshopsToCompare;
       }
-    } catch (error) {
-      console.error(`Error calculating CO2 for request ${request.id}:`, error);
-      // Continue with other requests
+      
+      totalKmSaved += kmForThisRequest;
+      
+      // Estimate fuel and money saved if we have vehicle data
+      if (request.vehicle?.fuelConsumption) {
+        const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
+        totalFuelSaved += fuelUsed;
+        
+        // Estimate money based on fuel type
+        let pricePerUnit = settings.fuelPricePerLiter || 1.65;
+        if (request.vehicle.fuelType === 'DIESEL') {
+          pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
+        } else if (request.vehicle.fuelType === 'ELECTRIC') {
+          pricePerUnit = settings.electricPricePerKWh || 0.35;
+        }
+        totalMoneySaved += fuelUsed * pricePerUnit;
+      }
     }
   }
 

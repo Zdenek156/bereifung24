@@ -278,6 +278,13 @@ export async function getCustomerCO2Stats(customerId: string) {
     select: {
       savedCO2Grams: true,
       calculationMethod: true,
+      vehicle: {
+        select: {
+          fuelType: true,
+          fuelConsumption: true,
+        },
+      },
+      nearestWorkshopKm: true,
     },
   });
 
@@ -288,10 +295,63 @@ export async function getCustomerCO2Stats(customerId: string) {
 
   const totalCO2SavedKg = totalCO2SavedGrams / 1000;
 
+  // Calculate aggregated data
+  const settings = await getCO2Settings();
+  const avgWorkshopsCompared = settings?.workshopsToCompare || 3;
+  
+  // Calculate average distance from requests with workshop distance
+  const requestsWithDistance = requests.filter(req => req.nearestWorkshopKm);
+  const avgDistance = requestsWithDistance.length > 0
+    ? requestsWithDistance.reduce((sum, req) => sum + (req.nearestWorkshopKm || 0), 0) / requestsWithDistance.length
+    : 12; // fallback
+
+  const totalKmSaved = requests.length * avgDistance * 2 * avgWorkshopsCompared;
+
+  // Calculate fuel consumption stats
+  const requestsWithFuel = requests.filter(req => req.vehicle?.fuelConsumption);
+  const avgFuelConsumption = requestsWithFuel.length > 0
+    ? requestsWithFuel.reduce((sum, req) => sum + (req.vehicle?.fuelConsumption || 0), 0) / requestsWithFuel.length
+    : undefined;
+
+  // Determine most common fuel type
+  const fuelTypeCounts: Record<string, number> = {};
+  requests.forEach(req => {
+    if (req.vehicle?.fuelType && req.vehicle.fuelType !== 'UNKNOWN') {
+      fuelTypeCounts[req.vehicle.fuelType] = (fuelTypeCounts[req.vehicle.fuelType] || 0) + 1;
+    }
+  });
+  const mostCommonFuelType = Object.keys(fuelTypeCounts).length > 0
+    ? Object.entries(fuelTypeCounts).sort((a, b) => b[1] - a[1])[0][0]
+    : undefined;
+
+  // Map fuel type to German
+  const fuelTypeMap: Record<string, string> = {
+    'PETROL': 'Benzin',
+    'DIESEL': 'Diesel',
+    'LPG': 'Autogas',
+    'CNG': 'Erdgas',
+    'ELECTRIC': 'Elektrisch',
+    'HYBRID': 'Hybrid',
+    'PLUGIN_HYBRID': 'Plug-in Hybrid',
+  };
+
+  // Estimate money saved (rough calculation)
+  const totalMoneySaved = avgFuelConsumption && totalKmSaved > 0
+    ? (totalKmSaved * avgFuelConsumption / 100) * (settings?.fuelPricePerLiter || 1.65)
+    : undefined;
+
   return {
     totalCO2SavedGrams,
     totalCO2SavedKg: Math.round(totalCO2SavedKg * 100) / 100,
     numberOfRequests: requests.length,
+    totalMoneySaved: totalMoneySaved ? Math.round(totalMoneySaved * 100) / 100 : undefined,
+    breakdown: {
+      averageDistancePerWorkshop: Math.round(avgDistance * 10) / 10,
+      workshopsCompared: avgWorkshopsCompared,
+      totalKmSaved: Math.round(totalKmSaved * 10) / 10,
+      averageFuelConsumption: avgFuelConsumption ? Math.round(avgFuelConsumption * 10) / 10 : undefined,
+      fuelType: mostCommonFuelType ? fuelTypeMap[mostCommonFuelType] : undefined,
+    },
     comparisons: {
       equivalentCarKm: Math.round(totalCO2SavedGrams / 140), // 140g CO2/km Durchschnitt
       equivalentTrees: Math.round(totalCO2SavedKg / 20), // ~20kg CO2/Jahr pro Baum

@@ -352,15 +352,10 @@ export async function getCustomerCO2Stats(customerId: string) {
   let totalMoneySaved = 0;
 
   for (const request of requests) {
-    // Use already calculated CO2 if available
-    if (request.savedCO2Grams) {
-      totalCO2SavedGrams += request.savedCO2Grams;
-    }
-
+    let kmForThisRequest = 0;
+    
     // Estimate km saved based on offers
     if (request.latitude && request.longitude) {
-      let kmForThisRequest = 0;
-      
       if (request.offers.length > 0 && request.offers[0].distanceKm) {
         // Has accepted offer with distance
         const acceptedDistance = request.offers[0].distanceKm;
@@ -372,21 +367,42 @@ export async function getCustomerCO2Stats(customerId: string) {
       }
       
       totalKmSaved += kmForThisRequest;
-      
-      // Estimate fuel and money saved if we have vehicle data
-      if (request.vehicle?.fuelConsumption) {
-        const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
-        totalFuelSaved += fuelUsed;
-        
-        // Estimate money based on fuel type
-        let pricePerUnit = settings.fuelPricePerLiter || 1.65;
-        if (request.vehicle.fuelType === 'DIESEL') {
-          pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
-        } else if (request.vehicle.fuelType === 'ELECTRIC') {
-          pricePerUnit = settings.electricPricePerKWh || 0.35;
-        }
-        totalMoneySaved += fuelUsed * pricePerUnit;
+    }
+
+    // Use already calculated CO2 if available, otherwise calculate now
+    if (request.savedCO2Grams) {
+      totalCO2SavedGrams += request.savedCO2Grams;
+    } else if (kmForThisRequest > 0) {
+      // Calculate CO2 on-the-fly if not saved
+      if (request.vehicle?.fuelConsumption && request.vehicle?.fuelType) {
+        // Personal calculation with vehicle data
+        const result = calculatePersonalCO2(request.vehicle, kmForThisRequest, settings);
+        totalCO2SavedGrams += result.savedCO2Grams;
+        if (result.fuelSaved) totalFuelSaved += result.fuelSaved;
+        if (result.moneySaved) totalMoneySaved += result.moneySaved;
+      } else {
+        // Standard calculation
+        const result = calculateStandardCO2(kmForThisRequest, settings);
+        totalCO2SavedGrams += result.savedCO2Grams;
       }
+    }
+    
+    // Estimate fuel and money saved if we have vehicle data (only if not already calculated above)
+    if (!request.savedCO2Grams && request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
+      // Already calculated above, skip
+    } else if (request.savedCO2Grams && request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
+      // We have saved CO2 but need to estimate fuel/money
+      const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
+      totalFuelSaved += fuelUsed;
+      
+      // Estimate money based on fuel type
+      let pricePerUnit = settings.fuelPricePerLiter || 1.65;
+      if (request.vehicle.fuelType === 'DIESEL') {
+        pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
+      } else if (request.vehicle.fuelType === 'ELECTRIC') {
+        pricePerUnit = settings.electricPricePerKWh || 0.35;
+      }
+      totalMoneySaved += fuelUsed * pricePerUnit;
     }
   }
 

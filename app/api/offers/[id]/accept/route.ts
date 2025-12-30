@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -7,7 +8,7 @@ import { calculateCO2ForRequest } from '@/lib/co2Calculator'
 
 // POST - Kunde nimmt Angebot an
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -404,6 +405,35 @@ export async function POST(
     } catch (co2Error) {
       console.error('CO2 calculation failed:', co2Error)
       // Continue even if CO2 calculation fails
+    }
+
+    // Track affiliate conversion if ref code exists
+    const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
+    if (affiliateRef) {
+      try {
+        const influencer = await prisma.influencer.findUnique({
+          where: { code: affiliateRef }
+        })
+
+        if (influencer) {
+          await prisma.affiliateConversion.create({
+            data: {
+              influencerId: influencer.id,
+              customerId: customer.id,
+              type: 'ACCEPTED_OFFER',
+              tireRequestId: offer.tireRequestId,
+              offerId: offer.id,
+              convertedAt: new Date(),
+              isPaid: false
+            }
+          })
+          
+          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - Offer accepted`)
+        }
+      } catch (conversionError) {
+        console.error('[AFFILIATE] Error tracking conversion:', conversionError)
+        // Don't fail offer acceptance if conversion tracking fails
+      }
     }
 
     // Email an Werkstatt senden

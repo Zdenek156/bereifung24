@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
@@ -20,12 +21,15 @@ const customerSchema = z.object({
   city: z.string().optional(),
 })
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
     // Validierung
     const validatedData = customerSchema.parse(body)
+
+    // Get affiliate ref from cookies (if exists)
+    const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
 
     // Prüfen ob Email bereits existiert
     const existingUser = await prisma.user.findUnique({
@@ -142,6 +146,32 @@ export async function POST(request: Request) {
     } catch (adminEmailError) {
       console.error('Failed to send admin notifications:', adminEmailError)
       // Fehler bei Admin-Benachrichtigungen nicht nach außen weitergeben
+    }
+
+    // Track affiliate conversion if ref code exists
+    if (affiliateRef && user.customer) {
+      try {
+        const influencer = await prisma.influencer.findUnique({
+          where: { code: affiliateRef }
+        })
+
+        if (influencer) {
+          await prisma.affiliateConversion.create({
+            data: {
+              influencerId: influencer.id,
+              customerId: user.customer.id,
+              type: 'REGISTRATION',
+              convertedAt: new Date(),
+              isPaid: false
+            }
+          })
+          
+          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - Customer registration`)
+        }
+      } catch (conversionError) {
+        console.error('[AFFILIATE] Error tracking conversion:', conversionError)
+        // Don't fail registration if conversion tracking fails
+      }
     }
 
     return NextResponse.json(

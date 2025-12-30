@@ -73,3 +73,48 @@ export function getAffiliateData(request: NextRequest) {
     hasAffiliate: !!refCode && !!cookieId,
   };
 }
+
+/**
+ * Track a conversion for the current affiliate cookie
+ * Call this from server-side code when a conversion happens
+ */
+export async function trackConversion(
+  refCode: string | undefined,
+  customerId: string,
+  type: 'REGISTRATION' | 'ACCEPTED_OFFER',
+  metadata?: {
+    tireRequestId?: string
+    offerId?: string
+  }
+) {
+  if (!refCode) {
+    return null; // No affiliate to track
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/affiliate/convert`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refCode,
+          customerId,
+          type,
+          ...metadata
+        })
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.conversion;
+    }
+  } catch (error) {
+    console.error('[AFFILIATE] Conversion tracking error:', error);
+  }
+
+  return null;
+}

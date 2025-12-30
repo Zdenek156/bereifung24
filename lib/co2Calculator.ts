@@ -2,11 +2,12 @@
  * CO2 Calculator for Bereifung24
  * Berechnet CO2-Einsparungen durch vermiedene Fahrten zu Werkstätten
  * 
- * NEUE LOGIK (Stand: 29.12.2025):
- * - Fall 1 (Anfrage abgelaufen): Kunde hätte alle 3 nächsten Werkstätten besucht
- *   → kmSaved = (distance1 + distance2 + distance3) × 2
- * - Fall 2 (Angebot angenommen): 2 nächste + gewählte Werkstatt
- *   → kmSaved = (Summe aller 3 - distanceGewählte) × 2
+ * NEUE LOGIK (Stand: 30.12.2025):
+ * - Fall 1 (Anfrage abgelaufen): Kunde hätte alle N nächsten Werkstätten besucht
+ *   → kmSaved = (distance1 + distance2 + ... + distanceN) × 2
+ * - Fall 2 (Angebot angenommen): (N-1) nächste + gewählte Werkstatt
+ *   → kmSaved = (distance1 + distance2 + ... + gewählte) × 2
+ *   → WICHTIG: Gewählte Werkstatt wird NICHT abgezogen!
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -122,12 +123,13 @@ export async function calculateCO2ForRequest(
 
   if (acceptedOffer && acceptedOffer.distanceKm) {
     // FALL 2: Angebot angenommen
-    // Finde die 2 nächsten Werkstätten
-    const nearest2 = findNearest(
+    // Finde die (N-1) nächsten Werkstätten (z.B. bei workshopsToCompare=3 → 2 nächste)
+    const nearestCount = Math.max(1, workshopsToCompare - 1);
+    const nearestWorkshops = findNearest(
       tireRequest.latitude,
       tireRequest.longitude,
       allWorkshops,
-      2
+      nearestCount
     );
 
     // Finde die gewählte Werkstatt
@@ -137,15 +139,11 @@ export async function calculateCO2ForRequest(
       throw new Error('Gewählte Werkstatt nicht gefunden');
     }
 
-    // Kombiniere: 2 nächste + gewählte (unique)
-    const workshopIds = new Set([
-      ...nearest2.map(w => w.id),
-      chosenWorkshop.id
-    ]);
-
-    // Wenn gewählte bereits in nearest2, nur 3 unique Werkstätten
-    let workshops = [...nearest2];
-    if (!nearest2.find(w => w.id === chosenWorkshop.id)) {
+    // Kombiniere: (N-1) nächste + gewählte
+    let workshops = [...nearestWorkshops];
+    
+    // Füge die gewählte Werkstatt hinzu (auch wenn sie bereits in nearestWorkshops ist)
+    if (!nearestWorkshops.find(w => w.id === chosenWorkshop.id)) {
       workshops.push({
         id: chosenWorkshop.id,
         distance: acceptedOffer.distanceKm,
@@ -154,12 +152,12 @@ export async function calculateCO2ForRequest(
       });
     }
 
-    // Begrenze auf workshopsToCompare (normalerweise 3)
+    // Begrenze auf workshopsToCompare (falls gewählte weit weg ist)
     workshops = workshops.slice(0, workshopsToCompare);
 
-    // Berechne Ersparnis: Summe aller 3 - gewählte
+    // Berechne Ersparnis: Summe ALLER Werkstätten (inkl. gewählte!)
     const totalDistance = workshops.reduce((sum, w) => sum + w.distance, 0);
-    distanceAvoided = (totalDistance - acceptedOffer.distanceKm) * 2;
+    distanceAvoided = totalDistance * 2;
 
   } else {
     // FALL 1: Anfrage abgelaufen (kein Angebot angenommen)

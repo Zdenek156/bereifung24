@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Check if user is B24 employee with admin access
+    // Check if user is B24 employee
     const employee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, isActive: true }
     })
     
-    if (!employee || employee.role !== 'ADMIN') {
+    if (!employee || !employee.isActive) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     

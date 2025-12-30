@@ -231,20 +231,25 @@ export async function calculateCO2Savings(
 }
 
 /**
- * Standard-Berechnung mit Durchschnittswerten
+ * Standard-Berechnung mit Benzin als Standard-Kraftstoff
+ * Wird verwendet, wenn keine Fahrzeugdaten vorhanden sind
  */
 function calculateStandardCO2(
   distanceKm: number,
   settings: any
 ): CO2CalculationResult {
-  // Annahme: Durchschnitt aus Verbrenner und E-Autos
-  const avgCO2PerKm = (settings.co2PerKmCombustion + settings.co2PerKmElectric) / 2;
-  const savedCO2Grams = Math.round(distanceKm * avgCO2PerKm);
+  // Standard: Benzin mit Durchschnittsverbrauch 7.5 L/100km
+  const avgConsumption = 7.5; // L/100km - deutscher Durchschnitt für Benziner
+  const litersUsed = (distanceKm / 100) * avgConsumption;
+  const savedCO2Grams = Math.round(litersUsed * settings.co2PerLiterPetrol);
+  const moneySaved = litersUsed * settings.petrolPricePerLiter;
 
   return {
     savedCO2Grams,
     calculationMethod: 'STANDARD',
     distanceAvoided: distanceKm,
+    fuelSaved: litersUsed,
+    moneySaved: Math.round(moneySaved * 100) / 100,
   };
 }
 
@@ -280,6 +285,7 @@ function calculatePersonalCO2(
     let pricePerLiter: number;
     
     switch (fuelType) {
+      case 'BENZIN':
       case 'PETROL':
         co2PerLiter = settings.co2PerLiterPetrol || settings.co2PerLiterFuel;
         pricePerLiter = settings.petrolPricePerLiter || settings.fuelPricePerLiter;
@@ -386,26 +392,27 @@ export async function getCustomerCO2Stats(customerId: string) {
     totalTripsAvoided += workshopsForThisRequest;
     
     // Calculate km saved from CO2 value (reverse calculation)
-    // We stored CO2 grams based on: distanceKm × avgCO2PerKm
-    // So: distanceKm = CO2grams / avgCO2PerKm
     let kmForThisRequest = 0;
     if (request.calculationMethod === 'PERSONAL' && request.vehicle?.fuelConsumption) {
       // Personal calculation: reverse engineer from CO2 and fuel consumption
       let co2PerLiter;
       switch (request.vehicle.fuelType) {
-        case 'BENZIN': co2PerLiter = settings.co2PerLiterBenzin; break;
+        case 'BENZIN': co2PerLiter = settings.co2PerLiterPetrol; break;
         case 'DIESEL': co2PerLiter = settings.co2PerLiterDiesel; break;
         case 'LPG': co2PerLiter = settings.co2PerLiterLPG; break;
-        case 'CNG': co2PerLiter = settings.co2PerLiterCNG; break;
-        default: co2PerLiter = settings.co2PerLiterBenzin;
+        case 'CNG': co2PerLiter = settings.co2PerKgCNG; break;
+        default: co2PerLiter = settings.co2PerLiterPetrol;
       }
       // CO2 = (fuelConsumption/100) × km × co2PerLiter
       // km = CO2 / ((fuelConsumption/100) × co2PerLiter)
       kmForThisRequest = request.savedCO2Grams / ((request.vehicle.fuelConsumption / 100) * co2PerLiter);
     } else {
-      // Standard calculation: CO2 = km × avgCO2PerKm
-      const avgCO2PerKm = (settings.co2PerKmCombustion + settings.co2PerKmElectric) / 2;
-      kmForThisRequest = request.savedCO2Grams / avgCO2PerKm;
+      // Standard calculation: Use Benzin with 7.5 L/100km
+      const avgConsumption = 7.5;
+      const co2PerLiter = settings.co2PerLiterPetrol;
+      // CO2 = (avgConsumption/100) × km × co2PerLiter
+      // km = CO2 / ((avgConsumption/100) × co2PerLiter)
+      kmForThisRequest = request.savedCO2Grams / ((avgConsumption / 100) * co2PerLiter);
     }
       
     totalKmSaved += kmForThisRequest;

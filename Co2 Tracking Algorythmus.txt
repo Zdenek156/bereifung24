@@ -1,0 +1,49 @@
+Fall 1:
+Beispiel: Admin hat "3 Werkstätten" eingestellt
+
+Schritt 1: Finde die 3 nächsten Werkstätten zum Kunden
+  - Werkstatt A: 5.2 km
+  - Werkstatt B: 8.7 km  
+  - Werkstatt C: 12.3 km
+
+Schritt 2: Summiere alle Distanzen
+  Total = 5.2 + 8.7 + 12.3 = 26.2 km
+
+Schritt 3: Multipliziere mit 2 (Hin + Rückfahrt)
+  Eingesparte KM = 26.2 × 2 = 52.4 km
+
+Schritt 4: Berechne CO2
+  CO2 = 52.4 km × 95 g/km (Standard: (co2PerKmCombustion + co2PerKmElectric) / 2)
+  CO2 = 52.4 km × 95 g/km = 4,978 g ≈ 4.98 kg CO₂
+  
+  ODER mit persönlichem Fahrzeug (Benzin, 12 L/100km):
+  Verbrauch = 52.4 km ÷ 100 × 12 L/100km = 6.29 Liter
+  CO2 = 6.29 L × 2320 g/L (co2PerLiterPetrol) = 14,586 g ≈ 14.59 kg CO₂
+  Kosten = 6.29 L × 1.75 €/L (petrolPricePerLiter) = 11.00 €
+
+Fall 2:
+Beispiel: Admin hat "3 Werkstätten" eingestellt
+         Kunde hat Angebot von Werkstatt D angenommen (10.5 km entfernt)
+
+Schritt 1: Finde die 2 nächsten Werkstätten zum Kunden
+  - Werkstatt A: 5.2 km
+  - Werkstatt B: 8.7 km
+
+Schritt 2: Füge die gewählte Werkstatt D hinzu
+  - Werkstatt A: 5.2 km
+  - Werkstatt B: 8.7 km
+  - Werkstatt D (gewählt): 10.5 km
+
+Schritt 3: Summiere ALLE 3 Distanzen (inkl. gewählte!)
+  Total = 5.2 + 8.7 + 10.5 = 24.4 km
+
+Schritt 4: Multipliziere mit 2 (Hin + Rückfahrt)
+  Eingesparte KM = 24.4 × 2 = 48.8 km
+
+Schritt 5: Berechne CO2
+  CO2 = 48.8 km × 95 g/km (Standard) = 4,636 g ≈ 4.64 kg CO₂
+  
+  ODER mit persönlichem Fahrzeug (Benzin, 12 L/100km):
+  Verbrauch = 48.8 km ÷ 100 × 12 L/100km = 5.86 Liter
+  CO2 = 5.86 L × 2320 g/L (co2PerLiterPetrol) = 13,595 g ≈ 13.60 kg CO₂
+  Kosten = 5.86 L × 1.75 €/L (petrolPricePerLiter) = 10.25 €

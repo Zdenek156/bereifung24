@@ -385,21 +385,30 @@ export async function getCustomerCO2Stats(customerId: string) {
     const workshopsForThisRequest = request.workshopsNotified ?? settings.workshopsToCompare;
     totalTripsAvoided += workshopsForThisRequest;
     
-    // Estimate km saved based on offers
+    // Calculate km saved from CO2 value (reverse calculation)
+    // We stored CO2 grams based on: distanceKm × avgCO2PerKm
+    // So: distanceKm = CO2grams / avgCO2PerKm
     let kmForThisRequest = 0;
-    if (request.latitude && request.longitude) {
-      const acceptedOffer = request.offers.find(o => o.status === 'ACCEPTED');
-      if (acceptedOffer && acceptedOffer.distanceKm) {
-        // Has accepted offer with distance
-        const acceptedDistance = acceptedOffer.distanceKm;
-        // Assume 2 other workshops at similar distance
-        kmForThisRequest = acceptedDistance * 2 * (settings.workshopsToCompare - 1);
-      } else {
-        // No offer or no distance, use default estimate
-        kmForThisRequest = 25 * 2 * settings.workshopsToCompare;
+    if (request.calculationMethod === 'PERSONAL' && request.vehicle?.fuelConsumption) {
+      // Personal calculation: reverse engineer from CO2 and fuel consumption
+      let co2PerLiter;
+      switch (request.vehicle.fuelType) {
+        case 'BENZIN': co2PerLiter = settings.co2PerLiterBenzin; break;
+        case 'DIESEL': co2PerLiter = settings.co2PerLiterDiesel; break;
+        case 'LPG': co2PerLiter = settings.co2PerLiterLPG; break;
+        case 'CNG': co2PerLiter = settings.co2PerLiterCNG; break;
+        default: co2PerLiter = settings.co2PerLiterBenzin;
       }
+      // CO2 = (fuelConsumption/100) × km × co2PerLiter
+      // km = CO2 / ((fuelConsumption/100) × co2PerLiter)
+      kmForThisRequest = request.savedCO2Grams / ((request.vehicle.fuelConsumption / 100) * co2PerLiter);
+    } else {
+      // Standard calculation: CO2 = km × avgCO2PerKm
+      const avgCO2PerKm = (settings.co2PerKmCombustion + settings.co2PerKmElectric) / 2;
+      kmForThisRequest = request.savedCO2Grams / avgCO2PerKm;
+    }
       
-      totalKmSaved += kmForThisRequest;
+    totalKmSaved += kmForThisRequest;
       
       // Estimate fuel and money saved if we have vehicle data
       if (request.vehicle?.fuelConsumption && kmForThisRequest > 0) {

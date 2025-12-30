@@ -447,6 +447,7 @@ export async function getCustomerCO2Stats(customerId: string) {
     breakdown: {
       averageDistancePerWorkshop: Math.round(avgDistance * 10) / 10,
       workshopsCompared: settings.workshopsToCompare,
+      totalTripsAvoided: requestsWithSavedCO2.length * settings.workshopsToCompare, // Total individual trips across all requests
       totalKmSaved: Math.round(totalKmSaved * 10) / 10,
       averageFuelConsumption: avgFuelConsumption ? Math.round(avgFuelConsumption * 10) / 10 : undefined,
       fuelType: mostCommonFuelType ? fuelTypeMap[mostCommonFuelType] : undefined,

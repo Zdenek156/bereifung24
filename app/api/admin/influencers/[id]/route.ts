@@ -20,10 +20,10 @@ export async function GET(
     
     const employee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, isActive: true }
     })
     
-    if (!employee || employee.role !== 'ADMIN') {
+    if (!employee || !employee.isActive) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
@@ -84,16 +84,17 @@ export async function PUT(
     
     const employee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, isActive: true }
     })
     
-    if (!employee || employee.role !== 'ADMIN') {
+    if (!employee || !employee.isActive) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
     const body = await request.json()
     const {
       email,
+      name,
       platform,
       channelName,
       channelUrl,
@@ -113,6 +114,10 @@ export async function PUT(
       taxType,
       companyName,
       taxId,
+      street,
+      zipCode,
+      city,
+      country,
       notes
     } = body
     
@@ -120,6 +125,7 @@ export async function PUT(
       where: { id: params.id },
       data: {
         email: email || undefined,
+        name: name !== undefined ? name : undefined,
         platform: platform !== undefined ? platform : undefined,
         channelName: channelName !== undefined ? channelName : undefined,
         channelUrl: channelUrl !== undefined ? channelUrl : undefined,
@@ -127,7 +133,7 @@ export async function PUT(
         commissionPer1000Views: commissionPer1000Views !== undefined ? commissionPer1000Views : undefined,
         commissionPerRegistration: commissionPerRegistration !== undefined ? commissionPerRegistration : undefined,
         commissionPerAcceptedOffer: commissionPerAcceptedOffer !== undefined ? commissionPerAcceptedOffer : undefined,
-        activeFrom: activeFrom !== undefined ? (activeFrom ? new Date(activeFrom) : null) : undefined,
+        activeFrom: activeFrom !== undefined ? (activeFrom ? new Date(activeFrom) : new Date()) : undefined,
         activeUntil: activeUntil !== undefined ? (activeUntil ? new Date(activeUntil) : null) : undefined,
         isUnlimited: isUnlimited !== undefined ? isUnlimited : undefined,
         isActive: isActive !== undefined ? isActive : undefined,
@@ -139,6 +145,10 @@ export async function PUT(
         taxType: taxType !== undefined ? taxType : undefined,
         companyName: companyName !== undefined ? companyName : undefined,
         taxId: taxId !== undefined ? taxId : undefined,
+        street: street !== undefined ? street : undefined,
+        zipCode: zipCode !== undefined ? zipCode : undefined,
+        city: city !== undefined ? city : undefined,
+        country: country !== undefined ? country : undefined,
         notes: notes !== undefined ? notes : undefined,
       }
     })
@@ -168,10 +178,10 @@ export async function DELETE(
     
     const employee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, isActive: true }
     })
     
-    if (!employee || employee.role !== 'ADMIN') {
+    if (!employee || !employee.isActive) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     

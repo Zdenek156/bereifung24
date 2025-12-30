@@ -146,12 +146,26 @@ export default function InfluencerDashboardPage() {
                 {influencer.channelName || influencer.name || influencer.email} • Code: {influencer.code}
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Abmelden
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push('/influencer/profile')}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Profil
+              </button>
+              <button
+                onClick={() => router.push('/influencer/payments')}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Auszahlungen
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Abmelden
+              </button>
+            </div>
           </div>
         </div>
       </header>

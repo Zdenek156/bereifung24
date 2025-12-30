@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     
     const employee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { id: true, role: true }
+      select: { id: true, isActive: true }
     })
     
-    if (!employee || employee.role !== 'ADMIN') {
+    if (!employee || !employee.isActive) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     

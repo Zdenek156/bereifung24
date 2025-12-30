@@ -39,7 +39,7 @@ export async function GET(
           take: 50,
           include: {
             customer: {
-              select: { email: true, firstName: true, lastName: true }
+              select: { id: true }
             },
             tireRequest: {
               select: { id: true, season: true }

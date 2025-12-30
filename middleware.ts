@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { handleAffiliateTracking } from './lib/affiliateTracking'
 
 // List of known static routes to avoid checking database
 const STATIC_ROUTES = [
@@ -10,10 +11,16 @@ const STATIC_ROUTES = [
 ]
 
 // This middleware runs before NextAuth can intercept calendar callbacks
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   
   console.log('[MIDDLEWARE] Path:', url.pathname, 'Search:', url.search)
+  
+  // Handle Affiliate Tracking (if ?ref= parameter exists)
+  if (url.searchParams.has('ref')) {
+    console.log('[MIDDLEWARE] Affiliate tracking detected')
+    return await handleAffiliateTracking(request)
+  }
   
   // If this is a calendar callback, let it through to our handler
   if (url.pathname === '/api/gcal/callback') {

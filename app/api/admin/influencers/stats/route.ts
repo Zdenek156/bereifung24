@@ -58,21 +58,28 @@ export async function GET(request: NextRequest) {
     })
     
     // Top 5 performers by total conversions
-    const topPerformers = await prisma.influencer.findMany({
-      take: 5,
-      include: {
-        _count: {
-          select: {
-            conversions: true
-          }
-        }
-      },
-      orderBy: {
-        conversions: {
-          _count: 'desc'
-        }
+    const allInfluencers = await prisma.influencer.findMany({
+      select: {
+        id: true,
+        code: true,
+        email: true,
+        channelName: true,
+        platform: true
       }
     })
+    
+    const influencersWithCounts = await Promise.all(
+      allInfluencers.map(async (inf) => {
+        const conversions = await prisma.affiliateConversion.count({
+          where: { influencerId: inf.id }
+        })
+        return { ...inf, conversions }
+      })
+    )
+    
+    const topPerformers = influencersWithCounts
+      .sort((a, b) => b.conversions - a.conversions)
+      .slice(0, 5)
     
     // Recent conversions (last 7 days)
     const sevenDaysAgo = new Date()
@@ -107,7 +114,7 @@ export async function GET(request: NextRequest) {
         email: p.email,
         channelName: p.channelName,
         platform: p.platform,
-        conversions: p._count.conversions
+        conversions: p.conversions
       })),
       recentConversions,
       conversionRate: parseFloat(conversionRate)

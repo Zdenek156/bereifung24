@@ -124,6 +124,12 @@ export default function InfluencerManagementPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <button
+            onClick={() => router.push('/admin')}
+            className="text-blue-600 hover:text-blue-800 mb-3 inline-flex items-center text-sm"
+          >
+            ← Zurück zum Dashboard
+          </button>
           <h1 className="text-3xl font-bold text-gray-900">Influencer Management</h1>
           <p className="mt-2 text-gray-600">Verwalte Influencer, verfolge Performance und verarbeite Zahlungen</p>
         </div>

@@ -1,6 +1,62 @@
 'use client'
 
+import { useState } from 'react'
+
 export default function InfluencerHomePage() {
+  const [showApplicationForm, setShowApplicationForm] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    platform: '',
+    channelName: '',
+    channelUrl: '',
+    followers: '',
+    message: ''
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setSubmitMessage(null)
+
+    try {
+      // Here you could send to an API endpoint or email service
+      // For now, we'll simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setSubmitMessage({
+        type: 'success',
+        text: 'Vielen Dank für Ihre Bewerbung! Wir melden uns innerhalb von 2-3 Werktagen bei Ihnen.'
+      })
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        platform: '',
+        channelName: '',
+        channelUrl: '',
+        followers: '',
+        message: ''
+      })
+      
+      setTimeout(() => {
+        setShowApplicationForm(false)
+        setSubmitMessage(null)
+      }, 3000)
+      
+    } catch (error) {
+      setSubmitMessage({
+        type: 'error',
+        text: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie uns unter partner@bereifung24.de'
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Hero Section */}
@@ -19,12 +75,12 @@ export default function InfluencerHomePage() {
             >
               Partner Login
             </a>
-            <a
-              href="mailto:partner@bereifung24.de"
+            <button
+              onClick={() => setShowApplicationForm(true)}
               className="px-8 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
             >
-              Partner werden
-            </a>
+              Jetzt bewerben
+            </button>
           </div>
         </div>
 
@@ -127,13 +183,178 @@ export default function InfluencerHomePage() {
           <p className="text-xl mb-8 opacity-90">
             Werden Sie Teil unseres Partner-Netzwerks und verdienen Sie mit jedem vermittelten Kunden
           </p>
-          <a
-            href="mailto:partner@bereifung24.de"
+          <button
+            onClick={() => setShowApplicationForm(true)}
             className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
           >
-            Jetzt Partner werden
-          </a>
+            Jetzt bewerben
+          </button>
         </div>
+
+        {/* Application Form Modal */}
+        {showApplicationForm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Jetzt als Partner bewerben</h2>
+                  <button
+                    onClick={() => {
+                      setShowApplicationForm(false)
+                      setSubmitMessage(null)
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {submitMessage && (
+                  <div className={`mb-6 p-4 rounded-lg ${
+                    submitMessage.type === 'success' 
+                      ? 'bg-green-50 border border-green-200 text-green-800' 
+                      : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}>
+                    {submitMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ihr Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Max Mustermann"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        E-Mail-Adresse *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="max@beispiel.de"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Plattform *
+                      </label>
+                      <select
+                        required
+                        value={formData.platform}
+                        onChange={(e) => setFormData({...formData, platform: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Bitte wählen</option>
+                        <option value="YOUTUBE">YouTube</option>
+                        <option value="INSTAGRAM">Instagram</option>
+                        <option value="TIKTOK">TikTok</option>
+                        <option value="FACEBOOK">Facebook</option>
+                        <option value="TWITTER">Twitter/X</option>
+                        <option value="WEBSITE">Website/Blog</option>
+                        <option value="OTHER">Andere</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Follower/Abonnenten
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.followers}
+                        onChange={(e) => setFormData({...formData, followers: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="z.B. 50.000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Kanal Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.channelName}
+                        onChange={(e) => setFormData({...formData, channelName: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="@username"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Kanal URL *
+                      </label>
+                      <input
+                        type="url"
+                        required
+                        value={formData.channelUrl}
+                        onChange={(e) => setFormData({...formData, channelUrl: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nachricht (optional)
+                    </label>
+                    <textarea
+                      value={formData.message}
+                      onChange={(e) => setFormData({...formData, message: e.target.value})}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Erzählen Sie uns kurz über sich und Ihren Kanal..."
+                    />
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowApplicationForm(false)
+                        setSubmitMessage(null)
+                      }}
+                      className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Abbrechen
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? 'Wird gesendet...' : 'Bewerbung absenden'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-16 text-center text-gray-600">

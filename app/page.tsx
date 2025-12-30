@@ -405,6 +405,7 @@ export default function HomePage() {
                 <li><Link href="/workshop-benefits" className="hover:text-white transition-colors">Vorteile</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
                 <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
+                <li><Link href="/influencer" className="hover:text-primary-400 transition-colors font-medium">Partner-Programm</Link></li>
               </ul>
             </div>
 

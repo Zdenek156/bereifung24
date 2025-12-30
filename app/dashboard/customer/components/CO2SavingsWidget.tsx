@@ -122,7 +122,7 @@ export default function CO2SavingsWidget() {
               <div>
                 <span className="text-gray-600">Vermiedene Fahrten:</span>
                 <div className="font-semibold text-gray-800">
-                  {stats.breakdown.workshopsCompared} Werkstätten
+                  {stats.breakdown.totalTripsAvoided || stats.breakdown.workshopsCompared} Fahrten
                 </div>
               </div>
               <div>

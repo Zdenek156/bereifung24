@@ -153,14 +153,11 @@ async function calculateCO2ForRequest(tireRequestId) {
 }
 
 async function backfillCO2() {
-  console.log('🔄 Starting CO2 backfill for accepted offers...\n');
+  console.log('🔄 Recalculating CO2 for ALL accepted offers with NEW logic...\n');
   
   const acceptedOffers = await prisma.offer.findMany({
     where: { 
-      status: 'ACCEPTED',
-      tireRequest: {
-        savedCO2Grams: null
-      }
+      status: 'ACCEPTED'
     },
     include: {
       tireRequest: {

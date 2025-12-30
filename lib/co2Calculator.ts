@@ -352,9 +352,19 @@ export async function getCustomerCO2Stats(customerId: string) {
   let totalMoneySaved = 0;
 
   for (const request of requests) {
-    let kmForThisRequest = 0;
+    // Only count requests where CO2 has been calculated and saved
+    // CO2 is saved when:
+    // 1. Offer is accepted
+    // 2. Request expires (neededByDate passed) - via CRON
+    if (!request.savedCO2Grams) {
+      // Skip requests without saved CO2 (not yet accepted or expired)
+      continue;
+    }
+
+    totalCO2SavedGrams += request.savedCO2Grams;
     
     // Estimate km saved based on offers
+    let kmForThisRequest = 0;
     if (request.latitude && request.longitude) {
       if (request.offers.length > 0 && request.offers[0].distanceKm) {
         // Has accepted offer with distance
@@ -367,56 +377,37 @@ export async function getCustomerCO2Stats(customerId: string) {
       }
       
       totalKmSaved += kmForThisRequest;
-    }
-
-    // Use already calculated CO2 if available, otherwise calculate now
-    if (request.savedCO2Grams) {
-      totalCO2SavedGrams += request.savedCO2Grams;
-    } else if (kmForThisRequest > 0) {
-      // Calculate CO2 on-the-fly if not saved
-      if (request.vehicle?.fuelConsumption && request.vehicle?.fuelType) {
-        // Personal calculation with vehicle data
-        const result = calculatePersonalCO2(request.vehicle, kmForThisRequest, settings);
-        totalCO2SavedGrams += result.savedCO2Grams;
-        if (result.fuelSaved) totalFuelSaved += result.fuelSaved;
-        if (result.moneySaved) totalMoneySaved += result.moneySaved;
-      } else {
-        // Standard calculation
-        const result = calculateStandardCO2(kmForThisRequest, settings);
-        totalCO2SavedGrams += result.savedCO2Grams;
-      }
-    }
-    
-    // Estimate fuel and money saved if we have vehicle data (only if not already calculated above)
-    if (!request.savedCO2Grams && request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
-      // Already calculated above, skip
-    } else if (request.savedCO2Grams && request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
-      // We have saved CO2 but need to estimate fuel/money
-      const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
-      totalFuelSaved += fuelUsed;
       
-      // Estimate money based on fuel type
-      let pricePerUnit = settings.fuelPricePerLiter || 1.65;
-      if (request.vehicle.fuelType === 'DIESEL') {
-        pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
-      } else if (request.vehicle.fuelType === 'ELECTRIC') {
-        pricePerUnit = settings.electricPricePerKWh || 0.35;
+      // Estimate fuel and money saved if we have vehicle data
+      if (request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
+        const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
+        totalFuelSaved += fuelUsed;
+        
+        // Estimate money based on fuel type
+        let pricePerUnit = settings.fuelPricePerLiter || 1.65;
+        if (request.vehicle.fuelType === 'DIESEL') {
+          pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
+        } else if (request.vehicle.fuelType === 'ELECTRIC') {
+          pricePerUnit = settings.electricPricePerKWh || 0.35;
+        }
+        totalMoneySaved += fuelUsed * pricePerUnit;
       }
-      totalMoneySaved += fuelUsed * pricePerUnit;
+      }
     }
   }
 
   const totalCO2SavedKg = totalCO2SavedGrams / 1000;
 
-  // Calculate fuel consumption stats
-  const requestsWithFuel = requests.filter(req => req.vehicle?.fuelConsumption);
+  // Calculate fuel consumption stats - only for requests with saved CO2
+  const requestsWithSavedCO2 = requests.filter(req => req.savedCO2Grams !== null);
+  const requestsWithFuel = requestsWithSavedCO2.filter(req => req.vehicle?.fuelConsumption);
   const avgFuelConsumption = requestsWithFuel.length > 0
     ? requestsWithFuel.reduce((sum, req) => sum + (req.vehicle?.fuelConsumption || 0), 0) / requestsWithFuel.length
     : undefined;
 
   // Determine most common fuel type
   const fuelTypeCounts: Record<string, number> = {};
-  requests.forEach(req => {
+  requestsWithSavedCO2.forEach(req => {
     if (req.vehicle?.fuelType && req.vehicle.fuelType !== 'UNKNOWN') {
       fuelTypeCounts[req.vehicle.fuelType] = (fuelTypeCounts[req.vehicle.fuelType] || 0) + 1;
     }
@@ -436,14 +427,14 @@ export async function getCustomerCO2Stats(customerId: string) {
     'PLUGIN_HYBRID': 'Plug-in Hybrid',
   };
 
-  const avgDistance = totalKmSaved > 0 && requests.length > 0
-    ? (totalKmSaved / (requests.length * 2 * settings.workshopsToCompare))
+  const avgDistance = totalKmSaved > 0 && requestsWithSavedCO2.length > 0
+    ? (totalKmSaved / (requestsWithSavedCO2.length * 2 * settings.workshopsToCompare))
     : 0;
 
   return {
     totalCO2SavedGrams,
     totalCO2SavedKg: Math.round(totalCO2SavedKg * 100) / 100,
-    numberOfRequests: requests.length,
+    numberOfRequests: requestsWithSavedCO2.length, // Only count requests with saved CO2
     totalMoneySaved: totalMoneySaved > 0 ? Math.round(totalMoneySaved * 100) / 100 : undefined,
     breakdown: {
       averageDistancePerWorkshop: Math.round(avgDistance * 10) / 10,

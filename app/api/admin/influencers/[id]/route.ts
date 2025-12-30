@@ -45,7 +45,7 @@ export async function GET(
               select: { id: true, season: true }
             },
             offer: {
-              select: { id: true, totalPrice: true }
+              select: { id: true, price: true }
             }
           }
         },

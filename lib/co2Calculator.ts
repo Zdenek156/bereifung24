@@ -120,6 +120,7 @@ export async function calculateCO2ForRequest(
 
   const acceptedOffer = tireRequest.offers[0];
   let distanceAvoided: number;
+  let workshopsUsed: number; // Anzahl der tatsächlich verwendeten Werkstätten
 
   if (acceptedOffer && acceptedOffer.distanceKm) {
     // FALL 2: Angebot angenommen
@@ -155,6 +156,9 @@ export async function calculateCO2ForRequest(
     // Begrenze auf workshopsToCompare (falls gewählte weit weg ist)
     workshops = workshops.slice(0, workshopsToCompare);
 
+    // Speichere die tatsächliche Anzahl
+    workshopsUsed = workshops.length;
+
     // Berechne Ersparnis: Summe ALLER Werkstätten (inkl. gewählte!)
     const totalDistance = workshops.reduce((sum, w) => sum + w.distance, 0);
     distanceAvoided = totalDistance * 2;
@@ -168,6 +172,9 @@ export async function calculateCO2ForRequest(
       allWorkshops,
       workshopsToCompare
     );
+
+    // Speichere die tatsächliche Anzahl
+    workshopsUsed = nearestN.length;
 
     // Summe aller Distanzen × 2 (Hin und Zurück)
     const totalDistance = nearestN.reduce((sum, w) => sum + w.distance, 0);
@@ -195,7 +202,8 @@ export async function calculateCO2ForRequest(
   await prisma.tireRequest.update({
     where: { id: tireRequestId },
     data: {
-      savedCO2Grams: result.savedCO2Grams
+      savedCO2Grams: result.savedCO2Grams,
+      workshopsNotified: workshopsUsed
     }
   });
 
@@ -329,6 +337,7 @@ export async function getCustomerCO2Stats(customerId: string) {
       id: true,
       savedCO2Grams: true,
       calculationMethod: true,
+      workshopsNotified: true,
       latitude: true,
       longitude: true,
       offers: {
@@ -372,9 +381,9 @@ export async function getCustomerCO2Stats(customerId: string) {
     totalCO2SavedGrams += request.savedCO2Grams;
     
     // Count workshops that received this request (and were used in CO2 calculation)
-    // This is workshopsToCompare (default 3), representing the workshops the customer
-    // would have had to visit personally without using Bereifung24
-    totalTripsAvoided += settings.workshopsToCompare;
+    // Use the saved workshopsNotified value if available, otherwise fall back to workshopsToCompare setting
+    const workshopsForThisRequest = request.workshopsNotified ?? settings.workshopsToCompare;
+    totalTripsAvoided += workshopsForThisRequest;
     
     // Estimate km saved based on offers
     let kmForThisRequest = 0;

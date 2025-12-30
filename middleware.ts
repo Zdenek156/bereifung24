@@ -6,7 +6,7 @@ import { handleAffiliateTracking } from './lib/affiliateTracking'
 const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/sales', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
-  '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings',
+  '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder'
 ]
 

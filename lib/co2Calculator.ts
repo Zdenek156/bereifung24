@@ -186,11 +186,22 @@ export async function calculateCO2ForRequest(
     ((vehicle.fuelType === 'ELECTRIC' && vehicle.electricConsumption) ||
       (vehicle.fuelType !== 'ELECTRIC' && vehicle.fuelConsumption));
 
+  let result: CO2CalculationResult;
   if (hasPersonalData && vehicle) {
-    return calculatePersonalCO2(vehicle, distanceAvoided, settings);
+    result = calculatePersonalCO2(vehicle, distanceAvoided, settings);
   } else {
-    return calculateStandardCO2(distanceAvoided, settings);
+    result = calculateStandardCO2(distanceAvoided, settings);
   }
+
+  // Save CO2 result to database
+  await prisma.tireRequest.update({
+    where: { id: tireRequestId },
+    data: {
+      savedCO2Grams: result.savedCO2Grams
+    }
+  });
+
+  return result;
 }
 
 interface CO2CalculationResult {

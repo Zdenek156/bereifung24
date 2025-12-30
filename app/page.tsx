@@ -359,7 +359,7 @@ export default function HomePage() {
       {/* Footer - Professional */}
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -405,8 +405,21 @@ export default function HomePage() {
                 <li><Link href="/workshop-benefits" className="hover:text-white transition-colors">Vorteile</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
                 <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
-                <li><Link href="/influencer" className="hover:text-primary-400 transition-colors font-medium">Partner-Programm</Link></li>
               </ul>
+            </div>
+
+            {/* Partner Program */}
+            <div className="bg-gradient-to-br from-primary-600/10 to-primary-700/10 rounded-lg p-4 border border-primary-500/20">
+              <h4 className="text-lg font-bold mb-3 text-primary-400">💰 Partner werden</h4>
+              <p className="text-gray-300 text-sm mb-4">
+                Verdiene als Influencer mit unserem Partner-Programm!
+              </p>
+              <Link 
+                href="/influencer" 
+                className="inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold text-sm transition-colors"
+              >
+                Mehr erfahren →
+              </Link>
             </div>
 
             {/* Legal */}

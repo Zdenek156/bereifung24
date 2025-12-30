@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default function InfluencerHomePage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   const [formData, setFormData] = useState({

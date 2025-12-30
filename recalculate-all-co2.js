@@ -164,34 +164,36 @@ async function recalculateAllCO2() {
       calculationMethod = 'PERSONAL';
       if (vehicle.fuelType === 'ELECTRIC') {
         const fuelSaved = (vehicle.electricConsumption / 100) * distanceAvoided;
-        savedCO2Grams = Math.round(distanceAvoided * settings.co2PerKmElectric);
-        moneySaved = Math.round(fuelSaved * settings.electricityPricePerKwh * 100) / 100;
+        savedCO2Grams = Math.round(distanceAvoided * settings.co2PerKWhElectric);
+        moneySaved = Math.round(fuelSaved * settings.electricPricePerKwh * 100) / 100;
       } else {
         const fuelSaved = (vehicle.fuelConsumption / 100) * distanceAvoided;
         let co2PerLiter;
         switch (vehicle.fuelType) {
-          case 'BENZIN': co2PerLiter = settings.co2PerLiterBenzin; break;
+          case 'BENZIN': co2PerLiter = settings.co2PerLiterPetrol; break;
           case 'DIESEL': co2PerLiter = settings.co2PerLiterDiesel; break;
           case 'LPG': co2PerLiter = settings.co2PerLiterLPG; break;
-          case 'CNG': co2PerLiter = settings.co2PerLiterCNG; break;
-          default: co2PerLiter = settings.co2PerLiterBenzin;
+          case 'CNG': co2PerLiter = settings.co2PerKgCNG; break;
+          default: co2PerLiter = settings.co2PerLiterPetrol;
         }
         savedCO2Grams = Math.round(fuelSaved * co2PerLiter);
         
         let fuelPrice;
         switch (vehicle.fuelType) {
-          case 'BENZIN': fuelPrice = settings.fuelPriceBenzin; break;
-          case 'DIESEL': fuelPrice = settings.fuelPriceDiesel; break;
-          case 'LPG': fuelPrice = settings.fuelPriceLPG; break;
-          case 'CNG': fuelPrice = settings.fuelPriceCNG; break;
-          default: fuelPrice = settings.fuelPriceBenzin;
+          case 'BENZIN': fuelPrice = settings.petrolPricePerLiter; break;
+          case 'DIESEL': fuelPrice = settings.dieselPricePerLiter; break;
+          case 'LPG': fuelPrice = settings.lpgPricePerLiter; break;
+          case 'CNG': fuelPrice = settings.cngPricePerKg; break;
+          default: fuelPrice = settings.petrolPricePerLiter;
         }
         moneySaved = Math.round(fuelSaved * fuelPrice * 100) / 100;
       }
     } else {
-      // Standard calculation
-      const avgCO2PerKm = (settings.co2PerKmCombustion + settings.co2PerKmElectric) / 2;
-      savedCO2Grams = Math.round(distanceAvoided * avgCO2PerKm);
+      // Standard calculation: Use Benzin with 7.5 L/100km
+      const avgConsumption = 7.5; // L/100km - deutscher Durchschnitt für Benziner
+      const fuelSaved = (avgConsumption / 100) * distanceAvoided;
+      savedCO2Grams = Math.round(fuelSaved * settings.co2PerLiterPetrol);
+      moneySaved = Math.round(fuelSaved * settings.petrolPricePerLiter * 100) / 100;
     }
     
     // Update database

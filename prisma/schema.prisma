@@ -146,6 +146,7 @@ model Customer {
   tireRatings       TireRating[]
   vehicles          Vehicle[]
   weatherAlert      WeatherAlert?
+  affiliateConversions AffiliateConversion[] // Tracking von Affiliate-Conversions
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -390,6 +391,7 @@ model TireRequest {
   // Relations
   offers  Offer[]
   booking Booking?
+  affiliateConversions AffiliateConversion[] // Tracking von Affiliate-Conversions
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -539,6 +541,7 @@ model Offer {
   customerWantsStorage   Boolean?  @default(false) @map("customer_wants_storage")
   selectedTireOptionIds  String[]  @default([]) @map("selected_tire_option_ids") // IDs der vom Kunden ausgewählten TireOptions
   booking                Booking?
+  affiliateConversions   AffiliateConversion[] // Tracking von Affiliate-Conversions
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2024,4 +2027,223 @@ enum FuelType {
   PLUGIN_HYBRID // Plugin-Hybrid
   LPG // Autogas
   CNG // Erdgas
+}
+
+// ========================================
+// AFFILIATE / INFLUENCER MANAGEMENT SYSTEM
+// ========================================
+
+model Influencer {
+  id                    String   @id @default(cuid())
+  
+  // Basic Info
+  email                 String   @unique
+  code                  String   @unique // Unique affiliate code: z.B. "PETER24"
+  name                  String?
+  
+  // Registration Status
+  isRegistered          Boolean  @default(false)
+  registrationToken     String?  @unique // Token für erste Registrierung
+  registrationTokenExpiry DateTime?
+  
+  // Authentication (wenn registriert)
+  password              String? // Hashed password
+  isActive              Boolean  @default(true)
+  
+  // Platform & Channel Info
+  platform              InfluencerPlatform?
+  channelName           String? // z.B. "@username"
+  channelUrl            String?
+  additionalChannels    Json? // Array of {platform, url}
+  
+  // Commission Settings (in Cents)
+  commissionPer1000Views     Int @default(300) // €3.00 default
+  commissionPerRegistration  Int @default(1500) // €15.00 default
+  commissionPerAcceptedOffer Int @default(2500) // €25.00 default
+  
+  // Time Limits
+  activeFrom            DateTime @default(now())
+  activeUntil           DateTime? // null = unlimited
+  isUnlimited           Boolean  @default(false)
+  
+  // Payment Info
+  paymentMethod         PaymentMethod?
+  
+  // Bank Transfer
+  accountHolder         String?
+  iban                  String?
+  bic                   String?
+  
+  // PayPal
+  paypalEmail           String?
+  
+  // Tax Info
+  taxType               TaxType? // INDIVIDUAL or BUSINESS
+  companyName           String?
+  taxId                 String? // Steuernummer / USt-ID
+  
+  // Address
+  street                String?
+  zipCode               String?
+  city                  String?
+  country               String? @default("Deutschland")
+  
+  // Admin Notes
+  notes                 String? @db.Text
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  lastLoginAt           DateTime?
+  
+  // Relations
+  clicks                AffiliateClick[]
+  conversions           AffiliateConversion[]
+  payments              AffiliatePayment[]
+  
+  @@map("influencers")
+}
+
+model AffiliateClick {
+  id                    String   @id @default(cuid())
+  influencerId          String
+  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  
+  // Tracking Data
+  ipAddress             String
+  userAgent             String? @db.Text
+  referrer              String? @db.Text
+  landingPage           String?
+  
+  // Cookie ID für Attribution
+  cookieId              String @unique
+  
+  // Timestamps
+  clickedAt             DateTime @default(now())
+  
+  // Optional: Device/Location Data
+  deviceType            String? // mobile, desktop, tablet
+  country               String?
+  city                  String?
+  
+  @@map("affiliate_clicks")
+  @@index([influencerId])
+  @@index([cookieId])
+  @@index([clickedAt])
+}
+
+model AffiliateConversion {
+  id                    String   @id @default(cuid())
+  influencerId          String
+  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  
+  // Conversion Type
+  type                  ConversionType
+  
+  // Attribution
+  cookieId              String // Links back to AffiliateClick
+  
+  // Related Entities
+  customerId            String?
+  customer              Customer? @relation(fields: [customerId], references: [id])
+  
+  tireRequestId         String?
+  tireRequest           TireRequest? @relation(fields: [tireRequestId], references: [id])
+  
+  offerId               String?
+  offer                 Offer? @relation(fields: [offerId], references: [id])
+  
+  // Commission (in Cents)
+  commissionAmount      Int
+  
+  // Payment Status
+  isPaid                Boolean @default(false)
+  paidAt                DateTime?
+  paymentId             String?
+  payment               AffiliatePayment? @relation(fields: [paymentId], references: [id])
+  
+  // Timestamps
+  convertedAt           DateTime @default(now())
+  
+  @@map("affiliate_conversions")
+  @@index([influencerId])
+  @@index([customerId])
+  @@index([cookieId])
+  @@index([convertedAt])
+  @@index([isPaid])
+}
+
+model AffiliatePayment {
+  id                    String   @id @default(cuid())
+  influencerId          String
+  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  
+  // Payment Period
+  periodStart           DateTime
+  periodEnd             DateTime
+  
+  // Amounts (in Cents)
+  totalAmount           Int
+  clicksAmount          Int
+  registrationsAmount   Int
+  offersAmount          Int
+  
+  // Counts
+  totalClicks           Int
+  totalRegistrations    Int
+  totalOffers           Int
+  
+  // Status
+  status                PaymentStatus @default(PENDING)
+  
+  // Payment Details
+  paymentMethod         PaymentMethod
+  paymentReference      String? // z.B. PayPal Transaction ID oder Überweisung Referenz
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  paidAt                DateTime?
+  
+  // Relations
+  conversions           AffiliateConversion[]
+  
+  @@map("affiliate_payments")
+  @@index([influencerId])
+  @@index([periodStart, periodEnd])
+  @@index([status])
+}
+
+enum InfluencerPlatform {
+  TIKTOK
+  INSTAGRAM
+  YOUTUBE
+  FACEBOOK
+  TWITTER
+  LINKEDIN
+  BLOG
+  WEBSITE
+  OTHER
+}
+
+enum ConversionType {
+  PAGE_VIEW // Pro 1000 Views
+  REGISTRATION // User registered
+  ACCEPTED_OFFER // First offer accepted
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  PAYPAL
+}
+
+enum TaxType {
+  INDIVIDUAL // Privatperson
+  BUSINESS // Unternehmen
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
 }

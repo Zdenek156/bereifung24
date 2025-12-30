@@ -29,15 +29,6 @@ export async function GET(request: NextRequest) {
     
     // Get all influencers with aggregated stats
     const influencers = await prisma.influencer.findMany({
-      include: {
-        _count: {
-          select: {
-            clicks: true,
-            conversions: true,
-            payments: true
-          }
-        }
-      },
       orderBy: {
         createdAt: 'desc'
       }
@@ -46,6 +37,14 @@ export async function GET(request: NextRequest) {
     // Calculate earnings for each influencer
     const influencersWithStats = await Promise.all(
       influencers.map(async (influencer) => {
+        const totalClicks = await prisma.affiliateClick.count({
+          where: { influencerId: influencer.id }
+        })
+        
+        const totalConversions = await prisma.affiliateConversion.count({
+          where: { influencerId: influencer.id }
+        })
+        
         const totalEarnings = await prisma.affiliateConversion.aggregate({
           where: {
             influencerId: influencer.id,
@@ -70,8 +69,8 @@ export async function GET(request: NextRequest) {
           ...influencer,
           unpaidEarnings: totalEarnings._sum.commissionAmount || 0,
           paidEarnings: paidEarnings._sum.totalAmount || 0,
-          totalClicks: influencer._count.clicks,
-          totalConversions: influencer._count.conversions
+          totalClicks,
+          totalConversions
         }
       })
     )

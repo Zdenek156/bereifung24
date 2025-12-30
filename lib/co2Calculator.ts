@@ -410,20 +410,19 @@ export async function getCustomerCO2Stats(customerId: string) {
       
     totalKmSaved += kmForThisRequest;
       
-      // Estimate fuel and money saved if we have vehicle data
-      if (request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
-        const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
-        totalFuelSaved += fuelUsed;
-        
-        // Estimate money based on fuel type
-        let pricePerUnit = settings.fuelPricePerLiter || 1.65;
-        if (request.vehicle.fuelType === 'DIESEL') {
-          pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
-        } else if (request.vehicle.fuelType === 'ELECTRIC') {
-          pricePerUnit = settings.electricPricePerKWh || 0.35;
-        }
-        totalMoneySaved += fuelUsed * pricePerUnit;
+    // Estimate fuel and money saved if we have vehicle data
+    if (request.vehicle?.fuelConsumption && kmForThisRequest > 0) {
+      const fuelUsed = (request.vehicle.fuelConsumption / 100) * kmForThisRequest;
+      totalFuelSaved += fuelUsed;
+      
+      // Estimate money based on fuel type
+      let pricePerUnit = settings.fuelPricePerLiter || 1.65;
+      if (request.vehicle.fuelType === 'DIESEL') {
+        pricePerUnit = settings.dieselPricePerLiter || settings.fuelPricePerLiter || 1.65;
+      } else if (request.vehicle.fuelType === 'ELECTRIC') {
+        pricePerUnit = settings.electricPricePerKWh || 0.35;
       }
+      totalMoneySaved += fuelUsed * pricePerUnit;
     }
   }
 

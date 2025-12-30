@@ -24,6 +24,7 @@ export async function GET() {
       'notifications',
       'billing',
       'commissions',
+      'influencers',
       'territories',
       'cleanup',
       'sepa-mandates',

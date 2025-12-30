@@ -392,7 +392,6 @@ export async function getCustomerCO2Stats(customerId: string) {
         }
         totalMoneySaved += fuelUsed * pricePerUnit;
       }
-      }
     }
   }
 

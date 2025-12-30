@@ -332,10 +332,8 @@ export async function getCustomerCO2Stats(customerId: string) {
       latitude: true,
       longitude: true,
       offers: {
-        where: {
-          status: 'ACCEPTED'
-        },
         select: {
+          status: true,
           distanceKm: true,
           workshopId: true
         }
@@ -359,6 +357,7 @@ export async function getCustomerCO2Stats(customerId: string) {
   let totalKmSaved = 0;
   let totalFuelSaved = 0;
   let totalMoneySaved = 0;
+  let totalTripsAvoided = 0; // Count actual workshops that made offers (max workshopsToCompare per request)
 
   for (const request of requests) {
     // Only count requests where CO2 has been calculated and saved
@@ -372,12 +371,18 @@ export async function getCustomerCO2Stats(customerId: string) {
 
     totalCO2SavedGrams += request.savedCO2Grams;
     
+    // Count workshops that received this request (and were used in CO2 calculation)
+    // This is workshopsToCompare (default 3), representing the workshops the customer
+    // would have had to visit personally without using Bereifung24
+    totalTripsAvoided += settings.workshopsToCompare;
+    
     // Estimate km saved based on offers
     let kmForThisRequest = 0;
     if (request.latitude && request.longitude) {
-      if (request.offers.length > 0 && request.offers[0].distanceKm) {
+      const acceptedOffer = request.offers.find(o => o.status === 'ACCEPTED');
+      if (acceptedOffer && acceptedOffer.distanceKm) {
         // Has accepted offer with distance
-        const acceptedDistance = request.offers[0].distanceKm;
+        const acceptedDistance = acceptedOffer.distanceKm;
         // Assume 2 other workshops at similar distance
         kmForThisRequest = acceptedDistance * 2 * (settings.workshopsToCompare - 1);
       } else {
@@ -447,7 +452,7 @@ export async function getCustomerCO2Stats(customerId: string) {
     breakdown: {
       averageDistancePerWorkshop: Math.round(avgDistance * 10) / 10,
       workshopsCompared: settings.workshopsToCompare,
-      totalTripsAvoided: requestsWithSavedCO2.length * settings.workshopsToCompare, // Total individual trips across all requests
+      totalTripsAvoided: totalTripsAvoided, // Actual number of workshops that made offers (max workshopsToCompare per request)
       totalKmSaved: Math.round(totalKmSaved * 10) / 10,
       averageFuelConsumption: avgFuelConsumption ? Math.round(avgFuelConsumption * 10) / 10 : undefined,
       fuelType: mostCommonFuelType ? fuelTypeMap[mostCommonFuelType] : undefined,

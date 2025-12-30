@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         commissionPer1000Views: commissionPer1000Views || 300,
         commissionPerRegistration: commissionPerRegistration || 1500,
         commissionPerAcceptedOffer: commissionPerAcceptedOffer || 2500,
-        activeFrom: activeFrom ? new Date(activeFrom) : null,
+        activeFrom: activeFrom ? new Date(activeFrom) : new Date(),
         activeUntil: activeUntil ? new Date(activeUntil) : null,
         isUnlimited: isUnlimited ?? true,
         isActive: true,

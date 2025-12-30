@@ -311,7 +311,7 @@ export default function InfluencerManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => setSelectedInfluencer(influencer)}
+                      onClick={() => router.push(`/admin/influencer-management/${influencer.id}`)}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       Details

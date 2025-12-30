@@ -816,8 +816,4 @@ export default function InfluencerDetailPage() {
       </div>
     </div>
   )
-  
-  function formatCurrency(cents: number): string {
-    return `€${(cents / 100).toFixed(2)}`
-  }
 }

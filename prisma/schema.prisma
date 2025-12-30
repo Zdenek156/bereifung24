@@ -383,8 +383,9 @@ model TireRequest {
   status String @default("PENDING") // PENDING, QUOTED, ACCEPTED, COMPLETED, CANCELLED
 
   // CO2 Tracking
-  savedCO2Grams      Int?    // Gespeicherte CO₂-Menge in Gramm
-  calculationMethod  String? // 'STANDARD' oder 'PERSONAL'
+  savedCO2Grams       Int?    // Gespeicherte CO₂-Menge in Gramm
+  calculationMethod   String? // 'STANDARD' oder 'PERSONAL'
+  workshopsNotified   Int?    // Anzahl der Werkstätten, die die Anfrage erhalten haben (für CO2-Berechnung verwendet)
 
   // Relations
   offers  Offer[]

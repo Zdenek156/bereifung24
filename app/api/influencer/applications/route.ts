@@ -19,6 +19,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if application already exists
+    const existingApplication = await prisma.influencerApplication.findFirst({
+      where: {
+        email: email.toLowerCase()
+      }
+    })
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: 'Mit dieser E-Mail-Adresse wurde bereits eine Bewerbung eingereicht' },
+        { status: 400 }
+      )
+    }
+
+    // Save application to database
+    const application = await prisma.influencerApplication.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        platform,
+        channelName,
+        channelUrl,
+        followers: followers ? parseInt(followers) : null,
+        message,
+        status: 'PENDING'
+      }
+    })
+
+    console.log(`[INFLUENCER] New application created: ${application.id}`)
+
     // Get all admins who want to be notified about influencer applications
     const notificationRecipients = await prisma.adminNotificationSetting.findMany({
       where: {
@@ -84,9 +114,9 @@ export async function POST(request: NextRequest) {
         ` : ''}
         
         <p style="margin-top: 30px;">
-          <a href="${process.env.NEXTAUTH_URL}/admin/influencer-management" 
+          <a href="${process.env.NEXTAUTH_URL}/admin/influencer-applications" 
              style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-            Zum Influencer-Management
+            Bewerbung prüfen
           </a>
         </p>
         

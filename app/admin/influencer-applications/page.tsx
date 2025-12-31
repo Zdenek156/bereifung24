@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import ApplicationsList from '@/components/admin/ApplicationsList'
 import ApprovalModal from '@/components/admin/ApprovalModal'
+import RejectionModal from '@/components/admin/RejectionModal'
 
 export default function InfluencerApplicationsPage() {
   const { data: session, status } = useSession()
@@ -12,6 +13,7 @@ export default function InfluencerApplicationsPage() {
   const [applications, setApplications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<any>(null)
 
   useEffect(() => {
@@ -82,6 +84,10 @@ export default function InfluencerApplicationsPage() {
             setSelectedApplication(app)
             setShowApprovalModal(true)
           }}
+          onReject={(app) => {
+            setSelectedApplication(app)
+            setShowRejectionModal(true)
+          }}
         />
 
         {/* Approval Modal */}
@@ -90,6 +96,20 @@ export default function InfluencerApplicationsPage() {
             application={selectedApplication}
             onClose={() => {
               setShowApprovalModal(false)
+              setSelectedApplication(null)
+            }}
+            onSuccess={() => {
+              loadApplications()
+            }}
+          />
+        )}
+
+        {/* Rejection Modal */}
+        {showRejectionModal && selectedApplication && (
+          <RejectionModal
+            application={selectedApplication}
+            onClose={() => {
+              setShowRejectionModal(false)
               setSelectedApplication(null)
             }}
             onSuccess={() => {

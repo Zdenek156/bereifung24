@@ -11,8 +11,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { firstName, lastName, email, platform, channelName, channelUrl, followers, message } = body
 
+    console.log('[INFLUENCER] Application submission:', { firstName, lastName, email, platform, channelName })
+
     // Validate required fields
     if (!firstName || !lastName || !email || !platform || !channelName || !channelUrl) {
+      console.log('[INFLUENCER] Validation failed:', { firstName, lastName, email, platform, channelName, channelUrl })
       return NextResponse.json(
         { error: 'Alle Pflichtfelder müssen ausgefüllt werden' },
         { status: 400 }

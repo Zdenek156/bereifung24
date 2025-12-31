@@ -48,13 +48,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code bereits vergeben' }, { status: 400 })
     }
 
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if email already exists as influencer (customers can have same email)
+    const existingInfluencer = await prisma.influencer.findUnique({
       where: { email: application.email }
     })
 
-    if (existingUser) {
-      return NextResponse.json({ error: 'Email bereits registriert' }, { status: 400 })
+    if (existingInfluencer) {
+      return NextResponse.json({ error: 'Email bereits als Influencer registriert' }, { status: 400 })
     }
 
     // Generate random password

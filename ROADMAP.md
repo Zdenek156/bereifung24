@@ -807,7 +807,122 @@ Kunden können im Dashboard sehen, wie viel CO₂ sie durch die Nutzung von Bere
 
 ---
 
-**Letzte Aktualisierung:** 28. Dezember 2025
-**Version:** 0.8.1 - CO₂-Tracking-System hinzugefügt
-**Fortschritt:** 83% abgeschlossen (Phase 1-7 fertig, 5 von 7 Features)
-**Neue Features:** 5 erledigt, 2 in Arbeit (EPREL Tire Finder, CO₂-Tracking)
+## 🔄 AKTUELL IN ARBEIT: Influencer-Partner-Programm (31.12.2025)
+
+### ✅ FERTIG IMPLEMENTIERT (Lokal funktioniert):
+- [x] **Datenbank-Schema erweitert** (Commit: 885d9ee)
+  - InfluencerApplication Model mit Status-Workflow
+  - Influencer Model mit 5 Provisionstypen:
+    - CPM (Pro 1000 Views) - Standard €3.00
+    - Pro registriertem Kunden - Standard €15.00
+    - Pro erstem Angebot vom Kunden - Standard €25.00
+    - Pro registrierter Werkstatt - Standard €20.00 (NEU!)
+    - Pro erstem Angebot von Werkstatt - Standard €30.00 (NEU!)
+  - Individuelle Provisionssätze pro Influencer
+  - Payment-Daten (Bank/PayPal)
+
+- [x] **Frontend-Komponenten erstellt:**
+  - `/admin/influencer-applications` - Bewerbungsverwaltung
+  - `ApplicationsList.tsx` - Bewerbungsübersicht
+  - `ApprovalModal.tsx` - Genehmigungsformular mit allen 5 Provisionsfeldern
+  - "📝 Bewerbungen" Button im Influencer-Management
+
+- [x] **API-Routes implementiert:**
+  - `GET /api/admin/influencer-applications` - Bewerbungen abrufen
+  - `POST /api/admin/influencer-applications/approve` - Bewerbung genehmigen
+  - Automatische Account-Erstellung
+  - Temporäres Passwort-Generation
+
+- [x] **Welcome-E-Mail Template:**
+  - Alle 5 Provisionstypen werden angezeigt
+  - Login-Daten mit temporärem Passwort
+  - Persönlicher Tracking-Link
+  - Anleitung zur Vervollständigung des Profils
+
+- [x] **Dependencies korrekt:**
+  - jsonwebtoken hinzugefügt
+  - @radix-ui/react-select hinzugefügt
+  - @types/jsonwebtoken hinzugefügt
+
+### ❌ DEPLOYMENT-PROBLEM (Server):
+**Status:** Code ist fertig aber schlägt auf Production fehl
+
+**Fehler:** 
+```
+TypeError: Cannot read properties of undefined (reading 'findMany')
+at /var/www/bereifung24/.next/server/app/api/admin/influencer-applications/route.js
+```
+
+**Was funktioniert:**
+- ✅ Schema existiert auf Server (`prisma/schema.prisma`)
+- ✅ Dependencies installiert (`npm install` erfolgreich)
+- ✅ Prisma Client generiert (`npx prisma generate` erfolgreich)
+- ✅ Datenbank synchronisiert (`npx prisma db push` erfolgreich)
+- ✅ Build erfolgreich (`npm run build` ohne Fehler)
+- ✅ PM2 läuft (Restart #673)
+
+**Was NICHT funktioniert:**
+- ❌ Zur Laufzeit ist `prisma.influencerApplication` undefined
+- ❌ API-Route gibt 500 Internal Server Error
+
+**Mögliche Ursachen:**
+1. Prisma Client Cache-Problem
+2. Next.js Build-Cache inkonsistent
+3. lib/prisma.ts Import-Problem
+4. Node.js Module-Auflösung Issue
+5. PM2 Cluster-Mode Problem
+
+### 🔧 NÄCHSTE SCHRITTE ZUR FEHLERBEHEBUNG:
+1. **Server komplett neu starten** (nicht nur PM2)
+   ```bash
+   sudo reboot
+   ```
+
+2. **PM2 komplett neu aufsetzen**
+   ```bash
+   pm2 delete bereifung24
+   pm2 start ecosystem.config.js
+   pm2 save
+   ```
+
+3. **Alternative: Prisma Client direkt importieren**
+   ```typescript
+   import { PrismaClient } from '@prisma/client'
+   const prisma = new PrismaClient()
+   ```
+
+4. **Node.js Module Cache leeren**
+   ```bash
+   rm -rf node_modules/.cache
+   rm -rf .next
+   npm ci --force
+   ```
+
+5. **Prisma Studio testen ob Model existiert**
+   ```bash
+   npx prisma studio
+   ```
+
+6. **Alternative: Temporär deaktivieren**
+   - Route auskommentieren
+   - Button verstecken
+   - Später mit frischem Kopf debuggen
+
+### 📝 WICHTIGE DATEIEN:
+- Schema: `prisma/schema.prisma` (Zeile 2034-2116)
+- API: `app/api/admin/influencer-applications/route.ts`
+- Approve: `app/api/admin/influencer-applications/approve/route.ts`
+- Komponenten: `components/admin/ApplicationsList.tsx`
+- Modal: `components/admin/ApprovalModal.tsx`
+- Page: `app/admin/influencer-applications/page.tsx`
+- Dependencies: `package.json` (jsonwebtoken, @radix-ui/react-select)
+
+### 🎯 PRIORITÄT: 
+**HOCH** - Feature ist komplett, nur Deployment blockiert
+
+---
+
+**Letzte Aktualisierung:** 31. Dezember 2025, 01:45 Uhr
+**Version:** 0.8.2 - Influencer-System (95% fertig, Deployment-Issue)
+**Fortschritt:** 85% abgeschlossen (Phase 1-7 fertig, Influencer-Feature blockiert)
+**Aktuelle Session:** 138k tokens verwendet, PM2 Restart #673

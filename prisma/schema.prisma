@@ -21,8 +21,9 @@ model AdminNotificationSetting {
   name  String?
 
   // Notification Types
-  notifyCustomerRegistration Boolean @default(true) // Benachrichtigung bei Kunden-Registrierung
-  notifyWorkshopRegistration Boolean @default(true) // Benachrichtigung bei Werkstatt-Registrierung
+  notifyCustomerRegistration  Boolean @default(true) // Benachrichtigung bei Kunden-Registrierung
+  notifyWorkshopRegistration  Boolean @default(true) // Benachrichtigung bei Werkstatt-Registrierung
+  notifyInfluencerApplication Boolean @default(false) // Benachrichtigung bei Influencer-Bewerbung
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

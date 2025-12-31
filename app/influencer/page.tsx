@@ -24,9 +24,23 @@ export default function InfluencerHomePage() {
     setSubmitMessage(null)
 
     try {
-      // Here you could send to an API endpoint or email service
-      // For now, we'll simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch('/api/influencer/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setSubmitMessage({
+          type: 'error',
+          text: data.error || 'Ein Fehler ist aufgetreten'
+        })
+        return
+      }
       
       setSubmitMessage({
         type: 'success',
@@ -50,6 +64,7 @@ export default function InfluencerHomePage() {
       }, 3000)
       
     } catch (error) {
+      console.error('Application error:', error)
       setSubmitMessage({
         type: 'error',
         text: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie uns unter partner@bereifung24.de'

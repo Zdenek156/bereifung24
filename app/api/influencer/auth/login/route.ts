@@ -11,7 +11,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
  */
 export async function POST(request: NextRequest) {
   try {
+    console.log('[INFLUENCER LOGIN] Request received')
     const body = await request.json()
+    console.log('[INFLUENCER LOGIN] Body parsed:', { email: body.email })
     const { email, password } = body
 
     if (!email || !password) {
@@ -21,6 +23,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('[INFLUENCER LOGIN] Looking up influencer:', email)
     // Find influencer by email
     const influencer = await prisma.influencer.findUnique({
       where: { email: email.toLowerCase() },
@@ -34,6 +37,7 @@ export async function POST(request: NextRequest) {
         isRegistered: true,
       }
     })
+    console.log('[INFLUENCER LOGIN] Found influencer:', !!influencer, influencer?.isRegistered, !!influencer?.password)
 
     if (!influencer) {
       return NextResponse.json(
@@ -44,6 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Check if registered and has password
     if (!influencer.isRegistered || !influencer.password) {
+      console.log('[INFLUENCER LOGIN] Registration incomplete')
       return NextResponse.json(
         { error: 'Bitte vervollständigen Sie zuerst Ihre Registrierung' },
         { status: 401 }
@@ -52,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Check if active
     if (!influencer.isActive) {
+      console.log('[INFLUENCER LOGIN] Account inactive')
       return NextResponse.json(
         { error: 'Ihr Account ist deaktiviert. Bitte kontaktieren Sie den Support.' },
         { status: 403 }
@@ -59,15 +65,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
+    console.log('[INFLUENCER LOGIN] Verifying password')
     const isPasswordValid = await bcrypt.compare(password, influencer.password)
 
     if (!isPasswordValid) {
+      console.log('[INFLUENCER LOGIN] Invalid password')
       return NextResponse.json(
         { error: 'Ungültige E-Mail oder Passwort' },
         { status: 401 }
       )
     }
 
+    console.log('[INFLUENCER LOGIN] Login successful, creating token')
     // Update last login
     await prisma.influencer.update({
       where: { id: influencer.id },
@@ -109,7 +118,7 @@ export async function POST(request: NextRequest) {
     return response
 
   } catch (error) {
-    console.error('[INFLUENCER] Login error:', error)
+    console.error('[INFLUENCER LOGIN] Error:', error)
     return NextResponse.json(
       { error: 'Interner Server-Fehler' },
       { status: 500 }

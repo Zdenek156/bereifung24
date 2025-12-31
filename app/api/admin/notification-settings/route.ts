@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
         email,
         name: name || null,
         notifyCustomerRegistration: true,
-        notifyWorkshopRegistration: true
+        notifyWorkshopRegistration: true,
+        notifyInfluencerApplication: false
       }
     })
 
@@ -78,7 +79,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { id, notifyCustomerRegistration, notifyWorkshopRegistration } = body
+    const { id, notifyCustomerRegistration, notifyWorkshopRegistration, notifyInfluencerApplication } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 })
@@ -90,6 +91,9 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof notifyWorkshopRegistration === 'boolean') {
       updateData.notifyWorkshopRegistration = notifyWorkshopRegistration
+    }
+    if (typeof notifyInfluencerApplication === 'boolean') {
+      updateData.notifyInfluencerApplication = notifyInfluencerApplication
     }
 
     const setting = await prisma.adminNotificationSetting.update({

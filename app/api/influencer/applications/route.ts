@@ -9,15 +9,18 @@ import { sendEmail } from '@/lib/email'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, platform, channelName, channelUrl, followers, message } = body
+    const { firstName, lastName, email, platform, channelName, channelUrl, followers, message } = body
 
     // Validate required fields
-    if (!name || !email || !platform || !channelName || !channelUrl) {
+    if (!firstName || !lastName || !email || !platform || !channelName || !channelUrl) {
       return NextResponse.json(
         { error: 'Alle Pflichtfelder müssen ausgefüllt werden' },
         { status: 400 }
       )
     }
+
+    // Combine names for storage
+    const name = `${firstName.trim()} ${lastName.trim()}`
 
     // Check if application already exists
     const existingApplication = await prisma.influencerApplication.findFirst({

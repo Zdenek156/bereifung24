@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
 export default function InfluencerHomePage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     platform: '',
     channelName: '',
@@ -49,7 +50,8 @@ export default function InfluencerHomePage() {
       
       // Reset form
       setFormData({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         platform: '',
         channelName: '',
@@ -251,18 +253,34 @@ export default function InfluencerHomePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ihr Name *
+                        Vorname *
                       </label>
                       <input
                         type="text"
                         required
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Max Mustermann"
+                        placeholder="Max"
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nachname *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Mustermann"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         E-Mail-Adresse *

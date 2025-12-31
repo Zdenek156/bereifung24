@@ -2105,6 +2105,20 @@ model Influencer {
   @@map("influencers")
 }
 
+model InfluencerSettings {
+  id                       String   @id @default(cuid())
+  
+  // Default commission rates displayed on landing page (in cents)
+  defaultPer1000Views      Int      @default(300)    // €3.00
+  defaultPerRegistration   Int      @default(1500)   // €15.00
+  defaultPerAcceptedOffer  Int      @default(2500)   // €25.00
+  
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  
+  @@map("influencer_settings")
+}
+
 model AffiliateClick {
   id                    String   @id @default(cuid())
   influencerId          String

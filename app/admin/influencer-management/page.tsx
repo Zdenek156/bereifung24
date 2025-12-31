@@ -97,7 +97,7 @@ export default function InfluencerManagementPage() {
           setSettings(data.settings)
         }
       }
-      }
+
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {

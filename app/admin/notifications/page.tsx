@@ -14,14 +14,23 @@ interface NotificationSetting {
   notifyInfluencerApplication: boolean
 }
 
+interface B24Employee {
+  id: string
+  firstName: string
+  lastName: string
+  user: {
+    email: string
+  }
+}
+
 export default function AdminNotificationSettings() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [settings, setSettings] = useState<NotificationSetting[]>([])
+  const [employees, setEmployees] = useState<B24Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [newEmail, setNewEmail] = useState('')
-  const [newName, setNewName] = useState('')
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
 
   useEffect(() => {
@@ -38,6 +47,7 @@ export default function AdminNotificationSettings() {
     }
 
     fetchSettings()
+    fetchEmployees()
   }, [session, status, router])
 
   const fetchSettings = async () => {
@@ -54,9 +64,24 @@ export default function AdminNotificationSettings() {
     }
   }
 
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/admin/b24-employees')
+      if (response.ok) {
+        const data = await response.json()
+        setEmployees(data.employees || [])
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error)
+    }
+  }
+
   const addNotificationSetting = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newEmail) return
+    if (!selectedEmployeeId) return
+
+    const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId)
+    if (!selectedEmployee) return
 
     setSaving(true)
     try {
@@ -66,14 +91,13 @@ export default function AdminNotificationSettings() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: newEmail,
-          name: newName || null,
+          email: selectedEmployee.user.email,
+          name: `${selectedEmployee.firstName} ${selectedEmployee.lastName}`,
         }),
       })
 
       if (response.ok) {
-        setNewEmail('')
-        setNewName('')
+        setSelectedEmployeeId('')
         setShowAddForm(false)
         fetchSettings()
       } else {
@@ -198,32 +222,37 @@ export default function AdminNotificationSettings() {
           {showAddForm && (
             <div className="p-6 border-b border-gray-200 bg-gray-50">
               <form onSubmit={addNotificationSetting} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      E-Mail-Adresse *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="mitarbeiter@bereifung24.de"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="Max Mustermann"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    B24-Mitarbeiter auswählen *
+                  </label>
+                  <select
+                    required
+                    value={selectedEmployeeId}
+                    onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">-- Bitte Mitarbeiter auswählen --</option>
+                    {employees.map(emp => {
+                      // Check if employee is already in notification settings
+                      const alreadyAdded = settings.some(s => s.email === emp.user.email)
+                      return (
+                        <option 
+                          key={emp.id} 
+                          value={emp.id}
+                          disabled={alreadyAdded}
+                        >
+                          {emp.firstName} {emp.lastName} ({emp.user.email})
+                          {alreadyAdded ? ' - Bereits hinzugefügt' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  {employees.length === 0 && (
+                    <p className="mt-2 text-sm text-gray-500">
+                      Keine B24-Mitarbeiter gefunden. Bitte zuerst Mitarbeiter in der <Link href="/admin/b24-employees" className="text-primary-600 hover:text-primary-700 font-medium">Mitarbeiter-Verwaltung</Link> anlegen.
+                    </p>
+                  )}
                 </div>
                 <div className="flex justify-end">
                   <button

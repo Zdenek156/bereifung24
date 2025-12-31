@@ -1,16 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export const dynamic = 'force-dynamic'
 
 export default function InfluencerHomePage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false)
-  const [commissions, setCommissions] = useState({
-    per1000Views: 300,
-    perRegistration: 1500,
-    perAcceptedOffer: 2500
-  })
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,18 +17,6 @@ export default function InfluencerHomePage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-
-  useEffect(() => {
-    // Load default commission rates
-    fetch('/api/influencer/default-commissions')
-      .then(res => res.json())
-      .then(data => {
-        if (data.commissions) {
-          setCommissions(data.commissions)
-        }
-      })
-      .catch(err => console.error('Failed to load commissions:', err))
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,26 +142,35 @@ export default function InfluencerHomePage() {
 
         {/* Commission Rates */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Unsere Provisionen</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Unsere Vergütungsmodelle</h2>
+          <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+            Wir bieten faire und transparente Provisionen. Die genauen Konditionen werden individuell mit jedem Partner vereinbart.
+          </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="border-2 border-gray-200 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-              <div className="text-4xl font-bold text-blue-600 mb-2">€{(commissions.per1000Views / 100).toFixed(2)}</div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">💰</div>
+              <div className="text-gray-900 font-semibold text-lg mb-2">CPM-Vergütung</div>
               <div className="text-gray-600 text-sm mb-2">pro 1000 Views</div>
               <div className="text-gray-500 text-xs">Verfolgen Sie Ihre Reichweite</div>
             </div>
 
             <div className="border-2 border-blue-500 rounded-xl p-6 text-center bg-blue-50">
-              <div className="text-4xl font-bold text-blue-600 mb-2">€{(commissions.perRegistration / 100).toFixed(2)}</div>
-              <div className="text-gray-600 text-sm mb-2">pro Registrierung</div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">🎯</div>
+              <div className="text-gray-900 font-semibold text-lg mb-2">Pro Registrierung</div>
+              <div className="text-gray-600 text-sm mb-2">Für jeden neuen Kunden</div>
               <div className="text-gray-500 text-xs">Jeder neue Kunde zählt</div>
             </div>
 
             <div className="border-2 border-gray-200 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-              <div className="text-4xl font-bold text-blue-600 mb-2">€{(commissions.perAcceptedOffer / 100).toFixed(2)}</div>
-              <div className="text-gray-600 text-sm mb-2">pro Deal</div>
-              <div className="text-gray-500 text-xs">Bei abgeschlossenem Auftrag</div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">✅</div>
+              <div className="text-gray-900 font-semibold text-lg mb-2">Pro Deal</div>
+              <div className="text-gray-600 text-sm mb-2">Bei abgeschlossenem Auftrag</div>
+              <div className="text-gray-500 text-xs">Bei erfolgreicher Vermittlung</div>
             </div>
           </div>
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Die genauen Provisionsätze werden individuell vereinbart und richten sich nach Ihrer Reichweite und Zielgruppe.
+          </p>
         </div>
 
         {/* How it works */}

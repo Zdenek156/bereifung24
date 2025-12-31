@@ -2105,6 +2105,37 @@ model Influencer {
   @@map("influencers")
 }
 
+model InfluencerApplication {
+  id               String   @id @default(cuid())
+  
+  // Basic Info
+  name             String
+  email            String
+  
+  // Platform Info
+  platform         String // "YouTube", "Instagram", "TikTok", "Facebook", etc.
+  channelName      String
+  channelUrl       String
+  followers        Int?
+  
+  // Application Content
+  message          String?  @db.Text
+  
+  // Status Workflow
+  status           ApplicationStatus @default(PENDING)
+  
+  // Admin Review
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  rejectionReason  String?  @db.Text
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@map("influencer_applications")
+}
+
 model InfluencerSettings {
   id                       String   @id @default(cuid())
   
@@ -2238,6 +2269,12 @@ enum InfluencerPlatform {
   BLOG
   WEBSITE
   OTHER
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ConversionType {

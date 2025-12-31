@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         firstName,
         lastName,
         role: 'INFLUENCER',
-        isVerified: true
+        emailVerified: new Date()
       }
     })
 

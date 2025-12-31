@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/influencer/default-commissions
@@ -6,23 +7,38 @@ import { NextResponse } from 'next/server'
  */
 export async function GET() {
   try {
-    // These are the default rates shown on the landing page
-    // Admins can set individual rates per influencer
-    const defaultCommissions = {
-      per1000Views: 300,      // €3.00
-      perRegistration: 1500,   // €15.00
-      perAcceptedOffer: 2500   // €25.00
+    // Get settings from database
+    let settings = await prisma.influencerSettings.findFirst()
+
+    // If no settings exist, create default ones
+    if (!settings) {
+      settings = await prisma.influencerSettings.create({
+        data: {
+          defaultPer1000Views: 300,      // €3.00
+          defaultPerRegistration: 1500,   // €15.00
+          defaultPerAcceptedOffer: 2500   // €25.00
+        }
+      })
     }
 
     return NextResponse.json({
-      commissions: defaultCommissions
+      commissions: {
+        per1000Views: settings.defaultPer1000Views,
+        perRegistration: settings.defaultPerRegistration,
+        perAcceptedOffer: settings.defaultPerAcceptedOffer
+      }
     })
 
   } catch (error) {
     console.error('[INFLUENCER] Default commissions error:', error)
-    return NextResponse.json(
-      { error: 'Fehler beim Laden der Provisionen' },
-      { status: 500 }
-    )
+    
+    // Fallback to hardcoded values if DB fails
+    return NextResponse.json({
+      commissions: {
+        per1000Views: 300,
+        perRegistration: 1500,
+        perAcceptedOffer: 2500
+      }
+    })
   }
 }

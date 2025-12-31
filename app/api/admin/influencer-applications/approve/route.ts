@@ -89,7 +89,6 @@ export async function POST(req: NextRequest) {
     // Create influencer profile
     const influencer = await prisma.influencer.create({
       data: {
-        userId: user.id,
         email: application.email,
         code: code.toUpperCase(),
         platform: application.platform,

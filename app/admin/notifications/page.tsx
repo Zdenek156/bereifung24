@@ -113,6 +113,13 @@ export default function AdminNotificationSettings() {
   }
 
   const updateSetting = async (id: string, field: string, value: boolean) => {
+    // Optimistisches Update - sofort im UI aktualisieren
+    setSettings(prevSettings => 
+      prevSettings.map(setting => 
+        setting.id === id ? { ...setting, [field]: value } : setting
+      )
+    )
+
     try {
       const response = await fetch('/api/admin/notification-settings', {
         method: 'PATCH',
@@ -125,13 +132,15 @@ export default function AdminNotificationSettings() {
         }),
       })
 
-      if (response.ok) {
+      if (!response.ok) {
+        // Bei Fehler zurücksetzen
         fetchSettings()
-      } else {
         alert('Fehler beim Aktualisieren')
       }
     } catch (error) {
       console.error('Error updating setting:', error)
+      // Bei Fehler zurücksetzen
+      fetchSettings()
       alert('Fehler beim Aktualisieren')
     }
   }

@@ -25,16 +25,17 @@ export async function POST(request: NextRequest) {
     // Combine names for storage
     const name = `${firstName.trim()} ${lastName.trim()}`
 
-    // Check if application already exists
+    // Check if application already exists for this email and platform combination
     const existingApplication = await prisma.influencerApplication.findFirst({
       where: {
-        email: email.toLowerCase()
+        email: email.toLowerCase(),
+        platform: platform
       }
     })
 
     if (existingApplication) {
       return NextResponse.json(
-        { error: 'Mit dieser E-Mail-Adresse wurde bereits eine Bewerbung eingereicht' },
+        { error: `Mit dieser E-Mail-Adresse wurde bereits eine Bewerbung für ${platform} eingereicht` },
         { status: 400 }
       )
     }

@@ -66,17 +66,25 @@ export async function POST(req: NextRequest) {
     const firstName = nameParts[0]
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
 
-    // Create user account
-    const user = await prisma.user.create({
-      data: {
-        email: application.email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: 'INFLUENCER',
-        emailVerified: new Date()
-      }
+    // Check if user already exists (might be registered as customer)
+    let user = await prisma.user.findUnique({
+      where: { email: application.email }
     })
+
+    // If user doesn't exist, create new user account
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: application.email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: 'INFLUENCER',
+          emailVerified: new Date()
+        }
+      })
+    }
+
 
     // Create influencer profile
     const influencer = await prisma.influencer.create({

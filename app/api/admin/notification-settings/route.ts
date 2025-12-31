@@ -79,6 +79,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json()
+    console.log('[NOTIFICATION-SETTINGS] PATCH body:', body)
     const { id, notifyCustomerRegistration, notifyWorkshopRegistration, notifyInfluencerApplication } = body
 
     if (!id) {
@@ -96,10 +97,14 @@ export async function PATCH(req: NextRequest) {
       updateData.notifyInfluencerApplication = notifyInfluencerApplication
     }
 
+    console.log('[NOTIFICATION-SETTINGS] Update data:', updateData)
+
     const setting = await prisma.adminNotificationSetting.update({
       where: { id },
       data: updateData
     })
+
+    console.log('[NOTIFICATION-SETTINGS] Updated setting:', setting)
 
     return NextResponse.json(setting)
 

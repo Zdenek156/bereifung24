@@ -2058,9 +2058,11 @@ model Influencer {
   additionalChannels    Json? // Array of {platform, url}
   
   // Commission Settings (in Cents)
-  commissionPer1000Views     Int @default(300) // €3.00 default
-  commissionPerRegistration  Int @default(1500) // €15.00 default
-  commissionPerAcceptedOffer Int @default(2500) // €25.00 default
+  commissionPer1000Views           Int @default(300) // €3.00 default
+  commissionPerCustomerRegistration Int @default(1500) // €15.00 default
+  commissionPerCustomerFirstOffer   Int @default(2500) // €25.00 default
+  commissionPerWorkshopRegistration Int @default(1500) // €15.00 default
+  commissionPerWorkshopFirstOffer   Int @default(2500) // €25.00 default
   
   // Time Limits
   activeFrom            DateTime @default(now())
@@ -2128,6 +2130,7 @@ model InfluencerApplication {
   reviewedBy       String?
   reviewedAt       DateTime?
   rejectionReason  String?  @db.Text
+  influencerId     String? // Reference to created influencer after approval
   
   // Timestamps
   createdAt        DateTime @default(now())

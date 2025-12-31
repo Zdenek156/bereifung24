@@ -61,10 +61,10 @@ export async function POST(req: NextRequest) {
     const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10)
     const hashedPassword = await bcrypt.hash(tempPassword, 10)
 
-    // Split name into firstName and lastName
+    // Extract firstName and lastName from application name
     const nameParts = application.name.trim().split(' ')
     const firstName = nameParts[0]
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : nameParts[0]
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
 
     // Create user account
     const user = await prisma.user.create({

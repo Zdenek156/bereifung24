@@ -2146,7 +2146,7 @@ model InfluencerApplication {
 model DeletedUserEmail {
   id           String    @id @default(cuid())
   email        String    @unique // Email kann nicht mehr verwendet werden
-  userType     String    // 'CUSTOMER' or 'WORKSHOP'
+  userType     String    @default("CUSTOMER") // 'CUSTOMER' or 'WORKSHOP'
   reason       String?   // Grund für Löschung
   deletedBy    String?   // Admin/Employee der gelöscht hat
   deletedAt    DateTime  @default(now())

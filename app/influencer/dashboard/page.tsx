@@ -84,6 +84,13 @@ export default function InfluencerDashboardPage() {
         setStats(statsData.stats)
         setRecentConversions(statsData.recentConversions)
         setRecentPayments(statsData.recentPayments)
+      } else if (statsRes.status === 401) {
+        // Not authenticated - redirect to login
+        router.push('/influencer/login')
+        return
+      } else {
+        console.error('Stats API error:', statsRes.status)
+        setError('Fehler beim Laden der Statistiken')
       }
     } catch (err) {
       console.error('Error loading data:', err)

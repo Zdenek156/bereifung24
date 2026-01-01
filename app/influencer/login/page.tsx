@@ -75,9 +75,17 @@ export default function InfluencerLoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Passwort
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Passwort
+                </label>
+                <a 
+                  href="/influencer/forgot-password" 
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Passwort vergessen?
+                </a>
+              </div>
               <input
                 id="password"
                 type="password"

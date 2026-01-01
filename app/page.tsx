@@ -1,8 +1,13 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
+import AffiliateTracker from '@/components/AffiliateTracker'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
+      <Suspense fallback={null}>
+        <AffiliateTracker />
+      </Suspense>
       {/* Hero Section - Premium Design */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white overflow-hidden">
         {/* Animated Background Pattern */}

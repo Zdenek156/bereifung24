@@ -95,6 +95,23 @@ export default function CustomerRegisterPage() {
         return
       }
 
+      // Track affiliate conversion on registration
+      if (data.userId) {
+        try {
+          await fetch('/api/affiliate/convert', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: data.userId,
+              customerId: data.customerId
+            })
+          })
+        } catch (trackError) {
+          console.error('[AFFILIATE] Track error on registration:', trackError)
+        }
+      }
+
       // Success - zeige Hinweis
       alert('Registrierung erfolgreich! Bitte überprüfe deine E-Mails und bestätige deine E-Mail-Adresse, bevor du dich anmeldest.')
       router.push('/login')

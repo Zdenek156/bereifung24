@@ -47,12 +47,27 @@ export async function DELETE(
 
     // Hole den Customer mit User ID
     const customer = await prisma.customer.findUnique({
-      where: { userId: params.id }
+      where: { userId: params.id },
+      include: {
+        user: {
+          select: { email: true }
+        }
+      }
     })
 
     if (!customer) {
       return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
     }
+
+    const userEmail = customer.user.email
+
+    // Speichere Email in Blacklist damit sie nicht wiederverwendet werden kann
+    await prisma.deletedUserEmail.create({
+      data: {
+        email: userEmail.toLowerCase(),
+        reason: 'Customer account deleted by admin'
+      }
+    })
 
     // Lösche alle abhängigen Daten manuell
     // 1. Lösche alle Angebote zu den TireRequests des Kunden
@@ -105,17 +120,27 @@ export async function DELETE(
       where: { customerId: customer.id }
     })
 
-    // 8. Lösche den Customer
+    // 8. Anonymisiere Affiliate Conversions statt sie zu löschen
+    // Wichtig: Influencer behält die Provision, aber Customer-Verknüpfung wird entfernt
+    await prisma.affiliateConversion.updateMany({
+      where: { customerId: customer.id },
+      data: { customerId: null }
+    })
+
+    // 9. Lösche den Customer
     await prisma.customer.delete({
       where: { id: customer.id }
     })
 
-    // 9. Lösche den User
+    // 10. Lösche den User
     await prisma.user.delete({
       where: { id: params.id }
     })
 
-    return NextResponse.json({ success: true, message: 'Kunde erfolgreich gelöscht' })
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Kunde erfolgreich gelöscht. Email-Adresse gesperrt für zukünftige Registrierungen.' 
+    })
 
   } catch (error) {
     console.error('Error deleting customer:', error)

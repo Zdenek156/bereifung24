@@ -2139,6 +2139,23 @@ model InfluencerApplication {
   @@map("influencer_applications")
 }
 
+// ============================================
+// DELETED USERS BLACKLIST
+// ============================================
+
+model DeletedUserEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique // Email kann nicht mehr verwendet werden
+  reason    String?  // Optional: Grund für Löschung
+  deletedAt DateTime @default(now())
+
+  @@map("deleted_user_emails")
+}
+
+// ============================================
+// INFLUENCER SETTINGS
+// ============================================
+
 model InfluencerSettings {
   id String @id @default(cuid())
 

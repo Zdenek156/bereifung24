@@ -44,6 +44,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Prüfen ob Email auf der Blacklist ist (gelöschter User)
+    const blacklistedEmail = await prisma.deletedUserEmail.findUnique({
+      where: { email: validatedData.email.toLowerCase() }
+    })
+
+    if (blacklistedEmail) {
+      return NextResponse.json(
+        { error: 'Diese E-Mail-Adresse kann nicht verwendet werden. Bitte kontaktieren Sie den Support.' },
+        { status: 403 }
+      )
+    }
+
     // Passwort hashen
     const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 

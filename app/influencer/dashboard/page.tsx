@@ -99,6 +99,10 @@ export default function InfluencerDashboardPage() {
   }
 
   const formatCurrency = (cents: number) => {
+    if (cents === undefined || cents === null || isNaN(cents)) {
+      console.warn('[FORMAT] Invalid cents value:', cents)
+      return '€0.00'
+    }
     return `€${(cents / 100).toFixed(2)}`
   }
 

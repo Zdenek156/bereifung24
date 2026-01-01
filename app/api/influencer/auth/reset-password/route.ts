@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563eb;">Passwort zurücksetzen</h2>
-            <p>Hallo ${influencer.name || 'Influencer'},</p>
+            <p>Hallo${influencer.name ? ' ' + influencer.name : ''},</p>
             <p>Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt.</p>
             <p>Klicken Sie auf den folgenden Link, um Ihr Passwort zurückzusetzen:</p>
             <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">

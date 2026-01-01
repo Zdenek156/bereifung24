@@ -187,36 +187,11 @@ export async function POST(request: Request) {
       // Fehler bei Admin-Benachrichtigungen nicht nach außen weitergeben
     }
 
-    // Track affiliate conversion if exists
-    const affiliateCookie = request.headers.get('cookie')
-    if (affiliateCookie) {
-      const affiliateMatch = affiliateCookie.match(/affiliate_ref=([^;]+)/)
-      if (affiliateMatch) {
-        const affiliateRef = affiliateMatch[1]
-        try {
-          await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/affiliate/convert`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'WORKSHOP_REGISTRATION',
-                customerId: user.id
-              })
-            }
-          )
-          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - Workshop registration`)
-        } catch (conversionError) {
-          console.error('[AFFILIATE] Failed to track workshop registration conversion:', conversionError)
-          // Don't fail registration if conversion tracking fails
-        }
-      }
-    }
-
     return NextResponse.json(
       { 
         message: 'Werkstatt erfolgreich registriert! Dein Account wird in Kürze verifiziert.',
-        userId: user.id
+        userId: user.id,
+        workshopId: user.workshop?.id
       },
       { status: 201 }
     )

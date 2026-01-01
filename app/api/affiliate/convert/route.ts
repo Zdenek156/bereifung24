@@ -8,11 +8,7 @@ import { getAffiliateData } from '@/lib/affiliateTracking'
  */
 export async function POST(request: NextRequest) {
   try {
-    const { type, customerId, tireRequestId, offerId } = await request.json()
-    
-    if (!type) {
-      return NextResponse.json({ error: 'Missing conversion type' }, { status: 400 })
-    }
+    const { userId, customerId, workshopId, tireRequestId, offerId } = await request.json()
     
     // Get affiliate data from cookies
     const affiliateData = getAffiliateData(request)
@@ -22,15 +18,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'no_affiliate' })
     }
     
+    const cookieId = request.cookies.get('b24_cookie_id')?.value
+    if (!cookieId) {
+      return NextResponse.json({ status: 'no_cookie' })
+    }
+    
     // Find influencer by code
     const influencer = await prisma.influencer.findUnique({
       where: { code: affiliateData.refCode! },
       select: {
         id: true,
         isActive: true,
-        commissionPer1000Views: true,
-        commissionPerRegistration: true,
-        commissionPerAcceptedOffer: true,
+        commissionPerCustomerRegistration: true,
+        commissionPerWorkshopRegistration: true,
       }
     })
     
@@ -38,60 +38,64 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or inactive affiliate' }, { status: 403 })
     }
     
-    // Check if conversion already exists (prevent duplicates)
-    const existingConversion = await prisma.affiliateConversion.findFirst({
-      where: {
-        influencerId: influencer.id,
-        cookieId: affiliateData.cookieId!,
-        type,
-        ...(customerId && { customerId }),
-        ...(tireRequestId && { tireRequestId }),
-        ...(offerId && { offerId }),
+    // Determine conversion type based on what IDs are provided
+    let conversionType: string
+    let commissionAmount: number
+    
+    if (customerId) {
+      conversionType = 'REGISTRATION'
+      commissionAmount = influencer.commissionPerCustomerRegistration
+      
+      // Check for duplicate
+      const existingConversion = await prisma.affiliateConversion.findFirst({
+        where: {
+          influencerId: influencer.id,
+          cookieId: cookieId,
+          type: 'REGISTRATION',
+          customerId: customerId
+        }
+      })
+      
+      if (existingConversion) {
+        console.log('[AFFILIATE] Duplicate customer registration prevented')
+        return NextResponse.json({ status: 'duplicate' })
       }
-    })
-    
-    if (existingConversion) {
-      console.log('[AFFILIATE] Duplicate conversion prevented:', type)
-      return NextResponse.json({ status: 'duplicate' })
-    }
-    
-    // Calculate commission based on type
-    let commissionAmount = 0
-    switch (type) {
-      case 'PAGE_VIEW':
-        commissionAmount = Math.round(influencer.commissionPer1000Views / 1000)
-        break
-      case 'REGISTRATION':
-        commissionAmount = influencer.commissionPerRegistration
-        break
-      case 'ACCEPTED_OFFER':
-        commissionAmount = influencer.commissionPerAcceptedOffer
-        break
-      case 'WORKSHOP_REGISTRATION':
-        commissionAmount = influencer.commissionPerRegistration
-        break
-      case 'WORKSHOP_OFFER':
-        commissionAmount = influencer.commissionPerAcceptedOffer
-        break
-      default:
-        return NextResponse.json({ error: 'Invalid conversion type' }, { status: 400 })
+    } else if (workshopId) {
+      conversionType = 'WORKSHOP_REGISTRATION'
+      commissionAmount = influencer.commissionPerWorkshopRegistration
+      
+      // Check for duplicate
+      const existingConversion = await prisma.affiliateConversion.findFirst({
+        where: {
+          influencerId: influencer.id,
+          cookieId: cookieId,
+          type: 'WORKSHOP_REGISTRATION',
+          workshopId: workshopId
+        }
+      })
+      
+      if (existingConversion) {
+        console.log('[AFFILIATE] Duplicate workshop registration prevented')
+        return NextResponse.json({ status: 'duplicate' })
+      }
+    } else {
+      return NextResponse.json({ error: 'Missing customerId or workshopId' }, { status: 400 })
     }
     
     // Create conversion record
     const conversion = await prisma.affiliateConversion.create({
       data: {
         influencerId: influencer.id,
-        type,
-        cookieId: affiliateData.cookieId!,
+        type: conversionType,
+        cookieId: cookieId,
         customerId: customerId || null,
-        tireRequestId: tireRequestId || null,
-        offerId: offerId || null,
+        workshopId: workshopId || null,
         commissionAmount,
         isPaid: false,
       }
     })
     
-    console.log('[AFFILIATE] Conversion tracked:', type, conversion.id, 'Commission:', commissionAmount)
+    console.log(`[AFFILIATE] ✓ Conversion tracked: ${conversionType} - €${commissionAmount / 100}`, conversion.id)
     
     return NextResponse.json({ 
       status: 'tracked', 

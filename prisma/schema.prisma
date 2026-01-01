@@ -2049,8 +2049,8 @@ model Influencer {
   registrationTokenExpiry DateTime?
 
   // Password Reset
-  resetToken       String?   @unique
-  resetTokenExpiry DateTime?
+  resetToken       String?   @unique @map("resettoken")
+  resetTokenExpiry DateTime? @map("resettokenexpiry")
 
   // Authentication (wenn registriert)
   password String? // Hashed password

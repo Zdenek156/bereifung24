@@ -418,66 +418,40 @@ export async function POST(
           select: {
             id: true,
             isActive: true,
-            commissionPerOfferAcceptance: true,
-            commissionPerWorkshopOffer: true
+            commissionPerCustomerAcceptedOffer: true
           }
         })
 
         if (influencer && influencer.isActive) {
-          // Find the click record
-          const click = await prisma.affiliateClick.findFirst({
+          // Check for duplicate conversion
+          const existingConversion = await prisma.affiliateConversion.findFirst({
             where: {
               influencerId: influencer.id,
-              cookieId: cookieId
-            },
-            orderBy: { clickedAt: 'desc' }
+              cookieId: cookieId,
+              type: 'ACCEPTED_OFFER',
+              offerId: offer.id
+            }
           })
           
-          if (click) {
-            // Determine conversion type based on request type
-            const isWorkshopService = offer.tireRequest.additionalNotes?.includes('WERKSTATT') ||
-                                     offer.tireRequest.additionalNotes?.includes('BREMSEN') ||
-                                     offer.tireRequest.additionalNotes?.includes('BATTERIE') ||
-                                     offer.tireRequest.additionalNotes?.includes('KLIMASERVICE') ||
-                                     offer.tireRequest.additionalNotes?.includes('REPARATUR')
+          if (!existingConversion) {
+            const commissionAmount = influencer.commissionPerCustomerAcceptedOffer
             
-            const conversionType = isWorkshopService ? 'WORKSHOP_OFFER' : 'ACCEPTED_OFFER'
-            const commissionAmount = isWorkshopService 
-              ? influencer.commissionPerWorkshopOffer 
-              : influencer.commissionPerOfferAcceptance
-            
-            // Check for duplicate
-            const existingConversion = await prisma.affiliateConversion.findFirst({
-              where: {
+            await prisma.affiliateConversion.create({
+              data: {
                 influencerId: influencer.id,
                 cookieId: cookieId,
-                type: conversionType,
-                offerId: offer.id
+                customerId: customer.id,
+                type: 'ACCEPTED_OFFER',
+                tireRequestId: offer.tireRequestId,
+                offerId: offer.id,
+                commissionAmount: commissionAmount,
+                isPaid: false
               }
             })
             
-            if (!existingConversion) {
-              await prisma.affiliateConversion.create({
-                data: {
-                  influencerId: influencer.id,
-                  clickId: click.id,
-                  cookieId: cookieId,
-                  customerId: customer.id,
-                  type: conversionType,
-                  tireRequestId: offer.tireRequestId,
-                  offerId: offer.id,
-                  commissionAmount: commissionAmount,
-                  convertedAt: new Date(),
-                  isPaid: false
-                }
-              })
-              
-              console.log(`[AFFILIATE] Conversion tracked: ${affiliateRef} - ${conversionType} - €${commissionAmount / 100}`)
-            } else {
-              console.log(`[AFFILIATE] Duplicate conversion prevented: ${affiliateRef} - ${conversionType}`)
-            }
+            console.log(`[AFFILIATE] ✓ Offer acceptance conversion tracked: ${affiliateRef} - €${commissionAmount / 100}`)
           } else {
-            console.log(`[AFFILIATE] No click record found for cookieId: ${cookieId}`)
+            console.log(`[AFFILIATE] Duplicate conversion prevented: ${affiliateRef}`)
           }
         }
       } catch (conversionError) {

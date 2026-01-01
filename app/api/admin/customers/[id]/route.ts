@@ -61,15 +61,22 @@ export async function DELETE(
 
     const userEmail = customer.user.email
 
-    // Speichere Email in Blacklist damit sie nicht wiederverwendet werden kann
-    await prisma.deletedUserEmail.create({
-      data: {
-        email: userEmail.toLowerCase(),
-        userType: 'CUSTOMER',
-        reason: `Kunde gelöscht durch ${session.user.email}`,
-        deletedBy: session.user.email
-      }
+    // Prüfe ob Email bereits in Blacklist ist
+    const existingBlacklist = await prisma.deletedUserEmail.findUnique({
+      where: { email: userEmail.toLowerCase() }
     })
+
+    // Speichere Email in Blacklist nur wenn noch nicht vorhanden
+    if (!existingBlacklist) {
+      await prisma.deletedUserEmail.create({
+        data: {
+          email: userEmail.toLowerCase(),
+          userType: 'CUSTOMER',
+          reason: `Kunde gelöscht durch ${session.user.email}`,
+          deletedBy: session.user.email
+        }
+      })
+    }
 
     // Lösche alle abhängigen Daten manuell in der richtigen Reihenfolge
     

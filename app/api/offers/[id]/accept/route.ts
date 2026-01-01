@@ -416,11 +416,20 @@ export async function POST(
         })
 
         if (influencer) {
+          // Determine conversion type based on request type
+          const isWorkshopService = offer.tireRequest.additionalNotes?.includes('WERKSTATT') ||
+                                   offer.tireRequest.additionalNotes?.includes('BREMSEN') ||
+                                   offer.tireRequest.additionalNotes?.includes('BATTERIE') ||
+                                   offer.tireRequest.additionalNotes?.includes('KLIMASERVICE') ||
+                                   offer.tireRequest.additionalNotes?.includes('REPARATUR')
+          
+          const conversionType = isWorkshopService ? 'WORKSHOP_OFFER' : 'ACCEPTED_OFFER'
+          
           await prisma.affiliateConversion.create({
             data: {
               influencerId: influencer.id,
               customerId: customer.id,
-              type: 'ACCEPTED_OFFER',
+              type: conversionType,
               tireRequestId: offer.tireRequestId,
               offerId: offer.id,
               convertedAt: new Date(),
@@ -428,7 +437,7 @@ export async function POST(
             }
           })
           
-          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - Offer accepted`)
+          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - ${conversionType}`)
         }
       } catch (conversionError) {
         console.error('[AFFILIATE] Error tracking conversion:', conversionError)

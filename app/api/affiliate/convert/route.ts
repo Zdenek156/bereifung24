@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
       case 'ACCEPTED_OFFER':
         commissionAmount = influencer.commissionPerAcceptedOffer
         break
+      case 'WORKSHOP_REGISTRATION':
+        commissionAmount = influencer.commissionPerRegistration
+        break
+      case 'WORKSHOP_OFFER':
+        commissionAmount = influencer.commissionPerAcceptedOffer
+        break
       default:
         return NextResponse.json({ error: 'Invalid conversion type' }, { status: 400 })
     }

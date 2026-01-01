@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         isActive: true,
         activeFrom: true,
         activeUntil: true,
-        isUnlimited: true 
+        isUnlimited: true,
+        commissionPer1000Views: true
       }
     })
     
@@ -91,7 +92,18 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    console.log('[AFFILIATE] Click tracked:', refCode, cookieId)
+    // Create PAGE_VIEW conversion
+    await prisma.affiliateConversion.create({
+      data: {
+        influencerId: influencer.id,
+        cookieId,
+        type: 'PAGE_VIEW',
+        commissionAmount: Math.round(influencer.commissionPer1000Views / 1000), // Commission per single view
+        isPaid: false,
+      }
+    })
+    
+    console.log('[AFFILIATE] Click and PAGE_VIEW conversion tracked:', refCode, cookieId)
     
     return NextResponse.json({ status: 'tracked' })
     

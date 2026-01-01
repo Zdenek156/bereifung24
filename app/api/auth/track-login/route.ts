@@ -95,12 +95,10 @@ export async function POST(request: NextRequest) {
     const conversion = await prisma.affiliateConversion.create({
       data: {
         influencerId: influencer.id,
-        clickId: click.id,
         cookieId: cookieId,
         customerId: session.user.customerId,
         type: 'REGISTRATION',
         commissionAmount: influencer.commissionPerCustomerRegistration,
-        convertedAt: new Date(),
         isPaid: false
       }
     })

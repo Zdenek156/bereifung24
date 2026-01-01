@@ -2048,6 +2048,10 @@ model Influencer {
   registrationToken       String?   @unique // Token für erste Registrierung
   registrationTokenExpiry DateTime?
 
+  // Password Reset
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
   // Authentication (wenn registriert)
   password String? // Hashed password
   isActive Boolean @default(true)

@@ -736,11 +736,12 @@ export default function RequestDetailPage() {
   // Check if an offer has been accepted
   const acceptedOffer = request.offers.find(offer => offer.status === 'ACCEPTED')
   
-  // If no accepted offer, show all valid pending offers
+  // Show all valid offers - including accepted one
   const now = new Date()
   const validOffers = request.offers.filter(offer => {
     const validUntil = new Date(offer.validUntil)
-    return validUntil > now && offer.status === 'PENDING'
+    // Show PENDING offers that are not expired, OR the accepted offer
+    return (validUntil > now && offer.status === 'PENDING') || offer.status === 'ACCEPTED'
   })
 
   const sortedOffers = [...validOffers].sort((a, b) => a.price - b.price)

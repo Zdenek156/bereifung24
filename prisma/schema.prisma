@@ -268,6 +268,9 @@ model Workshop {
   // Sales CRM - Converted from Prospect
   prospectSource ProspectWorkshop? @relation("ConvertedFromProspect")
 
+  // Affiliate Tracking
+  affiliateConversions AffiliateConversion[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2220,6 +2223,9 @@ model AffiliateConversion {
   // Related Entities
   customerId String?
   customer   Customer? @relation(fields: [customerId], references: [id])
+
+  workshopId String?
+  workshop   Workshop? @relation(fields: [workshopId], references: [id])
 
   tireRequestId String?
   tireRequest   TireRequest? @relation(fields: [tireRequestId], references: [id])

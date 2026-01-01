@@ -127,10 +127,6 @@ export async function POST(request: NextRequest) {
         console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
       }
     }
-      } catch (conversionError) {
-        console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
-      }
-    }
 
     // Create JWT token
     const token = jwt.sign(

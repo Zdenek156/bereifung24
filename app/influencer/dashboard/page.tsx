@@ -80,6 +80,7 @@ export default function InfluencerDashboardPage() {
       const statsRes = await fetch('/api/influencer/stats')
       if (statsRes.ok) {
         const statsData = await statsRes.json()
+        console.log('[DEBUG] Stats data received:', statsData)
         setStats(statsData.stats)
         setRecentConversions(statsData.recentConversions)
         setRecentPayments(statsData.recentPayments)

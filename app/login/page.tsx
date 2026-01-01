@@ -56,6 +56,9 @@ export default function LoginPage() {
         // Small delay to ensure tracking completes
         await new Promise(resolve => setTimeout(resolve, 500))
         
+        console.log('[DEBUG] Redirect wird in 5 Sekunden ausgeführt - du kannst die Logs jetzt lesen')
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        
         // Force a full page reload to ensure session is properly loaded
         window.location.href = '/dashboard'
       } else {

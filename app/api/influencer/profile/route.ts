@@ -49,7 +49,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Influencer nicht gefunden' }, { status: 404 })
     }
 
-    return NextResponse.json({ influencer })
+    // Split name into firstName and lastName for frontend
+    const nameParts = (influencer.name || '').trim().split(' ')
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
+
+    return NextResponse.json({ 
+      influencer: {
+        ...influencer,
+        firstName,
+        lastName
+      }
+    })
 
   } catch (error: any) {
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
@@ -78,7 +89,8 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json()
     const {
-      name,
+      firstName,
+      lastName,
       channelName,
       channelUrl,
       platform,
@@ -97,6 +109,9 @@ export async function PUT(request: NextRequest) {
       currentPassword,
       newPassword
     } = body
+
+    // Combine firstName and lastName into name
+    const name = firstName && lastName ? `${firstName} ${lastName}` : firstName || ''
 
     // If password change is requested, verify current password
     if (newPassword) {

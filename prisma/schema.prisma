@@ -114,16 +114,16 @@ model User {
   // Relations based on role
   customer Customer?
   workshop Workshop?
-  
+
   // Procurement Relations
-  suppliersCreated      Supplier[]           @relation
-  procurementRequests   ProcurementRequest[] @relation
-  approvedRequests      ProcurementRequest[] @relation("ApprovedRequests")
-  purchaseOrders        PurchaseOrder[]      @relation
-  receivedOrders        PurchaseOrder[]      @relation("ReceivedOrders")
-  createdAssets         Asset[]              @relation("CreatedAssets")
-  assignedAssets        Asset[]              @relation
-  investmentPlans       InvestmentPlan[]
+  suppliersCreated    Supplier[]           @relation
+  procurementRequests ProcurementRequest[] @relation
+  approvedRequests    ProcurementRequest[] @relation("ApprovedRequests")
+  purchaseOrders      PurchaseOrder[]      @relation
+  receivedOrders      PurchaseOrder[]      @relation("ReceivedOrders")
+  createdAssets       Asset[]              @relation("CreatedAssets")
+  assignedAssets      Asset[]              @relation
+  investmentPlans     InvestmentPlan[]
 
   @@map("users")
 }
@@ -141,12 +141,12 @@ model Customer {
   emailNotifyOffers Boolean @default(true) // Benachrichtigung bei neuen Angeboten
 
   // Relations
-  tireRequests      TireRequest[]
-  bookings          Booking[]
-  reviews           Review[]
-  tireRatings       TireRating[]
-  vehicles          Vehicle[]
-  weatherAlert      WeatherAlert?
+  tireRequests         TireRequest[]
+  bookings             Booking[]
+  reviews              Review[]
+  tireRatings          TireRating[]
+  vehicles             Vehicle[]
+  weatherAlert         WeatherAlert?
   affiliateConversions AffiliateConversion[] // Tracking von Affiliate-Conversions
 
   createdAt DateTime @default(now())
@@ -160,8 +160,8 @@ model Customer {
 // ============================================
 
 model WeatherAlert {
-  id         String @id @default(cuid())
-  customerId String @unique
+  id         String   @id @default(cuid())
+  customerId String   @unique
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Settings
@@ -385,13 +385,13 @@ model TireRequest {
   status String @default("PENDING") // PENDING, QUOTED, ACCEPTED, COMPLETED, CANCELLED
 
   // CO2 Tracking
-  savedCO2Grams       Int?    // Gespeicherte CO₂-Menge in Gramm
-  calculationMethod   String? // 'STANDARD' oder 'PERSONAL'
-  workshopsNotified   Int?    // Anzahl der Werkstätten, die die Anfrage erhalten haben (für CO2-Berechnung verwendet)
+  savedCO2Grams     Int? // Gespeicherte CO₂-Menge in Gramm
+  calculationMethod String? // 'STANDARD' oder 'PERSONAL'
+  workshopsNotified Int? // Anzahl der Werkstätten, die die Anfrage erhalten haben (für CO2-Berechnung verwendet)
 
   // Relations
-  offers  Offer[]
-  booking Booking?
+  offers               Offer[]
+  booking              Booking?
   affiliateConversions AffiliateConversion[] // Tracking von Affiliate-Conversions
 
   createdAt DateTime @default(now())
@@ -537,10 +537,10 @@ model Offer {
 
   // If accepted
   acceptedAt             DateTime?
-  declinedAt             DateTime? @map("declined_at")
-  customerWantsBalancing Boolean?  @default(false) @map("customer_wants_balancing")
-  customerWantsStorage   Boolean?  @default(false) @map("customer_wants_storage")
-  selectedTireOptionIds  String[]  @default([]) @map("selected_tire_option_ids") // IDs der vom Kunden ausgewählten TireOptions
+  declinedAt             DateTime?             @map("declined_at")
+  customerWantsBalancing Boolean?              @default(false) @map("customer_wants_balancing")
+  customerWantsStorage   Boolean?              @default(false) @map("customer_wants_storage")
+  selectedTireOptionIds  String[]              @default([]) @map("selected_tire_option_ids") // IDs der vom Kunden ausgewählten TireOptions
   booking                Booking?
   affiliateConversions   AffiliateConversion[] // Tracking von Affiliate-Conversions
 
@@ -1413,14 +1413,14 @@ model ProspectNote {
 model ImprovementSuggestion {
   id String @id @default(cuid())
 
-  title       String  @db.VarChar(200)
-  description String  @db.Text
-  category    String  @db.VarChar(50) // z.B. "UI/UX", "Performance", "Prozess", "Feature"
+  title       String              @db.VarChar(200)
+  description String              @db.Text
+  category    String              @db.VarChar(50) // z.B. "UI/UX", "Performance", "Prozess", "Feature"
   priority    ImprovementPriority @default(MEDIUM)
   status      ImprovementStatus   @default(NEW)
 
   // Zeitplan
-  estimatedEffort String? @db.VarChar(50) // z.B. "1 Tag", "1 Woche", "1 Monat"
+  estimatedEffort String?   @db.VarChar(50) // z.B. "1 Tag", "1 Woche", "1 Monat"
   plannedDate     DateTime? // Geplante Umsetzung
   completedDate   DateTime? // Tatsächliche Umsetzung
 
@@ -1448,11 +1448,11 @@ model ImprovementSuggestion {
 model ImprovementComment {
   id String @id @default(cuid())
 
-  suggestionId String                 @map("suggestion_id")
+  suggestionId String                @map("suggestion_id")
   suggestion   ImprovementSuggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
 
-  content      String   @db.Text
-  isStatusNote Boolean  @default(false) @map("is_status_note") // true = System-Notiz bei Statusänderung
+  content      String  @db.Text
+  isStatusNote Boolean @default(false) @map("is_status_note") // true = System-Notiz bei Statusänderung
 
   authorId String      @map("author_id")
   author   B24Employee @relation(fields: [authorId], references: [id])
@@ -1466,13 +1466,13 @@ model ImprovementComment {
 }
 
 enum ImprovementStatus {
-  NEW          // Neu eingereicht
-  IN_REVIEW    // In Prüfung
-  APPROVED     // Genehmigt
-  IN_PROGRESS  // In Umsetzung
-  COMPLETED    // Abgeschlossen
-  REJECTED     // Abgelehnt
-  ON_HOLD      // Zurückgestellt
+  NEW // Neu eingereicht
+  IN_REVIEW // In Prüfung
+  APPROVED // Genehmigt
+  IN_PROGRESS // In Umsetzung
+  COMPLETED // Abgeschlossen
+  REJECTED // Abgelehnt
+  ON_HOLD // Zurückgestellt
 }
 
 enum ImprovementPriority {
@@ -1487,46 +1487,46 @@ enum ImprovementPriority {
 // ============================================
 
 model FileFolder {
-  id          String   @id @default(cuid())
-  name        String
-  parentId    String?
-  parent      FileFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  subfolders  FileFolder[] @relation("FolderHierarchy")
-  
-  files       FileUpload[]
-  
+  id         String       @id @default(cuid())
+  name       String
+  parentId   String?
+  parent     FileFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders FileFolder[] @relation("FolderHierarchy")
+
+  files FileUpload[]
+
   createdById String
   createdBy   B24Employee @relation(fields: [createdById], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([parentId])
   @@index([createdById])
   @@map("file_folders")
 }
 
 model FileUpload {
-  id            String   @id @default(cuid())
-  name          String   // Original filename
-  storagePath   String   @unique // Path on server filesystem
-  mimeType      String
-  size          Int      // Size in bytes
-  
-  folderId      String?
-  folder        FileFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  
-  uploadedById  String
-  uploadedBy    B24Employee @relation(fields: [uploadedById], references: [id])
-  
-  description   String?
-  
-  downloads     Int      @default(0)
+  id          String @id @default(cuid())
+  name        String // Original filename
+  storagePath String @unique // Path on server filesystem
+  mimeType    String
+  size        Int // Size in bytes
+
+  folderId String?
+  folder   FileFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  uploadedById String
+  uploadedBy   B24Employee @relation(fields: [uploadedById], references: [id])
+
+  description String?
+
+  downloads      Int       @default(0)
   lastDownloadAt DateTime?
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([folderId])
   @@index([uploadedById])
   @@index([createdAt])
@@ -1539,45 +1539,45 @@ model FileUpload {
 
 // Lieferanten / Suppliers
 model Supplier {
-  id               String   @id @default(cuid())
-  name             String
-  address          String?
-  zipCode          String?
-  city             String?
-  country          String?  @default("Deutschland")
-  email            String?
-  phone            String?
-  website          String?
-  
+  id      String  @id @default(cuid())
+  name    String
+  address String?
+  zipCode String?
+  city    String?
+  country String? @default("Deutschland")
+  email   String?
+  phone   String?
+  website String?
+
   // Tax & Banking
-  taxId            String?  // USt-IdNr.
-  vatId            String?  // Steuernummer
-  iban             String?
-  bic              String?
-  bankName         String?
-  
+  taxId    String? // USt-IdNr.
+  vatId    String? // Steuernummer
+  iban     String?
+  bic      String?
+  bankName String?
+
   // Payment Terms
-  paymentTerms     String?  @default("30 Tage netto") // z.B. "14 Tage 2% Skonto, 30 Tage netto"
-  
+  paymentTerms String? @default("30 Tage netto") // z.B. "14 Tage 2% Skonto, 30 Tage netto"
+
   // Categories
-  categories       String[] // ["BUERO", "IT", "FAHRZEUGE", "MARKETING", "SONSTIGES"]
-  
+  categories String[] // ["BUERO", "IT", "FAHRZEUGE", "MARKETING", "SONSTIGES"]
+
   // Rating
-  rating           Int      @default(0) // 0-5 Sterne
-  notes            String?  @db.Text
-  
+  rating Int     @default(0) // 0-5 Sterne
+  notes  String? @db.Text
+
   // Relations
-  orders           PurchaseOrder[]
-  requests         ProcurementRequest[]
-  
+  orders   PurchaseOrder[]
+  requests ProcurementRequest[]
+
   // Metadata
-  isActive         Boolean  @default(true)
-  createdById      String
-  createdBy        User     @relation(fields: [createdById], references: [id])
-  
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
+  isActive    Boolean @default(true)
+  createdById String
+  createdBy   User    @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([name])
   @@index([isActive])
   @@map("suppliers")
@@ -1585,46 +1585,46 @@ model Supplier {
 
 // Bedarfsanforderungen / Procurement Requests
 model ProcurementRequest {
-  id               String   @id @default(cuid())
-  requestNumber    String   @unique // z.B. "ANF-2025-001"
-  
+  id            String @id @default(cuid())
+  requestNumber String @unique // z.B. "ANF-2025-001"
+
   // Requester
-  requestedById    String
-  requestedBy      User     @relation(fields: [requestedById], references: [id])
-  
+  requestedById String
+  requestedBy   User   @relation(fields: [requestedById], references: [id])
+
   // Request Details
-  title            String
-  description      String?  @db.Text
-  category         ProcurementCategory
-  estimatedPrice   Float    // Geschätzter Preis in EUR
-  
+  title          String
+  description    String?             @db.Text
+  category       ProcurementCategory
+  estimatedPrice Float // Geschätzter Preis in EUR
+
   // Priority & Classification
-  urgency          UrgencyLevel @default(NORMAL)
-  costCenter       CostCenter
-  
+  urgency    UrgencyLevel @default(NORMAL)
+  costCenter CostCenter
+
   // Supplier
-  supplierId       String?
-  supplier         Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  supplierName     String?   // Falls noch kein Lieferant im System
-  
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierName String? // Falls noch kein Lieferant im System
+
   // Approval Workflow
-  status           RequestStatus @default(PENDING)
-  approvedById     String?
-  approvedBy       User?     @relation("ApprovedRequests", fields: [approvedById], references: [id])
-  approvedAt       DateTime?
-  rejectionReason  String?   @db.Text
-  
+  status          RequestStatus @default(PENDING)
+  approvedById    String?
+  approvedBy      User?         @relation("ApprovedRequests", fields: [approvedById], references: [id])
+  approvedAt      DateTime?
+  rejectionReason String?       @db.Text
+
   // Link to Order
-  orderId          String?   @unique
-  order            PurchaseOrder? @relation(fields: [orderId], references: [id])
-  
+  orderId String?        @unique
+  order   PurchaseOrder? @relation(fields: [orderId], references: [id])
+
   // Link to Investment
   investmentItemId String?
   investmentItem   InvestmentItem? @relation(fields: [investmentItemId], references: [id])
-  
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([requestNumber])
   @@index([requestedById])
   @@index([status])
@@ -1634,55 +1634,55 @@ model ProcurementRequest {
 
 // Bestellungen / Purchase Orders
 model PurchaseOrder {
-  id                String   @id @default(cuid())
-  orderNumber       String   @unique // z.B. "PO-2025-001"
-  
+  id          String @id @default(cuid())
+  orderNumber String @unique // z.B. "PO-2025-001"
+
   // Supplier
-  supplierId        String
-  supplier          Supplier @relation(fields: [supplierId], references: [id])
-  
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
   // Order Details
-  items             OrderItem[]
-  totalNet          Float    // Gesamt netto
-  totalVat          Float    // Gesamt MwSt
-  totalGross        Float    // Gesamt brutto
-  
+  items      OrderItem[]
+  totalNet   Float // Gesamt netto
+  totalVat   Float // Gesamt MwSt
+  totalGross Float // Gesamt brutto
+
   // Status
-  status            OrderStatus @default(DRAFT)
-  
+  status OrderStatus @default(DRAFT)
+
   // Ordering
-  orderedById       String
-  orderedBy         User     @relation(fields: [orderedById], references: [id])
-  orderedAt         DateTime?
-  
+  orderedById String
+  orderedBy   User      @relation(fields: [orderedById], references: [id])
+  orderedAt   DateTime?
+
   // Delivery
-  deliveryAddress   String?  @db.Text
-  expectedDelivery  DateTime?
-  actualDelivery    DateTime?
-  receivedById      String?
-  receivedBy        User?    @relation("ReceivedOrders", fields: [receivedById], references: [id])
-  receivedAt        DateTime?
-  
+  deliveryAddress  String?   @db.Text
+  expectedDelivery DateTime?
+  actualDelivery   DateTime?
+  receivedById     String?
+  receivedBy       User?     @relation("ReceivedOrders", fields: [receivedById], references: [id])
+  receivedAt       DateTime?
+
   // Invoice & Payment
-  invoiceNumber     String?
-  invoiceDate       DateTime?
-  invoiceReceived   Boolean  @default(false)
-  paymentDue        DateTime?
-  paid              Boolean  @default(false)
-  paidAt            DateTime?
-  paidAmount        Float?
-  
+  invoiceNumber   String?
+  invoiceDate     DateTime?
+  invoiceReceived Boolean   @default(false)
+  paymentDue      DateTime?
+  paid            Boolean   @default(false)
+  paidAt          DateTime?
+  paidAmount      Float?
+
   // Notes
-  notes             String?  @db.Text
-  internalNotes     String?  @db.Text
-  
+  notes         String? @db.Text
+  internalNotes String? @db.Text
+
   // Links
-  request           ProcurementRequest?
-  assets            Asset[]
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  request ProcurementRequest?
+  assets  Asset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([orderNumber])
   @@index([supplierId])
   @@index([status])
@@ -1692,82 +1692,82 @@ model PurchaseOrder {
 
 // Bestellpositionen / Order Items
 model OrderItem {
-  id          String        @id @default(cuid())
-  orderId     String
-  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  position    Int           // Positionsnummer
+  id      String        @id @default(cuid())
+  orderId String
+  order   PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  position    Int // Positionsnummer
   description String
   quantity    Int
-  unit        String        @default("Stück") // Stück, kg, Liter, etc.
-  
-  priceNet    Float         // Einzelpreis netto
-  vatRate     Float         // MwSt-Satz (0.19 oder 0.07)
-  
-  totalNet    Float         // Gesamt netto
-  totalVat    Float         // Gesamt MwSt
-  totalGross  Float         // Gesamt brutto
-  
-  notes       String?
-  
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
+  unit        String @default("Stück") // Stück, kg, Liter, etc.
+
+  priceNet Float // Einzelpreis netto
+  vatRate  Float // MwSt-Satz (0.19 oder 0.07)
+
+  totalNet   Float // Gesamt netto
+  totalVat   Float // Gesamt MwSt
+  totalGross Float // Gesamt brutto
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([orderId])
   @@map("order_items")
 }
 
 // Anlagenvermögen / Assets
 model Asset {
-  id                  String   @id @default(cuid())
-  assetNumber         String   @unique // z.B. "ASS-2025-001"
-  
+  id          String @id @default(cuid())
+  assetNumber String @unique // z.B. "ASS-2025-001"
+
   // Asset Details
-  name                String
-  description         String?  @db.Text
-  category            AssetCategory
-  
+  name        String
+  description String?       @db.Text
+  category    AssetCategory
+
   // Acquisition
-  acquisitionCost     Float    // Anschaffungskosten
-  acquisitionDate     DateTime
-  orderId             String?
-  order               PurchaseOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  
+  acquisitionCost Float // Anschaffungskosten
+  acquisitionDate DateTime
+  orderId         String?
+  order           PurchaseOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
   // Depreciation (AfA)
-  usefulLife          Int      // Nutzungsdauer in Jahren
-  afaMethod           AfaMethod @default(LINEAR)
-  annualDepreciation  Float    // Jährliche AfA
-  
+  usefulLife         Int // Nutzungsdauer in Jahren
+  afaMethod          AfaMethod @default(LINEAR)
+  annualDepreciation Float // Jährliche AfA
+
   // Current Value
-  bookValue           Float    // Aktueller Buchwert
-  fullyDepreciated    Boolean  @default(false)
-  
+  bookValue        Float // Aktueller Buchwert
+  fullyDepreciated Boolean @default(false)
+
   // Location & Assignment
-  costCenter          CostCenter
-  location            String?  // z.B. "Büro München, Raum 301"
-  assignedToId        String?
-  assignedTo          User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
-  
+  costCenter   CostCenter
+  location     String? // z.B. "Büro München, Raum 301"
+  assignedToId String?
+  assignedTo   User?      @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
   // Additional Info
-  serialNumber        String?
-  manufacturer        String?
-  model               String?
-  
+  serialNumber String?
+  manufacturer String?
+  model        String?
+
   // Status
-  status              AssetStatus @default(ACTIVE)
-  disposalDate        DateTime?
-  disposalReason      String?   @db.Text
-  
+  status         AssetStatus @default(ACTIVE)
+  disposalDate   DateTime?
+  disposalReason String?     @db.Text
+
   // Relations
   depreciationEntries DepreciationEntry[]
-  
+
   // Metadata
-  createdById         String
-  createdBy           User     @relation("CreatedAssets", fields: [createdById], references: [id])
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
+  createdById String
+  createdBy   User   @relation("CreatedAssets", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([assetNumber])
   @@index([category])
   @@index([costCenter])
@@ -1777,19 +1777,19 @@ model Asset {
 
 // Abschreibungsbuchungen / Depreciation Entries
 model DepreciationEntry {
-  id         String   @id @default(cuid())
-  assetId    String
-  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  
-  year       Int
-  month      Int?     // Optional für monatliche AfA
-  amount     Float    // Abschreibungsbetrag
-  bookValue  Float    // Buchwert nach Abschreibung
-  
-  notes      String?
-  
-  createdAt  DateTime @default(now())
-  
+  id      String @id @default(cuid())
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  year      Int
+  month     Int? // Optional für monatliche AfA
+  amount    Float // Abschreibungsbetrag
+  bookValue Float // Buchwert nach Abschreibung
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
   @@unique([assetId, year, month])
   @@index([assetId])
   @@index([year])
@@ -1798,43 +1798,43 @@ model DepreciationEntry {
 
 // Investitionsplanung / Investment Planning
 model InvestmentPlan {
-  id           String   @id @default(cuid())
-  year         Int      @unique
-  
+  id   String @id @default(cuid())
+  year Int    @unique
+
   // Budget per Cost Center
-  totalBudget  Float    @default(0)
-  spent        Float    @default(0)
-  reserved     Float    @default(0) // Genehmigte aber noch nicht bestellte Anfragen
-  
+  totalBudget Float @default(0)
+  spent       Float @default(0)
+  reserved    Float @default(0) // Genehmigte aber noch nicht bestellte Anfragen
+
   // Relations
-  items        InvestmentItem[]
-  budgets      CostCenterBudget[]
-  
+  items   InvestmentItem[]
+  budgets CostCenterBudget[]
+
   // Metadata
-  createdById  String
-  createdBy    User     @relation(fields: [createdById], references: [id])
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([year])
   @@map("investment_plans")
 }
 
 // Budget pro Kostenstelle
 model CostCenterBudget {
-  id             String         @id @default(cuid())
-  planId         String
-  plan           InvestmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  
-  costCenter     CostCenter
-  budget         Float
-  spent          Float          @default(0)
-  reserved       Float          @default(0)
-  
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  
+  id     String         @id @default(cuid())
+  planId String
+  plan   InvestmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  costCenter CostCenter
+  budget     Float
+  spent      Float      @default(0)
+  reserved   Float      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([planId, costCenter])
   @@index([planId])
   @@map("cost_center_budgets")
@@ -1842,40 +1842,40 @@ model CostCenterBudget {
 
 // Investitionsposten / Investment Items
 model InvestmentItem {
-  id              String          @id @default(cuid())
-  planId          String
-  plan            InvestmentPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
-  
+  id     String         @id @default(cuid())
+  planId String
+  plan   InvestmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
   // Details
-  title           String
-  description     String?         @db.Text
-  costCenter      CostCenter
-  
+  title       String
+  description String?    @db.Text
+  costCenter  CostCenter
+
   // Cost
-  estimatedCost   Float
-  actualCost      Float?
-  
+  estimatedCost Float
+  actualCost    Float?
+
   // Planning
-  priority        InvestmentPriority @default(MEDIUM)
-  type            InvestmentType
-  quarter         Int?            // 1, 2, 3, 4
-  plannedMonth    Int?            // 1-12
-  
+  priority     InvestmentPriority @default(MEDIUM)
+  type         InvestmentType
+  quarter      Int? // 1, 2, 3, 4
+  plannedMonth Int? // 1-12
+
   // Status
-  status          InvestmentStatus @default(PLANNED)
-  
+  status InvestmentStatus @default(PLANNED)
+
   // Relations
-  requests        ProcurementRequest[]
-  
+  requests ProcurementRequest[]
+
   // ROI Calculation (optional)
-  expectedSavings Float?          // Erwartete jährliche Einsparung
-  paybackPeriod   Float?          // Amortisationsdauer in Jahren
-  
-  notes           String?         @db.Text
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
+  expectedSavings Float? // Erwartete jährliche Einsparung
+  paybackPeriod   Float? // Amortisationsdauer in Jahren
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([planId])
   @@index([costCenter])
   @@index([status])
@@ -1887,13 +1887,13 @@ model InvestmentItem {
 // ============================================
 
 enum ProcurementCategory {
-  GWG              // Geringwertige Wirtschaftsgüter (bis 800€)
-  SAMMELPOSTEN     // 250-1000€
-  ANLAGEVERMOEGEN  // ab 1000€
-  VERBRAUCH        // Verbrauchsmaterial
-  SOFTWARE         // Software/Lizenzen
-  DIENSTLEISTUNG   // Dienstleistungen
-  SONSTIGES        // Sonstiges
+  GWG // Geringwertige Wirtschaftsgüter (bis 800€)
+  SAMMELPOSTEN // 250-1000€
+  ANLAGEVERMOEGEN // ab 1000€
+  VERBRAUCH // Verbrauchsmaterial
+  SOFTWARE // Software/Lizenzen
+  DIENSTLEISTUNG // Dienstleistungen
+  SONSTIGES // Sonstiges
 }
 
 enum UrgencyLevel {
@@ -1913,50 +1913,50 @@ enum CostCenter {
 }
 
 enum RequestStatus {
-  PENDING          // Ausstehend
-  APPROVED         // Genehmigt
-  REJECTED         // Abgelehnt
-  ORDERED          // Bestellt
-  COMPLETED        // Abgeschlossen
-  CANCELLED        // Storniert
+  PENDING // Ausstehend
+  APPROVED // Genehmigt
+  REJECTED // Abgelehnt
+  ORDERED // Bestellt
+  COMPLETED // Abgeschlossen
+  CANCELLED // Storniert
 }
 
 enum OrderStatus {
-  DRAFT            // Entwurf
-  SENT             // Versendet
-  CONFIRMED        // Bestätigt
+  DRAFT // Entwurf
+  SENT // Versendet
+  CONFIRMED // Bestätigt
   PARTIALLY_DELIVERED // Teilweise geliefert
-  DELIVERED        // Geliefert
-  INVOICED         // Rechnung erhalten
-  PAID             // Bezahlt
-  CANCELLED        // Storniert
+  DELIVERED // Geliefert
+  INVOICED // Rechnung erhalten
+  PAID // Bezahlt
+  CANCELLED // Storniert
 }
 
 enum AssetCategory {
-  COMPUTER         // Computer/Laptops
-  MONITOR          // Monitore
-  PERIPHERALS      // Peripherie (Drucker, Scanner, etc.)
-  SOFTWARE         // Software
-  FURNITURE        // Büromöbel
-  VEHICLE          // Fahrzeuge
-  PHONE            // Telefone/Smartphones
-  NETWORK          // Netzwerkgeräte
-  SERVER           // Server
-  OTHER            // Sonstiges
+  COMPUTER // Computer/Laptops
+  MONITOR // Monitore
+  PERIPHERALS // Peripherie (Drucker, Scanner, etc.)
+  SOFTWARE // Software
+  FURNITURE // Büromöbel
+  VEHICLE // Fahrzeuge
+  PHONE // Telefone/Smartphones
+  NETWORK // Netzwerkgeräte
+  SERVER // Server
+  OTHER // Sonstiges
 }
 
 enum AfaMethod {
-  LINEAR           // Lineare Abschreibung
-  DEGRESSIV        // Degressive Abschreibung
-  SOFORT           // Sofortabschreibung (GWG)
+  LINEAR // Lineare Abschreibung
+  DEGRESSIV // Degressive Abschreibung
+  SOFORT // Sofortabschreibung (GWG)
 }
 
 enum AssetStatus {
-  ACTIVE           // Aktiv in Nutzung
-  INACTIVE         // Nicht in Nutzung
-  IN_REPAIR        // In Reparatur
-  DISPOSED         // Ausgemustert
-  SOLD             // Verkauft
+  ACTIVE // Aktiv in Nutzung
+  INACTIVE // Nicht in Nutzung
+  IN_REPAIR // In Reparatur
+  DISPOSED // Ausgemustert
+  SOLD // Verkauft
 }
 
 enum InvestmentPriority {
@@ -1967,19 +1967,19 @@ enum InvestmentPriority {
 }
 
 enum InvestmentType {
-  REPLACEMENT      // Ersatzinvestition
-  EXPANSION        // Erweiterungsinvestition
-  RATIONALIZATION  // Rationalisierungsinvestition
-  STRATEGIC        // Strategische Investition
+  REPLACEMENT // Ersatzinvestition
+  EXPANSION // Erweiterungsinvestition
+  RATIONALIZATION // Rationalisierungsinvestition
+  STRATEGIC // Strategische Investition
 }
 
 enum InvestmentStatus {
-  PLANNED          // Geplant
-  APPROVED         // Genehmigt
-  IN_PROGRESS      // In Bearbeitung
-  COMPLETED        // Abgeschlossen
-  CANCELLED        // Abgebrochen
-  POSTPONED        // Verschoben
+  PLANNED // Geplant
+  APPROVED // Genehmigt
+  IN_PROGRESS // In Bearbeitung
+  COMPLETED // Abgeschlossen
+  CANCELLED // Abgebrochen
+  POSTPONED // Verschoben
 }
 
 // ============================================
@@ -1987,34 +1987,34 @@ enum InvestmentStatus {
 // ============================================
 
 model CO2Settings {
-  id                    String   @id @default(cuid())
-  workshopsToCompare    Int      @default(3) // Anzahl Werkstätten, die Kunde sonst besuchen würde
-  
+  id                 String @id @default(cuid())
+  workshopsToCompare Int    @default(3) // Anzahl Werkstätten, die Kunde sonst besuchen würde
+
   // Durchschnittswerte pro km (Fallback wenn kein Fahrzeug bekannt)
-  co2PerKmCombustion    Int      @default(140) // g CO₂/km für Verbrenner (Durchschnitt)
-  co2PerKmElectric      Int      @default(50) // g CO₂/km für E-Autos (Strommix DE)
-  
+  co2PerKmCombustion Int @default(140) // g CO₂/km für Verbrenner (Durchschnitt)
+  co2PerKmElectric   Int @default(50) // g CO₂/km für E-Autos (Strommix DE)
+
   // Kraftstoffspezifische CO₂-Faktoren (für präzise Berechnung mit Verbrauchsdaten)
-  co2PerLiterPetrol     Int      @default(2320) // g CO₂/Liter Benzin
-  co2PerLiterDiesel     Int      @default(2640) // g CO₂/Liter Diesel
-  co2PerLiterLPG        Int      @default(1640) // g CO₂/Liter LPG (Autogas)
-  co2PerKgCNG           Int      @default(1990) // g CO₂/kg CNG (Erdgas)
-  co2PerKWhElectric     Int      @default(420) // g CO₂/kWh Strom (DE Mix)
-  
+  co2PerLiterPetrol Int @default(2320) // g CO₂/Liter Benzin
+  co2PerLiterDiesel Int @default(2640) // g CO₂/Liter Diesel
+  co2PerLiterLPG    Int @default(1640) // g CO₂/Liter LPG (Autogas)
+  co2PerKgCNG       Int @default(1990) // g CO₂/kg CNG (Erdgas)
+  co2PerKWhElectric Int @default(420) // g CO₂/kWh Strom (DE Mix)
+
   // Legacy field (kept for backwards compatibility)
-  co2PerLiterFuel       Int      @default(2330) // g CO₂/Liter (Durchschnitt Benzin/Diesel)
-  
+  co2PerLiterFuel Int @default(2330) // g CO₂/Liter (Durchschnitt Benzin/Diesel)
+
   // Kraftstoffpreise für monetäre Einsparungsberechnung
-  petrolPricePerLiter   Float    @default(1.75) // €/Liter (Benzin)
-  dieselPricePerLiter   Float    @default(1.65) // €/Liter (Diesel)
-  lpgPricePerLiter      Float    @default(0.80) // €/Liter (LPG)
-  cngPricePerKg         Float    @default(1.10) // €/kg (CNG)
-  electricPricePerKWh   Float    @default(0.35) // €/kWh (Strom)
-  
+  petrolPricePerLiter Float @default(1.75) // €/Liter (Benzin)
+  dieselPricePerLiter Float @default(1.65) // €/Liter (Diesel)
+  lpgPricePerLiter    Float @default(0.80) // €/Liter (LPG)
+  cngPricePerKg       Float @default(1.10) // €/kg (CNG)
+  electricPricePerKWh Float @default(0.35) // €/kWh (Strom)
+
   // Legacy field (kept for backwards compatibility)
-  fuelPricePerLiter     Float    @default(1.65) // €/Liter (Durchschnitt)
-  
-  updatedAt             DateTime @updatedAt
+  fuelPricePerLiter Float @default(1.65) // €/Liter (Durchschnitt)
+
+  updatedAt DateTime @updatedAt
 
   @@map("co2_settings")
 }
@@ -2035,231 +2035,231 @@ enum FuelType {
 // ========================================
 
 model Influencer {
-  id                    String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Basic Info
-  email                 String   @unique
-  code                  String   @unique // Unique affiliate code: z.B. "PETER24"
-  name                  String?
-  
+  email String  @unique
+  code  String  @unique // Unique affiliate code: z.B. "PETER24"
+  name  String?
+
   // Registration Status
-  isRegistered          Boolean  @default(false)
-  registrationToken     String?  @unique // Token für erste Registrierung
+  isRegistered            Boolean   @default(false)
+  registrationToken       String?   @unique // Token für erste Registrierung
   registrationTokenExpiry DateTime?
-  
+
   // Authentication (wenn registriert)
-  password              String? // Hashed password
-  isActive              Boolean  @default(true)
-  
+  password String? // Hashed password
+  isActive Boolean @default(true)
+
   // Platform & Channel Info
-  platform              InfluencerPlatform?
-  channelName           String? // z.B. "@username"
-  channelUrl            String?
-  additionalChannels    Json? // Array of {platform, url}
-  
+  platform           InfluencerPlatform?
+  channelName        String? // z.B. "@username"
+  channelUrl         String?
+  additionalChannels Json? // Array of {platform, url}
+
   // Commission Settings (in Cents)
-  commissionPer1000Views           Int @default(300) // €3.00 default
+  commissionPer1000Views            Int @default(300) // €3.00 default
   commissionPerCustomerRegistration Int @default(1500) // €15.00 default
   commissionPerCustomerFirstOffer   Int @default(2500) // €25.00 default
   commissionPerWorkshopRegistration Int @default(1500) // €15.00 default
   commissionPerWorkshopFirstOffer   Int @default(2500) // €25.00 default
-  
+
   // Time Limits
-  activeFrom            DateTime @default(now())
-  activeUntil           DateTime? // null = unlimited
-  isUnlimited           Boolean  @default(false)
-  
+  activeFrom  DateTime  @default(now())
+  activeUntil DateTime? // null = unlimited
+  isUnlimited Boolean   @default(false)
+
   // Payment Info
-  paymentMethod         PaymentMethod?
-  
+  paymentMethod PaymentMethod?
+
   // Bank Transfer
-  accountHolder         String?
-  iban                  String?
-  bic                   String?
-  
+  accountHolder String?
+  iban          String?
+  bic           String?
+
   // PayPal
-  paypalEmail           String?
-  
+  paypalEmail String?
+
   // Tax Info
-  taxType               TaxType? // INDIVIDUAL or BUSINESS
-  companyName           String?
-  taxId                 String? // Steuernummer / USt-ID
-  
+  taxType     TaxType? // INDIVIDUAL or BUSINESS
+  companyName String?
+  taxId       String? // Steuernummer / USt-ID
+
   // Address
-  street                String?
-  zipCode               String?
-  city                  String?
-  country               String? @default("Deutschland")
-  
+  street  String?
+  zipCode String?
+  city    String?
+  country String? @default("Deutschland")
+
   // Admin Notes
-  notes                 String? @db.Text
-  
+  notes String? @db.Text
+
   // Timestamps
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  lastLoginAt           DateTime?
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
   // Relations
-  clicks                AffiliateClick[]
-  conversions           AffiliateConversion[]
-  payments              AffiliatePayment[]
-  
+  clicks      AffiliateClick[]
+  conversions AffiliateConversion[]
+  payments    AffiliatePayment[]
+
   @@map("influencers")
 }
 
 model InfluencerApplication {
-  id               String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Basic Info
-  name             String
-  email            String
-  
+  name  String
+  email String
+
   // Platform Info
-  platform         String // "YouTube", "Instagram", "TikTok", "Facebook", etc.
-  channelName      String
-  channelUrl       String
-  followers        Int?
-  
+  platform    String // "YouTube", "Instagram", "TikTok", "Facebook", etc.
+  channelName String
+  channelUrl  String
+  followers   Int?
+
   // Application Content
-  message          String?  @db.Text
-  
+  message String? @db.Text
+
   // Status Workflow
-  status           ApplicationStatus @default(PENDING)
-  
+  status ApplicationStatus @default(PENDING)
+
   // Admin Review
-  reviewedBy       String?
-  reviewedAt       DateTime?
-  rejectionReason  String?  @db.Text
-  influencerId     String? // Reference to created influencer after approval
-  
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?   @db.Text
+  influencerId    String? // Reference to created influencer after approval
+
   // Timestamps
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("influencer_applications")
 }
 
 model InfluencerSettings {
-  id                       String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Default commission rates displayed on landing page (in cents)
-  defaultPer1000Views      Int      @default(300)    // €3.00
-  defaultPerRegistration   Int      @default(1500)   // €15.00
-  defaultPerAcceptedOffer  Int      @default(2500)   // €25.00
-  
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  
+  defaultPer1000Views     Int @default(300) // €3.00
+  defaultPerRegistration  Int @default(1500) // €15.00
+  defaultPerAcceptedOffer Int @default(2500) // €25.00
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("influencer_settings")
 }
 
 model AffiliateClick {
-  id                    String   @id @default(cuid())
-  influencerId          String
-  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  
+  id           String     @id @default(cuid())
+  influencerId String
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
   // Tracking Data
-  ipAddress             String
-  userAgent             String? @db.Text
-  referrer              String? @db.Text
-  landingPage           String?
-  
+  ipAddress   String
+  userAgent   String? @db.Text
+  referrer    String? @db.Text
+  landingPage String?
+
   // Cookie ID für Attribution
-  cookieId              String @unique
-  
+  cookieId String @unique
+
   // Timestamps
-  clickedAt             DateTime @default(now())
-  
+  clickedAt DateTime @default(now())
+
   // Optional: Device/Location Data
-  deviceType            String? // mobile, desktop, tablet
-  country               String?
-  city                  String?
-  
-  @@map("affiliate_clicks")
+  deviceType String? // mobile, desktop, tablet
+  country    String?
+  city       String?
+
   @@index([influencerId])
   @@index([cookieId])
   @@index([clickedAt])
+  @@map("affiliate_clicks")
 }
 
 model AffiliateConversion {
-  id                    String   @id @default(cuid())
-  influencerId          String
-  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  
+  id           String     @id @default(cuid())
+  influencerId String
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
   // Conversion Type
-  type                  ConversionType
-  
+  type ConversionType
+
   // Attribution
-  cookieId              String // Links back to AffiliateClick
-  
+  cookieId String // Links back to AffiliateClick
+
   // Related Entities
-  customerId            String?
-  customer              Customer? @relation(fields: [customerId], references: [id])
-  
-  tireRequestId         String?
-  tireRequest           TireRequest? @relation(fields: [tireRequestId], references: [id])
-  
-  offerId               String?
-  offer                 Offer? @relation(fields: [offerId], references: [id])
-  
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  tireRequestId String?
+  tireRequest   TireRequest? @relation(fields: [tireRequestId], references: [id])
+
+  offerId String?
+  offer   Offer?  @relation(fields: [offerId], references: [id])
+
   // Commission (in Cents)
-  commissionAmount      Int
-  
+  commissionAmount Int
+
   // Payment Status
-  isPaid                Boolean @default(false)
-  paidAt                DateTime?
-  paymentId             String?
-  payment               AffiliatePayment? @relation(fields: [paymentId], references: [id])
-  
+  isPaid    Boolean           @default(false)
+  paidAt    DateTime?
+  paymentId String?
+  payment   AffiliatePayment? @relation(fields: [paymentId], references: [id])
+
   // Timestamps
-  convertedAt           DateTime @default(now())
-  
-  @@map("affiliate_conversions")
+  convertedAt DateTime @default(now())
+
   @@index([influencerId])
   @@index([customerId])
   @@index([cookieId])
   @@index([convertedAt])
   @@index([isPaid])
+  @@map("affiliate_conversions")
 }
 
 model AffiliatePayment {
-  id                    String   @id @default(cuid())
-  influencerId          String
-  influencer            Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
-  
+  id           String     @id @default(cuid())
+  influencerId String
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
   // Payment Period
-  periodStart           DateTime
-  periodEnd             DateTime
-  
+  periodStart DateTime
+  periodEnd   DateTime
+
   // Amounts (in Cents)
-  totalAmount           Int
-  clicksAmount          Int
-  registrationsAmount   Int
-  offersAmount          Int
-  
+  totalAmount         Int
+  clicksAmount        Int
+  registrationsAmount Int
+  offersAmount        Int
+
   // Counts
-  totalClicks           Int
-  totalRegistrations    Int
-  totalOffers           Int
-  
+  totalClicks        Int
+  totalRegistrations Int
+  totalOffers        Int
+
   // Status
-  status                PaymentStatus @default(PENDING)
-  
+  status PaymentStatus @default(PENDING)
+
   // Payment Details
-  paymentMethod         PaymentMethod
-  paymentReference      String? // z.B. PayPal Transaction ID oder Überweisung Referenz
-  
+  paymentMethod    PaymentMethod
+  paymentReference String? // z.B. PayPal Transaction ID oder Überweisung Referenz
+
   // Timestamps
-  createdAt             DateTime @default(now())
-  paidAt                DateTime?
-  
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+
   // Relations
-  conversions           AffiliateConversion[]
-  
-  @@map("affiliate_payments")
+  conversions AffiliateConversion[]
+
   @@index([influencerId])
   @@index([periodStart, periodEnd])
   @@index([status])
+  @@map("affiliate_payments")
 }
 
 enum InfluencerPlatform {
@@ -2284,6 +2284,8 @@ enum ConversionType {
   PAGE_VIEW // Pro 1000 Views
   REGISTRATION // User registered
   ACCEPTED_OFFER // First offer accepted
+  WORKSHOP_REGISTRATION // Workshop registration
+  WORKSHOP_OFFER // Workshop offer
 }
 
 enum PaymentMethod {

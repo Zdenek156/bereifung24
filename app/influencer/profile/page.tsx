@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface ProfileData {
-  name: string
+  firstName: string
+  lastName: string
   channelName: string
   channelUrl: string
   platform: string
@@ -29,7 +30,8 @@ export default function InfluencerProfilePage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
   const [formData, setFormData] = useState<ProfileData>({
-    name: '',
+    firstName: '',
+    lastName: '',
     channelName: '',
     channelUrl: '',
     platform: '',
@@ -53,6 +55,16 @@ export default function InfluencerProfilePage() {
     confirmPassword: ''
   })
 
+  const [showPassword, setShowPassword] = useState<{
+    current: boolean
+    new: boolean
+    confirm: boolean
+  }>({
+    current: false,
+    new: false,
+    confirm: false
+  })
+
   useEffect(() => {
     loadProfile()
   }, [])
@@ -68,7 +80,8 @@ export default function InfluencerProfilePage() {
 
       const data = await res.json()
       setFormData({
-        name: data.influencer.name || '',
+        firstName: data.influencer.firstName || '',
+        lastName: data.influencer.lastName || '',
         channelName: data.influencer.channelName || '',
         channelUrl: data.influencer.channelUrl || '',
         platform: data.influencer.platform || '',
@@ -198,11 +211,20 @@ export default function InfluencerProfilePage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Grundinformationen</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+                <input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
@@ -411,30 +433,60 @@ export default function InfluencerProfilePage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Aktuelles Passwort</label>
-              <input
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword.current ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword({...showPassword, current: !showPassword.current})}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 text-lg"
+                  title={showPassword.current ? 'Passwort verbergen' : 'Passwort anzeigen'}
+                >
+                  {showPassword.current ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
-              <input
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword.new ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword({...showPassword, new: !showPassword.new})}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 text-lg"
+                  title={showPassword.new ? 'Passwort verbergen' : 'Passwort anzeigen'}
+                >
+                  {showPassword.new ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen</label>
-              <input
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword.confirm ? 'text' : 'password'}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 text-lg"
+                  title={showPassword.confirm ? 'Passwort verbergen' : 'Passwort anzeigen'}
+                >
+                  {showPassword.confirm ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
             </div>
             <div className="flex justify-end">
               <button

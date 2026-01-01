@@ -65,12 +65,20 @@ export async function DELETE(
     await prisma.deletedUserEmail.create({
       data: {
         email: userEmail.toLowerCase(),
-        reason: 'Customer account deleted by admin'
+        userType: 'CUSTOMER',
+        reason: `Kunde gelöscht durch ${session.user.email}`,
+        deletedBy: session.user.email
       }
     })
 
-    // Lösche alle abhängigen Daten manuell
-    // 1. Lösche alle Angebote zu den TireRequests des Kunden
+    // Lösche alle abhängigen Daten manuell in der richtigen Reihenfolge
+    
+    // 1. Lösche alle Bookings ZUERST (haben FK zu Offers)
+    await prisma.booking.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 2. Lösche alle Angebote zu den TireRequests des Kunden
     await prisma.offer.deleteMany({
       where: {
         tireRequest: {
@@ -79,13 +87,8 @@ export async function DELETE(
       }
     })
 
-    // 2. Lösche alle TireRequests
+    // 3. Lösche alle TireRequests
     await prisma.tireRequest.deleteMany({
-      where: { customerId: customer.id }
-    })
-
-    // 3. Lösche alle Bookings
-    await prisma.booking.deleteMany({
       where: { customerId: customer.id }
     })
 

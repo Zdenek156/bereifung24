@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "ConversionType" ADD VALUE 'WORKSHOP_REGISTRATION';
+
+-- AlterEnum
+ALTER TYPE "ConversionType" ADD VALUE 'WORKSHOP_OFFER';

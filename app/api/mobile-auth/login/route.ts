@@ -49,6 +49,69 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Track affiliate conversion on first login
+    if (user.customer?.id) {
+      try {
+        const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
+        const cookieId = request.cookies.get('b24_cookie_id')?.value
+
+        if (affiliateRef && cookieId) {
+          // Check if conversion already exists
+          const existingConversion = await prisma.affiliateConversion.findFirst({
+            where: {
+              cookieId: cookieId,
+              type: 'REGISTRATION',
+              customerId: user.customer.id
+            }
+          })
+
+          if (!existingConversion) {
+            // Find the influencer
+            const influencer = await prisma.influencer.findUnique({
+              where: { code: affiliateRef },
+              select: {
+                id: true,
+                isActive: true,
+                commissionPerCustomerRegistration: true
+              }
+            })
+
+            if (influencer && influencer.isActive) {
+              // Find the click record
+              const click = await prisma.affiliateClick.findFirst({
+                where: {
+                  influencerId: influencer.id,
+                  cookieId: cookieId
+                },
+                orderBy: {
+                  clickedAt: 'desc'
+                }
+              })
+
+              if (click) {
+                await prisma.affiliateConversion.create({
+                  data: {
+                    influencerId: influencer.id,
+                    clickId: click.id,
+                    cookieId: cookieId,
+                    customerId: user.customer.id,
+                    type: 'REGISTRATION',
+                    commissionAmount: influencer.commissionPerCustomerRegistration,
+                    convertedAt: new Date(),
+                    isPaid: false
+                  }
+                })
+                
+                console.log(`[AFFILIATE] First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
+              }
+            }
+          }
+        }
+      } catch (conversionError) {
+        console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
+      }
+    }
+
     // Create JWT token
     const token = jwt.sign(
       {

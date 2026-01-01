@@ -73,6 +73,12 @@ export async function GET(request: NextRequest) {
         case 'ACCEPTED_OFFER':
           amount = influencer.commissionPerAcceptedOffer
           break
+        case 'WORKSHOP_REGISTRATION':
+          amount = influencer.commissionPerRegistration
+          break
+        case 'WORKSHOP_OFFER':
+          amount = influencer.commissionPerAcceptedOffer
+          break
       }
 
       totalEarnings += amount
@@ -89,6 +95,8 @@ export async function GET(request: NextRequest) {
       PAGE_VIEW: influencer.conversions.filter(c => c.type === 'PAGE_VIEW').length,
       REGISTRATION: influencer.conversions.filter(c => c.type === 'REGISTRATION').length,
       ACCEPTED_OFFER: influencer.conversions.filter(c => c.type === 'ACCEPTED_OFFER').length,
+      WORKSHOP_REGISTRATION: influencer.conversions.filter(c => c.type === 'WORKSHOP_REGISTRATION').length,
+      WORKSHOP_OFFER: influencer.conversions.filter(c => c.type === 'WORKSHOP_OFFER').length,
     }
 
     // Recent activity (last 30 days)

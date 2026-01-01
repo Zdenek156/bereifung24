@@ -34,6 +34,8 @@ interface Stats {
     PAGE_VIEW?: number
     REGISTRATION?: number
     ACCEPTED_OFFER?: number
+    WORKSHOP_REGISTRATION?: number
+    WORKSHOP_OFFER?: number
   }
   unpaidCommissions: number
   paidCommissions: number

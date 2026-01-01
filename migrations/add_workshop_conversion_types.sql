@@ -1,0 +1,3 @@
+-- Add new conversion types to enum
+ALTER TYPE "ConversionType" ADD VALUE IF NOT EXISTS 'WORKSHOP_REGISTRATION';
+ALTER TYPE "ConversionType" ADD VALUE IF NOT EXISTS 'WORKSHOP_OFFER';

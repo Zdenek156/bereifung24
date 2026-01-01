@@ -23,6 +23,8 @@ interface Stats {
     PAGE_VIEW: number
     REGISTRATION: number
     ACCEPTED_OFFER: number
+    WORKSHOP_REGISTRATION: number
+    WORKSHOP_OFFER: number
   }
   recentClicks: number
   recentConversions: number
@@ -228,7 +230,7 @@ export default function InfluencerDashboardPage() {
         {/* Conversions by Type */}
         <div className="mb-8 bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Conversions nach Typ</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="border rounded-lg p-4">
               <div className="text-sm text-gray-600">Seitenaufrufe</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
@@ -245,6 +247,18 @@ export default function InfluencerDashboardPage() {
               <div className="text-sm text-gray-600">Angenommene Angebote</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.conversionsByType.ACCEPTED_OFFER}
+              </div>
+            </div>
+            <div className="border rounded-lg p-4">
+              <div className="text-sm text-gray-600">Workshop-Registrierungen</div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.conversionsByType.WORKSHOP_REGISTRATION}
+              </div>
+            </div>
+            <div className="border rounded-lg p-4">
+              <div className="text-sm text-gray-600">Workshop-Angebote</div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.conversionsByType.WORKSHOP_OFFER}
               </div>
             </div>
           </div>

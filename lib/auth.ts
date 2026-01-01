@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
+import { cookies } from 'next/headers'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -66,6 +67,86 @@ export const authOptions: NextAuthOptions = {
             })
             if (employee) {
               b24EmployeeId = employee.id
+            }
+          }
+
+          // Track affiliate conversion on first login for customers
+          if (user.customer?.id) {
+            try {
+              const cookieStore = cookies()
+              const affiliateRef = cookieStore.get('b24_affiliate_ref')?.value
+              const cookieId = cookieStore.get('b24_cookie_id')?.value
+
+              console.log('[AFFILIATE LOGIN] Starting tracking check:', {
+                hasCustomer: !!user.customer?.id,
+                affiliateRef,
+                cookieId,
+                email: user.email
+              })
+
+              if (affiliateRef && cookieId) {
+                // Check if conversion already exists
+                const existingConversion = await prisma.affiliateConversion.findFirst({
+                  where: {
+                    cookieId: cookieId,
+                    type: 'REGISTRATION',
+                    customerId: user.customer.id
+                  }
+                })
+
+                if (!existingConversion) {
+                  // Find the influencer
+                  const influencer = await prisma.influencer.findUnique({
+                    where: { code: affiliateRef },
+                    select: {
+                      id: true,
+                      isActive: true,
+                      commissionPerCustomerRegistration: true
+                    }
+                  })
+
+                  if (influencer && influencer.isActive) {
+                    console.log(`[AFFILIATE LOGIN] Influencer found: ${affiliateRef}, active: ${influencer.isActive}`)
+                    // Find the click record
+                    const click = await prisma.affiliateClick.findFirst({
+                      where: {
+                        influencerId: influencer.id,
+                        cookieId: cookieId
+                      },
+                      orderBy: {
+                        clickedAt: 'desc'
+                      }
+                    })
+
+                    if (click) {
+                      await prisma.affiliateConversion.create({
+                        data: {
+                          influencerId: influencer.id,
+                          clickId: click.id,
+                          cookieId: cookieId,
+                          customerId: user.customer.id,
+                          type: 'REGISTRATION',
+                          commissionAmount: influencer.commissionPerCustomerRegistration,
+                          convertedAt: new Date(),
+                          isPaid: false
+                        }
+                      })
+                      
+                      console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
+                    } else {
+                      console.log(`[AFFILIATE] ✗ No click found for cookieId: ${cookieId}`)
+                    }
+                  } else {
+                    console.log(`[AFFILIATE LOGIN] Influencer not found or inactive: ${affiliateRef}`)
+                  }
+                } else {
+                  console.log(`[AFFILIATE LOGIN] Conversion already exists for this customer`)
+                }
+              } else {
+                console.log(`[AFFILIATE LOGIN] Missing cookies - affiliateRef: ${!!affiliateRef}, cookieId: ${!!cookieId}`)
+              }
+            } catch (conversionError) {
+              console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
             }
           }
 

@@ -38,6 +38,19 @@ export default function LoginPage() {
 
       if (result?.ok) {
         console.log('Login successful, redirecting...')
+        
+        // Track affiliate conversion after successful login
+        try {
+          const trackResponse = await fetch('/api/auth/track-login', {
+            method: 'POST',
+            credentials: 'include'
+          })
+          const trackData = await trackResponse.json()
+          console.log('[AFFILIATE] Track response:', trackData)
+        } catch (trackError) {
+          console.error('[AFFILIATE] Track error:', trackError)
+        }
+        
         // Force a full page reload to ensure session is properly loaded
         window.location.href = '/dashboard'
       } else {

@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Get affiliate ref from cookies (if exists)
     const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
+    const cookieId = request.cookies.get('b24_cookie_id')?.value
 
     // Prüfen ob Email bereits existiert
     const existingUser = await prisma.user.findUnique({
@@ -149,28 +150,72 @@ export async function POST(request: NextRequest) {
     }
 
     // Track affiliate conversion if ref code exists
-    if (affiliateRef && user.customer) {
+    if (affiliateRef && cookieId && user.customer) {
       try {
+        // Find the influencer
         const influencer = await prisma.influencer.findUnique({
-          where: { code: affiliateRef }
+          where: { code: affiliateRef },
+          select: {
+            id: true,
+            isActive: true,
+            commissionPerRegistration: true
+          }
         })
 
-        if (influencer) {
-          await prisma.affiliateConversion.create({
-            data: {
+        if (influencer && influencer.isActive) {
+          // Find the click record
+          const click = await prisma.affiliateClick.findFirst({
+            where: {
               influencerId: influencer.id,
-              customerId: user.customer.id,
-              type: 'REGISTRATION',
-              convertedAt: new Date(),
-              isPaid: false
+              cookieId: cookieId
+            },
+            orderBy: {
+              clickedAt: 'desc'
             }
           })
-          
-          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - Customer registration`)
+
+          if (click) {
+            // Check if conversion already exists
+            const existingConversion = await prisma.affiliateConversion.findFirst({
+              where: {
+                influencerId: influencer.id,
+                cookieId: cookieId,
+                type: 'REGISTRATION',
+                customerId: user.customer.id
+              }
+            })
+
+            if (!existingConversion) {
+              await prisma.affiliateConversion.create({
+                data: {
+                  influencerId: influencer.id,
+                  clickId: click.id,
+                  cookieId: cookieId,
+                  customerId: user.customer.id,
+                  type: 'REGISTRATION',
+                  commissionAmount: influencer.commissionPerRegistration,
+                  convertedAt: new Date(),
+                  isPaid: false
+                }
+              })
+              
+              console.log(`[AFFILIATE] Conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerRegistration / 100}`)
+            } else {
+              console.log(`[AFFILIATE] Conversion already exists for cookieId: ${cookieId}`)
+            }
+          } else {
+            console.log(`[AFFILIATE] No click record found for cookieId: ${cookieId}`)
+          }
+        } else {
+          console.log(`[AFFILIATE] Influencer not found or inactive: ${affiliateRef}`)
         }
       } catch (conversionError) {
         console.error('[AFFILIATE] Error tracking conversion:', conversionError)
         // Don't fail registration if conversion tracking fails
+      }
+    } else {
+      if (affiliateRef && !cookieId) {
+        console.log('[AFFILIATE] Missing cookieId for ref:', affiliateRef)
       }
     }
 

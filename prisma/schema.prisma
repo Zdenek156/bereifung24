@@ -2226,7 +2226,7 @@ model AffiliateConversion {
   customerId String?
   customer   Customer? @relation(fields: [customerId], references: [id])
 
-  workshopId String?
+  workshopId String? @map("workshop_id")
   workshop   Workshop? @relation(fields: [workshopId], references: [id])
 
   tireRequestId String?

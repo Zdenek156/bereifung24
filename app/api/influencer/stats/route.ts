@@ -60,26 +60,8 @@ export async function GET(request: NextRequest) {
     let paidEarnings = 0
 
     influencer.conversions.forEach(conv => {
-      let amount = 0
-      
-      switch (conv.type) {
-        case 'PAGE_VIEW':
-          // Assuming 1000 views tracked somehow
-          amount = influencer.commissionPer1000Views
-          break
-        case 'REGISTRATION':
-          amount = influencer.commissionPerRegistration
-          break
-        case 'ACCEPTED_OFFER':
-          amount = influencer.commissionPerAcceptedOffer
-          break
-        case 'WORKSHOP_REGISTRATION':
-          amount = influencer.commissionPerRegistration
-          break
-        case 'WORKSHOP_OFFER':
-          amount = influencer.commissionPerAcceptedOffer
-          break
-      }
+      // Use commissionAmount directly from the conversion record
+      const amount = conv.commissionAmount || 0
 
       totalEarnings += amount
       
@@ -125,12 +107,8 @@ export async function GET(request: NextRequest) {
       })
 
       const monthEarnings = monthConversions.reduce((sum, conv) => {
-        switch (conv.type) {
-          case 'PAGE_VIEW': return sum + influencer.commissionPer1000Views
-          case 'REGISTRATION': return sum + influencer.commissionPerRegistration
-          case 'ACCEPTED_OFFER': return sum + influencer.commissionPerAcceptedOffer
-          default: return sum
-        }
+        // Use commissionAmount from conversion record
+        return sum + (conv.commissionAmount || 0)
       }, 0)
 
       monthlyStats.push({
@@ -159,9 +137,7 @@ export async function GET(request: NextRequest) {
         type: conv.type,
         convertedAt: conv.convertedAt,
         isPaid: conv.isPaid,
-        amount: conv.type === 'PAGE_VIEW' ? influencer.commissionPer1000Views :
-                conv.type === 'REGISTRATION' ? influencer.commissionPerRegistration :
-                influencer.commissionPerAcceptedOffer
+        amount: conv.commissionAmount || 0
       })),
       recentPayments: influencer.payments.slice(0, 5).map(pay => ({
         id: pay.id,

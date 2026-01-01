@@ -154,3 +154,128 @@ export async function PUT(req: NextRequest) {
     )
   }
 }
+
+// DELETE /api/user/profile - Delete own account (self-service)
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id || session.user.role !== 'CUSTOMER') {
+      return NextResponse.json(
+        { error: 'Nicht authentifiziert oder keine Berechtigung' },
+        { status: 401 }
+      )
+    }
+
+    // Hole den Customer
+    const customer = await prisma.customer.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        user: {
+          select: { email: true }
+        }
+      }
+    })
+
+    if (!customer) {
+      return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
+    }
+
+    const userEmail = customer.user.email
+
+    // Speichere Email in Blacklist damit sie nicht wiederverwendet werden kann
+    await prisma.deletedUserEmail.create({
+      data: {
+        email: userEmail.toLowerCase(),
+        userType: 'CUSTOMER',
+        reason: 'Account selbst gelöscht',
+        deletedBy: userEmail
+      }
+    })
+
+    // Lösche alle abhängigen Daten in der richtigen Reihenfolge
+    
+    // 1. Lösche alle Bookings ZUERST (haben FK zu Offers)
+    await prisma.booking.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 2. Lösche alle Angebote zu den TireRequests des Kunden
+    await prisma.offer.deleteMany({
+      where: {
+        tireRequest: {
+          customerId: customer.id
+        }
+      }
+    })
+
+    // 3. Lösche alle TireRequests
+    await prisma.tireRequest.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 4. Lösche alle Reviews
+    await prisma.review.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 5. Lösche alle TireRatings
+    await prisma.tireRating.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 6. Lösche TireHistory Einträge (über Vehicle)
+    const customerVehicles = await prisma.vehicle.findMany({
+      where: { customerId: customer.id },
+      select: { id: true }
+    })
+    
+    if (customerVehicles.length > 0) {
+      await prisma.tireHistory.deleteMany({
+        where: {
+          vehicleId: {
+            in: customerVehicles.map(v => v.id)
+          }
+        }
+      })
+    }
+
+    // 7. Lösche alle Vehicles
+    await prisma.vehicle.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 8. Lösche WeatherAlert falls vorhanden
+    await prisma.weatherAlert.deleteMany({
+      where: { customerId: customer.id }
+    })
+
+    // 9. Anonymisiere Affiliate Conversions (Influencer behält die Provision)
+    await prisma.affiliateConversion.updateMany({
+      where: { customerId: customer.id },
+      data: { customerId: null }
+    })
+
+    // 10. Lösche den Customer
+    await prisma.customer.delete({
+      where: { id: customer.id }
+    })
+
+    // 11. Lösche den User
+    await prisma.user.delete({
+      where: { id: session.user.id }
+    })
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Ihr Account wurde erfolgreich gelöscht. Die E-Mail-Adresse wurde für zukünftige Registrierungen gesperrt.' 
+    })
+
+  } catch (error) {
+    console.error('Error deleting account:', error)
+    return NextResponse.json(
+      { error: 'Fehler beim Löschen des Accounts' },
+      { status: 500 }
+    )
+  }
+}

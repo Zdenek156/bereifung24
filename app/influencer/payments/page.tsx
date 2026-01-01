@@ -55,6 +55,9 @@ export default function InfluencerPaymentsPage() {
           paidEarnings: statsData.stats.paidEarnings,
           totalEarnings: statsData.stats.totalEarnings
         })
+      } else if (statsRes.status === 401) {
+        router.push('/influencer/login')
+        return
       }
     } catch (error) {
       console.error('Error loading data:', error)

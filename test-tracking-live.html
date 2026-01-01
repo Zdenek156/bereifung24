@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test TURBOGA53 Tracking</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Affiliate Tracking Test - TURBOGA53</h1>
+    
+    <div class="test-box">
+        <h2>Schritt 1: Cookie prüfen</h2>
+        <button onclick="checkCookies()">Cookies prüfen</button>
+        <div id="cookie-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Schritt 2: Cookie manuell setzen</h2>
+        <button onclick="setCookie()">Cookie setzen (b24_affiliate_ref=TURBOGA53)</button>
+        <div id="set-cookie-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Schritt 3: Tracking API testen</h2>
+        <button onclick="testTracking()">Tracking testen</button>
+        <div id="tracking-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Schritt 4: Registrierung simulieren</h2>
+        <p class="info status">
+            ⚠️ Dieser Test zeigt nur, ob der Cookie richtig gelesen wird. 
+            Für eine echte Registrierung gehen Sie zu: <a href="/register/customer">/register/customer</a>
+        </p>
+        <button onclick="checkRegistrationFlow()">Registrierungs-Flow prüfen</button>
+        <div id="registration-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Schritt 5: Influencer-Login prüfen</h2>
+        <p class="info status">
+            Das Dashboard-Problem kommt daher, dass Sie nicht eingeloggt sind.
+        </p>
+        <button onclick="window.location.href='/influencer/login'">Zum Influencer-Login</button>
+    </div>
+
+    <script>
+        function checkCookies() {
+            const result = document.getElementById('cookie-result');
+            const cookies = document.cookie.split('; ');
+            const affiliateRef = cookies.find(c => c.startsWith('b24_affiliate_ref='));
+            const cookieId = cookies.find(c => c.startsWith('b24_cookie_id='));
+            
+            let html = '<div style="margin-top: 15px;">';
+            
+            if (affiliateRef) {
+                html += `<div class="status success">✅ Affiliate Cookie gefunden: <code>${affiliateRef}</code></div>`;
+            } else {
+                html += `<div class="status error">❌ Affiliate Cookie NICHT gefunden!</div>`;
+            }
+            
+            if (cookieId) {
+                html += `<div class="status success">✅ Cookie ID gefunden: <code>${cookieId}</code></div>`;
+            } else {
+                html += `<div class="status info">ℹ️ Cookie ID nicht gefunden (wird beim ersten Tracking gesetzt)</div>`;
+            }
+            
+            if (!affiliateRef) {
+                html += `<div class="status info">💡 Tipp: Besuchen Sie die Seite mit <code>?ref=TURBOGA53</code> Parameter</div>`;
+            }
+            
+            html += '</div>';
+            result.innerHTML = html;
+        }
+
+        function setCookie() {
+            const result = document.getElementById('set-cookie-result');
+            
+            // Set affiliate ref cookie
+            document.cookie = `b24_affiliate_ref=TURBOGA53; path=/; max-age=${30 * 24 * 60 * 60}`;
+            
+            // Set cookie ID if not exists
+            const existingId = document.cookie.split('; ').find(c => c.startsWith('b24_cookie_id='));
+            if (!existingId) {
+                const cookieId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+                document.cookie = `b24_cookie_id=${cookieId}; path=/; max-age=${30 * 24 * 60 * 60}`;
+            }
+            
+            result.innerHTML = `
+                <div class="status success" style="margin-top: 15px;">
+                    ✅ Cookies gesetzt!<br>
+                    <small>Cookie läuft ab in: 30 Tagen</small>
+                </div>
+            `;
+        }
+
+        async function testTracking() {
+            const result = document.getElementById('tracking-result');
+            result.innerHTML = '<div class="status info">⏳ Teste Tracking API...</div>';
+            
+            const cookieId = 'test-' + Math.random().toString(36).substring(7);
+            
+            try {
+                const response = await fetch(`/api/affiliate/track?ref=TURBOGA53&cookieId=${cookieId}`);
+                const data = await response.json();
+                
+                let html = '<div style="margin-top: 15px;">';
+                html += `<div><strong>HTTP Status:</strong> ${response.status}</div>`;
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                if (response.status === 200 && data.status === 'tracked') {
+                    html += '<div class="status success">✅ Tracking funktioniert! Click und PAGE_VIEW wurden erstellt.</div>';
+                } else if (response.status === 404) {
+                    html += '<div class="status error">❌ Influencer TURBOGA53 existiert nicht in der Datenbank!</div>';
+                    html += '<div class="status info">💡 Führen Sie aus: <code>node create-turboga53-influencer.mjs</code></div>';
+                } else if (response.status === 403) {
+                    html += '<div class="status error">❌ Influencer ist inaktiv oder abgelaufen!</div>';
+                    html += '<div class="status info">💡 Prüfen Sie in Prisma Studio: <code>npx prisma studio</code></div>';
+                } else if (data.status === 'duplicate') {
+                    html += '<div class="status info">ℹ️ Duplicate Click (bereits innerhalb 24h getrackt)</div>';
+                } else {
+                    html += '<div class="status error">❌ Unerwarteter Fehler</div>';
+                }
+                
+                html += '</div>';
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error" style="margin-top: 15px;">
+                        ❌ Fehler beim Testen:<br>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkRegistrationFlow() {
+            const result = document.getElementById('registration-result');
+            
+            const cookies = document.cookie.split('; ');
+            const affiliateRef = cookies.find(c => c.startsWith('b24_affiliate_ref='));
+            
+            let html = '<div style="margin-top: 15px;">';
+            
+            if (affiliateRef) {
+                const refValue = affiliateRef.split('=')[1];
+                html += `<div class="status success">✅ Cookie ist gesetzt: <code>${affiliateRef}</code></div>`;
+                html += `<div class="status success">✅ Bei Registrierung wird dieser Code verwendet: <strong>${refValue}</strong></div>`;
+                html += `<div class="status info">
+                    💡 <strong>Nächster Schritt:</strong><br>
+                    1. Gehen Sie zu <a href="/register/customer">/register/customer</a><br>
+                    2. Registrieren Sie einen neuen Kunden<br>
+                    3. Eine REGISTRATION Conversion wird automatisch erstellt<br>
+                    4. Prüfen Sie danach im Influencer-Dashboard die Stats
+                </div>`;
+            } else {
+                html += `<div class="status error">❌ Kein Affiliate Cookie gesetzt!</div>`;
+                html += `<div class="status info">💡 Klicken Sie oben auf "Cookie setzen" oder besuchen Sie die Seite mit <code>?ref=TURBOGA53</code></div>`;
+            }
+            
+            html += '</div>';
+            result.innerHTML = html;
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            checkCookies();
+        });
+    </script>
+
+    <div class="test-box">
+        <h2>📋 Zusammenfassung</h2>
+        <div class="status info">
+            <h3>Das Problem mit dem 500-Fehler:</h3>
+            <p>Der Fehler bei <code>/api/influencer/stats</code> kommt daher, dass Sie nicht als Influencer eingeloggt sind.</p>
+            <p>Das Tracking selbst (Clicks und Registrierungen) funktioniert aber trotzdem!</p>
+            
+            <h3>So funktioniert das System:</h3>
+            <ol>
+                <li>Besucher kommt über <code>?ref=TURBOGA53</code> → Cookie wird gesetzt</li>
+                <li>Click wird getrackt (AffiliateClick + PAGE_VIEW Conversion)</li>
+                <li>Besucher registriert sich → REGISTRATION Conversion wird erstellt</li>
+                <li><strong>Influencer loggt sich separat ein</strong> → Sieht Stats im Dashboard</li>
+            </ol>
+            
+            <h3>Test-Ablauf:</h3>
+            <ol>
+                <li>✅ Cookie prüfen/setzen (oben)</li>
+                <li>✅ Tracking API testen (oben)</li>
+                <li>✅ Registrierung durchführen</li>
+                <li>✅ Als Influencer einloggen unter <a href="/influencer/login">/influencer/login</a></li>
+                <li>✅ Dashboard prüfen unter <a href="/influencer/dashboard">/influencer/dashboard</a></li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

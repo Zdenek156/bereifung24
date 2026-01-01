@@ -2148,6 +2148,10 @@ model DeletedUserEmail {
   email     String   @unique // Email kann nicht mehr verwendet werden
   reason    String?  // Optional: Grund für Löschung
   deletedAt DateTime @default(now())
+  
+  // Support-Notizen
+  supportNotes String?  @db.Text // Kommentare vom Support-Team
+  updatedAt    DateTime @updatedAt
 
   @@map("deleted_user_emails")
 }

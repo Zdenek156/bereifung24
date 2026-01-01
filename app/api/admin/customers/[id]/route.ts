@@ -80,7 +80,24 @@ export async function DELETE(
 
     // Lösche alle abhängigen Daten manuell in der richtigen Reihenfolge
     
-    // 1. Lösche alle Bookings ZUERST (haben FK zu Offers)
+    // 1. Hole alle Bookings des Kunden
+    const customerBookings = await prisma.booking.findMany({
+      where: { customerId: customer.id },
+      select: { id: true }
+    })
+
+    // 2. Lösche alle Commissions zu diesen Bookings (haben FK zu Bookings)
+    if (customerBookings.length > 0) {
+      await prisma.commission.deleteMany({
+        where: {
+          bookingId: {
+            in: customerBookings.map(b => b.id)
+          }
+        }
+      })
+    }
+
+    // 3. Lösche alle Bookings
     await prisma.booking.deleteMany({
       where: { customerId: customer.id }
     })

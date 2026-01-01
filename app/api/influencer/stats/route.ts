@@ -49,7 +49,9 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats
     const totalClicks = influencer.clicks.length
-    const totalConversions = influencer.conversions.length
+    // Exclude PAGE_VIEW from conversions count (it's auto-generated from click)
+    const actualConversions = influencer.conversions.filter(c => c.type !== 'PAGE_VIEW')
+    const totalConversions = actualConversions.length
     
     // Conversion rate
     const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0

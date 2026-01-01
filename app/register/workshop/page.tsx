@@ -102,6 +102,23 @@ export default function WorkshopRegisterPage() {
         return
       }
 
+      // Track affiliate conversion on registration
+      if (data.userId && data.workshopId) {
+        try {
+          await fetch('/api/affiliate/convert', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: data.userId,
+              workshopId: data.workshopId
+            })
+          })
+        } catch (trackError) {
+          console.error('[AFFILIATE] Track error on workshop registration:', trackError)
+        }
+      }
+
       // Success
       alert(
         'Registrierung erfolgreich!\n\n' +

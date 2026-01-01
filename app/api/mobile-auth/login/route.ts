@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
         const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
         const cookieId = request.cookies.get('b24_cookie_id')?.value
 
+        console.log('[AFFILIATE LOGIN] Starting tracking check:', {
+          hasCustomer: !!user.customer?.id,
+          affiliateRef,
+          cookieId,
+          email: user.email
+        })
+
         if (affiliateRef && cookieId) {
           // Check if conversion already exists
           const existingConversion = await prisma.affiliateConversion.findFirst({
@@ -77,6 +84,7 @@ export async function POST(request: NextRequest) {
             })
 
             if (influencer && influencer.isActive) {
+              console.log(`[AFFILIATE LOGIN] Influencer found: ${affiliateRef}, active: ${influencer.isActive}`)
               // Find the click record
               const click = await prisma.affiliateClick.findFirst({
                 where: {
@@ -102,9 +110,17 @@ export async function POST(request: NextRequest) {
                   }
                 })
                 
-                console.log(`[AFFILIATE] First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
-              }
+                console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
+              } else {
+                console.log(`[AFFILIATE] ✗ No click found for cookieId: ${cookieId}`)
+              else {
+              console.log(`[AFFILIATE LOGIN] Influencer not found or inactive: ${affiliateRef}`)
             }
+          } else {
+            console.log(`[AFFILIATE LOGIN] Conversion already exists for this customer`)
+          }
+        } else {
+          console.log(`[AFFILIATE LOGIN] Missing cookies - affiliateRef: ${!!affiliateRef}, cookieId: ${!!cookieId}`) }
           }
         }
       } catch (conversionError) {

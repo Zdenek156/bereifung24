@@ -263,6 +263,7 @@ model Workshop {
   workshopServices  WorkshopService[]
   pricingSettings   PricingSettings?
   landingPage       WorkshopLandingPage?
+  affiliateConversions AffiliateConversion[]
   crmData           WorkshopCRM?
 
   // Sales CRM - Converted from Prospect
@@ -2232,6 +2233,9 @@ model AffiliateConversion {
 
   offerId String?
   offer   Offer?  @relation(fields: [offerId], references: [id])
+
+  workshopId String?
+  workshop   Workshop? @relation(fields: [workshopId], references: [id])
 
   // Commission (in Cents)
   commissionAmount Int

@@ -409,35 +409,76 @@ export async function POST(
 
     // Track affiliate conversion if ref code exists
     const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
-    if (affiliateRef) {
+    const cookieId = request.cookies.get('b24_cookie_id')?.value
+    
+    if (affiliateRef && cookieId) {
       try {
         const influencer = await prisma.influencer.findUnique({
-          where: { code: affiliateRef }
+          where: { code: affiliateRef },
+          select: {
+            id: true,
+            isActive: true,
+            commissionPerOfferAcceptance: true,
+            commissionPerWorkshopOffer: true
+          }
         })
 
-        if (influencer) {
-          // Determine conversion type based on request type
-          const isWorkshopService = offer.tireRequest.additionalNotes?.includes('WERKSTATT') ||
-                                   offer.tireRequest.additionalNotes?.includes('BREMSEN') ||
-                                   offer.tireRequest.additionalNotes?.includes('BATTERIE') ||
-                                   offer.tireRequest.additionalNotes?.includes('KLIMASERVICE') ||
-                                   offer.tireRequest.additionalNotes?.includes('REPARATUR')
-          
-          const conversionType = isWorkshopService ? 'WORKSHOP_OFFER' : 'ACCEPTED_OFFER'
-          
-          await prisma.affiliateConversion.create({
-            data: {
+        if (influencer && influencer.isActive) {
+          // Find the click record
+          const click = await prisma.affiliateClick.findFirst({
+            where: {
               influencerId: influencer.id,
-              customerId: customer.id,
-              type: conversionType,
-              tireRequestId: offer.tireRequestId,
-              offerId: offer.id,
-              convertedAt: new Date(),
-              isPaid: false
-            }
+              cookieId: cookieId
+            },
+            orderBy: { clickedAt: 'desc' }
           })
           
-          console.log(`[AFFILIATE] Conversion tracked for ${affiliateRef} - ${conversionType}`)
+          if (click) {
+            // Determine conversion type based on request type
+            const isWorkshopService = offer.tireRequest.additionalNotes?.includes('WERKSTATT') ||
+                                     offer.tireRequest.additionalNotes?.includes('BREMSEN') ||
+                                     offer.tireRequest.additionalNotes?.includes('BATTERIE') ||
+                                     offer.tireRequest.additionalNotes?.includes('KLIMASERVICE') ||
+                                     offer.tireRequest.additionalNotes?.includes('REPARATUR')
+            
+            const conversionType = isWorkshopService ? 'WORKSHOP_OFFER' : 'ACCEPTED_OFFER'
+            const commissionAmount = isWorkshopService 
+              ? influencer.commissionPerWorkshopOffer 
+              : influencer.commissionPerOfferAcceptance
+            
+            // Check for duplicate
+            const existingConversion = await prisma.affiliateConversion.findFirst({
+              where: {
+                influencerId: influencer.id,
+                cookieId: cookieId,
+                type: conversionType,
+                offerId: offer.id
+              }
+            })
+            
+            if (!existingConversion) {
+              await prisma.affiliateConversion.create({
+                data: {
+                  influencerId: influencer.id,
+                  clickId: click.id,
+                  cookieId: cookieId,
+                  customerId: customer.id,
+                  type: conversionType,
+                  tireRequestId: offer.tireRequestId,
+                  offerId: offer.id,
+                  commissionAmount: commissionAmount,
+                  convertedAt: new Date(),
+                  isPaid: false
+                }
+              })
+              
+              console.log(`[AFFILIATE] Conversion tracked: ${affiliateRef} - ${conversionType} - €${commissionAmount / 100}`)
+            } else {
+              console.log(`[AFFILIATE] Duplicate conversion prevented: ${affiliateRef} - ${conversionType}`)
+            }
+          } else {
+            console.log(`[AFFILIATE] No click record found for cookieId: ${cookieId}`)
+          }
         }
       } catch (conversionError) {
         console.error('[AFFILIATE] Error tracking conversion:', conversionError)

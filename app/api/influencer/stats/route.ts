@@ -55,8 +55,8 @@ export async function GET(request: NextRequest) {
     const actualConversions = influencer.conversions.filter(c => c.type !== 'PAGE_VIEW')
     const totalConversions = actualConversions.length
     
-    // Conversion rate
-    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
+    // Conversion rate (max 100%)
+    const conversionRate = totalClicks > 0 ? Math.min((totalConversions / totalClicks) * 100, 100) : 0
 
     // Calculate earnings
     let totalEarnings = 0

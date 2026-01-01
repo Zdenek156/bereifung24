@@ -250,19 +250,19 @@ export default function InfluencerDashboardPage() {
               </div>
             </div>
             <div className="border rounded-lg p-4">
-              <div className="text-sm text-gray-600">Registrierungen</div>
+              <div className="text-sm text-gray-600">Registrierung Kunde</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.conversionsByType.REGISTRATION}
               </div>
             </div>
             <div className="border rounded-lg p-4">
-              <div className="text-sm text-gray-600">Angenommene Angebote</div>
+              <div className="text-sm text-gray-600">Angenommenes Angebot</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.conversionsByType.ACCEPTED_OFFER}
               </div>
             </div>
             <div className="border rounded-lg p-4">
-              <div className="text-sm text-gray-600">Workshop-Registrierungen</div>
+              <div className="text-sm text-gray-600">Registrierung Werkstatt</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.conversionsByType.WORKSHOP_REGISTRATION}
               </div>

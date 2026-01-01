@@ -113,16 +113,20 @@ export async function POST(request: NextRequest) {
                 console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
               } else {
                 console.log(`[AFFILIATE] ✗ No click found for cookieId: ${cookieId}`)
-              else {
+              }
+            } else {
               console.log(`[AFFILIATE LOGIN] Influencer not found or inactive: ${affiliateRef}`)
             }
           } else {
             console.log(`[AFFILIATE LOGIN] Conversion already exists for this customer`)
           }
         } else {
-          console.log(`[AFFILIATE LOGIN] Missing cookies - affiliateRef: ${!!affiliateRef}, cookieId: ${!!cookieId}`) }
-          }
+          console.log(`[AFFILIATE LOGIN] Missing cookies - affiliateRef: ${!!affiliateRef}, cookieId: ${!!cookieId}`)
         }
+      } catch (conversionError) {
+        console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
+      }
+    }
       } catch (conversionError) {
         console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
       }

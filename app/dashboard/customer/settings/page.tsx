@@ -24,6 +24,7 @@ export default function CustomerSettings() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
   const [formData, setFormData] = useState<UserProfile>({
@@ -134,6 +135,58 @@ export default function CustomerSettings() {
       console.error('Failed to save profile:', error)
       setMessage({ type: 'error', text: 'Fehler beim Speichern der Einstellungen' })
       setSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      '⚠️ ACCOUNT ENDGÜLTIG LÖSCHEN ⚠️\n\n' +
+      'Möchten Sie Ihren Account wirklich dauerhaft löschen?\n\n' +
+      'Folgendes wird gelöscht:\n' +
+      '• Alle Ihre persönlichen Daten\n' +
+      '• Alle Ihre Anfragen und Angebote\n' +
+      '• Alle Ihre Fahrzeuge\n' +
+      '• Alle Ihre Buchungen\n\n' +
+      '⚠️ Diese Aktion kann NICHT rückgängig gemacht werden!\n' +
+      '⚠️ Ihre E-Mail-Adresse wird gesperrt und kann nicht erneut verwendet werden!\n\n' +
+      'Sind Sie sicher?'
+    )
+
+    if (!confirmed) return
+
+    const doubleConfirm = window.confirm(
+      '⚠️ LETZTE WARNUNG ⚠️\n\n' +
+      'Sind Sie WIRKLICH sicher?\n\n' +
+      'Nach dieser Aktion:\n' +
+      '• Können Sie sich nicht mehr einloggen\n' +
+      '• Sind alle Ihre Daten unwiderruflich gelöscht\n' +
+      '• Kann Ihre E-Mail-Adresse nicht wiederverwendet werden\n\n' +
+      'Klicken Sie OK, um Ihren Account ENDGÜLTIG zu löschen.'
+    )
+
+    if (!doubleConfirm) return
+
+    setDeleting(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        alert('Ihr Account wurde erfolgreich gelöscht. Sie werden nun ausgeloggt.')
+        // Logout and redirect
+        window.location.href = '/api/auth/signout?callbackUrl=/'
+      } else {
+        const error = await response.json()
+        setMessage({ type: 'error', text: error.error || 'Fehler beim Löschen des Accounts' })
+        setDeleting(false)
+      }
+    } catch (error) {
+      console.error('Failed to delete account:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Löschen des Accounts' })
+      setDeleting(false)
     }
   }
 
@@ -390,6 +443,37 @@ export default function CustomerSettings() {
               </button>
             </div>
           </form>
+
+          {/* Delete Account Section */}
+          <div className="mt-12 pt-8 border-t border-red-200">
+            <h3 className="text-lg font-semibold text-red-900 mb-2">Gefahrenzone</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Einmal gelöscht, können Sie Ihren Account nicht wiederherstellen. Bitte seien Sie sicher.
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <div className="flex items-start gap-4">
+                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-red-900 mb-2">Account endgültig löschen</h4>
+                  <p className="text-sm text-red-800 mb-4">
+                    Alle Ihre Daten werden unwiderruflich gelöscht. Dies umfasst alle Anfragen, Angebote, Buchungen, Fahrzeuge und persönlichen Informationen. 
+                    Ihre E-Mail-Adresse wird gesperrt und kann nicht erneut verwendet werden.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  >
+                    {deleting ? 'Wird gelöscht...' : 'Account endgültig löschen'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -2064,9 +2064,9 @@ model Influencer {
 
   // Commission Settings (in Cents)
   commissionPer1000Views            Int @default(300) // €3.00 default
-  commissionPerRegistration         Int @default(1500) @map("commissionpercustomerregistration") // €15.00 default
-  commissionPerAcceptedOffer        Int @default(2500) @map("commissionpercustomerfirstoffer") // €25.00 default
-  commissionPerWorkshopRegistration Int @default(1500) @map("commissionperworkshopregistration") // €15.00 default
+  commissionPerRegistration         Int @default(1500) // €15.00 default (maps to commissionPerCustomerRegistration in DB)
+  commissionPerAcceptedOffer        Int @default(2500) // €25.00 default (maps to commissionPerCustomerFirstOffer in DB)
+  commissionPerWorkshopRegistration Int @default(1500) // €15.00 default
 
   // Time Limits
   activeFrom  DateTime  @default(now())

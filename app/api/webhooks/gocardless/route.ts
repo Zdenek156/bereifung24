@@ -17,11 +17,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
     }
 
+    // Get webhook secret from database
+    const webhookSecretSetting = await prisma.adminApiSetting.findUnique({
+      where: { key: 'GOCARDLESS_WEBHOOK_SECRET' }
+    })
+
+    const webhookSecret = webhookSecretSetting?.value || process.env.GOCARDLESS_WEBHOOK_SECRET
+
+    if (!webhookSecret) {
+      console.error('❌ Missing GOCARDLESS_WEBHOOK_SECRET')
+      return NextResponse.json({ error: 'Missing webhook secret configuration' }, { status: 500 })
+    }
+
     // Verify webhook signature
     const isValid = verifyWebhookSignature(
       body,
       signature,
-      process.env.GOCARDLESS_WEBHOOK_SECRET!
+      webhookSecret
     )
 
     if (!isValid) {

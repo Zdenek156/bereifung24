@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
               select: {
                 id: true,
                 isActive: true,
-                commissionPerCustomerRegistration: true
+                commissionPerRegistration: true
               }
             })
 
@@ -104,13 +104,13 @@ export async function POST(request: NextRequest) {
                     cookieId: cookieId,
                     customerId: user.customer.id,
                     type: 'REGISTRATION',
-                    commissionAmount: influencer.commissionPerCustomerRegistration,
+                    commissionAmount: influencer.commissionPerRegistration,
                     convertedAt: new Date(),
                     isPaid: false
                   }
                 })
                 
-                console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerCustomerRegistration / 100}`)
+                console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerRegistration / 100}`)
               } else {
                 console.log(`[AFFILIATE] ✗ No click found for cookieId: ${cookieId}`)
               }

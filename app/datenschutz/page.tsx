@@ -214,7 +214,91 @@ export default function DatenschutzPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Ihre Rechte</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Google Calendar Integration</h2>
+              
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Zweck der Integration</h3>
+              <p className="mb-4">
+                Bereifung24 bietet Werkstätten die Möglichkeit, ihren Google Calendar zu verbinden, um Termine 
+                mit dem persönlichen Kalender des Werkstatt-Mitarbeiters zu synchronisieren. Diese Integration 
+                ist vollständig optional und kann jederzeit aktiviert oder deaktiviert werden.
+              </p>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Verwendete Daten</h3>
+              <p className="mb-4">Bei aktivierter Calendar-Integration verarbeiten wir folgende Daten:</p>
+              <ul className="list-disc list-inside mb-4 space-y-1">
+                <li>Kalendername und Kalender-ID</li>
+                <li>Termine (Datum, Uhrzeit, Titel, Beschreibung)</li>
+                <li>Verfügbarkeitsinformationen (frei/belegt)</li>
+                <li>OAuth Access Token und Refresh Token</li>
+              </ul>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Funktionsweise</h3>
+              <p className="mb-4">Die Calendar-Integration ermöglicht:</p>
+              <ul className="list-disc list-inside mb-4 space-y-2">
+                <li>
+                  <strong>Lesen:</strong> Prüfung der Verfügbarkeit des Werkstatt-Mitarbeiters zur Vermeidung 
+                  von Doppelbuchungen und Anzeige freier Zeitslots für Kunden
+                </li>
+                <li>
+                  <strong>Schreiben:</strong> Automatisches Erstellen von Terminen bei Buchungsbestätigung und 
+                  Synchronisation von Änderungen oder Verschiebungen
+                </li>
+                <li>
+                  <strong>Löschen:</strong> Entfernung von Terminen bei Stornierung durch den Kunden
+                </li>
+              </ul>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Speicherung und Sicherheit</h3>
+              <p className="mb-4">
+                Die OAuth-Zugangsdaten (Access Token und Refresh Token) werden verschlüsselt in unserer 
+                PostgreSQL-Datenbank gespeichert. Die Tokens werden ausschließlich für die Kommunikation mit 
+                der Google Calendar API verwendet und nicht an Dritte weitergegeben.
+              </p>
+              <p className="mb-4">
+                Die Kalenderdaten selbst werden nicht dauerhaft bei uns gespeichert, sondern nur temporär 
+                abgerufen, um Verfügbarkeiten zu prüfen oder Termine zu erstellen.
+              </p>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Rechtsgrundlage</h3>
+              <p className="mb-4">
+                Die Verarbeitung erfolgt auf Grundlage Ihrer ausdrücklichen Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). 
+                Die Integration ist optional und wird erst nach Ihrer aktiven Zustimmung durch den OAuth-Flow aktiviert.
+              </p>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Widerruf und Löschung</h3>
+              <p className="mb-4">
+                Sie können die Calendar-Integration jederzeit deaktivieren:
+              </p>
+              <ul className="list-disc list-inside mb-4 space-y-1">
+                <li><strong>In Bereifung24:</strong> Dashboard → Einstellungen → Google Calendar → "Verbindung trennen"</li>
+                <li><strong>Bei Google:</strong> <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">myaccount.google.com/permissions</a></li>
+              </ul>
+              <p className="mb-4">
+                Bei Deaktivierung werden alle gespeicherten OAuth-Tokens sowie die Kalenderkonfiguration 
+                umgehend aus unserer Datenbank gelöscht. Bereits erstellte Termine in Ihrem Google Calendar 
+                bleiben bestehen und müssen bei Bedarf manuell gelöscht werden.
+              </p>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Drittanbieter</h3>
+              <p className="mb-4">
+                Die Calendar-Integration nutzt die Google Calendar API von:
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p><strong>Google Ireland Limited</strong></p>
+                <p>Gordon House, Barrow Street</p>
+                <p>Dublin 4, Irland</p>
+                <p className="mt-2">
+                  Datenschutzerklärung: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline break-all">https://policies.google.com/privacy</a>
+                </p>
+              </div>
+              <p>
+                Google verarbeitet Ihre Daten gemäß den eigenen Datenschutzbestimmungen. Die Datenübertragung 
+                an Google erfolgt verschlüsselt über HTTPS.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Ihre Rechte</h2>
               <p className="mb-4">Sie haben folgende Rechte:</p>
               <ul className="list-disc list-inside space-y-2">
                 <li><strong>Auskunftsrecht:</strong> Sie können Auskunft über Ihre gespeicherten Daten verlangen</li>
@@ -228,7 +312,7 @@ export default function DatenschutzPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Datensicherheit</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Datensicherheit</h2>
               <p>
                 Wir verwenden innerhalb des Website-Besuchs das verbreitete SSL-Verfahren (Secure Socket Layer) in 
                 Verbindung mit der jeweils höchsten Verschlüsselungsstufe, die von Ihrem Browser unterstützt wird. 

@@ -666,7 +666,7 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
           <div className="border-t pt-4">
             <h4 className="font-medium text-gray-900 mb-3">Provision (in Cent)</h4>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Pro 1000 Views</label>
                 <input

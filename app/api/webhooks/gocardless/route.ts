@@ -30,6 +30,11 @@ export async function POST(request: Request) {
     }
 
     // Verify webhook signature
+    console.log('🔐 Verifying webhook signature...')
+    console.log('   Received signature:', signature)
+    console.log('   Using secret:', webhookSecret?.substring(0, 20) + '...')
+    console.log('   Body length:', body.length)
+    
     const isValid = verifyWebhookSignature(
       body,
       signature,
@@ -38,6 +43,7 @@ export async function POST(request: Request) {
 
     if (!isValid) {
       console.error('❌ Invalid webhook signature')
+      console.error('   Expected secret:', webhookSecret?.substring(0, 30) + '...')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 

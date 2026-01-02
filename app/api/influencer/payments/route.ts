@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
     influencer.conversions.forEach(conv => {
       switch (conv.type) {
         case 'PAGE_VIEW':
-          clicksAmount += influencer.commissionPer1000Views
           totalClicks++
           break
         case 'REGISTRATION':
@@ -118,6 +117,9 @@ export async function POST(request: NextRequest) {
           break
       }
     })
+
+    // Calculate clicks amount: commission per 1000 views (CPM model)
+    clicksAmount = Math.floor((totalClicks / 1000) * influencer.commissionPer1000Views)
 
     const totalAmount = clicksAmount + registrationsAmount + offersAmount
 

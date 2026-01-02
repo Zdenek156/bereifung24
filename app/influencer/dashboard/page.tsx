@@ -209,7 +209,7 @@ export default function InfluencerDashboardPage() {
             <div className="text-sm font-medium text-gray-600 mb-1">Gesamtverdienst</div>
             <div className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalEarnings)}</div>
             <div className="text-xs text-gray-500 mt-2">
-              Offen: {formatCurrency(stats.unpaidEarnings)}
+              Ausgezahlt: {formatCurrency(stats.paidEarnings)}
             </div>
           </div>
 

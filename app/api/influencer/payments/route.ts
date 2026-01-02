@@ -103,6 +103,9 @@ export async function POST(request: NextRequest) {
         case 'ACCEPTED_OFFER':
           totalAmount += influencer.commissionPerAcceptedOffer
           break
+        case 'WORKSHOP_REGISTRATION':
+          totalAmount += influencer.commissionPerWorkshopRegistration
+          break
       }
     })
 

@@ -82,7 +82,6 @@ export async function GET(request: NextRequest) {
       REGISTRATION: influencer.conversions.filter(c => c.type === 'REGISTRATION').length,
       ACCEPTED_OFFER: influencer.conversions.filter(c => c.type === 'ACCEPTED_OFFER').length,
       WORKSHOP_REGISTRATION: influencer.conversions.filter(c => c.type === 'WORKSHOP_REGISTRATION').length,
-      WORKSHOP_OFFER: influencer.conversions.filter(c => c.type === 'WORKSHOP_OFFER').length,
     }
 
     // Recent activity (last 30 days)

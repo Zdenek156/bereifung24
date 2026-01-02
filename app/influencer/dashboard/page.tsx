@@ -24,7 +24,6 @@ interface Stats {
     REGISTRATION: number
     ACCEPTED_OFFER: number
     WORKSHOP_REGISTRATION: number
-    WORKSHOP_OFFER: number
   }
   recentClicks: number
   recentConversions: number
@@ -265,12 +264,6 @@ export default function InfluencerDashboardPage() {
               <div className="text-sm text-gray-600">Registrierung Werkstatt</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.conversionsByType.WORKSHOP_REGISTRATION}
-              </div>
-            </div>
-            <div className="border rounded-lg p-4">
-              <div className="text-sm text-gray-600">Workshop-Angebote</div>
-              <div className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.conversionsByType.WORKSHOP_OFFER}
               </div>
             </div>
           </div>

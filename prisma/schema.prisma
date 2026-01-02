@@ -2318,7 +2318,6 @@ enum ConversionType {
   REGISTRATION // User registered
   ACCEPTED_OFFER // First offer accepted
   WORKSHOP_REGISTRATION // Workshop registration
-  WORKSHOP_OFFER // Workshop offer
 }
 
 enum PaymentMethod {

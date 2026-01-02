@@ -28,6 +28,8 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email und Passwort erforderlich')
         }
 
+        console.log('[AUTH] Login attempt for:', credentials.email)
+
         // First, try to find regular user
         const user = await prisma.user.findUnique({
           where: {
@@ -68,6 +70,14 @@ export const authOptions: NextAuthOptions = {
               b24EmployeeId = employee.id
             }
           }
+
+          console.log('[AUTH] User found, returning:', {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            customerId: user.customer?.id,
+            workshopId: user.workshop?.id
+          })
 
           return {
             id: user.id,
@@ -230,6 +240,12 @@ export const authOptions: NextAuthOptions = {
       return true
     },
     async jwt({ token, user, account }) {
+      console.log('[AUTH JWT] Called with:', {
+        hasUser: !!user,
+        userRole: user?.role,
+        tokenRole: token.role
+      })
+      
       if (user) {
         // Initial sign in - user comes from authorize()
         token.role = user.role
@@ -238,16 +254,32 @@ export const authOptions: NextAuthOptions = {
         token.workshopId = user.workshopId
         token.isB24Employee = user.isB24Employee
         token.b24EmployeeId = user.b24EmployeeId
+        
+        console.log('[AUTH JWT] Token updated with user data:', {
+          role: token.role,
+          id: token.id
+        })
       }
       return token
     },
     async session({ session, token }) {
+      console.log('[AUTH SESSION] Token to session:', {
+        tokenRole: token.role,
+        tokenId: token.id
+      })
+      
       if (session?.user) {
         session.user.role = token.role as string
         session.user.id = token.id as string
         session.user.customerId = token.customerId as string | undefined
         session.user.workshopId = token.workshopId as string | undefined
         session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
+        
+        console.log('[AUTH SESSION] Session updated:', {
+          email: session.user.email,
+          role: session.user.role,
+          id: session.user.id
+        })
       }
       return session
     }

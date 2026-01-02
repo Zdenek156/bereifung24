@@ -241,7 +241,7 @@ export default function InfluencerDashboardPage() {
         {/* Conversions by Type */}
         <div className="mb-8 bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Conversions nach Typ</h2>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="border rounded-lg p-4">
               <div className="text-sm text-gray-600">Seitenaufrufe</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">

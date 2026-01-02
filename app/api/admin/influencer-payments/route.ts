@@ -7,8 +7,16 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
+    console.log('[INFLUENCER PAYMENTS] Session check:', {
+      hasSession: !!session,
+      email: session?.user?.email,
+      role: session?.user?.role,
+      userId: session?.user?.id
+    })
+
     // Check if user is admin
     if (!session || session.user.role !== 'ADMIN') {
+      console.log('[INFLUENCER PAYMENTS] Unauthorized access attempt')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

@@ -170,9 +170,8 @@ export async function POST(request: NextRequest) {
         totalRegistrations,
         totalOffers,
         status: 'PENDING',
-        requestedAt: new Date(),
         paymentMethod: influencer.paymentMethod,
-        paymentDetails: influencer.paymentMethod === 'BANK_TRANSFER' 
+        paymentReference: influencer.paymentMethod === 'BANK_TRANSFER' 
           ? `IBAN: ${influencer.iban}, Inhaber: ${influencer.accountHolder}`
           : `PayPal: ${influencer.paypalEmail}`
       }
@@ -184,7 +183,7 @@ export async function POST(request: NextRequest) {
         id: payment.id,
         amount: payment.totalAmount,
         status: payment.status,
-        requestedAt: payment.requestedAt
+        requestedAt: payment.createdAt
       }
     })
 

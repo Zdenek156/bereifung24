@@ -133,10 +133,15 @@ export default function InfluencerPaymentsPage() {
     return method === 'BANK_TRANSFER' ? 'Überweisung' : 'PayPal'
   }
 
-  const pendingCount = payments.filter(p => p.status === 'PENDING').length
-  const totalPending = payments
-    .filter(p => p.status === 'PENDING')
-    .reduce((sum, p) => sum + p.totalAmount, 0)
+  // Calculate counts for each status
+  const allPayments = payments
+  const pendingPayments = payments.filter(p => p.status === 'PENDING')
+  const approvedPayments = payments.filter(p => p.status === 'APPROVED')
+  const paidPayments = payments.filter(p => p.status === 'PAID')
+  const cancelledPayments = payments.filter(p => p.status === 'CANCELLED')
+  
+  const pendingCount = pendingPayments.length
+  const totalPending = pendingPayments.reduce((sum, p) => sum + p.totalAmount, 0)
 
   if (status === 'loading' || loading) {
     return (
@@ -154,6 +159,17 @@ export default function InfluencerPaymentsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={() => router.push('/admin')}
+              className="flex items-center text-gray-600 hover:text-gray-900"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Zurück
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Influencer Auszahlungen</h1>
           <p className="mt-2 text-gray-600">
             Verwalte Auszahlungsanfragen von Influencern
@@ -180,22 +196,81 @@ export default function InfluencerPaymentsPage() {
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="p-4 border-b">
             <div className="flex gap-2">
-              {['ALL', 'PENDING', 'APPROVED', 'PAID', 'CANCELLED'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status as any)}
-                  className={`px-4 py-2 rounded ${
-                    filter === status
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {status === 'ALL' ? 'Alle' : 
-                   status === 'PENDING' ? 'Ausstehend' :
-                   status === 'APPROVED' ? 'Genehmigt' :
-                   status === 'PAID' ? 'Bezahlt' : 'Storniert'}
-                </button>
-              ))}
+              <button
+                onClick={() => setFilter('ALL')}
+                className={`px-4 py-2 rounded flex items-center gap-2 ${
+                  filter === 'ALL'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>Alle</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  filter === 'ALL' ? 'bg-blue-700' : 'bg-gray-200'
+                }`}>
+                  {allPayments.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilter('PENDING')}
+                className={`px-4 py-2 rounded flex items-center gap-2 ${
+                  filter === 'PENDING'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>Ausstehend</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  filter === 'PENDING' ? 'bg-blue-700' : 'bg-yellow-200 text-yellow-800'
+                }`}>
+                  {pendingPayments.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilter('APPROVED')}
+                className={`px-4 py-2 rounded flex items-center gap-2 ${
+                  filter === 'APPROVED'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>Genehmigt</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  filter === 'APPROVED' ? 'bg-blue-700' : 'bg-blue-200 text-blue-800'
+                }`}>
+                  {approvedPayments.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilter('PAID')}
+                className={`px-4 py-2 rounded flex items-center gap-2 ${
+                  filter === 'PAID'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>Bezahlt</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  filter === 'PAID' ? 'bg-blue-700' : 'bg-green-200 text-green-800'
+                }`}>
+                  {paidPayments.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilter('CANCELLED')}
+                className={`px-4 py-2 rounded flex items-center gap-2 ${
+                  filter === 'CANCELLED'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span>Storniert</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  filter === 'CANCELLED' ? 'bg-blue-700' : 'bg-red-200 text-red-800'
+                }`}>
+                  {cancelledPayments.length}
+                </span>
+              </button>
             </div>
           </div>
 

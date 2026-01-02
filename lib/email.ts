@@ -1623,3 +1623,269 @@ export function sepaMandateActivatedEmailTemplate(data: {
   `
   }
 }
+
+// ============================================
+// INFLUENCER PAYMENT CONFIRMATION
+// ============================================
+
+export function influencerPaymentConfirmationEmailTemplate(data: {
+  influencerName: string
+  amount: string
+  periodStart: string
+  periodEnd: string
+  totalClicks: number
+  clicksAmount: string
+  totalRegistrations: number
+  registrationsAmount: string
+  totalOffers: number
+  offersAmount: string
+  paymentMethod: string
+  paymentReference?: string
+  paidAt: string
+}) {
+  return {
+    subject: 'Ihre Auszahlung wurde durchgeführt - Bereifung24',
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f5f5f5;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 30px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 28px;
+          font-weight: 600;
+        }
+        .content {
+          padding: 40px 30px;
+        }
+        .success-badge {
+          text-align: center;
+          margin: 20px 0;
+        }
+        .success-badge .icon {
+          font-size: 48px;
+          color: #10b981;
+        }
+        .amount-box {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          padding: 25px;
+          border-radius: 8px;
+          text-align: center;
+          margin: 20px 0;
+        }
+        .amount-box .label {
+          font-size: 14px;
+          opacity: 0.9;
+          margin-bottom: 5px;
+        }
+        .amount-box .amount {
+          font-size: 36px;
+          font-weight: bold;
+          margin: 0;
+        }
+        .info-section {
+          background: #f9fafb;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 10px 0;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .info-row:last-child {
+          border-bottom: none;
+        }
+        .info-label {
+          font-weight: 500;
+          color: #6b7280;
+        }
+        .info-value {
+          font-weight: 600;
+          color: #111827;
+        }
+        .breakdown {
+          margin: 20px 0;
+        }
+        .breakdown-item {
+          background: white;
+          border: 1px solid #e5e7eb;
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 10px;
+        }
+        .breakdown-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .breakdown-title {
+          font-weight: 600;
+          color: #111827;
+        }
+        .breakdown-amount {
+          font-weight: 700;
+          color: #059669;
+          font-size: 18px;
+        }
+        .breakdown-details {
+          font-size: 14px;
+          color: #6b7280;
+        }
+        .footer {
+          background-color: #f9fafb;
+          padding: 20px 30px;
+          text-align: center;
+          color: #6b7280;
+          font-size: 14px;
+        }
+        .button {
+          display: inline-block;
+          padding: 12px 30px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: 600;
+          margin: 20px 0;
+        }
+        .button-container {
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>💰 Auszahlung durchgeführt</h1>
+        </div>
+        
+        <div class="content">
+          <div class="success-badge">
+            <div class="icon">✅</div>
+          </div>
+
+          <p>Hallo ${data.influencerName},</p>
+          
+          <p>
+            großartige Neuigkeiten! Ihre Auszahlung wurde erfolgreich durchgeführt.
+          </p>
+
+          <div class="amount-box">
+            <div class="label">Ausgezahlter Betrag</div>
+            <div class="amount">${data.amount}</div>
+          </div>
+
+          <div class="info-section">
+            <div class="info-row">
+              <span class="info-label">Zeitraum</span>
+              <span class="info-value">${data.periodStart} - ${data.periodEnd}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Zahlungsmethode</span>
+              <span class="info-value">${data.paymentMethod === 'BANK_TRANSFER' ? 'Banküberweisung' : 'PayPal'}</span>
+            </div>
+            ${data.paymentReference ? `
+            <div class="info-row">
+              <span class="info-label">Transaktions-ID</span>
+              <span class="info-value">${data.paymentReference}</span>
+            </div>
+            ` : ''}
+            <div class="info-row">
+              <span class="info-label">Ausgezahlt am</span>
+              <span class="info-value">${data.paidAt}</span>
+            </div>
+          </div>
+
+          <h3 style="color: #111827; margin-top: 30px;">📊 Aufschlüsselung</h3>
+          
+          <div class="breakdown">
+            ${data.totalClicks > 0 ? `
+            <div class="breakdown-item">
+              <div class="breakdown-header">
+                <span class="breakdown-title">👆 Page Views (CPM)</span>
+                <span class="breakdown-amount">${data.clicksAmount}</span>
+              </div>
+              <div class="breakdown-details">${data.totalClicks} Klicks</div>
+            </div>
+            ` : ''}
+            
+            ${data.totalRegistrations > 0 ? `
+            <div class="breakdown-item">
+              <div class="breakdown-header">
+                <span class="breakdown-title">👤 Registrierungen</span>
+                <span class="breakdown-amount">${data.registrationsAmount}</span>
+              </div>
+              <div class="breakdown-details">${data.totalRegistrations} Registrierungen</div>
+            </div>
+            ` : ''}
+            
+            ${data.totalOffers > 0 ? `
+            <div class="breakdown-item">
+              <div class="breakdown-header">
+                <span class="breakdown-title">✅ Akzeptierte Angebote</span>
+                <span class="breakdown-amount">${data.offersAmount}</span>
+              </div>
+              <div class="breakdown-details">${data.totalOffers} Angebote</div>
+            </div>
+            ` : ''}
+          </div>
+
+          <p style="margin-top: 30px; background: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+            <strong>💡 Tipp:</strong> Die Zahlung sollte in den nächsten ${data.paymentMethod === 'PAYPAL' ? '1-2' : '2-3'} Werktagen auf Ihrem Konto eingehen.
+          </p>
+
+          <div class="button-container">
+            <a href="${process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'}/influencer/payments" class="button">
+              Zahlungshistorie ansehen
+            </a>
+          </div>
+
+          <p style="margin-top: 30px;">
+            Vielen Dank für Ihre großartige Arbeit! Wir freuen uns auf weitere erfolgreiche Zusammenarbeit.
+          </p>
+
+          <p>
+            Bei Fragen zur Auszahlung stehen wir Ihnen gerne zur Verfügung.<br>
+            Ihr Bereifung24-Team
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Bereifung24</strong></p>
+          <p>Ihre Plattform für Reifenwechsel und mehr</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+  }
+}

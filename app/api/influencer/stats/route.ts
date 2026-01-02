@@ -58,10 +58,9 @@ export async function GET(request: NextRequest) {
     // Conversion rate (max 100%)
     const conversionRate = totalClicks > 0 ? Math.min((totalConversions / totalClicks) * 100, 100) : 0
 
-    // Calculate earnings
+    // Calculate earnings from conversions
     let totalEarnings = 0
     let unpaidEarnings = 0
-    let paidEarnings = 0
 
     influencer.conversions.forEach(conv => {
       // Use commissionAmount directly from the conversion record
@@ -69,12 +68,15 @@ export async function GET(request: NextRequest) {
 
       totalEarnings += amount
       
-      if (conv.isPaid) {
-        paidEarnings += amount
-      } else {
+      if (!conv.isPaid) {
         unpaidEarnings += amount
       }
     })
+
+    // Calculate paid earnings from payments
+    const paidEarnings = influencer.payments
+      .filter(pay => pay.status === 'PAID')
+      .reduce((sum, pay) => sum + pay.totalAmount, 0)
 
     // Conversions by type
     const conversionsByType = {

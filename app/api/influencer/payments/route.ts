@@ -90,24 +90,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calculate total unpaid amount
-    let totalAmount = 0
+    // Calculate amounts by type
+    let clicksAmount = 0
+    let registrationsAmount = 0
+    let offersAmount = 0
+    let totalClicks = 0
+    let totalRegistrations = 0
+    let totalOffers = 0
+
     influencer.conversions.forEach(conv => {
       switch (conv.type) {
         case 'PAGE_VIEW':
-          totalAmount += influencer.commissionPer1000Views
+          clicksAmount += influencer.commissionPer1000Views
+          totalClicks++
           break
         case 'REGISTRATION':
-          totalAmount += influencer.commissionPerRegistration
+          registrationsAmount += influencer.commissionPerRegistration
+          totalRegistrations++
           break
         case 'ACCEPTED_OFFER':
-          totalAmount += influencer.commissionPerAcceptedOffer
+          offersAmount += influencer.commissionPerAcceptedOffer
+          totalOffers++
           break
         case 'WORKSHOP_REGISTRATION':
-          totalAmount += influencer.commissionPerWorkshopRegistration
+          registrationsAmount += influencer.commissionPerWorkshopRegistration
+          totalRegistrations++
           break
       }
     })
+
+    const totalAmount = clicksAmount + registrationsAmount + offersAmount
 
     // Check minimum payout amount (e.g., 50 EUR = 5000 cents)
     const MINIMUM_PAYOUT = 5000
@@ -137,11 +149,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Calculate period (from first to last unpaid conversion)
+    const conversionDates = influencer.conversions.map(c => new Date(c.convertedAt))
+    const periodStart = conversionDates.length > 0 
+      ? new Date(Math.min(...conversionDates.map(d => d.getTime())))
+      : new Date()
+    const periodEnd = new Date()
+
     // Create payment request
     const payment = await prisma.affiliatePayment.create({
       data: {
         influencerId,
-        amount: totalAmount,
+        periodStart,
+        periodEnd,
+        totalAmount,
+        clicksAmount,
+        registrationsAmount,
+        offersAmount,
+        totalClicks,
+        totalRegistrations,
+        totalOffers,
         status: 'PENDING',
         requestedAt: new Date(),
         paymentMethod: influencer.paymentMethod,
@@ -155,7 +182,7 @@ export async function POST(request: NextRequest) {
       message: 'Auszahlungsanfrage erfolgreich erstellt',
       payment: {
         id: payment.id,
-        amount: payment.amount,
+        amount: payment.totalAmount,
         status: payment.status,
         requestedAt: payment.requestedAt
       }

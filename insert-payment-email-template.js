@@ -14,22 +14,23 @@ async function insertEmailTemplate() {
         where: { key: 'influencer-payment-confirmation' },
         data: {
           name: 'Influencer Auszahlungsbestätigung',
+          description: 'E-Mail die an Influencer gesendet wird wenn eine Auszahlung als "Bezahlt" markiert wurde',
           subject: 'Ihre Auszahlung wurde durchgeführt - Bereifung24',
           htmlContent: getTemplateHtml(),
-          variables: JSON.stringify([
-            'influencerName',
-            'amount',
-            'periodStart',
-            'periodEnd',
-            'totalClicks',
-            'clicksAmount',
-            'totalRegistrations',
-            'registrationsAmount',
-            'totalOffers',
-            'offersAmount',
-            'paymentMethod',
-            'paymentReference',
-            'paidAt'
+          placeholders: JSON.stringify([
+            { key: 'influencerName', description: 'Name des Influencers' },
+            { key: 'amount', description: 'Auszahlungsbetrag (z.B. €60.00)' },
+            { key: 'periodStart', description: 'Startdatum des Abrechnungszeitraums' },
+            { key: 'periodEnd', description: 'Enddatum des Abrechnungszeitraums' },
+            { key: 'totalClicks', description: 'Anzahl der Klicks' },
+            { key: 'clicksAmount', description: 'Betrag für Klicks' },
+            { key: 'totalRegistrations', description: 'Anzahl der Registrierungen' },
+            { key: 'registrationsAmount', description: 'Betrag für Registrierungen' },
+            { key: 'totalOffers', description: 'Anzahl akzeptierter Angebote' },
+            { key: 'offersAmount', description: 'Betrag für Angebote' },
+            { key: 'paymentMethod', description: 'Zahlungsmethode (Banküberweisung/PayPal)' },
+            { key: 'paymentReference', description: 'Transaktions-ID (optional)' },
+            { key: 'paidAt', description: 'Datum der Auszahlung' }
           ]),
           isActive: true
         }
@@ -41,22 +42,23 @@ async function insertEmailTemplate() {
         data: {
           key: 'influencer-payment-confirmation',
           name: 'Influencer Auszahlungsbestätigung',
+          description: 'E-Mail die an Influencer gesendet wird wenn eine Auszahlung als "Bezahlt" markiert wurde',
           subject: 'Ihre Auszahlung wurde durchgeführt - Bereifung24',
           htmlContent: getTemplateHtml(),
-          variables: JSON.stringify([
-            'influencerName',
-            'amount',
-            'periodStart',
-            'periodEnd',
-            'totalClicks',
-            'clicksAmount',
-            'totalRegistrations',
-            'registrationsAmount',
-            'totalOffers',
-            'offersAmount',
-            'paymentMethod',
-            'paymentReference',
-            'paidAt'
+          placeholders: JSON.stringify([
+            { key: 'influencerName', description: 'Name des Influencers' },
+            { key: 'amount', description: 'Auszahlungsbetrag (z.B. €60.00)' },
+            { key: 'periodStart', description: 'Startdatum des Abrechnungszeitraums' },
+            { key: 'periodEnd', description: 'Enddatum des Abrechnungszeitraums' },
+            { key: 'totalClicks', description: 'Anzahl der Klicks' },
+            { key: 'clicksAmount', description: 'Betrag für Klicks' },
+            { key: 'totalRegistrations', description: 'Anzahl der Registrierungen' },
+            { key: 'registrationsAmount', description: 'Betrag für Registrierungen' },
+            { key: 'totalOffers', description: 'Anzahl akzeptierter Angebote' },
+            { key: 'offersAmount', description: 'Betrag für Angebote' },
+            { key: 'paymentMethod', description: 'Zahlungsmethode (Banküberweisung/PayPal)' },
+            { key: 'paymentReference', description: 'Transaktions-ID (optional)' },
+            { key: 'paidAt', description: 'Datum der Auszahlung' }
           ]),
           isActive: true
         }

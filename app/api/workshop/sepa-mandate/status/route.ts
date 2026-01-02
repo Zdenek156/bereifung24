@@ -41,31 +41,49 @@ export async function GET(request: Request) {
       })
     }
 
-    // Get latest status from GoCardless
-    const mandate = await getMandateStatus(workshop.gocardlessMandateId)
+    // Try to get latest status from GoCardless
+    let mandate
+    let mandateStatus = workshop.gocardlessMandateStatus
+    
+    try {
+      mandate = await getMandateStatus(workshop.gocardlessMandateId)
 
-    console.log('=== SEPA MANDATE STATUS DEBUG ===')
-    console.log('Workshop:', workshop.companyName)
-    console.log('Mandate ID:', workshop.gocardlessMandateId)
-    console.log('GoCardless Status:', mandate.status)
-    console.log('Local Status:', workshop.gocardlessMandateStatus)
-    console.log('================================')
+      console.log('=== SEPA MANDATE STATUS DEBUG ===')
+      console.log('Workshop:', workshop.companyName)
+      console.log('Mandate ID:', workshop.gocardlessMandateId)
+      console.log('GoCardless Status:', mandate.status)
+      console.log('Local Status:', workshop.gocardlessMandateStatus)
+      console.log('================================')
 
-    // Update local status if changed
-    if (mandate.status !== workshop.gocardlessMandateStatus) {
-      await prisma.workshop.update({
-        where: { id: workshop.id },
-        data: {
-          gocardlessMandateStatus: mandate.status
-        }
-      })
+      // Update local status if changed
+      if (mandate.status !== workshop.gocardlessMandateStatus) {
+        await prisma.workshop.update({
+          where: { id: workshop.id },
+          data: {
+            gocardlessMandateStatus: mandate.status
+          }
+        })
+        mandateStatus = mandate.status
+      } else {
+        mandateStatus = mandate.status
+      }
+    } catch (gcError) {
+      console.warn('⚠️ Could not fetch status from GoCardless, using local status:', gcError.message)
+      // Use local database status as fallback
+      mandate = {
+        id: workshop.gocardlessMandateId,
+        status: workshop.gocardlessMandateStatus,
+        reference: workshop.gocardlessMandateRef,
+        created_at: workshop.gocardlessMandateCreatedAt
+      }
+      mandateStatus = workshop.gocardlessMandateStatus
     }
 
     const response = {
       configured: true,
       mandate: {
         id: mandate.id,
-        status: mandate.status,
+        status: mandateStatus,
         reference: mandate.reference,
         createdAt: mandate.created_at,
         nextPossibleChargeDate: mandate.next_possible_charge_date,

@@ -37,7 +37,7 @@ interface Payment {
 export default function InfluencerPaymentsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [payments, setPayments] = useState<Payment[]>([])
+  const [allPayments, setAllPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'>('PENDING')
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
@@ -50,19 +50,16 @@ export default function InfluencerPaymentsPage() {
     } else if (status === 'authenticated') {
       loadPayments()
     }
-  }, [status, router, filter])
+  }, [status, router])
 
   const loadPayments = async () => {
     try {
       setLoading(true)
-      const url = filter === 'ALL' 
-        ? '/api/admin/influencer-payments'
-        : `/api/admin/influencer-payments?status=${filter}`
-      
-      const response = await fetch(url)
+      // Load ALL payments for proper counting
+      const response = await fetch('/api/admin/influencer-payments')
       if (response.ok) {
         const data = await response.json()
-        setPayments(data.payments)
+        setAllPayments(data.payments)
       }
     } catch (error) {
       console.error('Error loading payments:', error)
@@ -133,15 +130,19 @@ export default function InfluencerPaymentsPage() {
     return method === 'BANK_TRANSFER' ? 'Überweisung' : 'PayPal'
   }
 
-  // Calculate counts for each status
-  const allPayments = payments
-  const pendingPayments = payments.filter(p => p.status === 'PENDING')
-  const approvedPayments = payments.filter(p => p.status === 'APPROVED')
-  const paidPayments = payments.filter(p => p.status === 'PAID')
-  const cancelledPayments = payments.filter(p => p.status === 'CANCELLED')
+  // Calculate counts for each status from ALL payments
+  const pendingPayments = allPayments.filter(p => p.status === 'PENDING')
+  const approvedPayments = allPayments.filter(p => p.status === 'APPROVED')
+  const paidPayments = allPayments.filter(p => p.status === 'PAID')
+  const cancelledPayments = allPayments.filter(p => p.status === 'CANCELLED')
   
   const pendingCount = pendingPayments.length
   const totalPending = pendingPayments.reduce((sum, p) => sum + p.totalAmount, 0)
+
+  // Filter payments based on selected tab
+  const filteredPayments = filter === 'ALL' 
+    ? allPayments 
+    : allPayments.filter(p => p.status === filter)
 
   if (status === 'loading' || loading) {
     return (
@@ -188,7 +189,7 @@ export default function InfluencerPaymentsPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-500">Gesamt Auszahlungen</div>
-            <div className="mt-2 text-3xl font-bold text-green-600">{payments.length}</div>
+            <div className="mt-2 text-3xl font-bold text-green-600">{allPayments.length}</div>
           </div>
         </div>
 
@@ -303,7 +304,7 @@ export default function InfluencerPaymentsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">
@@ -347,7 +348,7 @@ export default function InfluencerPaymentsPage() {
               </tbody>
             </table>
 
-            {payments.length === 0 && (
+            {filteredPayments.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-500">Keine Auszahlungen gefunden</p>
               </div>

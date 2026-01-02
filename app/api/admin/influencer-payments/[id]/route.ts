@@ -48,9 +48,7 @@ export async function PATCH(
         influencer: {
           select: {
             email: true,
-            channelName: true,
-            firstName: true,
-            lastName: true
+            channelName: true
           }
         }
       }
@@ -65,9 +63,7 @@ export async function PATCH(
     // Send email notification when payment is marked as PAID
     if (status === 'PAID') {
       try {
-        const influencerName = payment.influencer.firstName && payment.influencer.lastName
-          ? `${payment.influencer.firstName} ${payment.influencer.lastName}`
-          : payment.influencer.channelName || 'Influencer'
+        const influencerName = payment.influencer.channelName || 'Influencer'
 
         const emailTemplate = influencerPaymentConfirmationEmailTemplate({
           influencerName,

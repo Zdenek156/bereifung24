@@ -218,9 +218,7 @@ async function sendTestEmail() {
         influencer: {
           select: {
             email: true,
-            channelName: true,
-            firstName: true,
-            lastName: true
+            channelName: true
           }
         }
       }
@@ -252,9 +250,7 @@ async function sendTestEmail() {
     console.log('')
 
     // Prepare email data
-    const influencerName = payment.influencer.firstName && payment.influencer.lastName
-      ? `${payment.influencer.firstName} ${payment.influencer.lastName}`
-      : payment.influencer.channelName || 'Influencer'
+    const influencerName = payment.influencer.channelName || 'Influencer'
 
     const emailTemplate = influencerPaymentConfirmationEmailTemplate({
       influencerName,

@@ -570,6 +570,7 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
     commissionPer1000Views: 300,
     commissionPerRegistration: 1500,
     commissionPerAcceptedOffer: 2500,
+    commissionPerWorkshopRegistration: 1500,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -665,7 +666,7 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
           <div className="border-t pt-4">
             <h4 className="font-medium text-gray-900 mb-3">Provision (in Cent)</h4>
             
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Pro 1000 Views</label>
                 <input
@@ -678,7 +679,7 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pro Registration</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pro Registrierung Kunde</label>
                 <input
                   type="number"
                   value={formData.commissionPerRegistration}
@@ -689,7 +690,7 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pro Accepted Offer</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pro Angenommenes Angebot</label>
                 <input
                   type="number"
                   value={formData.commissionPerAcceptedOffer}
@@ -697,6 +698,17 @@ function CreateInfluencerModal({ onClose, onSuccess }: { onClose: () => void; on
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
                 <div className="text-xs text-gray-500 mt-1">€{(formData.commissionPerAcceptedOffer / 100).toFixed(2)}</div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pro Registrierung Werkstatt</label>
+                <input
+                  type="number"
+                  value={formData.commissionPerWorkshopRegistration}
+                  onChange={(e) => setFormData({ ...formData, commissionPerWorkshopRegistration: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <div className="text-xs text-gray-500 mt-1">€{(formData.commissionPerWorkshopRegistration / 100).toFixed(2)}</div>
               </div>
             </div>
           </div>

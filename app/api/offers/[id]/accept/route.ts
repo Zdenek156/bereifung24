@@ -418,7 +418,7 @@ export async function POST(
           select: {
             id: true,
             isActive: true,
-            commissionPerCustomerFirstOffer: true
+            commissionPerAcceptedOffer: true
           }
         })
 
@@ -434,7 +434,7 @@ export async function POST(
           })
           
           if (!existingConversion) {
-            const commissionAmount = influencer.commissionPerCustomerFirstOffer
+            const commissionAmount = influencer.commissionPerAcceptedOffer
             
             await prisma.affiliateConversion.create({
               data: {

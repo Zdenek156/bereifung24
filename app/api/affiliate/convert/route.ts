@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         isActive: true,
-        commissionPerCustomerRegistration: true,
+        commissionPerRegistration: true,
         commissionPerWorkshopRegistration: true,
       }
     })
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     if (customerId) {
       conversionType = 'REGISTRATION'
-      commissionAmount = influencer.commissionPerCustomerRegistration
+      commissionAmount = influencer.commissionPerRegistration
       
       // Check for duplicate
       const existingConversion = await prisma.affiliateConversion.findFirst({

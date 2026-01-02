@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       })),
       recentPayments: influencer.payments.slice(0, 5).map(pay => ({
         id: pay.id,
-        amount: pay.amount,
+        amount: pay.totalAmount,
         status: pay.status,
         createdAt: pay.createdAt,
         paidAt: pay.paidAt

@@ -50,8 +50,11 @@ export default function EmailPage() {
   const checkSettings = async () => {
     try {
       const res = await fetch('/api/email/settings')
-      if (!res.ok && res.status === 404) {
-        setHasSettings(false)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.needsConfiguration) {
+          setHasSettings(false)
+        }
       }
     } catch (error) {
       console.error('Error checking settings:', error)
@@ -65,9 +68,14 @@ export default function EmailPage() {
       const res = await fetch(`/api/email/messages?folder=${currentFolder}&limit=50`)
       if (res.ok) {
         const data = await res.json()
-        setMessages(data)
-        if (data.length > 0 && !selectedMessage) {
-          setSelectedMessage(data[0])
+        if (data.needsConfiguration) {
+          setHasSettings(false)
+          setMessages([])
+          return
+        }
+        setMessages(data.messages || [])
+        if (data.messages?.length > 0 && !selectedMessage) {
+          setSelectedMessage(data.messages[0])
         }
       }
     } catch (error) {

@@ -52,6 +52,17 @@ export class EmailService {
   }
 
   /**
+   * Prüfen, ob E-Mail-Einstellungen existieren
+   */
+  async hasSettings(): Promise<boolean> {
+    const settings = await prisma.emailSettings.findUnique({
+      where: { userId: this.userId },
+      select: { id: true },
+    })
+    return !!settings
+  }
+
+  /**
    * E-Mail-Einstellungen des Benutzers abrufen
    */
   async getEmailSettings() {

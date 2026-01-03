@@ -17,9 +17,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
 
     const emailService = new EmailService(session.user.id)
+    
+    // Check if email settings exist
+    const hasSettings = await emailService.hasSettings()
+    if (!hasSettings) {
+      return NextResponse.json({ messages: [], needsConfiguration: true })
+    }
+
     const messages = await emailService.getCachedMessages(folder, limit)
 
-    return NextResponse.json(messages)
+    return NextResponse.json({ messages, needsConfiguration: false })
   } catch (error: any) {
     console.error('Error fetching messages:', error)
     return NextResponse.json(

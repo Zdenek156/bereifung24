@@ -2350,6 +2350,9 @@ model EmailSettings {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Encryption Key
+  encryptionKey String? // AES-256 key for encrypting passwords
+
   // IMAP Settings
   imapHost     String // imap.hetzner.de
   imapPort     Int     @default(993)

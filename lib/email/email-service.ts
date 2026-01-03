@@ -5,18 +5,42 @@ import crypto from 'crypto'
 
 const prisma = new PrismaClient()
 
-// Verschlüsselungs-Key (in Produktion aus env laden)
-const ENCRYPTION_KEY = process.env.EMAIL_ENCRYPTION_KEY || 'default-key-32-chars-long-here'
 const ENCRYPTION_IV_LENGTH = 16
+
+/**
+ * Get encryption key from user's email settings or generate a new one
+ */
+async function getEncryptionKey(userId: string): Promise<string> {
+  const settings = await prisma.emailSettings.findUnique({
+    where: { userId },
+    select: { encryptionKey: true }
+  })
+  
+  if (settings?.encryptionKey) {
+    return settings.encryptionKey
+  }
+  
+  // Generate new 32-byte key for AES-256
+  const newKey = crypto.randomBytes(32).toString('hex').substring(0, 32)
+  
+  // Save it to settings if they exist
+  await prisma.emailSettings.updateMany({
+    where: { userId },
+    data: { encryptionKey: newKey }
+  })
+  
+  return newKey
+}
 
 /**
  * Passwort verschlüsseln
  */
-export function encryptPassword(password: string): string {
+export async function encryptPassword(password: string, userId: string): Promise<string> {
+  const key = await getEncryptionKey(userId)
   const iv = crypto.randomBytes(ENCRYPTION_IV_LENGTH)
   const cipher = crypto.createCipheriv(
     'aes-256-cbc',
-    Buffer.from(ENCRYPTION_KEY),
+    Buffer.from(key),
     iv
   )
   let encrypted = cipher.update(password)
@@ -27,13 +51,14 @@ export function encryptPassword(password: string): string {
 /**
  * Passwort entschlüsseln
  */
-export function decryptPassword(encryptedPassword: string): string {
+export async function decryptPassword(encryptedPassword: string, userId: string): Promise<string> {
+  const key = await getEncryptionKey(userId)
   const parts = encryptedPassword.split(':')
   const iv = Buffer.from(parts[0], 'hex')
   const encryptedText = Buffer.from(parts[1], 'hex')
   const decipher = crypto.createDecipheriv(
     'aes-256-cbc',
-    Buffer.from(ENCRYPTION_KEY),
+    Buffer.from(key),
     iv
   )
   let decrypted = decipher.update(encryptedText)
@@ -85,7 +110,7 @@ export class EmailService {
 
     const config: ImapConfig = {
       user: settings.imapUser,
-      password: decryptPassword(settings.imapPassword),
+      password: await decryptPassword(settings.imapPassword, this.userId),
       host: settings.imapHost,
       port: settings.imapPort,
       tls: settings.imapTls,
@@ -106,7 +131,7 @@ export class EmailService {
       secure: settings.smtpSecure,
       auth: {
         user: settings.smtpUser,
-        pass: decryptPassword(settings.smtpPassword),
+        pass: await decryptPassword(settings.smtpPassword, this.userId),
       },
     }
 
@@ -291,7 +316,7 @@ export async function saveEmailSettings(
   }
 ) {
   // Passwörter verschlüsseln
-  const encryptedPassword = encryptPassword(settings.imapPassword)
+  const encryptedPassword = await encryptPassword(settings.imapPassword, userId)
 
   return await prisma.emailSettings.upsert({
     where: { userId },

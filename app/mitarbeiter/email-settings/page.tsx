@@ -361,11 +361,11 @@ export default function EmailSettingsPage() {
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col gap-3 pt-4">
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium"
               >
                 {saving ? 'Speichere...' : 'Einstellungen speichern'}
               </button>
@@ -375,10 +375,16 @@ export default function EmailSettingsPage() {
                   type="button"
                   onClick={testConnection}
                   disabled={saving}
-                  className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                  className="w-full px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
                 >
                   Verbindung testen
                 </button>
+              )}
+              
+              {!settings.id && (
+                <p className="text-sm text-gray-500 text-center">
+                  💡 Speichern Sie zuerst die Einstellungen, um die Verbindung zu testen
+                </p>
               )}
             </div>
           </form>

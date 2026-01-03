@@ -235,156 +235,6 @@ export default function WerkstattInfoPage() {
         </div>
       </section>
 
-      {/* Highlight Features - Landing Page & Price Calculator */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold">
-                Exklusive Features
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                Das macht Bereifung24 einzigartig
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Landing Page Builder */}
-              <div className="bg-white p-8 rounded-2xl shadow-xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-4xl">
-                    🌐
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Eigene Landing Page</h3>
-                    <p className="text-blue-600 font-semibold">Deine digitale Visitenkarte</p>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Erstelle in wenigen Minuten eine professionelle Werkstatt-Webseite - ohne Programmierkenntnisse. 
-                  Perfekt für Marketing und Online-Präsenz.
-                </p>
-
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Werkstatt-Informationen</p>
-                      <p className="text-gray-600 text-sm">Beschreibung, Spezialgebiete, Zertifikate, Team-Fotos</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Öffnungszeiten</p>
-                      <p className="text-gray-600 text-sm">Automatische Anzeige, Feiertage, Sonderöffnungszeiten</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Google Maps Integration</p>
-                      <p className="text-gray-600 text-sm">Standort, Anfahrt, Routenplaner direkt integriert</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Service-Übersicht</p>
-                      <p className="text-gray-600 text-sm">Deine Leistungen, Preise, Besonderheiten präsentieren</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-bold">Beispiel:</span> bereifung24.de/werkstatt/mueller-reifenservice
-                  </p>
-                </div>
-              </div>
-
-              {/* Automatic Price Calculator */}
-              <div className="bg-white p-8 rounded-2xl shadow-xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-4xl">
-                    🧮
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Automatische Preiskalkulation</h3>
-                    <p className="text-green-600 font-semibold">Spare Zeit & vermeide Fehler</p>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Keine manuellen Berechnungen mehr! Lege einmal deine Kalkulation fest - das System 
-                  berechnet alle Preise automatisch für jede Anfrage.
-                </p>
-
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Basis-Preiskalkulation</p>
-                      <p className="text-gray-600 text-sm">Arbeitszeit, Material, Gemeinkosten - einmal festlegen</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Automatische Zuschläge</p>
-                      <p className="text-gray-600 text-sm">Runflat, Größe, Komplexität - System rechnet automatisch</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Saisonale Anpassungen</p>
-                      <p className="text-gray-600 text-sm">Winter/Sommer-Preise, Nachfrage-basierte Kalkulation</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                    </svg>
-                    <div>
-                      <p className="font-bold text-gray-900">Fehlerfreie Angebote</p>
-                      <p className="text-gray-600 text-sm">Keine Rechenfehler mehr, konsistente Preisgestaltung</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-600">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-bold">Beispiel:</span> Reifenwechsel 17" + Runflat = Basispreis × 1,3 × 1,15 = automatisch berechnet
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -579,5 +429,10 @@ const workshopFeatures = [
     icon: '🔔',
     title: 'Benachrichtigungen',
     description: 'Erhalte sofort Bescheid über neue Anfragen und Buchungen.'
+  },
+  {
+    icon: '🎧',
+    title: 'Persönlicher Support',
+    description: 'Direkter Ansprechpartner bei Bereifung24. Wir helfen dir bei Fragen und Problemen.'
   }
 ]

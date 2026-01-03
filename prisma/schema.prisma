@@ -115,6 +115,11 @@ model User {
   customer Customer?
   workshop Workshop?
 
+  // Email System Relations
+  emailSettings  EmailSettings?
+  emailSignature EmailSignature?
+  emailMessages  EmailMessage[]
+
   // Procurement Relations
   suppliersCreated    Supplier[]           @relation
   procurementRequests ProcurementRequest[] @relation
@@ -254,17 +259,17 @@ model Workshop {
   assignedEmployee   B24Employee? @relation("WorkshopAssignment", fields: [assignedEmployeeId], references: [id])
 
   // Relations
-  offers            Offer[]
-  bookings          Booking[]
-  reviews           Review[]
-  commissions       Commission[]
-  employees         Employee[]
-  workshopVacations WorkshopVacation[]
-  workshopServices  WorkshopService[]
-  pricingSettings   PricingSettings?
-  landingPage       WorkshopLandingPage?
+  offers               Offer[]
+  bookings             Booking[]
+  reviews              Review[]
+  commissions          Commission[]
+  employees            Employee[]
+  workshopVacations    WorkshopVacation[]
+  workshopServices     WorkshopService[]
+  pricingSettings      PricingSettings?
+  landingPage          WorkshopLandingPage?
   affiliateConversions AffiliateConversion[]
-  crmData           WorkshopCRM?
+  crmData              WorkshopCRM?
 
   // Sales CRM - Converted from Prospect
   prospectSource ProspectWorkshop? @relation("ConvertedFromProspect")
@@ -2148,17 +2153,17 @@ model InfluencerApplication {
 // ============================================
 
 model DeletedUserEmail {
-  id           String    @id @default(cuid())
-  email        String    @unique // Email kann nicht mehr verwendet werden
-  userType     String    @default("CUSTOMER") // 'CUSTOMER' or 'WORKSHOP'
-  reason       String?   // Grund für Löschung
-  deletedBy    String?   // Admin/Employee der gelöscht hat
-  deletedAt    DateTime  @default(now())
-  
+  id        String   @id @default(cuid())
+  email     String   @unique // Email kann nicht mehr verwendet werden
+  userType  String   @default("CUSTOMER") // 'CUSTOMER' or 'WORKSHOP'
+  reason    String? // Grund für Löschung
+  deletedBy String? // Admin/Employee der gelöscht hat
+  deletedAt DateTime @default(now())
+
   // Support-Notizen
   supportNotes String?   @db.Text // Kommentare vom Support-Team
   unlockedAt   DateTime? // Wann wurde entsperrt
-  unlockedBy   String?   // Wer hat entsperrt
+  unlockedBy   String? // Wer hat entsperrt
   updatedAt    DateTime  @updatedAt
 
   @@map("deleted_user_emails")
@@ -2225,7 +2230,7 @@ model AffiliateConversion {
   customerId String?
   customer   Customer? @relation(fields: [customerId], references: [id])
 
-  workshopId String? @map("workshop_id")
+  workshopId String?   @map("workshop_id")
   workshop   Workshop? @relation(fields: [workshopId], references: [id])
 
   tireRequestId String?
@@ -2334,4 +2339,90 @@ enum PaymentStatus {
   APPROVED
   PAID
   CANCELLED
+}
+
+// ============================================
+// EMAIL SYSTEM
+// ============================================
+
+model EmailSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // IMAP Settings
+  imapHost     String // imap.hetzner.de
+  imapPort     Int     @default(993)
+  imapUser     String // employee@bereifung24.de
+  imapPassword String // Encrypted
+  imapTls      Boolean @default(true)
+
+  // SMTP Settings
+  smtpHost     String // smtp.hetzner.de
+  smtpPort     Int     @default(465)
+  smtpUser     String // employee@bereifung24.de
+  smtpPassword String // Encrypted (same as IMAP)
+  smtpSecure   Boolean @default(true)
+
+  // Sync Settings
+  syncEnabled  Boolean   @default(true)
+  syncInterval Int       @default(300000) // 5 minutes in ms
+  lastSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_settings")
+}
+
+model EmailSignature {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  htmlContent String  @db.Text
+  enabled     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_signatures")
+}
+
+model EmailMessage {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // IMAP Metadata
+  uid       Int
+  messageId String?
+  folder    String   @default("INBOX")
+  flags     String[] // ["\\Seen", "\\Flagged"]
+
+  // Email Headers
+  from    String
+  to      String[]
+  cc      String[] @default([])
+  bcc     String[] @default([])
+  replyTo String?
+  subject String
+  date    DateTime
+
+  // Content
+  textContent String? @db.Text
+  htmlContent String? @db.Text
+  attachments Json? // [{filename, contentType, size}]
+
+  // Status
+  isRead    Boolean @default(false)
+  isFlagged Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, uid, folder])
+  @@index([userId, folder])
+  @@index([userId, date])
+  @@map("email_messages")
 }

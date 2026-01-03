@@ -128,6 +128,7 @@ export class ImapService {
         })
 
         const messages: EmailMessage[] = []
+        const parsedMessages: Map<number, Partial<EmailMessage>> = new Map()
 
         fetch.on('message', (msg, seqno) => {
           let uid = 0
@@ -140,7 +141,7 @@ export class ImapService {
                 return
               }
 
-              messages.push({
+              const messageData = {
                 uid,
                 messageId: parsed.messageId,
                 from: parsed.from?.text || '',
@@ -159,7 +160,9 @@ export class ImapService {
                 })),
                 flags,
                 folder,
-              })
+              }
+
+              parsedMessages.set(uid, messageData)
             })
           })
 
@@ -177,8 +180,12 @@ export class ImapService {
         })
 
         fetch.once('end', () => {
-          this.disconnect()
-          resolve(messages)
+          // Wait a bit for all parsing to complete
+          setTimeout(() => {
+            messages.push(...Array.from(parsedMessages.values()) as EmailMessage[])
+            this.disconnect()
+            resolve(messages)
+          }, 1000)
         })
       })
     })

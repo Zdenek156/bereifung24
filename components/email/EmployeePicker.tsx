@@ -95,6 +95,35 @@ export default function EmployeePicker({
     }
   }
 
+  const handleAddEmail = () => {
+    // Check if search is a valid email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (emailRegex.test(search)) {
+      const newEmployee: Employee = {
+        id: `custom-${Date.now()}`,
+        firstName: '',
+        lastName: '',
+        name: search,
+        email: search,
+        displayName: search,
+      }
+      
+      // Check if not already added
+      if (!selectedEmployees.some((e) => e.email === search)) {
+        onSelect([...selectedEmployees, newEmployee])
+      }
+      setSearch('')
+      setIsOpen(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAddEmail()
+    }
+  }
+
   const removeEmployee = (employeeId: string) => {
     onSelect(selectedEmployees.filter((e) => e.id !== employeeId))
   }
@@ -156,10 +185,20 @@ export default function EmployeePicker({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Name oder E-Mail suchen..."
+              onKeyDown={handleKeyDown}
+              placeholder="Name, E-Mail suchen oder E-Mail-Adresse eingeben..."
               className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
+            {search && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(search) && (
+              <button
+                type="button"
+                onClick={handleAddEmail}
+                className="mt-2 w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              >
+                + E-Mail hinzufügen: {search}
+              </button>
+            )}
           </div>
 
           {/* Employee List */}

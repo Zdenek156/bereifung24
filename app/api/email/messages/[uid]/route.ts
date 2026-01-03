@@ -15,11 +15,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const uid = parseInt(params.uid)
-    const folder = request.nextUrl.searchParams.get('folder') || 'INBOX'
-
+    const messageId = params.uid
+    
+    // Check if it's a database ID (CUID) or numeric IMAP uid
+    const isNumericUid = /^\d+$/.test(messageId)
+    
     const emailService = new EmailService(session.user.id)
-    const message = await emailService.getCachedMessage(uid, folder)
+    let message
+    
+    if (isNumericUid) {
+      const uid = parseInt(messageId)
+      const folder = request.nextUrl.searchParams.get('folder') || 'INBOX'
+      message = await emailService.getCachedMessage(uid, folder)
+    } else {
+      // Database ID - query by ID directly
+      message = await emailService.getMessageById(messageId)
+    }
 
     if (!message) {
       return NextResponse.json({ error: 'Message not found' }, { status: 404 })

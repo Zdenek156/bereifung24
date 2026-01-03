@@ -72,7 +72,7 @@ export default function HomePage() {
                 Jetzt Anfrage stellen
               </Link>
               <Link
-                href="/werkstatt-info"
+                href="/fuer-werkstaetten"
                 className="w-full sm:w-auto px-8 py-4 bg-primary-500 text-white rounded-lg font-bold text-lg hover:bg-primary-400 transition-all border-2 border-white/20"
               >
                 Infos für Werkstätten
@@ -254,7 +254,7 @@ export default function HomePage() {
                 Als Kunde registrieren
               </Link>
               <Link
-                href="/werkstatt-info"
+                href="/fuer-werkstaetten"
                 className="px-10 py-5 bg-primary-500 text-white rounded-lg font-bold text-lg hover:bg-primary-400 transition-all border-2 border-white/20"
               >
                 Infos für Werkstätten
@@ -308,7 +308,7 @@ export default function HomePage() {
             <div>
               <h4 className="text-lg font-bold mb-4">Für Werkstätten</h4>
               <ul className="space-y-3 text-gray-400">
-                <li><Link href="/werkstatt-info" className="hover:text-white transition-colors">Werkstatt-Informationen</Link></li>
+                <li><Link href="/fuer-werkstaetten" className="hover:text-white transition-colors">Werkstatt-Informationen</Link></li>
                 <li><Link href="/register/workshop" className="hover:text-white transition-colors">Werkstatt registrieren</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Werkstatt-Login</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>

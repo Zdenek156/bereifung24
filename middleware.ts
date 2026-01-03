@@ -7,6 +7,7 @@ const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/sales', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
+  '/fuer-werkstaetten',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder'
 ]
 

@@ -187,9 +187,9 @@ export default function EmailPage() {
             className="px-3 py-1.5 border rounded-lg text-sm"
           >
             <option value="INBOX">Posteingang</option>
-            <option value="Sent">Gesendet</option>
-            <option value="Drafts">Entwürfe</option>
-            <option value="Trash">Papierkorb</option>
+            <option value="INBOX.Sent">Gesendet</option>
+            <option value="INBOX.Drafts">Entwürfe</option>
+            <option value="INBOX.Trash">Papierkorb</option>
           </select>
         </div>
 

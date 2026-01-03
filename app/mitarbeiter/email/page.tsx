@@ -62,7 +62,7 @@ export default function EmailPage() {
     }
   }
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (autoSync: boolean = true) => {
     setLoading(true)
     try {
       const res = await fetch(`/api/email/messages?folder=${currentFolder}&limit=50`)
@@ -73,6 +73,14 @@ export default function EmailPage() {
           setMessages([])
           return
         }
+        
+        // Wenn keine Nachrichten in der DB sind, automatisch synchronisieren
+        if (autoSync && (!data.messages || data.messages.length === 0)) {
+          setLoading(false)
+          await syncMessages()
+          return
+        }
+        
         setMessages(data.messages || [])
         if (data.messages?.length > 0 && !selectedMessage) {
           setSelectedMessage(data.messages[0])
@@ -95,7 +103,7 @@ export default function EmailPage() {
       })
       
       if (res.ok) {
-        await fetchMessages()
+        await fetchMessages(false) // Don't auto-sync again after manual sync
       }
     } catch (error) {
       console.error('Error syncing messages:', error)

@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const https = require('https');
 
-// Dein neuer Webhook Secret
-const SECRET = 'AByU_DwS5gEc2AvYLh2g60oiO8tWQVYTWcOMzAwz8wqrH_gO8WpGTe4_LQG-QWMDVg';
+// Dein neuer Webhook Secret (aus der Datenbank)
+const SECRET = 'AByU_DwS5gEc2AvYLh2g60oiOHckHwaHumTK2gNk';
 const MANDATE_ID = 'MD01KCD3T4ACS0';
 
 // Webhook Payload

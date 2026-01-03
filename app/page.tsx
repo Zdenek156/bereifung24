@@ -72,10 +72,10 @@ export default function HomePage() {
                 Jetzt Anfrage stellen
               </Link>
               <Link
-                href="/register/workshop"
+                href="/werkstatt-info"
                 className="w-full sm:w-auto px-8 py-4 bg-primary-500 text-white rounded-lg font-bold text-lg hover:bg-primary-400 transition-all border-2 border-white/20"
               >
-                Werkstatt registrieren
+                Infos für Werkstätten
               </Link>
             </div>
 
@@ -236,103 +236,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Workshop Benefits - Premium Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-block mb-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-sm font-semibold">
-                Für Werkstätten
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">
-                Erreiche mehr Kunden. Steigere deine Auslastung.
-              </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                Profitiere von Deutschlands erster digitaler Reifenservice-Plattform und gewinne neue Stammkunden
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              {workshopBenefits.map((benefit, index) => (
-                <div key={index} className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all">
-                  <div className="w-14 h-14 bg-primary-600 rounded-xl flex items-center justify-center text-white text-2xl mb-4">
-                    {benefit.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-300 leading-relaxed mb-4">
-                    {benefit.description}
-                  </p>
-                  <ul className="space-y-2">
-                    {benefit.details.map((detail, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                        </svg>
-                        <span className="text-gray-300">{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-8 md:p-12 rounded-2xl text-center shadow-2xl">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                Kostenlose Registrierung • Keine monatlichen Gebühren
-              </h3>
-              <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
-                Zahle nur eine faire Provision bei erfolgreicher Vermittlung. Keine versteckten Kosten.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/register/workshop"
-                  className="px-8 py-4 bg-white text-primary-600 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
-                >
-                  Werkstatt registrieren
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-bold text-lg hover:bg-white/10 transition-all"
-                >
-                  Werkstatt-Login
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust & Security */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                Vertrauen & Sicherheit
-              </h2>
-              <p className="text-xl text-gray-600">
-                Deine Daten sind bei uns in sicheren Händen
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {trustFeatures.map((feature, index) => (
-                <div key={index} className="bg-white p-8 rounded-xl shadow-md text-center">
-                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-3xl mx-auto mb-4">
-                    {feature.icon}
-                  </div>
-                  <p className="text-gray-600">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -351,10 +254,10 @@ export default function HomePage() {
                 Als Kunde registrieren
               </Link>
               <Link
-                href="/register/workshop"
+                href="/werkstatt-info"
                 className="px-10 py-5 bg-primary-500 text-white rounded-lg font-bold text-lg hover:bg-primary-400 transition-all border-2 border-white/20"
               >
-                Als Werkstatt registrieren
+                Infos für Werkstätten
               </Link>
             </div>
           </div>
@@ -405,9 +308,9 @@ export default function HomePage() {
             <div>
               <h4 className="text-lg font-bold mb-4">Für Werkstätten</h4>
               <ul className="space-y-3 text-gray-400">
+                <li><Link href="/werkstatt-info" className="hover:text-white transition-colors">Werkstatt-Informationen</Link></li>
                 <li><Link href="/register/workshop" className="hover:text-white transition-colors">Werkstatt registrieren</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Werkstatt-Login</Link></li>
-                <li><Link href="/workshop-benefits" className="hover:text-white transition-colors">Vorteile</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
                 <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
               </ul>
@@ -612,63 +515,5 @@ const customerBenefits = [
   {
     title: 'Flexible Stornierung',
     description: 'Pläne ändern sich? Storniere oder verschiebe deinen Termin kostenlos.'
-  }
-]
-
-const workshopBenefits = [
-  {
-    title: 'Neue Kunden gewinnen',
-    icon: '👥',
-    description: 'Erreiche Autofahrer, die aktiv nach deinen Services suchen. Erweitere deinen Kundenstamm digital.',
-    details: [
-      'Qualifizierte Anfragen in deinem Radius',
-      'Kunden suchen aktiv nach deinen Services',
-      'Höhere Conversion als klassische Werbung'
-    ]
-  },
-  {
-    title: 'Auslastung optimieren',
-    icon: '📊',
-    description: 'Fülle Lücken in deinem Terminkalender. Nutze freie Kapazitäten optimal aus.',
-    details: [
-      'Flexibles Angebots-Management',
-      'Automatische Terminverwaltung',
-      'Echtzeit-Kapazitätsplanung'
-    ]
-  },
-  {
-    title: 'Faire Konditionen',
-    icon: '💰',
-    description: 'Keine monatlichen Fixkosten. Zahle nur bei erfolgreicher Vermittlung eine faire Provision.',
-    details: [
-      'Keine Grundgebühr',
-      'Transparente Provisionsmodelle',
-      'Volle Kostenkontrolle'
-    ]
-  },
-  {
-    title: 'Digitale Verwaltung',
-    icon: '💻',
-    description: 'Verwalte Services, Preise, Termine und Mitarbeiter zentral. Alles in einem Dashboard.',
-    details: [
-      'Intuitive Bedienung',
-      'Mitarbeiter- & Urlaubsverwaltung',
-      'Automatisierte Prozesse'
-    ]
-  }
-]
-
-const trustFeatures = [
-  {
-    icon: '🔒',
-    description: 'SSL-Verschlüsselung und sichere Datenspeicherung nach EU-DSGVO'
-  },
-  {
-    icon: '✅',
-    description: 'Alle Werkstätten werden manuell geprüft und verifiziert'
-  },
-  {
-    icon: '⚡',
-    description: 'Schnelle Vermittlung - durchschnittlich 3-5 Angebote innerhalb von 24 Stunden'
   }
 ]

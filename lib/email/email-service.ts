@@ -256,6 +256,18 @@ export class EmailService {
   }
 
   /**
+   * E-Mail anhand Datenbank-ID abrufen
+   */
+  async getMessageById(id: string) {
+    return await prisma.emailMessage.findFirst({
+      where: {
+        id,
+        userId: this.userId,
+      },
+    })
+  }
+
+  /**
    * E-Mail als gelesen markieren
    */
   async markAsRead(uid: number, folder: string = 'INBOX'): Promise<void> {

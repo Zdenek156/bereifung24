@@ -127,8 +127,10 @@ export default function EmailSettingsPage() {
         body: JSON.stringify({ folder: 'INBOX', limit: 1 }),
       })
 
+      const data = await res.json()
+
       if (!res.ok) {
-        throw new Error('Verbindung fehlgeschlagen')
+        throw new Error(data.error || 'Verbindung fehlgeschlagen')
       }
 
       setMessage({ type: 'success', text: 'Verbindung erfolgreich getestet!' })

@@ -28,12 +28,12 @@ export default function EmailSettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   
   const [settings, setSettings] = useState<EmailSettings>({
-    imapHost: 'imap.hetzner.de',
+    imapHost: 'mail.your-server.de',
     imapPort: 993,
     imapUser: '',
     imapPassword: '',
     imapTls: true,
-    smtpHost: 'smtp.hetzner.de',
+    smtpHost: 'mail.your-server.de',
     smtpPort: 465,
     smtpUser: '',
     smtpPassword: '',
@@ -397,9 +397,9 @@ export default function EmailSettingsPage() {
               💡 Hetzner E-Mail-Setup
             </h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• IMAP Server: <code className="bg-blue-100 px-2 py-0.5 rounded">imap.hetzner.de</code></li>
+              <li>• IMAP Server: <code className="bg-blue-100 px-2 py-0.5 rounded">mail.your-server.de</code></li>
               <li>• IMAP Port: <code className="bg-blue-100 px-2 py-0.5 rounded">993</code> (SSL/TLS)</li>
-              <li>• SMTP Server: <code className="bg-blue-100 px-2 py-0.5 rounded">smtp.hetzner.de</code></li>
+              <li>• SMTP Server: <code className="bg-blue-100 px-2 py-0.5 rounded">mail.your-server.de</code></li>
               <li>• SMTP Port: <code className="bg-blue-100 px-2 py-0.5 rounded">465</code> (SSL) oder <code className="bg-blue-100 px-2 py-0.5 rounded">587</code> (STARTTLS)</li>
               <li>• Die E-Mail-Adresse muss vom Admin bei Hetzner eingerichtet werden</li>
             </ul>

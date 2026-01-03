@@ -35,13 +35,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (!settings) {
-      return NextResponse.json(
-        { error: 'Email settings not configured' },
-        { status: 404 }
-      )
+      return NextResponse.json({ settings: null, needsConfiguration: true })
     }
 
-    return NextResponse.json(settings)
+    return NextResponse.json({ settings, needsConfiguration: false })
   } catch (error: any) {
     console.error('Error fetching email settings:', error)
     return NextResponse.json(

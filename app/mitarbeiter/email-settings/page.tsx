@@ -61,10 +61,13 @@ export default function EmailSettingsPage() {
       const res = await fetch('/api/email/settings')
       if (res.ok) {
         const data = await res.json()
-        setSettings((prev) => ({
-          ...prev,
-          ...data,
-        }))
+        // API gibt { settings, needsConfiguration } zurück
+        if (data.settings) {
+          setSettings((prev) => ({
+            ...prev,
+            ...data.settings,
+          }))
+        }
       } else if (res.status !== 404) {
         throw new Error('Failed to fetch settings')
       }
@@ -152,8 +155,20 @@ export default function EmailSettingsPage() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">E-Mail-Einstellungen</h1>
-            <p className="text-gray-600 mt-2">
+            <div className="flex items-center gap-4 mb-4">
+              <button
+                type="button"
+                onClick={() => router.push('/mitarbeiter/email')}
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Zurück
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900">E-Mail-Einstellungen</h1>
+            </div>
+            <p className="text-gray-600">
               Konfigurieren Sie Ihren Hetzner E-Mail-Zugang
             </p>
           </div>

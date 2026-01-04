@@ -160,23 +160,6 @@ export default function EmailPage() {
     }
   }
 
-  const deleteMessage = async (message: EmailMessage) => {
-    if (!confirm('E-Mail wirklich löschen?')) return
-
-    try {
-      await fetch(`/api/email/messages/${message.uid}?folder=${message.folder}`, {
-        method: 'DELETE',
-      })
-
-      setMessages((prev) => prev.filter((m) => m.id !== message.id))
-      if (selectedMessage?.id === message.id) {
-        setSelectedMessage(null)
-      }
-    } catch (error) {
-      console.error('Error deleting message:', error)
-    }
-  }
-
   const handleSelectMessage = (message: EmailMessage) => {
     setSelectedMessage(message)
     markAsRead(message)

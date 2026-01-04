@@ -370,4 +370,40 @@ export class ImapService {
       })
     })
   }
+
+  /**
+   * E-Mail in einen IMAP-Ordner anhängen (z.B. Sent)
+   */
+  async appendMessage(
+    folder: string,
+    rawMessage: string | Buffer,
+    flags?: string[]
+  ): Promise<void> {
+    await this.connect()
+
+    return new Promise((resolve, reject) => {
+      if (!this.imap) {
+        return reject(new Error('IMAP not connected'))
+      }
+
+      // Stelle sicher, dass die Nachricht ein Buffer ist
+      const messageBuffer = Buffer.isBuffer(rawMessage)
+        ? rawMessage
+        : Buffer.from(rawMessage)
+
+      this.imap.append(messageBuffer, {
+        mailbox: folder,
+        flags: flags || ['\\Seen'],
+      }, (err) => {
+        this.disconnect()
+        if (err) {
+          console.error('Error appending message to', folder, ':', err)
+          reject(err)
+        } else {
+          console.log('Message appended to', folder)
+          resolve()
+        }
+      })
+    })
+  }
 }

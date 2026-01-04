@@ -74,6 +74,15 @@ const allNavigationItems: NavigationItem[] = [
     resource: '',
     isDefault: true // Immer sichtbar
   },
+  {
+    href: '/mitarbeiter/fahrtenbuch',
+    title: 'Fahrtenbuch',
+    description: 'Fahrten dokumentieren & KM erfassen',
+    icon: '🚗',
+    color: 'bg-cyan-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
   // Berechtigungsbasierte Seiten
   {
     href: '/mitarbeiter/email',

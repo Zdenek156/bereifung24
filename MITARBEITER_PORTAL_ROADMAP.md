@@ -135,39 +135,64 @@ Professionelles Self-Service-Portal für alle Bereifung24-Mitarbeiter mit rollen
 
 ---
 
-## 🕐 PHASE 3: Zeiterfassung
+## ✅ PHASE 3: Zeiterfassung (ABGESCHLOSSEN)
 
-**Timeline:** Woche 5-7 (01.02 - 22.02.2026)
+**Timeline:** 04.01.2026  
+**Status:** ✅ Live seit 04.01.2026
 
 ### 3.1 Zeiterfassung `/mitarbeiter/zeit`
-- [ ] Start/Stop-Buttons
-- [ ] Pausenzeit-Erfassung
-- [ ] Laufende Zeit-Anzeige
-- [ ] Tageszusammenfassung
-- [ ] Wochenübersicht
-- [ ] Monatsübersicht
-- [ ] Export-Funktion (Excel/PDF)
+- [x] Start/Stop-Buttons
+  - [x] Große Live-Timer-Anzeige (Stunden:Minuten:Sekunden)
+  - [x] Arbeit starten/beenden
+  - [x] Status-Anzeige (Aktiv/Pause)
+- [x] Pausenzeit-Erfassung
+  - [x] Pause starten/beenden
+  - [x] Automatische Pausenzeit-Berechnung
+  - [x] Mehrere Pausen pro Session
+- [x] Laufende Zeit-Anzeige
+  - [x] Echtzeit-Update jede Sekunde
+  - [x] Aktuelle Session-Zeit
+- [x] Tageszusammenfassung
+  - [x] Heute gearbeitet (Stunden)
+  - [x] Anzahl Sessions
+  - [x] Anzahl Pausen
+- [x] Heutige Zeiteinträge-Liste
+  - [x] Alle Sessions mit Start/Ende
+  - [x] Status (Läuft/Beendet)
+  - [x] Arbeitszeit + Pausenzeit
+- [x] Auto-Refresh (alle 30 Sekunden)
+- [ ] **TODO:** Wochenübersicht
+- [ ] **TODO:** Monatsübersicht
+- [ ] **TODO:** Export-Funktion (Excel/PDF)
 
 ### 3.2 Überstunden-Tracking
-- [ ] Automatische Berechnung
-- [ ] Überstunden-Konto
-- [ ] Abbau-Anträge
-- [ ] Historie
+- [x] Automatische Berechnung im Hintergrund
+  - [x] Monatliche Soll/Ist-Stunden
+  - [x] Differenz (Überstunden/Minusstunden)
+  - [x] Kumuliertes Saldo über Monate
+- [x] `OvertimeBalance` Model mit Monatsdaten
+- [ ] **TODO:** Überstunden-Konto-Anzeige für Mitarbeiter
+- [ ] **TODO:** Abbau-Anträge für Überstunden
+- [ ] **TODO:** Historie & Grafiken
 
 ### 3.3 Projekt/Kunden-Zuordnung
-- [ ] Zeitbuchung auf Projekte
-- [ ] Notizen zu Einträgen
-- [ ] Auswertungen pro Projekt
+- [x] Feld `projectName` in WorkSession (optional)
+- [ ] **TODO:** Zeitbuchung auf Projekte/Kunden
+- [ ] **TODO:** Notizen zu Einträgen (erweitert)
+- [ ] **TODO:** Auswertungen pro Projekt
+- [ ] **TODO:** Projekt-Dropdown in UI
 
-### 3.4 Datenbank
-- [ ] `TimeEntry` Model
-- [ ] `WorkSession` Model
-- [ ] `OvertimeBalance` Model
-- [ ] Time-Tracking-API
+### 3.4 Datenbank & API
+- [x] `WorkSession` Model (mit Relations)
+- [x] `Break` Model (mit Berechnung)
+- [x] `OvertimeBalance` Model (monatlich)
+- [x] `/api/employee/time` - GET (aktuelle Session + heute)
+- [x] `/api/employee/time` - POST (start, stop, break-start, break-end)
+- [x] Automatisches Überstunden-Update bei Session-Ende
 
 ---
 
-## 🚗 PHASE 4: Fahrzeuge & Fahrten
+## 🚗 PHASE 4: Fahrzeuge & Fahrten (IN ARBEIT)
 
 **Timeline:** Woche 8-10 (22.02 - 15.03.2026)
 

@@ -115,14 +115,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (endKm <= startKm) {
+    // Konvertiere zu Zahlen
+    const startKmInt = parseInt(startKm)
+    const endKmInt = parseInt(endKm)
+
+    if (isNaN(startKmInt) || isNaN(endKmInt)) {
+      return NextResponse.json(
+        { error: 'KM-Werte müssen Zahlen sein' },
+        { status: 400 }
+      )
+    }
+
+    if (endKmInt <= startKmInt) {
       return NextResponse.json(
         { error: 'End-KM muss größer als Start-KM sein' },
         { status: 400 }
       )
     }
 
-    const distanceKm = endKm - startKm
+    const distanceKm = endKmInt - startKmInt
 
     // Erstelle Fahrt
     const trip = await prisma.tripEntry.create({
@@ -130,8 +141,8 @@ export async function POST(request: NextRequest) {
         employeeId,
         vehicleId,
         date: new Date(date),
-        startKm,
-        endKm,
+        startKm: startKmInt,
+        endKm: endKmInt,
         distanceKm,
         startLocation,
         endLocation,
@@ -155,7 +166,7 @@ export async function POST(request: NextRequest) {
     // Update Fahrzeug-Kilometerstand
     await prisma.companyVehicle.update({
       where: { id: vehicleId },
-      data: { currentKm: endKm }
+      data: { currentKm: endKmInt }
     })
 
     return NextResponse.json({

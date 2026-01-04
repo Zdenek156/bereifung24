@@ -4,19 +4,50 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+interface Vehicle {
+  id: string
+  licensePlate: string
+  make: string
+  model: string
+  year?: number
+  vin?: string
+  currentKm: number
+  isActive: boolean
+  assignedTo?: {
+    firstName: string
+    lastName: string
+  }
+  _count: {
+    trips: number
+  }
+}
+
+interface Employee {
+  id: string
+  firstName: string
+  lastName: string
+}
+
 export default function VehiclesAdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [vehicles, setVehicles] = useState([])
-  const [employees, setEmployees] = useState([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ licensePlate: '', make: '', model: '', year: '', vin: '', currentKm: '0', assignedToId: '' })
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login')
-    else if (session?.user?.role === 'ADMIN') fetchData()
-    else router.push('/dashboard')
+    if (status === 'loading') return
+    if (!session) {
+      router.push('/login')
+      return
+    }
+    if (session.user.role !== 'ADMIN') {
+      router.push('/dashboard')
+      return
+    }
+    fetchData()
   }, [status, session, router])
 
   const fetchData = async () => {

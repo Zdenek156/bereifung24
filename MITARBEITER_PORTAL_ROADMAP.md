@@ -74,40 +74,64 @@ Professionelles Self-Service-Portal für alle Bereifung24-Mitarbeiter mit rollen
 
 ---
 
-## ⏰ PHASE 2: Urlaubs- & Abwesenheitsverwaltung
+## ✅ PHASE 2: Urlaubs- & Abwesenheitsverwaltung (ABGESCHLOSSEN)
 
-**Timeline:** Woche 3-4 (18.01 - 01.02.2026)
+**Timeline:** 04.01.2026  
+**Status:** ✅ Live seit 04.01.2026
 
 ### 2.1 Urlaubsverwaltung `/mitarbeiter/urlaub`
-- [ ] Urlaubsantrag-Formular
-  - [ ] Datumsauswahl (Start/Ende)
-  - [ ] Art (Urlaub/Sonderurlaub)
-  - [ ] Bemerkungsfeld
-- [ ] Antrags-Übersicht
-  - [ ] Pending/Approved/Rejected
-  - [ ] Historie
-- [ ] Urlaubskonto-Anzeige
-  - [ ] Gesamt-Anspruch
-  - [ ] Genommen
-  - [ ] Resturlaub
-- [ ] Genehmigungs-Workflow
+- [x] Urlaubsantrag-Formular
+  - [x] Datumsauswahl (Start/Ende)
+  - [x] Art (Urlaub/Sonderurlaub/Unbezahlt)
+  - [x] Bemerkungsfeld
+- [x] Antrags-Übersicht
+  - [x] Pending/Approved/Rejected Status
+  - [x] Historie aller Anträge
+- [x] Urlaubskonto-Anzeige
+  - [x] Gesamt-Anspruch (30 Tage)
+  - [x] Genommen
+  - [x] Beantragt (Pending)
+  - [x] Verfügbar
+  - [x] Übertrag aus Vorjahr
+- [x] API-Integration für LeaveBalance & LeaveRequest
+- [ ] **HR-TODO:** Genehmigungs-Workflow
   - [ ] Notification an Vorgesetzte
-  - [ ] Approve/Reject-Funktion
+  - [ ] Approve/Reject-Funktion in HR-Portal
   - [ ] E-Mail-Benachrichtigungen
 
 ### 2.2 Krankmeldungen `/mitarbeiter/krankmeldung`
-- [ ] Krankmeldungs-Formular
-- [ ] AU-Bescheinigung hochladen
-- [ ] Krankmeldungs-Historie
-- [ ] Automatische Benachrichtigungen
-- [ ] Rückkehr-Datum-Tracking
+- [x] Krankmeldungs-Formular
+  - [x] Startdatum (Pflicht)
+  - [x] Enddatum (Optional)
+  - [x] Erwartetes Rückkehr-Datum
+  - [x] Bemerkungsfeld
+- [x] AU-Bescheinigung hochladen
+  - [x] PDF/Bild-Upload
+  - [x] Speicherung in `/uploads/sick-certificates/`
+- [x] Krankmeldungs-Historie
+  - [x] Alle Krankmeldungen anzeigen
+  - [x] AU-Status (vorhanden/ausstehend)
+- [x] Rückkehr-Datum-Tracking
+- [ ] **HR-TODO:** Automatische Benachrichtigungen
+  - [ ] E-Mail an HR bei neuer Krankmeldung
+  - [ ] Erinnerung bei fehlender AU-Bescheinigung
 
-### 2.3 Datenbank
-- [ ] `LeaveRequest` Model
-- [ ] `SickLeave` Model
-- [ ] `LeaveBalance` Model
-- [ ] Approval-Workflow-API
-- [ ] Notification-System
+### 2.3 Datenbank & API
+- [x] `LeaveRequest` Model (bereits vorhanden)
+- [x] `SickLeave` Model (bereits vorhanden)
+- [x] `LeaveBalance` Model (bereits vorhanden)
+- [x] `/api/employee/leave` - GET & POST
+- [x] `/api/employee/sick-leave` - GET & POST
+- [ ] **HR-TODO:** Approval-Workflow-API
+- [ ] **HR-TODO:** Notification-System
+
+### 📋 HR-Integration Notizen:
+- Alle Datenstrukturen sind HR-ready
+- `approvedBy`, `approvedAt`, `rejectionReason` Felder bereits vorhanden
+- `substituteId` für Urlaubsvertretung implementiert
+- Krankmeldungen mit Benachrichtigungs-Timestamp (`notifiedAt`)
+- Upload-Ordner für AU-Bescheinigungen eingerichtet
+- Status-Management implementiert (pending/approved/rejected/cancelled)
 
 ---
 

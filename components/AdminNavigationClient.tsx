@@ -362,7 +362,7 @@ export default function AdminNavigationClient() {
         const accessibleResources = new Set(data.accessibleResources)
         
         const filtered = allNavigationItems.filter(item => 
-          accessibleResources.has(item.resource)
+          item.resource === '' || accessibleResources.has(item.resource)
         )
         
         setVisibleItems(filtered)

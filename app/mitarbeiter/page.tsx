@@ -65,7 +65,7 @@ const allNavigationItems: NavigationItem[] = [
     resource: 'leave-requests'
   },
   {
-    href: '/admin/files',
+    href: '/mitarbeiter/files',
     title: 'Dateiverwaltung',
     description: 'Gemeinsame Dateien & Ordner',
     icon: '📁',

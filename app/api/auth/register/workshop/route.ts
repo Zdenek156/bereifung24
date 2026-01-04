@@ -29,12 +29,16 @@ export async function POST(request: Request) {
     // Validierung
     const validatedData = workshopSchema.parse(body)
 
-    // Prüfen ob Email bereits existiert
+    // Prüfen ob Email bereits existiert (in User ODER B24Employee Tabelle)
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email }
     })
 
-    if (existingUser) {
+    const existingEmployee = await prisma.b24Employee.findUnique({
+      where: { email: validatedData.email }
+    })
+
+    if (existingUser || existingEmployee) {
       return NextResponse.json(
         { error: 'E-Mail-Adresse bereits registriert' },
         { status: 400 }

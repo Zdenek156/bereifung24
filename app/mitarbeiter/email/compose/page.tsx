@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -24,6 +24,8 @@ export default function ComposePage() {
   const [sending, setSending] = useState(false)
   const [showCc, setShowCc] = useState(false)
   const [showBcc, setShowBcc] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const emailSentRef = useRef(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -36,6 +38,57 @@ export default function ComposePage() {
       loadReplyMessage(replyToId)
     }
   }, [replyToId])
+
+  // Erkennung von Änderungen
+  useEffect(() => {
+    if (to.length > 0 || subject || body) {
+      setHasUnsavedChanges(true)
+    }
+  }, [to, cc, bcc, subject, body])
+
+  // Auto-Save beim Verlassen der Seite
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !emailSentRef.current) {
+        saveDraft()
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedChanges, to, cc, bcc, subject, body])
+
+  const saveDraft = async () => {
+    if (!to.length || !subject) return
+
+    try {
+      await fetch('/api/email/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: to.map((e) => e.email),
+          cc: cc.map((e) => e.email),
+          bcc: bcc.map((e) => e.email),
+          subject,
+          html: body,
+        }),
+      })
+    } catch (error) {
+      console.error('Error saving draft:', error)
+    }
+  }
+
+  const handleClose = async () => {
+    if (hasUnsavedChanges && !emailSentRef.current) {
+      if (to.length > 0 && subject) {
+        await saveDraft()
+        alert('Entwurf wurde gespeichert')
+      }
+    }
+    router.back()
+  }
 
   const loadReplyMessage = async (messageId: string) => {
     try {
@@ -75,6 +128,8 @@ export default function ComposePage() {
         throw new Error('Failed to send email')
       }
 
+      emailSentRef.current = true
+      setHasUnsavedChanges(false)
       alert('E-Mail erfolgreich versendet!')
       router.push('/mitarbeiter/email')
     } catch (error) {
@@ -104,7 +159,7 @@ export default function ComposePage() {
           <div className="border-b px-6 py-4 flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-900">✉️ Neue E-Mail</h1>
             <button
-              onClick={() => router.back()}
+              onClick={handleClose}
               className="text-gray-600 hover:text-gray-900"
             >
               ✕
@@ -232,7 +287,7 @@ export default function ComposePage() {
                 {sending ? 'Sende...' : '📤 E-Mail senden'}
               </button>
               <button
-                onClick={() => router.back()}
+                onClick={handleClose}
                 className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
               >
                 Abbrechen

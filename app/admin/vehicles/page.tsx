@@ -58,11 +58,12 @@ export default function VehiclesAdminPage() {
       ])
       if (vehiclesRes.ok) {
         const data = await vehiclesRes.json()
-        setVehicles(data.vehicles)
+        setVehicles(data.vehicles || [])
       }
       if (employeesRes.ok) {
         const data = await employeesRes.json()
-        setEmployees(data.employees)
+        // API könnte employees als Array oder als { employees: [] } zurückgeben
+        setEmployees(Array.isArray(data) ? data : (data.employees || []))
       }
     } catch (error) {
       console.error('Error:', error)

@@ -953,11 +953,12 @@ model B24Employee {
   password String? // Null until they set it via email link
 
   // Personal Info
-  firstName  String
-  lastName   String
-  phone      String?
-  position   String? // e.g., "Account Manager", "Buchhalter", "Marketing Manager"
-  department String? // e.g., "Buchhaltung", "Marketing", "Vertrieb", "Support"
+  firstName    String
+  lastName     String
+  phone        String?
+  position     String? // e.g., "Account Manager", "Buchhalter", "Marketing Manager"
+  department   String? // e.g., "Buchhaltung", "Marketing", "Vertrieb", "Support"
+  profileImage String? // URL to profile image
 
   // Status
   isActive      Boolean @default(true)

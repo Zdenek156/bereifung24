@@ -125,10 +125,21 @@ export class EmailService {
   async getSmtpService(): Promise<SmtpService> {
     const settings = await this.getEmailSettings()
 
+    // Automatische Bestimmung der Verschlüsselung basierend auf Port
+    // Port 465 = SSL/TLS (secure: true)
+    // Port 587 = STARTTLS (secure: false)
+    // Andere Ports = Benutzereinstellung
+    let secure = settings.smtpSecure
+    if (settings.smtpPort === 465) {
+      secure = true
+    } else if (settings.smtpPort === 587) {
+      secure = false
+    }
+
     const config: SmtpConfig = {
       host: settings.smtpHost,
       port: settings.smtpPort,
-      secure: settings.smtpSecure,
+      secure: secure,
       auth: {
         user: settings.smtpUser,
         pass: await decryptPassword(settings.smtpPassword, this.userId),

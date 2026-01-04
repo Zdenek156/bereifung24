@@ -1006,6 +1006,12 @@ model B24Employee {
   workSessions     WorkSession[]
   overtimeBalances OvertimeBalance[]
 
+  // Vehicle & Trip Relations
+  assignedVehicles CompanyVehicle[] // Reverse relation
+  trips            TripEntry[]
+  fuelReceipts     FuelReceipt[]
+  reportedDamages  VehicleDamage[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2681,4 +2687,167 @@ model OvertimeBalance {
   @@unique([employeeId, year, month])
   @@index([employeeId])
   @@map("overtime_balances")
+}
+
+// COMPANY VEHICLES & TRIP LOG
+// ============================================
+
+model CompanyVehicle {
+  id String @id @default(cuid())
+
+  // Fahrzeug-Stammdaten
+  licensePlate String  @unique
+  make         String // z.B. "BMW"
+  model        String // z.B. "320d"
+  year         Int?
+  vin          String? @unique
+
+  // Kilometer
+  currentKm Int @default(0)
+
+  // Zuordnung (optional)
+  assignedToId String?
+  assignedTo   B24Employee? @relation(fields: [assignedToId], references: [id])
+
+  // Leasingdaten
+  leasingCompany  String?
+  leasingStart    DateTime?
+  leasingEnd      DateTime?
+  monthlyRate     Decimal?  @db.Decimal(10, 2)
+  includedKm      Int? // Inklusiv-Kilometer pro Jahr
+
+  // Wartung
+  lastService     DateTime?
+  nextService     DateTime?
+  nextServiceKm   Int?
+  nextInspection  DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  trips         TripEntry[]
+  fuelReceipts  FuelReceipt[]
+  damages       VehicleDamage[]
+  maintenances  VehicleMaintenance[]
+
+  @@map("company_vehicles")
+}
+
+model TripEntry {
+  id        String         @id @default(cuid())
+  vehicleId String
+  vehicle   CompanyVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Fahrt-Daten
+  date      DateTime
+  startKm   Int
+  endKm     Int
+  distanceKm Int // Berechnet: endKm - startKm
+
+  // Ziel
+  startLocation String
+  endLocation   String
+  purpose       String // z.B. "Kundenbesuch"
+
+  // Art
+  tripType String @default("BUSINESS") // BUSINESS, PRIVATE, COMMUTE
+
+  // Optional: Kunde/Projekt
+  customerName String?
+  projectName  String?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([vehicleId])
+  @@index([date])
+  @@map("trip_entries")
+}
+
+model FuelReceipt {
+  id        String         @id @default(cuid())
+  vehicleId String
+  vehicle   CompanyVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  date       DateTime
+  km         Int // Kilometerstand bei Tankung
+  liters     Float
+  priceTotal Decimal @db.Decimal(10, 2)
+  station    String? // z.B. "Shell"
+
+  receiptUrl String? // Foto des Belegs
+
+  createdAt DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([vehicleId])
+  @@map("fuel_receipts")
+}
+
+model VehicleDamage {
+  id        String         @id @default(cuid())
+  vehicleId String
+  vehicle   CompanyVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  reportedById String
+  reportedBy   B24Employee @relation(fields: [reportedById], references: [id])
+
+  date        DateTime
+  location    String? // Wo ist der Schaden aufgetreten
+  description String
+  severity    String  @default("MINOR") // MINOR, MAJOR, CRITICAL
+
+  // Fotos
+  photos String? // JSON Array von URLs
+
+  // Status
+  status     String    @default("REPORTED") // REPORTED, IN_REPAIR, REPAIRED, INSURANCE_CLAIM
+  repairedAt DateTime?
+  repairCost Decimal?  @db.Decimal(10, 2)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleId])
+  @@index([reportedById])
+  @@map("vehicle_damages")
+}
+
+model VehicleMaintenance {
+  id        String         @id @default(cuid())
+  vehicleId String
+  vehicle   CompanyVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  type String // SERVICE, INSPECTION, TIRE_CHANGE, REPAIR, OTHER
+
+  date       DateTime
+  km         Int
+  workshop   String?
+  cost       Decimal? @db.Decimal(10, 2)
+  description String
+
+  // Nächster Service
+  nextServiceKm   Int?
+  nextServiceDate DateTime?
+
+  receiptUrl String? // Rechnung/Beleg
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+  @@map("vehicle_maintenances")
 }

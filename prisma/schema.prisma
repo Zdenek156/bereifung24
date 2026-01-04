@@ -1002,6 +1002,10 @@ model B24Employee {
   substituteFor      LeaveRequest[]            @relation("LeaveSubstitute")
   sickLeaves         SickLeave[]
 
+  // Time Tracking Relations
+  workSessions     WorkSession[]
+  overtimeBalances OvertimeBalance[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2596,4 +2600,85 @@ model SickLeave {
   @@index([employeeId])
   @@index([startDate])
   @@map("sick_leaves")
+}
+
+// TIME TRACKING SYSTEM
+// ============================================
+
+model WorkSession {
+  id         String      @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  startTime DateTime
+  endTime   DateTime?
+
+  // Pausenzeiten
+  breakMinutes Int @default(0)
+
+  // Automatisch berechnet bei endTime
+  totalMinutes Int?
+  workMinutes  Int? // totalMinutes - breakMinutes
+
+  // Optional: Projekt/Kunde zuordnen
+  projectName String?
+  notes       String?
+
+  // Status
+  isActive Boolean @default(true) // true = läuft gerade
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  breaks Break[]
+
+  @@index([employeeId])
+  @@index([startTime])
+  @@index([isActive])
+  @@map("work_sessions")
+}
+
+model Break {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   WorkSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  startTime DateTime
+  endTime   DateTime?
+
+  minutes Int? // Automatisch berechnet
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@map("breaks")
+}
+
+model OvertimeBalance {
+  id         String      @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  year  Int
+  month Int
+
+  // Soll-Stunden (z.B. 160h bei 40h/Woche)
+  targetHours Float @default(160)
+
+  // Ist-Stunden
+  actualHours Float @default(0)
+
+  // Differenz
+  overtimeHours Float @default(0) // Kann negativ sein (Minusstunden)
+
+  // Kumuliert (inkl. Vormonat)
+  cumulativeOvertime Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, year, month])
+  @@index([employeeId])
+  @@map("overtime_balances")
 }

@@ -102,9 +102,21 @@ export class SmtpService {
 
       const info = await this.transporter.sendMail(mailOptions)
       console.log('Email sent successfully:', info.messageId)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending email:', error)
-      throw new Error('Failed to send email')
+      
+      // Provide more specific error messages
+      if (error.code === 'ETIMEDOUT') {
+        throw new Error('Verbindung zum E-Mail-Server konnte nicht hergestellt werden (Timeout). Bitte überprüfen Sie die SMTP-Einstellungen.')
+      } else if (error.code === 'ECONNREFUSED') {
+        throw new Error('Verbindung zum E-Mail-Server wurde verweigert. Bitte überprüfen Sie Host und Port.')
+      } else if (error.responseCode === 535 || error.response?.includes('authentication failed')) {
+        throw new Error('E-Mail-Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Benutzername und Passwort.')
+      } else if (error.responseCode === 550) {
+        throw new Error('E-Mail wurde vom Server abgelehnt. Bitte überprüfen Sie die Empfängeradresse.')
+      }
+      
+      throw new Error(error.message || 'Failed to send email')
     }
   }
 

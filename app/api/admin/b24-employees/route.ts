@@ -44,12 +44,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, firstName, lastName, phone, position, department, permissions } = body
 
-    // Check if email already exists
+    // Check if email already exists (in B24Employee OR User table)
     const existingEmployee = await prisma.b24Employee.findUnique({
       where: { email }
     })
 
-    if (existingEmployee) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (existingEmployee || existingUser) {
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
 

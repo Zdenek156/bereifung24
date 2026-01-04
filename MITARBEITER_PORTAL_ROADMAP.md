@@ -192,12 +192,71 @@ Professionelles Self-Service-Portal für alle Bereifung24-Mitarbeiter mit rollen
 
 ---
 
-## 🚗 PHASE 4: Fahrzeuge & Fahrten (IN ARBEIT)
+## 🚗 PHASE 4: Fahrzeuge & Fahrten (ABGESCHLOSSEN)
 
-**Timeline:** Woche 8-10 (22.02 - 15.03.2026)
+**Timeline:** 04.01.2026  
+**Status:** ✅ Live seit 04.01.2026
 
 ### 4.1 Fahrtenbuch `/mitarbeiter/fahrtenbuch`
-- [ ] Fahrt-Eingabe-Formular
+- [x] Fahrt-Eingabe-Formular
+  - [x] Fahrzeug auswählen (Dropdown)
+  - [x] Datum auswählen
+  - [x] Start-KM / End-KM (automatische Berechnung)
+  - [x] Start-/Ziel-Ort
+  - [x] Zweck (Freitext)
+  - [x] Art: Geschäftlich/Privat/Arbeitsweg
+- [x] Fahrten-Übersicht (letzte 30 Tage)
+  - [x] Alle Fahrten mit Details anzeigen
+  - [x] Fahrzeug, Strecke, KM, Art
+- [x] Monatsstatistik
+  - [x] Monat gesamt (KM)
+  - [x] Geschäftlich (KM)
+  - [x] Anzahl Fahrten
+- [x] Automatisches KM-Update am Fahrzeug
+- [x] Kunde/Projekt-Zuordnung (optional)
+- [ ] **TODO:** Monatlicher Export (PDF/Excel)
+- [ ] **TODO:** 1%-Regelung für Privatfahrten berechnen
+- [ ] **TODO:** Kilometerabrechnung (€/km)
+
+### 4.2 Fahrzeugverwaltung (Admin) `/admin/vehicles`
+- [x] Neues Fahrzeug anlegen
+  - [x] Kennzeichen, Marke, Modell
+  - [x] Baujahr, FIN/VIN
+  - [x] Aktueller KM-Stand
+  - [x] Mitarbeiter zuordnen (optional)
+- [x] Fahrzeug-Übersicht
+  - [x] Liste aller Fahrzeuge
+  - [x] KM-Stand, Zuordnung, Status
+  - [x] Anzahl Fahrten pro Fahrzeug
+- [ ] **TODO:** Fahrzeug bearbeiten/deaktivieren
+- [ ] **TODO:** Tankbelege hochladen (für Mitarbeiter)
+- [ ] **TODO:** Wartungstermine verwalten
+- [ ] **TODO:** Schadenmeldungen mit Fotos
+- [ ] **TODO:** Leasingdokumente verwalten
+
+### 4.3 Datenbank & API
+- [x] `CompanyVehicle` Model (mit Leasing-Daten)
+- [x] `TripEntry` Model (mit KM-Berechnung)
+- [x] `FuelReceipt` Model (vorbereitet)
+- [x] `VehicleDamage` Model (vorbereitet)
+- [x] `VehicleMaintenance` Model (vorbereitet)
+- [x] `/api/employee/trips` - GET & POST
+- [x] `/api/admin/vehicles` - GET & POST
+- [x] Automatisches KM-Update bei Fahrt
+
+### 📋 Buchhaltungs-Integration (TODO):
+- [ ] **Export-Funktion für Buchhaltung**
+  - [ ] Monatlicher Export aller Fahrten (Excel/CSV)
+  - [ ] Filterung nach Mitarbeiter
+  - [ ] Filterung nach Fahrzeug
+  - [ ] Filterung nach Zeitraum
+  - [ ] Berechnung der Kilometerpauschale
+  - [ ] Zugriff für Buchhaltungs-Rolle
+- [ ] **Admin-Übersicht**
+  - [ ] Alle Fahrten aller Mitarbeiter
+  - [ ] Monatliche Statistiken
+  - [ ] Tankkosten-Übersicht
+  - [ ] Export für Steuerberater
   - [ ] Start-/End-KM
   - [ ] Start-/Ziel-Ort
   - [ ] Zweck (Geschäftlich/Privat)

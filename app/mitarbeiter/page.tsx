@@ -16,6 +16,72 @@ interface DashboardStats {
   overtimeHours?: number
 }
 
+interface NavigationItem {
+  href: string
+  title: string
+  description: string
+  icon: string
+  color: string
+  resource: string
+  isDefault?: boolean // Immer sichtbar
+}
+
+// Verfügbare Mitarbeiter-Portal Seiten
+const allNavigationItems: NavigationItem[] = [
+  // Standard-Seiten (immer sichtbar)
+  {
+    href: '/mitarbeiter/profil',
+    title: 'Mein Profil',
+    description: 'Persönliche Daten & Bankverbindung',
+    icon: '👤',
+    color: 'bg-blue-100',
+    resource: '',
+    isDefault: true
+  },
+  {
+    href: '/mitarbeiter/dokumente',
+    title: 'Dokumente',
+    description: 'Verträge, Gehaltsabrechnungen & mehr',
+    icon: '📄',
+    color: 'bg-orange-100',
+    resource: '',
+    isDefault: true
+  },
+  // Berechtigungsbasierte Seiten
+  {
+    href: '/mitarbeiter/email',
+    title: 'E-Mail',
+    description: 'Postfach mit IMAP/SMTP',
+    icon: '📧',
+    color: 'bg-green-100',
+    resource: 'email'
+  },
+  {
+    href: '/mitarbeiter/urlaub',
+    title: 'Urlaub & Spesen',
+    description: 'Urlaubsanträge & Spesenabrechnungen',
+    icon: '🏖️',
+    color: 'bg-purple-100',
+    resource: 'leave-requests'
+  },
+  {
+    href: '/mitarbeiter/files',
+    title: 'Dateiverwaltung',
+    description: 'Gemeinsame Dateien & Ordner',
+    icon: '📁',
+    color: 'bg-yellow-100',
+    resource: 'files'
+  },
+  {
+    href: '/admin/kvp',
+    title: 'Verbesserungsvorschläge',
+    description: 'KVP - Ideen einreichen',
+    icon: '💡',
+    color: 'bg-indigo-100',
+    resource: 'kvp'
+  }
+]
+
 export default function MitarbeiterDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -24,12 +90,15 @@ export default function MitarbeiterDashboard() {
     pendingTasks: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [visibleItems, setVisibleItems] = useState<NavigationItem[]>([])
+  const [permissionsLoading, setPermissionsLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
     } else if (session?.user) {
       fetchStats()
+      fetchPermissions()
     }
   }, [status, session, router])
 
@@ -44,6 +113,29 @@ export default function MitarbeiterDashboard() {
       console.error('Error fetching stats:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchPermissions = async () => {
+    try {
+      const res = await fetch('/api/employee/permissions')
+      if (res.ok) {
+        const data = await res.json()
+        const accessibleResources = new Set(data.accessibleResources)
+        
+        // Filtere Seiten: Standard-Seiten immer sichtbar, andere nur mit Permission
+        const filtered = allNavigationItems.filter(item => 
+          item.isDefault || accessibleResources.has(item.resource)
+        )
+        
+        setVisibleItems(filtered)
+      }
+    } catch (error) {
+      console.error('Error fetching permissions:', error)
+      // Bei Fehler: Nur Standard-Seiten anzeigen
+      setVisibleItems(allNavigationItems.filter(item => item.isDefault))
+    } finally {
+      setPermissionsLoading(false)
     }
   }
 
@@ -169,7 +261,60 @@ export default function MitarbeiterDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions / Navigation Kacheln */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Verfügbare Bereiche
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Basierend auf Ihren Berechtigungen
+            </p>
+          </div>
+          <div className="p-6">
+            {permissionsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 rounded-lg h-32"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {visibleItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="group bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start">
+                      <div className={`flex-shrink-0 w-12 h-12 ${item.color} rounded-lg flex items-center justify-center`}>
+                        <span className="text-2xl">{item.icon}</span>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {item.description}
+                        </p>
+                        {item.isDefault && (
+                          <span className="inline-block mt-2 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            Standard
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Old Quick Actions - Entfernen */}
+        {/* 
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -261,14 +406,14 @@ export default function MitarbeiterDashboard() {
               </h3>
               <div className="mt-2 text-sm text-blue-800">
                 <p>
-                  Hier finden Sie alle wichtigen Funktionen für Ihren Arbeitsalltag.
-                  Weitere Features wie Zeiterfassung, Urlaubsverwaltung und mehr
-                  werden in Kürze verfügbar sein.
+                  Die angezeigten Bereiche basieren auf Ihren Berechtigungen.
+                  Bei Fragen zur Freischaltung weiterer Funktionen wenden Sie sich bitte an den Administrator.
                 </p>
               </div>
             </div>
           </div>
         </div>
+        */}
       </div>
     </div>
   )

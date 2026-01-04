@@ -35,7 +35,13 @@ export default function AdminDashboard() {
       return
     }
 
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+    // Nur ADMIN darf ins Admin-Dashboard
+    if (session.user.role === 'B24_EMPLOYEE') {
+      router.push('/mitarbeiter')
+      return
+    }
+
+    if (session.user.role !== 'ADMIN') {
       router.push('/dashboard')
       return
     }

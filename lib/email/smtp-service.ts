@@ -44,6 +44,9 @@ export class SmtpService {
         user: this.config.auth.user,
         pass: this.config.auth.pass,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000, // 10 seconds
+      socketTimeout: 30000, // 30 seconds
     })
   }
 

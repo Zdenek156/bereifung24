@@ -47,6 +47,24 @@ const allNavigationItems: NavigationItem[] = [
     resource: '',
     isDefault: true
   },
+  {
+    href: '/mitarbeiter/urlaub',
+    title: 'Urlaub & Spesen',
+    description: 'Urlaubsanträge & Spesenabrechnungen',
+    icon: '🏖️',
+    color: 'bg-purple-100',
+    resource: 'leave-requests',
+    isDefault: true // Immer sichtbar für alle Mitarbeiter
+  },
+  {
+    href: '/mitarbeiter/krankmeldung',
+    title: 'Krankmeldung',
+    description: 'Krankmeldungen einreichen',
+    icon: '🤒',
+    color: 'bg-red-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
   // Berechtigungsbasierte Seiten
   {
     href: '/mitarbeiter/email',
@@ -55,14 +73,6 @@ const allNavigationItems: NavigationItem[] = [
     icon: '📧',
     color: 'bg-green-100',
     resource: 'email'
-  },
-  {
-    href: '/mitarbeiter/urlaub',
-    title: 'Urlaub & Spesen',
-    description: 'Urlaubsanträge & Spesenabrechnungen',
-    icon: '🏖️',
-    color: 'bg-purple-100',
-    resource: 'leave-requests'
   },
   {
     href: '/mitarbeiter/files',

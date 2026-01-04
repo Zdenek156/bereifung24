@@ -131,6 +131,36 @@ export default function EmailPage() {
   }
 
   const deleteMessage = async (message: EmailMessage) => {
+    if (!confirm('E-Mail in den Papierkorb verschieben?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(
+        `/api/email/messages/${message.uid}/delete?folder=${message.folder}`,
+        { method: 'DELETE' }
+      )
+
+      if (res.ok) {
+        // E-Mail aus der Liste entfernen
+        setMessages((prev) => prev.filter((m) => m.id !== message.id))
+        
+        // Wenn die gelöschte E-Mail ausgewählt war, Auswahl zurücksetzen
+        if (selectedMessage?.id === message.id) {
+          setSelectedMessage(null)
+        }
+
+        alert('E-Mail wurde in den Papierkorb verschoben')
+      } else {
+        throw new Error('Failed to delete message')
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error)
+      alert('Fehler beim Löschen der E-Mail')
+    }
+  }
+
+  const deleteMessage = async (message: EmailMessage) => {
     if (!confirm('E-Mail wirklich löschen?')) return
 
     try {

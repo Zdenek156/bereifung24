@@ -37,9 +37,25 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        console.log('Login successful, redirecting...')
-        // Force a full page reload to ensure session is properly loaded
-        window.location.href = '/dashboard'
+        console.log('Login successful, checking session for redirect...')
+        
+        // Hole Session um die Rolle zu prüfen
+        const response = await fetch('/api/auth/session')
+        const session = await response.json()
+        
+        console.log('Session data:', session)
+        
+        // Routing basierend auf Rolle
+        if (session?.user?.role === 'B24_EMPLOYEE') {
+          console.log('Redirecting B24_EMPLOYEE to /mitarbeiter')
+          window.location.href = '/mitarbeiter'
+        } else if (session?.user?.role === 'ADMIN') {
+          console.log('Redirecting ADMIN to /admin')
+          window.location.href = '/admin'
+        } else {
+          console.log('Redirecting to /dashboard')
+          window.location.href = '/dashboard'
+        }
       } else {
         console.error('Unexpected result:', result)
         setError('Ein unerwarteter Fehler ist aufgetreten')

@@ -65,6 +65,15 @@ const allNavigationItems: NavigationItem[] = [
     resource: '',
     isDefault: true // Immer sichtbar
   },
+  {
+    href: '/mitarbeiter/zeit',
+    title: 'Zeiterfassung',
+    description: 'Arbeitszeit erfassen & Überstunden',
+    icon: '⏱️',
+    color: 'bg-indigo-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
   // Berechtigungsbasierte Seiten
   {
     href: '/mitarbeiter/email',

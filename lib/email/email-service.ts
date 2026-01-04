@@ -233,6 +233,40 @@ export class EmailService {
     } else {
       await smtpService.sendEmail(options)
     }
+
+    // Gesendete E-Mail im IMAP Sent-Ordner speichern
+    try {
+      const imapService = await this.getImapService()
+      const settings = await this.getEmailSettings()
+      
+      // Erstelle rohe E-Mail im RFC822-Format
+      const from = options.from || settings.smtpUser
+      const to = Array.isArray(options.to) ? options.to.join(', ') : options.to
+      const date = new Date().toUTCString()
+      
+      let rawMessage = `From: ${from}\r\n`
+      rawMessage += `To: ${to}\r\n`
+      if (options.cc) {
+        const cc = Array.isArray(options.cc) ? options.cc.join(', ') : options.cc
+        rawMessage += `Cc: ${cc}\r\n`
+      }
+      rawMessage += `Subject: ${options.subject}\r\n`
+      rawMessage += `Date: ${date}\r\n`
+      rawMessage += `MIME-Version: 1.0\r\n`
+      
+      if (options.html) {
+        rawMessage += `Content-Type: text/html; charset=utf-8\r\n\r\n`
+        rawMessage += options.html
+      } else {
+        rawMessage += `Content-Type: text/plain; charset=utf-8\r\n\r\n`
+        rawMessage += options.text || ''
+      }
+      
+      await imapService.appendMessage('INBOX.Sent', rawMessage, ['\\Seen'])
+    } catch (error) {
+      console.error('Error saving sent message to IMAP:', error)
+      // Nicht werfen, da die E-Mail bereits versendet wurde
+    }
   }
 
   /**
@@ -315,6 +349,94 @@ export class EmailService {
         },
       },
     })
+  }
+
+  /**
+   * E-Mail in Papierkorb verschieben
+   */
+  async moveToTrash(uid: number, fromFolder: string = 'INBOX'): Promise<void> {
+    const imapService = await this.getImapService()
+    
+    try {
+      await imapService.moveMessage(uid, fromFolder, 'INBOX.Trash')
+      
+      // Cache aktualisieren
+      await prisma.emailMessage.updateMany({
+        where: {
+          userId: this.userId,
+          uid,
+          folder: fromFolder,
+        },
+        data: {
+          folder: 'INBOX.Trash',
+        },
+      })
+    } catch (error) {
+      console.error('Error moving message to trash:', error)
+      throw error
+    }
+  }
+
+  /**
+   * E-Mail dauerhaft löschen
+   */
+  async deleteMessage(uid: number, folder: string = 'INBOX.Trash'): Promise<void> {
+    const imapService = await this.getImapService()
+    
+    try {
+      await imapService.deleteMessage(uid, folder)
+      
+      // Aus Cache entfernen
+      await prisma.emailMessage.deleteMany({
+        where: {
+          userId: this.userId,
+          uid,
+          folder,
+        },
+      })
+    } catch (error) {
+      console.error('Error deleting message:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Entwurf speichern
+   */
+  async saveDraft(options: EmailOptions): Promise<void> {
+    const imapService = await this.getImapService()
+    const settings = await this.getEmailSettings()
+    
+    try {
+      // Erstelle rohe E-Mail im RFC822-Format
+      const from = options.from || settings.smtpUser
+      const to = Array.isArray(options.to) ? options.to.join(', ') : options.to
+      const date = new Date().toUTCString()
+      
+      let rawMessage = `From: ${from}\r\n`
+      rawMessage += `To: ${to}\r\n`
+      if (options.cc) {
+        const cc = Array.isArray(options.cc) ? options.cc.join(', ') : options.cc
+        rawMessage += `Cc: ${cc}\r\n`
+      }
+      rawMessage += `Subject: ${options.subject}\r\n`
+      rawMessage += `Date: ${date}\r\n`
+      rawMessage += `MIME-Version: 1.0\r\n`
+      rawMessage += `X-Draft: true\r\n`
+      
+      if (options.html) {
+        rawMessage += `Content-Type: text/html; charset=utf-8\r\n\r\n`
+        rawMessage += options.html
+      } else {
+        rawMessage += `Content-Type: text/plain; charset=utf-8\r\n\r\n`
+        rawMessage += options.text || ''
+      }
+      
+      await imapService.appendMessage('INBOX.Drafts', rawMessage, ['\\Draft'])
+    } catch (error) {
+      console.error('Error saving draft:', error)
+      throw error
+    }
   }
 }
 

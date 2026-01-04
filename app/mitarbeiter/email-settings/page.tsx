@@ -34,10 +34,10 @@ export default function EmailSettingsPage() {
     imapPassword: '',
     imapTls: true,
     smtpHost: 'mail.your-server.de',
-    smtpPort: 465,
+    smtpPort: 587,
     smtpUser: '',
     smtpPassword: '',
-    smtpSecure: true,
+    smtpSecure: false,
     syncEnabled: true,
     syncInterval: 300000, // 5 Minuten
   })

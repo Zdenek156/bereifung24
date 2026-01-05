@@ -23,13 +23,12 @@ export async function GET() {
       })
     }
 
-    // Tagesschau API aufrufen
-    const response = await fetch('https://www.tagesschau.de/api2/news/', {
+    // Tagesschau API aufrufen (using api2u endpoint which is more permissive)
+    const response = await fetch('https://www.tagesschau.de/api2u/news', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
-        'Accept-Language': 'de-DE,de;q=0.9',
-        'Referer': 'https://www.tagesschau.de/'
+        'Accept-Language': 'de-DE,de;q=0.9'
       },
       cache: 'no-store'
     })

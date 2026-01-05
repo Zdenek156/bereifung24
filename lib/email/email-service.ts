@@ -83,6 +83,15 @@ export class EmailService {
   }
 
   /**
+   * Helper: Get where clause for email messages based on user type
+   */
+  private getMessageWhereClause() {
+    return this.isB24Employee
+      ? { b24EmployeeId: this.userId }
+      : { userId: this.userId }
+  }
+
+  /**
    * Prüfen, ob E-Mail-Einstellungen existieren
    */
   async hasSettings(): Promise<boolean> {
@@ -174,14 +183,16 @@ export class EmailService {
 
       // E-Mails in Datenbank speichern (Cache)
       for (const message of messages) {
+        const whereClause = this.isB24Employee
+          ? { b24EmployeeId_uid_folder: { b24EmployeeId: this.userId, uid: message.uid, folder: message.folder } }
+          : { userId_uid_folder: { userId: this.userId, uid: message.uid, folder: message.folder } }
+
+        const identityField = this.isB24Employee
+          ? { b24EmployeeId: this.userId }
+          : { userId: this.userId }
+
         await prisma.emailMessage.upsert({
-          where: {
-            userId_uid_folder: {
-              userId: this.userId,
-              uid: message.uid,
-              folder: message.folder,
-            },
-          },
+          where: whereClause,
           update: {
             messageId: message.messageId,
             from: message.from,
@@ -199,7 +210,7 @@ export class EmailService {
             isFlagged: message.flags.includes('\\Flagged'),
           },
           create: {
-            userId: this.userId,
+            ...identityField,
             uid: message.uid,
             messageId: message.messageId,
             folder: message.folder,
@@ -221,8 +232,12 @@ export class EmailService {
       }
 
       // lastSyncedAt aktualisieren
+      const settingsWhereClause = this.isB24Employee
+        ? { b24EmployeeId: this.userId }
+        : { userId: this.userId }
+
       await prisma.emailSettings.update({
-        where: { userId: this.userId },
+        where: settingsWhereClause,
         data: { lastSyncedAt: new Date() },
       })
     } catch (error) {
@@ -289,7 +304,7 @@ export class EmailService {
   async getCachedMessages(folder: string = 'INBOX', limit: number = 50) {
     return await prisma.emailMessage.findMany({
       where: {
-        userId: this.userId,
+        ...this.getMessageWhereClause(),
         folder,
       },
       orderBy: {
@@ -303,14 +318,12 @@ export class EmailService {
    * Einzelne E-Mail aus Cache abrufen
    */
   async getCachedMessage(uid: number, folder: string = 'INBOX') {
+    const whereClause = this.isB24Employee
+      ? { b24EmployeeId_uid_folder: { b24EmployeeId: this.userId, uid, folder } }
+      : { userId_uid_folder: { userId: this.userId, uid, folder } }
+
     return await prisma.emailMessage.findUnique({
-      where: {
-        userId_uid_folder: {
-          userId: this.userId,
-          uid,
-          folder,
-        },
-      },
+      where: whereClause,
     })
   }
 
@@ -321,7 +334,7 @@ export class EmailService {
     return await prisma.emailMessage.findFirst({
       where: {
         id,
-        userId: this.userId,
+        ...this.getMessageWhereClause(),
       },
     })
   }
@@ -334,14 +347,12 @@ export class EmailService {
     await imapService.updateFlags(uid, ['\\Seen'], folder)
 
     // Cache aktualisieren
+    const whereClause = this.isB24Employee
+      ? { b24EmployeeId_uid_folder: { b24EmployeeId: this.userId, uid, folder } }
+      : { userId_uid_folder: { userId: this.userId, uid, folder } }
+
     await prisma.emailMessage.update({
-      where: {
-        userId_uid_folder: {
-          userId: this.userId,
-          uid,
-          folder,
-        },
-      },
+      where: whereClause,
       data: { isRead: true },
     })
   }
@@ -354,14 +365,12 @@ export class EmailService {
     await imapService.deleteMessage(uid, folder)
 
     // Aus Cache entfernen
+    const whereClause = this.isB24Employee
+      ? { b24EmployeeId_uid_folder: { b24EmployeeId: this.userId, uid, folder } }
+      : { userId_uid_folder: { userId: this.userId, uid, folder } }
+
     await prisma.emailMessage.delete({
-      where: {
-        userId_uid_folder: {
-          userId: this.userId,
-          uid,
-          folder,
-        },
-      },
+      where: whereClause,
     })
   }
 
@@ -377,7 +386,7 @@ export class EmailService {
       // Cache aktualisieren
       await prisma.emailMessage.updateMany({
         where: {
-          userId: this.userId,
+          ...this.getMessageWhereClause(),
           uid,
           folder: fromFolder,
         },
@@ -403,7 +412,7 @@ export class EmailService {
       // Aus Cache entfernen
       await prisma.emailMessage.deleteMany({
         where: {
-          userId: this.userId,
+          ...this.getMessageWhereClause(),
           uid,
           folder,
         },

@@ -250,32 +250,22 @@ export default function DokumentePage() {
                   <div>
                     <div>Von mir hochgeladen</div>
                     <div className="text-sm font-normal text-gray-500">
-                       className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">ℹ️</span>
-                      <div className="text-sm text-blue-900">
-                        <strong>Sie können hochladen:</strong> Bescheinigungen, Nachweise und sonstige Dokumente.
-                        <br />
-                        <strong>Hinweis:</strong> Verträge, Gehaltsabrechnungen und offizielle Dokumente werden von der Personalabteilung hochgeladen.
-                      </div>
+                      {employeeDocuments.length} {employeeDocuments.length === 1 ? 'Dokument' : 'Dokumente'}
                     </div>
                   </div>
+                </div>
+              </button>
+            </div>
+          </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dokumententyp *
-                    </label>
-                    <select
-                      value={uploadData.type}
-                      onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      {uploadableTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.icon} {type.label}
-                        </option>
-                      ))}rträge</div>
+          {/* Statistics Cards - inside tab content */}
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {activeTab === 'hr' ? (
+                <>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl mb-1">📄</div>
+                    <div className="text-sm text-gray-600">Verträge</div>
                     <div className="text-lg font-semibold">
                       {currentDocuments.filter(d => d.type === 'contract').length}
                     </div>
@@ -347,6 +337,18 @@ export default function DokumentePage() {
                 </div>
 
                 <form onSubmit={handleUpload} className="space-y-4">
+                  {/* Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg">ℹ️</span>
+                      <div className="text-sm text-blue-900">
+                        <strong>Sie können hochladen:</strong> Bescheinigungen, Nachweise und sonstige Dokumente.
+                        <br />
+                        <strong>Hinweis:</strong> Verträge, Gehaltsabrechnungen und offizielle Dokumente werden von der Personalabteilung hochgeladen.
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Dokumententyp *
@@ -357,12 +359,11 @@ export default function DokumentePage() {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       required
                     >
-                      <option value="contract">Vertrag</option>
-                      <option value="payslip">Gehaltsabrechnung</option>
-                      <option value="certificate">Bescheinigung</option>
-                      <option value="tax">Steuerdokument</option>
-                      <option value="social_security">Sozialversicherung</option>
-                      <option value="other">Sonstige</option>
+                      {uploadableTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.icon} {type.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 

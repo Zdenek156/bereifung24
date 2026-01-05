@@ -71,17 +71,23 @@ export async function decryptPassword(encryptedPassword: string, userId: string)
  */
 export class EmailService {
   private userId: string
+  private isB24Employee: boolean
 
-  constructor(userId: string) {
+  constructor(userId: string, isB24Employee: boolean = false) {
     this.userId = userId
+    this.isB24Employee = isB24Employee
   }
 
   /**
    * Prüfen, ob E-Mail-Einstellungen existieren
    */
   async hasSettings(): Promise<boolean> {
+    const whereClause = this.isB24Employee
+      ? { b24EmployeeId: this.userId }
+      : { userId: this.userId }
+    
     const settings = await prisma.emailSettings.findUnique({
-      where: { userId: this.userId },
+      where: whereClause,
       select: { id: true },
     })
     return !!settings
@@ -91,8 +97,12 @@ export class EmailService {
    * E-Mail-Einstellungen des Benutzers abrufen
    */
   async getEmailSettings() {
+    const whereClause = this.isB24Employee
+      ? { b24EmployeeId: this.userId }
+      : { userId: this.userId }
+    
     const settings = await prisma.emailSettings.findUnique({
-      where: { userId: this.userId },
+      where: whereClause,
     })
 
     if (!settings) {
@@ -458,41 +468,40 @@ export async function saveEmailSettings(
     smtpSecure: boolean
     syncEnabled: boolean
     syncInterval: number
-  }
+  },
+  isB24Employee: boolean = false
 ) {
   // Passwörter verschlüsseln
   const encryptedPassword = await encryptPassword(settings.imapPassword, userId)
 
+  // Determine which field to use based on user type
+  const whereClause = isB24Employee 
+    ? { b24EmployeeId: userId } 
+    : { userId }
+
+  const updateData = {
+    imapHost: settings.imapHost,
+    imapPort: settings.imapPort,
+    imapUser: settings.imapUser,
+    imapPassword: encryptedPassword,
+    imapTls: settings.imapTls,
+    smtpHost: settings.smtpHost,
+    smtpPort: settings.smtpPort,
+    smtpUser: settings.smtpUser,
+    smtpPassword: encryptedPassword, // Gleiche Credentials
+    smtpSecure: settings.smtpSecure,
+    syncEnabled: settings.syncEnabled,
+    syncInterval: settings.syncInterval,
+  }
+
+  const createData = {
+    ...updateData,
+    ...(isB24Employee ? { b24EmployeeId: userId } : { userId }),
+  }
+
   return await prisma.emailSettings.upsert({
-    where: { userId },
-    update: {
-      imapHost: settings.imapHost,
-      imapPort: settings.imapPort,
-      imapUser: settings.imapUser,
-      imapPassword: encryptedPassword,
-      imapTls: settings.imapTls,
-      smtpHost: settings.smtpHost,
-      smtpPort: settings.smtpPort,
-      smtpUser: settings.smtpUser,
-      smtpPassword: encryptedPassword, // Gleiche Credentials
-      smtpSecure: settings.smtpSecure,
-      syncEnabled: settings.syncEnabled,
-      syncInterval: settings.syncInterval,
-    },
-    create: {
-      userId,
-      imapHost: settings.imapHost,
-      imapPort: settings.imapPort,
-      imapUser: settings.imapUser,
-      imapPassword: encryptedPassword,
-      imapTls: settings.imapTls,
-      smtpHost: settings.smtpHost,
-      smtpPort: settings.smtpPort,
-      smtpUser: settings.smtpUser,
-      smtpPassword: encryptedPassword,
-      smtpSecure: settings.smtpSecure,
-      syncEnabled: settings.syncEnabled,
-      syncInterval: settings.syncInterval,
-    },
+    where: whereClause,
+    update: updateData,
+    create: createData,
   })
 }

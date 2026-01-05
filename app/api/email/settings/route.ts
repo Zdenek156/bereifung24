@@ -15,8 +15,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const isB24Employee = session.user.role === 'B24_EMPLOYEE'
+    const whereClause = isB24Employee
+      ? { b24EmployeeId: session.user.id }
+      : { userId: session.user.id }
+
     const settings = await prisma.emailSettings.findUnique({
-      where: { userId: session.user.id },
+      where: whereClause,
       select: {
         id: true,
         imapHost: true,
@@ -81,20 +86,26 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const settings = await saveEmailSettings(session.user.id, {
-      imapHost,
-      imapPort: imapPort || 993,
-      imapUser,
-      imapPassword,
-      imapTls: imapTls !== undefined ? imapTls : true,
-      smtpHost,
-      smtpPort: smtpPort || 465,
-      smtpUser,
-      smtpPassword: smtpPassword || imapPassword, // Normalerweise gleiches Passwort
-      smtpSecure: smtpSecure !== undefined ? smtpSecure : true,
-      syncEnabled: syncEnabled !== undefined ? syncEnabled : true,
-      syncInterval: syncInterval || 300000, // 5 Minuten
-    })
+    const isB24Employee = session.user.role === 'B24_EMPLOYEE'
+
+    const settings = await saveEmailSettings(
+      session.user.id,
+      {
+        imapHost,
+        imapPort: imapPort || 993,
+        imapUser,
+        imapPassword,
+        imapTls: imapTls !== undefined ? imapTls : true,
+        smtpHost,
+        smtpPort: smtpPort || 465,
+        smtpUser,
+        smtpPassword: smtpPassword || imapPassword, // Normalerweise gleiches Passwort
+        smtpSecure: smtpSecure !== undefined ? smtpSecure : true,
+        syncEnabled: syncEnabled !== undefined ? syncEnabled : true,
+        syncInterval: syncInterval || 300000, // 5 Minuten
+      },
+      isB24Employee
+    )
 
     // Passwörter nicht zurückgeben
     const { imapPassword: _, smtpPassword: __, ...safeSettings } = settings

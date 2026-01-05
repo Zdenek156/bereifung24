@@ -10,6 +10,11 @@ import { encrypt } from '@/lib/encryption'
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'documents')
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
+// Document types that only HR can upload
+const HR_ONLY_TYPES = ['contract', 'payslip', 'tax', 'social_security', 'company']
+// Document types that employees can upload
+const EMPLOYEE_TYPES = ['certificate', 'proof', 'other']
+
 // GET - List documents for current employee
 export async function GET(request: NextRequest) {
   try {
@@ -89,6 +94,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if employee is allowed to upload this type
+    if (!EMPLOYEE_TYPES.includes(type.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'Sie haben keine Berechtigung, diesen Dokumenttyp hochzuladen. Nur HR kann diesen Typ hochladen.' },
+        { status: 403 }
+      )
+    }
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
@@ -145,6 +158,7 @@ export async function POST(request: NextRequest) {
         mimeType: file.type,
         fileUrl: encryptedPath,
         uploadedById: employee.id,
+        uploadedByRole: 'EMPLOYEE',
         category: category || null,
         tags: [],
         accessLog: [],

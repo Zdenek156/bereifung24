@@ -469,6 +469,21 @@ export default function EditEmployeePage() {
                   </div>
                 )}
 
+                {/* Quick Actions */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-3">Schnellzugriff</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/admin/b24-employees/${employeeId}/documents`)}
+                    >
+                      📄 Dokumente verwalten
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Actions */}
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button

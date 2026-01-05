@@ -2500,12 +2500,23 @@ model EmployeeProfile {
   @@map("employee_profiles")
 }
 
+enum DocumentType {
+  CONTRACT           // Arbeitsvertrag - nur HR
+  PAYSLIP            // Gehaltsabrechnung - nur HR
+  TAX                // Steuerdokumente - nur HR
+  SOCIAL_SECURITY    // Sozialversicherung - nur HR
+  COMPANY            // Betriebliche Dokumente - nur HR
+  CERTIFICATE        // Bescheinigungen - Mitarbeiter
+  PROOF              // Nachweise - Mitarbeiter
+  OTHER              // Sonstige - beide
+}
+
 model EmployeeDocument {
   id         String      @id @default(cuid())
   employeeId String
   employee   B24Employee @relation("EmployeeDocuments", fields: [employeeId], references: [id], onDelete: Cascade)
 
-  type        String // contract, payslip, certificate, tax, social_security, other
+  type        String // contract, payslip, certificate, tax, social_security, company, proof, other
   title       String
   description String?
   fileName    String
@@ -2516,13 +2527,16 @@ model EmployeeDocument {
   uploadedById String
   uploadedBy   B24Employee @relation("DocumentUploader", fields: [uploadedById], references: [id])
   uploadedAt   DateTime    @default(now())
+  
+  // Indicates if uploaded by HR/Admin or by Employee themselves
+  uploadedByRole String @default("EMPLOYEE") // EMPLOYEE or HR
 
   // Access Control
-  accessLog Json[] // [{userId, accessedAt, ip}]
+  accessLog Json[] @default([]) // [{userId, accessedAt, ip}]
 
   // Metadata
   category   String?
-  tags       String[]
+  tags       String[] @default([])
   validFrom  DateTime?
   validUntil DateTime?
 
@@ -2531,6 +2545,7 @@ model EmployeeDocument {
 
   @@index([employeeId])
   @@index([type])
+  @@index([uploadedByRole])
   @@map("employee_documents")
 }
 

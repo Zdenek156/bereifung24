@@ -45,13 +45,19 @@ export default function TasksPage() {
   const [filterStatus, setFilterStatus] = useState<string>('ALL')
 
   useEffect(() => {
+    if (status === 'loading') return
+    
     if (status === 'unauthenticated') {
       router.push('/login')
-    } else if (session?.user?.role !== 'B24_EMPLOYEE') {
-      router.push('/dashboard')
-    } else {
-      fetchTasks()
+      return
     }
+    
+    if (session?.user?.role !== 'B24_EMPLOYEE') {
+      router.push('/dashboard')
+      return
+    }
+    
+    fetchTasks()
   }, [session, status, router])
 
   const fetchTasks = async () => {

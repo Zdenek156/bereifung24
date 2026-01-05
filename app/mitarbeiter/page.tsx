@@ -241,11 +241,8 @@ export default function MitarbeiterDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Linke Spalte: Dashboard Inhalte */}
-          <div className="lg:col-span-2">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Urlaubstage */}
           {stats.leaveBalance && (
             <div className="bg-white rounded-lg shadow p-6">
@@ -330,6 +327,11 @@ export default function MitarbeiterDashboard() {
           </div>
         </div>
 
+        {/* News Feed Stripe */}
+        <div className="mb-8">
+          <NewsFeed />
+        </div>
+
         {/* Quick Actions / Navigation Kacheln */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-6 py-4 border-b">
@@ -381,13 +383,6 @@ export default function MitarbeiterDashboard() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Rechte Spalte: News Feed */}
-      <div className="lg:col-span-1">
-        <NewsFeed />
-      </div>
-    </div>
 
         {/* Old Quick Actions - Entfernen */}
         {/* 

@@ -474,22 +474,9 @@ export async function saveEmailSettings(
   // Passwörter verschlüsseln
   const encryptedPassword = await encryptPassword(settings.imapPassword, userId)
 
-  // Wenn B24Employee, müssen wir die Employee ID finden
-  let employeeId: string | undefined
-  if (isB24Employee) {
-    const employee = await prisma.b24Employee.findUnique({
-      where: { userId },
-      select: { id: true }
-    })
-    if (!employee) {
-      throw new Error('B24Employee not found for user')
-    }
-    employeeId = employee.id
-  }
-
-  // Determine which field to use based on user type
-  const whereClause = isB24Employee && employeeId
-    ? { b24EmployeeId: employeeId } 
+  // Für B24Employee ist userId bereits die Employee ID
+  const whereClause = isB24Employee
+    ? { b24EmployeeId: userId } 
     : { userId }
 
   const updateData = {
@@ -509,7 +496,7 @@ export async function saveEmailSettings(
 
   const createData = {
     ...updateData,
-    ...(isB24Employee && employeeId ? { b24EmployeeId: employeeId } : { userId }),
+    ...(isB24Employee ? { b24EmployeeId: userId } : { userId }),
   }
 
   return await prisma.emailSettings.upsert({

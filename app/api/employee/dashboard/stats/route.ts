@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
+import { EmailService } from '@/lib/email/email-service'
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +67,20 @@ export async function GET(request: NextRequest) {
     // TODO: Implement overtime hours
     const overtimeHours = undefined
 
+    // Get unread emails count
+    let unreadEmails = 0
+    try {
+      const emailService = new EmailService(session.user.id)
+      const hasSettings = await emailService.hasSettings()
+      if (hasSettings) {
+        const messages = await emailService.getCachedMessages('INBOX', 100)
+        unreadEmails = messages.filter(msg => !msg.isRead).length
+      }
+    } catch (emailError) {
+      console.error('Error fetching email stats:', emailError)
+      // Continue without email stats
+    }
+
     return NextResponse.json({
       leaveBalance: leaveBalance
         ? {
@@ -77,6 +92,7 @@ export async function GET(request: NextRequest) {
       newDocuments,
       pendingTasks,
       overtimeHours,
+      unreadEmails,
     })
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error)

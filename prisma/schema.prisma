@@ -1028,6 +1028,9 @@ model B24Employee {
   knowledgeArticles        KnowledgeArticle[]      @relation("KnowledgeArticles")
   editedArticles           KnowledgeArticle[]      @relation("EditedArticles")
 
+  // Email Settings
+  emailSettings EmailSettings?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2383,9 +2386,11 @@ enum PaymentStatus {
 // ============================================
 
 model EmailSettings {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String       @id @default(cuid())
+  userId        String?      @unique
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  b24EmployeeId String?      @unique
+  b24Employee   B24Employee? @relation(fields: [b24EmployeeId], references: [id], onDelete: Cascade)
 
   // Encryption Key
   encryptionKey String? // AES-256 key for encrypting passwords

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface Document {
@@ -13,31 +12,37 @@ interface Document {
   fileName: string
   fileSize: number
   mimeType: string
-  category?: string
-  tags: string[]
   uploadedAt: string
   uploadedByRole: 'EMPLOYEE' | 'HR'
   uploadedBy: {
     firstName: string
     lastName: string
   }
-  validFrom?: string
-  validUntil?: string
 }
 
-export default function DokumentePage() {
-  const { data: session, status } = useSession()
+interface Employee {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  position?: string
+}
+
+export default function EmployeeDocumentsPage() {
+  const params = useParams()
   const router = useRouter()
+  const employeeId = params.id as string
+
+  const [employee, setEmployee] = useState<Employee | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [activeTab, setActiveTab] = useState<'hr' | 'employee'>('hr')
-  const [filterType, setFilterType] = useState<string>('all')
   
   // Upload form
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [uploadData, setUploadData] = useState({
-    type: 'certificate',
+    type: 'contract',
     title: '',
     description: '',
     category: '',
@@ -45,19 +50,28 @@ export default function DokumentePage() {
   })
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
-    } else if (session?.user) {
-      fetchDocuments()
+    fetchEmployee()
+    fetchDocuments()
+  }, [employeeId])
+
+  const fetchEmployee = async () => {
+    try {
+      const res = await fetch(`/api/admin/b24-employees/${employeeId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setEmployee(data.employee)
+      }
+    } catch (error) {
+      console.error('Error fetching employee:', error)
     }
-  }, [status, session, router])
+  }
 
   const fetchDocuments = async () => {
     try {
-      const res = await fetch('/api/employee/documents')
+      const res = await fetch(`/api/admin/employee-documents?employeeId=${employeeId}`)
       if (res.ok) {
         const data = await res.json()
-        setDocuments(data.documents || [])
+        setDocuments(data.all || [])
       }
     } catch (error) {
       console.error('Error fetching documents:', error)
@@ -65,6 +79,14 @@ export default function DokumentePage() {
       setLoading(false)
     }
   }
+
+  const hrDocumentTypes = [
+    { value: 'contract', label: 'Arbeitsvertrag', icon: '📄' },
+    { value: 'payslip', label: 'Gehaltsabrechnung', icon: '💰' },
+    { value: 'tax', label: 'Steuerdokument', icon: '📊' },
+    { value: 'social_security', label: 'Sozialversicherung', icon: '🏥' },
+    { value: 'company', label: 'Firmendokument', icon: '🏢' }
+  ]
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -87,8 +109,9 @@ export default function DokumentePage() {
       formData.append('title', uploadData.title)
       formData.append('description', uploadData.description)
       formData.append('category', uploadData.category)
+      formData.append('employeeId', employeeId)
 
-      const res = await fetch('/api/employee/documents', {
+      const res = await fetch('/api/admin/employee-documents', {
         method: 'POST',
         body: formData,
       })
@@ -97,13 +120,12 @@ export default function DokumentePage() {
         alert('Dokument erfolgreich hochgeladen!')
         setShowUploadForm(false)
         setUploadData({
-          type: 'certificate',
+          type: 'contract',
           title: '',
           description: '',
           category: '',
           file: null
         })
-        setActiveTab('employee') // Switch to employee tab after upload
         fetchDocuments()
       } else {
         const error = await res.json()
@@ -114,28 +136,6 @@ export default function DokumentePage() {
       alert('Fehler beim Hochladen')
     } finally {
       setUploading(false)
-    }
-  }
-
-  const handleDownload = async (docId: string, fileName: string) => {
-    try {
-      const res = await fetch(`/api/employee/documents/${docId}/download`)
-      if (res.ok) {
-        const blob = await res.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = fileName
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        alert('Fehler beim Herunterladen')
-      }
-    } catch (error) {
-      console.error('Download error:', error)
-      alert('Fehler beim Herunterladen')
     }
   }
 
@@ -159,20 +159,9 @@ export default function DokumentePage() {
     return icons[type] || '📎'
   }
 
-  const uploadableTypes = [
-    { value: 'certificate', label: 'Bescheinigung', icon: '🎓' },
-    { value: 'proof', label: 'Nachweis', icon: '✅' },
-    { value: 'other', label: 'Sonstige', icon: '📎' }
-  ]
-
   const hrDocuments = documents.filter(doc => doc.uploadedByRole === 'HR')
   const employeeDocuments = documents.filter(doc => doc.uploadedByRole === 'EMPLOYEE')
-
   const currentDocuments = activeTab === 'hr' ? hrDocuments : employeeDocuments
-  
-  const filteredDocuments = filterType === 'all' 
-    ? currentDocuments 
-    : currentDocuments.filter(doc => doc.type === filterType)
 
   if (loading) {
     return (
@@ -190,25 +179,24 @@ export default function DokumentePage() {
           <div className="flex items-center justify-between">
             <div>
               <Link
-                href="/mitarbeiter"
+                href={`/admin/b24-employees/${employeeId}`}
                 className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block"
               >
-                ← Zurück zum Dashboard
+                ← Zurück zu Mitarbeiter-Details
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Meine Dokumente</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Dokumente: {employee?.firstName} {employee?.lastName}
+              </h1>
               <p className="text-sm text-gray-600 mt-1">
-                {documents.length} {documents.length === 1 ? 'Dokument' : 'Dokumente'} insgesamt
-                • {hrDocuments.length} von HR • {employeeDocuments.length} von mir
+                {employee?.position} • {employee?.email}
               </p>
             </div>
-            {activeTab === 'employee' && (
-              <button
-                onClick={() => setShowUploadForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                📤 Dokument hochladen
-              </button>
-            )}
+            <button
+              onClick={() => setShowUploadForm(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              📤 Dokument hochladen (HR)
+            </button>
           </div>
         </div>
       </div>
@@ -228,9 +216,9 @@ export default function DokumentePage() {
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl">📥</span>
+                  <span className="text-2xl">🏢</span>
                   <div>
-                    <div>Von HR erhalten</div>
+                    <div>Von HR hochgeladen</div>
                     <div className="text-sm font-normal text-gray-500">
                       {hrDocuments.length} {hrDocuments.length === 1 ? 'Dokument' : 'Dokumente'}
                     </div>
@@ -246,36 +234,26 @@ export default function DokumentePage() {
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl">📤</span>
+                  <span className="text-2xl">👤</span>
                   <div>
-                    <div>Von mir hochgeladen</div>
+                    <div>Vom Mitarbeiter hochgeladen</div>
                     <div className="text-sm font-normal text-gray-500">
-                       className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">ℹ️</span>
-                      <div className="text-sm text-blue-900">
-                        <strong>Sie können hochladen:</strong> Bescheinigungen, Nachweise und sonstige Dokumente.
-                        <br />
-                        <strong>Hinweis:</strong> Verträge, Gehaltsabrechnungen und offizielle Dokumente werden von der Personalabteilung hochgeladen.
-                      </div>
+                      {employeeDocuments.length} {employeeDocuments.length === 1 ? 'Dokument' : 'Dokumente'}
                     </div>
                   </div>
+                </div>
+              </button>
+            </div>
+          </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dokumententyp *
-                    </label>
-                    <select
-                      value={uploadData.type}
-                      onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      {uploadableTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.icon} {type.label}
-                        </option>
-                      ))}rträge</div>
+          {/* Stats */}
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {activeTab === 'hr' ? (
+                <>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl mb-1">📄</div>
+                    <div className="text-sm text-gray-600">Verträge</div>
                     <div className="text-lg font-semibold">
                       {currentDocuments.filter(d => d.type === 'contract').length}
                     </div>
@@ -299,6 +277,13 @@ export default function DokumentePage() {
                     <div className="text-sm text-gray-600">Sozialversicherung</div>
                     <div className="text-lg font-semibold">
                       {currentDocuments.filter(d => d.type === 'social_security').length}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl mb-1">🏢</div>
+                    <div className="text-sm text-gray-600">Firmendokumente</div>
+                    <div className="text-lg font-semibold">
+                      {currentDocuments.filter(d => d.type === 'company').length}
                     </div>
                   </div>
                 </>
@@ -337,7 +322,7 @@ export default function DokumentePage() {
             <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Dokument hochladen</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Dokument hochladen (HR)</h2>
                   <button
                     onClick={() => setShowUploadForm(false)}
                     className="text-gray-400 hover:text-gray-600"
@@ -347,6 +332,15 @@ export default function DokumentePage() {
                 </div>
 
                 <form onSubmit={handleUpload} className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg">ℹ️</span>
+                      <div className="text-sm text-blue-900">
+                        <strong>Als HR können Sie hochladen:</strong> Arbeitsverträge, Gehaltsabrechnungen, Steuerdokumente, Sozialversicherungsunterlagen und Firmendokumente.
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Dokumententyp *
@@ -357,12 +351,11 @@ export default function DokumentePage() {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       required
                     >
-                      <option value="contract">Vertrag</option>
-                      <option value="payslip">Gehaltsabrechnung</option>
-                      <option value="certificate">Bescheinigung</option>
-                      <option value="tax">Steuerdokument</option>
-                      <option value="social_security">Sozialversicherung</option>
-                      <option value="other">Sonstige</option>
+                      {hrDocumentTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.icon} {type.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -402,7 +395,7 @@ export default function DokumentePage() {
                       value={uploadData.category}
                       onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="z.B. Personal, Finanzen"
+                      placeholder="z.B. Personal, Finanzen, Arbeitsrecht"
                     />
                   </div>
 
@@ -445,18 +438,18 @@ export default function DokumentePage() {
         )}
 
         {/* Documents Grid */}
-        {filteredDocuments.length === 0 ? (
+        {currentDocuments.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <div className="text-6xl mb-4">📂</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Keine Dokumente vorhanden
             </h3>
             <p className="text-gray-600 mb-4">
-              {filterType === 'all' 
-                ? 'Laden Sie Ihr erstes Dokument hoch'
-                : 'Keine Dokumente in dieser Kategorie'}
+              {activeTab === 'hr' 
+                ? 'Noch keine HR-Dokumente für diesen Mitarbeiter hochgeladen'
+                : 'Mitarbeiter hat noch keine Dokumente hochgeladen'}
             </p>
-            {filterType === 'all' && (
+            {activeTab === 'hr' && (
               <button
                 onClick={() => setShowUploadForm(true)}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -467,14 +460,23 @@ export default function DokumentePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDocuments.map((doc) => (
+            {currentDocuments.map((doc) => (
               <div key={doc.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="text-4xl">{getDocumentIcon(doc.type)}</div>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                      {formatFileSize(doc.fileSize)}
-                    </span>
+                    <div className="text-right">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded block mb-1">
+                        {formatFileSize(doc.fileSize)}
+                      </span>
+                      <span className={`px-2 py-1 text-xs rounded block ${
+                        doc.uploadedByRole === 'HR' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {doc.uploadedByRole === 'HR' ? '🏢 HR' : '👤 MA'}
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
@@ -489,22 +491,10 @@ export default function DokumentePage() {
 
                   <div className="text-xs text-gray-500 space-y-1 mb-4">
                     <div>📅 {new Date(doc.uploadedAt).toLocaleDateString('de-DE')}</div>
-                    <div>👤 {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}</div>
-                    {doc.category && <div>🏷️ {doc.category}</div>}
+                    <div>👤 Hochgeladen von: {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}</div>
                   </div>
 
-                  {doc.tags && doc.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {doc.tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
                   <button
-                    onClick={() => handleDownload(doc.id, doc.fileName)}
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                   >
                     📥 Herunterladen

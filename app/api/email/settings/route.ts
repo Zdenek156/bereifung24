@@ -22,22 +22,10 @@ export async function GET(request: NextRequest) {
 
     const isB24Employee = session.user.role === 'B24_EMPLOYEE'
     
-    // Wenn B24Employee, müssen wir die Employee ID finden
-    let whereClause: any
-    if (isB24Employee) {
-      const employee = await prisma.b24Employee.findUnique({
-        where: { userId: session.user.id },
-        select: { id: true }
-      })
-      if (!employee) {
-        console.log('   ❌ B24Employee not found for user')
-        return NextResponse.json({ settings: null, needsConfiguration: true })
-      }
-      whereClause = { b24EmployeeId: employee.id }
-      console.log('   Employee ID:', employee.id)
-    } else {
-      whereClause = { userId: session.user.id }
-    }
+    // Für B24_EMPLOYEE ist die session.user.id bereits die B24Employee ID
+    const whereClause = isB24Employee
+      ? { b24EmployeeId: session.user.id }
+      : { userId: session.user.id }
 
     console.log('   isB24Employee:', isB24Employee)
     console.log('   whereClause:', whereClause)

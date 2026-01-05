@@ -2440,7 +2440,7 @@ model EmailMessage {
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  b24EmployeeId String?
+  b24EmployeeId String?      @map("b24employeeid")
   b24Employee   B24Employee? @relation(fields: [b24EmployeeId], references: [id], onDelete: Cascade)
 
   // IMAP Metadata

@@ -92,6 +92,34 @@ const allNavigationItems: NavigationItem[] = [
     resource: '',
     isDefault: true // Immer sichtbar
   },
+  // Phase 7: Kommunikation & Organisation
+  {
+    href: '/mitarbeiter/news',
+    title: 'Schwarzes Brett',
+    description: 'Ankündigungen & News',
+    icon: '📢',
+    color: 'bg-blue-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
+  {
+    href: '/mitarbeiter/aufgaben',
+    title: 'Meine Aufgaben',
+    description: 'Aufgaben & To-Do-Liste',
+    icon: '✅',
+    color: 'bg-green-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
+  {
+    href: '/mitarbeiter/wiki',
+    title: 'Wissensdatenbank',
+    description: 'FAQ, Anleitungen & Vorlagen',
+    icon: '📚',
+    color: 'bg-purple-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
+  },
   // Berechtigungsbasierte Seiten
   {
     href: '/mitarbeiter/email',

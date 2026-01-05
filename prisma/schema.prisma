@@ -1012,6 +1012,12 @@ model B24Employee {
   fuelReceipts     FuelReceipt[]
   reportedDamages  VehicleDamage[]
 
+  // Spesen & Reisekosten Relations
+  expenses               Expense[]       @relation("EmployeeExpenses")
+  approvedExpenses       Expense[]       @relation("ApprovedExpenses")
+  travelExpenses         TravelExpense[] @relation("EmployeeTravelExpenses")
+  approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2851,3 +2857,137 @@ model VehicleMaintenance {
   @@index([vehicleId])
   @@map("vehicle_maintenances")
 }
+
+// ============================================
+// SPESEN & BELEGE (PHASE 5)
+// ============================================
+
+enum ExpenseCategory {
+  MEAL          // Essen & Trinken
+  HOTEL         // Übernachtung
+  TRAVEL        // Fahrtkosten (nicht Firmenwagen)
+  FUEL          // Tankkosten
+  TOOLS         // Werkzeug/Material
+  OFFICE        // Büromaterial
+  PHONE         // Telefon/Internet
+  OTHER         // Sonstiges
+}
+
+enum ExpenseStatus {
+  PENDING       // Warten auf Genehmigung
+  APPROVED      // Genehmigt
+  REJECTED      // Abgelehnt
+  PAID          // Ausgezahlt
+}
+
+model Expense {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   B24Employee @relation("EmployeeExpenses", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Beleg-Informationen
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(10, 2)
+  vatAmount   Decimal?        @db.Decimal(10, 2) // MwSt.-Betrag
+  vatRate     Int?            // MwSt.-Satz in % (7 oder 19)
+  date        DateTime        // Datum des Belegs
+  description String
+  merchant    String?         // Händler/Lieferant
+
+  // Beleg-Upload
+  receiptUrl String? // Pfad zum hochgeladenen Beleg
+
+  // OCR-Daten (optional)
+  ocrExtracted Boolean @default(false)
+  ocrData      String? // JSON mit OCR-Ergebnissen
+
+  // Status & Genehmigung
+  status         ExpenseStatus @default(PENDING)
+  approvedById   String?
+  approvedBy     B24Employee?  @relation("ApprovedExpenses", fields: [approvedById], references: [id])
+  approvedAt     DateTime?
+  rejectionNote  String?       // Grund für Ablehnung
+  
+  // Auszahlung
+  paidAt         DateTime?
+  paymentMethod  String?       // BANK_TRANSFER, CASH, PAYROLL
+
+  // Projekt/Kunde-Zuordnung (optional)
+  projectName String?
+  customerName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([date])
+  @@map("expenses")
+}
+
+model TravelExpense {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   B24Employee @relation("EmployeeTravelExpenses", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Reise-Informationen
+  purpose     String    // Zweck der Reise
+  startDate   DateTime  // Beginn der Reise
+  endDate     DateTime  // Ende der Reise
+  destination String    // Zielort
+  
+  // Verpflegungspauschale
+  fullDays      Int     @default(0) // Anzahl volle Tage (24h+)
+  partialDays   Int     @default(0) // Anzahl Teilreisetage (8-24h)
+  dailyRate     Decimal @db.Decimal(10, 2) @default(28.00) // Tagessatz Deutschland
+  mealDeduction Decimal @db.Decimal(10, 2) @default(0) // Abzug für gestellte Mahlzeiten
+  
+  // Übernachtungskosten
+  accommodationCosts Decimal  @db.Decimal(10, 2) @default(0)
+  accommodationReceipts String? // JSON Array von Receipt-URLs
+  
+  // Fahrtkosten
+  travelCosts    Decimal @db.Decimal(10, 2) @default(0)
+  travelMethod   String? // CAR, TRAIN, PLANE, TAXI, PUBLIC_TRANSPORT
+  travelReceipts String? // JSON Array von Receipt-URLs
+  kmDriven       Int?    // Bei PKW: gefahrene KM
+  kmRate         Decimal? @db.Decimal(10, 2) @default(0.30) // €/km
+  
+  // Sonstige Kosten
+  otherCosts        Decimal @db.Decimal(10, 2) @default(0)
+  otherDescription  String?
+  otherReceipts     String? // JSON Array von Receipt-URLs
+  
+  // Gesamt
+  totalAmount Decimal @db.Decimal(10, 2) // Gesamtsumme
+  
+  // Status & Genehmigung
+  status        ExpenseStatus @default(PENDING)
+  approvedById  String?
+  approvedBy    B24Employee?  @relation("ApprovedTravelExpenses", fields: [approvedById], references: [id])
+  approvedAt    DateTime?
+  rejectionNote String?
+  
+  // Auszahlung
+  paidAt        DateTime?
+  paymentMethod String?
+
+  notes String? // Zusätzliche Bemerkungen
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+  @@map("travel_expenses")
+}
+
+// B24Employee Relations erweitern
+// Hinweis: Diese Relations müssen zum bestehenden B24Employee Model hinzugefügt werden:
+// expenses       Expense[]       @relation("EmployeeExpenses")
+// approvedExpenses Expense[]     @relation("ApprovedExpenses")
+// travelExpenses TravelExpense[] @relation("EmployeeTravelExpenses")
+// approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")

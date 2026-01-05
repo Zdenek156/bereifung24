@@ -49,12 +49,21 @@ const allNavigationItems: NavigationItem[] = [
   },
   {
     href: '/mitarbeiter/urlaub',
-    title: 'Urlaub & Spesen',
-    description: 'Urlaubsanträge & Spesenabrechnungen',
+    title: 'Urlaub',
+    description: 'Urlaubsanträge & Abwesenheiten',
     icon: '🏖️',
     color: 'bg-purple-100',
     resource: 'leave-requests',
     isDefault: true // Immer sichtbar für alle Mitarbeiter
+  },
+  {
+    href: '/mitarbeiter/spesen',
+    title: 'Spesen & Reisekosten',
+    description: 'Ausgaben & Reisekostenabrechnungen',
+    icon: '💰',
+    color: 'bg-emerald-100',
+    resource: '',
+    isDefault: true // Immer sichtbar
   },
   {
     href: '/mitarbeiter/krankmeldung',

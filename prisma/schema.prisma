@@ -2471,7 +2471,7 @@ model EmailMessage {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, uid, folder])
-  @@unique([b24EmployeeId, uid, folder])
+  @@unique([b24EmployeeId, uid, folder], map: "email_messages_b24employeeid_uid_folder_key")
   @@index([userId, folder])
   @@index([b24EmployeeId, folder])
   @@index([userId, date])

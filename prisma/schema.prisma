@@ -1018,6 +1018,16 @@ model B24Employee {
   travelExpenses         TravelExpense[] @relation("EmployeeTravelExpenses")
   approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")
 
+  // Phase 7: Communication & Organization Relations
+  announcements            Announcement[]          @relation("AnnouncementAuthor")
+  readAnnouncements        AnnouncementRead[]      @relation("ReadAnnouncements")
+  employeeAssignedTasks    EmployeeTask[]          @relation("EmployeeAssignedTasks")
+  employeeCreatedTasks     EmployeeTask[]          @relation("EmployeeCreatedTasks")
+  employeeCompletedTasks   EmployeeTask[]          @relation("EmployeeCompletedTasks")
+  employeeTaskComments     EmployeeTaskComment[]   @relation("EmployeeTaskComments")
+  knowledgeArticles        KnowledgeArticle[]      @relation("KnowledgeArticles")
+  editedArticles           KnowledgeArticle[]      @relation("EditedArticles")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -3006,3 +3016,232 @@ model TravelExpense {
 // approvedExpenses Expense[]     @relation("ApprovedExpenses")
 // travelExpenses TravelExpense[] @relation("EmployeeTravelExpenses")
 // approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")
+
+// ============================================
+// PHASE 7: COMMUNICATION & ORGANIZATION
+// ============================================
+
+// SCHWARZES BRETT (Announcements/News)
+// ============================================
+
+model Announcement {
+  id String @id @default(cuid())
+
+  title   String
+  content String @db.Text
+  type    AnnouncementType @default(GENERAL)
+
+  // Priorität & Sichtbarkeit
+  priority   AnnouncementPriority @default(NORMAL)
+  isPinned   Boolean              @default(false) // Oben fixieren
+  isActive   Boolean              @default(true)
+  
+  // Zeitraum
+  publishedAt DateTime? // Veröffentlichungsdatum (null = Entwurf)
+  expiresAt   DateTime? // Ablaufdatum (optional)
+
+  // Autor
+  authorId String
+  author   B24Employee @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+
+  // Anhänge (optional)
+  attachments String? // JSON Array: [{name: "file.pdf", url: "/uploads/..."}]
+
+  // Statistik
+  viewCount Int @default(0)
+
+  // Gelesen von (Many-to-Many)
+  readBy AnnouncementRead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([priority])
+  @@index([isPinned])
+  @@index([publishedAt])
+  @@map("announcements")
+}
+
+enum AnnouncementType {
+  GENERAL      // Allgemein
+  NEWS         // Firmenneuigkeiten
+  EVENT        // Events/Termine
+  BIRTHDAY     // Geburtstage
+  ACHIEVEMENT  // Erfolge/Meilensteine
+  POLICY       // Richtlinien/Policy
+  URGENT       // Dringend
+  MARKETPLACE  // Kleinanzeigen
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model AnnouncementRead {
+  id String @id @default(cuid())
+
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   B24Employee @relation("ReadAnnouncements", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  readAt DateTime @default(now())
+
+  @@unique([announcementId, employeeId])
+  @@index([employeeId])
+  @@map("announcement_reads")
+}
+
+// AUFGABENVERWALTUNG (Task Management) für Mitarbeiter
+// ============================================
+
+model EmployeeTask {
+  id String @id @default(cuid())
+
+  title       String
+  description String? @db.Text
+  status      EmployeeTaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+
+  // Zuweisungen
+  assignedToId String
+  assignedTo   B24Employee @relation("EmployeeAssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   B24Employee @relation("EmployeeCreatedTasks", fields: [createdById], references: [id])
+
+  // Zeitplanung
+  dueDate   DateTime?
+  startDate DateTime?
+
+  // Projekt/Kategorie
+  category String? // z.B. "HR", "IT", "Vertrieb"
+  tags     String? // JSON Array: ["urgent", "customer-related"]
+
+  // Fortschritt
+  progress        Int      @default(0) // 0-100%
+  estimatedHours  Float?   // Geschätzte Stunden
+  actualHours     Float?   // Tatsächliche Stunden
+  
+  // Abschluss
+  completedAt DateTime?
+  completedById String?
+  completedBy   B24Employee? @relation("EmployeeCompletedTasks", fields: [completedById], references: [id])
+
+  // Kommentare & Aktivitäten
+  comments EmployeeTaskComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@map("employee_tasks")
+}
+
+enum EmployeeTaskStatus {
+  TODO        // Zu erledigen
+  IN_PROGRESS // In Arbeit
+  REVIEW      // Zur Überprüfung
+  BLOCKED     // Blockiert
+  COMPLETED   // Abgeschlossen
+  CANCELLED   // Abgebrochen
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model EmployeeTaskComment {
+  id String @id @default(cuid())
+
+  taskId String
+  task   EmployeeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   B24Employee @relation("EmployeeTaskComments", fields: [authorId], references: [id])
+
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@map("employee_task_comments")
+}
+
+// WISSENSDATENBANK (Knowledge Base)
+// ============================================
+
+model KnowledgeArticle {
+  id String @id @default(cuid())
+
+  title   String
+  slug    String        @unique // URL-freundlicher Titel
+  content String        @db.Text
+  excerpt String?       // Kurzbeschreibung
+  type    KnowledgeType @default(ARTICLE)
+
+  // Kategorisierung
+  category String? // z.B. "Onboarding", "IT", "HR-Policies"
+  tags     String? // JSON Array
+
+  // Sichtbarkeit & Status
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  isPinned      Boolean   @default(false)
+  
+  // Autor & Verwaltung
+  authorId String
+  author   B24Employee @relation("KnowledgeArticles", fields: [authorId], references: [id])
+
+  lastEditedById String?
+  lastEditedBy   B24Employee? @relation("EditedArticles", fields: [lastEditedById], references: [id])
+
+  // Dateien & Medien
+  attachments String? // JSON Array: [{name, url, type, size}]
+  videoUrl    String? // Optional: Link zu Tutorial-Video
+
+  // Statistik
+  viewCount   Int @default(0)
+  helpfulCount Int @default(0) // "War dies hilfreich?" Counter
+
+  // Versionierung (optional für später)
+  version Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([isPublished])
+  @@map("knowledge_articles")
+}
+
+enum KnowledgeType {
+  ARTICLE   // Artikel/Anleitung
+  FAQ       // Häufig gestellte Frage
+  TEMPLATE  // Vorlage/Formular
+  VIDEO     // Video-Tutorial
+  POLICY    // Richtlinie
+}
+
+// B24Employee Relations für Phase 7 erweitern:
+// announcements            Announcement[]          @relation("AnnouncementAuthor")
+// readAnnouncements        AnnouncementRead[]      @relation("ReadAnnouncements")
+// employeeAssignedTasks    EmployeeTask[]          @relation("EmployeeAssignedTasks")
+// employeeCreatedTasks     EmployeeTask[]          @relation("EmployeeCreatedTasks")
+// employeeCompletedTasks   EmployeeTask[]          @relation("EmployeeCompletedTasks")
+// employeeTaskComments     EmployeeTaskComment[]   @relation("EmployeeTaskComments")
+// knowledgeArticles        KnowledgeArticle[]      @relation("KnowledgeArticles")
+// editedArticles           KnowledgeArticle[]      @relation("EditedArticles")

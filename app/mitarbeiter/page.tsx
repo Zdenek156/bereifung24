@@ -506,7 +506,6 @@ export default function MitarbeiterDashboard() {
             </div>
           </div>
         </div>
-        */}
       </div>
     </div>
   )

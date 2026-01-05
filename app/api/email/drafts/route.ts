@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     await emailService.saveDraft({
       to,
       cc,

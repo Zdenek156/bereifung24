@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
     const folder = searchParams.get('folder') || 'INBOX'
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     
     // Check if email settings exist
     const hasSettings = await emailService.hasSettings()
@@ -55,7 +57,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     await emailService.sendEmail({
       to,
       cc,

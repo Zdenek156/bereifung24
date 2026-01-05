@@ -78,7 +78,8 @@ export default function EmailPage() {
       const res = await fetch(`/api/email/messages?folder=${currentFolder}&limit=50`)
       if (res.ok) {
         const data = await res.json()
-        if (data.needsConfiguration) {
+        // Nur wenn explizit needsConfiguration zurückkommt UND wir noch keine Settings haben
+        if (data.needsConfiguration && hasSettings !== true) {
           setHasSettings(false)
           setMessages([])
           return

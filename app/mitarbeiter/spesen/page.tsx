@@ -244,14 +244,14 @@ export default function SpesenPage() {
             <div className="text-sm text-gray-600">Gesamt</div>
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
             <div className="text-sm text-gray-500">
-              {stats.totalAmount.toFixed(2)} €
+              {Number(stats.totalAmount).toFixed(2)} €
             </div>
           </div>
           <div className="bg-yellow-50 p-6 rounded-lg shadow">
             <div className="text-sm text-yellow-800">Wartend</div>
             <div className="text-2xl font-bold text-yellow-900">{stats.pending}</div>
             <div className="text-sm text-yellow-700">
-              {stats.pendingAmount.toFixed(2)} €
+              {Number(stats.pendingAmount).toFixed(2)} €
             </div>
           </div>
           <div className="bg-green-50 p-6 rounded-lg shadow">
@@ -563,7 +563,7 @@ export default function SpesenPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-gray-900">
-                        {expense.amount.toFixed(2)} €
+                        {Number(expense.amount).toFixed(2)} €
                       </div>
                       {expense.vatRate && (
                         <div className="text-sm text-gray-500">

@@ -594,7 +594,7 @@ export default function ReisekostenPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-gray-900">
-                        {expense.totalAmount.toFixed(2)} €
+                        {Number(expense.totalAmount).toFixed(2)} €
                       </div>
                     </div>
                   </div>

@@ -108,10 +108,9 @@ export default function EmailSettingsPage() {
 
       setMessage({ type: 'success', text: 'Einstellungen erfolgreich gespeichert! Sie werden weitergeleitet...' })
       
-      // Direkt zur Email-Übersicht weiterleiten
+      // Hard reload der Email-Seite um Cache zu umgehen
       setTimeout(() => {
-        router.push('/mitarbeiter/email')
-        router.refresh() // Force refresh to reload settings
+        window.location.href = '/mitarbeiter/email'
       }, 1500)
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message })

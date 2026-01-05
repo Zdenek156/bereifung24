@@ -15,10 +15,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('📧 GET /api/email/settings called')
+    console.log('   User ID:', session.user.id)
+    console.log('   User Role:', session.user.role)
+    console.log('   User Email:', session.user.email)
+
     const isB24Employee = session.user.role === 'B24_EMPLOYEE'
     const whereClause = isB24Employee
       ? { b24EmployeeId: session.user.id }
       : { userId: session.user.id }
+
+    console.log('   isB24Employee:', isB24Employee)
+    console.log('   whereClause:', whereClause)
 
     const settings = await prisma.emailSettings.findUnique({
       where: whereClause,
@@ -39,10 +47,18 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    console.log('   Settings found:', settings ? 'YES' : 'NO')
+    if (settings) {
+      console.log('   IMAP User:', settings.imapUser)
+      console.log('   IMAP Host:', settings.imapHost)
+    }
+
     if (!settings) {
+      console.log('   ❌ Returning needsConfiguration: true')
       return NextResponse.json({ settings: null, needsConfiguration: true })
     }
 
+    console.log('   ✅ Returning needsConfiguration: false')
     return NextResponse.json({ settings, needsConfiguration: false })
   } catch (error: any) {
     console.error('Error fetching email settings:', error)
@@ -62,6 +78,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('📧 PUT /api/email/settings called')
+    console.log('   User ID:', session.user.id)
+    console.log('   User Role:', session.user.role)
+    console.log('   User Email:', session.user.email)
+
     const body = await request.json()
     const {
       imapHost,
@@ -78,8 +99,14 @@ export async function PUT(request: NextRequest) {
       syncInterval,
     } = body
 
+    console.log('   Received data:')
+    console.log('     imapHost:', imapHost)
+    console.log('     imapUser:', imapUser)
+    console.log('     imapPassword:', imapPassword ? 'SET' : 'NOT SET')
+
     // Validierung
     if (!imapHost || !imapUser || !imapPassword || !smtpHost || !smtpUser) {
+      console.log('   ❌ Validation failed - missing fields')
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -87,6 +114,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const isB24Employee = session.user.role === 'B24_EMPLOYEE'
+    console.log('   isB24Employee:', isB24Employee)
 
     const settings = await saveEmailSettings(
       session.user.id,
@@ -106,6 +134,11 @@ export async function PUT(request: NextRequest) {
       },
       isB24Employee
     )
+
+    console.log('   ✅ Settings saved successfully')
+    console.log('     Settings ID:', settings.id)
+    console.log('     User ID field:', settings.userId)
+    console.log('     B24Employee ID field:', settings.b24EmployeeId)
 
     // Passwörter nicht zurückgeben
     const { imapPassword: _, smtpPassword: __, ...safeSettings } = settings

@@ -103,12 +103,16 @@ export default function EmailSettingsPage() {
         throw new Error(error.error || 'Failed to save settings')
       }
 
-      setMessage({ type: 'success', text: 'Einstellungen erfolgreich gespeichert!' })
+      const result = await res.json()
+      console.log('✅ Settings saved successfully:', result)
+
+      setMessage({ type: 'success', text: 'Einstellungen erfolgreich gespeichert! Sie werden weitergeleitet...' })
       
-      // Nach 2 Sekunden zur Email-Übersicht
+      // Direkt zur Email-Übersicht weiterleiten
       setTimeout(() => {
         router.push('/mitarbeiter/email')
-      }, 2000)
+        router.refresh() // Force refresh to reload settings
+      }, 1500)
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message })
     } finally {

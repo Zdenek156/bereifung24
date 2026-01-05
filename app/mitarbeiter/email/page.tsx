@@ -49,12 +49,22 @@ export default function EmailPage() {
 
   const checkSettings = async () => {
     try {
-      const res = await fetch('/api/email/settings')
+      const res = await fetch('/api/email/settings', {
+        cache: 'no-store', // Wichtig: Cache deaktivieren
+      })
       if (res.ok) {
         const data = await res.json()
-        if (data.needsConfiguration) {
+        console.log('📧 Email settings check:', data)
+        if (data.needsConfiguration || !data.settings) {
+          console.log('⚠️ Email settings need configuration')
           setHasSettings(false)
+        } else {
+          console.log('✅ Email settings configured')
+          setHasSettings(true)
         }
+      } else {
+        console.log('❌ Failed to fetch settings, status:', res.status)
+        setHasSettings(false)
       }
     } catch (error) {
       console.error('Error checking settings:', error)

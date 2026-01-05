@@ -68,7 +68,16 @@ export default function DokumentePage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setUploadData({ ...uploadData, file: e.target.files[0] })
+      const file = e.target.files[0]
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      
+      if (file.size > maxSize) {
+        alert(`Datei zu groß! Maximum: 10 MB. Ihre Datei: ${(file.size / (1024 * 1024)).toFixed(2)} MB`)
+        e.target.value = '' // Reset file input
+        return
+      }
+      
+      setUploadData({ ...uploadData, file })
     }
   }
 

@@ -167,10 +167,10 @@ export default function MitarbeiterDashboard() {
         <NewsFeed />
       </div>
 
-      {/* Admin-Bereiche mit Zugriffsrechten */}
+      {/* Anwendungen mit Zugriffsrechten */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Admin-Bereiche</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Anwendungen</h2>
           <p className="text-sm text-gray-600 mt-1">Basierend auf Ihren Zugriffsrechten</p>
         </div>
         <EmployeeAdminTiles />

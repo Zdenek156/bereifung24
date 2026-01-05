@@ -26,27 +26,14 @@ export default function NewsFeed() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('https://www.tagesschau.de/api2/news/')
+      const response = await fetch('/api/news')
       
       if (!response.ok) {
         throw new Error('API nicht erreichbar')
       }
 
       const data = await response.json()
-      
-      const newsItems = data.news?.slice(0, 12).map((article: any) => ({
-        id: article.sophoraId || article.externalId,
-        title: article.title,
-        shortText: article.firstSentence || article.teaserImage?.alttext,
-        date: article.date,
-        imageUrl: article.teaserImage?.imageVariants?.['16x9-256'],
-        tags: article.tags?.map((tag: any) => tag.tag) || [],
-        detailsUrl: article.shareURL || article.detailsweb,
-        type: article.type,
-        topline: article.topline
-      })) || []
-
-      setNews(newsItems)
+      setNews(data.news || [])
     } catch (err) {
       console.error('Error fetching news:', err)
       setError('Nachrichten konnten nicht geladen werden')

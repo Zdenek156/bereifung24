@@ -27,7 +27,7 @@ export default function EmailPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [currentFolder, setCurrentFolder] = useState('INBOX')
-  const [hasSettings, setHasSettings] = useState(true)
+  const [hasSettings, setHasSettings] = useState<boolean | null>(null) // null = noch nicht geprüft
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -42,7 +42,7 @@ export default function EmailPage() {
   }, [session])
 
   useEffect(() => {
-    if (hasSettings) {
+    if (hasSettings === true) {
       fetchMessages()
     }
   }, [currentFolder, hasSettings])
@@ -175,7 +175,19 @@ export default function EmailPage() {
     markAsRead(message)
   }
 
-  if (!hasSettings) {
+  // Loading state während Settings geprüft werden
+  if (hasSettings === null) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Lade E-Mail-Einstellungen...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (hasSettings === false) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md text-center">

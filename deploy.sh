@@ -3,6 +3,10 @@
 # Deployment Script für Bereifung24
 # Auf dem Server als /var/www/bereifung24/deploy.sh speichern
 
+# Load NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
 echo "🚀 Starting deployment..."
 
 # Navigate to project directory

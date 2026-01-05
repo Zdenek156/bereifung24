@@ -15,6 +15,7 @@ interface DashboardStats {
   newDocuments: number
   pendingTasks: number
   overtimeHours?: number
+  unreadEmails: number
 }
 
 interface NavigationItem {
@@ -154,6 +155,7 @@ export default function MitarbeiterDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     newDocuments: 0,
     pendingTasks: 0,
+    unreadEmails: 0
   })
   const [loading, setLoading] = useState(true)
   const [visibleItems, setVisibleItems] = useState<NavigationItem[]>([])
@@ -243,6 +245,26 @@ export default function MitarbeiterDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Neue E-Mails */}
+          <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📧</span>
+                </div>
+              </div>
+              <div className="ml-4 flex-1">
+                <p className="text-sm font-medium text-gray-600">
+                  Neue E-Mails
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.unreadEmails}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Ungelesen</p>
+              </div>
+            </div>
+          </Link>
+
           {/* Urlaubstage */}
           {stats.leaveBalance && (
             <div className="bg-white rounded-lg shadow p-6">

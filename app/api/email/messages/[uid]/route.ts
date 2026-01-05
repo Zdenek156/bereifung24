@@ -20,7 +20,9 @@ export async function GET(
     // Check if it's a database ID (CUID) or numeric IMAP uid
     const isNumericUid = /^\d+$/.test(messageId)
     
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     let message
     
     if (isNumericUid) {
@@ -62,7 +64,9 @@ export async function PUT(
     const body = await request.json()
     const { isRead, folder } = body
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
 
     if (isRead !== undefined) {
       await emailService.markAsRead(uid, folder || 'INBOX')
@@ -93,7 +97,9 @@ export async function DELETE(
     const uid = parseInt(params.uid)
     const folder = request.nextUrl.searchParams.get('folder') || 'INBOX'
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     await emailService.deleteMessage(uid, folder)
 
     return NextResponse.json({ success: true })

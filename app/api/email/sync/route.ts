@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { folder, limit } = body
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     
     // Prüfen ob Einstellungen existieren
     const hasSettings = await emailService.hasSettings()

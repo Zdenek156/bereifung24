@@ -12,7 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
     
     // Check if email settings exist
     const hasSettings = await emailService.hasSettings()

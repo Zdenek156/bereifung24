@@ -24,7 +24,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid UID' }, { status: 400 })
     }
 
-    const emailService = new EmailService(session.user.id)
+    // Check if user is B24_EMPLOYEE
+    const isB24Employee = session.user?.role === 'B24_EMPLOYEE'
+    const emailService = new EmailService(session.user.id, isB24Employee)
 
     if (permanent) {
       // Dauerhaft löschen

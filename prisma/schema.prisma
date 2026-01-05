@@ -1030,6 +1030,7 @@ model B24Employee {
 
   // Email Settings
   emailSettings EmailSettings?
+  emailMessages EmailMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2436,8 +2437,11 @@ model EmailSignature {
 
 model EmailMessage {
   id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  b24EmployeeId String?
+  b24Employee   B24Employee? @relation(fields: [b24EmployeeId], references: [id], onDelete: Cascade)
 
   // IMAP Metadata
   uid       Int
@@ -2467,8 +2471,11 @@ model EmailMessage {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, uid, folder])
+  @@unique([b24EmployeeId, uid, folder])
   @@index([userId, folder])
+  @@index([b24EmployeeId, folder])
   @@index([userId, date])
+  @@index([b24EmployeeId, date])
   @@map("email_messages")
 }
 

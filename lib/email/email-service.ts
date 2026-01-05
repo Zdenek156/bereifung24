@@ -10,9 +10,13 @@ const ENCRYPTION_IV_LENGTH = 16
 /**
  * Get encryption key from user's email settings or generate a new one
  */
-async function getEncryptionKey(userId: string): Promise<string> {
+async function getEncryptionKey(userId: string, isB24Employee: boolean = false): Promise<string> {
+  const whereClause = isB24Employee
+    ? { b24EmployeeId: userId }
+    : { userId }
+  
   const settings = await prisma.emailSettings.findUnique({
-    where: { userId },
+    where: whereClause,
     select: { encryptionKey: true }
   })
   
@@ -25,7 +29,7 @@ async function getEncryptionKey(userId: string): Promise<string> {
   
   // Save it to settings if they exist
   await prisma.emailSettings.updateMany({
-    where: { userId },
+    where: whereClause,
     data: { encryptionKey: newKey }
   })
   
@@ -35,8 +39,8 @@ async function getEncryptionKey(userId: string): Promise<string> {
 /**
  * Passwort verschlüsseln
  */
-export async function encryptPassword(password: string, userId: string): Promise<string> {
-  const key = await getEncryptionKey(userId)
+export async function encryptPassword(password: string, userId: string, isB24Employee: boolean = false): Promise<string> {
+  const key = await getEncryptionKey(userId, isB24Employee)
   const iv = crypto.randomBytes(ENCRYPTION_IV_LENGTH)
   const cipher = crypto.createCipheriv(
     'aes-256-cbc',
@@ -51,8 +55,8 @@ export async function encryptPassword(password: string, userId: string): Promise
 /**
  * Passwort entschlüsseln
  */
-export async function decryptPassword(encryptedPassword: string, userId: string): Promise<string> {
-  const key = await getEncryptionKey(userId)
+export async function decryptPassword(encryptedPassword: string, userId: string, isB24Employee: boolean = false): Promise<string> {
+  const key = await getEncryptionKey(userId, isB24Employee)
   const parts = encryptedPassword.split(':')
   const iv = Buffer.from(parts[0], 'hex')
   const encryptedText = Buffer.from(parts[1], 'hex')
@@ -120,7 +124,7 @@ export class EmailService {
 
     const config: ImapConfig = {
       user: settings.imapUser,
-      password: await decryptPassword(settings.imapPassword, this.userId),
+      password: await decryptPassword(settings.imapPassword, this.userId, this.isB24Employee),
       host: settings.imapHost,
       port: settings.imapPort,
       tls: settings.imapTls,
@@ -152,7 +156,7 @@ export class EmailService {
       secure: secure,
       auth: {
         user: settings.smtpUser,
-        pass: await decryptPassword(settings.smtpPassword, this.userId),
+        pass: await decryptPassword(settings.smtpPassword, this.userId, this.isB24Employee),
       },
     }
 
@@ -472,7 +476,7 @@ export async function saveEmailSettings(
   isB24Employee: boolean = false
 ) {
   // Passwörter verschlüsseln
-  const encryptedPassword = await encryptPassword(settings.imapPassword, userId)
+  const encryptedPassword = await encryptPassword(settings.imapPassword, userId, isB24Employee)
 
   // Für B24Employee ist userId bereits die Employee ID
   const whereClause = isB24Employee

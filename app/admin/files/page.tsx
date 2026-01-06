@@ -449,7 +449,11 @@ export default function FilesPage() {
             <Card
               key={folder.id}
               className="p-4 hover:shadow-lg transition-shadow cursor-pointer group"
-              onClick={() => navigateToFolder(folder.id)}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault()
+                navigateToFolder(folder.id)
+              }}
+              style={{ cursor: 'pointer' }}
             >
               <div>
                 <div className="flex items-start justify-between mb-3">

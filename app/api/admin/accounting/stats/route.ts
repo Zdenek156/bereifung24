@@ -1,0 +1,89 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get total account count
+    const accountCount = await prisma.chartOfAccounts.count()
+
+    // Get total entry count
+    const entryCount = await prisma.accountingEntry.count()
+
+    // Get last entry date
+    const lastEntry = await prisma.accountingEntry.findFirst({
+      orderBy: { bookingDate: 'desc' },
+      select: { bookingDate: true }
+    })
+
+    // Calculate total revenue (credit entries on revenue accounts 8xxx)
+    const revenueEntries = await prisma.accountingEntry.findMany({
+      where: {
+        creditAccount: {
+          accountNumber: {
+            startsWith: '8'
+          }
+        }
+      },
+      select: {
+        amount: true
+      }
+    })
+
+    const totalRevenue = revenueEntries.reduce((sum, entry) => sum + entry.amount.toNumber(), 0)
+
+    // Calculate total expenses (debit entries on expense accounts 4xxx and 6xxx)
+    const expenseEntries = await prisma.accountingEntry.findMany({
+      where: {
+        OR: [
+          {
+            debitAccount: {
+              accountNumber: {
+                startsWith: '4'
+              }
+            }
+          },
+          {
+            debitAccount: {
+              accountNumber: {
+                startsWith: '6'
+              }
+            }
+          }
+        ]
+      },
+      select: {
+        amount: true
+      }
+    })
+
+    const totalExpenses = expenseEntries.reduce((sum, entry) => sum + entry.amount.toNumber(), 0)
+
+    const totalProfit = totalRevenue - totalExpenses
+
+    return NextResponse.json({
+      totalRevenue,
+      totalExpenses,
+      totalProfit,
+      entryCount,
+      accountCount,
+      lastEntryDate: lastEntry?.bookingDate?.toISOString() || null
+    })
+  } catch (error) {
+    console.error('Error fetching accounting stats:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

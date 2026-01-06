@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (permissionError) return permissionError
 
     const { searchParams } = new URL(request.url)
-    const folderId = searchParams.get('folderId') || null
+    const folderId = searchParams.get('folder') || searchParams.get('folderId') || null
     const search = searchParams.get('search') || ''
 
     // Get current folder info (if in a subfolder)

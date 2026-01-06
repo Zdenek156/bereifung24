@@ -29,13 +29,13 @@
 
 ### 1.1 Neue Prisma Models erstellen
 
-- [ ] **ChartOfAccounts** - SKR04 Kontenplan
+- [x] **ChartOfAccounts** - SKR04 Kontenplan
   - Kontonummern (z.B. 4120)
   - Kontobezeichnungen (z.B. "Löhne und Gehälter")
   - Kontentyp (REVENUE, EXPENSE, ASSET, LIABILITY)
   - Aktiv/Inaktiv Status
 
-- [ ] **AccountingEntry** - Zentrale Buchungen
+- [x] **AccountingEntry** - Zentrale Buchungen
   - Fortlaufende Belegnummer (GoBD)
   - Buchungsdatum / Belegdatum
   - Soll-Konto / Haben-Konto (SKR04)
@@ -48,7 +48,7 @@
   - Stornierung (Verknüpfung zu Original)
   - Audit-Fields (createdBy, createdAt, updatedAt)
 
-- [ ] **Payroll** - Gehaltsabrechnungen
+- [x] **Payroll** - Gehaltsabrechnungen
   - Mitarbeiter-Verknüpfung
   - Monat/Jahr
   - Brutto-Gehalt, Netto-Gehalt
@@ -59,7 +59,7 @@
   - PDF-Dokument
   - ⚠️ Hinweis: Vorbereitung für HR-System-Integration
 
-- [ ] **VehicleCost** - Fahrzeugkosten
+- [x] **VehicleCost** - Fahrzeugkosten
   - Verknüpfung zu Asset (Fahrzeug)
   - Kostenart (FUEL, MAINTENANCE, INSURANCE, TAX, REPAIRS, PARKING, TOLLS, OTHER)
   - Datum, Betrag
@@ -67,7 +67,7 @@
   - Beschreibung, Lieferant/Tankstelle
   - Beleg-URL
 
-- [ ] **AccountingSetting** - Konfiguration
+- [x] **AccountingSetting** - Konfiguration
   - Steuerberater-Daten (Name, Email, Telefon, Adresse)
   - Unternehmensdaten (Steuernummer, USt-IdNr.)
   - Export-Präferenzen (DATEV/Excel/PDF)
@@ -77,15 +77,15 @@
 
 ### 1.2 Enums erweitern
 
-- [ ] EntrySourceType (COMMISSION, EXPENSE, TRAVEL_EXPENSE, PAYROLL, PROCUREMENT, INFLUENCER, VEHICLE, MANUAL)
-- [ ] AccountType (REVENUE, EXPENSE, ASSET, LIABILITY)
-- [ ] VehicleCostType (FUEL, MAINTENANCE, INSURANCE, TAX, REPAIRS, PARKING, TOLLS, OTHER)
-- [ ] PayrollStatus (DRAFT, APPROVED, PAID)
-- [ ] ExportFormat (DATEV, EXCEL, PDF)
+- [x] EntrySourceType (COMMISSION, EXPENSE, TRAVEL_EXPENSE, PAYROLL, PROCUREMENT, INFLUENCER, VEHICLE, MANUAL)
+- [x] AccountType (REVENUE, EXPENSE, ASSET, LIABILITY)
+- [x] VehicleCostType (FUEL, MAINTENANCE, INSURANCE, TAX, REPAIRS, PARKING, TOLLS, OTHER)
+- [x] PayrollStatus (DRAFT, APPROVED, PAID)
+- [x] ExportFormat (DATEV, EXCEL, PDF)
 
 ### 1.3 Bestehende Models erweitern
 
-- [ ] B24Employee erweitern (falls nötig)
+- [x] B24Employee erweitern (falls nötig)
   - Relation zu Payroll
   - Gehaltsinformationen (für später mit HR-System)
 
@@ -97,7 +97,7 @@
 
 ### 1.5 SKR04 Kontenplan initialisieren
 
-- [ ] Seed-Script für wichtigste SKR04-Konten erstellen:
+- [x] Seed-Script für wichtigste SKR04-Konten erstellen:
   - **Erlöse (8xxx):**
     - 8400 - Erlöse (Provisionen Werkstätten)
     - 8120 - Umsatzerlöse 19% USt

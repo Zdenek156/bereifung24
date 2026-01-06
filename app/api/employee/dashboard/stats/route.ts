@@ -81,6 +81,40 @@ export async function GET(request: NextRequest) {
       // Continue without email stats
     }
 
+    // Get total customers count
+    const totalCustomers = await prisma.user.count({
+      where: {
+        role: 'CUSTOMER',
+      },
+    })
+
+    // Get total active workshops count
+    const totalWorkshops = await prisma.workshop.count({
+      where: {
+        isActive: true,
+      },
+    })
+
+    // Get total commissions for current month
+    const now = new Date()
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const commissions = await prisma.commission.findMany({
+      where: {
+        createdAt: {
+          gte: firstDayOfMonth,
+          lte: lastDayOfMonth,
+        },
+        status: 'APPROVED',
+      },
+      select: {
+        amount: true,
+      },
+    })
+
+    const totalCommissions = commissions.reduce((sum, c) => sum + c.amount, 0)
+
     return NextResponse.json({
       leaveBalance: leaveBalance
         ? {
@@ -93,6 +127,9 @@ export async function GET(request: NextRequest) {
       pendingTasks,
       overtimeHours,
       unreadEmails,
+      totalCustomers,
+      totalWorkshops,
+      totalCommissions,
     })
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error)

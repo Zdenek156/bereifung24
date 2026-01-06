@@ -1,0 +1,1 @@
+ALTER TABLE email_messages ALTER COLUMN "userId" DROP NOT NULL;

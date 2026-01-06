@@ -81,31 +81,19 @@ export async function GET(request: NextRequest) {
       // Continue without email stats
     }
 
-    // Get total customers count
+    // Get total registered customers count
     const totalCustomers = await prisma.user.count({
       where: {
         role: 'CUSTOMER',
       },
     })
 
-    // Get total active workshops count
-    const totalWorkshops = await prisma.workshop.count({
-      where: {
-        isActive: true,
-      },
-    })
+    // Get total registered workshops count (all workshops, not just active)
+    const totalWorkshops = await prisma.workshop.count()
 
-    // Get total commissions for current month
-    const now = new Date()
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-
+    // Get total commissions (all approved commissions, not just current month)
     const commissions = await prisma.commission.findMany({
       where: {
-        createdAt: {
-          gte: firstDayOfMonth,
-          lte: lastDayOfMonth,
-        },
         status: 'APPROVED',
       },
       select: {

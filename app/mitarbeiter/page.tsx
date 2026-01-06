@@ -178,7 +178,7 @@ export default function MitarbeiterDashboard() {
             <div className="ml-4 flex-1">
               <p className="text-sm font-medium text-gray-600">Anzahl Kunden</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
-              <p className="text-xs text-gray-500 mt-1">Gesamt</p>
+              <p className="text-xs text-gray-500 mt-1">Registriert</p>
             </div>
           </div>
         </Link>
@@ -194,7 +194,7 @@ export default function MitarbeiterDashboard() {
             <div className="ml-4 flex-1">
               <p className="text-sm font-medium text-gray-600">Anzahl Werkstätten</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalWorkshops}</p>
-              <p className="text-xs text-gray-500 mt-1">Aktiv</p>
+              <p className="text-xs text-gray-500 mt-1">Registriert</p>
             </div>
           </div>
         </Link>
@@ -210,7 +210,7 @@ export default function MitarbeiterDashboard() {
             <div className="ml-4 flex-1">
               <p className="text-sm font-medium text-gray-600">Provision</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalCommissions.toFixed(2)} €</p>
-              <p className="text-xs text-gray-500 mt-1">Aktueller Monat</p>
+              <p className="text-xs text-gray-500 mt-1">Gesamt</p>
             </div>
           </div>
         </Link>

@@ -17,6 +17,9 @@ interface DashboardStats {
   pendingTasks: number
   overtimeHours?: number
   unreadEmails: number
+  totalCustomers: number
+  totalWorkshops: number
+  totalCommissions: number
 }
 
 export default function MitarbeiterDashboard() {
@@ -25,7 +28,10 @@ export default function MitarbeiterDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     newDocuments: 0,
     pendingTasks: 0,
-    unreadEmails: 0
+    unreadEmails: 0,
+    totalCustomers: 0,
+    totalWorkshops: 0,
+    totalCommissions: 0
   })
   const [loading, setLoading] = useState(true)
 
@@ -157,6 +163,54 @@ export default function MitarbeiterDashboard() {
               <p className="text-sm font-medium text-gray-600">Offene Aufgaben</p>
               <p className="text-2xl font-bold text-gray-900">{stats.pendingTasks}</p>
               <p className="text-xs text-gray-500 mt-1">Zu erledigen</p>
+            </div>
+          </div>
+        </Link>
+
+        {/* Anzahl Kunden */}
+        <Link href="/admin/customers" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+            </div>
+            <div className="ml-4 flex-1">
+              <p className="text-sm font-medium text-gray-600">Anzahl Kunden</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
+              <p className="text-xs text-gray-500 mt-1">Gesamt</p>
+            </div>
+          </div>
+        </Link>
+
+        {/* Anzahl Werkstätten */}
+        <Link href="/admin/workshops" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🔧</span>
+              </div>
+            </div>
+            <div className="ml-4 flex-1">
+              <p className="text-sm font-medium text-gray-600">Anzahl Werkstätten</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalWorkshops}</p>
+              <p className="text-xs text-gray-500 mt-1">Aktiv</p>
+            </div>
+          </div>
+        </Link>
+
+        {/* Provision */}
+        <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💰</span>
+              </div>
+            </div>
+            <div className="ml-4 flex-1">
+              <p className="text-sm font-medium text-gray-600">Provision</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalCommissions.toFixed(2)} €</p>
+              <p className="text-xs text-gray-500 mt-1">Aktueller Monat</p>
             </div>
           </div>
         </Link>

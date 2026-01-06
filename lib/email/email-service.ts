@@ -188,8 +188,8 @@ export class EmailService {
           : { userId_uid_folder: { userId: this.userId, uid: message.uid, folder: message.folder } }
 
         const identityField = this.isB24Employee
-          ? { b24EmployeeId: this.userId }
-          : { userId: this.userId }
+          ? { b24EmployeeId: this.userId, userId: null }
+          : { userId: this.userId, b24EmployeeId: null }
 
         // Check if message exists
         const existingMessage = await prisma.emailMessage.findUnique({

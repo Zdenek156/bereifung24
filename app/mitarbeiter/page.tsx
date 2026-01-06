@@ -80,137 +80,99 @@ export default function MitarbeiterDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
         {/* Neue E-Mails */}
-        <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📧</span>
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">📧</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Neue E-Mails</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.unreadEmails}</p>
-              <p className="text-xs text-gray-500 mt-1">Ungelesen</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Neue E-Mails</p>
+              <p className="text-xl font-bold text-gray-900">{stats.unreadEmails}</p>
+              <p className="text-xs text-gray-500 truncate">Ungelesen</p>
             </div>
           </div>
         </Link>
 
-        {/* Urlaubstage */}
-        {stats.leaveBalance && (
-          <Link href="/mitarbeiter/urlaub" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">🏖️</span>
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">Resturlaub</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.leaveBalance.remaining} Tage</p>
-                <p className="text-xs text-gray-500 mt-1">von {stats.leaveBalance.total} Tagen</p>
-              </div>
-            </div>
-          </Link>
-        )}
-
-        {/* Überstunden */}
-        {stats.overtimeHours !== undefined && (
-          <Link href="/mitarbeiter/zeit" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">⏰</span>
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">Überstunden</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.overtimeHours > 0 ? '+' : ''}{stats.overtimeHours}h
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Aktueller Stand</p>
-              </div>
-            </div>
-          </Link>
-        )}
-
         {/* Neue Dokumente */}
-        <Link href="/mitarbeiter/dokumente" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/mitarbeiter/dokumente" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📄</span>
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">📄</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Neue Dokumente</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.newDocuments}</p>
-              <p className="text-xs text-gray-500 mt-1">Ungelesen</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Neue Dokumente</p>
+              <p className="text-xl font-bold text-gray-900">{stats.newDocuments}</p>
+              <p className="text-xs text-gray-500 truncate">Ungelesen</p>
             </div>
           </div>
         </Link>
 
         {/* Offene Aufgaben */}
-        <Link href="/mitarbeiter/aufgaben" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/mitarbeiter/aufgaben" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">✓</span>
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">✓</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Offene Aufgaben</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingTasks}</p>
-              <p className="text-xs text-gray-500 mt-1">Zu erledigen</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Offene Aufgaben</p>
+              <p className="text-xl font-bold text-gray-900">{stats.pendingTasks}</p>
+              <p className="text-xs text-gray-500 truncate">Zu erledigen</p>
             </div>
           </div>
         </Link>
 
         {/* Anzahl Kunden */}
-        <Link href="/admin/customers" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/admin/customers" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">👥</span>
+              <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">👥</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Anzahl Kunden</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
-              <p className="text-xs text-gray-500 mt-1">Registriert</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Anzahl Kunden</p>
+              <p className="text-xl font-bold text-gray-900">{stats.totalCustomers}</p>
+              <p className="text-xs text-gray-500 truncate">Registriert</p>
             </div>
           </div>
         </Link>
 
         {/* Anzahl Werkstätten */}
-        <Link href="/admin/workshops" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/admin/workshops" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🔧</span>
+              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">🔧</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Anzahl Werkstätten</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalWorkshops}</p>
-              <p className="text-xs text-gray-500 mt-1">Registriert</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Anzahl Werkstätten</p>
+              <p className="text-xl font-bold text-gray-900">{stats.totalWorkshops}</p>
+              <p className="text-xs text-gray-500 truncate">Registriert</p>
             </div>
           </div>
         </Link>
 
         {/* Provision */}
-        <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+        <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">💰</span>
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">💰</span>
               </div>
             </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm font-medium text-gray-600">Provision</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCommissions.toFixed(2)} €</p>
-              <p className="text-xs text-gray-500 mt-1">Gesamt</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Provision</p>
+              <p className="text-xl font-bold text-gray-900 truncate">{stats.totalCommissions.toFixed(2)} €</p>
+              <p className="text-xs text-gray-500 truncate">Gesamt</p>
             </div>
           </div>
         </Link>

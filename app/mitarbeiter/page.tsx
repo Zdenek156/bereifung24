@@ -80,7 +80,7 @@ export default function MitarbeiterDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
         {/* Neue E-Mails */}
         <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center">

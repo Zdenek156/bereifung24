@@ -1,0 +1,282 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+
+interface AccountingEntry {
+  id: string
+  entryNumber: string
+  bookingDate: string
+  debitAccount: {
+    accountNumber: string
+    accountName: string
+  }
+  creditAccount: {
+    accountNumber: string
+    accountName: string
+  }
+  amount: number
+  description: string
+  sourceType: string
+  locked: boolean
+  isStorno: boolean
+  createdAt: string
+}
+
+export default function JournalPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [entries, setEntries] = useState<AccountingEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    if (session.user.role !== 'ADMIN') {
+      router.push('/dashboard')
+      return
+    }
+
+    fetchEntries()
+  }, [session, status, router])
+
+  const fetchEntries = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (filter) params.append('search', filter)
+      if (dateFrom) params.append('from', dateFrom)
+      if (dateTo) params.append('to', dateTo)
+
+      const response = await fetch(`/api/admin/accounting/entries?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEntries(data.entries || [])
+      }
+    } catch (error) {
+      console.error('Error fetching entries:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = () => {
+    setLoading(true)
+    fetchEntries()
+  }
+
+  if (status === 'loading' || !session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Link 
+                href="/admin/buchhaltung" 
+                className="text-primary-600 hover:text-primary-700 mb-2 inline-block"
+              >
+                ← Zurück zur Buchhaltung
+              </Link>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Journalbuch
+              </h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Chronologische Übersicht aller Buchungseinträge
+              </p>
+            </div>
+            <Link
+              href="/admin/buchhaltung/manuelle-buchung"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              + Neue Buchung
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Suche
+              </label>
+              <input
+                type="text"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Buchungsnummer, Beschreibung..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Von Datum
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bis Datum
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleSearch}
+                className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Suchen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Journal Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Belegnr.
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Datum
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Soll
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Haben
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Betrag
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Beschreibung
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quelle
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center">
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : entries.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      Noch keine Buchungseinträge vorhanden
+                    </td>
+                  </tr>
+                ) : (
+                  entries.map((entry) => (
+                    <tr 
+                      key={entry.id} 
+                      className={`hover:bg-gray-50 ${entry.isStorno ? 'bg-red-50' : ''}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {entry.entryNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(entry.bookingDate).toLocaleDateString('de-DE')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="font-medium">{entry.debitAccount.accountNumber}</div>
+                        <div className="text-gray-500 text-xs">{entry.debitAccount.accountName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="font-medium">{entry.creditAccount.accountNumber}</div>
+                        <div className="text-gray-500 text-xs">{entry.creditAccount.accountName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
+                        {entry.amount.toFixed(2)} €
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                        {entry.description}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                          {entry.sourceType}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {entry.isStorno ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                            Storniert
+                          </span>
+                        ) : entry.locked ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                            Gesperrt
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                            Offen
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm text-blue-700">
+              <strong>Hinweis:</strong> Gesperrte Einträge können nicht mehr geändert werden (GoBD-Konformität). 
+              Fehlerhafte Buchungen müssen per Storno korrigiert werden.
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}

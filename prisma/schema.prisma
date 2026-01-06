@@ -130,6 +130,11 @@ model User {
   assignedAssets      Asset[]              @relation
   investmentPlans     InvestmentPlan[]
 
+  // Buchhaltung Relations
+  createdAccountingEntries AccountingEntry[]    @relation("AccountingEntryCreator")
+  lockedAccountingEntries  AccountingEntry[]    @relation("AccountingEntryLocker")
+  accountingAuditLogs      AccountingAuditLog[] @relation("AccountingAuditor")
+
   @@map("users")
 }
 
@@ -993,14 +998,14 @@ model B24Employee {
   uploadedFiles  FileUpload[]
 
   // Employee Portal Relations
-  profile            EmployeeProfile?
-  documents          EmployeeDocument[]        @relation("EmployeeDocuments")
-  uploadedDocuments  EmployeeDocument[]        @relation("DocumentUploader")
-  leaveBalance       LeaveBalance[]
-  leaveRequests      LeaveRequest[]            @relation("EmployeeLeaveRequests")
-  approvedLeaves     LeaveRequest[]            @relation("LeaveApprover")
-  substituteFor      LeaveRequest[]            @relation("LeaveSubstitute")
-  sickLeaves         SickLeave[]
+  profile           EmployeeProfile?
+  documents         EmployeeDocument[] @relation("EmployeeDocuments")
+  uploadedDocuments EmployeeDocument[] @relation("DocumentUploader")
+  leaveBalance      LeaveBalance[]
+  leaveRequests     LeaveRequest[]     @relation("EmployeeLeaveRequests")
+  approvedLeaves    LeaveRequest[]     @relation("LeaveApprover")
+  substituteFor     LeaveRequest[]     @relation("LeaveSubstitute")
+  sickLeaves        SickLeave[]
 
   // Time Tracking Relations
   workSessions     WorkSession[]
@@ -1019,14 +1024,17 @@ model B24Employee {
   approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")
 
   // Phase 7: Communication & Organization Relations
-  announcements            Announcement[]          @relation("AnnouncementAuthor")
-  readAnnouncements        AnnouncementRead[]      @relation("ReadAnnouncements")
-  employeeAssignedTasks    EmployeeTask[]          @relation("EmployeeAssignedTasks")
-  employeeCreatedTasks     EmployeeTask[]          @relation("EmployeeCreatedTasks")
-  employeeCompletedTasks   EmployeeTask[]          @relation("EmployeeCompletedTasks")
-  employeeTaskComments     EmployeeTaskComment[]   @relation("EmployeeTaskComments")
-  knowledgeArticles        KnowledgeArticle[]      @relation("KnowledgeArticles")
-  editedArticles           KnowledgeArticle[]      @relation("EditedArticles")
+  announcements          Announcement[]        @relation("AnnouncementAuthor")
+  readAnnouncements      AnnouncementRead[]    @relation("ReadAnnouncements")
+  employeeAssignedTasks  EmployeeTask[]        @relation("EmployeeAssignedTasks")
+  employeeCreatedTasks   EmployeeTask[]        @relation("EmployeeCreatedTasks")
+  employeeCompletedTasks EmployeeTask[]        @relation("EmployeeCompletedTasks")
+  employeeTaskComments   EmployeeTaskComment[] @relation("EmployeeTaskComments")
+  knowledgeArticles      KnowledgeArticle[]    @relation("KnowledgeArticles")
+  editedArticles         KnowledgeArticle[]    @relation("EditedArticles")
+
+  // Buchhaltung Relations
+  payrolls Payroll[] @relation("EmployeePayroll")
 
   // Email Settings
   emailSettings EmailSettings?
@@ -1807,6 +1815,7 @@ model Asset {
 
   // Relations
   depreciationEntries DepreciationEntry[]
+  vehicleCosts        VehicleCost[]       @relation("VehicleCosts")
 
   // Metadata
   createdById String
@@ -2436,7 +2445,7 @@ model EmailSignature {
 }
 
 model EmailMessage {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -2523,14 +2532,14 @@ model EmployeeProfile {
 }
 
 enum DocumentType {
-  CONTRACT           // Arbeitsvertrag - nur HR
-  PAYSLIP            // Gehaltsabrechnung - nur HR
-  TAX                // Steuerdokumente - nur HR
-  SOCIAL_SECURITY    // Sozialversicherung - nur HR
-  COMPANY            // Betriebliche Dokumente - nur HR
-  CERTIFICATE        // Bescheinigungen - Mitarbeiter
-  PROOF              // Nachweise - Mitarbeiter
-  OTHER              // Sonstige - beide
+  CONTRACT // Arbeitsvertrag - nur HR
+  PAYSLIP // Gehaltsabrechnung - nur HR
+  TAX // Steuerdokumente - nur HR
+  SOCIAL_SECURITY // Sozialversicherung - nur HR
+  COMPANY // Betriebliche Dokumente - nur HR
+  CERTIFICATE // Bescheinigungen - Mitarbeiter
+  PROOF // Nachweise - Mitarbeiter
+  OTHER // Sonstige - beide
 }
 
 model EmployeeDocument {
@@ -2549,7 +2558,7 @@ model EmployeeDocument {
   uploadedById String
   uploadedBy   B24Employee @relation("DocumentUploader", fields: [uploadedById], references: [id])
   uploadedAt   DateTime    @default(now())
-  
+
   // Indicates if uploaded by HR/Admin or by Employee themselves
   uploadedByRole String @default("EMPLOYEE") // EMPLOYEE or HR
 
@@ -2558,7 +2567,7 @@ model EmployeeDocument {
 
   // Metadata
   category   String?
-  tags       String[] @default([])
+  tags       String[]  @default([])
   validFrom  DateTime?
   validUntil DateTime?
 
@@ -2577,10 +2586,10 @@ model LeaveBalance {
   employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   year          Int
-  totalDays     Float   @default(30) // Gesetzlicher Anspruch
-  usedDays      Float   @default(0)
-  pendingDays   Float   @default(0)
-  remainingDays Float   @default(30)
+  totalDays     Float @default(30) // Gesetzlicher Anspruch
+  usedDays      Float @default(0)
+  pendingDays   Float @default(0)
+  remainingDays Float @default(30)
 
   // Übertrag aus Vorjahr
   carryOverDays Float @default(0)
@@ -2597,7 +2606,7 @@ model LeaveRequest {
   employeeId String
   employee   B24Employee @relation("EmployeeLeaveRequests", fields: [employeeId], references: [id], onDelete: Cascade)
 
-  type      String   // vacation, sick, special, unpaid
+  type      String // vacation, sick, special, unpaid
   startDate DateTime
   endDate   DateTime
   days      Float // Arbeitstage
@@ -2753,17 +2762,17 @@ model CompanyVehicle {
   assignedTo   B24Employee? @relation(fields: [assignedToId], references: [id])
 
   // Leasingdaten
-  leasingCompany  String?
-  leasingStart    DateTime?
-  leasingEnd      DateTime?
-  monthlyRate     Decimal?  @db.Decimal(10, 2)
-  includedKm      Int? // Inklusiv-Kilometer pro Jahr
+  leasingCompany String?
+  leasingStart   DateTime?
+  leasingEnd     DateTime?
+  monthlyRate    Decimal?  @db.Decimal(10, 2)
+  includedKm     Int? // Inklusiv-Kilometer pro Jahr
 
   // Wartung
-  lastService     DateTime?
-  nextService     DateTime?
-  nextServiceKm   Int?
-  nextInspection  DateTime?
+  lastService    DateTime?
+  nextService    DateTime?
+  nextServiceKm  Int?
+  nextInspection DateTime?
 
   isActive Boolean @default(true)
 
@@ -2771,10 +2780,10 @@ model CompanyVehicle {
   updatedAt DateTime @updatedAt
 
   // Relations
-  trips         TripEntry[]
-  fuelReceipts  FuelReceipt[]
-  damages       VehicleDamage[]
-  maintenances  VehicleMaintenance[]
+  trips        TripEntry[]
+  fuelReceipts FuelReceipt[]
+  damages      VehicleDamage[]
+  maintenances VehicleMaintenance[]
 
   @@map("company_vehicles")
 }
@@ -2788,9 +2797,9 @@ model TripEntry {
   employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   // Fahrt-Daten
-  date      DateTime
-  startKm   Int
-  endKm     Int
+  date       DateTime
+  startKm    Int
+  endKm      Int
   distanceKm Int // Berechnet: endKm - startKm
 
   // Ziel
@@ -2827,7 +2836,7 @@ model FuelReceipt {
   date       DateTime
   km         Int // Kilometerstand bei Tankung
   liters     Float
-  priceTotal Decimal @db.Decimal(10, 2)
+  priceTotal Decimal  @db.Decimal(10, 2)
   station    String? // z.B. "Shell"
 
   receiptUrl String? // Foto des Belegs
@@ -2850,7 +2859,7 @@ model VehicleDamage {
   date        DateTime
   location    String? // Wo ist der Schaden aufgetreten
   description String
-  severity    String  @default("MINOR") // MINOR, MAJOR, CRITICAL
+  severity    String   @default("MINOR") // MINOR, MAJOR, CRITICAL
 
   // Fotos
   photos String? // JSON Array von URLs
@@ -2877,10 +2886,10 @@ model VehicleMaintenance {
 
   type String // SERVICE, INSPECTION, TIRE_CHANGE, REPAIR, OTHER
 
-  date       DateTime
-  km         Int
-  workshop   String?
-  cost       Decimal? @db.Decimal(10, 2)
+  date        DateTime
+  km          Int
+  workshop    String?
+  cost        Decimal? @db.Decimal(10, 2)
   description String
 
   // Nächster Service
@@ -2900,21 +2909,21 @@ model VehicleMaintenance {
 // ============================================
 
 enum ExpenseCategory {
-  MEAL          // Essen & Trinken
-  HOTEL         // Übernachtung
-  TRAVEL        // Fahrtkosten (nicht Firmenwagen)
-  FUEL          // Tankkosten
-  TOOLS         // Werkzeug/Material
-  OFFICE        // Büromaterial
-  PHONE         // Telefon/Internet
-  OTHER         // Sonstiges
+  MEAL // Essen & Trinken
+  HOTEL // Übernachtung
+  TRAVEL // Fahrtkosten (nicht Firmenwagen)
+  FUEL // Tankkosten
+  TOOLS // Werkzeug/Material
+  OFFICE // Büromaterial
+  PHONE // Telefon/Internet
+  OTHER // Sonstiges
 }
 
 enum ExpenseStatus {
-  PENDING       // Warten auf Genehmigung
-  APPROVED      // Genehmigt
-  REJECTED      // Abgelehnt
-  PAID          // Ausgezahlt
+  PENDING // Warten auf Genehmigung
+  APPROVED // Genehmigt
+  REJECTED // Abgelehnt
+  PAID // Ausgezahlt
 }
 
 model Expense {
@@ -2927,10 +2936,10 @@ model Expense {
   category    ExpenseCategory
   amount      Decimal         @db.Decimal(10, 2)
   vatAmount   Decimal?        @db.Decimal(10, 2) // MwSt.-Betrag
-  vatRate     Int?            // MwSt.-Satz in % (7 oder 19)
-  date        DateTime        // Datum des Belegs
+  vatRate     Int? // MwSt.-Satz in % (7 oder 19)
+  date        DateTime // Datum des Belegs
   description String
-  merchant    String?         // Händler/Lieferant
+  merchant    String? // Händler/Lieferant
 
   // Beleg-Upload
   receiptUrl String? // Pfad zum hochgeladenen Beleg
@@ -2940,18 +2949,18 @@ model Expense {
   ocrData      String? // JSON mit OCR-Ergebnissen
 
   // Status & Genehmigung
-  status         ExpenseStatus @default(PENDING)
-  approvedById   String?
-  approvedBy     B24Employee?  @relation("ApprovedExpenses", fields: [approvedById], references: [id])
-  approvedAt     DateTime?
-  rejectionNote  String?       // Grund für Ablehnung
-  
+  status        ExpenseStatus @default(PENDING)
+  approvedById  String?
+  approvedBy    B24Employee?  @relation("ApprovedExpenses", fields: [approvedById], references: [id])
+  approvedAt    DateTime?
+  rejectionNote String? // Grund für Ablehnung
+
   // Auszahlung
-  paidAt         DateTime?
-  paymentMethod  String?       // BANK_TRANSFER, CASH, PAYROLL
+  paidAt        DateTime?
+  paymentMethod String? // BANK_TRANSFER, CASH, PAYROLL
 
   // Projekt/Kunde-Zuordnung (optional)
-  projectName String?
+  projectName  String?
   customerName String?
 
   createdAt DateTime @default(now())
@@ -2970,43 +2979,43 @@ model TravelExpense {
   employee   B24Employee @relation("EmployeeTravelExpenses", fields: [employeeId], references: [id], onDelete: Cascade)
 
   // Reise-Informationen
-  purpose     String    // Zweck der Reise
-  startDate   DateTime  // Beginn der Reise
-  endDate     DateTime  // Ende der Reise
-  destination String    // Zielort
-  
+  purpose     String // Zweck der Reise
+  startDate   DateTime // Beginn der Reise
+  endDate     DateTime // Ende der Reise
+  destination String // Zielort
+
   // Verpflegungspauschale
   fullDays      Int     @default(0) // Anzahl volle Tage (24h+)
   partialDays   Int     @default(0) // Anzahl Teilreisetage (8-24h)
-  dailyRate     Decimal @db.Decimal(10, 2) @default(28.00) // Tagessatz Deutschland
-  mealDeduction Decimal @db.Decimal(10, 2) @default(0) // Abzug für gestellte Mahlzeiten
-  
+  dailyRate     Decimal @default(28.00) @db.Decimal(10, 2) // Tagessatz Deutschland
+  mealDeduction Decimal @default(0) @db.Decimal(10, 2) // Abzug für gestellte Mahlzeiten
+
   // Übernachtungskosten
-  accommodationCosts Decimal  @db.Decimal(10, 2) @default(0)
+  accommodationCosts    Decimal @default(0) @db.Decimal(10, 2)
   accommodationReceipts String? // JSON Array von Receipt-URLs
-  
+
   // Fahrtkosten
-  travelCosts    Decimal @db.Decimal(10, 2) @default(0)
+  travelCosts    Decimal  @default(0) @db.Decimal(10, 2)
   travelMethod   String? // CAR, TRAIN, PLANE, TAXI, PUBLIC_TRANSPORT
   travelReceipts String? // JSON Array von Receipt-URLs
-  kmDriven       Int?    // Bei PKW: gefahrene KM
-  kmRate         Decimal? @db.Decimal(10, 2) @default(0.30) // €/km
-  
+  kmDriven       Int? // Bei PKW: gefahrene KM
+  kmRate         Decimal? @default(0.30) @db.Decimal(10, 2) // €/km
+
   // Sonstige Kosten
-  otherCosts        Decimal @db.Decimal(10, 2) @default(0)
-  otherDescription  String?
-  otherReceipts     String? // JSON Array von Receipt-URLs
-  
+  otherCosts       Decimal @default(0) @db.Decimal(10, 2)
+  otherDescription String?
+  otherReceipts    String? // JSON Array von Receipt-URLs
+
   // Gesamt
   totalAmount Decimal @db.Decimal(10, 2) // Gesamtsumme
-  
+
   // Status & Genehmigung
   status        ExpenseStatus @default(PENDING)
   approvedById  String?
   approvedBy    B24Employee?  @relation("ApprovedTravelExpenses", fields: [approvedById], references: [id])
   approvedAt    DateTime?
   rejectionNote String?
-  
+
   // Auszahlung
   paidAt        DateTime?
   paymentMethod String?
@@ -3040,14 +3049,14 @@ model Announcement {
   id String @id @default(cuid())
 
   title   String
-  content String @db.Text
+  content String           @db.Text
   type    AnnouncementType @default(GENERAL)
 
   // Priorität & Sichtbarkeit
-  priority   AnnouncementPriority @default(NORMAL)
-  isPinned   Boolean              @default(false) // Oben fixieren
-  isActive   Boolean              @default(true)
-  
+  priority AnnouncementPriority @default(NORMAL)
+  isPinned Boolean              @default(false) // Oben fixieren
+  isActive Boolean              @default(true)
+
   // Zeitraum
   publishedAt DateTime? // Veröffentlichungsdatum (null = Entwurf)
   expiresAt   DateTime? // Ablaufdatum (optional)
@@ -3076,14 +3085,14 @@ model Announcement {
 }
 
 enum AnnouncementType {
-  GENERAL      // Allgemein
-  NEWS         // Firmenneuigkeiten
-  EVENT        // Events/Termine
-  BIRTHDAY     // Geburtstage
-  ACHIEVEMENT  // Erfolge/Meilensteine
-  POLICY       // Richtlinien/Policy
-  URGENT       // Dringend
-  MARKETPLACE  // Kleinanzeigen
+  GENERAL // Allgemein
+  NEWS // Firmenneuigkeiten
+  EVENT // Events/Termine
+  BIRTHDAY // Geburtstage
+  ACHIEVEMENT // Erfolge/Meilensteine
+  POLICY // Richtlinien/Policy
+  URGENT // Dringend
+  MARKETPLACE // Kleinanzeigen
 }
 
 enum AnnouncementPriority {
@@ -3116,9 +3125,9 @@ model EmployeeTask {
   id String @id @default(cuid())
 
   title       String
-  description String? @db.Text
-  status      EmployeeTaskStatus   @default(TODO)
-  priority    TaskPriority @default(MEDIUM)
+  description String?            @db.Text
+  status      EmployeeTaskStatus @default(TODO)
+  priority    TaskPriority       @default(MEDIUM)
 
   // Zuweisungen
   assignedToId String
@@ -3136,12 +3145,12 @@ model EmployeeTask {
   tags     String? // JSON Array: ["urgent", "customer-related"]
 
   // Fortschritt
-  progress        Int      @default(0) // 0-100%
-  estimatedHours  Float?   // Geschätzte Stunden
-  actualHours     Float?   // Tatsächliche Stunden
-  
+  progress       Int    @default(0) // 0-100%
+  estimatedHours Float? // Geschätzte Stunden
+  actualHours    Float? // Tatsächliche Stunden
+
   // Abschluss
-  completedAt DateTime?
+  completedAt   DateTime?
   completedById String?
   completedBy   B24Employee? @relation("EmployeeCompletedTasks", fields: [completedById], references: [id])
 
@@ -3159,12 +3168,12 @@ model EmployeeTask {
 }
 
 enum EmployeeTaskStatus {
-  TODO        // Zu erledigen
+  TODO // Zu erledigen
   IN_PROGRESS // In Arbeit
-  REVIEW      // Zur Überprüfung
-  BLOCKED     // Blockiert
-  COMPLETED   // Abgeschlossen
-  CANCELLED   // Abgebrochen
+  REVIEW // Zur Überprüfung
+  BLOCKED // Blockiert
+  COMPLETED // Abgeschlossen
+  CANCELLED // Abgebrochen
 }
 
 enum TaskPriority {
@@ -3201,7 +3210,7 @@ model KnowledgeArticle {
   title   String
   slug    String        @unique // URL-freundlicher Titel
   content String        @db.Text
-  excerpt String?       // Kurzbeschreibung
+  excerpt String? // Kurzbeschreibung
   type    KnowledgeType @default(ARTICLE)
 
   // Kategorisierung
@@ -3209,10 +3218,10 @@ model KnowledgeArticle {
   tags     String? // JSON Array
 
   // Sichtbarkeit & Status
-  isPublished   Boolean   @default(false)
-  publishedAt   DateTime?
-  isPinned      Boolean   @default(false)
-  
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  isPinned    Boolean   @default(false)
+
   // Autor & Verwaltung
   authorId String
   author   B24Employee @relation("KnowledgeArticles", fields: [authorId], references: [id])
@@ -3225,7 +3234,7 @@ model KnowledgeArticle {
   videoUrl    String? // Optional: Link zu Tutorial-Video
 
   // Statistik
-  viewCount   Int @default(0)
+  viewCount    Int @default(0)
   helpfulCount Int @default(0) // "War dies hilfreich?" Counter
 
   // Versionierung (optional für später)
@@ -3241,11 +3250,11 @@ model KnowledgeArticle {
 }
 
 enum KnowledgeType {
-  ARTICLE   // Artikel/Anleitung
-  FAQ       // Häufig gestellte Frage
-  TEMPLATE  // Vorlage/Formular
-  VIDEO     // Video-Tutorial
-  POLICY    // Richtlinie
+  ARTICLE // Artikel/Anleitung
+  FAQ // Häufig gestellte Frage
+  TEMPLATE // Vorlage/Formular
+  VIDEO // Video-Tutorial
+  POLICY // Richtlinie
 }
 
 // B24Employee Relations für Phase 7 erweitern:
@@ -3257,3 +3266,262 @@ enum KnowledgeType {
 // employeeTaskComments     EmployeeTaskComment[]   @relation("EmployeeTaskComments")
 // knowledgeArticles        KnowledgeArticle[]      @relation("KnowledgeArticles")
 // editedArticles           KnowledgeArticle[]      @relation("EditedArticles")
+
+// ============================================
+// BUCHHALTUNG (ACCOUNTING SYSTEM)
+// ============================================
+
+// Kontenrahmen SKR04
+model ChartOfAccounts {
+  id            String      @id @default(cuid())
+  accountNumber String      @unique // z.B. "4120", "8400"
+  accountName   String // z.B. "Löhne und Gehälter", "Erlöse 19% USt"
+  accountType   AccountType // REVENUE, EXPENSE, ASSET, LIABILITY
+  skrType       String      @default("SKR04") // Kontenrahmen-Version
+  parentAccount String? // Hierarchie (optional)
+  isActive      Boolean     @default(true)
+  description   String? // Zusätzliche Beschreibung
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountNumber])
+  @@index([accountType])
+  @@index([skrType])
+  @@map("chart_of_accounts")
+}
+
+enum AccountType {
+  REVENUE // Erlöse/Einnahmen (8xxx)
+  EXPENSE // Aufwendungen/Ausgaben (4xxx, 6xxx)
+  ASSET // Vermögen (0xxx, 1xxx)
+  LIABILITY // Verbindlichkeiten/Kapital (2xxx, 3xxx)
+}
+
+// Zentrale Buchungseinträge
+model AccountingEntry {
+  id          String @id @default(cuid())
+  entryNumber String @unique // Fortlaufende Belegnummer (GoBD) z.B. "BEL-2026-00001"
+
+  // Datum
+  bookingDate  DateTime // Buchungsdatum
+  documentDate DateTime // Belegdatum
+
+  // Konten (SKR04)
+  debitAccount  String // Soll-Konto (4-stellig)
+  creditAccount String // Haben-Konto (4-stellig)
+
+  // Beträge
+  amount    Decimal  @db.Decimal(10, 2) // Brutto-Betrag
+  vatRate   Int?     @default(0) // MwSt-Satz in % (0, 7, 19)
+  vatAmount Decimal? @db.Decimal(10, 2) // MwSt-Betrag
+  netAmount Decimal? @db.Decimal(10, 2) // Netto-Betrag
+
+  // Beschreibung
+  description    String // Buchungstext
+  documentNumber String? // Externe Belegnummer (z.B. Rechnungsnummer)
+
+  // Verknüpfung zu Quell-Datensatz
+  sourceType EntrySourceType // Woher kommt die Buchung?
+  sourceId   String? // ID des Original-Datensatzes
+
+  // Belege/Anlagen
+  attachmentUrls String? // JSON Array von URLs zu PDF/Foto-Belegen
+
+  // GoBD-Konformität
+  locked     Boolean   @default(false) // Gesperrt (nicht mehr änderbar)
+  lockedAt   DateTime? // Zeitpunkt der Sperrung
+  lockedById String? // Wer hat gesperrt?
+  lockedBy   User?     @relation("AccountingEntryLocker", fields: [lockedById], references: [id])
+
+  // Stornierung
+  isStorno        Boolean           @default(false) // Ist dies eine Storno-Buchung?
+  originalEntryId String? // Verknüpfung zur Original-Buchung
+  originalEntry   AccountingEntry?  @relation("StornoEntries", fields: [originalEntryId], references: [id], onDelete: SetNull)
+  stornoEntries   AccountingEntry[] @relation("StornoEntries")
+
+  // Audit
+  createdById String
+  createdBy   User   @relation("AccountingEntryCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Audit-Log
+  auditLogs AccountingAuditLog[]
+
+  @@index([bookingDate])
+  @@index([entryNumber])
+  @@index([sourceType, sourceId])
+  @@index([debitAccount])
+  @@index([creditAccount])
+  @@index([locked])
+  @@map("accounting_entries")
+}
+
+enum EntrySourceType {
+  COMMISSION // Werkstatt-Provision
+  EXPENSE // Mitarbeiter-Spesen
+  TRAVEL_EXPENSE // Reisekosten
+  PAYROLL // Gehaltsabrechnung
+  PROCUREMENT // Einkauf/Bestellung
+  INFLUENCER // Influencer-Zahlung
+  VEHICLE // Fahrzeugkosten
+  MANUAL // Manuelle Buchung
+}
+
+// Audit-Trail für Buchungen (GoBD)
+model AccountingAuditLog {
+  id      String          @id @default(cuid())
+  entryId String
+  entry   AccountingEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  action  String // CREATED, UPDATED, LOCKED, STORNO
+  userId  String
+  user    User    @relation("AccountingAuditor", fields: [userId], references: [id])
+  changes String? @db.Text // JSON mit Änderungen (alt → neu)
+
+  timestamp DateTime @default(now())
+
+  @@index([entryId])
+  @@index([timestamp])
+  @@map("accounting_audit_logs")
+}
+
+// Gehaltsabrechnungen
+model Payroll {
+  id         String      @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation("EmployeePayroll", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Zeitraum
+  month Int // 1-12
+  year  Int // z.B. 2026
+
+  // Beträge
+  grossSalary    Decimal @db.Decimal(10, 2) // Brutto-Gehalt
+  netSalary      Decimal @db.Decimal(10, 2) // Netto-Gehalt
+  taxAmount      Decimal @default(0) @db.Decimal(10, 2) // Lohnsteuer
+  socialSecurity Decimal @default(0) @db.Decimal(10, 2) // Sozialversicherung (Gesamt)
+
+  // Zusätzliche Beträge
+  bonuses    Decimal @default(0) @db.Decimal(10, 2) // Bonuszahlungen
+  deductions Decimal @default(0) @db.Decimal(10, 2) // Abzüge
+
+  // Details (optional, JSON)
+  taxBreakdown String? @db.Text // JSON: {incomeTax, churchTax, solidarityTax}
+  svBreakdown  String? @db.Text // JSON: {health, pension, unemployment, care}
+
+  // Status & Workflow
+  status PayrollStatus @default(DRAFT)
+  paidAt DateTime? // Wann ausgezahlt?
+
+  // Dokument
+  documentUrl String? // URL zum PDF der Gehaltsabrechnung
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@index([status])
+  @@index([month, year])
+  @@map("payroll")
+}
+
+enum PayrollStatus {
+  DRAFT // Entwurf
+  APPROVED // Genehmigt
+  PAID // Ausgezahlt
+}
+
+// Fahrzeugkosten
+model VehicleCost {
+  id      String @id @default(cuid())
+  assetId String
+  asset   Asset  @relation("VehicleCosts", fields: [assetId], references: [id], onDelete: Cascade)
+
+  // Kostenart
+  costType VehicleCostType
+
+  // Details
+  date        DateTime
+  amount      Decimal  @db.Decimal(10, 2)
+  mileage     Int? // KM-Stand bei Tankfüllung/Service
+  description String
+  vendor      String? // Tankstelle, Werkstatt, Versicherung, etc.
+
+  // Beleg
+  receiptUrl String?
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assetId, date])
+  @@index([costType])
+  @@index([date])
+  @@map("vehicle_costs")
+}
+
+enum VehicleCostType {
+  FUEL // Treibstoff
+  MAINTENANCE // Wartung/Inspektion
+  INSURANCE // Versicherung
+  TAX // Kfz-Steuer
+  REPAIRS // Reparaturen
+  PARKING // Parkgebühren
+  TOLLS // Maut
+  WASHING // Autowäsche
+  TIRES // Reifen
+  OTHER // Sonstiges
+}
+
+// Buchhaltungs-Einstellungen
+model AccountingSetting {
+  id String @id @default(cuid())
+
+  // Steuerberater
+  taxAdvisorName    String?
+  taxAdvisorCompany String?
+  taxAdvisorEmail   String?
+  taxAdvisorPhone   String?
+  taxAdvisorAddress String? @db.Text
+
+  // Unternehmens-Stammdaten
+  companyTaxNumber String? // Steuernummer
+  companyVatId     String? // USt-IdNr.
+
+  // Export-Präferenzen
+  preferredExportFormat ExportFormat @default(EXCEL) // DATEV, EXCEL, PDF
+
+  // Kontenplan
+  accountingSystem String @default("SKR04") // SKR03 oder SKR04
+
+  // Belegnummern
+  entryNumberPrefix  String @default("BEL") // Präfix für Belegnummern
+  entryNumberCounter Int    @default(0) // Fortlaufender Counter
+
+  // Standard-MwSt-Sätze
+  defaultVatRate Int @default(19) // Standard 19%
+  reducedVatRate Int @default(7) // Ermäßigt 7%
+
+  // Einstellungen
+  autoLockAfterExport Boolean @default(false) // Buchungen nach Export sperren?
+  fiscalYearStart     Int     @default(1) // Geschäftsjahresbeginn (Monat 1-12)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("accounting_settings")
+}
+
+enum ExportFormat {
+  DATEV // DATEV CSV-Format
+  EXCEL // Excel-Datei
+  PDF // PDF-Bericht
+}

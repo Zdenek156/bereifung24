@@ -234,8 +234,7 @@ export default function FilesPage() {
 
   const navigateToFolder = (folderId: string | null) => {
     const url = folderId ? `/admin/files?folder=${folderId}` : '/admin/files'
-    router.push(url)
-    router.refresh()
+    window.location.href = url
   }
 
   const formatFileSize = (bytes: number) => {

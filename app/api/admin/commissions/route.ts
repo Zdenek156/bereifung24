@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { bookingService } from '@/lib/accounting/bookingService'
 
 export async function GET() {
   try {
@@ -102,6 +103,15 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { commissionId, status, sepaStatus, notes } = body
 
+    // Get current commission to check status change
+    const currentCommission = await prisma.commission.findUnique({
+      where: { id: commissionId }
+    })
+
+    if (!currentCommission) {
+      return NextResponse.json({ error: 'Commission not found' }, { status: 404 })
+    }
+
     const updatedCommission = await prisma.commission.update({
       where: { id: commissionId },
       data: {
@@ -112,6 +122,22 @@ export async function PATCH(request: Request) {
         collectedAt: status === 'COLLECTED' ? new Date() : undefined
       }
     })
+
+    // AUTO-BOOKING: Create accounting entry when commission is collected
+    if (status === 'COLLECTED' && currentCommission.status !== 'COLLECTED') {
+      try {
+        await bookingService.bookCommissionReceived(
+          commissionId,
+          updatedCommission.commissionAmount.toNumber(),
+          new Date(),
+          session.user.id
+        )
+        console.log(`✅ Auto-booking created for commission ${commissionId}`)
+      } catch (error) {
+        console.error('Failed to create auto-booking for commission:', error)
+        // Don't fail the commission update if booking fails
+      }
+    }
 
     return NextResponse.json({ commission: updatedCommission })
 

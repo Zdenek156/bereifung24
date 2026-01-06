@@ -191,44 +191,45 @@ export class EmailService {
           ? { b24EmployeeId: this.userId }
           : { userId: this.userId }
 
-        await prisma.emailMessage.upsert({
+        // Check if message exists
+        const existingMessage = await prisma.emailMessage.findUnique({
           where: whereClause,
-          update: {
-            messageId: message.messageId,
-            from: message.from,
-            to: message.to,
-            cc: message.cc || [],
-            bcc: message.bcc || [],
-            replyTo: message.replyTo,
-            subject: message.subject,
-            date: message.date,
-            textContent: message.textContent,
-            htmlContent: message.htmlContent,
-            attachments: message.attachments as any,
-            flags: message.flags,
-            isRead: message.flags.includes('\\Seen'),
-            isFlagged: message.flags.includes('\\Flagged'),
-          },
-          create: {
-            ...identityField,
-            uid: message.uid,
-            messageId: message.messageId,
-            folder: message.folder,
-            from: message.from,
-            to: message.to,
-            cc: message.cc || [],
-            bcc: message.bcc || [],
-            replyTo: message.replyTo,
-            subject: message.subject,
-            date: message.date,
-            textContent: message.textContent,
-            htmlContent: message.htmlContent,
-            attachments: message.attachments as any,
-            flags: message.flags,
-            isRead: message.flags.includes('\\Seen'),
-            isFlagged: message.flags.includes('\\Flagged'),
-          },
         })
+
+        const messageData = {
+          messageId: message.messageId,
+          from: message.from,
+          to: message.to,
+          cc: message.cc || [],
+          bcc: message.bcc || [],
+          replyTo: message.replyTo,
+          subject: message.subject,
+          date: message.date,
+          textContent: message.textContent,
+          htmlContent: message.htmlContent,
+          attachments: message.attachments as any,
+          flags: message.flags,
+          isRead: message.flags.includes('\\Seen'),
+          isFlagged: message.flags.includes('\\Flagged'),
+        }
+
+        if (existingMessage) {
+          // Update existing message
+          await prisma.emailMessage.update({
+            where: { id: existingMessage.id },
+            data: messageData,
+          })
+        } else {
+          // Create new message
+          await prisma.emailMessage.create({
+            data: {
+              ...identityField,
+              uid: message.uid,
+              folder: message.folder,
+              ...messageData,
+            },
+          })
+        }
       }
 
       // lastSyncedAt aktualisieren

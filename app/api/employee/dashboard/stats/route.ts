@@ -97,11 +97,11 @@ export async function GET(request: NextRequest) {
         status: 'APPROVED',
       },
       select: {
-        amount: true,
+        commissionAmount: true,
       },
     })
 
-    const totalCommissions = commissions.reduce((sum, c) => sum + c.amount, 0)
+    const totalCommissions = commissions.reduce((sum, c) => sum + c.commissionAmount, 0)
 
     return NextResponse.json({
       leaveBalance: leaveBalance

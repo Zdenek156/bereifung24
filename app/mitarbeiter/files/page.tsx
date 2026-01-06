@@ -260,6 +260,7 @@ export default function MitarbeiterFilesPage() {
   const navigateToFolder = (folderId: string | null) => {
     const url = folderId ? `/mitarbeiter/files?folder=${folderId}` : '/mitarbeiter/files'
     router.push(url)
+    router.refresh()
   }
 
   const formatFileSize = (bytes: number) => {

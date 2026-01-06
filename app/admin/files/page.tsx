@@ -449,8 +449,9 @@ export default function FilesPage() {
             <Card
               key={folder.id}
               className="p-4 hover:shadow-lg transition-shadow cursor-pointer group"
+              onClick={() => navigateToFolder(folder.id)}
             >
-              <div onClick={() => navigateToFolder(folder.id)}>
+              <div>
                 <div className="flex items-start justify-between mb-3">
                   <Folder className="w-12 h-12 text-blue-500" />
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

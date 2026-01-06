@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, influencerPaymentConfirmationEmailTemplate } from '@/lib/email'
+import { bookingService } from '@/lib/accounting/bookingService'
 
 interface RouteParams {
   params: {
@@ -59,6 +60,24 @@ export async function PATCH(
       status,
       influencer: payment.influencer.email
     })
+
+    // AUTO-BOOKING: Create accounting entry when payment is marked as PAID
+    if (status === 'PAID') {
+      try {
+        const influencerName = payment.influencer.channelName || payment.influencer.email
+        await bookingService.bookInfluencerPayment(
+          payment.id,
+          payment.totalAmount / 100, // Convert cents to euros
+          payment.paidAt!,
+          session.user.id,
+          influencerName
+        )
+        console.log(`✅ Auto-booking created for influencer payment ${payment.id}`)
+      } catch (error) {
+        console.error('Failed to create auto-booking for influencer payment:', error)
+        // Don't fail the payment if booking fails
+      }
+    }
 
     // Send email notification when payment is marked as PAID
     if (status === 'PAID') {

@@ -50,7 +50,10 @@ export default function MitarbeiterDashboard() {
       const res = await fetch('/api/employee/dashboard/stats')
       if (res.ok) {
         const data = await res.json()
+        console.log('Dashboard stats loaded:', data)
         setStats(data)
+      } else {
+        console.error('Failed to fetch stats:', res.status, await res.text())
       }
     } catch (error) {
       console.error('Error fetching stats:', error)

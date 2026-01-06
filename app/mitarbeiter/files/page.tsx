@@ -494,17 +494,15 @@ export default function MitarbeiterFilesPage() {
             {folders.map((folder) => (
               <Card
                 key={folder.id}
-                className="p-4 hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={(e: React.MouseEvent) => {
-                  e.preventDefault()
-                  navigateToFolder(folder.id)
-                }}
-                style={{ cursor: 'pointer' }}
+                className="p-4 hover:shadow-lg transition-shadow group relative"
               >
-                <div>
+                <div 
+                  onClick={() => navigateToFolder(folder.id)}
+                  className="cursor-pointer"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <Folder className="w-12 h-12 text-blue-500" />
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-10">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()

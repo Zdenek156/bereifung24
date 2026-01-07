@@ -105,7 +105,7 @@ export default function WeatherWidget() {
   const isBelowThreshold = currentTemp < threshold
 
   return (
-    <div className={`bg-white rounded-lg shadow h-full min-h-[500px] flex flex-col w-full ${isBelowThreshold ? 'border-2 border-blue-500' : 'border'}`}>
+    <div className="bg-white rounded-lg shadow h-full min-h-[500px] flex flex-col w-full border">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold flex items-center gap-2">

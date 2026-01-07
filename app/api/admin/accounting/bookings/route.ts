@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { bookingService } from '@/lib/accounting/bookingService'
 
 // POST /api/admin/accounting/bookings - Create manual booking

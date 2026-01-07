@@ -38,6 +38,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get account numbers from IDs
+    const [debitAccount, creditAccount] = await Promise.all([
+      prisma.chartOfAccounts.findUnique({ where: { id: debitAccountId } }),
+      prisma.chartOfAccounts.findUnique({ where: { id: creditAccountId } })
+    ])
+
+    if (!debitAccount || !creditAccount) {
+      return NextResponse.json(
+        { error: 'Konten nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
     if (amount <= 0) {
       return NextResponse.json(
         { error: 'Betrag muss größer als 0 sein' },
@@ -48,8 +61,8 @@ export async function POST(request: NextRequest) {
     // Create the booking
     const entry = await bookingService.createBooking({
       bookingDate: new Date(bookingDate),
-      debitAccountId,
-      creditAccountId,
+      debitAccountNumber: debitAccount.accountNumber,
+      creditAccountNumber: creditAccount.accountNumber,
       amount,
       description,
       referenceNumber: referenceNumber || undefined,

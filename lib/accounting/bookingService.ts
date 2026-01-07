@@ -103,24 +103,17 @@ export class AccountingBookingService {
       data: {
         entryNumber,
         bookingDate: params.bookingDate,
-        debitAccountId: (await prisma.chartOfAccounts.findFirst({
-          where: { accountNumber: params.debitAccountNumber }
-        }))!.id,
-        creditAccountId: (await prisma.chartOfAccounts.findFirst({
-          where: { accountNumber: params.creditAccountNumber }
-        }))!.id,
+        documentDate: params.bookingDate,
+        debitAccount: params.debitAccountNumber,
+        creditAccount: params.creditAccountNumber,
         amount: new Prisma.Decimal(params.amount),
         description: params.description,
         sourceType: params.sourceType,
         sourceId: params.sourceId,
-        referenceNumber: params.referenceNumber,
+        documentNumber: params.referenceNumber,
         locked: false,
         isStorno: false,
-        createdByUserId: params.createdByUserId
-      },
-      include: {
-        debitAccount: true,
-        creditAccount: true
+        createdById: params.createdByUserId
       }
     })
 
@@ -130,13 +123,13 @@ export class AccountingBookingService {
         entryId: entry.id,
         action: 'CREATED',
         userId: params.createdByUserId,
-        changes: {
+        changes: JSON.stringify({
           entryNumber,
           debitAccount: params.debitAccountNumber,
           creditAccount: params.creditAccountNumber,
           amount: params.amount,
           description: params.description
-        }
+        })
       }
     })
 

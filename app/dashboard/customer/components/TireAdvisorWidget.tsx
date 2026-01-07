@@ -4,11 +4,22 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car, Zap, Shield, Volume2, Euro } from 'lucide-react';
 
+interface TireSpec {
+  width: number;
+  aspectRatio: number;
+  diameter: number;
+  loadIndex?: number;
+  speedRating?: string;
+}
+
 interface Vehicle {
   id: string;
   make: string;
   model: string;
   year: number;
+  summerTires?: TireSpec;
+  winterTires?: TireSpec;
+  allSeasonTires?: TireSpec;
 }
 
 interface TireRecommendation {
@@ -121,9 +132,10 @@ const gradeColors = {
 };
 
 export default function TireAdvisorWidget() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedTireType, setSelectedTireType] = useState<'SUMMER' | 'WINTER' | 'ALL_SEASON' | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null);
   const [recommendations, setRecommendations] = useState<TireRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,15 +159,61 @@ export default function TireAdvisorWidget() {
   };
 
   const handleVehicleSelect = (vehicleId: string) => {
-    setSelectedVehicle(vehicleId);
-    setStep(2);
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (!vehicle) return;
+    
+    setSelectedVehicle(vehicle);
+    
+    // Wenn nur eine Reifenart verfügbar ist, überspringe die Auswahl
+    const availableTireTypes = [];
+    if (vehicle.summerTires) availableTireTypes.push('SUMMER');
+    if (vehicle.winterTires) availableTireTypes.push('WINTER');
+    if (vehicle.allSeasonTires) availableTireTypes.push('ALL_SEASON');
+    
+    if (availableTireTypes.length === 1) {
+      setSelectedTireType(availableTireTypes[0] as 'SUMMER' | 'WINTER' | 'ALL_SEASON');
+      setStep(3);
+    } else {
+      setStep(2);
+    }
+  };
+
+  const handleTireTypeSelect = (tireType: 'SUMMER' | 'WINTER' | 'ALL_SEASON') => {
+    setSelectedTireType(tireType);
+    setStep(3);
   };
 
   const handlePrioritySelect = (priority: Priority) => {
     setSelectedPriority(priority);
     
+    if (!selectedVehicle || !selectedTireType) return;
+    
+    // Hole die entsprechende Reifengröße basierend auf der gewählten Reifenart
+    let tireSpec: TireSpec | undefined;
+    if (selectedTireType === 'SUMMER') tireSpec = selectedVehicle.summerTires;
+    else if (selectedTireType === 'WINTER') tireSpec = selectedVehicle.winterTires;
+    else if (selectedTireType === 'ALL_SEASON') tireSpec = selectedVehicle.allSeasonTires;
+    
+    if (!tireSpec) return;
+    
+    // Erstelle Reifengröße String
+    const dimension = `${tireSpec.width}/${tireSpec.aspectRatio} R${tireSpec.diameter}${tireSpec.loadIndex ? ' ' + tireSpec.loadIndex : ''}${tireSpec.speedRating || ''}`;
+    
+    // Filtere Mock-Daten nach Saison und passe Dimension an
+    let filteredTires = mockTireData
+      .filter(tire => {
+        if (selectedTireType === 'SUMMER') return tire.season === 'SUMMER';
+        if (selectedTireType === 'WINTER') return tire.season === 'WINTER';
+        if (selectedTireType === 'ALL_SEASON') return tire.season === 'ALL_SEASON';
+        return true;
+      })
+      .map(tire => ({
+        ...tire,
+        dimension // Verwende die tatsächliche Reifengröße des Fahrzeugs
+      }));
+    
     // Sortiere Empfehlungen basierend auf Priorität
-    const sorted = [...mockTireData].sort((a, b) => {
+    const sorted = [...filteredTires].sort((a, b) => {
       switch (priority) {
         case 'SAFETY':
           // Beste Nasshaftung zuerst
@@ -175,7 +233,7 @@ export default function TireAdvisorWidget() {
     });
     
     setRecommendations(sorted.slice(0, 3)); // Top 3
-    setStep(3);
+    setStep(4);
   };
 
   const handleRequestTire = (tire: TireRecommendation) => {
@@ -217,6 +275,7 @@ export default function TireAdvisorWidget() {
           <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
           <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
           <div className={`h-2 flex-1 rounded-full ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+          <div className={`h-2 flex-1 rounded-full ${step >= 4 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
         </div>
       </CardHeader>
       
@@ -261,11 +320,59 @@ export default function TireAdvisorWidget() {
           </div>
         )}
 
-        {/* Schritt 2: Priorität wählen */}
-        {step === 2 && (
+        {/* Schritt 2: Reifenart wählen */}
+        {step === 2 && selectedVehicle && (
           <div className="space-y-3">
             <button
               onClick={() => setStep(1)}
+              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              ← Zurück
+            </button>
+            <h3 className="font-semibold text-gray-900">Welche Reifenart suchen Sie?</h3>
+            <div className="grid gap-3">
+              {selectedVehicle.summerTires && (
+                <button
+                  onClick={() => handleTireTypeSelect('SUMMER')}
+                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                >
+                  <div className="font-semibold text-gray-900">☀️ Sommerreifen</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {selectedVehicle.summerTires.width}/{selectedVehicle.summerTires.aspectRatio} R{selectedVehicle.summerTires.diameter}
+                  </div>
+                </button>
+              )}
+              {selectedVehicle.winterTires && (
+                <button
+                  onClick={() => handleTireTypeSelect('WINTER')}
+                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                >
+                  <div className="font-semibold text-gray-900">❄️ Winterreifen</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {selectedVehicle.winterTires.width}/{selectedVehicle.winterTires.aspectRatio} R{selectedVehicle.winterTires.diameter}
+                  </div>
+                </button>
+              )}
+              {selectedVehicle.allSeasonTires && (
+                <button
+                  onClick={() => handleTireTypeSelect('ALL_SEASON')}
+                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                >
+                  <div className="font-semibold text-gray-900">🌦️ Ganzjahresreifen</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {selectedVehicle.allSeasonTires.width}/{selectedVehicle.allSeasonTires.aspectRatio} R{selectedVehicle.allSeasonTires.diameter}
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Schritt 3: Priorität wählen */}
+        {step === 3 && (
+          <div className="space-y-3">
+            <button
+              onClick={() => setStep(2)}
               className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               ← Zurück
@@ -291,11 +398,11 @@ export default function TireAdvisorWidget() {
           </div>
         )}
 
-        {/* Schritt 3: Empfehlungen */}
-        {step === 3 && selectedPriority && (
+        {/* Schritt 4: Empfehlungen */}
+        {step === 4 && selectedPriority && (
           <div className="space-y-3">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
               className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               ← Zurück

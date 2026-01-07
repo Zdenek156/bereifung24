@@ -33,24 +33,24 @@ export class AccountingBookingService {
       settings = await prisma.accountingSetting.create({
         data: {
           fiscalYearStart: 1,
-          fiscalYearEnd: 12,
-          currentEntryNumber: 1,
+          entryNumberCounter: 1,
+          entryNumberPrefix: 'BEL',
           taxAdvisorName: '',
           taxAdvisorEmail: '',
-          standardVatRate: new Prisma.Decimal(19.0),
-          reducedVatRate: new Prisma.Decimal(7.0),
-          defaultExportFormat: 'DATEV'
+          defaultVatRate: 19,
+          reducedVatRate: 7,
+          preferredExportFormat: 'DATEV'
         }
       })
     }
 
-    const entryNumber = `BEL-${year}-${String(settings.currentEntryNumber).padStart(6, '0')}`
+    const entryNumber = `${settings.entryNumberPrefix}-${year}-${String(settings.entryNumberCounter).padStart(6, '0')}`
     
     // Increment counter
     await prisma.accountingSetting.update({
       where: { id: settings.id },
       data: {
-        currentEntryNumber: settings.currentEntryNumber + 1
+        entryNumberCounter: settings.entryNumberCounter + 1
       }
     })
 

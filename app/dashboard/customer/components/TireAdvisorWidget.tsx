@@ -33,26 +33,23 @@ interface TireRecommendation {
   noiseLevel: number; // dB
   noiseClass: string; // A-C
   has3PMSF: boolean;
-  price: number;
   yearlyFuelSavings?: number;
   brakingDistanceAdvantage?: number;
   reason: string;
 }
 
-type Priority = 'SAFETY' | 'EFFICIENCY' | 'QUIET' | 'PRICE';
+type Priority = 'SAFETY' | 'EFFICIENCY' | 'QUIET';
 
 const priorityLabels = {
   SAFETY: 'Sicherheit',
   EFFICIENCY: 'Kraftstoff-Effizienz',
-  QUIET: 'Lautstärke',
-  PRICE: 'Preis'
+  QUIET: 'Lautstärke'
 };
 
 const priorityIcons = {
   SAFETY: Shield,
   EFFICIENCY: Zap,
-  QUIET: Volume2,
-  PRICE: Euro
+  QUIET: Volume2
 };
 
 // Mock EPREL Daten (später durch echte API ersetzen)
@@ -68,7 +65,6 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 68,
     noiseClass: 'A',
     has3PMSF: false,
-    price: 89.99,
     yearlyFuelSavings: 120,
     brakingDistanceAdvantage: 3.5,
     reason: 'Beste Nasshaftung für maximale Sicherheit bei Regen'
@@ -84,7 +80,6 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 68,
     noiseClass: 'A',
     has3PMSF: false,
-    price: 95.99,
     yearlyFuelSavings: 150,
     brakingDistanceAdvantage: 2.8,
     reason: 'Geringster Rollwiderstand für maximale Kraftstoffersparnis'
@@ -100,7 +95,6 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 67,
     noiseClass: 'A',
     has3PMSF: false,
-    price: 84.99,
     yearlyFuelSavings: 110,
     brakingDistanceAdvantage: 3.2,
     reason: 'Leisester Reifen für ruhiges und komfortables Fahren'
@@ -116,7 +110,6 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 69,
     noiseClass: 'B',
     has3PMSF: false,
-    price: 79.99,
     yearlyFuelSavings: 100,
     brakingDistanceAdvantage: 3.0,
     reason: 'Bestes Preis-Leistungs-Verhältnis mit guten Sicherheitswerten'
@@ -224,9 +217,6 @@ export default function TireAdvisorWidget() {
         case 'QUIET':
           // Leiseste Reifen zuerst
           return a.noiseLevel - b.noiseLevel;
-        case 'PRICE':
-          // Günstigste zuerst
-          return a.price - b.price;
         default:
           return 0;
       }
@@ -416,26 +406,18 @@ export default function TireAdvisorWidget() {
                   key={tire.id}
                   className="bg-white rounded-lg p-4 border-2 border-gray-200 hover:border-blue-500 transition-all"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        {index === 0 && (
-                          <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded">
-                            #1 EMPFEHLUNG
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="font-bold text-gray-900 mt-1">
-                        {tire.manufacturer} {tire.model}
-                      </h4>
-                      <p className="text-sm text-gray-600">{tire.dimension}</p>
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      {index === 0 && (
+                        <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded">
+                          #1 EMPFEHLUNG
+                        </span>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {tire.price.toFixed(2)} €
-                      </div>
-                      <div className="text-xs text-gray-600">pro Reifen</div>
-                    </div>
+                    <h4 className="font-bold text-gray-900">
+                      {tire.manufacturer} {tire.model}
+                    </h4>
+                    <p className="text-sm text-gray-600">{tire.dimension}</p>
                   </div>
 
                   {/* EU-Label */}

@@ -79,18 +79,17 @@ export default function ReportsPage() {
             </Link>
 
             {/* UStVA */}
-            <div className="border border-gray-200 rounded-lg p-6 hover:border-purple-300 transition-colors">
-              <h3 className="font-semibold text-gray-900 mb-2">🧾 UStVA (Umsatzsteuer-Voranmeldung)</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Monatliche oder quartalsweise Umsatzsteuer-Voranmeldung ans Finanzamt
-              </p>
-              <button
-                disabled
-                className="w-full bg-gray-100 text-gray-400 py-2 px-4 rounded-md cursor-not-allowed text-sm"
-              >
-                Kommt in Phase 6
-              </button>
-            </div>
+            <Link href="/admin/buchhaltung/auswertungen/ustva">
+              <div className="border border-gray-200 rounded-lg p-6 hover:border-purple-500 hover:shadow-md transition-all cursor-pointer">
+                <h3 className="font-semibold text-gray-900 mb-2">🧾 UStVA (Umsatzsteuer-Voranmeldung)</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Monatliche oder quartalsweise Umsatzsteuer-Voranmeldung ans Finanzamt
+                </p>
+                <div className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md text-sm text-center font-medium">
+                  Bericht öffnen →
+                </div>
+              </div>
+            </Link>
 
             {/* Summen & Salden */}
             <div className="border border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">

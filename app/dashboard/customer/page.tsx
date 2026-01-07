@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import WeatherWidget from '@/components/WeatherWidget'
 import CO2SavingsWidget from './components/CO2SavingsWidget'
+import TireAdvisorWidget from './components/TireAdvisorWidget'
 
 export default function CustomerDashboard() {
   const { data: session } = useSession()
@@ -118,6 +119,11 @@ export default function CustomerDashboard() {
         <div className="flex w-full">
           <CO2SavingsWidget />
         </div>
+      </div>
+
+      {/* Tire Advisor Widget - Full Width */}
+      <div className="mb-8">
+        <TireAdvisorWidget />
       </div>
 
       {/* Welcome & Instructions Section */}

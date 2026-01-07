@@ -107,14 +107,17 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Weather Widget */}
-      <div className="mb-8">
-        <WeatherWidget />
-      </div>
+      {/* Widgets Grid - Weather & CO2 side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 items-stretch">
+        {/* Weather Widget */}
+        <div className="flex w-full">
+          <WeatherWidget />
+        </div>
 
-      {/* CO2 Savings Widget */}
-      <div className="mb-8">
-        <CO2SavingsWidget />
+        {/* CO2 Savings Widget */}
+        <div className="flex w-full">
+          <CO2SavingsWidget />
+        </div>
       </div>
 
       {/* Welcome & Instructions Section */}

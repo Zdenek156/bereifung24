@@ -189,9 +189,64 @@ async function handlePaymentEvent(action: string, paymentId: string) {
   if (result.count > 0) {
     console.log(`✅ Updated payment ${paymentId} to status: ${newStatus}`)
 
-    // If payment confirmed, update to COLLECTED
+    // If payment confirmed, create monthly consolidated accounting entry
     if (newStatus === 'confirmed' || newStatus === 'paid_out') {
       console.log(`💰 Payment ${paymentId} collected successfully`)
+      
+      try {
+        // Get all commissions for this payment to calculate total and get workshop info
+        const commissions = await prisma.commission.findMany({
+          where: { gocardlessPaymentId: paymentId },
+          include: {
+            workshop: {
+              select: {
+                companyName: true
+              }
+            }
+          }
+        })
+
+        if (commissions.length > 0) {
+          const totalAmount = commissions.reduce((sum, c) => sum + c.commissionAmount.toNumber(), 0)
+          const firstCommission = commissions[0]
+          const workshopName = firstCommission.workshop.companyName
+          const billingPeriod = `${firstCommission.billingYear}-${String(firstCommission.billingMonth).padStart(2, '0')}`
+          
+          // Create consolidated booking for the entire monthly payment
+          const { BookingService } = await import('@/lib/accounting/bookingService')
+          const bookingService = new BookingService()
+          
+          // Get or create system user for automated bookings
+          let systemUser = await prisma.user.findFirst({
+            where: { email: 'system@bereifung24.de' }
+          })
+          
+          if (!systemUser) {
+            systemUser = await prisma.user.create({
+              data: {
+                email: 'system@bereifung24.de',
+                password: 'NO_LOGIN',
+                role: 'ADMIN',
+                firstName: 'System',
+                lastName: 'Automated',
+                isActive: false
+              }
+            })
+          }
+
+          await bookingService.bookCommissionReceived(
+            paymentId,
+            totalAmount,
+            new Date(),
+            systemUser.id
+          )
+          
+          console.log(`📊 Monthly commission booking created: ${workshopName} - ${billingPeriod} - €${totalAmount.toFixed(2)}`)
+        }
+      } catch (bookingError) {
+        console.error(`❌ Failed to create monthly commission booking:`, bookingError)
+        // Don't fail webhook if booking fails
+      }
     }
 
     // If payment failed, log error

@@ -206,6 +206,20 @@ export default function BuchhaltungPage() {
           </Link>
 
           <Link
+            href="/admin/buchhaltung/belege"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Beleg-Verwaltung</h3>
+            <p className="text-sm text-gray-600 mb-4">Rechnungen, Quittungen & Dokumente</p>
+            <div className="text-primary-600 font-medium">Zu den Belegen →</div>
+          </Link>
+
+          <Link
             href="/admin/buchhaltung/export"
             className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >

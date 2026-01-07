@@ -53,18 +53,17 @@ export default function ReportsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {/* BWA */}
-            <div className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
-              <h3 className="font-semibold text-gray-900 mb-2">📊 BWA (Betriebswirtschaftliche Auswertung)</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Monatliche Übersicht über Einnahmen, Ausgaben und Gewinn nach Kontengruppen
-              </p>
-              <button
-                disabled
-                className="w-full bg-gray-100 text-gray-400 py-2 px-4 rounded-md cursor-not-allowed text-sm"
-              >
-                Kommt in Phase 7
-              </button>
-            </div>
+            <Link href="/admin/buchhaltung/auswertungen/bwa">
+              <div className="border border-gray-200 rounded-lg p-6 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer">
+                <h3 className="font-semibold text-gray-900 mb-2">📊 BWA (Betriebswirtschaftliche Auswertung)</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Monatliche Übersicht über Einnahmen, Ausgaben und Gewinn nach Kontengruppen
+                </p>
+                <div className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm text-center font-medium">
+                  Bericht öffnen →
+                </div>
+              </div>
+            </Link>
 
             {/* EÜR */}
             <div className="border border-gray-200 rounded-lg p-6 hover:border-green-300 transition-colors">

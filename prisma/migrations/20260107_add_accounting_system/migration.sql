@@ -212,4 +212,4 @@ ALTER TABLE "accounting_audit_logs" ADD CONSTRAINT "accounting_audit_logs_userId
 ALTER TABLE "payroll" ADD CONSTRAINT "payroll_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "b24_employees"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "vehicle_costs" ADD CONSTRAINT "vehicle_costs_assetId_fkey" FOREIGN KEY ("assetId") REFERENCES "procurement_assets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "vehicle_costs" ADD CONSTRAINT "vehicle_costs_assetId_fkey" FOREIGN KEY ("assetId") REFERENCES "assets"("id") ON DELETE CASCADE ON UPDATE CASCADE;

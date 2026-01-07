@@ -319,7 +319,12 @@ export default function JournalPage() {
                       className={`hover:bg-gray-50 ${entry.isStorno ? 'bg-red-50' : ''}`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {entry.entryNumber}
+                        <button
+                          onClick={() => openDetailModal(entry.id)}
+                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                        >
+                          {entry.entryNumber}
+                        </button>
                         {entry.description.startsWith('STORNO:') && (
                           <div className="text-xs text-red-600 mt-1">
                             {entry.description.match(/STORNO-(.+?)(?:\s|$)/)?.[0] || ''}
@@ -396,11 +401,187 @@ export default function JournalPage() {
             </svg>
             <div className="text-sm text-blue-700">
               <strong>Hinweis:</strong> Gesperrte Einträge können nicht mehr geändert werden (GoBD-Konformität). 
-              Fehlerhafte Buchungen müssen per Storno korrigiert werden.
+              Fehlerhafte Buchungen müssen per Storno korrigiert werden. Klicken Sie auf die Belegnummer für Details.
             </div>
           </div>
         </div>
       </main>
+
+      {/* Detail Modal */}
+      {detailModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 my-8">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Buchungsdetails
+                </h3>
+                <button
+                  onClick={closeDetailModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {!detailData ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Basis-Info */}
+                  <div className="grid grid-cols-2 gap-6 pb-6 border-b">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Belegnummer</label>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">{detailData.entryNumber}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Buchungsdatum</label>
+                      <p className="mt-1 text-lg text-gray-900">
+                        {new Date(detailData.bookingDate).toLocaleDateString('de-DE')}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Betrag</label>
+                      <p className="mt-1 text-2xl font-bold text-gray-900">{detailData.amount.toFixed(2)} €</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Status</label>
+                      <p className="mt-1">
+                        {detailData.isStorno ? (
+                          <span className="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+                            STORNO
+                          </span>
+                        ) : detailData.locked ? (
+                          <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">
+                            Gesperrt
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+                            Offen
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Konten */}
+                  <div className="grid grid-cols-2 gap-6 pb-6 border-b">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Soll-Konto</label>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">
+                        {detailData.debitAccountDetails?.accountNumber || detailData.debitAccount}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {detailData.debitAccountDetails?.accountName}
+                      </p>
+                      <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700">
+                        {detailData.debitAccountDetails?.accountType}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Haben-Konto</label>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">
+                        {detailData.creditAccountDetails?.accountNumber || detailData.creditAccount}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {detailData.creditAccountDetails?.accountName}
+                      </p>
+                      <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700">
+                        {detailData.creditAccountDetails?.accountType}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Beschreibung & Quelle */}
+                  <div className="pb-6 border-b">
+                    <label className="text-sm font-medium text-gray-500">Beschreibung</label>
+                    <p className="mt-1 text-gray-900">{detailData.description}</p>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Quelle</label>
+                        <p className="mt-1">
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            {detailData.sourceType}
+                          </span>
+                        </p>
+                      </div>
+                      {detailData.documentNumber && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Belegnummer</label>
+                          <p className="mt-1 text-sm text-gray-900">{detailData.documentNumber}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ersteller & Zeitstempel */}
+                  <div className="grid grid-cols-2 gap-6 pb-6 border-b">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Erstellt von</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {detailData.createdBy?.name || 'System'}
+                      </p>
+                      <p className="text-xs text-gray-500">{detailData.createdBy?.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Erstellt am</label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {new Date(detailData.createdAt).toLocaleString('de-DE')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Audit Log */}
+                  {detailData.auditLogs && detailData.auditLogs.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 mb-3 block">Änderungshistorie</label>
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {detailData.auditLogs.map((log: any, idx: number) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3 text-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-gray-900">{log.action}</span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(log.createdAt).toLocaleString('de-DE')}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600">
+                              {log.user?.name || 'System'} ({log.user?.email})
+                            </p>
+                            {log.changes && (
+                              <div className="mt-2 p-2 bg-white rounded text-xs font-mono">
+                                {log.changes.reason && (
+                                  <p><strong>Grund:</strong> {log.changes.reason}</p>
+                                )}
+                                {log.changes.stornoEntryId && (
+                                  <p className="text-red-600"><strong>Storno-ID:</strong> {log.changes.stornoEntryId}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeDetailModal}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Schließen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Storno Modal */}
       {stornoModal.open && (

@@ -153,6 +153,18 @@ export class AccountingBookingService {
       throw new Error('Cannot storno a storno entry')
     }
 
+    // Check if this entry was already storniert
+    const existingStorno = await prisma.accountingAuditLog.findFirst({
+      where: {
+        entryId: originalEntryId,
+        action: 'STORNIERT'
+      }
+    })
+
+    if (existingStorno) {
+      throw new Error('This entry has already been storniert')
+    }
+
     // Create reverse booking (swap debit and credit)
     const stornoEntry = await this.createBooking({
       debitAccountNumber: originalEntry.creditAccount,

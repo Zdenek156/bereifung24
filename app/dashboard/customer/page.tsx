@@ -108,8 +108,8 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Widgets Grid - Weather & CO2 side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 items-stretch">
+      {/* Widgets Grid - All three side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8 items-stretch">
         {/* Weather Widget */}
         <div className="flex w-full">
           <WeatherWidget />
@@ -119,11 +119,11 @@ export default function CustomerDashboard() {
         <div className="flex w-full">
           <CO2SavingsWidget />
         </div>
-      </div>
 
-      {/* Tire Advisor Widget - Full Width */}
-      <div className="mb-8">
-        <TireAdvisorWidget />
+        {/* Tire Advisor Widget */}
+        <div className="flex w-full">
+          <TireAdvisorWidget />
+        </div>
       </div>
 
       {/* Welcome & Instructions Section */}

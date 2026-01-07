@@ -36,32 +36,42 @@ export async function GET(request: NextRequest) {
 
     const entries = await prisma.accountingEntry.findMany({
       where,
-      include: {
-        debitAccount: {
-          select: {
-            accountNumber: true,
-            accountName: true
-          }
-        },
-        creditAccount: {
-          select: {
-            accountNumber: true,
-            accountName: true
-          }
-        }
-      },
       orderBy: {
         bookingDate: 'desc'
       },
       take: 100
     })
 
+    // Fetch account details separately
+    const accountNumbers = [
+      ...new Set([
+        ...entries.map(e => e.debitAccount),
+        ...entries.map(e => e.creditAccount)
+      ])
+    ]
+
+    const accounts = await prisma.chartOfAccounts.findMany({
+      where: {
+        accountNumber: { in: accountNumbers }
+      },
+      select: {
+        accountNumber: true,
+        accountName: true
+      }
+    })
+
+    const accountMap = new Map(
+      accounts.map(a => [a.accountNumber, a.accountName])
+    )
+
     const serializedEntries = entries.map(entry => ({
       ...entry,
       amount: entry.amount.toNumber(),
       bookingDate: entry.bookingDate.toISOString(),
       createdAt: entry.createdAt.toISOString(),
-      updatedAt: entry.updatedAt.toISOString()
+      updatedAt: entry.updatedAt.toISOString(),
+      debitAccountName: accountMap.get(entry.debitAccount),
+      creditAccountName: accountMap.get(entry.creditAccount)
     }))
 
     return NextResponse.json({ entries: serializedEntries })

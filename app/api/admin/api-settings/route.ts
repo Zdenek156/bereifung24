@@ -85,6 +85,7 @@ function getDescriptionForKey(key: string): string {
     'GOOGLE_OAUTH_CLIENT_ID': 'Google OAuth Client ID für Calendar Integration',
     'GOOGLE_OAUTH_CLIENT_SECRET': 'Google OAuth Client Secret',
     'WEATHERAPI_KEY': 'WeatherAPI.com API Key für Wetter-basierte Reifenwechsel-Erinnerungen (1M Calls/Monat kostenlos)',
+    'EPREL_API_KEY': 'EPREL API Key für EU Reifenlabel-Daten (European Product Database for Energy Labelling)',
   }
   return descriptions[key] || ''
 }

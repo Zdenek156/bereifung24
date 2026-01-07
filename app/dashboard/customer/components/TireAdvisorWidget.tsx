@@ -33,23 +33,26 @@ interface TireRecommendation {
   noiseLevel: number; // dB
   noiseClass: string; // A-C
   has3PMSF: boolean;
+  price: number;
   yearlyFuelSavings?: number;
   brakingDistanceAdvantage?: number;
   reason: string;
 }
 
-type Priority = 'SAFETY' | 'EFFICIENCY' | 'QUIET';
+type Priority = 'SAFETY' | 'EFFICIENCY' | 'QUIET' | 'PRICE';
 
 const priorityLabels = {
   SAFETY: 'Sicherheit',
   EFFICIENCY: 'Kraftstoff-Effizienz',
-  QUIET: 'Lautstärke'
+  QUIET: 'Lautstärke',
+  PRICE: 'Preis'
 };
 
 const priorityIcons = {
   SAFETY: Shield,
   EFFICIENCY: Zap,
-  QUIET: Volume2
+  QUIET: Volume2,
+  PRICE: Euro
 };
 
 // Mock EPREL Daten (später durch echte API ersetzen)
@@ -65,6 +68,7 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 68,
     noiseClass: 'A',
     has3PMSF: false,
+    price: 89.99,
     yearlyFuelSavings: 120,
     brakingDistanceAdvantage: 3.5,
     reason: 'Beste Nasshaftung für maximale Sicherheit bei Regen'
@@ -80,6 +84,7 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 68,
     noiseClass: 'A',
     has3PMSF: false,
+    price: 95.99,
     yearlyFuelSavings: 150,
     brakingDistanceAdvantage: 2.8,
     reason: 'Geringster Rollwiderstand für maximale Kraftstoffersparnis'
@@ -95,6 +100,7 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 67,
     noiseClass: 'A',
     has3PMSF: false,
+    price: 84.99,
     yearlyFuelSavings: 110,
     brakingDistanceAdvantage: 3.2,
     reason: 'Leisester Reifen für ruhiges und komfortables Fahren'
@@ -110,6 +116,7 @@ const mockTireData: TireRecommendation[] = [
     noiseLevel: 69,
     noiseClass: 'B',
     has3PMSF: false,
+    price: 79.99,
     yearlyFuelSavings: 100,
     brakingDistanceAdvantage: 3.0,
     reason: 'Bestes Preis-Leistungs-Verhältnis mit guten Sicherheitswerten'
@@ -217,6 +224,9 @@ export default function TireAdvisorWidget() {
         case 'QUIET':
           // Leiseste Reifen zuerst
           return a.noiseLevel - b.noiseLevel;
+        case 'PRICE':
+          // Günstigste zuerst
+          return a.price - b.price;
         default:
           return 0;
       }

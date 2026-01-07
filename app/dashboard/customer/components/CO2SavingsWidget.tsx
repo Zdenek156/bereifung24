@@ -47,17 +47,15 @@ export default function CO2SavingsWidget() {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 h-full min-h-[500px] flex flex-col w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-green-700">
             <Leaf className="h-5 w-5" />
             Ihre CO₂-Einsparungen
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          </div>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
         </CardContent>
       </Card>
     );
@@ -65,15 +63,15 @@ export default function CO2SavingsWidget() {
 
   if (!stats || stats.numberOfRequests === 0) {
     return (
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 h-full min-h-[500px] flex flex-col w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-green-700">
             <Leaf className="h-5 w-5" />
             Ihre CO₂-Einsparungen
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600">
+        <CardContent className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-gray-600 text-center px-4">
             Erstellen Sie Ihre erste Anfrage, um zu sehen, wie viel CO₂ Sie durch Bereifung24
             einsparen!
           </p>
@@ -83,14 +81,14 @@ export default function CO2SavingsWidget() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+    <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 h-full min-h-[500px] flex flex-col w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-green-700">
           <Leaf className="h-5 w-5" />
           Ihre CO₂-Einsparungen
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         {/* Hauptanzeige */}
         <div className="text-center">
           <div className="flex items-baseline justify-center gap-2">

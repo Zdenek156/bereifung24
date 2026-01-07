@@ -47,7 +47,7 @@ export async function GET(
     // Fetch audit logs
     const auditLogs = await prisma.accountingAuditLog.findMany({
       where: { entryId: params.id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
       include: {
         user: {
           select: {
@@ -79,7 +79,7 @@ export async function GET(
       createdBy,
       auditLogs: auditLogs.map(log => ({
         ...log,
-        createdAt: log.createdAt.toISOString(),
+        timestamp: log.timestamp.toISOString(),
         changes: typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes
       }))
     }

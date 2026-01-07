@@ -546,7 +546,7 @@ export default function JournalPage() {
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-medium text-gray-900">{log.action}</span>
                               <span className="text-xs text-gray-500">
-                                {new Date(log.createdAt).toLocaleString('de-DE')}
+                                {new Date(log.timestamp).toLocaleString('de-DE')}
                               </span>
                             </div>
                             <p className="text-xs text-gray-600">

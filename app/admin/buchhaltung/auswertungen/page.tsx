@@ -92,18 +92,17 @@ export default function ReportsPage() {
             </Link>
 
             {/* Summen & Salden */}
-            <div className="border border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
-              <h3 className="font-semibold text-gray-900 mb-2">💰 Summen- und Saldenliste</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Übersicht aller Konten mit Anfangsbestand, Umsätzen und Endbestand
-              </p>
-              <button
-                disabled
-                className="w-full bg-gray-100 text-gray-400 py-2 px-4 rounded-md cursor-not-allowed text-sm"
-              >
-                Kommt in Phase 7
-              </button>
-            </div>
+            <Link href="/admin/buchhaltung/auswertungen/summen-salden">
+              <div className="border border-gray-200 rounded-lg p-6 hover:border-orange-500 hover:shadow-md transition-all cursor-pointer">
+                <h3 className="font-semibold text-gray-900 mb-2">💰 Summen- und Saldenliste</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Übersicht aller Konten mit Anfangsbestand, Umsätzen und Endbestand
+                </p>
+                <div className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-md text-sm text-center font-medium">
+                  Bericht öffnen →
+                </div>
+              </div>
+            </Link>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

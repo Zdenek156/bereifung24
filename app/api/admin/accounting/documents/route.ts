@@ -36,14 +36,9 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Alle Buchungen mit Belegen
+    // Alle Buchungen mit/ohne Belege
     const entries = await prisma.accountingEntry.findMany({
       where: {
-        ...(unassigned ? {
-          attachmentUrls: { equals: [] }
-        } : {
-          attachmentUrls: { isEmpty: false }
-        }),
         ...(startDate && endDate ? {
           bookingDate: {
             gte: new Date(startDate),
@@ -66,8 +61,13 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Filter nach unassigned/assigned
+    const filteredEntries = unassigned 
+      ? entries.filter(e => e.attachmentUrls.length === 0)
+      : entries.filter(e => e.attachmentUrls.length > 0)
+
     // Flache Liste aller Dokumente mit Zuordnung
-    const documents = entries.flatMap(entry => 
+    const documents = filteredEntries.flatMap(entry => 
       entry.attachmentUrls.map((url: string) => ({
         url,
         fileName: path.basename(url),
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       documents,
-      totalEntries: entries.length,
+      totalEntries: filteredEntries.length,
       totalDocuments: documents.length
     })
 

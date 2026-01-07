@@ -2,23 +2,74 @@
 
 **Projekt:** Vollständige Finanzbuchhaltung für Bereifung24  
 **Start:** 06.01.2026  
+**Aktueller Stand:** 07.01.2026  
 **Kontenrahmen:** SKR04 (Abschlussgliederung)  
 **Geschäftsjahr:** Kalenderjahr (01.01. - 31.12.)  
 **GoBD-konform:** Ja (10 Jahre Aufbewahrung)
 
 ---
 
+## ⚠️ WICHTIGE ANFORDERUNG: UMSTELLUNG AUF GmbH
+
+**Status:** Geplant  
+**Priorität:** KRITISCH für zukünftige Entwicklung
+
+### Änderungen bei GmbH-Umstellung:
+
+**1. Rechnungslegung:**
+- ❌ Bisher: Einnahmen-Überschuss-Rechnung (EÜR)
+- ✅ Zukünftig: Doppelte Buchführung (Bilanzierung)
+- Erforderlich: Jahresabschluss (Bilanz + GuV)
+
+**2. Kontenrahmen-Erweiterung:**
+- Zusätzliche Bilanzkonten erforderlich:
+  - Aktivkonten (Vermögen): Anlagevermögen, Umlaufvermögen, Forderungen
+  - Passivkonten (Kapital + Schulden): Eigenkapital, Rückstellungen, Verbindlichkeiten
+  - Erfolgskonten: Bereits vorhanden (Erlöse/Aufwendungen)
+
+**3. Neue Berichte:**
+- [ ] **Bilanz** (Aktiva/Passiva)
+- [ ] **Gewinn- und Verlustrechnung (GuV)** (statt EÜR)
+- [ ] **Anlagenspiegel** (Entwicklung Anlagevermögen)
+- [ ] **Kapitalkontenentwicklung**
+
+**4. Buchungslogik anpassen:**
+- Abschreibungen auf Anlagevermögen
+- Rückstellungen bilden
+- Forderungen/Verbindlichkeiten verwalten
+- Periodenabgrenzung (RAP/ARAP)
+- Privatentnahmen/Privateinlagen → Eigenkapital
+
+**5. Technische Anpassungen:**
+- Migration: EÜR-Daten → Bilanzkonten
+- Eröffnungsbilanz erstellen
+- Jahresabschluss-Workflow
+- Erweiterte Kontengruppen in SKR04
+
+**Timeline:**
+- Phase 1-9: Aktuelle Entwicklung mit EÜR
+- Phase 16 (NEU): GmbH-Umstellung & Bilanzierung
+- Geschätzte Dauer: 5-7 Tage zusätzlich
+
+**Notizen:**
+- Aktuelle Implementierung bleibt EÜR-basiert
+- GmbH-Umstellung als separate Phase nach Go-Live
+- Steuerberater-Absprache vor Umstellung erforderlich
+
+---
+
 ## 🎯 PROJEKTZIELE
 
-- [ ] Zentrale Buchhaltungsübersicht mit allen Einnahmen und Ausgaben
-- [ ] Automatische Buchungserstellung aus bestehenden Systemen
-- [ ] Manuelle Buchungsmöglichkeit für sonstige Geschäftsvorfälle
+- [x] Zentrale Buchhaltungsübersicht mit allen Einnahmen und Ausgaben ✅
+- [x] Automatische Buchungserstellung aus bestehenden Systemen ✅ (3 von 8 deployed)
+- [x] Manuelle Buchungsmöglichkeit für sonstige Geschäftsvorfälle ✅
 - [ ] Gehaltsverwaltung mit Vorbereitung für HR-Integration
 - [ ] Fahrzeugkosten-Tracking für Geschäftsfahrzeuge
-- [ ] Beleg-Management (PDF, Fotos, E-Mails)
-- [ ] Export für Steuerberater (DATEV, Excel, PDF)
-- [ ] GoBD-konforme Archivierung (unveränderbar, nachvollziehbar)
-- [ ] Berichte: EÜR, UStVA, BWA
+- [x] Beleg-Management (PDF, Fotos, E-Mails) ✅
+- [x] Export für Steuerberater (DATEV CSV) ✅ (Excel/PDF in Planung)
+- [x] GoBD-konforme Archivierung (unveränderbar, nachvollziehbar) ✅
+- [x] Berichte: Journal, Kontenübersicht ✅ (EÜR, UStVA, BWA in Planung)
+- [ ] **NEU:** Umstellung auf doppelte Buchführung (Bilanzierung) für GmbH
 
 ---
 
@@ -441,52 +492,51 @@
 
 ---
 
-## 📋 PHASE 6: BELEG-MANAGEMENT
+## 📋 PHASE 6: BELEG-MANAGEMENT ✅ COMPLETE
 
 **Dauer:** 3-4 Tage  
-**Priorität:** MITTEL
+**Priorität:** MITTEL  
+**Status:** ✅ Abgeschlossen (07.01.2026)
 
-### 6.1 Zentrale Belegsammlung
+### 6.1 Zentrale Belegsammlung ✅ DEPLOYED
 
-**Route:** `/admin/accounting/documents` oder `/admin/belege`
+**Route:** `/admin/buchhaltung/belege`
 
-- [ ] **API-Route:** `/api/admin/accounting/documents`
-  - GET: Alle Belege (mit Filter)
-  - POST: Beleg hochladen
-  - PATCH: Beleg zuordnen zu Buchung
-  - DELETE: Beleg löschen
+- [x] **API-Route:** `/api/admin/accounting/documents`
+  - GET: Alle Belege (mit Filter nach entryId, Datum, mit/ohne Zuordnung)
+  - POST: Beleg hochladen (Multi-File mit optionalem entryId)
+  - DELETE: Beleg von Buchung entfernen (nur Referenz, Datei bleibt)
 
-- [ ] **Frontend:**
-  - Grid-Ansicht mit Thumbnails
-  - Upload-Bereich (Drag & Drop)
-  - Filterung (Datum, Zugeordnet/Nicht zugeordnet, Typ)
-  - Vorschau-Modal (PDF/Bild)
+- [x] **Frontend:**
+  - Info-Box: Leitet zu Journal für Upload
+  - Dokumenten-Tabelle mit Thumbnails (Bilder) / PDF-Icons
+  - Filterung (Datumsbereich, mit/ohne Belege)
+  - Vorschau-Modal (Bilder/PDFs)
   - Download-Funktion
+  - Link zu zugeordneter Buchung (mit highlight)
 
-### 6.2 Beleg-Upload verbessern
+### 6.2 Journal-Integration ✅ DEPLOYED
 
-- [ ] Multi-File-Upload
-- [ ] Datei-Typen: PDF, JPG, PNG, HEIC
-- [ ] Max. Größe: 10MB pro Datei
-- [ ] Automatische Thumbnail-Generierung
+- [x] Beleg-Spalte in Journal-Tabelle mit Badge
+- [x] Upload-Funktion in Buchungs-Detail-Modal:
+  - Multi-File-Upload (PDF, JPG, PNG, HEIC)
+  - Max. 10MB pro Datei
+  - Automatische Zuordnung via entryId
+  - Upload nur bei nicht-gesperrten Einträgen
+- [x] Belege anzeigen mit Vorschau/Download/Entfernen
+- [x] Validierung: Gesperrte Einträge schreibgeschützt
 
-### 6.3 Zuordnung zu Buchungen
+### 6.3 Dateispeicherung
 
-- [ ] Drag & Drop: Beleg auf Buchung ziehen
-- [ ] Oder: Bei Buchung "Beleg hinzufügen" Button
-- [ ] Mehrere Belege pro Buchung möglich
-- [ ] Beleg-Vorschau in Buchungs-Detail
+- [x] Verzeichnisstruktur: `/public/uploads/accounting/[JAHR]/[MONAT]/`
+- [x] Dateinamen: Timestamp + sanitized Originalname
+- [x] Datenbank: attachmentUrls Array (String[]) in AccountingEntry
+- [x] Archivierung: Dateien werden nie gelöscht (GoBD)
 
-### 6.4 Manuelles OCR (ohne externe API)
+### 6.4 OCR & E-Mail (NICHT IMPLEMENTIERT)
 
-- [ ] ⚠️ Erstmal ohne automatisches OCR (zu teuer)
-- [ ] Später optional: tesseract.js (Browser-basiert, kostenlos aber langsam)
-- [ ] Oder Eingabefeld: "Betrag aus Beleg" für manuelle Übernahme
-
-### 6.5 E-Mail-Integration (optional, später)
-
-- [ ] ⚠️ Nicht in dieser Phase
-- [ ] Später: Rechnungen aus E-Mail-Postfach importieren
+- [ ] ⚠️ Manuelles OCR: Zu komplex, erstmal ausgelassen
+- [ ] ⚠️ E-Mail-Integration: Spätere Phase
 
 ---
 

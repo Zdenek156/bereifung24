@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         accountType,
         description: description || null,
         isActive: true,
-        skr: 'SKR04'
+        skrType: 'SKR04'
       }
     })
 

@@ -19,6 +19,7 @@ interface AccountingEntry {
   locked: boolean
   isStorno: boolean
   createdAt: string
+  attachmentUrls?: string[]
 }
 
 export default function JournalPage() {
@@ -45,6 +46,7 @@ export default function JournalPage() {
   })
   const [stornoReason, setStornoReason] = useState('')
   const [stornoLoading, setStornoLoading] = useState(false)
+  const [uploadingFiles, setUploadingFiles] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -159,6 +161,65 @@ export default function JournalPage() {
       alert('Fehler beim Stornieren der Buchung')
     } finally {
       setStornoLoading(false)
+    }
+  }
+
+  const handleFileUpload = async (files: FileList | null, entryId: string) => {
+    if (!files || files.length === 0) return
+
+    setUploadingFiles(true)
+    const formData = new FormData()
+    
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i])
+    }
+    formData.append('entryId', entryId)
+
+    try {
+      const response = await fetch('/api/admin/accounting/documents', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`${data.urls.length} Datei(en) erfolgreich hochgeladen`)
+        // Refresh detail modal
+        openDetailModal(entryId)
+      } else {
+        alert(data.error || 'Fehler beim Hochladen')
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error)
+      alert('Fehler beim Hochladen der Dateien')
+    } finally {
+      setUploadingFiles(false)
+    }
+  }
+
+  const handleRemoveDocument = async (entryId: string, fileUrl: string) => {
+    if (!confirm('Beleg wirklich entfernen?')) return
+
+    try {
+      const response = await fetch('/api/admin/accounting/documents', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId, fileUrl })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('Beleg erfolgreich entfernt')
+        // Refresh detail modal
+        openDetailModal(entryId)
+      } else {
+        alert(data.error || 'Fehler beim Entfernen')
+      }
+    } catch (error) {
+      console.error('Error removing document:', error)
+      alert('Fehler beim Entfernen des Belegs')
     }
   }
 
@@ -289,8 +350,9 @@ export default function JournalPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quelle
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">                    Belege
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">                    Status
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Aktionen
@@ -300,7 +362,7 @@ export default function JournalPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center">
+                    <td colSpan={10} className="px-6 py-12 text-center">
                       <div className="flex justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                       </div>
@@ -308,7 +370,7 @@ export default function JournalPage() {
                   </tr>
                 ) : entries.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                       Noch keine Buchungseinträge vorhanden
                     </td>
                   </tr>
@@ -358,6 +420,20 @@ export default function JournalPage() {
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                           {entry.sourceType}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {entry.attachmentUrls && entry.attachmentUrls.length > 0 ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-xs font-medium text-green-600">
+                              {entry.attachmentUrls.length}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {entry.isStorno ? (
@@ -534,6 +610,105 @@ export default function JournalPage() {
                         {new Date(detailData.createdAt).toLocaleString('de-DE')}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Belege/Dokumente */}
+                  <div className="pb-6 border-b">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-gray-500">
+                        Belege & Dokumente ({detailData.attachmentUrls?.length || 0})
+                      </label>
+                      {!detailData.locked && !detailData.isStorno && (
+                        <label className="px-3 py-1 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 cursor-pointer transition-colors">
+                          {uploadingFiles ? (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Hochladen...
+                            </div>
+                          ) : (
+                            <>+ Belege hochladen</>
+                          )}
+                          <input
+                            type="file"
+                            multiple
+                            accept="application/pdf,image/jpeg,image/jpg,image/png,image/heic"
+                            onChange={(e) => handleFileUpload(e.target.files, detailData.id)}
+                            className="hidden"
+                            disabled={uploadingFiles}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {detailData.attachmentUrls && detailData.attachmentUrls.length > 0 ? (
+                      <div className="space-y-2">
+                        {detailData.attachmentUrls.map((url: string, idx: number) => {
+                          const filename = url.split('/').pop() || 'Dokument'
+                          const isPDF = filename.toLowerCase().endsWith('.pdf')
+                          
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100">
+                              <div className="flex items-center gap-3">
+                                {isPDF ? (
+                                  <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                  </svg>
+                                ) : (
+                                  <img 
+                                    src={url} 
+                                    alt={filename} 
+                                    className="w-12 h-12 object-cover rounded border border-gray-200"
+                                  />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{filename}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {isPDF ? 'PDF-Dokument' : 'Bild'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 text-sm text-primary-600 hover:text-primary-800 hover:underline"
+                                >
+                                  Öffnen
+                                </a>
+                                <a
+                                  href={url}
+                                  download
+                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  Download
+                                </a>
+                                {!detailData.locked && !detailData.isStorno && (
+                                  <button
+                                    onClick={() => handleRemoveDocument(detailData.id, url)}
+                                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:underline"
+                                  >
+                                    Entfernen
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                        <svg className="mx-auto w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="text-sm text-gray-500">Noch keine Belege hochgeladen</p>
+                        {!detailData.locked && !detailData.isStorno && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Nutzen Sie den Button oben, um Belege hinzuzufügen
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Audit Log */}

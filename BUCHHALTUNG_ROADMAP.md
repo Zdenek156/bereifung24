@@ -219,45 +219,39 @@
 
 ---
 
-## 📋 PHASE 3: BUCHHALTUNGS-DASHBOARD & UI
+## 📋 PHASE 3: MANUELLE BUCHUNGEN & UI ✅ COMPLETE
 
-**Dauer:** 4-5 Tage  
-**Priorität:** HOCH
+**Dauer:** 1-2 Tage  
+**Priorität:** HOCH  
+**Status:** Abgeschlossen
 
-### 3.1 Navigation erweitern
+### 3.1 Manuelles Buchungsformular ✅ DEPLOYED
 
-- [ ] Admin-Menü erweitern:
-  ```
-  Buchhaltung
-  ├── Übersicht (Dashboard)
-  ├── Journalbuch
-  ├── Kontenplan
-  ├── Offene Posten
-  ├── Manuelle Buchung
-  ├── Berichte
-  └── Einstellungen
-  ```
+- [x] **Frontend-Seite:** `/admin/buchhaltung/manuelle-buchung`
+  - Formular mit allen Pflichtfeldern
+  - Soll/Haben-Konto Auswahl-Dropdowns
+  - Betragseingabe mit Validation
+  - Beschreibungsfeld
+  - Optionale Belegnummer
+  - Live-Vorschau der Buchung
+  - Validation (Konten unterschiedlich, Betrag > 0)
+  - Farbcodierte Kontotypen
+  - Hilfe-Infobox mit Beispielen
 
-### 3.2 Dashboard erstellen
+- [x] **Backend-API:** `/api/admin/accounting/bookings` (POST)
+  - Verwendet bookingService.createBooking()
+  - Validierung aller Eingaben
+  - Automatische Belegnummer-Generierung
+  - Audit-Log-Erstellung
+  - Fehlerbehandlung mit aussagekräftigen Meldungen
+  - Erfolgreiche Buchung → Redirect zu Journalbuch
 
-**Route:** `/admin/accounting` oder `/admin/buchhaltung`
-
-- [ ] **API-Route:** `/api/admin/accounting/dashboard`
-  - Monatliche Einnahmen/Ausgaben
-  - Gewinn/Verlust aktueller Monat
-  - Jahres-Summen
-  - Top-Konten
-  - Ausstehende Belege
-  - Umsatzsteuer-Vorschau
-
-- [ ] **Frontend-Komponenten:**
-  - KPI-Cards (Einnahmen, Ausgaben, Gewinn)
-  - Diagramme (Monatsverlauf)
-  - Letzte Buchungen (Tabelle)
-  - Warnungen/Todos
-  - Quick-Actions (Manuelle Buchung, Export)
-
-### 3.3 Journalbuch
+- [x] **Features:**
+  - Soll/Haben-Prinzip erklärt
+  - Live-Preview zeigt Buchungssatz
+  - Account-Type-Badges (Aktiva/Passiva/Erlös/Aufwand)
+  - Responsive Design
+  - Session-basierte Authentifizierung
 
 **Route:** `/admin/accounting/journal`
 

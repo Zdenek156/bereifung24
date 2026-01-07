@@ -30,9 +30,7 @@ export async function GET(request: NextRequest) {
     const revenueEntries = await prisma.accountingEntry.findMany({
       where: {
         creditAccount: {
-          accountNumber: {
-            startsWith: '8'
-          }
+          startsWith: '8'
         }
       },
       select: {
@@ -48,16 +46,12 @@ export async function GET(request: NextRequest) {
         OR: [
           {
             debitAccount: {
-              accountNumber: {
-                startsWith: '4'
-              }
+              startsWith: '4'
             }
           },
           {
             debitAccount: {
-              accountNumber: {
-                startsWith: '6'
-              }
+              startsWith: '6'
             }
           }
         ]

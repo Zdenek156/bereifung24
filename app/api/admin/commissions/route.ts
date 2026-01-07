@@ -123,21 +123,8 @@ export async function PATCH(request: Request) {
       }
     })
 
-    // AUTO-BOOKING: Create accounting entry when commission is collected
-    if (status === 'COLLECTED' && currentCommission.status !== 'COLLECTED') {
-      try {
-        await bookingService.bookCommissionReceived(
-          commissionId,
-          updatedCommission.commissionAmount.toNumber(),
-          new Date(),
-          session.user.id
-        )
-        console.log(`✅ Auto-booking created for commission ${commissionId}`)
-      } catch (error) {
-        console.error('Failed to create auto-booking for commission:', error)
-        // Don't fail the commission update if booking fails
-      }
-    }
+    // NOTE: Auto-booking is now created monthly via SEPA payment webhook
+    // Individual commission bookings are no longer created here
 
     return NextResponse.json({ commission: updatedCommission })
 

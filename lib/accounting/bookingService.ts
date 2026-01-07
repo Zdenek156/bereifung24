@@ -224,18 +224,19 @@ export class AccountingBookingService {
   }
 
   /**
-   * AUTO-BOOKING: Commission payment collected
+   * AUTO-BOOKING: Monthly commission payment collected
    * Soll: 1200 Bank / Haben: 8400 Provisionserlöse
+   * Creates one consolidated entry per workshop per month when SEPA payment is confirmed
    */
-  async bookCommissionReceived(commissionId: string, amount: number, paymentDate: Date, userId: string) {
+  async bookCommissionReceived(paymentId: string, amount: number, paymentDate: Date, userId: string) {
     return await this.createBooking({
       debitAccountNumber: '1200',  // Bank
       creditAccountNumber: '8400', // Provisionserlöse
       amount,
-      description: `Provisionseingang Buchung #${commissionId}`,
+      description: `SEPA-Provisionseingang Payment #${paymentId}`,
       bookingDate: paymentDate,
       sourceType: 'COMMISSION',
-      sourceId: commissionId,
+      sourceId: paymentId,
       createdByUserId: userId
     })
   }

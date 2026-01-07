@@ -55,74 +55,6 @@ const priorityIcons = {
   PRICE: Euro
 };
 
-// Mock EPREL Daten (später durch echte API ersetzen)
-const mockTireData: TireRecommendation[] = [
-  {
-    id: '1',
-    manufacturer: 'Continental',
-    model: 'EcoContact 6',
-    dimension: '205/55 R16 91V',
-    season: 'SUMMER',
-    wetGripClass: 'A',
-    fuelEfficiency: 'B',
-    noiseLevel: 68,
-    noiseClass: 'A',
-    has3PMSF: false,
-    price: 89.99,
-    yearlyFuelSavings: 120,
-    brakingDistanceAdvantage: 3.5,
-    reason: 'Beste Nasshaftung für maximale Sicherheit bei Regen'
-  },
-  {
-    id: '2',
-    manufacturer: 'Michelin',
-    model: 'Energy Saver+',
-    dimension: '205/55 R16 91V',
-    season: 'SUMMER',
-    wetGripClass: 'B',
-    fuelEfficiency: 'A',
-    noiseLevel: 68,
-    noiseClass: 'A',
-    has3PMSF: false,
-    price: 95.99,
-    yearlyFuelSavings: 150,
-    brakingDistanceAdvantage: 2.8,
-    reason: 'Geringster Rollwiderstand für maximale Kraftstoffersparnis'
-  },
-  {
-    id: '3',
-    manufacturer: 'Goodyear',
-    model: 'EfficientGrip Performance',
-    dimension: '205/55 R16 91V',
-    season: 'SUMMER',
-    wetGripClass: 'A',
-    fuelEfficiency: 'B',
-    noiseLevel: 67,
-    noiseClass: 'A',
-    has3PMSF: false,
-    price: 84.99,
-    yearlyFuelSavings: 110,
-    brakingDistanceAdvantage: 3.2,
-    reason: 'Leisester Reifen für ruhiges und komfortables Fahren'
-  },
-  {
-    id: '4',
-    manufacturer: 'Bridgestone',
-    model: 'Turanza T005',
-    dimension: '205/55 R16 91V',
-    season: 'SUMMER',
-    wetGripClass: 'A',
-    fuelEfficiency: 'B',
-    noiseLevel: 69,
-    noiseClass: 'B',
-    has3PMSF: false,
-    price: 79.99,
-    yearlyFuelSavings: 100,
-    brakingDistanceAdvantage: 3.0,
-    reason: 'Bestes Preis-Leistungs-Verhältnis mit guten Sicherheitswerten'
-  }
-];
-
 const gradeColors = {
   A: 'bg-green-500',
   B: 'bg-lime-500',
@@ -183,7 +115,7 @@ export default function TireAdvisorWidget() {
     setStep(3);
   };
 
-  const handlePrioritySelect = (priority: Priority) => {
+  const handlePrioritySelect = async (priority: Priority) => {
     setSelectedPriority(priority);
     
     if (!selectedVehicle || !selectedTireType) return;
@@ -196,43 +128,54 @@ export default function TireAdvisorWidget() {
     
     if (!tireSpec) return;
     
-    // Erstelle Reifengröße String
-    const dimension = `${tireSpec.width}/${tireSpec.aspectRatio} R${tireSpec.diameter}${tireSpec.loadIndex ? ' ' + tireSpec.loadIndex : ''}${tireSpec.speedRating || ''}`;
-    
-    // Filtere Mock-Daten nach Saison und passe Dimension an
-    let filteredTires = mockTireData
-      .filter(tire => {
-        if (selectedTireType === 'SUMMER') return tire.season === 'SUMMER';
-        if (selectedTireType === 'WINTER') return tire.season === 'WINTER';
-        if (selectedTireType === 'ALL_SEASON') return tire.season === 'ALL_SEASON';
-        return true;
-      })
-      .map(tire => ({
-        ...tire,
-        dimension // Verwende die tatsächliche Reifengröße des Fahrzeugs
-      }));
-    
-    // Sortiere Empfehlungen basierend auf Priorität
-    const sorted = [...filteredTires].sort((a, b) => {
-      switch (priority) {
-        case 'SAFETY':
-          // Beste Nasshaftung zuerst
-          return a.wetGripClass.localeCompare(b.wetGripClass);
-        case 'EFFICIENCY':
-          // Beste Kraftstoffeffizienz zuerst
-          return a.fuelEfficiency.localeCompare(b.fuelEfficiency);
-        case 'QUIET':
-          // Leiseste Reifen zuerst
-          return a.noiseLevel - b.noiseLevel;
-        case 'PRICE':
-          // Günstigste zuerst
-          return a.price - b.price;
-        default:
-          return 0;
+    // Suche Reifen über EPREL API
+    try {
+      const response = await fetch('/api/eprel/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          width: tireSpec.width,
+          aspectRatio: tireSpec.aspectRatio,
+          diameter: tireSpec.diameter,
+          season: selectedTireType,
+          limit: 20
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('EPREL API Fehler');
       }
-    });
+      
+      const tires = await response.json();
+      
+      // Sortiere Empfehlungen basierend auf Priorität
+      const sorted = [...tires].sort((a: TireRecommendation, b: TireRecommendation) => {
+        switch (priority) {
+          case 'SAFETY':
+            // Beste Nasshaftung zuerst
+            return a.wetGripClass.localeCompare(b.wetGripClass);
+          case 'EFFICIENCY':
+            // Beste Kraftstoffeffizienz zuerst
+            return a.fuelEfficiency.localeCompare(b.fuelEfficiency);
+          case 'QUIET':
+            // Leiseste Reifen zuerst
+            return a.noiseLevel - b.noiseLevel;
+          case 'PRICE':
+            // Günstigste zuerst (nur wenn Preis verfügbar)
+            if (a.price && b.price) return a.price - b.price;
+            return 0;
+          default:
+            return 0;
+        }
+      });
+      
+      setRecommendations(sorted.slice(0, 3)); // Top 3
+    } catch (error) {
+      console.error('Fehler beim Laden der Reifenempfehlungen:', error);
+      // Fallback auf leere Liste
+      setRecommendations([]);
+    }
     
-    setRecommendations(sorted.slice(0, 3)); // Top 3
     setStep(4);
   };
 

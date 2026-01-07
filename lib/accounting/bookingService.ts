@@ -142,11 +142,7 @@ export class AccountingBookingService {
    */
   async createStorno(originalEntryId: string, userId: string, reason: string): Promise<any> {
     const originalEntry = await prisma.accountingEntry.findUnique({
-      where: { id: originalEntryId },
-      include: {
-        debitAccount: true,
-        creditAccount: true
-      }
+      where: { id: originalEntryId }
     })
 
     if (!originalEntry) {
@@ -159,8 +155,8 @@ export class AccountingBookingService {
 
     // Create reverse booking (swap debit and credit)
     const stornoEntry = await this.createBooking({
-      debitAccountNumber: originalEntry.creditAccount.accountNumber,
-      creditAccountNumber: originalEntry.debitAccount.accountNumber,
+      debitAccountNumber: originalEntry.creditAccount,
+      creditAccountNumber: originalEntry.debitAccount,
       amount: originalEntry.amount.toNumber(),
       description: `STORNO: ${originalEntry.description} (Grund: ${reason})`,
       bookingDate: new Date(),
@@ -182,10 +178,10 @@ export class AccountingBookingService {
         entryId: originalEntryId,
         action: 'STORNIERT',
         userId,
-        changes: {
+        changes: JSON.stringify({
           stornoEntryId: stornoEntry.id,
           reason
-        }
+        })
       }
     })
 

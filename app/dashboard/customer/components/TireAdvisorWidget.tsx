@@ -146,7 +146,23 @@ export default function TireAdvisorWidget() {
         throw new Error('EPREL API Fehler');
       }
       
-      const tires = await response.json();
+      const data = await response.json();
+      
+      // Prüfe auf API-Fehler
+      if (!response.ok || data.error) {
+        setRecommendations([]);
+        setStep(4);
+        return;
+      }
+      
+      const tires = data;
+      
+      // Prüfe ob Ergebnisse vorhanden
+      if (!Array.isArray(tires) || tires.length === 0) {
+        setRecommendations([]);
+        setStep(4);
+        return;
+      }
       
       // Sortiere Empfehlungen basierend auf Priorität
       const sorted = [...tires].sort((a: TireRecommendation, b: TireRecommendation) => {
@@ -353,6 +369,31 @@ export default function TireAdvisorWidget() {
             <h3 className="font-semibold text-gray-900">
               Unsere Top 3 Empfehlungen für {priorityLabels[selectedPriority]}:
             </h3>
+            {recommendations.length === 0 ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <p className="text-gray-700 mb-2 font-semibold">Keine Reifendaten verfügbar</p>
+                <p className="text-sm text-gray-600">
+                  Für diese Reifengröße ({selectedVehicle?.summerTires?.width || selectedVehicle?.winterTires?.width || selectedVehicle?.allSeasonTires?.width}/{selectedVehicle?.summerTires?.aspectRatio || selectedVehicle?.winterTires?.aspectRatio || selectedVehicle?.allSeasonTires?.aspectRatio} R{selectedVehicle?.summerTires?.diameter || selectedVehicle?.winterTires?.diameter || selectedVehicle?.allSeasonTires?.diameter}) 
+                  sind aktuell keine Daten in der EPREL-Datenbank verfügbar oder die Verbindung ist vorübergehend nicht möglich.
+                </p>
+                <p className="text-sm text-gray-600 mt-3">
+                  Sie können trotzdem eine Anfrage erstellen und erhalten Angebote von Werkstätten.
+                </p>
+                <button
+                  onClick={() => {
+                    if (!selectedVehicle || !selectedTireType) return;
+                    const tireSpec = selectedTireType === 'SUMMER' ? selectedVehicle.summerTires : 
+                                   selectedTireType === 'WINTER' ? selectedVehicle.winterTires : 
+                                   selectedVehicle.allSeasonTires;
+                    if (!tireSpec) return;
+                    window.location.href = `/dashboard/customer/create-request/tires?width=${tireSpec.width}&aspectRatio=${tireSpec.aspectRatio}&diameter=${tireSpec.diameter}&season=${selectedTireType}`;
+                  }}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Trotzdem Anfrage erstellen
+                </button>
+              </div>
+            ) : (
             <div className="space-y-3">
               {recommendations.map((tire, index) => (
                 <div
@@ -429,13 +470,16 @@ export default function TireAdvisorWidget() {
                 </div>
               ))}
             </div>
+            )}
 
+            {recommendations.length > 0 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
               <p className="text-xs text-gray-700">
-                ℹ️ Die Daten basieren auf der offiziellen EU-EPREL Datenbank. 
-                Preise sind Richtwerte und können bei Werkstätten variieren.
+                ℹ️ Die Daten basieren auf der offiziellen EU-EPREL Datenbank (European Product Database for Energy Labelling). 
+                Fordern Sie ein konkretes Angebot an, um aktuelle Preise und Verfügbarkeit zu erhalten.
               </p>
             </div>
+            )}
           </div>
         )}
       </CardContent>

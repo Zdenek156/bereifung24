@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
     const apiKey = await getApiSetting('EPREL_API_KEY')
     
     if (!apiKey) {
-      console.warn('EPREL_API_KEY not configured, using mock data')
-      return NextResponse.json(generateMockTires(width, aspectRatio, diameter, season, limit))
+      console.warn('EPREL_API_KEY not configured')
+      return NextResponse.json({ error: 'EPREL API nicht konfiguriert' }, { status: 503 })
     }
 
     try {
@@ -72,8 +72,7 @@ export async function POST(req: NextRequest) {
 
       if (!response.ok) {
         console.error('EPREL API Error:', response.status, response.statusText)
-        // Fallback to mock data on error
-        return NextResponse.json(generateMockTires(width, aspectRatio, diameter, season, limit))
+        return NextResponse.json({ error: 'EPREL API vorübergehend nicht verfügbar' }, { status: 503 })
       }
 
       const data = await response.json()
@@ -97,8 +96,7 @@ export async function POST(req: NextRequest) {
 
     } catch (apiError) {
       console.error('Error calling EPREL API:', apiError)
-      // Fallback to mock data
-      return NextResponse.json(generateMockTires(width, aspectRatio, diameter, season, limit))
+      return NextResponse.json({ error: 'EPREL API vorübergehend nicht verfügbar' }, { status: 503 })
     }
 
   } catch (error) {

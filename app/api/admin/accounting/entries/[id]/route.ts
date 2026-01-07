@@ -51,7 +51,8 @@ export async function GET(
       include: {
         user: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         }
@@ -62,7 +63,8 @@ export async function GET(
     const createdBy = entry.createdById ? await prisma.user.findUnique({
       where: { id: entry.createdById },
       select: {
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true
       }
     }) : null
@@ -76,11 +78,18 @@ export async function GET(
       updatedAt: entry.updatedAt.toISOString(),
       debitAccountDetails: accountMap.get(entry.debitAccount),
       creditAccountDetails: accountMap.get(entry.creditAccount),
-      createdBy,
+      createdBy: createdBy ? {
+        name: `${createdBy.firstName} ${createdBy.lastName}`,
+        email: createdBy.email
+      } : null,
       auditLogs: auditLogs.map(log => ({
         ...log,
         timestamp: log.timestamp.toISOString(),
-        changes: typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes
+        changes: typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes,
+        user: log.user ? {
+          name: `${log.user.firstName} ${log.user.lastName}`,
+          email: log.user.email
+        } : null
       }))
     }
 

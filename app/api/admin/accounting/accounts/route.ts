@@ -149,8 +149,8 @@ export async function DELETE(request: NextRequest) {
     const usedInBookings = await prisma.accountingEntry.count({
       where: {
         OR: [
-          { debitAccountId: accountId },
-          { creditAccountId: accountId }
+          { debitAccount: account.accountNumber },
+          { creditAccount: account.accountNumber }
         ]
       }
     })

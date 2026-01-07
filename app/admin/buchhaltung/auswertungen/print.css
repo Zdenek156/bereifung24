@@ -1,0 +1,246 @@
+/* Print Styles für Buchhaltungs-Auswertungen */
+@media print {
+  /* Allgemeine Print-Einstellungen */
+  @page {
+    margin: 2cm;
+    size: A4 portrait;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #000;
+    background: white !important;
+  }
+
+  /* Navigation und UI-Elemente ausblenden */
+  nav,
+  header,
+  .no-print,
+  button,
+  .print-hide,
+  [class*="sidebar"],
+  [class*="navigation"],
+  .back-button,
+  .filter-controls,
+  .quick-select-buttons,
+  .info-box {
+    display: none !important;
+  }
+
+  /* Container-Anpassungen */
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Kopfzeile für Berichte */
+  .print-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-header h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+  }
+
+  .print-header .company-name {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .print-header .period {
+    font-size: 11pt;
+    color: #333;
+  }
+
+  /* Tabellen-Styling */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 15px 0 !important;
+    page-break-inside: avoid;
+  }
+
+  table thead {
+    background-color: #f0f0f0 !important;
+    font-weight: bold;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #333 !important;
+    padding: 8px !important;
+    text-align: left !important;
+  }
+
+  table th {
+    background-color: #e0e0e0 !important;
+    font-weight: bold !important;
+  }
+
+  table td.number,
+  table th.number {
+    text-align: right !important;
+  }
+
+  table tr.total-row {
+    font-weight: bold !important;
+    background-color: #f5f5f5 !important;
+    border-top: 2px solid #000 !important;
+  }
+
+  table tr.subtotal-row {
+    font-weight: bold !important;
+    background-color: #fafafa !important;
+  }
+
+  /* Cards zu Tabellen umwandeln */
+  .report-section {
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+
+  .report-section h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #666;
+  }
+
+  .report-section h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+  }
+
+  /* Werte-Zeilen */
+  .value-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .value-row.total {
+    font-weight: bold;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    padding: 8px 0;
+    margin-top: 5px;
+  }
+
+  /* Farben für Print anpassen */
+  .text-green-600,
+  .text-green-700 {
+    color: #000 !important;
+  }
+
+  .text-red-600,
+  .text-red-700 {
+    color: #000 !important;
+  }
+
+  .text-blue-600,
+  .text-blue-700 {
+    color: #000 !important;
+  }
+
+  .bg-green-50,
+  .bg-red-50,
+  .bg-blue-50,
+  .bg-gray-50 {
+    background-color: #f9f9f9 !important;
+  }
+
+  /* Seitenumbrüche kontrollieren */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Fußzeile */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+  }
+
+  /* Spezifische Anpassungen für verschiedene Berichte */
+  
+  /* BWA */
+  .bwa-section {
+    margin-bottom: 20px;
+  }
+
+  /* EÜR */
+  .euer-summary {
+    margin-top: 20px;
+    padding: 10px;
+    border: 2px solid #000;
+    font-weight: bold;
+  }
+
+  /* UStVA */
+  .ustva-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .ustva-total {
+    font-weight: bold;
+    font-size: 12pt;
+    padding: 10px;
+    margin-top: 10px;
+    border: 2px solid #000;
+  }
+
+  /* Summen-Salden */
+  .account-summary {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f5f5f5 !important;
+    border: 1px solid #000;
+  }
+}
+
+/* Spezielle Klassen für Print-optimierte Elemente */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+  }
+}

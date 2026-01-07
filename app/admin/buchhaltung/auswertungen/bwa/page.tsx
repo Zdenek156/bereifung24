@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import '../print.css'
 
 interface BWAData {
   revenue: {
@@ -130,8 +131,22 @@ export default function BWAPage() {
 
   return (
     <main className="flex-1 p-8 bg-gray-50">
+      {/* Print Header - nur beim Drucken sichtbar */}
+      <div className="print-only print-header">
+        <div className="company-name">Bereifung24</div>
+        <h1>Betriebswirtschaftliche Auswertung (BWA)</h1>
+        {data && (
+          <div className="period">
+            Zeitraum: {new Date(startDate).toLocaleDateString('de-DE')} - {new Date(endDate).toLocaleDateString('de-DE')}
+          </div>
+        )}
+        <div style={{ fontSize: '10pt', marginTop: '5px', color: '#666' }}>
+          Erstellt am: {new Date().toLocaleDateString('de-DE')} um {new Date().toLocaleTimeString('de-DE')}
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 no-print">
         <Link 
           href="/admin/buchhaltung/auswertungen"
           className="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
@@ -147,7 +162,7 @@ export default function BWAPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6 no-print">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -215,7 +230,7 @@ export default function BWAPage() {
 
       {/* BWA Table */}
       {data && (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden print-container">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">

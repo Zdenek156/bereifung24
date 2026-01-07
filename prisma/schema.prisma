@@ -3326,7 +3326,7 @@ model AccountingEntry {
   sourceId   String? // ID des Original-Datensatzes
 
   // Belege/Anlagen
-  attachmentUrls String? // JSON Array von URLs zu PDF/Foto-Belegen
+  attachmentUrls String[] @default([]) // Array von URLs zu PDF/Foto-Belegen
 
   // GoBD-Konformität
   locked     Boolean   @default(false) // Gesperrt (nicht mehr änderbar)

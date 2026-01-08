@@ -121,7 +121,7 @@ export default function SelectServicePage() {
               className={`
                 group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 transition-all duration-300
                 ${service.available 
-                  ? 'border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md hover:scale-105 cursor-pointer' 
+                  ? 'border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500/50 hover:shadow-md hover:scale-105 cursor-pointer' 
                   : 'border-gray-100 dark:border-gray-700 opacity-50 cursor-not-allowed'
                 }
               `}
@@ -145,7 +145,7 @@ export default function SelectServicePage() {
                 {/* Arrow */}
                 {service.available && (
                   <div className="mt-auto pt-1">
-                    <div className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium group-hover:gap-3 transition-all">
+                    <div className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-500/70 font-medium group-hover:gap-3 transition-all">
                       Anfrage erstellen
                       <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

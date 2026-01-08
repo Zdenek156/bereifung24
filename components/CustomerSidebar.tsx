@@ -159,7 +159,7 @@ export default function CustomerSidebar() {
                     className={`
                       w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left
                       ${isActive(item.path)
-                        ? 'bg-blue-500 dark:bg-blue-600 text-white'
+                        ? 'bg-blue-500 dark:bg-blue-500/70 text-white'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }
                     `}

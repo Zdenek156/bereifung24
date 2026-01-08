@@ -210,9 +210,9 @@ export default function TireAdvisorWidget() {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 h-full min-h-[500px] flex flex-col w-full">
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-blue-200 dark:border-blue-800 h-full min-h-[500px] flex flex-col w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-700">
+          <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
             <Car className="h-5 w-5" />
             Smart Reifen-Berater
           </CardTitle>
@@ -225,17 +225,17 @@ export default function TireAdvisorWidget() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 h-full min-h-[500px] flex flex-col w-full">
+    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-blue-200 dark:border-blue-800 h-full min-h-[500px] flex flex-col w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-700">
+        <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
           <Car className="h-5 w-5" />
           Smart Reifen-Berater
         </CardTitle>
         <div className="flex items-center gap-2 mt-2">
-          <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-          <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-          <div className={`h-2 flex-1 rounded-full ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-          <div className={`h-2 flex-1 rounded-full ${step >= 4 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+          <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+          <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+          <div className={`h-2 flex-1 rounded-full ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+          <div className={`h-2 flex-1 rounded-full ${step >= 4 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
         </div>
       </CardHeader>
       
@@ -243,10 +243,10 @@ export default function TireAdvisorWidget() {
         {/* Schritt 1: Fahrzeug auswählen */}
         {step === 1 && (
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Wählen Sie Ihr Fahrzeug:</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Wählen Sie Ihr Fahrzeug:</h3>
             {vehicles.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">Sie haben noch keine Fahrzeuge gespeichert.</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">Sie haben noch keine Fahrzeuge gespeichert.</p>
                 <button
                   onClick={() => window.location.href = '/dashboard/customer/vehicles'}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -260,15 +260,15 @@ export default function TireAdvisorWidget() {
                   <button
                     key={vehicle.id}
                     onClick={() => handleVehicleSelect(vehicle.id)}
-                    className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                    className="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left"
                   >
                     <div className="flex items-center gap-3">
                       <Car className="h-5 w-5 text-blue-600" />
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 dark:text-white">
                           {vehicle.make} {vehicle.model}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
                           Baujahr {vehicle.year}
                         </div>
                       </div>
@@ -289,15 +289,15 @@ export default function TireAdvisorWidget() {
             >
               ← Zurück
             </button>
-            <h3 className="font-semibold text-gray-900">Welche Reifenart suchen Sie?</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Welche Reifenart suchen Sie?</h3>
             <div className="grid gap-3">
               {selectedVehicle.summerTires && (
                 <button
                   onClick={() => handleTireTypeSelect('SUMMER')}
-                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                  className="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left"
                 >
-                  <div className="font-semibold text-gray-900">☀️ Sommerreifen</div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="font-semibold text-gray-900 dark:text-white">☀️ Sommerreifen</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {selectedVehicle.summerTires.hasDifferentSizes && selectedVehicle.summerTires.rearWidth ? (
                       <>
                         Vorne: {selectedVehicle.summerTires.width}/{selectedVehicle.summerTires.aspectRatio} R{selectedVehicle.summerTires.diameter}
@@ -313,10 +313,10 @@ export default function TireAdvisorWidget() {
               {selectedVehicle.winterTires && (
                 <button
                   onClick={() => handleTireTypeSelect('WINTER')}
-                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                  className="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left"
                 >
-                  <div className="font-semibold text-gray-900">❄️ Winterreifen</div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="font-semibold text-gray-900 dark:text-white">❄️ Winterreifen</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {selectedVehicle.winterTires.hasDifferentSizes && selectedVehicle.winterTires.rearWidth ? (
                       <>
                         Vorne: {selectedVehicle.winterTires.width}/{selectedVehicle.winterTires.aspectRatio} R{selectedVehicle.winterTires.diameter}
@@ -332,10 +332,10 @@ export default function TireAdvisorWidget() {
               {selectedVehicle.allSeasonTires && (
                 <button
                   onClick={() => handleTireTypeSelect('ALL_SEASON')}
-                  className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all text-left"
+                  className="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all text-left"
                 >
-                  <div className="font-semibold text-gray-900">🌦️ Ganzjahresreifen</div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="font-semibold text-gray-900 dark:text-white">🌦️ Ganzjahresreifen</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {selectedVehicle.allSeasonTires.hasDifferentSizes && selectedVehicle.allSeasonTires.rearWidth ? (
                       <>
                         Vorne: {selectedVehicle.allSeasonTires.width}/{selectedVehicle.allSeasonTires.aspectRatio} R{selectedVehicle.allSeasonTires.diameter}
@@ -361,7 +361,7 @@ export default function TireAdvisorWidget() {
             >
               ← Zurück
             </button>
-            <h3 className="font-semibold text-gray-900">Was ist Ihnen am wichtigsten?</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Was ist Ihnen am wichtigsten?</h3>
             <div className="grid grid-cols-2 gap-3">
               {(Object.keys(priorityLabels) as Priority[]).map((priority) => {
                 const Icon = priorityIcons[priority];
@@ -369,10 +369,10 @@ export default function TireAdvisorWidget() {
                   <button
                     key={priority}
                     onClick={() => handlePrioritySelect(priority)}
-                    className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all"
+                    className="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all"
                   >
                     <Icon className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                    <div className="text-sm font-medium text-gray-900 text-center">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white text-center">
                       {priorityLabels[priority]}
                     </div>
                   </button>
@@ -391,17 +391,17 @@ export default function TireAdvisorWidget() {
             >
               ← Zurück
             </button>
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-gray-900 dark:text-white">
               Unsere Top 3 Empfehlungen für {priorityLabels[selectedPriority]}:
             </h3>
             {recommendations.length === 0 ? (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                <p className="text-gray-700 mb-2 font-semibold">Keine Reifendaten verfügbar</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-gray-700 dark:text-gray-300 mb-2 font-semibold">Keine Reifendaten verfügbar</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Für diese Reifengröße ({selectedVehicle?.summerTires?.width || selectedVehicle?.winterTires?.width || selectedVehicle?.allSeasonTires?.width}/{selectedVehicle?.summerTires?.aspectRatio || selectedVehicle?.winterTires?.aspectRatio || selectedVehicle?.allSeasonTires?.aspectRatio} R{selectedVehicle?.summerTires?.diameter || selectedVehicle?.winterTires?.diameter || selectedVehicle?.allSeasonTires?.diameter}) 
                   sind aktuell keine Daten in der EPREL-Datenbank verfügbar oder die Verbindung ist vorübergehend nicht möglich.
                 </p>
-                <p className="text-sm text-gray-600 mt-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
                   Sie können trotzdem eine Anfrage erstellen und erhalten Angebote von Werkstätten.
                 </p>
                 <button
@@ -423,7 +423,7 @@ export default function TireAdvisorWidget() {
               {recommendations.map((tire, index) => (
                 <div
                   key={tire.id}
-                  className="bg-white rounded-lg p-4 border-2 border-gray-200 hover:border-blue-500 transition-all"
+                  className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all"
                 >
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
@@ -433,28 +433,28 @@ export default function TireAdvisorWidget() {
                         </span>
                       )}
                     </div>
-                    <h4 className="font-bold text-gray-900">
+                    <h4 className="font-bold text-gray-900 dark:text-white">
                       {tire.manufacturer} {tire.model}
                     </h4>
-                    <p className="text-sm text-gray-600">{tire.dimension}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{tire.dimension}</p>
                   </div>
 
                   {/* EU-Label */}
                   <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
                     <div>
-                      <div className="text-gray-600 mb-1">Nasshaftung</div>
+                      <div className="text-gray-600 dark:text-gray-400 mb-1">Nasshaftung</div>
                       <div className={`${gradeColors[tire.wetGripClass as keyof typeof gradeColors]} text-white font-bold text-center py-1 rounded`}>
                         {tire.wetGripClass}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600 mb-1">Effizienz</div>
+                      <div className="text-gray-600 dark:text-gray-400 mb-1">Effizienz</div>
                       <div className={`${gradeColors[tire.fuelEfficiency as keyof typeof gradeColors]} text-white font-bold text-center py-1 rounded`}>
                         {tire.fuelEfficiency}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-600 mb-1">Lautstärke</div>
+                      <div className="text-gray-600 dark:text-gray-400 mb-1">Lautstärke</div>
                       <div className="bg-gray-700 text-white font-bold text-center py-1 rounded">
                         {tire.noiseLevel} dB
                       </div>
@@ -463,7 +463,7 @@ export default function TireAdvisorWidget() {
 
                   {/* Vorteile */}
                   <div className="bg-blue-50 rounded p-3 mb-3">
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
                       <span className="font-semibold">💡 Darum empfehlen wir:</span> {tire.reason}
                     </p>
                   </div>
@@ -499,7 +499,7 @@ export default function TireAdvisorWidget() {
 
             {recommendations.length > 0 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
-              <p className="text-xs text-gray-700">
+              <p className="text-xs text-gray-700 dark:text-gray-300">
                 ℹ️ Die Daten basieren auf der offiziellen EU-EPREL Datenbank (European Product Database for Energy Labelling). 
                 Fordern Sie ein konkretes Angebot an, um aktuelle Preise und Verfügbarkeit zu erhalten.
               </p>

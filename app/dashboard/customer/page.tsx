@@ -47,10 +47,10 @@ export default function CustomerDashboard() {
       {/* Header */}
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Willkommen, {session?.user?.name || 'Kunde'}!
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Welcome & Instructions Section */}
-      <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-6 border border-primary-100">
+      <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/30 dark:to-blue-900/30 rounded-lg shadow-md p-6 border border-primary-100 dark:border-primary-800">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
@@ -137,65 +137,65 @@ export default function CustomerDashboard() {
             </div>
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900 mb-3">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
               So funktioniert Bereifung24
             </h2>
-            <p className="text-gray-700 mb-4 text-sm">
+            <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
               Mit unserem Service erhalten Sie schnell und unkompliziert Angebote von Werkstätten in Ihrer Nähe. 
               Vergleichen Sie Preise und wählen Sie das beste Angebot für sich aus.
             </p>
             
             <div className="grid md:grid-cols-2 gap-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
                     1
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Anfrage erstellen</h3>
-                    <p className="text-xs text-gray-600">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Anfrage erstellen</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Wählen Sie Ihre Reifengröße oder einen anderen Service aus. Die Anfrage ist komplett kostenlos und unverbindlich.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-5 shadow-sm">
+              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     2
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Angebote erhalten</h3>
-                    <p className="text-xs text-gray-600">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Angebote erhalten</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Werkstätten in Ihrer Nähe werden automatisch benachrichtigt und senden Ihnen passende Angebote zu.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-5 shadow-sm">
+              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     3
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Vergleichen & auswählen</h3>
-                    <p className="text-xs text-gray-600">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Vergleichen & auswählen</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Schauen Sie sich alle Angebote in Ruhe an und wählen Sie das beste für sich aus.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-5 shadow-sm">
+              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     4
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-1 text-sm">Termin vereinbaren</h3>
-                    <p className="text-xs text-gray-600">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Termin vereinbaren</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Buchen Sie direkt online einen passenden Termin bei der Werkstatt Ihrer Wahl.
                     </p>
                   </div>
@@ -204,20 +204,20 @@ export default function CustomerDashboard() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="font-medium">100% kostenlos</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="font-medium">Unverbindlich</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-primary-700 bg-white rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="font-medium">Schnell & einfach</span>

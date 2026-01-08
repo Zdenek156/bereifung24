@@ -280,22 +280,22 @@ export default function CustomerAppointments() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-transparent dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link 
               href="/dashboard/customer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Meine Termine</h1>
-              <p className="mt-1 text-sm text-gray-600">Werkstatttermine verwalten und Bewertungen abgeben</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Meine Termine</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Werkstatttermine verwalten und Bewertungen abgeben</p>
             </div>
           </div>
         </div>
@@ -304,15 +304,15 @@ export default function CustomerAppointments() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('upcoming')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'upcoming'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Kommende Termine ({upcomingBookings.length})
@@ -321,8 +321,8 @@ export default function CustomerAppointments() {
                 onClick={() => setActiveTab('past')}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'past'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Vergangene Termine ({pastBookings.length})
@@ -334,32 +334,32 @@ export default function CustomerAppointments() {
         {/* Bookings List */}
         <div className="space-y-6">
           {activeTab === 'upcoming' && upcomingBookings.length === 0 && (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 p-8 text-center">
               <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Keine kommenden Termine</h3>
-              <p className="text-gray-600">Sie haben aktuell keine bevorstehenden Werkstatttermine.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Keine kommenden Termine</h3>
+              <p className="text-gray-600 dark:text-gray-400">Sie haben aktuell keine bevorstehenden Werkstatttermine.</p>
             </div>
           )}
 
           {activeTab === 'past' && pastBookings.length === 0 && (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 p-8 text-center">
               <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Keine vergangenen Termine</h3>
-              <p className="text-gray-600">Sie haben noch keine abgeschlossenen Werkstatttermine.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Keine vergangenen Termine</h3>
+              <p className="text-gray-600 dark:text-gray-400">Sie haben noch keine abgeschlossenen Werkstatttermine.</p>
             </div>
           )}
 
           {(activeTab === 'upcoming' ? upcomingBookings : pastBookings).map((booking) => (
-            <div key={booking.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div key={booking.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-transparent dark:border-gray-700 overflow-hidden">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{booking.workshop.companyName}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{booking.workshop.companyName}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {getServiceTitle(booking)}
                     </p>
                   </div>
@@ -369,21 +369,21 @@ export default function CustomerAppointments() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   {/* Date & Time */}
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Termin</h4>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Termin</h4>
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-gray-700">
+                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <span>{formatDate(booking.appointmentDate)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-700">
+                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span>{booking.appointmentTime} Uhr (ca. {booking.estimatedDuration} Min.)</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-700">
+                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
@@ -392,7 +392,7 @@ export default function CustomerAppointments() {
                         </div>
                       </div>
                       {booking.tireRequest.vehicle && (
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
@@ -404,9 +404,9 @@ export default function CustomerAppointments() {
 
                   {/* Workshop Address */}
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Werkstatt</h4>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Werkstatt</h4>
                     <div className="space-y-2">
-                      <div className="flex items-start gap-2 text-gray-700">
+                      <div className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
                         <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -416,7 +416,7 @@ export default function CustomerAppointments() {
                           <p>{booking.workshop.zipCode} {booking.workshop.city}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-700">
+                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
@@ -438,10 +438,10 @@ export default function CustomerAppointments() {
                 </div>
 
                 {/* Review Section */}
-                <div className="border-t pt-4">
+                <div className="border-t dark:border-gray-700 pt-4">
                   {booking.review ? (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Ihre Bewertung</h4>
+                    <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Ihre Bewertung</h4>
                       <div className="flex items-center gap-2 mb-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <svg
@@ -455,7 +455,7 @@ export default function CustomerAppointments() {
                         ))}
                       </div>
                       {booking.review.comment && (
-                        <p className="text-gray-700 text-sm">{booking.review.comment}</p>
+                        <p className="text-gray-700 dark:text-gray-300 text-sm">{booking.review.comment}</p>
                       )}
                     </div>
                   ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
@@ -476,16 +476,16 @@ export default function CustomerAppointments() {
       {/* Review Modal */}
       {showReviewModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Werkstatt bewerten</h2>
-                  <p className="text-sm text-gray-600 mt-1">{selectedBooking.workshop.companyName}</p>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Werkstatt bewerten</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{selectedBooking.workshop.companyName}</p>
                 </div>
                 <button
                   onClick={() => setShowReviewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -496,7 +496,7 @@ export default function CustomerAppointments() {
               <div className="space-y-6">
                 {/* Star Rating */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Wie zufrieden waren Sie? <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -533,14 +533,14 @@ export default function CustomerAppointments() {
 
                 {/* Comment */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Ihre Erfahrung (optional)
                   </label>
                   <textarea
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Beschreiben Sie Ihre Erfahrung mit der Werkstatt..."
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -549,10 +549,10 @@ export default function CustomerAppointments() {
                 </div>
               </div>
 
-              <div className="flex gap-4 justify-end mt-6 pt-6 border-t">
+              <div className="flex gap-4 justify-end mt-6 pt-6 border-t dark:border-gray-700">
                 <button
                   onClick={() => setShowReviewModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Abbrechen
                 </button>

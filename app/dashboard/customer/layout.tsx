@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import CustomerSidebar from '@/components/CustomerSidebar'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function CustomerLayout({
   children,
@@ -29,20 +30,22 @@ export default function CustomerLayout({
 
   if (status === 'loading' || !session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <CustomerSidebar />
-      
-      {/* Main Content - with left margin for sidebar */}
-      <div className="lg:ml-64">
-        {children}
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <CustomerSidebar />
+        
+        {/* Main Content - with left margin for sidebar */}
+        <div className="lg:ml-64">
+          {children}
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   )
 }

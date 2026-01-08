@@ -211,9 +211,9 @@ export default function PricingPage() {
         </div>
 
         {/* Auto Reifen */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
               <svg className="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -287,11 +287,11 @@ export default function PricingPage() {
                 </div>
 
                 <div className="border-t pt-4 mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
-                  <div className="bg-white p-3 rounded border">
-                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>100,00 €</strong></p>
-                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-primary-600">{calculateExample(100, settings.autoManualPricing, settings.autoFixedMarkup, settings.autoPercentMarkup, settings.autoIncludeVat).toFixed(2)} €</strong></p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white dark:bg-gray-700 p-3 rounded border dark:border-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Einkaufspreis: <strong>100,00 €</strong></p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Verkaufspreis: <strong className="text-primary-600 dark:text-primary-400">{calculateExample(100, settings.autoManualPricing, settings.autoFixedMarkup, settings.autoPercentMarkup, settings.autoIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {settings.autoIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
                     </p>
                   </div>
@@ -302,9 +302,9 @@ export default function PricingPage() {
         </div>
 
         {/* Motorrad Reifen */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
               <svg className="w-6 h-6 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -375,11 +375,11 @@ export default function PricingPage() {
                 </div>
 
                 <div className="border-t pt-4 mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
-                  <div className="bg-white p-3 rounded border">
-                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>150,00 €</strong></p>
-                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-orange-600">{calculateExample(150, settings.motoManualPricing, settings.motoFixedMarkup, settings.motoPercentMarkup, settings.motoIncludeVat).toFixed(2)} €</strong></p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white dark:bg-gray-700 p-3 rounded border dark:border-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Einkaufspreis: <strong>150,00 €</strong></p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Verkaufspreis: <strong className="text-orange-600 dark:text-orange-400">{calculateExample(150, settings.motoManualPricing, settings.motoFixedMarkup, settings.motoPercentMarkup, settings.motoIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {settings.motoIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
                     </p>
                   </div>
@@ -390,9 +390,9 @@ export default function PricingPage() {
         </div>
 
         {/* Batterie */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
               <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -463,11 +463,11 @@ export default function PricingPage() {
                 </div>
 
                 <div className="border-t pt-4 mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
-                  <div className="bg-white p-3 rounded border">
-                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>80,00 €</strong></p>
-                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-green-600">{calculateExample(80, settings.batteryManualPricing, settings.batteryFixedMarkup, settings.batteryPercentMarkup, settings.batteryIncludeVat).toFixed(2)} €</strong></p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white dark:bg-gray-700 p-3 rounded border dark:border-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Einkaufspreis: <strong>80,00 €</strong></p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Verkaufspreis: <strong className="text-green-600 dark:text-green-400">{calculateExample(80, settings.batteryManualPricing, settings.batteryFixedMarkup, settings.batteryPercentMarkup, settings.batteryIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {settings.batteryIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
                     </p>
                   </div>
@@ -478,9 +478,9 @@ export default function PricingPage() {
         </div>
 
         {/* Bremsen */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
               <svg className="w-6 h-6 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
@@ -551,11 +551,11 @@ export default function PricingPage() {
                 </div>
 
                 <div className="border-t pt-4 mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Beispielrechnung:</p>
-                  <div className="bg-white p-3 rounded border">
-                    <p className="text-sm text-gray-600">Einkaufspreis: <strong>120,00 €</strong></p>
-                    <p className="text-sm text-gray-600">Verkaufspreis: <strong className="text-red-600">{calculateExample(120, settings.brakeManualPricing, settings.brakeFixedMarkup, settings.brakePercentMarkup, settings.brakeIncludeVat).toFixed(2)} €</strong></p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Beispielrechnung:</p>
+                  <div className="bg-white dark:bg-gray-700 p-3 rounded border dark:border-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Einkaufspreis: <strong>120,00 €</strong></p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Verkaufspreis: <strong className="text-red-600 dark:text-red-400">{calculateExample(120, settings.brakeManualPricing, settings.brakeFixedMarkup, settings.brakePercentMarkup, settings.brakeIncludeVat).toFixed(2)} €</strong></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {settings.brakeIncludeVat ? 'inkl. MwSt.' : 'zzgl. MwSt.'}
                     </p>
                   </div>

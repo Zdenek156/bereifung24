@@ -124,36 +124,31 @@ export default function CreateRequestPage() {
 
   // Load URL parameters from Tire Advisor Widget
   useEffect(() => {
-    const width = searchParams.get('width')
-    const aspectRatio = searchParams.get('aspectRatio')
-    const diameter = searchParams.get('diameter')
-    const brand = searchParams.get('brand')
-    const model = searchParams.get('model')
+    const vehicleId = searchParams.get('vehicleId')
     const season = searchParams.get('season')
     const tireDesignation = searchParams.get('tireDesignation')
 
-    if (width && aspectRatio && diameter) {
-      setUseManualEntry(true)
-      const updates: any = {
-        width,
-        aspectRatio,
-        diameter
+    if (vehicleId) {
+      // Warte bis Fahrzeuge geladen sind
+      if (vehicles.length > 0) {
+        // Wähle Fahrzeug aus (triggert handleVehicleSelect)
+        setSelectedVehicle(vehicleId)
+        
+        // Setze Season und preferredBrands
+        const updates: any = {}
+        
+        if (season) {
+          updates.season = season
+        }
+        
+        if (tireDesignation) {
+          updates.preferredBrands = tireDesignation
+        }
+        
+        setFormData(prev => ({ ...prev, ...updates }))
       }
-      
-      if (season) {
-        updates.season = season
-      }
-      
-      // Fülle preferredBrands mit der Reifenbezeichnung
-      if (tireDesignation) {
-        updates.preferredBrands = tireDesignation
-      } else if (brand) {
-        updates.preferredBrands = brand + (model ? ` ${model}` : '')
-      }
-      
-      setFormData(prev => ({ ...prev, ...updates }))
     }
-  }, [searchParams])
+  }, [searchParams, vehicles])
 
   // Load vehicles and user profile
   useEffect(() => {
@@ -242,6 +237,13 @@ export default function CreateRequestPage() {
       handleVehicleSelect(selectedVehicle)
     }
   }, [formData.season])
+
+  // Handle vehicle selection from URL parameters
+  useEffect(() => {
+    if (selectedVehicle && vehicles.length > 0) {
+      handleVehicleSelect(selectedVehicle)
+    }
+  }, [selectedVehicle, vehicles])
 
   // Redirect if not authenticated
   if (status === 'loading') {

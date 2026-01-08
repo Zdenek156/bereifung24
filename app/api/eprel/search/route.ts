@@ -46,67 +46,115 @@ export async function POST(req: NextRequest) {
     // Get EPREL API Key from database
     const apiKey = await getApiSetting('EPREL_API_KEY')
     
-    // Temporarily use mock data until EPREL API is configured correctly
-    console.log('Using mock tire data (EPREL API integration pending)')
-    
-    const dimension = `${width}/${aspectRatio}R${diameter}`
-    
-    // Generate comprehensive mock tire data
-    const mockTires = generateMockTires(width, aspectRatio, diameter, season, limit)
-    
-    return NextResponse.json({
-      results: mockTires,
-      total: mockTires.length,
-      source: 'mock_data',
-      note: 'EPREL-Integration wird vorbereitet'
-    })
-
-    /* EPREL API Integration - Temporarily disabled until API key issue is resolved
     if (!apiKey) {
-      console.warn('EPREL_API_KEY not configured')
-      return NextResponse.json({ error: 'EPREL API nicht konfiguriert' }, { status: 503 })
+      console.warn('EPREL_API_KEY not configured, using mock data')
+      const mockTires = generateMockTires(width, aspectRatio, diameter, season, limit)
+      return NextResponse.json({
+        results: mockTires,
+        total: mockTires.length,
+        source: 'mock_data',
+        note: 'EPREL API Key nicht konfiguriert'
+      })
     }
 
     try {
-      // EPREL API Endpoint 
-      const eprelUrl = new URL('https://eprel.ec.europa.eu/api/v1.0.92/exportProducts/tyres')
+      // EPREL API Endpoint - Correct format from documentation
+      const eprelUrl = 'https://eprel.ec.europa.eu/api/products/tyres'
 
-      const response = await fetch(eprelUrl.toString(), {
+      console.log('Calling EPREL API:', eprelUrl)
+
+      const response = await fetch(eprelUrl, {
         headers: {
-          'X-API-KEY': apiKey,
+          'x-api-key': apiKey,  // lowercase as per EPREL documentation!
           'Accept': 'application/json'
         }
       })
 
+      console.log('EPREL API Response:', response.status, response.statusText)
+
       if (!response.ok) {
         console.error('EPREL API Error:', response.status, response.statusText)
-        return NextResponse.json({ error: 'EPREL API vorübergehend nicht verfügbar' }, { status: 503 })
+        // Fallback to mock data
+        const mockTires = generateMockTires(width, aspectRatio, diameter, season, limit)
+        return NextResponse.json({
+          results: mockTires,
+          total: mockTires.length,
+          source: 'mock_data',
+          note: `EPREL API Error: ${response.status}`
+        })
       }
 
       const data = await response.json()
       
+      console.log('EPREL API returned data:', Array.isArray(data) ? `${data.length} items` : typeof data)
+      
+      // EPREL returns array of all tyres, we need to filter
+      const dimension = `${width}/${aspectRatio}R${diameter}`
+      const allTires = Array.isArray(data) ? data : (data.results || [])
+      
+      // Filter by dimension and season
+      const filteredTires = allTires
+        .filter((tire: any) => {
+          // Match dimension
+          const tireDim = tire.tyreDimension || tire.dimension || ''
+          if (!tireDim.includes(`${width}`) || !tireDim.includes(`${aspectRatio}`) || !tireDim.includes(`R${diameter}`)) {
+            return false
+          }
+          // Match season if specified
+          if (season) {
+            const tireSeason = mapEPRELSeasonToOurs(tire.tyreClass || tire.season || '')
+            if (tireSeason !== season) return false
+          }
+          return true
+        })
+        .slice(0, limit)
+      
       // Transform EPREL response to our format
-      const tires: EPRELTire[] = data.results?.map((tire: any) => ({
-        id: tire.id || tire.productId,
-        manufacturer: tire.supplierName || tire.manufacturer,
-        model: tire.modelName || tire.model,
-        dimension: `${width}/${aspectRatio} R${diameter}`,
-        season: mapEPRELSeasonToOurs(tire.season),
-        wetGripClass: tire.wetGripClass || 'C',
-        fuelEfficiency: tire.fuelEfficiency || 'C',
-        noiseLevel: tire.externalRollingNoiseLevel || 70,
-        noiseClass: tire.externalRollingNoiseClass || 'B',
-        has3PMSF: tire.has3PMSF || false,
+      const tires: EPRELTire[] = filteredTires.map((tire: any) => ({
+        id: tire.id || tire.productId || `eprel-${Math.random()}`,
+        manufacturer: tire.supplierName || tire.manufacturer || 'Unknown',
+        model: tire.modelName || tire.commercialName || tire.model || 'Unknown Model',
+        dimension: dimension,
+        season: mapEPRELSeasonToOurs(tire.tyreClass || tire.season || ''),
+        wetGripClass: tire.wetGripClass || tire.wetGrip || 'C',
+        fuelEfficiency: tire.fuelEfficiencyClass || tire.rollingResistanceClass || 'C',
+        noiseLevel: parseInt(tire.externalRollingNoiseLevel || tire.noiseLevel || '70'),
+        noiseClass: tire.externalRollingNoiseClass || tire.noiseClass || 'B',
+        has3PMSF: tire.hasSnowflake || tire.has3PMSF || tire.snowGrip || false,
         price: undefined // EPREL doesn't provide prices
-      })) || []
+      }))
 
-      return NextResponse.json(tires)
+      console.log(`Filtered ${tires.length} tires from EPREL data`)
+
+      if (tires.length === 0) {
+        // No matching tires found, use mock data
+        const mockTires = generateMockTires(width, aspectRatio, diameter, season, limit)
+        return NextResponse.json({
+          results: mockTires,
+          total: mockTires.length,
+          source: 'mock_data',
+          note: 'Keine EPREL-Daten für diese Dimension gefunden'
+        })
+      }
+
+      return NextResponse.json({
+        results: tires,
+        total: tires.length,
+        source: 'eprel',
+        note: 'Daten von EPREL EU-Datenbank'
+      })
 
     } catch (apiError) {
       console.error('Error calling EPREL API:', apiError)
-      return NextResponse.json({ error: 'EPREL API vorübergehend nicht verfügbar' }, { status: 503 })
+      // Fallback to mock data on error
+      const mockTires = generateMockTires(width, aspectRatio, diameter, season, limit)
+      return NextResponse.json({
+        results: mockTires,
+        total: mockTires.length,
+        source: 'mock_data',
+        note: 'EPREL API Fehler - Mock-Daten verwendet'
+      })
     }
-    */
 
   } catch (error) {
     console.error('Error in EPREL search:', error)

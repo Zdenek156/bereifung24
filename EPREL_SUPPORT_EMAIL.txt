@@ -1,0 +1,51 @@
+TO: ENER-B1@ec.europa.eu
+CC: info@bereifung24.de
+ALTERNATIVE: Use contact form at https://energy.ec.europa.eu/contact_en
+
+Subject: EPREL Public API - 403 Forbidden Error with Valid API Key
+
+Dear EPREL API Support Team,
+
+We have received an API key for the EPREL Public API (Key: clIkTy1kZ4DRqCQlQzoC7FvNj3jh1Ys6UErv6nP) but are unable to access any API endpoints. All requests consistently return a 403 Forbidden error.
+
+TESTED ENDPOINTS (ALL FAILED WITH 403):
+Production Environment:
+- https://eprel.ec.europa.eu/api/v1.0.92/exportProducts/tyres
+- https://eprel.ec.europa.eu/api/exportProducts/tyres
+- https://eprel.ec.europa.eu/api/v1.0.92/products/tyres
+- https://eprel.ec.europa.eu/api/products/tyres
+
+Acceptance Environment:
+- https://public-energy-label-acceptance.ec.europa.eu/api/v1.0.92/exportProducts/tyres
+- https://public-energy-label-acceptance.ec.europa.eu/api/exportProducts/tyres
+
+REQUEST DETAILS:
+- Method: GET
+- Header: X-API-KEY: clIkTy1kZ4DRqCQlQzoC7FvNj3jh1Ys6UErv6nP
+- Header: Accept: application/json
+- Response: 403 Forbidden (all endpoints)
+
+QUESTIONS:
+1. Is the API key valid and active?
+2. Does our server IP address need to be whitelisted?
+3. Are we using the correct endpoint URLs and headers?
+4. Is there additional authentication required beyond the X-API-KEY header?
+5. Which specific endpoint should we use to retrieve tyre data?
+
+OUR SETUP:
+- Company: Bereifung24
+- Server IP: 167.235.24.110 (Hetzner)
+- Use case: Tire recommendation system for customers
+- Application: Next.js web application
+
+We followed the documentation from:
+- EPREL Public API key PDF document received via email
+- Wiki page: https://webgate.ec.europa.eu/fpfis/wikis/spaces/EPREL/
+
+Please send your response to: info@bereifung24.de
+
+Thank you for your assistance.
+
+Best regards,
+Bereifung24 Team
+info@bereifung24.de

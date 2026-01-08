@@ -131,7 +131,6 @@ export default function CreateRequestPage() {
     const model = searchParams.get('model')
     const season = searchParams.get('season')
     const tireDesignation = searchParams.get('tireDesignation')
-    const tireDimension = searchParams.get('tireDimension')
 
     if (width && aspectRatio && diameter) {
       setUseManualEntry(true)
@@ -150,11 +149,6 @@ export default function CreateRequestPage() {
         updates.preferredBrands = tireDesignation
       } else if (brand) {
         updates.preferredBrands = brand + (model ? ` ${model}` : '')
-      }
-      
-      // Füge Notiz mit vollständiger Info hinzu
-      if (tireDesignation && tireDimension) {
-        updates.additionalNotes = `Empfohlener Reifen: ${tireDesignation} (${tireDimension})`
       }
       
       setFormData(prev => ({ ...prev, ...updates }))

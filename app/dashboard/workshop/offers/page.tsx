@@ -206,8 +206,8 @@ export default function WorkshopOffers() {
         </div>
 
         {/* Search by Code */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Buchungs-Code suchen
           </label>
           <div className="flex gap-2">
@@ -217,12 +217,12 @@ export default function WorkshopOffers() {
               onChange={(e) => setSearchCode(e.target.value)}
               placeholder="Code eingeben (z.B. 3R4R)"
               maxLength={4}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono uppercase"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono uppercase bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
             {searchCode && (
               <button
                 onClick={() => setSearchCode('')}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Zurücksetzen
               </button>
@@ -447,19 +447,19 @@ export default function WorkshopOffers() {
 
                 {/* Booking Code for Accepted Offers */}
                 {offer.status === 'ACCEPTED' && (
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-blue-900">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
                           Buchungs-Code für telefonische Terminvereinbarung:
                         </p>
-                        <p className="text-xs text-blue-700">
+                        <p className="text-xs text-blue-700 dark:text-blue-400">
                           Der Kunde verwendet diesen Code, wenn er telefonisch einen Termin vereinbaren möchte
                         </p>
                       </div>
-                      <div className="text-center bg-white px-4 py-2 rounded-lg border border-blue-300">
-                        <p className="text-xs text-gray-600">Code</p>
-                        <p className="text-xl font-bold font-mono text-blue-600">
+                      <div className="text-center bg-white dark:bg-gray-700 px-4 py-2 rounded-lg border border-blue-300 dark:border-blue-600">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Code</p>
+                        <p className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400">
                           {offer.tireRequest.id.slice(-4).toUpperCase()}
                         </p>
                       </div>

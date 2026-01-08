@@ -275,9 +275,9 @@ export default function VacationManagementPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Workshop Vacations */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               Betriebsurlaub
@@ -368,9 +368,9 @@ export default function VacationManagementPage() {
           </div>
 
           {/* Employee Vacations */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Mitarbeiter-Urlaub

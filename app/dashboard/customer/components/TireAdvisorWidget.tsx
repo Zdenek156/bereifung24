@@ -155,7 +155,8 @@ export default function TireAdvisorWidget() {
         return;
       }
       
-      const tires = data;
+      // API gibt { results: [], total: X, source: 'mock_data' } zurück
+      const tires = data.results || data;
       
       // Prüfe ob Ergebnisse vorhanden
       if (!Array.isArray(tires) || tires.length === 0) {

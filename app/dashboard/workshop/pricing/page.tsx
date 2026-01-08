@@ -164,21 +164,21 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center">
             <Link
               href="/dashboard/workshop"
-              className="mr-4 text-gray-600 hover:text-gray-900"
+              className="mr-4 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Preiskalkulation</h1>
-              <p className="mt-1 text-sm text-gray-600">Automatische Berechnung von Reifen- und Servicepreisen</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Preiskalkulation</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Automatische Berechnung von Reifen- und Servicepreisen</p>
             </div>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function PricingPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Informationsbox */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1214,21 +1214,21 @@ export default function BrowseRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/workshop"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Anfragen durchsuchen</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Anfragen durchsuchen</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Kundenanfragen finden und Angebote erstellen
               </p>
             </div>
@@ -1239,7 +1239,7 @@ export default function BrowseRequestsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* SEPA Mandate Warning */}
         {!sepaMandateLoading && !sepaMandateStatus && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1247,10 +1247,10 @@ export default function BrowseRequestsPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                   SEPA-Lastschriftmandat erforderlich
                 </h3>
-                <div className="mt-2 text-sm text-yellow-700">
+                <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
                   <p>
                     Um Angebote erstellen zu können, müssen Sie zunächst ein SEPA-Lastschriftmandat für die Provisionsabrechnung einrichten.
                   </p>
@@ -1258,7 +1258,7 @@ export default function BrowseRequestsPage() {
                 <div className="mt-4">
                   <Link
                     href="/dashboard/workshop/settings?tab=sepa"
-                    className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                    className="text-sm font-medium text-yellow-800 hover:text-yellow-900 dark:text-yellow-200 dark:hover:text-yellow-100 underline"
                   >
                     Jetzt SEPA-Mandat einrichten →
                   </Link>
@@ -1270,7 +1270,7 @@ export default function BrowseRequestsPage() {
 
         {/* SEPA Mandate Pending Info */}
         {!sepaMandateLoading && sepaMandateStatus && sepaMandateStatus !== 'active' && (
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 p-4 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1278,10 +1278,10 @@ export default function BrowseRequestsPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
                   SEPA-Mandat wird aktiviert
                 </h3>
-                <div className="mt-2 text-sm text-blue-700">
+                <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
                   <p>
                     Ihr SEPA-Lastschriftmandat wurde erfolgreich eingerichtet und wird derzeit von GoCardless geprüft. 
                     Die Aktivierung dauert in der Regel <strong>3-5 Werktage</strong>. Sie können bereits jetzt Angebote erstellen.
@@ -1297,7 +1297,7 @@ export default function BrowseRequestsPage() {
                 <div className="mt-4">
                   <Link
                     href="/dashboard/workshop/settings?tab=sepa"
-                    className="text-sm font-medium text-blue-800 hover:text-blue-900 underline"
+                    className="text-sm font-medium text-blue-800 hover:text-blue-900 dark:text-blue-200 dark:hover:text-blue-100 underline"
                   >
                     Status prüfen →
                   </Link>
@@ -1308,7 +1308,7 @@ export default function BrowseRequestsPage() {
         )}
 
         {/* Filter */}
-        <div className="bg-white rounded-lg shadow mb-6 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-4">
           <div className="flex gap-4">
             <button
               onClick={() => setFilter('all')}
@@ -1345,12 +1345,12 @@ export default function BrowseRequestsPage() {
 
         {/* Requests List */}
         {filteredRequests.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Anfragen gefunden</h3>
-            <p className="text-gray-600">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Keine Anfragen gefunden</h3>
+            <p className="text-gray-600 dark:text-gray-400">
               {filter === 'new' && 'Es gibt aktuell keine neuen Anfragen.'}
               {filter === 'quoted' && 'Sie haben noch keine Angebote erstellt.'}
               {filter === 'all' && 'Es gibt aktuell keine offenen Anfragen.'}
@@ -1385,7 +1385,7 @@ export default function BrowseRequestsPage() {
               }
 
               return (
-                <div key={request.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                <div key={request.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -1448,7 +1448,7 @@ export default function BrowseRequestsPage() {
 
                         {/* Tire dimensions below title */}
                         {isMotorcycle ? (
-                          <div className="text-sm text-gray-600 mb-2">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {frontTireSize && rearTireSize ? (
                               <p>Vorne: {frontTireSize} • Hinten: {rearTireSize}</p>
                             ) : frontTireSize ? (
@@ -1487,7 +1487,7 @@ export default function BrowseRequestsPage() {
             })()}
           </div>
         ) : null}                        {!isWheelChange && request.width !== 0 && !isMotorcycle && (
-                          <div className="text-sm text-gray-600 space-y-1">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                             <p>
                               <span className="font-medium">Menge:</span> {request.quantity} Reifen
                             </p>
@@ -1516,16 +1516,16 @@ export default function BrowseRequestsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg mb-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Kunde</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-medium text-gray-900 dark:text-white mb-1">Kunde</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           {request.customer.user.firstName} {request.customer.user.lastName}
                         </p>
                         <p className="text-sm text-gray-600">
                           PLZ: {request.zipCode}{request.city ? ` - ${request.city}` : ''}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           Umkreis: {request.radiusKm} km
                         </p>
                         {request.vehicleInfo && (
@@ -1564,10 +1564,10 @@ export default function BrowseRequestsPage() {
                         if (userNotes) {
                           return (
                             <div>
-                              <h4 className="font-medium text-gray-900 mb-1">
+                              <h4 className="font-medium text-gray-900 dark:text-white mb-1">
                                 {request.width === 0 ? 'Service-Details' : 'Zusätzliche Hinweise'}
                               </h4>
-                              <p className="text-sm text-gray-600 whitespace-pre-line">{userNotes}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{userNotes}</p>
                             </div>
                           )
                         }
@@ -1576,7 +1576,7 @@ export default function BrowseRequestsPage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span>Erstellt: {new Date(request.createdAt).toLocaleDateString('de-DE')}</span>
                         {request._count.offers > 0 && (
                           <>
@@ -1601,7 +1601,7 @@ export default function BrowseRequestsPage() {
                           </button>
                           <Link 
                             href="/dashboard/workshop/settings?tab=sepa"
-                            className="text-sm text-primary-600 hover:text-primary-700 underline"
+                            className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
                           >
                             SEPA-Mandat einrichten
                           </Link>
@@ -1625,8 +1625,8 @@ export default function BrowseRequestsPage() {
 
       {/* Offer Form Modal */}
       {showOfferForm && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {(() => {
               // Prüfe ob Anfrage abgelaufen ist
               const today = new Date()
@@ -1642,9 +1642,9 @@ export default function BrowseRequestsPage() {
               if (isExpired || hasAcceptedOffer) {
                 return (
                   <>
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                       <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold text-gray-900">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                           {isExpired ? 'Anfrage abgelaufen' : 'Anfrage bereits vergeben'}
                         </h2>
                         <button
@@ -1652,7 +1652,7 @@ export default function BrowseRequestsPage() {
                             setShowOfferForm(false)
                             setSelectedRequest(null)
                           }}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                         >
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1661,16 +1661,16 @@ export default function BrowseRequestsPage() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                      <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
                         <div className="flex items-start gap-3">
                           <svg className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                           <div>
-                            <h3 className="text-lg font-semibold text-orange-900 mb-2">
+                            <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-200 mb-2">
                               {isExpired ? '⏰ Diese Anfrage ist abgelaufen' : '✅ Auftrag bereits vergeben'}
                             </h3>
-                            <p className="text-orange-800">
+                            <p className="text-orange-800 dark:text-orange-300">
                               {isExpired 
                                 ? `Das gewünschte Datum (${new Date(selectedRequest.needByDate).toLocaleDateString('de-DE', { 
                                     day: '2-digit', 
@@ -1679,7 +1679,7 @@ export default function BrowseRequestsPage() {
                                   })}) ist bereits verstrichen. Der Kunde hat diese Anfrage möglicherweise anderweitig gelöst oder benötigt den Service nicht mehr.`
                                 : 'Der Kunde hat bereits ein Angebot von einer anderen Werkstatt angenommen. Diese Anfrage ist nicht mehr verfügbar.'}
                             </p>
-                            <p className="text-sm text-orange-700 mt-3">
+                            <p className="text-sm text-orange-700 dark:text-orange-400 mt-3">
                               Bitte sehen Sie sich andere verfügbare Anfragen an.
                             </p>
                           </div>
@@ -1706,7 +1706,7 @@ export default function BrowseRequestsPage() {
                 <>
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Angebot erstellen</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Angebot erstellen</h2>
                 <button
                   onClick={() => {
                     setShowOfferForm(false)
@@ -1719,7 +1719,7 @@ export default function BrowseRequestsPage() {
                   </svg>
                 </button>
               </div>
-              <div className="mt-2 text-sm text-gray-600">
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
                   <>
                     {(() => {
@@ -1806,12 +1806,12 @@ export default function BrowseRequestsPage() {
               {/* mountOnMotorcycle Warning für Motorradreifen */}
               {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && 
                selectedRequest.additionalNotes?.includes('⚠️ MONTAGE AM GANZEN MOTORRAD ERFORDERLICH') && (
-                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600 text-lg">⚠️</span>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-orange-800">Montage am ganzen Motorrad</p>
-                      <p className="text-xs text-orange-700 mt-1">
+                      <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">Montage am ganzen Motorrad</p>
+                      <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
                         Der Kunde bringt das ganze Motorrad - nicht nur die ausgebauten Räder/Felgen.
                       </p>
                     </div>
@@ -1821,12 +1821,12 @@ export default function BrowseRequestsPage() {
               
               {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && 
                selectedRequest.additionalNotes?.includes('✓ Standard: Nur Räder/Felgen (ohne Motorrad)') && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <div className="flex items-start gap-2">
                     <span className="text-green-600 text-lg">✓</span>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-green-800">Standard-Service</p>
-                      <p className="text-xs text-green-700 mt-1">
+                      <p className="text-sm font-semibold text-green-800 dark:text-green-200">Standard-Service</p>
+                      <p className="text-xs text-green-700 dark:text-green-300 mt-1">
                         Der Kunde bringt nur die ausgebauten Räder/Felgen (ohne Motorrad).
                       </p>
                     </div>
@@ -1842,7 +1842,7 @@ export default function BrowseRequestsPage() {
                   selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE')) && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {selectedRequest.additionalNotes?.includes('BATTERIE-SERVICE') ? 'Batterie-Angebote *' :
                          selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') ? 'Bremsen-Angebote *' :
                          'Reifenangebote *'}
@@ -1858,9 +1858,9 @@ export default function BrowseRequestsPage() {
                   
                   <div className="space-y-4">
                     {offerForm.tireOptions.map((option, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
                             Angebot {index + 1}
                           </span>
                           {offerForm.tireOptions.length > 1 && (
@@ -1931,7 +1931,7 @@ export default function BrowseRequestsPage() {
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-green-50"
                             />
                             {option.costPrice && option.pricePerTire && parseFloat(option.costPrice) > 0 && (
-                              <p className="text-xs text-gray-600 mt-1">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 Aufschlag: {(parseFloat(option.pricePerTire) - parseFloat(option.costPrice)).toFixed(2)} €
                               </p>
                             )}
@@ -2050,8 +2050,8 @@ export default function BrowseRequestsPage() {
                   />
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Service-Informationen</h3>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Service-Informationen</h3>
                   
                   {offerForm.installationFee && selectedRequest && (() => {
                     const hasDisposal = selectedRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
@@ -2259,22 +2259,22 @@ export default function BrowseRequestsPage() {
                               )}
                               <div className="border-t-2 border-blue-400 pt-3 mt-3">
                                 <div className="flex justify-between items-start">
-                                  <span className="text-base font-bold text-gray-900">Gesamtpreis</span>
+                                  <span className="text-base font-bold text-gray-900 dark:text-white">Gesamtpreis</span>
                                   <div className="text-right">
                                     <div className="text-2xl font-bold text-primary-600">
                                       {parseFloat(offerForm.installationFee).toFixed(2)} €
                                     </div>
                                     {workshopTaxMode === 'STANDARD' && (
-                                      <div className="text-xs text-gray-600 mt-1">inkl. MwSt.</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">inkl. MwSt.</div>
                                     )}
                                   </div>
                                 </div>
                               </div>
                             </div>
-                            <div className="pt-2 border-t border-blue-200">
+                            <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Dauer</span>
-                                <span className="font-medium text-gray-900">
+                                <span className="text-gray-600 dark:text-gray-400">Dauer</span>
+                                <span className="font-medium text-gray-900 dark:text-white">
                                   {offerForm.durationMinutes ? `${offerForm.durationMinutes} Minuten` : 'Nicht konfiguriert'}
                                 </span>
                               </div>
@@ -2286,7 +2286,7 @@ export default function BrowseRequestsPage() {
                   })()}
                   
                   {!offerForm.installationFee && (
-                    <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                    <div className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded p-2">
                       ⚠️ Bitte konfigurieren Sie zuerst Ihre Services in der Service-Verwaltung
                     </div>
                   )}
@@ -2308,7 +2308,7 @@ export default function BrowseRequestsPage() {
                         }}
                         className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                       />
-                      <label htmlFor="customPriceEnabled" className="text-sm text-gray-700">
+                      <label htmlFor="customPriceEnabled" className="text-sm text-gray-700 dark:text-gray-300">
                         Bei einigen Fahrzeugen kann der Preis abweichen
                       </label>
                     </div>
@@ -2395,7 +2395,7 @@ export default function BrowseRequestsPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Einlagerung anbieten
                         </label>
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -2417,7 +2417,7 @@ export default function BrowseRequestsPage() {
                               }}
                               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                             />
-                            <label htmlFor="offerStorage" className="text-sm text-gray-700">
+                            <label htmlFor="offerStorage" className="text-sm text-gray-700 dark:text-gray-300">
                               Ich biete Einlagerung an {storagePrice > 0 && `(${storagePrice.toFixed(2)} €/Saison)`}
                             </label>
                           </div>
@@ -2426,7 +2426,7 @@ export default function BrowseRequestsPage() {
                               ⚠️ Bitte konfigurieren Sie den Einlagerungspreis in der Service-Verwaltung
                             </p>
                           )}
-                          <p className="text-xs text-gray-500 mt-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                             Der Kunde kann beim Annehmen des Angebots wählen, ob er die Einlagerung möchte
                           </p>
                         </div>
@@ -2461,7 +2461,7 @@ export default function BrowseRequestsPage() {
                     setShowOfferForm(false)
                     setSelectedRequest(null)
                   }}
-                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
                   Abbrechen
                 </button>

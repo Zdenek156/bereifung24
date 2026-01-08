@@ -161,20 +161,20 @@ export default function WorkshopReviews() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/workshop"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               ← Zurück zum Dashboard
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Kundenbewertungen</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Kundenbewertungen</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Feedback von Ihren Kunden
               </p>
             </div>
@@ -185,7 +185,7 @@ export default function WorkshopReviews() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overall Rating */}
         {reviewsData && reviewsData.totalReviews > 0 && (
-          <div className="bg-white rounded-lg shadow p-8 mb-6 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-8 mb-6 text-center">
             <div className="mb-4">
               <p className="text-6xl font-bold text-primary-600">
                 {reviewsData.averageRating.toFixed(1)}

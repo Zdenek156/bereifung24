@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface WorkshopProfile {
   email: string
@@ -50,6 +51,7 @@ export default function WorkshopSettings() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { theme, toggleTheme } = useTheme()
   const [profile, setProfile] = useState<WorkshopProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -564,29 +566,29 @@ export default function WorkshopSettings() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/workshop"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               ← Zurück zum Dashboard
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Werkstatt-Einstellungen
               </h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Verwalten Sie Ihr Profil und Ihre Unternehmensdaten
               </p>
             </div>
@@ -600,18 +602,55 @@ export default function WorkshopSettings() {
           <div
             className={`mb-6 p-4 rounded-lg ${
               message.type === 'success'
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700'
+                : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700'
             }`}
           >
             {message.text}
           </div>
         )}
 
+        {/* Dark Mode Toggle */}
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Darstellung</h2>
+          <label className="flex items-center justify-between cursor-pointer p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <div className="flex items-center gap-3">
+              {theme === 'dark' ? (
+                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+              <div>
+                <div className="font-medium text-gray-900 dark:text-white">Dark Mode</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {theme === 'dark' ? 'Dunkles Design aktiviert' : 'Helles Design aktiviert'}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-primary-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </label>
+        </div>
+
         {/* Verification Status */}
         {profile && (
-          <div className="mb-6 bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-3">Verifizierungsstatus</h2>
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Verifizierungsstatus</h2>
             {profile.isVerified ? (
               <div className="flex items-center gap-2 text-green-600">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -623,7 +662,7 @@ export default function WorkshopSettings() {
                 </svg>
                 <span className="font-medium">Verifiziert</span>
                 {profile.verifiedAt && (
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     seit {new Date(profile.verifiedAt).toLocaleDateString('de-DE')}
                   </span>
                 )}
@@ -638,7 +677,7 @@ export default function WorkshopSettings() {
                   />
                 </svg>
                 <span className="font-medium">Noch nicht verifiziert</span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   (Ihr Profil wird von einem Administrator überprüft)
                 </span>
               </div>
@@ -647,8 +686,8 @@ export default function WorkshopSettings() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 transition-colors">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
                 type="button"
@@ -656,7 +695,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'contact'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Kontakt & Unternehmen
@@ -667,7 +706,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'hours'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Öffnungszeiten
@@ -678,7 +717,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'payment'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Zahlungsmöglichkeiten
@@ -689,7 +728,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'sepa'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Bankverbindung & SEPA
@@ -700,7 +739,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'notifications'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Benachrichtigungen
@@ -711,7 +750,7 @@ export default function WorkshopSettings() {
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'terminplanung'
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Terminplanung
@@ -725,11 +764,11 @@ export default function WorkshopSettings() {
           {activeTab === 'contact' && (
             <>
               {/* Personal Information */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Ansprechpartner</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Ansprechpartner</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Vorname *
                 </label>
                 <input
@@ -737,12 +776,12 @@ export default function WorkshopSettings() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nachname *
                 </label>
                 <input
@@ -750,12 +789,12 @@ export default function WorkshopSettings() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Telefonnummer *
                 </label>
                 <input
@@ -764,29 +803,29 @@ export default function WorkshopSettings() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="z.B. 07145 123456"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   E-Mail
                 </label>
                 <input
                   type="email"
                   disabled
                   value={profile?.email || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-900 dark:text-gray-400"
                 />
-                <p className="text-xs text-gray-500 mt-1">E-Mail kann nicht geändert werden</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">E-Mail kann nicht geändert werden</p>
               </div>
             </div>
           </div>
 
           {/* Logo Upload */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Werkstatt-Logo</h2>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Werkstatt-Logo</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Laden Sie Ihr Firmenlogo hoch. Es wird in Ihren Angeboten und auf Ihrer Landing Page angezeigt.
             </p>
             
@@ -798,7 +837,7 @@ export default function WorkshopSettings() {
                     <img 
                       src={`${profile.logoUrl}?t=${Date.now()}`} 
                       alt="Werkstatt Logo" 
-                      className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-white"
+                      className="w-32 h-32 object-contain border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
                       key={profile.logoUrl}
                     />
                     <button
@@ -813,8 +852,8 @@ export default function WorkshopSettings() {
                     </button>
                   </div>
                 ) : (
-                  <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-32 h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-700">
+                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -832,14 +871,14 @@ export default function WorkshopSettings() {
                 />
                 <label
                   htmlFor="logo-upload"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                   {profile?.logoUrl ? 'Neues Logo hochladen' : 'Logo hochladen'}
                 </label>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   JPG, PNG oder WebP. Maximal 5MB. Empfohlen: Quadratisches Format (z.B. 500x500px)
                 </p>
                 {uploadingLogo && (
@@ -852,11 +891,11 @@ export default function WorkshopSettings() {
           </div>
 
           {/* Company Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Unternehmensdaten</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Unternehmensdaten</h2>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Firmenname *
                 </label>
                 <input
@@ -865,13 +904,13 @@ export default function WorkshopSettings() {
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="z.B. Mustermann KFZ-Service GmbH"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Steuernummer / USt-IdNr
                   </label>
                   <input
@@ -879,12 +918,12 @@ export default function WorkshopSettings() {
                     value={formData.taxId}
                     onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
                     placeholder="z.B. DE123456789"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Umsatzsteuer-Status
                   </label>
                   <div className="space-y-2">
@@ -897,7 +936,7 @@ export default function WorkshopSettings() {
                         onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
                         className="mr-2"
                       />
-                      <span className="text-sm">Regelbesteuerung (Preise inkl. MwSt.)</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-300">Regelbesteuerung (Preise inkl. MwSt.)</span>
                     </label>
                     <label className="flex items-center">
                       <input
@@ -908,13 +947,13 @@ export default function WorkshopSettings() {
                         onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
                         className="mr-2"
                       />
-                      <span className="text-sm">Kleinunternehmer gemäß §19 UStG (ohne MwSt.)</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-300">Kleinunternehmer gemäß §19 UStG (ohne MwSt.)</span>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Website
                   </label>
                   <input
@@ -922,13 +961,13 @@ export default function WorkshopSettings() {
                     value={formData.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     placeholder="https://www.ihre-werkstatt.de"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Beschreibung
                 </label>
                 <textarea
@@ -936,18 +975,18 @@ export default function WorkshopSettings() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
                   placeholder="Beschreiben Sie Ihre Werkstatt und Ihre Dienstleistungen..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
             </div>
           </div>
 
           {/* Address */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Adresse</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Adresse</h2>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Straße und Hausnummer *
                 </label>
                 <input
@@ -956,13 +995,13 @@ export default function WorkshopSettings() {
                   value={formData.street}
                   onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                   placeholder="z.B. Hauptstraße 123"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     PLZ *
                   </label>
                   <input
@@ -971,12 +1010,12 @@ export default function WorkshopSettings() {
                     value={formData.zipCode}
                     onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
                     placeholder="71706"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Stadt *
                   </label>
                   <input
@@ -985,7 +1024,7 @@ export default function WorkshopSettings() {
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     placeholder="z.B. Markgröningen"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -996,12 +1035,12 @@ export default function WorkshopSettings() {
 
           {/* Tab: Öffnungszeiten */}
           {activeTab === 'hours' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Öffnungszeiten</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Öffnungszeiten</h2>
               <div className="space-y-3">
                 {Object.entries(openingHoursData).map(([day, hours]) => (
                   <div key={day} className="flex items-center gap-3">
-                    <label className="w-28 text-sm text-gray-700">{dayLabels[day]}</label>
+                    <label className="w-28 text-sm text-gray-700 dark:text-gray-300">{dayLabels[day]}</label>
                     <input
                       type="checkbox"
                       checked={!hours.closed}
@@ -1023,13 +1062,13 @@ export default function WorkshopSettings() {
                               [day]: { ...hours, from: e.target.value }
                             })
                           }}
-                          className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'].map(time => (
                             <option key={time} value={time}>{time}</option>
                           ))}
                         </select>
-                        <span className="text-gray-500">bis</span>
+                        <span className="text-gray-500 dark:text-gray-400">bis</span>
                         <select
                           value={hours.to}
                           onChange={(e) => {
@@ -1038,7 +1077,7 @@ export default function WorkshopSettings() {
                               [day]: { ...hours, to: e.target.value }
                             })
                           }}
-                          className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map(time => (
                             <option key={time} value={time}>{time}</option>
@@ -1046,7 +1085,7 @@ export default function WorkshopSettings() {
                         </select>
                       </>
                     ) : (
-                      <span className="text-sm text-gray-500 italic">Geschlossen</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 italic">Geschlossen</span>
                     )}
                   </div>
                 ))}
@@ -1056,16 +1095,16 @@ export default function WorkshopSettings() {
 
           {/* Tab: Zahlungsmöglichkeiten */}
           {activeTab === 'payment' && (
-            <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-6">Zahlungsmöglichkeiten für Kunden</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Zahlungsmöglichkeiten für Kunden</h2>
             
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Wählen Sie aus, welche Zahlungsmethoden Sie Ihren Kunden anbieten möchten. Die Kunden sehen diese Optionen bei der Buchung.
             </p>
 
             <div className="space-y-4 mb-8">
               {/* Barzahlung */}
-              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <input
                   type="checkbox"
                   checked={paymentMethods.cash}
@@ -1073,17 +1112,17 @@ export default function WorkshopSettings() {
                   className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                     💵 Barzahlung vor Ort
                   </label>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     Der Kunde zahlt direkt bei Abholung oder nach Fertigstellung in bar
                   </p>
                 </div>
               </div>
 
               {/* Banküberweisung */}
-              <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-start gap-3 mb-3">
                   <input
                     type="checkbox"
@@ -1092,17 +1131,17 @@ export default function WorkshopSettings() {
                     className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                       🏦 Banküberweisung
                     </label>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                       Der Kunde überweist den Betrag auf Ihr Bankkonto
                     </p>
                   </div>
                 </div>
                 {paymentMethods.bankTransfer && (
                   <div className="ml-7 mt-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       IBAN für Überweisungen
                     </label>
                     <input
@@ -1110,9 +1149,9 @@ export default function WorkshopSettings() {
                       value={paymentMethods.bankTransferIban}
                       onChange={(e) => setPaymentMethods({ ...paymentMethods, bankTransferIban: e.target.value.toUpperCase() })}
                       placeholder="DE89 3704 0044 0532 0130 00"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Diese IBAN wird dem Kunden für Überweisungen angezeigt
                     </p>
                   </div>
@@ -1120,7 +1159,7 @@ export default function WorkshopSettings() {
               </div>
 
               {/* EC-Karte */}
-              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <input
                   type="checkbox"
                   checked={paymentMethods.ecCard}
@@ -1128,17 +1167,17 @@ export default function WorkshopSettings() {
                   className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                     💳 EC-Karte vor Ort
                   </label>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     Der Kunde zahlt mit EC-Karte direkt vor Ort bei Abholung
                   </p>
                 </div>
               </div>
 
               {/* Kreditkarte */}
-              <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <input
                   type="checkbox"
                   checked={paymentMethods.creditCard}
@@ -1146,17 +1185,17 @@ export default function WorkshopSettings() {
                   className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                     💳 Kreditkarte vor Ort
                   </label>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     Der Kunde zahlt mit Kreditkarte (Visa, Mastercard, etc.) direkt vor Ort bei Abholung
                   </p>
                 </div>
               </div>
 
               {/* PayPal */}
-              <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-start gap-3 mb-3">
                   <input
                     type="checkbox"
@@ -1165,17 +1204,17 @@ export default function WorkshopSettings() {
                     className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-900 cursor-pointer">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                       💳 PayPal
                     </label>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                       Der Kunde zahlt per PayPal
                     </p>
                   </div>
                 </div>
                 {paymentMethods.paypal && (
                   <div className="ml-7 mt-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       PayPal E-Mail-Adresse
                     </label>
                     <input
@@ -1183,9 +1222,9 @@ export default function WorkshopSettings() {
                       value={paymentMethods.paypalEmail}
                       onChange={(e) => setPaymentMethods({ ...paymentMethods, paypalEmail: e.target.value })}
                       placeholder="ihre-werkstatt@paypal.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Diese E-Mail wird dem Kunden für PayPal-Zahlungen angezeigt
                     </p>
                   </div>
@@ -1197,9 +1236,9 @@ export default function WorkshopSettings() {
 
           {/* Tab: Bankverbindung & SEPA */}
           {activeTab === 'sepa' && (
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Bankverbindung & SEPA-Mandat</h2>
-              <p className="text-sm text-gray-600 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bankverbindung & SEPA-Mandat</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 Für die automatische Einziehung Ihrer Provisionen (4,9% pro Auftrag)
               </p>
 
@@ -1213,16 +1252,16 @@ export default function WorkshopSettings() {
               ) : mandate?.configured ? (
                 <div>
                   {/* Configured State */}
-                  <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
+                  <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <svg className="w-7 h-7 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-7 h-7 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-green-900 mb-1">
+                        <h3 className="text-lg font-semibold text-green-900 dark:text-green-300 mb-1">
                           SEPA-Mandat aktiv
                         </h3>
-                        <p className="text-green-700">
+                        <p className="text-green-700 dark:text-green-400">
                           Ihre Provisionen werden automatisch monatlich eingezogen
                         </p>
                       </div>
@@ -1233,11 +1272,11 @@ export default function WorkshopSettings() {
                     {/* Status Badge */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700">Status:</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                           mandate.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' 
+                            : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300'
                         }`}>
                           <span className={`w-2 h-2 rounded-full mr-2 ${
                             mandate.status === 'active' 
@@ -1251,9 +1290,9 @@ export default function WorkshopSettings() {
                         </span>
                       </div>
                       {mandate.status !== 'active' && (
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           <p className="flex items-start gap-2">
-                            <svg className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             <span>
@@ -1266,16 +1305,16 @@ export default function WorkshopSettings() {
                     </div>
 
                     {/* Mandate Reference */}
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Mandatsreferenz</h3>
-                      <p className="font-mono text-base text-gray-900">{mandate.reference}</p>
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mandatsreferenz</h3>
+                      <p className="font-mono text-base text-gray-900 dark:text-white">{mandate.reference}</p>
                     </div>
 
                     {/* Mandate Created Date */}
                     {mandate.createdAt && (
-                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Mandat erteilt am</h3>
-                        <p className="text-base text-gray-900">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mandat erteilt am</h3>
+                        <p className="text-base text-gray-900 dark:text-white">
                           {new Date(mandate.createdAt).toLocaleDateString('de-DE', {
                             day: '2-digit',
                             month: 'long',
@@ -1287,14 +1326,14 @@ export default function WorkshopSettings() {
 
                     {/* Next Charge Date */}
                     {mandate.nextChargeDate && (
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
                         <div className="flex items-start gap-2">
-                          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                           </svg>
                           <div>
-                            <h3 className="text-sm font-medium text-blue-900 mb-1">Nächste Abbuchung</h3>
-                            <p className="text-base text-blue-700">
+                            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">Nächste Abbuchung</h3>
+                            <p className="text-base text-blue-700 dark:text-blue-300">
                               {new Date(mandate.nextChargeDate).toLocaleDateString('de-DE', {
                                 day: '2-digit',
                                 month: 'long',
@@ -1308,29 +1347,29 @@ export default function WorkshopSettings() {
                   </div>
 
                   {/* Info Box */}
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-2">Wichtige Informationen</h3>
-                    <ul className="space-y-2 text-sm text-gray-600">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Wichtige Informationen</h3>
+                    <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                       <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                         <span>Die Provisionen werden automatisch am 1. jedes Monats berechnet</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                         <span>Der Lastschrifteinzug erfolgt 3 Werktage nach Rechnungsstellung</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                         <span>Sie können das Mandat jederzeit widerrufen</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                         <span>Sie erhalten vor jeder Abbuchung eine Rechnung per E-Mail</span>
@@ -1342,21 +1381,21 @@ export default function WorkshopSettings() {
                 <div>
                   {/* Not Configured State */}
                   {mandateError && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm text-red-700">{mandateError}</p>
+                    <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+                      <p className="text-sm text-red-700 dark:text-red-300">{mandateError}</p>
                     </div>
                   )}
 
-                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <svg className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                       <div>
-                        <h3 className="font-semibold text-yellow-900 mb-1">
+                        <h3 className="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">
                           Kein SEPA-Mandat eingerichtet
                         </h3>
-                        <p className="text-yellow-700">
+                        <p className="text-yellow-700 dark:text-yellow-300">
                           Um Provisionen automatisch abbuchen zu können, benötigen wir ein SEPA-Lastschriftmandat
                         </p>
                       </div>
@@ -1364,16 +1403,16 @@ export default function WorkshopSettings() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Was ist ein SEPA-Lastschriftmandat?</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Was ist ein SEPA-Lastschriftmandat?</h3>
+                    <p className="text-gray-600 dark:text-gray-400">
                       Mit einem SEPA-Lastschriftmandat autorisieren Sie Bereifung24, fällige Provisionen 
                       automatisch von Ihrem Bankkonto abzubuchen. Dies vereinfacht die monatliche Abrechnung 
                       erheblich.
                     </p>
 
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Vorteile:</h4>
-                      <ul className="space-y-1 text-sm text-gray-600">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Vorteile:</h4>
+                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <li className="flex items-center gap-2">
                           <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -1401,9 +1440,9 @@ export default function WorkshopSettings() {
                       </ul>
                     </div>
 
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2">Ablauf:</h4>
-                      <ol className="space-y-1 text-sm text-blue-800">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Ablauf:</h4>
+                      <ol className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
                         <li>1. Klicken Sie auf "SEPA-Mandat einrichten"</li>
                         <li>2. Sie werden zu GoCardless weitergeleitet (unser Zahlungsdienstleister)</li>
                         <li>3. Geben Sie Ihre Bankdaten ein und bestätigen Sie das Mandat</li>
@@ -1429,7 +1468,7 @@ export default function WorkshopSettings() {
                       )}
                     </button>
 
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                       Sichere Verbindung über GoCardless • Zertifizierter Zahlungsdienstleister
                     </p>
                   </div>
@@ -1440,15 +1479,15 @@ export default function WorkshopSettings() {
 
           {/* Tab: Benachrichtigungen */}
           {activeTab === 'notifications' && (
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail-Benachrichtigungen</h2>
-              <p className="text-sm text-gray-600 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">E-Mail-Benachrichtigungen</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 Verwalten Sie hier, für welche Ereignisse Sie E-Mail-Benachrichtigungen erhalten möchten.
               </p>
               
               <div className="space-y-6">
                 {/* Neue Anfragen */}
-                <div className="border-b border-gray-200 pb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1459,11 +1498,11 @@ export default function WorkshopSettings() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">📬</span>
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Neue Anfragen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Benachrichtigung erhalten, wenn ein Kunde eine neue Reifenanfrage in Ihrem Umkreis erstellt
                       </span>
                     </div>
@@ -1471,7 +1510,7 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Angebot angenommen */}
-                <div className="border-b border-gray-200 pb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1481,11 +1520,11 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Angebot angenommen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Benachrichtigung erhalten, wenn ein Kunde eines Ihrer Angebote annimmt
                       </span>
                     </div>
@@ -1493,7 +1532,7 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Neue Terminbuchungen */}
-                <div className="border-b border-gray-200 pb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1503,11 +1542,11 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Neue Terminbuchungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Benachrichtigung erhalten, wenn ein Kunde einen Termin bei Ihnen bucht
                       </span>
                     </div>
@@ -1515,7 +1554,7 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Neue Bewertungen */}
-                <div className="border-b border-gray-200 pb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1525,11 +1564,11 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Neue Bewertungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Benachrichtigung erhalten, wenn ein Kunde eine Bewertung für Ihre Werkstatt abgibt
                       </span>
                     </div>
@@ -1537,7 +1576,7 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Terminerinnerungen */}
-                <div className="border-b border-gray-200 pb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1548,11 +1587,11 @@ export default function WorkshopSettings() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">⏰</span>
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Terminerinnerungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Erinnerung am Tag vor dem Termin erhalten (24 Stunden im Voraus)
                       </span>
                     </div>
@@ -1570,11 +1609,11 @@ export default function WorkshopSettings() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900">
+                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
                           Monatliche Provisionsabrechnungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 mt-1">
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Monatliche Übersicht über fällige Provisionen und Abrechnungsdetails erhalten
                       </span>
                     </div>
@@ -1582,15 +1621,15 @@ export default function WorkshopSettings() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                   <div className="flex">
-                    <svg className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-sm text-blue-900 font-medium">Hinweis zu E-Mail-Benachrichtigungen</p>
-                      <p className="text-sm text-blue-700 mt-1">
+                      <p className="text-sm text-blue-900 dark:text-blue-300 font-medium">Hinweis zu E-Mail-Benachrichtigungen</p>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                         Wichtige System-E-Mails (z.B. Passwort-Reset, Sicherheitsmeldungen) werden unabhängig von diesen Einstellungen immer versendet.
                       </p>
                     </div>
@@ -1606,30 +1645,30 @@ export default function WorkshopSettings() {
               {/* Calendar Status Banner */}
               <div className={`p-4 rounded-lg border-2 ${
                 workshopCalendarConnected || employees.some(emp => emp.calendarConnected)
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-yellow-50 border-yellow-200'
+                  ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700'
+                  : 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700'
               }`}>
                 <div className="flex items-center">
                   {workshopCalendarConnected || employees.some(emp => emp.calendarConnected) ? (
                     <>
-                      <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
-                        <p className="font-semibold text-green-900">Google Kalender verbunden</p>
-                        <p className="text-sm text-green-700">
+                        <p className="font-semibold text-green-900 dark:text-green-300">Google Kalender verbunden</p>
+                        <p className="text-sm text-green-700 dark:text-green-300">
                           Ihre Termine werden automatisch mit Google Kalender synchronisiert
                         </p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <svg className="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       <div>
-                        <p className="font-semibold text-yellow-900">Kein Kalender verbunden</p>
-                        <p className="text-sm text-yellow-700">
+                        <p className="font-semibold text-yellow-900 dark:text-yellow-300">Kein Kalender verbunden</p>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
                           Verbinden Sie Ihren Google Kalender für automatische Terminverwaltung und zur Vermeidung von Doppelbuchungen
                         </p>
                       </div>
@@ -1639,9 +1678,9 @@ export default function WorkshopSettings() {
               </div>
               
               {/* Calendar Mode Selection */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Google Kalender Integration</h2>
-                <p className="text-sm text-gray-600 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Google Kalender Integration</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                   Verbinden Sie Ihre Google Kalender, um Termine automatisch zu synchronisieren und Doppelbuchungen zu vermeiden.
                 </p>
 

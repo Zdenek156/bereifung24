@@ -83,7 +83,7 @@ export default function CustomerDashboard() {
       )}
 
       {/* Call-to-Action Card */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-xl p-6 mb-8">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg shadow-xl p-6 mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -130,7 +130,7 @@ export default function CustomerDashboard() {
       <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/30 dark:to-blue-900/30 rounded-lg shadow-md p-6 border border-primary-100 dark:border-primary-800">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -148,7 +148,7 @@ export default function CustomerDashboard() {
             <div className="grid md:grid-cols-2 gap-3">
               <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                 <div className="flex items-start gap-2">
-                  <div className="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                  <div className="flex-shrink-0 w-7 h-7 bg-blue-500 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
                     1
                   </div>
                   <div>
@@ -162,7 +162,7 @@ export default function CustomerDashboard() {
 
               <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     2
                   </div>
                   <div>
@@ -176,7 +176,7 @@ export default function CustomerDashboard() {
 
               <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     3
                   </div>
                   <div>
@@ -190,7 +190,7 @@ export default function CustomerDashboard() {
 
               <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     4
                   </div>
                   <div>

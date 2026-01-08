@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import DatePicker from '@/components/DatePicker'
 
 const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
@@ -73,6 +73,7 @@ type Vehicle = {
 export default function CreateRequestPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<string>('')
@@ -120,6 +121,45 @@ export default function CreateRequestPage() {
       }
     }
   }, [mixedTires, formData.tirePosition])
+
+  // Load URL parameters from Tire Advisor Widget
+  useEffect(() => {
+    const width = searchParams.get('width')
+    const aspectRatio = searchParams.get('aspectRatio')
+    const diameter = searchParams.get('diameter')
+    const brand = searchParams.get('brand')
+    const model = searchParams.get('model')
+    const season = searchParams.get('season')
+    const tireDesignation = searchParams.get('tireDesignation')
+    const tireDimension = searchParams.get('tireDimension')
+
+    if (width && aspectRatio && diameter) {
+      setUseManualEntry(true)
+      const updates: any = {
+        width,
+        aspectRatio,
+        diameter
+      }
+      
+      if (season) {
+        updates.season = season
+      }
+      
+      // Fülle preferredBrands mit der Reifenbezeichnung
+      if (tireDesignation) {
+        updates.preferredBrands = tireDesignation
+      } else if (brand) {
+        updates.preferredBrands = brand + (model ? ` ${model}` : '')
+      }
+      
+      // Füge Notiz mit vollständiger Info hinzu
+      if (tireDesignation && tireDimension) {
+        updates.additionalNotes = `Empfohlener Reifen: ${tireDesignation} (${tireDimension})`
+      }
+      
+      setFormData(prev => ({ ...prev, ...updates }))
+    }
+  }, [searchParams])
 
   // Load vehicles and user profile
   useEffect(() => {

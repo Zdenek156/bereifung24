@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
       console.error('Error calling EPREL API:', apiError)
       return NextResponse.json({ error: 'EPREL API vorübergehend nicht verfügbar' }, { status: 503 })
     }
+    */
 
   } catch (error) {
     console.error('Error in EPREL search:', error)

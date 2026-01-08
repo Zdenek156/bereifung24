@@ -8,8 +8,9 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+    // Check if user is admin
+    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
     const apiKey = await getApiSetting('EPREL_API_KEY')

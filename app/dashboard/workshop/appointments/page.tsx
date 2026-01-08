@@ -243,10 +243,10 @@ export default function WorkshopAppointments() {
             isSelected
               ? 'bg-primary-600 text-white hover:bg-primary-700'
               : isToday
-              ? 'ring-1.5 ring-primary-400 text-primary-600 hover:bg-primary-50'
+              ? 'ring-1.5 ring-primary-400 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'
               : isPast
-              ? 'text-gray-300 cursor-not-allowed'
-              : 'text-gray-900 cursor-pointer hover:bg-primary-50'
+              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              : 'text-gray-900 dark:text-gray-300 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900/30'
           }`}
           title={dayAppointments.length > 0 ? `${dayAppointments.length} Termin(e)` : undefined}
         >
@@ -270,10 +270,10 @@ export default function WorkshopAppointments() {
     
     return (
       <div className="flex-1 min-w-0">
-        <h3 className="text-center text-sm font-bold text-gray-900 mb-1.5">{monthName}</h3>
+        <h3 className="text-center text-sm font-bold text-gray-900 dark:text-white mb-1.5">{monthName}</h3>
         <div className="grid grid-cols-7 gap-0.5 mb-1">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="w-7 text-center text-xs font-medium text-gray-600 py-0.5">
+            <div key={day} className="w-7 text-center text-xs font-medium text-gray-600 dark:text-gray-400 py-0.5">
               {day}
             </div>
           ))}
@@ -416,7 +416,7 @@ export default function WorkshopAppointments() {
               className={`px-4 py-2 rounded-lg ${
                 filter === 'all'
                   ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               Alle

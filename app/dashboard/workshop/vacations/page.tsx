@@ -286,33 +286,33 @@ export default function VacationManagementPage() {
             <form onSubmit={handleAddWorkshopVacation} className="mb-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Von
                   </label>
                   <input
                     type="date"
                     value={workshopStartDate}
                     onChange={(e) => setWorkshopStartDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Bis
                   </label>
                   <input
                     type="date"
                     value={workshopEndDate}
                     onChange={(e) => setWorkshopEndDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Grund (optional)
                   </label>
                   <input
@@ -320,7 +320,7 @@ export default function VacationManagementPage() {
                     value={workshopReason}
                     onChange={(e) => setWorkshopReason(e.target.value)}
                     placeholder="z.B. Betriebsferien, Umbau, Feiertage"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
 
@@ -335,7 +335,7 @@ export default function VacationManagementPage() {
             </form>
 
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">Geplante Betriebsurlaube</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Geplante Betriebsurlaube</h3>
               {workshopVacations.length === 0 ? (
                 <p className="text-gray-500 text-sm">Keine Betriebsurlaube eingetragen</p>
               ) : (
@@ -377,13 +377,13 @@ export default function VacationManagementPage() {
             </h2>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Mitarbeiter auswählen
               </label>
               <select
                 value={selectedEmployee}
                 onChange={(e) => handleEmployeeChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">-- Mitarbeiter wählen --</option>
                 {employees.map((employee) => (
@@ -399,33 +399,33 @@ export default function VacationManagementPage() {
                 <form onSubmit={handleAddEmployeeVacation} className="mb-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Von
                       </label>
                       <input
                         type="date"
                         value={employeeStartDate}
                         onChange={(e) => setEmployeeStartDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Bis
                       </label>
                       <input
                         type="date"
                         value={employeeEndDate}
                         onChange={(e) => setEmployeeEndDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Grund (optional)
                       </label>
                       <input
@@ -433,7 +433,7 @@ export default function VacationManagementPage() {
                         value={employeeReason}
                         onChange={(e) => setEmployeeReason(e.target.value)}
                         placeholder="z.B. Urlaub, Krankheit, Fortbildung"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                       />
                     </div>
 
@@ -448,14 +448,14 @@ export default function VacationManagementPage() {
                 </form>
 
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900">Geplante Urlaube</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Geplante Urlaube</h3>
                   {employeeVacations.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Urlaube eingetragen</p>
                   ) : (
                     employeeVacations.map((vacation) => (
                       <div
                         key={vacation.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
                       >
                         <div>
                           <p className="font-medium text-gray-900">

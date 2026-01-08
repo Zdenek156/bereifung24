@@ -298,7 +298,15 @@ export default function TireAdvisorWidget() {
                 >
                   <div className="font-semibold text-gray-900">☀️ Sommerreifen</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    {selectedVehicle.summerTires.width}/{selectedVehicle.summerTires.aspectRatio} R{selectedVehicle.summerTires.diameter}
+                    {selectedVehicle.summerTires.hasDifferentSizes && selectedVehicle.summerTires.rearWidth ? (
+                      <>
+                        Vorne: {selectedVehicle.summerTires.width}/{selectedVehicle.summerTires.aspectRatio} R{selectedVehicle.summerTires.diameter}
+                        <br />
+                        Hinten: {selectedVehicle.summerTires.rearWidth}/{selectedVehicle.summerTires.rearAspectRatio} R{selectedVehicle.summerTires.rearDiameter}
+                      </>
+                    ) : (
+                      `${selectedVehicle.summerTires.width}/${selectedVehicle.summerTires.aspectRatio} R${selectedVehicle.summerTires.diameter}`
+                    )}
                   </div>
                 </button>
               )}
@@ -309,7 +317,15 @@ export default function TireAdvisorWidget() {
                 >
                   <div className="font-semibold text-gray-900">❄️ Winterreifen</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    {selectedVehicle.winterTires.width}/{selectedVehicle.winterTires.aspectRatio} R{selectedVehicle.winterTires.diameter}
+                    {selectedVehicle.winterTires.hasDifferentSizes && selectedVehicle.winterTires.rearWidth ? (
+                      <>
+                        Vorne: {selectedVehicle.winterTires.width}/{selectedVehicle.winterTires.aspectRatio} R{selectedVehicle.winterTires.diameter}
+                        <br />
+                        Hinten: {selectedVehicle.winterTires.rearWidth}/{selectedVehicle.winterTires.rearAspectRatio} R{selectedVehicle.winterTires.rearDiameter}
+                      </>
+                    ) : (
+                      `${selectedVehicle.winterTires.width}/${selectedVehicle.winterTires.aspectRatio} R${selectedVehicle.winterTires.diameter}`
+                    )}
                   </div>
                 </button>
               )}
@@ -320,7 +336,15 @@ export default function TireAdvisorWidget() {
                 >
                   <div className="font-semibold text-gray-900">🌦️ Ganzjahresreifen</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    {selectedVehicle.allSeasonTires.width}/{selectedVehicle.allSeasonTires.aspectRatio} R{selectedVehicle.allSeasonTires.diameter}
+                    {selectedVehicle.allSeasonTires.hasDifferentSizes && selectedVehicle.allSeasonTires.rearWidth ? (
+                      <>
+                        Vorne: {selectedVehicle.allSeasonTires.width}/{selectedVehicle.allSeasonTires.aspectRatio} R{selectedVehicle.allSeasonTires.diameter}
+                        <br />
+                        Hinten: {selectedVehicle.allSeasonTires.rearWidth}/{selectedVehicle.allSeasonTires.rearAspectRatio} R{selectedVehicle.allSeasonTires.rearDiameter}
+                      </>
+                    ) : (
+                      `${selectedVehicle.allSeasonTires.width}/${selectedVehicle.allSeasonTires.aspectRatio} R${selectedVehicle.allSeasonTires.diameter}`
+                    )}
                   </div>
                 </button>
               )}

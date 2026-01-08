@@ -203,7 +203,10 @@ export default function TireAdvisorWidget() {
       aspectRatio: tire.dimension.split('/')[1].split(' ')[0],
       diameter: tire.dimension.split('R')[1].split(' ')[0],
       brand: tire.manufacturer,
-      season: tire.season
+      model: tire.model,
+      season: tire.season,
+      tireDesignation: `${tire.manufacturer} ${tire.model}`,
+      tireDimension: tire.dimension
     });
     window.location.href = `/dashboard/customer/create-request/tires?${params.toString()}`;
   };

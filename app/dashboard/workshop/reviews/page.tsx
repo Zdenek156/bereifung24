@@ -194,7 +194,7 @@ export default function WorkshopReviews() {
                 {getRatingStars(Math.round(reviewsData.averageRating))}
               </p>
             </div>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Durchschnittliche Bewertung aus {reviewsData.totalReviews} Bewertung{reviewsData.totalReviews !== 1 ? 'en' : ''}
             </p>
           </div>
@@ -247,7 +247,7 @@ export default function WorkshopReviews() {
                     className={`px-4 py-2 rounded-lg transition-colors ${
                       starFilter === stars
                         ? 'bg-primary-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
                     {stars} ⭐ ({count})
@@ -309,32 +309,32 @@ export default function WorkshopReviews() {
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     <span className="font-medium">Service:</span> {getServiceName(review.booking.tireRequest.additionalNotes)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Termin: {new Date(review.booking.appointmentDate).toLocaleDateString('de-DE')}
                   </p>
                 </div>
 
                 {review.comment && (
-                  <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-gray-800">{review.comment}</p>
+                  <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <p className="text-gray-800 dark:text-gray-200">{review.comment}</p>
                   </div>
                 )}
 
                 {review.workshopResponse ? (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                       </svg>
-                      <p className="font-medium text-blue-900">Ihre Antwort</p>
-                      <span className="text-xs text-blue-600">
+                      <p className="font-medium text-blue-900 dark:text-blue-300">Ihre Antwort</p>
+                      <span className="text-xs text-blue-600 dark:text-blue-400">
                         {review.respondedAt && new Date(review.respondedAt).toLocaleDateString('de-DE')}
                       </span>
                     </div>
-                    <p className="text-blue-800">{review.workshopResponse}</p>
+                    <p className="text-blue-800 dark:text-blue-200">{review.workshopResponse}</p>
                   </div>
                 ) : respondingTo === review.id ? (
                   <div className="space-y-3">
@@ -342,7 +342,7 @@ export default function WorkshopReviews() {
                       value={responseText}
                       onChange={(e) => setResponseText(e.target.value)}
                       placeholder="Schreiben Sie Ihre Antwort..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                       rows={4}
                       disabled={submitting}
                     />

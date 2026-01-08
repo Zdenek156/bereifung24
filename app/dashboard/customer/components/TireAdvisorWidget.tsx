@@ -197,16 +197,13 @@ export default function TireAdvisorWidget() {
   };
 
   const handleRequestTire = (tire: TireRecommendation) => {
-    // Navigiere zur Anfrage-Seite mit vorausgefüllten Daten
+    // Navigiere zur Anfrage-Seite mit Fahrzeug-ID und Hersteller/Modell
+    if (!selectedVehicle) return;
+    
     const params = new URLSearchParams({
-      width: tire.dimension.split('/')[0],
-      aspectRatio: tire.dimension.split('/')[1].split(' ')[0],
-      diameter: tire.dimension.split('R')[1].split(' ')[0],
-      brand: tire.manufacturer,
-      model: tire.model,
+      vehicleId: selectedVehicle.id,
       season: tire.season,
-      tireDesignation: `${tire.manufacturer} ${tire.model}`,
-      tireDimension: tire.dimension
+      tireDesignation: `${tire.manufacturer} ${tire.model}`
     });
     window.location.href = `/dashboard/customer/create-request/tires?${params.toString()}`;
   };

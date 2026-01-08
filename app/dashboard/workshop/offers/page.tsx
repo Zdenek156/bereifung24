@@ -163,19 +163,19 @@ export default function WorkshopOffers() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/workshop"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               ← Zurück zum Dashboard
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Meine Angebote</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Meine Angebote</h1>
               <p className="mt-1 text-sm text-gray-600">
                 Übersicht aller gesendeten Angebote
               </p>
@@ -187,21 +187,21 @@ export default function WorkshopOffers() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Gesamt</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Ausstehend</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Ausstehend</p>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Angenommen</p>
-            <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Angenommen</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.accepted}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Abgelehnt</p>
-            <p className="text-2xl font-bold text-red-600">{stats.declined}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Abgelehnt</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.declined}</p>
           </div>
         </div>
 
@@ -234,7 +234,7 @@ export default function WorkshopOffers() {
         </div>
 
         {/* Filter */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('all')}
@@ -281,11 +281,11 @@ export default function WorkshopOffers() {
 
         {/* Offers List */}
         {filteredOffers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Keine Angebote</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Keine Angebote</h3>
             <p className="mt-1 text-sm text-gray-500">
               {filter === 'all' 
                 ? 'Sie haben noch keine Angebote versendet.'
@@ -295,7 +295,7 @@ export default function WorkshopOffers() {
         ) : (
           <div className="space-y-4">
             {filteredOffers.map((offer) => (
-              <div key={offer.id} className="bg-white rounded-lg shadow p-6">
+              <div key={offer.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">

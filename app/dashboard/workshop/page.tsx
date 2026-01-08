@@ -185,16 +185,16 @@ export default function WorkshopDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header mit Begrüßung */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 {getGreeting()}, {session?.user?.name || 'Werkstatt'}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Hier ist Ihre Übersicht für heute
               </p>
             </div>
@@ -206,7 +206,7 @@ export default function WorkshopDashboard() {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Neue Anfragen */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,8 +217,8 @@ export default function WorkshopDashboard() {
                 +{stats.newRequests}
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.newRequests}</h3>
-            <p className="text-sm text-gray-600">Neue Anfragen</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.newRequests}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Neue Anfragen</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/browse-requests" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                 Anfragen ansehen →
@@ -227,7 +227,7 @@ export default function WorkshopDashboard() {
           </div>
 
           {/* Offene Angebote */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,8 +238,8 @@ export default function WorkshopDashboard() {
                 Ausstehend
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.pendingOffers}</h3>
-            <p className="text-sm text-gray-600">Offene Angebote</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.pendingOffers}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Offene Angebote</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/offers" className="text-xs text-purple-600 hover:text-purple-700 font-medium">
                 Angebote verwalten →
@@ -248,7 +248,7 @@ export default function WorkshopDashboard() {
           </div>
 
           {/* Anstehende Termine */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,8 +259,8 @@ export default function WorkshopDashboard() {
                 7 Tage
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.upcomingAppointments}</h3>
-            <p className="text-sm text-gray-600">Anstehende Termine</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.upcomingAppointments}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Anstehende Termine</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/appointments" className="text-xs text-green-600 hover:text-green-700 font-medium">
                 Kalender öffnen →
@@ -269,7 +269,7 @@ export default function WorkshopDashboard() {
           </div>
 
           {/* Durchschnittliche Bewertung */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
@@ -280,8 +280,8 @@ export default function WorkshopDashboard() {
                 {stats.totalReviews} Bewertungen
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.averageRating.toFixed(1)}</h3>
-            <p className="text-sm text-gray-600">Kundenzufriedenheit</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.averageRating.toFixed(1)}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Kundenzufriedenheit</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/reviews" className="text-xs text-yellow-600 hover:text-yellow-700 font-medium">
                 Bewertungen ansehen →
@@ -293,8 +293,8 @@ export default function WorkshopDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Schnellzugriffe */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Schnellzugriffe</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Schnellzugriffe</h2>
               <div className="grid grid-cols-2 gap-4">
                 {quickActions.map((action, index) => (
                   <Link
@@ -314,31 +314,31 @@ export default function WorkshopDashboard() {
           </div>
 
           {/* Performance Übersicht */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Performance</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Performance</h2>
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Conversion Rate</span>
-                  <span className="text-sm font-semibold text-gray-900">{stats.conversionRate}%</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Conversion Rate</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.conversionRate}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${stats.conversionRate}%` }}></div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="bg-green-500 dark:bg-green-600 h-2 rounded-full" style={{ width: `${stats.conversionRate}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Angenommene Angebote</span>
-                  <span className="text-sm font-semibold text-gray-900">{stats.acceptedOffers}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Angenommene Angebote</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.acceptedOffers}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${(stats.acceptedOffers / 20) * 100}%` }}></div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="bg-blue-500/70 dark:bg-blue-500/60 h-2 rounded-full" style={{ width: `${(stats.acceptedOffers / 20) * 100}%` }}></div>
                 </div>
               </div>
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Umsatz (30 Tage)</span>
-                  <span className="text-xl font-bold text-gray-900">€{stats.totalRevenue.toLocaleString()}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Umsatz (30 Tage)</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">€{stats.totalRevenue.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -346,31 +346,31 @@ export default function WorkshopDashboard() {
         </div>
 
         {/* Aktivitäts-Feed */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Letzte Aktivitäten</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Letzte Aktivitäten</h2>
           {activities.length > 0 ? (
             <div className="space-y-3">
               {activities.map((activity) => (
-                <div key={activity.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={activity.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   <div className={`flex-shrink-0 w-10 h-10 ${activity.color} rounded-lg flex items-center justify-center`}>
                     {activity.icon}
                   </div>
                   <div className="ml-3 flex-1">
-                    <p className="text-sm text-gray-900">{activity.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm">Noch keine Aktivitäten vorhanden</p>
             </div>
           )}
-          <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
             <Link href="/dashboard/workshop/browse-requests" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
               Alle Aktivitäten anzeigen →
             </Link>

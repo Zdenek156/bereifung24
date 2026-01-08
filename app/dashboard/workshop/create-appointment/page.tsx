@@ -145,14 +145,14 @@ export default function CreateAppointmentPage() {
   const minDate = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link 
               href="/dashboard/workshop"
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -160,8 +160,8 @@ export default function CreateAppointmentPage() {
               Zurück zum Dashboard
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Termin erstellen</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Termin erstellen</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Tragen Sie manuell einen neuen Termin ein
               </p>
             </div>
@@ -170,11 +170,11 @@ export default function CreateAppointmentPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Datum & Zeit Auswahl */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">Datum & Uhrzeit</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Datum & Uhrzeit</h2>
               
               {/* Datum */}
               <div>
@@ -190,14 +190,14 @@ export default function CreateAppointmentPage() {
               {/* Uhrzeit */}
               {selectedDate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Uhrzeit <span className="text-red-500">*</span>
                   </label>
                   
                   {loadingSlots ? (
                     <div className="text-center py-4">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                      <p className="mt-2 text-sm text-gray-600">Lade verfügbare Zeiten...</p>
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Lade verfügbare Zeiten...</p>
                     </div>
                   ) : availableSlots.length > 0 ? (
                     <div className="grid grid-cols-4 gap-2">
@@ -209,10 +209,10 @@ export default function CreateAppointmentPage() {
                           disabled={!slot.available}
                           className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
                             selectedTime === slot.time
-                              ? 'border-primary-600 bg-primary-50 text-primary-700'
+                              ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
                               : slot.available
-                              ? 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
-                              : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                              ? 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                           }`}
                         >
                           {slot.time}
@@ -220,7 +220,7 @@ export default function CreateAppointmentPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                       Keine verfügbaren Zeitslots für dieses Datum
                     </p>
                   )}
@@ -230,7 +230,7 @@ export default function CreateAppointmentPage() {
 
             {/* Service-Auswahl */}
             <div>
-              <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="service" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Service *
               </label>
               {loadingServices ? (
@@ -242,7 +242,7 @@ export default function CreateAppointmentPage() {
                   id="service"
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 >
                   <option value="">Bitte wählen...</option>
@@ -269,28 +269,28 @@ export default function CreateAppointmentPage() {
                   onChange={(e) => setCustomDuration(Number(e.target.value))}
                   min="15"
                   step="15"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="z.B. 60"
                   required
                 />
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Empfohlen: Vielfache von 15 Minuten
                 </p>
               </div>
             )}
 
-            <div className="border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Zusätzliche Informationen <span className="text-sm font-normal text-gray-500">(Optional)</span>
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Zusätzliche Informationen <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Optional)</span>
               </h2>
 
               {/* Kunden-Informationen */}
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">Kundeninformationen</h3>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Kundeninformationen</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Name
                     </label>
                     <input
@@ -298,7 +298,7 @@ export default function CreateAppointmentPage() {
                       id="customerName"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="Max Mustermann"
                     />
                   </div>
@@ -312,7 +312,7 @@ export default function CreateAppointmentPage() {
                       id="customerPhone"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="+49 123 456789"
                     />
                   </div>
@@ -326,7 +326,7 @@ export default function CreateAppointmentPage() {
                       id="customerEmail"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="max@example.com"
                     />
                   </div>
@@ -346,7 +346,7 @@ export default function CreateAppointmentPage() {
                     value={serviceDescription}
                     onChange={(e) => setServiceDescription(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="z.B. Reifenwechsel, Ölwechsel, Inspektion..."
                   />
                 </div>
@@ -365,7 +365,7 @@ export default function CreateAppointmentPage() {
                     id="vehicleInfo"
                     value={vehicleInfo}
                     onChange={(e) => setVehicleInfo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="z.B. VW Golf, B-AB 1234 oder Hersteller/Modell"
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function CreateAppointmentPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Zusätzliche Informationen oder Hinweise..."
                   />
                 </div>
@@ -393,16 +393,16 @@ export default function CreateAppointmentPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
             {/* Submit Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <Link
                 href="/dashboard/workshop/appointments"
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Abbrechen
               </Link>

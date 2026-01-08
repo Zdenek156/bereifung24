@@ -302,20 +302,20 @@ export default function WorkshopAppointments() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/workshop"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               ← Zurück zum Dashboard
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Termine & Kalender</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Termine & Kalender</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Verwalten Sie Ihre Kundentermine
               </p>
             </div>
@@ -325,27 +325,27 @@ export default function WorkshopAppointments() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Calendar View */}
-        <div className="bg-white border-2 border-gray-300 rounded-lg p-2 mb-6">
+        <div className="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg p-2 mb-6">
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={prevMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               onClick={() => setCurrentMonth(new Date())}
-              className="px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               Heute
             </button>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -353,13 +353,13 @@ export default function WorkshopAppointments() {
           
           <div className="flex gap-2">
             {renderCalendar(0)}
-            <div className="hidden md:block w-px bg-gray-200" />
+            <div className="hidden md:block w-px bg-gray-200 dark:bg-gray-700" />
             <div className="hidden md:block flex-1 min-w-0">
               {renderCalendar(1)}
             </div>
           </div>
           
-          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-3 text-xs text-gray-600">
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               <span>Bestätigt</span>
@@ -371,7 +371,7 @@ export default function WorkshopAppointments() {
           </div>
           
           {selectedDate && (
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded text-xs text-blue-800 dark:text-blue-300">
               Termine für <strong>{new Date(selectedDate).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
               {' '}werden unten angezeigt. Klicken Sie erneut um den Filter zu entfernen.
             </div>
@@ -380,33 +380,33 @@ export default function WorkshopAppointments() {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Gesamt</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Anstehend</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.upcoming}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Anstehend</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.upcoming}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Abgeschlossen</p>
-            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Abgeschlossen</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-sm text-gray-600">Storniert</p>
-            <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Storniert</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</p>
           </div>
         </div>
 
         {/* Filter */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('upcoming')}
               className={`px-4 py-2 rounded-lg ${
                 filter === 'upcoming'
                   ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               Anstehend
@@ -446,23 +446,23 @@ export default function WorkshopAppointments() {
 
         {/* Appointments List */}
         {filteredAppointments.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Keine Termine</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Keine Termine</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Es gibt derzeit keine Termine in dieser Kategorie.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredAppointments.map((apt) => (
-              <div key={apt.id} className="bg-white rounded-lg shadow p-6">
+              <div key={apt.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {new Date(apt.appointmentDate).toLocaleDateString('de-DE', { 
                           weekday: 'long', 
                           year: 'numeric', 
@@ -472,7 +472,7 @@ export default function WorkshopAppointments() {
                       </h3>
                       {getStatusBadge(apt.status)}
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Uhrzeit: {apt.appointmentTime} ({apt.estimatedDuration} Minuten)
                     </p>
                   </div>
@@ -498,13 +498,13 @@ export default function WorkshopAppointments() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Kunde</h4>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kunde</h4>
                     {apt.customer ? (
                       <>
-                        <p className="text-sm text-gray-900 font-medium">
+                        <p className="text-sm text-gray-900 dark:text-white font-medium">
                           {apt.customer.user.firstName} {apt.customer.user.lastName}
                         </p>
-                        <p className="text-sm text-gray-600">{apt.customer.user.email}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{apt.customer.user.email}</p>
                         {apt.customer.user.phone && (
                           <p className="text-sm text-gray-600">{apt.customer.user.phone}</p>
                         )}
@@ -735,11 +735,11 @@ export default function WorkshopAppointments() {
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Termin stornieren
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 {isManualEntry 
                   ? 'Möchten Sie diesen manuellen Termin wirklich stornieren?'
                   : 'Möchten Sie diesen Kunden-Termin wirklich stornieren? Das Angebot bleibt bestehen und die Provision ist weiterhin fällig. Der Kunde wird per Email benachrichtigt.'}
@@ -747,13 +747,13 @@ export default function WorkshopAppointments() {
               
               {!isManualEntry && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Stornierungsgrund <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={cancelReasonType}
                     onChange={(e) => setCancelReasonType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Bitte wählen...</option>
                     <option value="customer_cancelled">Kunde hat abgesagt</option>
@@ -767,13 +767,13 @@ export default function WorkshopAppointments() {
               )}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {isManualEntry ? 'Notiz (optional)' : 'Zusätzliche Nachricht an den Kunden (optional)'}
                 </label>
                 <textarea
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                   placeholder={isManualEntry ? 'Interne Notiz...' : 'z.B. Bitte rufen Sie uns an für einen neuen Termin...'}
                 />

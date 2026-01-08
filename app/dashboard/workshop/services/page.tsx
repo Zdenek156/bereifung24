@@ -445,16 +445,16 @@ export default function WorkshopServicesPage() {
   const packageConfig = packageConfigurations[selectedServiceType] || []
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
               <Link href="/dashboard/workshop" className="text-primary-600 hover:text-primary-700 text-sm mb-2 inline-block">
                 ← Zurück zum Dashboard
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">Services verwalten</h1>
-              <p className="mt-1 text-sm text-gray-600">Konfigurieren Sie Ihre Servicepakete mit individuellen Preisen und Dauern</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Services verwalten</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Konfigurieren Sie Ihre Servicepakete mit individuellen Preisen und Dauern</p>
             </div>
             {!showAddForm && availableTypes.length > 0 && (
               <button
@@ -470,7 +470,7 @@ export default function WorkshopServicesPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {message && (
-          <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+          <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'}`}>
             {message.text}
             <button onClick={() => setMessage(null)} className="float-right font-bold">×</button>
           </div>
@@ -478,14 +478,14 @@ export default function WorkshopServicesPage() {
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div ref={formRef} className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-bold mb-6">
+          <div ref={formRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-xl font-bold dark:text-white mb-6">
               {editingService ? 'Service bearbeiten' : 'Neuer Service'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Service Type Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Service-Typ *
                 </label>
                 <select
@@ -493,7 +493,7 @@ export default function WorkshopServicesPage() {
                   onChange={(e) => handleServiceTypeChange(e.target.value)}
                   required
                   disabled={!!editingService}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Bitte wählen...</option>
                   {(editingService ? availableServiceTypes : availableTypes).map(type => (
@@ -506,7 +506,7 @@ export default function WorkshopServicesPage() {
 
               {/* Refrigerant Price for Climate Service */}
               {selectedServiceType === 'CLIMATE_SERVICE' && (
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">
                     Hinweis zur Kältemittelbefüllung
                   </h3>
@@ -634,7 +634,7 @@ export default function WorkshopServicesPage() {
                     </div>
                   </div>
 
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">
                       ⚖️ Wuchten (optional)
                     </h3>
@@ -698,8 +698,8 @@ export default function WorkshopServicesPage() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-900">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm text-blue-900 dark:text-blue-200">
                       <strong>Beispiel-Berechnung:</strong><br/>
                       Kunde wählt Wuchten + Einlagerung:<br/>
                       • Basis: {packages.base?.price || '0'} € + {packages.base?.duration || '0'} Min<br/>
@@ -720,17 +720,17 @@ export default function WorkshopServicesPage() {
 
               {/* Package Configuration */}
               {hasPackages && selectedServiceType && selectedServiceType !== 'WHEEL_CHANGE' && packageConfig.length > 0 && (
-                <div className="bg-blue-50 p-6 rounded-lg space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Servicepakete konfigurieren
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Legen Sie für jedes Paket Preis und Dauer fest. Aktivierte Pakete können von Kunden gewählt werden.
                   </p>
 
                   <div className="space-y-6">
                     {packageConfig.map(pkg => (
-                      <div key={pkg.type} className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div key={pkg.type} className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="flex items-start gap-4">
                           <input
                             type="checkbox"
@@ -740,8 +740,8 @@ export default function WorkshopServicesPage() {
                           />
                           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="md:col-span-1">
-                              <p className="font-semibold text-gray-900">{pkg.name}</p>
-                              <p className="text-sm text-gray-600">{pkg.description}</p>
+                              <p className="font-semibold text-gray-900 dark:text-white">{pkg.name}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{pkg.description}</p>
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -807,8 +807,8 @@ export default function WorkshopServicesPage() {
         {/* Services List */}
         <div className="space-y-4">
           {services.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-500 mb-4">Noch keine Services konfiguriert</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">Noch keine Services konfiguriert</p>
               {availableTypes.length > 0 && (
                 <button
                   onClick={() => setShowAddForm(true)}
@@ -820,11 +820,11 @@ export default function WorkshopServicesPage() {
             </div>
           ) : (
             services.map(service => (
-              <div key={service.id} className="bg-white rounded-lg shadow p-6">
+              <div key={service.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-bold text-gray-900">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                         {serviceTypeLabels[service.serviceType] || service.serviceType}
                       </h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -836,7 +836,7 @@ export default function WorkshopServicesPage() {
                     
                     {/* Refrigerant Price Info for Climate Service */}
                     {service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml && (
-                      <div className="mb-3 text-sm text-gray-700 bg-yellow-50 p-2 rounded">
+                      <div className="mb-3 text-sm text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                         💧 Kältemittel: {service.refrigerantPricePer100ml.toFixed(2)} € / 100ml
                       </div>
                     )}
@@ -845,12 +845,12 @@ export default function WorkshopServicesPage() {
                     {service.serviceType === 'TIRE_CHANGE' && (
                       <>
                         {service.runFlatSurcharge && (
-                          <div className="mb-2 text-sm text-gray-700 bg-blue-50 p-2 rounded">
+                          <div className="mb-2 text-sm text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
                             RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
                           </div>
                         )}
                         {service.disposalFee && (
-                          <div className="mb-3 text-sm text-gray-700 bg-green-50 p-2 rounded">
+                          <div className="mb-3 text-sm text-gray-700 dark:text-gray-300 bg-green-50 dark:bg-green-900/20 p-2 rounded">
                             ♻️ Altreifenentsorgung: {service.disposalFee.toFixed(2)} € pro Reifen
                           </div>
                         )}
@@ -861,7 +861,7 @@ export default function WorkshopServicesPage() {
                     {service.servicePackages && service.servicePackages.length > 0 ? (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-700">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {service.servicePackages.filter(p => p.isActive).length} Servicepakete aktiv
                           </p>
                           <button
@@ -875,11 +875,11 @@ export default function WorkshopServicesPage() {
                         {expandedServices.has(service.id) && (
                           <div className="space-y-2 mt-3">
                             {service.servicePackages.map(pkg => (
-                              <div key={pkg.id} className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                              <div key={pkg.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg flex items-center justify-between">
                                 <div className="flex-1">
-                                  <p className="font-semibold text-gray-900">{pkg.name}</p>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{pkg.name}</p>
                                   {pkg.description && (
-                                    <p className="text-sm text-gray-600">{pkg.description}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{pkg.description}</p>
                                   )}
                                   <div className="flex gap-6 mt-2">
                                     <span className="text-sm">
@@ -906,7 +906,7 @@ export default function WorkshopServicesPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
                         <p>Preis: {service.basePrice.toFixed(2)} € | Dauer: {service.durationMinutes} Min.</p>
                       </div>
                     )}

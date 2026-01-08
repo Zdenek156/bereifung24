@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import WorkshopSidebar from '@/components/WorkshopSidebar'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function WorkshopLayout({
   children,
@@ -29,20 +30,22 @@ export default function WorkshopLayout({
 
   if (status === 'loading' || !session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <WorkshopSidebar />
-      
-      {/* Main Content - with left margin for sidebar */}
-      <div className="lg:ml-64">
-        {children}
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <WorkshopSidebar />
+        
+        {/* Main Content - with left margin for sidebar */}
+        <div className="lg:ml-64">
+          {children}
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   )
 }

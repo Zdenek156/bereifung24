@@ -74,9 +74,9 @@ function SEPAMandateCompleteContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
           {completing && (
             <>
               <div className="mb-6">
@@ -85,7 +85,7 @@ function SEPAMandateCompleteContent() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Mandat wird abgeschlossen...
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Bitte warten Sie einen Moment
               </p>
             </>
@@ -101,7 +101,7 @@ function SEPAMandateCompleteContent() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Fehler
               </h1>
-              <p className="text-red-600 mb-6">
+              <p className="text-red-600 dark:text-red-400 mb-6">
                 {error}
               </p>
               <button
@@ -123,10 +123,10 @@ function SEPAMandateCompleteContent() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 SEPA-Mandat erfolgreich eingerichtet!
               </h1>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Ihr Lastschriftmandat wurde erfolgreich erstellt. Sie werden automatisch weitergeleitet...
               </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
                 <span>Weiterleitung...</span>
               </div>

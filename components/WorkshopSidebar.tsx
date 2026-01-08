@@ -149,7 +149,7 @@ export default function WorkshopSidebar() {
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-md bg-white shadow-lg text-gray-600 hover:text-gray-900"
+          className="p-2 rounded-md bg-white dark:bg-gray-800 shadow-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -168,16 +168,16 @@ export default function WorkshopSidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg z-40 transform transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
         `}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-primary-600">Bereifung24</h2>
-            <p className="text-sm text-gray-600">Werkstatt-Portal</p>
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-primary-600 dark:text-primary-400">Bereifung24</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Werkstatt-Portal</p>
           </div>
 
           {/* Navigation */}
@@ -193,8 +193,8 @@ export default function WorkshopSidebar() {
                   w-full flex items-center px-6 py-3 text-left transition-colors
                   ${
                     isActive(item.path)
-                      ? 'bg-primary-50 text-primary-600 border-r-4 border-primary-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-r-4 border-primary-600 dark:border-primary-500'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }
                 `}
               >
@@ -205,10 +205,10 @@ export default function WorkshopSidebar() {
           </nav>
 
           {/* Logout Button */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              className="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

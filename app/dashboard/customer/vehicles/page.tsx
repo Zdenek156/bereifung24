@@ -112,14 +112,14 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           {/* Zurück Button */}
           <a
             href="/dashboard/customer"
-            className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4 transition-colors"
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 mb-4 transition-colors"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -129,8 +129,8 @@ export default function VehiclesPage() {
           
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Meine Fahrzeuge</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Meine Fahrzeuge</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
                 Verwalten Sie Ihre Fahrzeuge und Reifengrößen
               </p>
             </div>
@@ -148,12 +148,12 @@ export default function VehiclesPage() {
 
         {/* Vehicles Grid */}
         {vehicles.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-transparent dark:border-gray-700 p-12 text-center">
             <div className="text-gray-400 text-6xl mb-4">🚗</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Noch keine Fahrzeuge
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Fügen Sie Ihr erstes Fahrzeug hinzu, um schneller Reifenanfragen zu erstellen
             </p>
             <button
@@ -166,7 +166,7 @@ export default function VehiclesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vehicles.map(vehicle => (
-              <div key={vehicle.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={vehicle.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-transparent dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Vehicle Header */}
                 <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6">
                   <div className="flex justify-between items-start mb-2">
@@ -209,9 +209,9 @@ export default function VehiclesPage() {
                     <div className="border-l-4 border-yellow-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
-                        <span className="font-semibold text-gray-700">{vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">{vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}</span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900">
+                      <p className="text-lg font-mono text-gray-900 dark:text-white">
                         {vehicle.summerTires.hasDifferentSizes ? (
                           <>
                             <span className="text-sm text-gray-600">Vorne: </span>
@@ -239,9 +239,9 @@ export default function VehiclesPage() {
                     <div className="border-l-4 border-blue-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">❄️</span>
-                        <span className="font-semibold text-gray-700">Winterreifen</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Winterreifen</span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900">
+                      <p className="text-lg font-mono text-gray-900 dark:text-white">
                         {vehicle.winterTires.hasDifferentSizes ? (
                           <>
                             <span className="text-sm text-gray-600">Vorne: </span>
@@ -269,9 +269,9 @@ export default function VehiclesPage() {
                     <div className="border-l-4 border-green-400 pl-4">
                       <div className="flex items-center mb-1">
                         <span className="text-2xl mr-2">🌤️</span>
-                        <span className="font-semibold text-gray-700">Ganzjahresreifen</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Ganzjahresreifen</span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900">
+                      <p className="text-lg font-mono text-gray-900 dark:text-white">
                         {vehicle.allSeasonTires.hasDifferentSizes ? (
                           <>
                             <span className="text-sm text-gray-600">Vorne: </span>
@@ -305,8 +305,8 @@ export default function VehiclesPage() {
 
                   {/* VIN Display */}
                   {vehicle.vin && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         <span className="font-semibold">VIN:</span> {vehicle.vin}
                       </p>
                     </div>
@@ -314,8 +314,8 @@ export default function VehiclesPage() {
 
                   {/* Fuel Type Display */}
                   {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
-                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200'}`}>
-                      <p className="text-sm text-gray-600">
+                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'}`}>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         <span className="font-semibold">⛽ Kraftstoff:</span>{' '}
                         {(vehicle as any).fuelType === 'PETROL' && 'Benzin'}
                         {(vehicle as any).fuelType === 'DIESEL' && 'Diesel'}
@@ -340,8 +340,8 @@ export default function VehiclesPage() {
 
                   {/* Inspection Date Display */}
                   {vehicle.nextInspectionDate && (
-                    <div className={`${vehicle.vin || ((vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN') ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200'}`}>
-                      <p className="text-sm text-gray-600">
+                    <div className={`${vehicle.vin || ((vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN') ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'}`}>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         <span className="font-semibold">Nächster TÜV:</span>{' '}
                         {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
                           month: 'long', 
@@ -669,11 +669,11 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">Fahrzeug bearbeiten</h2>
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Fahrzeug bearbeiten</h2>
             <button
               type="button"
               onClick={onClose}
@@ -912,7 +912,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             </div>
 
             {/* Summer Tires */}
-            <div className="border-t pt-6">
+            <div className="border-t dark:border-gray-700 pt-6">
               <div className="flex items-center mb-4">
                 {formData.vehicleType !== 'MOTORCYCLE' && (
                   <input

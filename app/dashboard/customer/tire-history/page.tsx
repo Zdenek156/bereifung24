@@ -206,22 +206,22 @@ export default function TireHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-transparent dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Link 
               href="/dashboard/customer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Reifenhistorie</h1>
-              <p className="mt-1 text-sm text-gray-600">Übersicht aller gekauften Reifen</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reifenhistorie</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Übersicht aller gekauften Reifen</p>
             </div>
           </div>
         </div>
@@ -230,16 +230,16 @@ export default function TireHistory() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filter */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 p-4 mb-6">
           <div className="flex items-center gap-4 flex-wrap">
-            <span className="text-sm font-medium text-gray-700">Filter:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter:</span>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilterSeason('ALL')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filterSeason === 'ALL'
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Alle ({history.length})
@@ -249,7 +249,7 @@ export default function TireHistory() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                   filterSeason === 'SUMMER'
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Sommerreifen ({history.filter(h => h.tireDetails.season === 'SUMMER').length})
@@ -259,7 +259,7 @@ export default function TireHistory() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                   filterSeason === 'WINTER'
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Winterreifen ({history.filter(h => h.tireDetails.season === 'WINTER').length})
@@ -269,7 +269,7 @@ export default function TireHistory() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                   filterSeason === 'ALL_SEASON'
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Ganzjahresreifen ({history.filter(h => h.tireDetails.season === 'ALL_SEASON').length})
@@ -280,12 +280,12 @@ export default function TireHistory() {
 
         {/* History List */}
         {filteredHistory.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 p-8 text-center">
             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Reifenhistorie</h3>
-            <p className="text-gray-600 mb-4">Sie haben noch keine Reifen über unsere Plattform gekauft.</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Keine Reifenhistorie</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Sie haben noch keine Reifen über unsere Plattform gekauft.</p>
             <Link
               href="/dashboard/customer/create-request"
               className="inline-block px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
@@ -296,7 +296,7 @@ export default function TireHistory() {
         ) : (
           <div className="space-y-4">
             {filteredHistory.map((item) => (
-              <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <div key={item.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-transparent dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start gap-4">
                     {/* Icon */}
@@ -308,10 +308,10 @@ export default function TireHistory() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900">
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                             {getSeasonLabel(item.tireDetails.season)}
                           </h3>
-                          <p className="text-sm text-gray-600">{formatDate(item.purchaseDate)}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{formatDate(item.purchaseDate)}</p>
                         </div>
                         {item.price && (
                           <div className="text-right">
@@ -322,11 +322,11 @@ export default function TireHistory() {
                       </div>
 
                       {/* Tire Specifications */}
-                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                      <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4 mb-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">Dimension</p>
-                            <p className="font-semibold text-gray-900">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Dimension</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">
                               {item.tireDetails.width}/{item.tireDetails.aspectRatio} R{item.tireDetails.diameter}
                             </p>
                           </div>
@@ -351,7 +351,7 @@ export default function TireHistory() {
 
                       {/* Workshop & Vehicle Info */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
@@ -361,7 +361,7 @@ export default function TireHistory() {
                           </div>
                         </div>
                         {item.vehicle && (
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -374,14 +374,14 @@ export default function TireHistory() {
                       </div>
 
                       {/* Tire Rating Section */}
-                      <div className="border-t pt-4">
+                      <div className="border-t dark:border-gray-700 pt-4">
                         {item.tireRating ? (
-                          <div className="bg-blue-50 rounded-lg p-4">
+                          <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
                             <div className="flex justify-between items-start mb-2">
-                              <h4 className="text-sm font-semibold text-gray-700">Ihre Reifenbewertung</h4>
+                              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Ihre Reifenbewertung</h4>
                               <button
                                 onClick={() => handleOpenRatingModal(item)}
-                                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
                               >
                                 Bearbeiten
                               </button>
@@ -399,7 +399,7 @@ export default function TireHistory() {
                               ))}
                             </div>
                             {item.tireRating.comment && (
-                              <p className="text-gray-700 text-sm mb-2">{item.tireRating.comment}</p>
+                              <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">{item.tireRating.comment}</p>
                             )}
                             {(item.tireRating.quietnessRating || item.tireRating.gripRating || item.tireRating.wearRating || item.tireRating.comfortRating) && (
                               <div className="grid grid-cols-2 gap-2 text-xs mt-2">
@@ -452,11 +452,11 @@ export default function TireHistory() {
 
         {/* Summary Statistics */}
         {history.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Zusammenfassung</h3>
+          <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow border border-transparent dark:border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Zusammenfassung</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <p className="text-sm text-gray-600">Gekaufte Reifensätze</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Gekaufte Reifensätze</p>
                 <p className="mt-1 text-2xl font-bold text-primary-600">{history.length}</p>
               </div>
               <div>
@@ -498,12 +498,12 @@ export default function TireHistory() {
       {/* Tire Rating Modal */}
       {showRatingModal && selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Reifen bewerten</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Reifen bewerten</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {getSeasonLabel(selectedItem.tireDetails.season)} - {selectedItem.tireDetails.width}/{selectedItem.tireDetails.aspectRatio} R{selectedItem.tireDetails.diameter}
                   </p>
                 </div>
@@ -520,7 +520,7 @@ export default function TireHistory() {
               <div className="space-y-6">
                 {/* Overall Rating */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Gesamtbewertung <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -556,8 +556,8 @@ export default function TireHistory() {
                 </div>
 
                 {/* Detailed Ratings */}
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">Detailbewertung (optional)</h3>
+                <div className="border-t dark:border-gray-700 pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Detailbewertung (optional)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Quietness */}
                     <div>
@@ -655,14 +655,14 @@ export default function TireHistory() {
 
                 {/* Comment */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Ihre Notizen zu den Reifen (optional)
                   </label>
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Beschreiben Sie Ihre Erfahrung mit diesen Reifen..."
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -671,10 +671,10 @@ export default function TireHistory() {
                 </div>
               </div>
 
-              <div className="flex gap-4 justify-end mt-6 pt-6 border-t">
+              <div className="flex gap-4 justify-end mt-6 pt-6 border-t dark:border-gray-700">
                 <button
                   onClick={() => setShowRatingModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Abbrechen
                 </button>

@@ -107,13 +107,13 @@ export default function RequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Link
             href="/dashboard/customer"
-            className="text-primary-600 hover:text-primary-700 mb-4 flex items-center inline-flex"
+            className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 mb-4 flex items-center inline-flex"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -122,8 +122,8 @@ export default function RequestsPage() {
           </Link>
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">Meine Anfragen</h1>
-              <p className="mt-2 text-lg text-gray-600">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Meine Anfragen</h1>
+              <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
                 Übersicht aller Reifenanfragen und erhaltenen Angebote
               </p>
             </div>
@@ -138,10 +138,10 @@ export default function RequestsPage() {
 
         {/* Requests List */}
         {requests.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Noch keine Anfragen</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Noch keine Anfragen</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Erstellen Sie Ihre erste Reifenanfrage und erhalten Sie Angebote von Werkstätten in Ihrer Nähe
             </p>
             <Link
@@ -156,13 +156,13 @@ export default function RequestsPage() {
             {requests.map((request) => (
               <div
                 key={request.id}
-                className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-4"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition-shadow p-4 border border-transparent dark:border-gray-700"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                           {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
                             // Motorcycle tire request
                             <>
@@ -197,7 +197,7 @@ export default function RequestsPage() {
                         {/* Tire dimensions - smaller text below title */}
                         {request.width !== 0 && (
                           <>
-                            <p className="text-sm text-gray-700 mt-1 font-medium">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 font-medium">
                               {request.additionalNotes?.includes('🏍️ MOTORRADREIFEN') ? (
                                 // Motorcycle - show front and rear
                                 <>
@@ -240,13 +240,13 @@ export default function RequestsPage() {
                             
                             {/* Vehicle Info */}
                             {request.vehicle && (
-                              <div className="text-xs text-gray-600 mt-1">
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 🚗 {request.vehicle.make} {request.vehicle.model} ({request.vehicle.year})
                               </div>
                             )}
                             
                             {/* Additional tire details */}
-                            <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 space-y-0.5">
                               {request.additionalNotes?.includes('Altreifenentsorgung') && (
                                 <div>✓ Altreifenentsorgung gewünscht</div>
                               )}
@@ -257,7 +257,7 @@ export default function RequestsPage() {
                           </>
                         )}
                         
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           {request.width === 0 ? (
                             request.additionalNotes?.includes('BREMSEN-SERVICE') ? 'Bremsen-Service' :
                             request.additionalNotes?.includes('BATTERIE-SERVICE') ? 'Batterie-Service' :
@@ -273,20 +273,20 @@ export default function RequestsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         PLZ {request.zipCode} ({request.radiusKm} km)
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Benötigt bis {formatDate(request.needByDate)}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -295,7 +295,7 @@ export default function RequestsPage() {
                     </div>
 
                     {request.preferredBrands && request.width !== 0 && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         <strong>Bevorzugte Hersteller:</strong> {request.preferredBrands}
                       </p>
                     )}

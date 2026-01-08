@@ -462,11 +462,13 @@ export default function TireAdvisorWidget() {
                   </div>
 
                   {/* Vorteile */}
-                  <div className="bg-blue-50 rounded p-3 mb-3">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <span className="font-semibold">💡 Darum empfehlen wir:</span> {tire.reason}
-                    </p>
-                  </div>
+                  {tire.reason && (
+                    <div className="bg-blue-50 dark:bg-blue-900/30 rounded p-3 mb-3">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold">💡 Darum empfehlen wir:</span> {tire.reason}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Einsparungen */}
                   {(tire.yearlyFuelSavings || tire.brakingDistanceAdvantage) && (

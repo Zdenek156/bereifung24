@@ -72,8 +72,13 @@ export default function GuvPage() {
           `/api/admin/accounting/income-statement?year=${selectedYear}`
         )
         if (response.ok) {
-          const data = await response.json()
-          setIncomeStatement(data)
+          const result = await response.json()
+          // API returns { success: true, data: IncomeStatement[] }
+          if (result.success && result.data && result.data.length > 0) {
+            setIncomeStatement(result.data[0])
+          } else {
+            setIncomeStatement(null)
+          }
         }
       }
     } catch (error) {
@@ -160,6 +165,60 @@ export default function GuvPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Lade Gewinn- und Verlustrechnung...</div>
         </div>
+      </div>
+    )
+  }
+
+  if (!incomeStatement) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          <div className="flex gap-3 items-center">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="border rounded px-3 py-2"
+              >
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+        <Card className="p-12 text-center">
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="text-6xl mb-4">📊</div>
+            <h2 className="text-2xl font-bold">Keine GuV-Daten für {selectedYear}</h2>
+            <p className="text-gray-600">
+              Für das ausgewählte Jahr sind noch keine Gewinn- und Verlustrechnungsdaten vorhanden.
+            </p>
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/admin/accounting/income-statement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: selectedYear })
+                  })
+                  if (response.ok) {
+                    fetchIncomeStatement()
+                  }
+                } catch (error) {
+                  console.error('Error generating income statement:', error)
+                }
+              }}
+              className="mt-4"
+            >
+              GuV für {selectedYear} generieren
+            </Button>
+          </div>
+        </Card>
       </div>
     )
   }

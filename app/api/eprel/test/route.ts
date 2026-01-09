@@ -44,21 +44,32 @@ export async function GET(req: NextRequest) {
           method: 'GET',
           headers: {
             'X-Api-Key': apiKey, // Note: Capital K in Api-Key as per support
-            'Accept': 'application/json'
           },
-          signal: AbortSignal.timeout(10000) // 10 second timeout for potential large download
+          redirect: 'follow', // Follow redirects like curl -L
+          signal: AbortSignal.timeout(30000) // 30 second timeout for ZIP download
         })
 
         const duration = Date.now() - startTime
         
         let responseText = ''
         let responseJson = null
+        let isZip = false
+        let fileSize = 0
         
-        try {
-          responseText = await response.text()
-          responseJson = JSON.parse(responseText)
-        } catch (e) {
-          // Keep as text
+        // Check if response is a ZIP file
+        const contentType = response.headers.get('content-type') || ''
+        if (contentType.includes('application/zip') || contentType.includes('application/octet-stream')) {
+          isZip = true
+          const buffer = await response.arrayBuffer()
+          fileSize = buffer.byteLength
+          responseText = `ZIP file received (${(fileSize / 1024 / 1024).toFixed(2)} MB)`
+        } else {
+          try {
+            responseText = await response.text()
+            responseJson = JSON.parse(responseText)
+          } catch (e) {
+            // Keep as text
+          }
         }
 
         results.push({
@@ -68,7 +79,9 @@ export async function GET(req: NextRequest) {
           duration: `${duration}ms`,
           headers: Object.fromEntries(response.headers.entries()),
           bodyPreview: responseText.substring(0, 500),
-          bodyJson: responseJson
+          bodyJson: responseJson,
+          isZip,
+          fileSize: isZip ? `${(fileSize / 1024 / 1024).toFixed(2)} MB` : undefined
         })
       } catch (error: any) {
         results.push({

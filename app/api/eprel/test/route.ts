@@ -139,15 +139,6 @@ export async function GET(req: NextRequest) {
     }, { status: 500 })
   }
 }
-      documentation: 'Basierend auf: https://webgate.ec.europa.eu/fpfis/wikis/display/ENERG/EPREL+API'
-    })
-
-  } catch (error) {
-    console.error('Error testing EPREL:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Fehler beim Test',
-      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
     }, { status: 500 })
   }
 }

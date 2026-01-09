@@ -41,9 +41,16 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Transform assets/liabilities to aktiva/passiva for frontend
+    const transformedBalanceSheets = balanceSheets.map(sheet => ({
+      ...sheet,
+      aktiva: sheet.assets,
+      passiva: sheet.liabilities
+    }))
+
     return NextResponse.json({
       success: true,
-      data: balanceSheets
+      data: transformedBalanceSheets
     })
   } catch (error) {
     console.error('Error fetching balance sheets:', error)

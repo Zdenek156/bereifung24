@@ -9,16 +9,31 @@ import { Decimal } from '@prisma/client/runtime/library'
 
 interface IncomeStatementData {
   revenue: {
-    umsatzerloese: number // 8xxx accounts
-    sonstigeBetrieblicheErtraege: number // Other operating income
+    umsatzerloese: number
+    bestandsveraenderungen: number
+    andereAktivierteEigenleistungen: number
+    sonstigeBetrieblicheErtraege: number
   }
   expenses: {
-    materialaufwand: number // 4xxx accounts
-    personalaufwand: number // 6xxx accounts (wages, social)
-    abschreibungen: number // 6220 depreciation
-    sonstigeBetrieblicheAufwendungen: number // Other operating expenses
-    zinsenUndAehnlicheAufwendungen: number // Interest
-    steuern: number // Taxes
+    materialaufwand: {
+      aufwendungenRohHilfsBetriebsstoffe: number
+      aufwendungenBezogeneLeistungen: number
+    }
+    personalaufwand: {
+      loehneGehaelter: number
+      sozialeAbgaben: number
+      altersversorgung: number
+    }
+    abschreibungen: number
+    sonstigeBetrieblicheAufwendungen: number
+    zinsenAehnlicheAufwendungen: number
+    steuernVomEinkommenErtrag: number
+    sonstigeSteuern: number
+  }
+  financialResult: {
+    zinsertraege: number
+    beteiligungsertraege: number
+    zinsenAehnlicheAufwendungen: number
   }
 }
 
@@ -43,24 +58,36 @@ export async function generateIncomeStatement(
     // Calculate revenue and expenses
     const revenue = await calculateRevenue(year)
     const expenses = await calculateExpenses(year)
+    const financialResult = await calculateFinancialResult(year)
     const netIncome = await calculateNetIncome(year)
 
     const totalRevenue = new Decimal(
-      revenue.umsatzerloese + revenue.sonstigeBetrieblicheErtraege
+      revenue.umsatzerloese + 
+      revenue.bestandsveraenderungen + 
+      revenue.andereAktivierteEigenleistungen + 
+      revenue.sonstigeBetrieblicheErtraege
     )
 
     const totalExpenses = new Decimal(
-      expenses.materialaufwand +
-      expenses.personalaufwand +
+      expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe +
+      expenses.materialaufwand.aufwendungenBezogeneLeistungen +
+      expenses.personalaufwand.loehneGehaelter +
+      expenses.personalaufwand.sozialeAbgaben +
+      expenses.personalaufwand.altersversorgung +
       expenses.abschreibungen +
       expenses.sonstigeBetrieblicheAufwendungen +
-      expenses.zinsenUndAehnlicheAufwendungen +
-      expenses.steuern
+      expenses.zinsenAehnlicheAufwendungen +
+      expenses.steuernVomEinkommenErtrag +
+      expenses.sonstigeSteuern
     )
+
+    const earningsBeforeTax = totalRevenue.minus(totalExpenses)
+    const taxes = new Decimal(expenses.steuernVomEinkommenErtrag + expenses.sonstigeSteuern)
 
     const incomeStatementData = {
       revenue,
-      expenses
+      expenses,
+      financialResult
     }
 
     // Create or update income statement
@@ -71,6 +98,9 @@ export async function generateIncomeStatement(
             fiscalYear: fiscalYear || year.toString(),
             revenue: incomeStatementData.revenue as any,
             expenses: incomeStatementData.expenses as any,
+            financialResult: incomeStatementData.financialResult as any,
+            earningsBeforeTax,
+            taxes,
             netIncome,
             updatedAt: new Date()
           }
@@ -81,6 +111,9 @@ export async function generateIncomeStatement(
             fiscalYear: fiscalYear || year.toString(),
             revenue: incomeStatementData.revenue as any,
             expenses: incomeStatementData.expenses as any,
+            financialResult: incomeStatementData.financialResult as any,
+            earningsBeforeTax,
+            taxes,
             netIncome
           }
         })
@@ -113,6 +146,8 @@ export async function calculateRevenue(year: number) {
 
     const revenue = {
       umsatzerloese: 0,
+      bestandsveraenderungen: 0,
+      andereAktivierteEigenleistungen: 0,
       sonstigeBetrieblicheErtraege: 0
     }
 
@@ -122,19 +157,22 @@ export async function calculateRevenue(year: number) {
       
       // Credit increases revenue accounts (8xxx)
       const creditAccount = entry.creditAccount
-      if (creditAccount.startsWith('8')) {
+      if (creditAccount >= '8000' && creditAccount <= '8399') {
         revenue.umsatzerloese += amount
+      } else if (creditAccount >= '8400' && creditAccount <= '8499') {
+        revenue.bestandsveraenderungen += amount
+      } else if (creditAccount >= '8500' && creditAccount <= '8599') {
+        revenue.andereAktivierteEigenleistungen += amount
+      } else if (creditAccount >= '8600' && creditAccount <= '8799') {
+        revenue.sonstigeBetrieblicheErtraege += amount
       }
 
       // Debit decreases revenue accounts (returns, discounts)
       const debitAccount = entry.debitAccount
-      if (debitAccount.startsWith('8')) {
+      if (debitAccount >= '8000' && debitAccount <= '8399') {
         revenue.umsatzerloese -= amount
-      }
-
-      // Other operating income (e.g., income from disposal of assets)
-      if (creditAccount >= '4800' && creditAccount <= '4899') {
-        revenue.sonstigeBetrieblicheErtraege += amount
+      } else if (debitAccount >= '8400' && debitAccount <= '8499') {
+        revenue.bestandsveraenderungen -= amount
       }
     }
 
@@ -165,12 +203,20 @@ export async function calculateExpenses(year: number) {
     })
 
     const expenses = {
-      materialaufwand: 0, // 4xxx accounts
-      personalaufwand: 0, // 6000-6299 wages and social
-      abschreibungen: 0, // 6220 depreciation
+      materialaufwand: {
+        aufwendungenRohHilfsBetriebsstoffe: 0, // 4000-4099
+        aufwendungenBezogeneLeistungen: 0 // 4100-4199
+      },
+      personalaufwand: {
+        loehneGehaelter: 0, // 6000-6099
+        sozialeAbgaben: 0, // 6100-6199
+        altersversorgung: 0 // 6200-6209
+      },
+      abschreibungen: 0, // 6220
       sonstigeBetrieblicheAufwendungen: 0, // 6300-6999
-      zinsenUndAehnlicheAufwendungen: 0, // 7xxx interest
-      steuern: 0 // Various tax accounts
+      zinsenAehnlicheAufwendungen: 0, // 7000-7099
+      steuernVomEinkommenErtrag: 0, // 7200-7299
+      sonstigeSteuern: 0 // 7300-7399
     }
 
     // Calculate expense balances
@@ -181,17 +227,21 @@ export async function calculateExpenses(year: number) {
       const debitAccount = entry.debitAccount
       
       // Material costs (4xxx)
-      if (debitAccount.startsWith('4') && debitAccount < '4800') {
-        expenses.materialaufwand += amount
+      if (debitAccount >= '4000' && debitAccount <= '4099') {
+        expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe += amount
+      } else if (debitAccount >= '4100' && debitAccount <= '4199') {
+        expenses.materialaufwand.aufwendungenBezogeneLeistungen += amount
       }
       
       // Personnel costs (6000-6299)
-      if (debitAccount >= '6000' && debitAccount <= '6299') {
-        if (debitAccount === '6220') {
-          expenses.abschreibungen += amount
-        } else {
-          expenses.personalaufwand += amount
-        }
+      if (debitAccount >= '6000' && debitAccount <= '6099') {
+        expenses.personalaufwand.loehneGehaelter += amount
+      } else if (debitAccount >= '6100' && debitAccount <= '6199') {
+        expenses.personalaufwand.sozialeAbgaben += amount
+      } else if (debitAccount >= '6200' && debitAccount <= '6209') {
+        expenses.personalaufwand.altersversorgung += amount
+      } else if (debitAccount === '6220') {
+        expenses.abschreibungen += amount
       }
       
       // Other operating expenses (6300-6999)
@@ -199,32 +249,49 @@ export async function calculateExpenses(year: number) {
         expenses.sonstigeBetrieblicheAufwendungen += amount
       }
       
-      // Interest and similar expenses (7xxx)
-      if (debitAccount.startsWith('7')) {
-        expenses.zinsenUndAehnlicheAufwendungen += amount
+      // Interest and similar expenses (7000-7099)
+      if (debitAccount >= '7000' && debitAccount <= '7099') {
+        expenses.zinsenAehnlicheAufwendungen += amount
+      }
+
+      // Taxes (7200-7399)
+      if (debitAccount >= '7200' && debitAccount <= '7299') {
+        expenses.steuernVomEinkommenErtrag += amount
+      } else if (debitAccount >= '7300' && debitAccount <= '7399') {
+        expenses.sonstigeSteuern += amount
       }
 
       // Credit decreases expense accounts (corrections, refunds)
       const creditAccount = entry.creditAccount
       
-      if (creditAccount.startsWith('4') && creditAccount < '4800') {
-        expenses.materialaufwand -= amount
+      if (creditAccount >= '4000' && creditAccount <= '4099') {
+        expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe -= amount
+      } else if (creditAccount >= '4100' && creditAccount <= '4199') {
+        expenses.materialaufwand.aufwendungenBezogeneLeistungen -= amount
       }
       
-      if (creditAccount >= '6000' && creditAccount <= '6299') {
-        if (creditAccount === '6220') {
-          expenses.abschreibungen -= amount
-        } else {
-          expenses.personalaufwand -= amount
-        }
+      if (creditAccount >= '6000' && creditAccount <= '6099') {
+        expenses.personalaufwand.loehneGehaelter -= amount
+      } else if (creditAccount >= '6100' && creditAccount <= '6199') {
+        expenses.personalaufwand.sozialeAbgaben -= amount
+      } else if (creditAccount >= '6200' && creditAccount <= '6209') {
+        expenses.personalaufwand.altersversorgung -= amount
+      } else if (creditAccount === '6220') {
+        expenses.abschreibungen -= amount
       }
       
       if (creditAccount >= '6300' && creditAccount <= '6999') {
         expenses.sonstigeBetrieblicheAufwendungen -= amount
       }
       
-      if (creditAccount.startsWith('7')) {
-        expenses.zinsenUndAehnlicheAufwendungen -= amount
+      if (creditAccount >= '7000' && creditAccount <= '7099') {
+        expenses.zinsenAehnlicheAufwendungen -= amount
+      }
+
+      if (creditAccount >= '7200' && creditAccount <= '7299') {
+        expenses.steuernVomEinkommenErtrag -= amount
+      } else if (creditAccount >= '7300' && creditAccount <= '7399') {
+        expenses.sonstigeSteuern -= amount
       }
     }
 
@@ -232,6 +299,56 @@ export async function calculateExpenses(year: number) {
   } catch (error) {
     console.error('Error calculating expenses:', error)
     throw new Error(`Failed to calculate expenses: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
+ * Calculate financial result (Finanzergebnis)
+ * Interest income vs interest expenses
+ */
+export async function calculateFinancialResult(year: number) {
+  try {
+    const startDate = new Date(year, 0, 1)
+    const endDate = new Date(year, 11, 31, 23, 59, 59)
+
+    const entries = await prisma.accountingEntry.findMany({
+      where: {
+        bookingDate: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    })
+
+    const financialResult = {
+      zinsertraege: 0,
+      beteiligungsertraege: 0,
+      zinsenAehnlicheAufwendungen: 0
+    }
+
+    for (const entry of entries) {
+      const amount = parseFloat(entry.amount.toString())
+      
+      // Interest income (credit side)
+      if (entry.creditAccount >= '8100' && entry.creditAccount <= '8199') {
+        financialResult.zinsertraege += amount
+      }
+      
+      // Investment income
+      if (entry.creditAccount >= '8200' && entry.creditAccount <= '8299') {
+        financialResult.beteiligungsertraege += amount
+      }
+      
+      // Interest expenses (debit side)
+      if (entry.debitAccount >= '7000' && entry.debitAccount <= '7099') {
+        financialResult.zinsenAehnlicheAufwendungen += amount
+      }
+    }
+
+    return financialResult
+  } catch (error) {
+    console.error('Error calculating financial result:', error)
+    throw new Error(`Failed to calculate financial result: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -244,14 +361,23 @@ export async function calculateNetIncome(year: number): Promise<Decimal> {
     const revenue = await calculateRevenue(year)
     const expenses = await calculateExpenses(year)
 
-    const totalRevenue = revenue.umsatzerloese + revenue.sonstigeBetrieblicheErtraege
+    const totalRevenue = 
+      revenue.umsatzerloese + 
+      revenue.bestandsveraenderungen + 
+      revenue.andereAktivierteEigenleistungen + 
+      revenue.sonstigeBetrieblicheErtraege
+
     const totalExpenses = 
-      expenses.materialaufwand +
-      expenses.personalaufwand +
+      expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe +
+      expenses.materialaufwand.aufwendungenBezogeneLeistungen +
+      expenses.personalaufwand.loehneGehaelter +
+      expenses.personalaufwand.sozialeAbgaben +
+      expenses.personalaufwand.altersversorgung +
       expenses.abschreibungen +
       expenses.sonstigeBetrieblicheAufwendungen +
-      expenses.zinsenUndAehnlicheAufwendungen +
-      expenses.steuern
+      expenses.zinsenAehnlicheAufwendungen +
+      expenses.steuernVomEinkommenErtrag +
+      expenses.sonstigeSteuern
 
     const netIncome = totalRevenue - totalExpenses
 

@@ -44,7 +44,85 @@ export default function ReportsPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* GmbH Bilanzierung Section */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="px-4 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white py-1 px-3 rounded-full">
+              GmbH Bilanzierung
+            </span>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <Link
+              href="/admin/buchhaltung/bilanz"
+              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-4 hover:shadow-xl transition-all border-2 border-blue-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-lg mb-3 mx-auto">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">Bilanz</h3>
+              <p className="text-xs text-gray-600 text-center">Aktiva & Passiva</p>
+            </Link>
+
+            <Link
+              href="/admin/buchhaltung/guv"
+              className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow p-4 hover:shadow-xl transition-all border-2 border-green-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-lg mb-3 mx-auto">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">GuV</h3>
+              <p className="text-xs text-gray-600 text-center">Gewinn & Verlust</p>
+            </Link>
+
+            <Link
+              href="/admin/buchhaltung/anlagen"
+              className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-4 hover:shadow-xl transition-all border-2 border-purple-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-purple-600 rounded-lg mb-3 mx-auto">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">Anlagen</h3>
+              <p className="text-xs text-gray-600 text-center">Abschreibungen</p>
+            </Link>
+
+            <Link
+              href="/admin/buchhaltung/rueckstellungen"
+              className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-4 hover:shadow-xl transition-all border-2 border-orange-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-orange-600 rounded-lg mb-3 mx-auto">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">Rückstellungen</h3>
+              <p className="text-xs text-gray-600 text-center">Provisionen</p>
+            </Link>
+
+            <Link
+              href="/admin/buchhaltung/jahresabschluss"
+              className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow p-4 hover:shadow-xl transition-all border-2 border-red-200"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-red-600 rounded-lg mb-3 mx-auto">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">Jahresabschluss</h3>
+              <p className="text-xs text-gray-600 text-center">Abschluss-Wizard</p>
+            </Link>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Auswertungen & Berichte</h2>
           <p className="text-gray-600 mb-6">

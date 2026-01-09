@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Lock, CheckCircle, Calendar } from 'lucide-react'
+import { Download, Lock, CheckCircle, Calendar, RefreshCw } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
@@ -268,15 +268,7 @@ export default function BilanzPage() {
             </select>
           </div>
           {balanceSheet && !balanceSheet.locked && (
-            <Button
-              onClick={handleLock}
-              disabled={processing}
-              variant="outline"
-            >
-              <Lock className="h-4 w-4 mr-2" />
-              Sperren
-            </Button>
-          )}
+            <>\n              <Button\n                onClick={async () => {\n                  try {\n                    const response = await fetch('/api/admin/accounting/balance-sheet', {\n                      method: 'POST',\n                      headers: { 'Content-Type': 'application/json' },\n                      body: JSON.stringify({ year: selectedYear })\n                    })\n                    if (response.ok) {\n                      fetchBalanceSheet()\n                    }\n                  } catch (error) {\n                    console.error('Error regenerating balance sheet:', error)\n                  }\n                }}\n                disabled={processing}\n                variant=\"outline\"\n              >\n                <RefreshCw className=\"h-4 w-4 mr-2\" />\n                Neu generieren\n              </Button>\n              <Button\n                onClick={handleLock}\n                disabled={processing}\n                variant=\"outline\"\n              >\n                <Lock className=\"h-4 w-4 mr-2\" />\n                Sperren\n              </Button>\n            </>\n          )}
           {balanceSheet && balanceSheet.locked && !balanceSheet.approved && (
             <Button
               onClick={handleApprove}
@@ -287,32 +279,15 @@ export default function BilanzPage() {
               Freigeben
             </Button>
           )}
-          <div className="relative">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg hidden group-hover:block">
-              <button
-                onClick={() => handleExport('pdf')}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                PDF
-              </button>
-              <button
-                onClick={() => handleExport('excel')}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                Excel
-              </button>
-              <button
-                onClick={() => handleExport('csv')}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                CSV
-              </button>
-            </div>
-          </div>
+          <Button
+            onClick={() => {
+              window.print()
+            }}
+            variant="outline"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
       </div>
 

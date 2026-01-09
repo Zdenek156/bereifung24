@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       where.fiscalYear = fiscalYear
     }
 
-    const balanceSheets = await prisma.balanceSheet.findMany({
+    const balanceSheets = await prisma.BalanceSheet.findMany({
       where,
       orderBy: {
         year: 'desc'

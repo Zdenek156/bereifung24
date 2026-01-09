@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       where.fiscalYear = fiscalYear
     }
 
-    const incomeStatements = await prisma.incomeStatement.findMany({
+    const incomeStatements = await prisma.IncomeStatement.findMany({
       where,
       orderBy: {
         year: 'desc'

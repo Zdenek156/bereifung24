@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -249,7 +249,32 @@ export default function GuvPage() {
             <BarChart3 className="h-4 w-4 mr-2" />
             Diagramme
           </Button>
-          <Button variant="outline">
+          <Button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/admin/accounting/income-statement', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ year: selectedYear })
+                })
+                if (response.ok) {
+                  fetchIncomeStatement()
+                }
+              } catch (error) {
+                console.error('Error regenerating income statement:', error)
+              }
+            }}
+            variant="outline"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Neu generieren
+          </Button>
+          <Button
+            onClick={() => {
+              window.print()
+            }}
+            variant="outline"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

@@ -178,10 +178,10 @@ class RequestDetailsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildInfoRow('Anzahl Reifen', '${request.quantity} Stück'),
           ],
-          if (request.needByDate != null) ...[
-            const SizedBox(height: 12),
-            _buildInfoRow('Benötigt bis', request.needByDate!),
-          ],
+          ...[
+          const SizedBox(height: 12),
+          _buildInfoRow('Benötigt bis', request.needByDate!),
+        ],
           if (request.additionalNotes != null && request.additionalNotes!.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(

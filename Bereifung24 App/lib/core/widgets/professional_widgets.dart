@@ -83,10 +83,10 @@ class ProfessionalButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
         ).copyWith(
-          elevation: MaterialStateProperty.resolveWith<double>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) return 8;
-              if (states.contains(MaterialState.hovered)) return 4;
+          elevation: WidgetStateProperty.resolveWith<double>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) return 8;
+              if (states.contains(WidgetState.hovered)) return 4;
               return 2;
             },
           ),

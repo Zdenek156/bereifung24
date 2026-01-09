@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getApiSetting } from '@/lib/api-settings'
 
-// GET /api/eprel/test - Test EPREL API connection
+// GET /api/eprel/test - Test EPREL API connection with various header combinations
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -23,30 +23,57 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // Test verschiedene mögliche EPREL API Endpoints
-    // Based on official EPREL support response - correct endpoint is exportProducts/tyres (without version number)
-    const testEndpoints = [
-      'https://eprel.ec.europa.eu/api/exportProducts/tyres', // CORRECT endpoint from support
-      'https://eprel.ec.europa.eu/api/products/tyres',       // Old attempt
-      'https://ec.europa.eu/energy/eeprel-api/v1/tyres',
-      'https://webgate.ec.europa.eu/eeprel-api/v1/tyres'
+    // Test verschiedene Header-Kombinationen für den korrekten Endpoint
+    const endpoint = 'https://eprel.ec.europa.eu/api/exportProducts/tyres'
+    
+    const headerVariations = [
+      {
+        name: 'X-Api-Key (Capital K)',
+        headers: { 'X-Api-Key': apiKey }
+      },
+      {
+        name: 'X-API-Key (All Caps)',
+        headers: { 'X-API-Key': apiKey }
+      },
+      {
+        name: 'x-api-key (lowercase)',
+        headers: { 'x-api-key': apiKey }
+      },
+      {
+        name: 'Authorization Bearer',
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      },
+      {
+        name: 'Authorization API-Key',
+        headers: { 'Authorization': `API-Key ${apiKey}` }
+      },
+      {
+        name: 'X-Api-Key + User-Agent',
+        headers: { 
+          'X-Api-Key': apiKey,
+          'User-Agent': 'Bereifung24/1.0'
+        }
+      },
+      {
+        name: 'X-Api-Key + Accept ZIP',
+        headers: { 
+          'X-Api-Key': apiKey,
+          'Accept': 'application/zip, application/octet-stream, */*'
+        }
+      }
     ]
 
     const results = []
 
-    for (const endpoint of testEndpoints) {
+    for (const variation of headerVariations) {
       try {
-        // No limit parameter for exportProducts endpoint - it returns a ZIP file
-        const testUrl = endpoint
         const startTime = Date.now()
         
-        const response = await fetch(testUrl, {
+        const response = await fetch(endpoint, {
           method: 'GET',
-          headers: {
-            'X-Api-Key': apiKey, // Note: Capital K in Api-Key as per support
-          },
-          redirect: 'follow', // Follow redirects like curl -L
-          signal: AbortSignal.timeout(30000) // 30 second timeout for ZIP download
+          headers: variation.headers,
+          redirect: 'follow',
+          signal: AbortSignal.timeout(30000)
         })
 
         const duration = Date.now() - startTime
@@ -73,31 +100,45 @@ export async function GET(req: NextRequest) {
         }
 
         results.push({
-          endpoint,
+          headerTest: variation.name,
           status: response.status,
           statusText: response.statusText,
           duration: `${duration}ms`,
-          headers: Object.fromEntries(response.headers.entries()),
-          bodyPreview: responseText.substring(0, 500),
-          bodyJson: responseJson,
+          contentType,
           isZip,
-          fileSize: isZip ? `${(fileSize / 1024 / 1024).toFixed(2)} MB` : undefined
+          fileSize: isZip ? `${(fileSize / 1024 / 1024).toFixed(2)} MB` : undefined,
+          bodyPreview: responseText.substring(0, 200),
+          bodyJson: responseJson,
+          requestHeaders: variation.headers,
+          responseHeaders: Object.fromEntries(response.headers.entries())
         })
       } catch (error: any) {
         results.push({
-          endpoint,
+          headerTest: variation.name,
           error: error.message,
-          type: error.name
+          type: error.name,
+          requestHeaders: variation.headers
         })
       }
     }
 
     return NextResponse.json({
       success: true,
+      endpoint,
       apiKeyConfigured: true,
       apiKeyLength: apiKey.length,
       apiKeyPreview: `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`,
       testResults: results,
+      documentation: 'Testing verschiedene Header-Kombinationen um 403 zu debuggen'
+    })
+  } catch (error: any) {
+    console.error('EPREL Test Error:', error)
+    return NextResponse.json({ 
+      success: false,
+      error: error.message 
+    }, { status: 500 })
+  }
+}
       documentation: 'Basierend auf: https://webgate.ec.europa.eu/fpfis/wikis/display/ENERG/EPREL+API'
     })
 

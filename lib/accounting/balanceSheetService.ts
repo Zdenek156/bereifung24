@@ -8,7 +8,7 @@ import { Decimal } from '@prisma/client/runtime/library'
  */
 
 interface BalanceSheetData {
-  assets: {
+  aktiva: {
     anlagevermoegen: {
       immaterielleVermoegensgegenstaende: number
       sachanlagen: number
@@ -19,27 +19,31 @@ interface BalanceSheetData {
       forderungen: number
       kasseBank: number
     }
-    rechnungsabgrenzung: number
+    rechnungsabgrenzungsposten: number
   }
-  liabilities: {
+  passiva: {
     eigenkapital: {
       gezeichnetesKapital: number
-      kapitalruecklage: number
-      gewinnruecklage: number
+      kapitalruecklagen: number
+      gewinnruecklagen: number
       gewinnvortrag: number
       jahresueberschuss: number
     }
     rueckstellungen: {
+      pensionsrueckstellungen: number
       steuerrueckstellungen: number
       urlaubsrueckstellungen: number
       gewährleistungsrueckstellungen: number
       sonstigeRueckstellungen: number
     }
     verbindlichkeiten: {
+      anleihen: number
       verbindlichkeitenKreditinstitute: number
-      verbindlichkeitenLieferanten: number
+      erhalteneAnzahlungen: number
+      verbindlichkeitenLieferungen: number
       sonstigeVerbindlichkeiten: number
     }
+    rechnungsabgrenzungsposten: number
   }
 }
 
@@ -62,32 +66,36 @@ export async function generateBalanceSheet(
     }
 
     // Calculate assets and liabilities
-    const assets = await calculateAssets(year)
-    const liabilities = await calculateLiabilities(year)
+    const aktiva = await calculateAssets(year)
+    const passiva = await calculateLiabilities(year)
 
     const totalAssets = new Decimal(
-      assets.anlagevermoegen.immaterielleVermoegensgegenstaende +
-      assets.anlagevermoegen.sachanlagen +
-      assets.anlagevermoegen.finanzanlagen +
-      assets.umlaufvermoegen.vorraete +
-      assets.umlaufvermoegen.forderungen +
-      assets.umlaufvermoegen.kasseBank +
-      assets.rechnungsabgrenzung
+      aktiva.anlagevermoegen.immaterielleVermoegensgegenstaende +
+      aktiva.anlagevermoegen.sachanlagen +
+      aktiva.anlagevermoegen.finanzanlagen +
+      aktiva.umlaufvermoegen.vorraete +
+      aktiva.umlaufvermoegen.forderungen +
+      aktiva.umlaufvermoegen.kasseBank +
+      aktiva.rechnungsabgrenzungsposten
     )
 
     const totalLiabilities = new Decimal(
-      liabilities.eigenkapital.gezeichnetesKapital +
-      liabilities.eigenkapital.kapitalruecklage +
-      liabilities.eigenkapital.gewinnruecklage +
-      liabilities.eigenkapital.gewinnvortrag +
-      liabilities.eigenkapital.jahresueberschuss +
-      liabilities.rueckstellungen.steuerrueckstellungen +
-      liabilities.rueckstellungen.urlaubsrueckstellungen +
-      liabilities.rueckstellungen.gewährleistungsrueckstellungen +
-      liabilities.rueckstellungen.sonstigeRueckstellungen +
-      liabilities.verbindlichkeiten.verbindlichkeitenKreditinstitute +
-      liabilities.verbindlichkeiten.verbindlichkeitenLieferanten +
-      liabilities.verbindlichkeiten.sonstigeVerbindlichkeiten
+      passiva.eigenkapital.gezeichnetesKapital +
+      passiva.eigenkapital.kapitalruecklagen +
+      passiva.eigenkapital.gewinnruecklagen +
+      passiva.eigenkapital.gewinnvortrag +
+      passiva.eigenkapital.jahresueberschuss +
+      passiva.rueckstellungen.pensionsrueckstellungen +
+      passiva.rueckstellungen.steuerrueckstellungen +
+      passiva.rueckstellungen.urlaubsrueckstellungen +
+      passiva.rueckstellungen.gewährleistungsrueckstellungen +
+      passiva.rueckstellungen.sonstigeRueckstellungen +
+      passiva.verbindlichkeiten.anleihen +
+      passiva.verbindlichkeiten.verbindlichkeitenKreditinstitute +
+      passiva.verbindlichkeiten.erhalteneAnzahlungen +
+      passiva.verbindlichkeiten.verbindlichkeitenLieferungen +
+      passiva.verbindlichkeiten.sonstigeVerbindlichkeiten +
+      passiva.rechnungsabgrenzungsposten
     )
 
     // Ensure balance (assets = liabilities)
@@ -96,8 +104,8 @@ export async function generateBalanceSheet(
     }
 
     const balanceSheetData: BalanceSheetData = {
-      assets,
-      liabilities
+      aktiva,
+      passiva
     }
 
     // Create or update balance sheet
@@ -106,8 +114,8 @@ export async function generateBalanceSheet(
           where: { year },
           data: {
             fiscalYear: fiscalYear || year.toString(),
-            assets: balanceSheetData.assets as any,
-            liabilities: balanceSheetData.liabilities as any,
+            assets: balanceSheetData.aktiva as any,
+            liabilities: balanceSheetData.passiva as any,
             totalAssets,
             totalLiabilities,
             updatedAt: new Date()
@@ -117,8 +125,8 @@ export async function generateBalanceSheet(
           data: {
             year,
             fiscalYear: fiscalYear || year.toString(),
-            assets: balanceSheetData.assets as any,
-            liabilities: balanceSheetData.liabilities as any,
+            assets: balanceSheetData.aktiva as any,
+            liabilities: balanceSheetData.passiva as any,
             totalAssets,
             totalLiabilities
           }
@@ -162,7 +170,7 @@ export async function calculateAssets(year: number) {
         forderungen: 0, // 1360, 1370, 1400, 1500
         kasseBank: 0 // 1000, 1100, 1140
       },
-      rechnungsabgrenzung: 0 // 0980, 0985
+      rechnungsabgrenzungsposten: 0 // 0980, 0985
     }
 
     // Calculate balances for each account
@@ -184,7 +192,7 @@ export async function calculateAssets(year: number) {
       } else if (['1000', '1100', '1140'].includes(debitAccount)) {
         assets.umlaufvermoegen.kasseBank += amount
       } else if (['0980', '0985'].includes(debitAccount)) {
-        assets.rechnungsabgrenzung += amount
+        assets.rechnungsabgrenzungsposten += amount
       }
 
       // Credit decreases asset accounts
@@ -202,7 +210,7 @@ export async function calculateAssets(year: number) {
       } else if (['1000', '1100', '1140'].includes(creditAccount)) {
         assets.umlaufvermoegen.kasseBank -= amount
       } else if (['0980', '0985'].includes(creditAccount)) {
-        assets.rechnungsabgrenzung -= amount
+        assets.rechnungsabgrenzungsposten -= amount
       }
     }
 
@@ -241,22 +249,26 @@ export async function calculateLiabilities(year: number) {
     const liabilities = {
       eigenkapital: {
         gezeichnetesKapital: 0, // 2800
-        kapitalruecklage: 0, // 2850
-        gewinnruecklage: 0, // 2860
+        kapitalruecklagen: 0, // 2850
+        gewinnruecklagen: 0, // 2860
         gewinnvortrag: 0, // 2870
         jahresueberschuss: 0 // 2880
       },
       rueckstellungen: {
+        pensionsrueckstellungen: 0, // 3000
         steuerrueckstellungen: 0, // 3010
         urlaubsrueckstellungen: 0, // 3030
         gewährleistungsrueckstellungen: 0, // 3040
         sonstigeRueckstellungen: 0 // 3020
       },
       verbindlichkeiten: {
+        anleihen: 0, // 3090
         verbindlichkeitenKreditinstitute: 0, // 3100
-        verbindlichkeitenLieferanten: 0, // 3150
+        erhalteneAnzahlungen: 0, // 3120
+        verbindlichkeitenLieferungen: 0, // 3150
         sonstigeVerbindlichkeiten: 0 // 3160-3199
-      }
+      },
+      rechnungsabgrenzungsposten: 0 // 3990
     }
 
     // Calculate balances for each account
@@ -268,13 +280,15 @@ export async function calculateLiabilities(year: number) {
       if (creditAccount === '2800') {
         liabilities.eigenkapital.gezeichnetesKapital += amount
       } else if (creditAccount === '2850') {
-        liabilities.eigenkapital.kapitalruecklage += amount
+        liabilities.eigenkapital.kapitalruecklagen += amount
       } else if (creditAccount === '2860') {
-        liabilities.eigenkapital.gewinnruecklage += amount
+        liabilities.eigenkapital.gewinnruecklagen += amount
       } else if (creditAccount === '2870') {
         liabilities.eigenkapital.gewinnvortrag += amount
       } else if (creditAccount === '2880') {
         liabilities.eigenkapital.jahresueberschuss += amount
+      } else if (creditAccount === '3000') {
+        liabilities.rueckstellungen.pensionsrueckstellungen += amount
       } else if (creditAccount === '3010') {
         liabilities.rueckstellungen.steuerrueckstellungen += amount
       } else if (creditAccount === '3030') {
@@ -283,12 +297,18 @@ export async function calculateLiabilities(year: number) {
         liabilities.rueckstellungen.gewährleistungsrueckstellungen += amount
       } else if (creditAccount === '3020') {
         liabilities.rueckstellungen.sonstigeRueckstellungen += amount
+      } else if (creditAccount === '3090') {
+        liabilities.verbindlichkeiten.anleihen += amount
       } else if (creditAccount === '3100') {
         liabilities.verbindlichkeiten.verbindlichkeitenKreditinstitute += amount
+      } else if (creditAccount === '3120') {
+        liabilities.verbindlichkeiten.erhalteneAnzahlungen += amount
       } else if (creditAccount === '3150') {
-        liabilities.verbindlichkeiten.verbindlichkeitenLieferanten += amount
+        liabilities.verbindlichkeiten.verbindlichkeitenLieferungen += amount
       } else if (creditAccount >= '3160' && creditAccount <= '3199') {
         liabilities.verbindlichkeiten.sonstigeVerbindlichkeiten += amount
+      } else if (creditAccount === '3990') {
+        liabilities.rechnungsabgrenzungsposten += amount
       }
 
       // Debit decreases liability accounts
@@ -296,13 +316,15 @@ export async function calculateLiabilities(year: number) {
       if (debitAccount === '2800') {
         liabilities.eigenkapital.gezeichnetesKapital -= amount
       } else if (debitAccount === '2850') {
-        liabilities.eigenkapital.kapitalruecklage -= amount
+        liabilities.eigenkapital.kapitalruecklagen -= amount
       } else if (debitAccount === '2860') {
-        liabilities.eigenkapital.gewinnruecklage -= amount
+        liabilities.eigenkapital.gewinnruecklagen -= amount
       } else if (debitAccount === '2870') {
         liabilities.eigenkapital.gewinnvortrag -= amount
       } else if (debitAccount === '2880') {
         liabilities.eigenkapital.jahresueberschuss -= amount
+      } else if (debitAccount === '3000') {
+        liabilities.rueckstellungen.pensionsrueckstellungen -= amount
       } else if (debitAccount === '3010') {
         liabilities.rueckstellungen.steuerrueckstellungen -= amount
       } else if (debitAccount === '3030') {
@@ -311,12 +333,18 @@ export async function calculateLiabilities(year: number) {
         liabilities.rueckstellungen.gewährleistungsrueckstellungen -= amount
       } else if (debitAccount === '3020') {
         liabilities.rueckstellungen.sonstigeRueckstellungen -= amount
+      } else if (debitAccount === '3090') {
+        liabilities.verbindlichkeiten.anleihen -= amount
       } else if (debitAccount === '3100') {
         liabilities.verbindlichkeiten.verbindlichkeitenKreditinstitute -= amount
+      } else if (debitAccount === '3120') {
+        liabilities.verbindlichkeiten.erhalteneAnzahlungen -= amount
       } else if (debitAccount === '3150') {
-        liabilities.verbindlichkeiten.verbindlichkeitenLieferanten -= amount
+        liabilities.verbindlichkeiten.verbindlichkeitenLieferungen -= amount
       } else if (debitAccount >= '3160' && debitAccount <= '3199') {
         liabilities.verbindlichkeiten.sonstigeVerbindlichkeiten -= amount
+      } else if (debitAccount === '3990') {
+        liabilities.rechnungsabgrenzungsposten -= amount
       }
     }
 

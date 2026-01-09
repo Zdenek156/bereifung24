@@ -70,8 +70,13 @@ export default function BilanzPage() {
         `/api/admin/accounting/balance-sheet?year=${selectedYear}`
       )
       if (response.ok) {
-        const data = await response.json()
-        setBalanceSheet(data)
+        const result = await response.json()
+        // API returns { success: true, data: BalanceSheet[] }
+        if (result.success && result.data && result.data.length > 0) {
+          setBalanceSheet(result.data[0])
+        } else {
+          setBalanceSheet(null)
+        }
       }
     } catch (error) {
       console.error('Error fetching balance sheet:', error)
@@ -185,6 +190,60 @@ export default function BilanzPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Lade Bilanz...</div>
         </div>
+      </div>
+    )
+  }
+
+  if (!balanceSheet) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Bilanz</h1>
+          <div className="flex gap-3 items-center">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="border rounded px-3 py-2"
+              >
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+        <Card className="p-12 text-center">
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="text-6xl mb-4">⚖️</div>
+            <h2 className="text-2xl font-bold">Keine Bilanzdaten für {selectedYear}</h2>
+            <p className="text-gray-600">
+              Für das ausgewählte Jahr sind noch keine Bilanzdaten vorhanden.
+            </p>
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/admin/accounting/balance-sheet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: selectedYear })
+                  })
+                  if (response.ok) {
+                    fetchBalanceSheet()
+                  }
+                } catch (error) {
+                  console.error('Error generating balance sheet:', error)
+                }
+              }}
+              className="mt-4"
+            >
+              Bilanz für {selectedYear} generieren
+            </Button>
+          </div>
+        </Card>
       </div>
     )
   }

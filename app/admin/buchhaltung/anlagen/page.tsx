@@ -8,10 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Edit, Trash2, TrendingDown } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingDown } from 'lucide-react';
 
 interface Asset {
   id: string;
@@ -276,22 +274,14 @@ export default function AnlagenPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Purchase Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(formData.purchaseDate, 'dd.MM.yyyy')}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.purchaseDate}
-                        onSelect={(date) => date && setFormData({ ...formData, purchaseDate: date })}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="purchaseDate">Purchase Date</Label>
+                  <Input
+                    id="purchaseDate"
+                    type="date"
+                    value={formData.purchaseDate.toISOString().split('T')[0]}
+                    onChange={(e) => setFormData({ ...formData, purchaseDate: new Date(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="purchasePrice">Purchase Price (€)</Label>

@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, BookOpen, XCircle, PieChart } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 interface Provision {
   id: string;
@@ -39,8 +38,6 @@ const PROVISION_TYPES = [
   { value: 'onerous', label: 'Onerous Contracts' },
   { value: 'other', label: 'Other' },
 ];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658'];
 
 export default function RueckstellungenPage() {
   const [provisions, setProvisions] = useState<Provision[]>([]);
@@ -217,20 +214,26 @@ export default function RueckstellungenPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={totals}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="type" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
-                <Legend />
-                <Bar dataKey="total" name="Amount">
-                  {totals.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {totals.map((item, index) => {
+                const maxTotal = Math.max(...totals.map(t => t.total));
+                const percentage = (item.total / maxTotal) * 100;
+                const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-orange-500', 'bg-purple-500', 'bg-teal-500', 'bg-pink-500'];
+                return (
+                  <div key={index}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium">{PROVISION_TYPES.find(t => t.value === item.type)?.label || item.type}</span>
+                      <span className="text-muted-foreground">€{item.total.toFixed(2)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-8">
+                      <div className={`${colors[index % colors.length]} h-8 rounded-full flex items-center justify-end pr-2 text-white text-xs font-medium`} style={{ width: `${percentage}%` }}>
+                        {percentage > 10 ? `${percentage.toFixed(0)}%` : ''}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

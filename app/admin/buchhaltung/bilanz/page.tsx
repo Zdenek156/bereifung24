@@ -268,7 +268,38 @@ export default function BilanzPage() {
             </select>
           </div>
           {balanceSheet && !balanceSheet.locked && (
-            <>\n              <Button\n                onClick={async () => {\n                  try {\n                    const response = await fetch('/api/admin/accounting/balance-sheet', {\n                      method: 'POST',\n                      headers: { 'Content-Type': 'application/json' },\n                      body: JSON.stringify({ year: selectedYear })\n                    })\n                    if (response.ok) {\n                      fetchBalanceSheet()\n                    }\n                  } catch (error) {\n                    console.error('Error regenerating balance sheet:', error)\n                  }\n                }}\n                disabled={processing}\n                variant=\"outline\"\n              >\n                <RefreshCw className=\"h-4 w-4 mr-2\" />\n                Neu generieren\n              </Button>\n              <Button\n                onClick={handleLock}\n                disabled={processing}\n                variant=\"outline\"\n              >\n                <Lock className=\"h-4 w-4 mr-2\" />\n                Sperren\n              </Button>\n            </>\n          )}
+            <>
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/accounting/balance-sheet', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ year: selectedYear })
+                    })
+                    if (response.ok) {
+                      fetchBalanceSheet()
+                    }
+                  } catch (error) {
+                    console.error('Error regenerating balance sheet:', error)
+                  }
+                }}
+                disabled={processing}
+                variant="outline"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Neu generieren
+              </Button>
+              <Button
+                onClick={handleLock}
+                disabled={processing}
+                variant="outline"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Sperren
+              </Button>
+            </>
+          )}
           {balanceSheet && balanceSheet.locked && !balanceSheet.approved && (
             <Button
               onClick={handleApprove}

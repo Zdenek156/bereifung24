@@ -1815,6 +1815,7 @@ model Asset {
 
   // Relations
   depreciationEntries DepreciationEntry[]
+  depreciations       Depreciation[]      @relation("AssetDepreciations") // GmbH: Monatliche AfA
   vehicleCosts        VehicleCost[]       @relation("VehicleCosts")
 
   // Metadata
@@ -3525,3 +3526,340 @@ enum ExportFormat {
   EXCEL // Excel-Datei
   PDF // PDF-Bericht
 }
+
+// ============================================
+// GmbH-SPEZIFISCHE ERWEITERUNGEN
+// ============================================
+
+// Bilanz (Aktiva/Passiva) - GmbH-Pflicht
+model BalanceSheet {
+  id         String @id @default(cuid())
+  year       Int // Geschäftsjahr
+  fiscalYear String // z.B. "2026" oder "2026/2027"
+
+  // Aktiva (Vermögen)
+  assets Json // Struktur: {anlagevermoegen: {...}, umlaufvermoegen: {...}}
+  // Beispiel: {
+  //   anlagevermoegen: { sachanlagen: 50000, finanzanlagen: 0 },
+  //   umlaufvermoegen: { vorraete: 10000, forderungen: 25000, bank: 15000 }
+  // }
+
+  // Passiva (Kapital + Schulden)
+  liabilities Json // Struktur: {eigenkapital: {...}, rueckstellungen: {...}, verbindlichkeiten: {...}}
+  // Beispiel: {
+  //   eigenkapital: { stammkapital: 25000, gewinnvortrag: 10000, jahresueberschuss: 15000 },
+  //   rueckstellungen: { steuerrueckstellungen: 5000 },
+  //   verbindlichkeiten: { verbindlichkeiten: 45000 }
+  // }
+
+  // Bilanzsumme (muss auf beiden Seiten gleich sein)
+  totalAssets      Decimal @db.Decimal(12, 2)
+  totalLiabilities Decimal @db.Decimal(12, 2)
+
+  // Status
+  locked    Boolean   @default(false) // Nach Feststellung gesperrt
+  lockedAt  DateTime?
+  approvedBy String? // Admin/Geschäftsführer
+  notes      String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([year])
+  @@index([year])
+  @@map("balance_sheets")
+}
+
+// Gewinn- und Verlustrechnung (GuV) - ersetzt EÜR bei GmbH
+model IncomeStatement {
+  id         String @id @default(cuid())
+  year       Int // Geschäftsjahr
+  fiscalYear String // z.B. "2026"
+
+  // Umsatzerlöse
+  revenue Json // Struktur nach GuV-Schema
+  // Beispiel: {
+  //   umsatzerloese: 250000,
+  //   sonstigeBetrieblicheErtraege: 5000
+  // }
+
+  // Aufwendungen
+  expenses Json // Struktur nach GuV-Schema
+  // Beispiel: {
+  //   materialaufwand: 80000,
+  //   personalaufwand: 95000,
+  //   abschreibungen: 10000,
+  //   sonstigeAufwendungen: 25000
+  // }
+
+  // Finanzergebnis
+  financialResult Json? // Zinsen, etc.
+
+  // Ergebnis vor Steuern
+  earningsBeforeTax Decimal @db.Decimal(12, 2)
+
+  // Steuern
+  taxes Decimal @default(0) @db.Decimal(12, 2)
+
+  // Jahresüberschuss/-fehlbetrag
+  netIncome Decimal @db.Decimal(12, 2)
+
+  // Status
+  locked    Boolean   @default(false)
+  lockedAt  DateTime?
+  approvedBy String?
+  notes      String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([year])
+  @@index([year])
+  @@map("income_statements")
+}
+
+// Abschreibungen auf Anlagevermögen
+model Depreciation {
+  id      String @id @default(cuid())
+  assetId String
+  asset   Asset  @relation("AssetDepreciations", fields: [assetId], references: [id], onDelete: Cascade)
+
+  // Zeitraum
+  year  Int
+  month Int // 1-12
+
+  // Abschreibung
+  depreciationRate   Decimal @db.Decimal(5, 2) // z.B. 20.00% für 5 Jahre
+  depreciationAmount Decimal @db.Decimal(10, 2) // Monatlicher Abschreibungsbetrag
+  accumulatedDepreciation Decimal @db.Decimal(10, 2) // Kumulierte Abschreibung bis dato
+  bookValue          Decimal @db.Decimal(10, 2) // Restbuchwert
+
+  // Verknüpfung zur Buchung
+  entryId String? // Verknüpfung zu AccountingEntry (monatliche Afa-Buchung)
+
+  // Methode
+  method String @default("LINEAR") // LINEAR, DEGRESSIVE, SOFORT
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assetId, year, month])
+  @@index([year, month])
+  @@map("depreciations")
+}
+
+// Rückstellungen (GmbH-Pflicht)
+model Provision {
+  id   String @id @default(cuid())
+  type ProvisionType
+
+  // Details
+  year        Int
+  amount      Decimal  @db.Decimal(10, 2)
+  description String
+  reason      String?  @db.Text // Begründung der Rückstellung
+
+  // Status
+  released    Boolean   @default(false) // Wurde aufgelöst?
+  releasedAt  DateTime?
+  releasedAmount Decimal? @db.Decimal(10, 2)
+
+  // Verknüpfung
+  entryId String? // Verknüpfung zur Bildungs-Buchung
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([year, type])
+  @@index([released])
+  @@map("provisions")
+}
+
+enum ProvisionType {
+  TAX // Steuerrückstellungen
+  VACATION // Urlaubsrückstellungen
+  WARRANTY // Gewährleistungsrückstellungen
+  LEGAL // Rechtliche Verpflichtungen
+  RESTRUCTURING // Restrukturierung
+  PENSION // Pensionsrückstellungen
+  OTHER // Sonstige
+}
+
+// Forderungen und Verbindlichkeiten (für Bilanzbuchhaltung)
+model AccountsReceivable {
+  id             String  @id @default(cuid())
+  invoiceNumber  String  @unique // Rechnungsnummer
+  customerName   String
+  customerId     String? // Optional: Verknüpfung zu User
+
+  // Betrag
+  amount        Decimal  @db.Decimal(10, 2) // Brutto
+  netAmount     Decimal? @db.Decimal(10, 2)
+  vatAmount     Decimal? @db.Decimal(10, 2)
+  vatRate       Int?     @default(19)
+
+  // Datum
+  invoiceDate DateTime
+  dueDate     DateTime
+  paidAt      DateTime? // Wann bezahlt?
+
+  // Status
+  status ReceivableStatus @default(OPEN)
+
+  // Zahlungseingang
+  paidAmount Decimal? @db.Decimal(10, 2)
+  
+  // Verknüpfung zu Buchungen
+  invoiceEntryId String? // Buchung bei Rechnungsstellung
+  paymentEntryId String? // Buchung bei Zahlungseingang
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceDate])
+  @@map("accounts_receivable")
+}
+
+enum ReceivableStatus {
+  OPEN // Offen
+  PARTIALLY_PAID // Teilweise bezahlt
+  PAID // Vollständig bezahlt
+  OVERDUE // Überfällig
+  WRITTEN_OFF // Abgeschrieben (uneinbringlich)
+}
+
+model AccountsPayable {
+  id             String  @id @default(cuid())
+  invoiceNumber  String // Lieferantenrechnungsnummer
+  vendorName     String
+  vendorId       String? // Optional: Verknüpfung
+
+  // Betrag
+  amount     Decimal  @db.Decimal(10, 2)
+  netAmount  Decimal? @db.Decimal(10, 2)
+  vatAmount  Decimal? @db.Decimal(10, 2)
+  vatRate    Int?     @default(19)
+
+  // Datum
+  invoiceDate DateTime
+  dueDate     DateTime
+  paidAt      DateTime?
+
+  // Status
+  status PayableStatus @default(OPEN)
+
+  // Zahlung
+  paidAmount Decimal? @db.Decimal(10, 2)
+
+  // Verknüpfung zu Buchungen
+  invoiceEntryId String? // Buchung bei Rechnungserhalt
+  paymentEntryId String? // Buchung bei Zahlung
+
+  // Kategorie
+  category String? // z.B. "Marketing", "IT", "Bürobedarf"
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceDate])
+  @@map("accounts_payable")
+}
+
+enum PayableStatus {
+  OPEN // Offen
+  PARTIALLY_PAID // Teilweise bezahlt
+  PAID // Vollständig bezahlt
+  OVERDUE // Überfällig
+}
+
+// Rechnungsabgrenzungsposten (RAP)
+model DeferredItem {
+  id   String @id @default(cuid())
+  type DeferredType
+
+  // Details
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  
+  // Zeitraum
+  startDate DateTime // Beginn der Periode
+  endDate   DateTime // Ende der Periode
+  
+  // Buchungsjahr
+  fiscalYear Int
+
+  // Verknüpfung
+  entryId String? // Ursprüngliche Buchung
+
+  // Status
+  released    Boolean   @default(false)
+  releasedAt  DateTime?
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fiscalYear, type])
+  @@index([released])
+  @@map("deferred_items")
+}
+
+enum DeferredType {
+  ARAP // Aktive Rechnungsabgrenzung (Vorausgezahlte Ausgaben)
+  PRAP // Passive Rechnungsabgrenzung (Voraus erhaltene Einnahmen)
+}
+
+// Eigenkapital-Entwicklung
+model EquityMovement {
+  id   String @id @default(cuid())
+  year Int
+  type EquityMovementType
+
+  // Betrag
+  amount      Decimal @db.Decimal(10, 2)
+  description String
+
+  // Datum
+  date DateTime
+
+  // Verknüpfung
+  entryId String? // Buchung
+
+  // Details
+  details String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([year, type])
+  @@index([date])
+  @@map("equity_movements")
+}
+
+enum EquityMovementType {
+  CAPITAL_INCREASE // Kapitalerhöhung
+  CAPITAL_DECREASE // Kapitalherabsetzung
+  PROFIT_DISTRIBUTION // Gewinnausschüttung
+  PROFIT_RETENTION // Gewinnvortrag
+  WITHDRAWAL // Privatentnahme (bei Personengesellschaft)
+  CONTRIBUTION // Privateinlage (bei Personengesellschaft)
+}
+

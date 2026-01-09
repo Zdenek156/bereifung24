@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -292,15 +290,19 @@ export default function JahresabschlussPage() {
             ) : (
               <div className="space-y-3">
                 {preChecks.map((check) => (
-                  <Alert key={check.id} variant={check.status === 'failed' ? 'destructive' : 'default'}>
+                  <div key={check.id} className={`p-4 rounded-lg border ${
+                    check.status === 'failed' ? 'bg-red-50 border-red-200' : 
+                    check.status === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                    'bg-green-50 border-green-200'
+                  }`}>
                     <div className="flex items-start gap-3">
                       {getStatusIcon(check.status)}
                       <div className="flex-1">
-                        <AlertTitle>{check.title}</AlertTitle>
-                        <AlertDescription>{check.message}</AlertDescription>
+                        <div className="font-medium mb-1">{check.title}</div>
+                        <div className="text-sm text-muted-foreground">{check.message}</div>
                       </div>
                     </div>
-                  </Alert>
+                  </div>
                 ))}
               </div>
             )}
@@ -462,14 +464,18 @@ export default function JahresabschlussPage() {
       case 6:
         return (
           <div className="space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Warning</AlertTitle>
-              <AlertDescription>
-                Closing the fiscal year will lock all transactions for year {fiscalYear}. This action cannot be
-                undone.
-              </AlertDescription>
-            </Alert>
+            <div className="p-4 rounded-lg border bg-red-50 border-red-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-red-800 mb-1">Warning</div>
+                  <div className="text-sm text-red-700">
+                    Closing the fiscal year will lock all transactions for year {fiscalYear}. This action cannot be
+                    undone.
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="space-y-2 text-sm">
               <p>✓ All accounts reconciled</p>
               <p>✓ Depreciation calculated</p>
@@ -514,7 +520,9 @@ export default function JahresabschlussPage() {
           <span className="text-sm font-medium">Progress</span>
           <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
+        </div>
       </div>
 
       {/* Steps */}

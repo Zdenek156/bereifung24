@@ -24,27 +24,29 @@ export async function GET(req: NextRequest) {
     }
 
     // Test verschiedene mögliche EPREL API Endpoints
+    // Based on official EPREL support response - correct endpoint is exportProducts/tyres (without version number)
     const testEndpoints = [
+      'https://eprel.ec.europa.eu/api/exportProducts/tyres', // CORRECT endpoint from support
+      'https://eprel.ec.europa.eu/api/products/tyres',       // Old attempt
       'https://ec.europa.eu/energy/eeprel-api/v1/tyres',
-      'https://ec.europa.eu/product-registry/api/v1/tyres',
-      'https://webgate.ec.europa.eu/eeprel-api/v1/tyres',
-      'https://eprel.ec.europa.eu/api/products/tyres'
+      'https://webgate.ec.europa.eu/eeprel-api/v1/tyres'
     ]
 
     const results = []
 
     for (const endpoint of testEndpoints) {
       try {
-        const testUrl = `${endpoint}?limit=1`
+        // No limit parameter for exportProducts endpoint - it returns a ZIP file
+        const testUrl = endpoint
         const startTime = Date.now()
         
         const response = await fetch(testUrl, {
           method: 'GET',
           headers: {
-            'X-API-Key': apiKey,
+            'X-Api-Key': apiKey, // Note: Capital K in Api-Key as per support
             'Accept': 'application/json'
           },
-          signal: AbortSignal.timeout(5000) // 5 second timeout
+          signal: AbortSignal.timeout(10000) // 10 second timeout for potential large download
         })
 
         const duration = Date.now() - startTime

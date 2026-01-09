@@ -58,14 +58,15 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // EPREL API Endpoint - Correct format from documentation
-      const eprelUrl = 'https://eprel.ec.europa.eu/api/products/tyres'
+      // EPREL API Endpoint - Correct format from EPREL support team
+      // They confirmed: https://eprel.ec.europa.eu/api/exportProducts/tyres is the correct endpoint
+      const eprelUrl = 'https://eprel.ec.europa.eu/api/exportProducts/tyres'
 
       console.log('Calling EPREL API:', eprelUrl)
 
       const response = await fetch(eprelUrl, {
         headers: {
-          'x-api-key': apiKey,  // lowercase as per EPREL documentation!
+          'X-Api-Key': apiKey,  // X-Api-Key as confirmed by EPREL support
           'Accept': 'application/json'
         }
       })

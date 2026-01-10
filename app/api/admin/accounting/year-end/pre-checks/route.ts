@@ -8,12 +8,25 @@ import { prisma } from '@/lib/prisma'
  * Verifies all prerequisites before starting year-end closing process
  */
 export async function GET(request: NextRequest) {
+  console.log('[PRE-CHECKS] API Called')
   const preChecks = []
   
   try {
     console.log('[PRE-CHECKS] Starting pre-checks...')
-    const session = await getServerSession(authOptions)
-    console.log('[PRE-CHECKS] Session:', session?.user?.email, session?.user?.role)
+    
+    let session
+    try {
+      session = await getServerSession(authOptions)
+      console.log('[PRE-CHECKS] Session retrieved:', session?.user?.email, session?.user?.role)
+    } catch (sessionError) {
+      console.error('[PRE-CHECKS] Session error:', sessionError)
+      return NextResponse.json([{
+        id: 'error',
+        title: 'Fehler bei Prüfungen',
+        status: 'failed',
+        message: 'Session-Fehler aufgetreten'
+      }])
+    }
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       console.log('[PRE-CHECKS] Unauthorized access attempt')

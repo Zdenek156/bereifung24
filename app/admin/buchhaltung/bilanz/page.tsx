@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer } from 'lucide-react'
+import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer, ArrowLeft } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
+import { useRouter } from 'next/navigation'
 
 // Print styles
 const printStyles = `
@@ -112,6 +113,7 @@ interface BalanceSheetData {
 }
 
 export default function BilanzPage() {
+  const router = useRouter()
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [balanceSheet, setBalanceSheet] = useState<BalanceSheetData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -265,7 +267,16 @@ export default function BilanzPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Bilanz</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/buchhaltung')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <h1 className="text-3xl font-bold">Bilanz</h1>
+          </div>
           <div className="flex gap-3 items-center">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -320,7 +331,16 @@ export default function BilanzPage() {
       <style>{printStyles}</style>
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6 print-hide">
-          <h1 className="text-3xl font-bold">Bilanz</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/buchhaltung')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <h1 className="text-3xl font-bold">Bilanz</h1>
+          </div>
           <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />

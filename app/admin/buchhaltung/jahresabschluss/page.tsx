@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +21,7 @@ import {
   FileText,
   Archive,
   CheckSquare,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface PreCheck {
@@ -40,6 +41,7 @@ interface YearEndStep {
 }
 
 export default function JahresabschlussPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [preChecks, setPreChecks] = useState<PreCheck[]>([]);
   const [loading, setLoading] = useState(false);
@@ -485,7 +487,7 @@ export default function JahresabschlussPage() {
               <p>✓ Provisions reviewed</p>
               <p>✓ Reports generated</p>
             </div>
-            <Button onClick={handleStep6Complete} className="w-full" variant="destructive" disabled={loading}>
+            <Button onClick={handleStep6Complete} className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={loading}>
               {loading ? 'Closing...' : 'Close Fiscal Year'}
             </Button>
           </div>
@@ -513,7 +515,13 @@ export default function JahresabschlussPage() {
   return (
     <div className="container mx-auto py-8 max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Jahresabschluss Wizard</h1>
+        <div className="flex items-center gap-4 mb-2">
+          <Button variant="outline" onClick={() => router.push('/admin/buchhaltung')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück
+          </Button>
+          <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
+        </div>
         <p className="text-muted-foreground">Step-by-step year-end closing process</p>
       </div>
 

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer, ArrowLeft } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { useRouter } from 'next/navigation'
 
 // Print styles
 const printStyles = `
@@ -102,6 +103,7 @@ interface ComparisonData {
 }
 
 export default function GuvPage() {
+  const router = useRouter()
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [incomeStatement, setIncomeStatement] = useState<IncomeStatementData | null>(null)
   const [comparison, setComparison] = useState<ComparisonData | null>(null)
@@ -272,7 +274,16 @@ export default function GuvPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/buchhaltung')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          </div>
           <div className="flex gap-3 items-center">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -327,7 +338,16 @@ export default function GuvPage() {
       <style>{printStyles}</style>
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6 print-hide">
-          <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/buchhaltung')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          </div>
           <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />

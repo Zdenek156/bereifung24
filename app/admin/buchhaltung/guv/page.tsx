@@ -6,6 +6,69 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 
+// Print styles
+const printStyles = `
+  @media print {
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+    
+    body * {
+      visibility: hidden;
+    }
+    
+    #print-content, #print-content * {
+      visibility: visible;
+    }
+    
+    #print-content {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    
+    .print-hide {
+      display: none !important;
+    }
+    
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .print-table th,
+    .print-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .print-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    
+    .print-section {
+      margin-top: 30px;
+      page-break-inside: avoid;
+    }
+    
+    .print-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .print-total {
+      font-weight: bold;
+      border-top: 2px solid #000;
+      margin-top: 10px;
+    }
+  }
+`
+
 interface IncomeStatementData {
   year: number
   revenue: {
@@ -224,10 +287,12 @@ export default function GuvPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
-        <div className="flex gap-3 items-center">
+    <>
+      <style>{printStyles}</style>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6 print-hide">
+          <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
+          <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <select
@@ -500,6 +565,169 @@ export default function GuvPage() {
           </div>
         </div>
       </Card>
+
+      {/* Print-only content */}
+      <div id="print-content" className="hidden print:block">
+        <div className="print-header">
+          <h1 className="text-2xl font-bold">GEWINN- UND VERLUSTRECHNUNG</h1>
+          <p className="text-lg">für das Geschäftsjahr {selectedYear}</p>
+          <p className="text-sm mt-2">Bereifung24 GmbH</p>
+        </div>
+
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th style={{ width: '70%' }}>ERTRÄGE</th>
+              <th style={{ width: '30%', textAlign: 'right' }}>EUR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1. Umsatzerlöse</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.revenue.umsatzerloese || 0)}</td>
+            </tr>
+            <tr>
+              <td>2. Bestandsveränderungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.revenue.bestandsveraenderungen || 0)}</td>
+            </tr>
+            <tr>
+              <td>3. Andere aktivierte Eigenleistungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.revenue.andereAktivierteEigenleistungen || 0)}</td>
+            </tr>
+            <tr>
+              <td>4. Sonstige betriebliche Erträge</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.revenue.sonstigeBetrieblicheErtraege || 0)}</td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Gesamtleistung</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR(calculateTotalRevenue(incomeStatement!))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="print-table" style={{ marginTop: '30px' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '70%' }}>AUFWENDUNGEN</th>
+              <th style={{ width: '30%', textAlign: 'right' }}>EUR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={2}><strong>5. Materialaufwand</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>a) Aufwendungen für Roh-, Hilfs- und Betriebsstoffe</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe || 0)}</td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>b) Aufwendungen für bezogene Leistungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.materialaufwand.aufwendungenBezogeneLeistungen || 0)}</td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td style={{ paddingLeft: '20px' }}>Summe Materialaufwand</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((incomeStatement?.expenses.materialaufwand.aufwendungenRohHilfsBetriebsstoffe || 0) + 
+                          (incomeStatement?.expenses.materialaufwand.aufwendungenBezogeneLeistungen || 0))}
+              </td>
+            </tr>
+            
+            <tr>
+              <td colSpan={2}><strong>6. Personalaufwand</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>a) Löhne und Gehälter</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.personalaufwand.loehneGehaelter || 0)}</td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>b) Soziale Abgaben</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.personalaufwand.sozialeAbgaben || 0)}</td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>c) Altersversorgung</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.personalaufwand.altersversorgung || 0)}</td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td style={{ paddingLeft: '20px' }}>Summe Personalaufwand</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((incomeStatement?.expenses.personalaufwand.loehneGehaelter || 0) + 
+                          (incomeStatement?.expenses.personalaufwand.sozialeAbgaben || 0) + 
+                          (incomeStatement?.expenses.personalaufwand.altersversorgung || 0))}
+              </td>
+            </tr>
+            
+            <tr>
+              <td><strong>7. Abschreibungen</strong></td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.abschreibungen || 0)}</td>
+            </tr>
+            
+            <tr>
+              <td><strong>8. Sonstige betriebliche Aufwendungen</strong></td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.expenses.sonstigeBetrieblicheAufwendungen || 0)}</td>
+            </tr>
+            
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Betriebsergebnis</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR(calculateTotalRevenue(incomeStatement!) - calculateTotalExpenses(incomeStatement!))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="print-table" style={{ marginTop: '30px' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '70%' }}>FINANZERGEBNIS</th>
+              <th style={{ width: '30%', textAlign: 'right' }}>EUR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>9. Zinserträge</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.financialResult?.zinsertraege || 0)}</td>
+            </tr>
+            <tr>
+              <td>10. Beteiligungserträge</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.financialResult?.beteiligungsertraege || 0)}</td>
+            </tr>
+            <tr>
+              <td>11. Zinsen und ähnliche Aufwendungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.financialResult?.zinsenAehnlicheAufwendungen || 0)}</td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Finanzergebnis</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((incomeStatement?.financialResult?.zinsertraege || 0) + 
+                          (incomeStatement?.financialResult?.beteiligungsertraege || 0) - 
+                          (incomeStatement?.financialResult?.zinsenAehnlicheAufwendungen || 0))}
+              </td>
+            </tr>
+            
+            <tr style={{ fontWeight: 'bold', borderTop: '2px solid #000' }}>
+              <td>Ergebnis vor Steuern</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.earningsBeforeTax || 0)}</td>
+            </tr>
+            
+            <tr>
+              <td>12. Steuern vom Einkommen und vom Ertrag</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(incomeStatement?.taxes || 0)}</td>
+            </tr>
+            
+            <tr className="print-total">
+              <td><strong>{incomeStatement && incomeStatement.netIncome >= 0 ? 'JAHRESÜBERSCHUSS' : 'JAHRESFEHLBETRAG'}</strong></td>
+              <td style={{ textAlign: 'right' }}><strong>{formatEUR(incomeStatement?.netIncome || 0)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ marginTop: '40px', fontSize: '12px', textAlign: 'center' }}>
+          <p>Erstellt am: {new Date().toLocaleDateString('de-DE')}</p>
+        </div>
+      </div>
     </div>
+    </>
   )
 }

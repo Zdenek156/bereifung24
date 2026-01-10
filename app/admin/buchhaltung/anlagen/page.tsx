@@ -128,7 +128,7 @@ export default function AnlagenPage() {
       });
       if (response.ok) {
         await fetchAssets();
-        alert('Monthly depreciation completed successfully');
+        alert('Monatliche AfA erfolgreich ausgeführt');
       }
     } catch (error) {
       console.error('Failed to run depreciation:', error);

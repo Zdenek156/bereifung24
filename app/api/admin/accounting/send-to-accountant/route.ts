@@ -134,17 +134,17 @@ export async function POST(request: NextRequest) {
       smtpSecure: false
     }
 
+    // Load CompanySettings for tax number and SMTP settings
+    const companySettings = await prisma.companySettings.findFirst()
+    
     // Fallback to CompanySettings if AdminApiSetting is empty
-    if (!smtpSettings.smtpHost) {
-      const companySettings = await prisma.companySettings.findFirst()
-      if (companySettings) {
-        smtpSettings.smtpHost = companySettings.smtpHost || ''
-        smtpSettings.smtpPort = companySettings.smtpPort || '587'
-        smtpSettings.smtpUser = companySettings.smtpUser || ''
-        smtpSettings.smtpPassword = companySettings.smtpPassword || ''
-        smtpSettings.smtpFrom = companySettings.smtpFrom || ''
-        smtpSettings.smtpSecure = companySettings.smtpSecure || false
-      }
+    if (!smtpSettings.smtpHost && companySettings) {
+      smtpSettings.smtpHost = companySettings.smtpHost || ''
+      smtpSettings.smtpPort = companySettings.smtpPort || '587'
+      smtpSettings.smtpUser = companySettings.smtpUser || ''
+      smtpSettings.smtpPassword = companySettings.smtpPassword || ''
+      smtpSettings.smtpFrom = companySettings.smtpFrom || ''
+      smtpSettings.smtpSecure = companySettings.smtpSecure || false
     }
 
     const emailTemplate = await prisma.emailTemplate.findUnique({
@@ -166,7 +166,8 @@ export async function POST(request: NextRequest) {
       documents: attachments.map(a => a.name),
       message: message || null,
       accountantName: accountant.name || null,
-      companyAddress: null
+      companyAddress: null,
+      companyTaxNumber: companySettings?.taxNumber || null
     }
 
     // Compile Handlebars template
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
             let extension: string
 
             if (format === 'pdf') {
-              buffer = await generateBalanceSheetPDF(balanceSheetData)
+              buffer = await generateBalanceSheetPDF(balanceSheetData, companySettings?.taxNumber)
               contentType = 'application/pdf'
               extension = 'pdf'
             } else if (format === 'excel') {
@@ -266,7 +267,7 @@ export async function POST(request: NextRequest) {
             let extension: string
 
             if (format === 'pdf') {
-              buffer = await generateIncomeStatementPDF(incomeStatementData)
+              buffer = await generateIncomeStatementPDF(incomeStatementData, companySettings?.taxNumber)
               contentType = 'application/pdf'
               extension = 'pdf'
             } else if (format === 'excel') {
@@ -311,7 +312,7 @@ export async function POST(request: NextRequest) {
             let extension: string
 
             if (format === 'pdf') {
-              buffer = await generateJournalPDF(journalEntries, year)
+              buffer = await generateJournalPDF(journalEntries, year, companySettings?.taxNumber)
               contentType = 'application/pdf'
               extension = 'pdf'
             } else if (format === 'excel') {
@@ -431,6 +432,9 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
       doc.fontSize(12).text(`zum 31. Dezember ${balanceSheet.year}`, { align: 'center' })
       doc.moveDown()
       doc.fontSize(10).text('Bereifung24 GmbH', { align: 'center' })
+      if (taxNumber) {
+        doc.fontSize(8).text(`Steuernummer: ${taxNumber}`, { align: 'center' })
+      }
       doc.moveDown(2)
 
       const assets = balanceSheet.assets as any
@@ -527,7 +531,7 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
 }
 
 // Helper function to generate GuV PDF
-async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer> {
+async function generateIncomeStatementPDF(incomeStatement: any, taxNumber?: string | null): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 
@@ -553,6 +557,9 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
       doc.fontSize(12).text(`für das Geschäftsjahr ${incomeStatement.year}`, { align: 'center' })
       doc.moveDown()
       doc.fontSize(10).text('Bereifung24 GmbH', { align: 'center' })
+      if (taxNumber) {
+        doc.fontSize(8).text(`Steuernummer: ${taxNumber}`, { align: 'center' })
+      }
       doc.moveDown(2)
 
       const revenue = incomeStatement.revenue as any
@@ -650,7 +657,7 @@ function toNumber(value: any): number {
 }
 
 // Helper function to generate Journal PDF
-async function generateJournalPDF(entries: any[], year: number): Promise<Buffer> {
+async function generateJournalPDF(entries: any[], year: number, taxNumber?: string | null): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 
@@ -677,6 +684,9 @@ async function generateJournalPDF(entries: any[], year: number): Promise<Buffer>
       doc.fontSize(10).text(`Geschäftsjahr ${year}`, { align: 'center' })
       doc.moveDown()
       doc.fontSize(8).text('Bereifung24 GmbH', { align: 'center' })
+      if (taxNumber) {
+        doc.fontSize(7).text(`Steuernummer: ${taxNumber}`, { align: 'center' })
+      }
       doc.moveDown(1.5)
 
       // Table headers

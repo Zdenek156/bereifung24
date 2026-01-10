@@ -2,25 +2,22 @@ const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
-async function addAccountantTemplate() {
+async function updateAccountantTemplate() {
   try {
-    // Check if template already exists
+    // Check if template exists
     const existing = await prisma.emailTemplate.findUnique({
       where: { key: 'ACCOUNTANT_DOCUMENTS' }
     })
 
-    if (existing) {
-      console.log('✅ Template ACCOUNTANT_DOCUMENTS already exists!')
+    if (!existing) {
+      console.log('❌ Template ACCOUNTANT_DOCUMENTS does not exist!')
       return
     }
 
-    // Create the template
-    await prisma.emailTemplate.create({
+    // Update the template with tax number
+    await prisma.emailTemplate.update({
+      where: { key: 'ACCOUNTANT_DOCUMENTS' },
       data: {
-        key: 'ACCOUNTANT_DOCUMENTS',
-        name: 'Steuerberater - Jahresabschluss Dokumente',
-        description: 'Email-Vorlage für den Versand von Bilanz, GuV und Journal an den Steuerberater',
-        subject: 'Jahresabschluss {{year}} - Bereifung24 GmbH',
         htmlContent: `
 <!DOCTYPE html>
 <html>
@@ -86,18 +83,17 @@ async function addAccountantTemplate() {
           'senderName',
           'companyAddress',
           'companyTaxNumber'
-        ]),
-        isActive: true
+        ])
       }
     })
 
-    console.log('✅ Email template ACCOUNTANT_DOCUMENTS created successfully!')
+    console.log('✅ Email template ACCOUNTANT_DOCUMENTS updated successfully with tax number!')
   } catch (error) {
-    console.error('❌ Error creating template:', error)
+    console.error('❌ Error updating template:', error)
     throw error
   } finally {
     await prisma.$disconnect()
   }
 }
 
-addAccountantTemplate()
+addAccountantTemplate().catch(console.error)

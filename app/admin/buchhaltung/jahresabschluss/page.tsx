@@ -133,12 +133,20 @@ export default function JahresabschlussPage() {
     try {
       const response = await fetch(`/api/admin/accounting/year-end/pre-checks?year=${fiscalYear}`);
       const data = await response.json();
-      setPreChecks(data);
+      setPreChecks(Array.isArray(data) ? data : []);
       
-      const allPassed = data.every((check: PreCheck) => check.status === 'passed');
-      updateStepCompletion(1, allPassed);
+      // Allow to proceed if no critical errors (failed status)
+      const hasCriticalError = data.some((check: PreCheck) => check.status === 'failed');
+      updateStepCompletion(1, !hasCriticalError);
     } catch (error) {
       console.error('Failed to run pre-checks:', error);
+      setPreChecks([{
+        id: 'error',
+        title: 'Fehler bei Prüfungen',
+        status: 'warning',
+        message: 'Prüfungen konnten nicht durchgeführt werden. Sie können trotzdem fortfahren.'
+      }]);
+      updateStepCompletion(1, true); // Allow to proceed even on error
     } finally {
       setLoading(false);
     }

@@ -11,23 +11,30 @@ export async function GET(request: NextRequest) {
   const preChecks = []
   
   try {
+    console.log('[PRE-CHECKS] Starting pre-checks...')
     const session = await getServerSession(authOptions)
+    console.log('[PRE-CHECKS] Session:', session?.user?.email, session?.user?.role)
+    
     if (!session?.user || session.user.role !== 'ADMIN') {
+      console.log('[PRE-CHECKS] Unauthorized access attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const searchParams = request.nextUrl.searchParams
     const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString())
+    console.log('[PRE-CHECKS] Year:', year)
 
     const startDate = new Date(year, 0, 1)
     const endDate = new Date(year, 11, 31, 23, 59, 59)
 
     // Check 1: Balance Sheet Exists
+    console.log('[PRE-CHECKS] Check 1: Balance Sheet')
     let balanceSheet = null
     try {
       balanceSheet = await prisma.balanceSheet.findUnique({
         where: { year }
       })
+      console.log('[PRE-CHECKS] Balance sheet found:', !!balanceSheet)
     } catch (err) {
       console.error('Balance sheet check error:', err)
     }
@@ -165,7 +172,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(preChecks)
   } catch (error) {
-    console.error('Error running pre-checks:', error)
+    console.error('[PRE-CHECKS] FATAL ERROR:', error)
+    console.error('[PRE-CHECKS] Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('[PRE-CHECKS] Error message:', error instanceof Error ? error.message : String(error))
     // Return empty array instead of error to prevent frontend crash
     return NextResponse.json([
       {

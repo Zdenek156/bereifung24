@@ -129,9 +129,41 @@ export default function GuvPage() {
           `/api/admin/accounting/income-statement/comparison?year=${selectedYear}`
         )
         if (response.ok) {
-          const data = await response.json()
-          setComparison(data)
-          setIncomeStatement(data.current)
+          const result = await response.json()
+          if (result.success && result.data) {
+            setComparison(result.data)
+            setIncomeStatement(result.data.current)
+          } else {
+            // No data available, fetch single year data
+            const singleResponse = await fetch(
+              `/api/admin/accounting/income-statement?year=${selectedYear}`
+            )
+            if (singleResponse.ok) {
+              const singleResult = await singleResponse.json()
+              if (singleResult.success && singleResult.data && singleResult.data.length > 0) {
+                setIncomeStatement(singleResult.data[0])
+                setComparison(null)
+              } else {
+                setIncomeStatement(null)
+                setComparison(null)
+              }
+            }
+          }
+        } else {
+          // If comparison fails, try to get single year data
+          const singleResponse = await fetch(
+            `/api/admin/accounting/income-statement?year=${selectedYear}`
+          )
+          if (singleResponse.ok) {
+            const singleResult = await singleResponse.json()
+            if (singleResult.success && singleResult.data && singleResult.data.length > 0) {
+              setIncomeStatement(singleResult.data[0])
+              setComparison(null)
+            } else {
+              setIncomeStatement(null)
+              setComparison(null)
+            }
+          }
         }
       } else {
         const response = await fetch(
@@ -354,6 +386,41 @@ export default function GuvPage() {
         </TabsList>
       </Tabs>
 
+      {viewMode === 'comparison' && incomeStatement && !comparison?.previous && (
+        <Card className="p-4 mb-6 bg-yellow-50 border-yellow-200">
+          <div className="flex items-start gap-3">
+            <div className="text-yellow-600 text-2xl">⚠️</div>
+            <div>
+              <h3 className="font-semibold text-yellow-900 mb-1">Keine Vorjahresdaten verfügbar</h3>
+              <p className="text-sm text-yellow-800">
+                Für das Jahr {selectedYear - 1} sind keine Gewinn- und Verlustrechnungsdaten vorhanden. 
+                Der Vergleich kann daher nicht angezeigt werden.
+              </p>
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/accounting/income-statement', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ year: selectedYear - 1 })
+                    })
+                    if (response.ok) {
+                      fetchIncomeStatement()
+                    }
+                  } catch (error) {
+                    console.error('Error generating previous year income statement:', error)
+                  }
+                }}
+                size="sm"
+                className="mt-3 bg-yellow-600 hover:bg-yellow-700"
+              >
+                GuV für {selectedYear - 1} generieren
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {showCharts && incomeStatement && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card className="p-6">
@@ -419,7 +486,8 @@ export default function GuvPage() {
                 <span>1. Umsatzerlöse</span>
                 <div className="flex items-center gap-4">
                   <span className="font-mono">{formatEUR(incomeStatement?.revenue.umsatzerloese || 0)}</span>
-                  {viewMode === 'comparison' && comparison && renderChangeIndicator(incomeStatement?.revenue.umsatzerloese || 0, comparison.previous.revenue.umsatzerloese)}
+                  {viewMode === 'comparison' && comparison && comparison.previous && renderChangeIndicator(incomeStatement?.revenue.umsatzerloese || 0, comparison.previous.revenue.umsatzerloese)}
+                  {viewMode === 'comparison' && !comparison?.previous && <span className="text-xs text-gray-400">Keine Vorjahresdaten</span>}
                 </div>
               </div>
               <div className="flex justify-between items-center">

@@ -44,14 +44,7 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    if (!current) {
-      return NextResponse.json(
-        { success: false, error: `No income statement found for year ${currentYear}` },
-        { status: 404 }
-      )
-    }
-
-    // Calculate changes
+    // Calculate changes (even if previous is null)
     const calculateChange = (currentVal: number | null, previousVal: number | null) => {
       if (currentVal === null || previousVal === null || previousVal === 0) {
         return { absolute: 0, percentage: 0 }

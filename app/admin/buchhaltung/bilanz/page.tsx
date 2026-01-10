@@ -117,9 +117,12 @@ export default function BilanzPage() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
 
+  // Years from 2025 onwards (current year + 5 years into future)
+  const currentYear = new Date().getFullYear()
+  const startYear = Math.max(2025, currentYear)
   const availableYears = Array.from(
-    { length: 10 },
-    (_, i) => new Date().getFullYear() - i
+    { length: 6 },
+    (_, i) => startYear + i
   )
 
   useEffect(() => {

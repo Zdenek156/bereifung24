@@ -33,17 +33,19 @@ export async function POST(request: NextRequest) {
     })
 
     if (!balanceSheet) {
+      console.log('[YEAR-END UNLOCK] No balance sheet found for year:', year)
       return NextResponse.json({
-        success: false,
-        error: 'Keine Bilanz für dieses Jahr gefunden'
-      }, { status: 404 })
+        success: true,
+        message: `Keine Bilanz für ${year} gefunden - Jahr ist bereits entsperrt`
+      })
     }
 
     if (!balanceSheet.locked) {
+      console.log('[YEAR-END UNLOCK] Balance sheet already unlocked')
       return NextResponse.json({
-        success: false,
-        error: 'Geschäftsjahr ist nicht gesperrt'
-      }, { status: 400 })
+        success: true,
+        message: `Geschäftsjahr ${year} ist bereits entsperrt`
+      })
     }
 
     // Unlock the balance sheet

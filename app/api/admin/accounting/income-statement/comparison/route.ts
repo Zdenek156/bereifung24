@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const comparison = {
       current,
       previous,
-      changes: previous ? {
+      changes: (previous && current) ? {
         salesRevenue: calculateChange(current.salesRevenue, previous.salesRevenue),
         inventoryChange: calculateChange(current.inventoryChange, previous.inventoryChange),
         ownWorkCapitalized: calculateChange(current.ownWorkCapitalized, previous.ownWorkCapitalized),

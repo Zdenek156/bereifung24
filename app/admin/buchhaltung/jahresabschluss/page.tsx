@@ -276,10 +276,9 @@ export default function JahresabschlussPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 6 }, (_, i) => {
+                  {Array.from({ length: new Date().getFullYear() - 2025 + 1 }, (_, i) => {
                     const currentYear = new Date().getFullYear()
-                    const startYear = Math.max(2025, currentYear)
-                    return startYear + i
+                    return currentYear - i // Most recent year first
                   }).map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}

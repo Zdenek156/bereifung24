@@ -109,13 +109,14 @@ export default function GuvPage() {
   const [viewMode, setViewMode] = useState<'single' | 'comparison'>('single')
   const [showCharts, setShowCharts] = useState(false)
 
-  // Years from 2025 onwards (current year + 5 years into future)
+  // Years from 2025 up to current year (no future years for accounting data)
   const currentYear = new Date().getFullYear()
-  const startYear = Math.max(2025, currentYear)
+  const startYear = 2025
+  const yearCount = currentYear - startYear + 1
   const availableYears = Array.from(
-    { length: 6 },
+    { length: yearCount },
     (_, i) => startYear + i
-  )
+  ).reverse() // Most recent year first
 
   useEffect(() => {
     fetchIncomeStatement()

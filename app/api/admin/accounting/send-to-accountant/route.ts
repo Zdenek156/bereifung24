@@ -167,6 +167,8 @@ Bereifung24 GmbH
     */
 
     // Create audit log entry
+    // TODO: Implement AuditLog model or use existing logging system
+    /*
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
@@ -184,6 +186,7 @@ Bereifung24 GmbH
         }
       }
     })
+    */
 
     return NextResponse.json({
       success: true,

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const year = body.year || new Date().getFullYear()
+    const year = body.year || body.fiscalYear || new Date().getFullYear()
     
     console.log('[YEAR-END DEPRECIATION] Processing depreciation for year:', year)
 

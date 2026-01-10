@@ -300,6 +300,7 @@ export default function RueckstellungenPage() {
                 <TableHead className="text-right">Betrag</TableHead>
                 <TableHead>Jahr</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Buchung</TableHead>
                 <TableHead>Erstellt</TableHead>
                 <TableHead>Aktionen</TableHead>
               </TableRow>
@@ -319,6 +320,20 @@ export default function RueckstellungenPage() {
                     >
                       {provision.released ? 'Aufgelöst' : 'Aktiv'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {provision.entryId ? (
+                      <a 
+                        href={`/admin/buchhaltung/buchungen?id=${provision.entryId}`}
+                        className="text-blue-600 hover:underline text-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {provision.entryId.slice(0, 8)}...
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Keine</span>
+                    )}
                   </TableCell>
                   <TableCell>{new Date(provision.createdAt).toLocaleDateString('de-DE')}</TableCell>
                   <TableCell>

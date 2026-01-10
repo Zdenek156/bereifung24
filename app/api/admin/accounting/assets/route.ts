@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         afaMethod: depreciationMethod.toUpperCase() === 'LINEAR' ? 'LINEAR' : 'DEGRESSIV',
         annualDepreciation,
         bookValue: purchasePrice,
-        costCenter: 'ADMINISTRATION',
+        costCenter: 'ALLGEMEIN', // Changed from ADMINISTRATION to ALLGEMEIN (valid enum value)
         status: 'ACTIVE',
         createdById: session.user.id
       }

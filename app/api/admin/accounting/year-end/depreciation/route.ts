@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     
     const assets = await prisma.asset.findMany({
       where: {
-        purchaseDate: {
+        acquisitionDate: {
           lte: endDate
         },
         OR: [
@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
 
     // Create depreciation entries for assets that don't have them yet
     for (const asset of assets) {
-      if (asset.depreciations.length === 0 && asset.usefulLifeYears > 0) {
-        // Calculate annual depreciation amount
-        const annualDepreciation = asset.purchasePrice / asset.usefulLifeYears
+      if (asset.depreciations.length === 0 && asset.usefulLife > 0) {
+        // Calculate annual depreciation amount (already calculated in Asset)
+        const annualDepreciation = asset.annualDepreciation
         
         await prisma.depreciation.create({
           data: {

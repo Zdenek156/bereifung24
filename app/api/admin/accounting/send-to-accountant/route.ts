@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import nodemailer from 'nodemailer'
-import Handlebars from 'handlebars'
+import * as nodemailer from 'nodemailer'
+import * as Handlebars from 'handlebars'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'

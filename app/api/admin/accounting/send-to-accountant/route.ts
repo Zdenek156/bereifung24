@@ -816,6 +816,7 @@ async function generateBalanceSheetExcel(balanceSheet: any, year: number): Promi
     ['SUMME AKTIVA', formatEUR(toNumber(balanceSheet.totalAssets))]
   ]
   const wsAktiva = XLSX.utils.aoa_to_sheet(aktivaData)
+  wsAktiva['!cols'] = [{ wch: 50 }, { wch: 20 }]
   XLSX.utils.book_append_sheet(wb, wsAktiva, 'Aktiva')
 
   // Passiva Sheet  
@@ -847,6 +848,7 @@ async function generateBalanceSheetExcel(balanceSheet: any, year: number): Promi
     ['SUMME PASSIVA', formatEUR(toNumber(balanceSheet.totalLiabilities))]
   ]
   const wsPassiva = XLSX.utils.aoa_to_sheet(passivaData)
+  wsPassiva['!cols'] = [{ wch: 50 }, { wch: 20 }]
   XLSX.utils.book_append_sheet(wb, wsPassiva, 'Passiva')
 
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
@@ -880,6 +882,7 @@ async function generateIncomeStatementExcel(incomeStatement: any, year: number):
   ]
   
   const ws = XLSX.utils.aoa_to_sheet(data)
+  ws['!cols'] = [{ wch: 50 }, { wch: 20 }]
   XLSX.utils.book_append_sheet(wb, ws, 'GuV')
 
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
@@ -916,6 +919,7 @@ async function generateJournalExcel(entries: any[], year: number): Promise<Buffe
   data.push(['', '', '', '', `Summe (${entries.length} Buchungen)`, formatEUR(totalAmount), ''])
   
   const ws = XLSX.utils.aoa_to_sheet(data)
+  ws['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 12 }]
   XLSX.utils.book_append_sheet(wb, ws, 'Journal')
 
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })

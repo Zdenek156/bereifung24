@@ -93,7 +93,7 @@ export default function AnlagenPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
+    if (!confirm('Möchten Sie diese Anlage wirklich löschen?')) return;
     
     try {
       const response = await fetch(`/api/admin/accounting/assets/${id}`, {
@@ -120,7 +120,7 @@ export default function AnlagenPage() {
   };
 
   const runMonthlyDepreciation = async () => {
-    if (!confirm('Run monthly depreciation for all active assets?')) return;
+    if (!confirm('Monatliche AfA für alle aktiven Anlagen ausführen?')) return;
     
     try {
       const response = await fetch('/api/admin/accounting/assets/depreciation/run', {
@@ -174,30 +174,30 @@ export default function AnlagenPage() {
         <div className="space-x-2">
           <Button onClick={runMonthlyDepreciation} variant="outline">
             <TrendingDown className="mr-2 h-4 w-4" />
-            Run Monthly Depreciation
+            Monatliche AfA ausführen
           </Button>
           <Button onClick={() => openModal()}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Asset
+            Anlage hinzufügen
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8">Laden...</div>
       ) : (
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Purchase Date</TableHead>
-                <TableHead className="text-right">Purchase Price</TableHead>
-                <TableHead className="text-right">Current Value</TableHead>
-                <TableHead className="text-right">Acc. Depreciation</TableHead>
+                <TableHead>Kategorie</TableHead>
+                <TableHead>Kaufdatum</TableHead>
+                <TableHead className="text-right">Anschaffungskosten</TableHead>
+                <TableHead className="text-right">Buchwert</TableHead>
+                <TableHead className="text-right">Kum. AfA</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,7 +217,7 @@ export default function AnlagenPage() {
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button size="sm" variant="outline" onClick={() => viewSchedule(asset)}>
-                        Schedule
+                        AfA-Plan
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => openModal(asset)}>
                         <Edit className="h-4 w-4" />
@@ -238,13 +238,13 @@ export default function AnlagenPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedAsset ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
+            <DialogTitle>{selectedAsset ? 'Anlage bearbeiten' : 'Neue Anlage hinzufügen'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Asset Name</Label>
+                  <Label htmlFor="name">Anlagenbezeichnung</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -253,20 +253,20 @@ export default function AnlagenPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">Kategorie</Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) => setFormData({ ...formData, category: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Kategorie wählen" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="equipment">Equipment</SelectItem>
-                      <SelectItem value="vehicles">Vehicles</SelectItem>
-                      <SelectItem value="furniture">Furniture</SelectItem>
+                      <SelectItem value="equipment">Betriebs- und Geschäftsausstattung</SelectItem>
+                      <SelectItem value="vehicles">Fuhrpark</SelectItem>
+                      <SelectItem value="furniture">Büromöbel</SelectItem>
                       <SelectItem value="software">Software</SelectItem>
-                      <SelectItem value="buildings">Buildings</SelectItem>
+                      <SelectItem value="buildings">Gebäude</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -274,7 +274,7 @@ export default function AnlagenPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="purchaseDate">Purchase Date</Label>
+                  <Label htmlFor="purchaseDate">Anschaffungsdatum</Label>
                   <Input
                     id="purchaseDate"
                     type="date"
@@ -284,7 +284,7 @@ export default function AnlagenPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="purchasePrice">Purchase Price (€)</Label>
+                  <Label htmlFor="purchasePrice">Anschaffungskosten (€)</Label>
                   <Input
                     id="purchasePrice"
                     type="number"
@@ -298,7 +298,7 @@ export default function AnlagenPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="depreciationMethod">Depreciation Method</Label>
+                  <Label htmlFor="depreciationMethod">AfA-Methode</Label>
                   <Select
                     value={formData.depreciationMethod}
                     onValueChange={(value) => setFormData({ ...formData, depreciationMethod: value })}
@@ -308,12 +308,12 @@ export default function AnlagenPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="linear">Linear</SelectItem>
-                      <SelectItem value="declining">Declining Balance</SelectItem>
+                      <SelectItem value="declining">Degressiv</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="usefulLife">Useful Life (Years)</Label>
+                  <Label htmlFor="usefulLife">Nutzungsdauer (Jahre)</Label>
                   <Input
                     id="usefulLife"
                     type="number"
@@ -323,7 +323,7 @@ export default function AnlagenPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="residualValue">Residual Value (€)</Label>
+                  <Label htmlFor="residualValue">Restwert (€)</Label>
                   <Input
                     id="residualValue"
                     type="number"
@@ -336,10 +336,10 @@ export default function AnlagenPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeModal}>
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit">
-                {selectedAsset ? 'Update' : 'Create'}
+                {selectedAsset ? 'Aktualisieren' : 'Erstellen'}
               </Button>
             </DialogFooter>
           </form>
@@ -350,16 +350,16 @@ export default function AnlagenPage() {
       <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Depreciation Schedule - {selectedAsset?.name}</DialogTitle>
+            <DialogTitle>AfA-Plan - {selectedAsset?.name}</DialogTitle>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead className="text-right">Opening Value</TableHead>
-                  <TableHead className="text-right">Depreciation</TableHead>
-                  <TableHead className="text-right">Closing Value</TableHead>
+                  <TableHead>Periode</TableHead>
+                  <TableHead className="text-right">Anfangswert</TableHead>
+                  <TableHead className="text-right">AfA</TableHead>
+                  <TableHead className="text-right">Endwert</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

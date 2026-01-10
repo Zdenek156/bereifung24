@@ -136,6 +136,11 @@ export async function POST(request: NextRequest) {
 
     // Load CompanySettings for tax number and SMTP settings
     const companySettings = await prisma.companySettings.findFirst()
+    console.log('[SEND TO ACCOUNTANT] CompanySettings loaded:', {
+      hasTaxNumber: !!companySettings?.taxNumber,
+      taxNumber: companySettings?.taxNumber || 'NOT SET',
+      hasAccountantTaxNumber: !!companySettings?.accountantTaxNumber
+    })
     
     // Fallback to CompanySettings if AdminApiSetting is empty
     if (!smtpSettings.smtpHost && companySettings) {

@@ -93,9 +93,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('📥 Provision POST request body:', JSON.stringify(body, null, 2))
+    
     const { type, amount, year, description, reason } = body
 
     if (!type || !amount || !year || !description) {
+      console.error('❌ Missing required fields:', { type, amount, year, description })
       return NextResponse.json(
         { success: false, error: 'Type, amount, year, and description are required' },
         { status: 400 }
@@ -103,27 +106,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (!Object.values(ProvisionType).includes(type)) {
+      console.error('❌ Invalid provision type:', type, 'Valid types:', Object.values(ProvisionType))
       return NextResponse.json(
-        { success: false, error: 'Invalid provision type' },
+        { success: false, error: `Invalid provision type: ${type}` },
         { status: 400 }
       )
     }
 
     if (typeof amount !== 'number' || amount <= 0) {
+      console.error('❌ Invalid amount:', amount, 'Type:', typeof amount)
       return NextResponse.json(
         { success: false, error: 'Amount must be a positive number' },
         { status: 400 }
       )
     }
 
+    console.log('✅ Creating provision with:', { type, amount, year, description, reason })
     const provision = await createProvision(type, amount, year, description, reason)
+    console.log('✅ Provision created successfully:', provision.id)
 
     return NextResponse.json({
       success: true,
       data: provision
     }, { status: 201 })
   } catch (error) {
-    console.error('Error creating provision:', error)
+    console.error('❌ Error creating provision:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined
+    })
 
     if (error instanceof Error && error.message.includes('must be greater')) {
       return NextResponse.json(
@@ -133,7 +144,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

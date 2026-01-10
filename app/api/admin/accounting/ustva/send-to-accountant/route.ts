@@ -53,10 +53,6 @@ export async function POST(request: NextRequest) {
           lte: end
         }
       },
-      include: {
-        debitAccountData: true,
-        creditAccountData: true
-      },
       orderBy: {
         bookingDate: 'asc'
       }

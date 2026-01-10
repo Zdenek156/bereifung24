@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import * as nodemailer from 'nodemailer'
+import { SmtpService } from '@/lib/email/smtp-service'
 import * as Handlebars from 'handlebars'
 
 // Force dynamic rendering
@@ -210,16 +210,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Dynamic import for nodemailer in production
-      const nodemailerModule = await import('nodemailer')
-      const createTransporter = nodemailerModule.default?.createTransporter || nodemailerModule.createTransporter
-      
-      if (!createTransporter) {
-        throw new Error('Nodemailer createTransporter not available')
-      }
-
-      // Create transporter
-      const transporter = createTransporter({
+      // Create SMTP service
+      const smtpService = new SmtpService({
         host: smtpSettings.smtpHost,
         port: parseInt(smtpSettings.smtpPort || '587'),
         secure: smtpSettings.smtpSecure || false,
@@ -230,7 +222,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Send email
-      await transporter.sendMail({
+      await smtpService.sendEmail({
         from: `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`,
         to: accountant.email,
         subject: emailSubject,

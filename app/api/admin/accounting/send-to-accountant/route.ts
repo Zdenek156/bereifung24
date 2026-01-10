@@ -210,6 +210,49 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Generate PDF attachments
+      const emailAttachments = []
+
+      if (documents.balanceSheet) {
+        try {
+          const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/accounting/balance-sheet/export?year=${year}&format=pdf`, {
+            headers: {
+              'Cookie': request.headers.get('cookie') || ''
+            }
+          })
+          if (pdfResponse.ok) {
+            const pdfBuffer = await pdfResponse.arrayBuffer()
+            emailAttachments.push({
+              filename: `Bilanz_${year}.pdf`,
+              content: Buffer.from(pdfBuffer)
+            })
+            console.log('[SEND TO ACCOUNTANT] Generated Bilanz PDF')
+          }
+        } catch (err) {
+          console.error('[SEND TO ACCOUNTANT] Error generating Bilanz PDF:', err)
+        }
+      }
+
+      if (documents.incomeStatement) {
+        try {
+          const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/accounting/income-statement/export?year=${year}&format=pdf`, {
+            headers: {
+              'Cookie': request.headers.get('cookie') || ''
+            }
+          })
+          if (pdfResponse.ok) {
+            const pdfBuffer = await pdfResponse.arrayBuffer()
+            emailAttachments.push({
+              filename: `GuV_${year}.pdf`,
+              content: Buffer.from(pdfBuffer)
+            })
+            console.log('[SEND TO ACCOUNTANT] Generated GuV PDF')
+          }
+        } catch (err) {
+          console.error('[SEND TO ACCOUNTANT] Error generating GuV PDF:', err)
+        }
+      }
+
       // Create SMTP service
       const smtpService = new SmtpService({
         host: smtpSettings.smtpHost,
@@ -221,17 +264,16 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Send email
+      // Send email with attachments
       await smtpService.sendEmail({
         from: `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`,
         to: accountant.email,
         subject: emailSubject,
         html: emailHtml,
-        // Note: Actual document generation would go here
-        // For now, we're just sending the email notification
+        attachments: emailAttachments
       })
 
-      console.log('[SEND TO ACCOUNTANT] ✅ Email sent successfully!')
+      console.log('[SEND TO ACCOUNTANT] ✅ Email sent successfully with', emailAttachments.length, 'attachments!')
     } catch (emailError) {
       console.error('[SEND TO ACCOUNTANT] Email error:', emailError)
       return NextResponse.json({

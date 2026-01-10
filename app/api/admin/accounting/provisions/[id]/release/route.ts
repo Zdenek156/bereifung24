@@ -31,8 +31,17 @@ export async function POST(
       )
     }
 
-    const body = await request.json()
-    const { amount, reason } = body
+    // Parse body if present, otherwise use defaults
+    let amount: number | undefined
+    let reason: string | undefined
+    
+    try {
+      const body = await request.json()
+      amount = body.amount
+      reason = body.reason
+    } catch (e) {
+      // No body or invalid JSON - use defaults (full release)
+    }
 
     await releaseProvision(id, session.user.id, amount, reason)
 

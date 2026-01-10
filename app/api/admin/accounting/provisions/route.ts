@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Creating provision with:', { type, amount, year, description, reason })
-    const provision = await createProvision(type, amount, year, description, reason)
+    const provision = await createProvision(type, amount, year, description, reason, session.user.id)
     console.log('✅ Provision created successfully:', provision.id)
 
     return NextResponse.json({

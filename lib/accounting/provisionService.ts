@@ -12,27 +12,68 @@ import { AccountingBookingService } from './bookingService'
 /**
  * Create a new provision
  * Provisions are used for probable future liabilities with uncertain timing or amount
+ * Automatically books the provision to accounting
  */
 export async function createProvision(
   type: ProvisionType,
   amount: number,
   year: number,
   description: string,
-  reason?: string
+  reason?: string,
+  userId?: string
 ): Promise<Provision> {
   try {
     if (amount <= 0) {
       throw new Error('Provision amount must be greater than zero')
     }
 
-    // Create provision record
+    // Determine provision account based on type
+    let provisionAccount = '3020' // Default: Sonstige Rückstellungen
+
+    switch (type) {
+      case 'TAX':
+        provisionAccount = '3010' // Steuerrückstellungen
+        break
+      case 'VACATION':
+        provisionAccount = '3030' // Urlaubsrückstellungen
+        break
+      case 'WARRANTY':
+        provisionAccount = '3040' // Gewährleistungsrückstellungen
+        break
+      case 'PENSION':
+        provisionAccount = '3000' // Pensionsrückstellungen
+        break
+      case 'LEGAL':
+      case 'RESTRUCTURING':
+      case 'OTHER':
+        provisionAccount = '3020' // Sonstige Rückstellungen
+        break
+    }
+
+    // Create accounting entry first
+    const bookingService = new AccountingBookingService()
+    const bookingDate = new Date(year, 11, 31) // Book at year end
+
+    const entry = await bookingService.createBooking({
+      debitAccountNumber: '6850', // Zuführung zu sonstigen Rückstellungen
+      creditAccountNumber: provisionAccount,
+      amount,
+      description: `Rückstellung: ${description}`,
+      bookingDate,
+      sourceType: 'MANUAL',
+      sourceId: '', // Will be updated with provision ID
+      createdByUserId: userId || 'system'
+    })
+
+    // Create provision record with entry ID
     const provision = await prisma.provision.create({
       data: {
         type,
         amount: new Decimal(amount),
         year,
         description,
-        reason
+        reason,
+        entryId: entry.id
       }
     })
 

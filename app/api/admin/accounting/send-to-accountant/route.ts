@@ -113,9 +113,6 @@ export async function POST(request: NextRequest) {
       attachments.push({ name: `Journal_${year}.${format}`, type: 'journal' })
     }
 
-      attachments.push({ name: `Journal_${year}.${format}`, type: 'journal' })
-    }
-
     // In a real implementation, you would:
     // 1. Generate attachments based on format (PDF, Excel, CSV)
     // 2. Send email via SMTP using settings from CompanySettings

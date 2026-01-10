@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
           company: companySettings.accountantCompany || '',
           address: companySettings.accountantAddress || '',
           phone: companySettings.accountantPhone || '',
-          taxNumber: companySettings.accountantTaxNumber || '',
-          companyTaxNumber: companySettings.taxNumber || ''
+          taxNumber: companySettings.accountantTaxNumber || ''
         }
       })
     }
@@ -46,8 +45,7 @@ export async function GET(request: NextRequest) {
         company: '',
         address: '',
         phone: '',
-        taxNumber: '',
-        companyTaxNumber: ''
+        taxNumber: ''
       }
     })
   } catch (error) {
@@ -72,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, company, address, phone, taxNumber, companyTaxNumber } = body
+    const { name, email, company, address, phone, taxNumber } = body
 
     // Validation
     if (!email) {
@@ -96,7 +94,6 @@ export async function POST(request: NextRequest) {
           accountantAddress: address,
           accountantPhone: phone,
           accountantTaxNumber: taxNumber,
-          taxNumber: companyTaxNumber,
           updatedAt: new Date()
         }
       })
@@ -110,8 +107,7 @@ export async function POST(request: NextRequest) {
           accountantCompany: company,
           accountantAddress: address,
           accountantPhone: phone,
-          accountantTaxNumber: taxNumber,
-          taxNumber: companyTaxNumber
+          accountantTaxNumber: taxNumber
         }
       })
     }

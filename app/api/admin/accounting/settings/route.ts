@@ -28,7 +28,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ settings })
+    // Load company tax number from CompanySettings
+    const companySettings = await prisma.companySettings.findFirst()
+    const companyTaxNumber = companySettings?.taxNumber || null
+
+    return NextResponse.json({ 
+      settings: {
+        ...settings,
+        companyTaxNumber
+      }
+    })
   } catch (error) {
     console.error('Error fetching accounting settings:', error)
     return NextResponse.json(
@@ -50,10 +59,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       fiscalYearStart,
-      taxAdvisorName,
-      taxAdvisorEmail,
-      taxAdvisorPhone,
-      taxAdvisorCompany,
+      companyTaxNumber,
       defaultVatRate,
       reducedVatRate,
       preferredExportFormat
@@ -84,10 +90,6 @@ export async function POST(request: NextRequest) {
         where: { id: settings.id },
         data: {
           fiscalYearStart,
-          taxAdvisorName: taxAdvisorName || null,
-          taxAdvisorEmail: taxAdvisorEmail || null,
-          taxAdvisorPhone: taxAdvisorPhone || null,
-          taxAdvisorCompany: taxAdvisorCompany || null,
           defaultVatRate,
           reducedVatRate,
           preferredExportFormat: preferredExportFormat || 'DATEV'
@@ -99,13 +101,25 @@ export async function POST(request: NextRequest) {
         data: {
           fiscalYearStart,
           entryNumberCounter: 0,
-          taxAdvisorName: taxAdvisorName || null,
-          taxAdvisorEmail: taxAdvisorEmail || null,
-          taxAdvisorPhone: taxAdvisorPhone || null,
-          taxAdvisorCompany: taxAdvisorCompany || null,
           defaultVatRate,
           reducedVatRate,
           preferredExportFormat: preferredExportFormat || 'DATEV'
+        }
+      })
+    }
+
+    // Update company tax number in CompanySettings
+    const existingCompany = await prisma.companySettings.findFirst()
+    if (existingCompany) {
+      await prisma.companySettings.update({
+        where: { id: existingCompany.id },
+        data: { taxNumber: companyTaxNumber || null }
+      })
+    } else {
+      await prisma.companySettings.create({
+        data: {
+          companyName: 'Bereifung24 GmbH',
+          taxNumber: companyTaxNumber || null
         }
       })
     }
@@ -114,7 +128,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
-      settings 
+      settings: {
+        ...settings,
+        companyTaxNumber
+      }
     })
   } catch (error: any) {
     console.error('Error updating accounting settings:', error)

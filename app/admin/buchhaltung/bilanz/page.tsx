@@ -1,11 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer, ArrowLeft } from 'lucide-react'
+import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer, ArrowLeft, Mail, FileDown, ChevronDown } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 // Print styles
 const printStyles = `
@@ -209,6 +215,31 @@ export default function BilanzPage() {
     }
   }
 
+  const handleEmailToAccountant = async () => {
+    if (!confirm('Bilanz und GuV als PDF an den Steuerberater senden?')) return
+    
+    setProcessing(true)
+    try {
+      const response = await fetch('/api/admin/accounting/send-to-accountant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year: selectedYear })
+      })
+      
+      if (response.ok) {
+        alert('Berichte wurden erfolgreich an den Steuerberater gesendet!')
+      } else {
+        const error = await response.json()
+        alert(`Fehler beim Versand: ${error.error || 'Unbekannter Fehler'}`)
+      }
+    } catch (error) {
+      console.error('Error sending to accountant:', error)
+      alert('Fehler beim Versand der Berichte')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const formatEUR = (amount: number) => {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
@@ -405,6 +436,36 @@ export default function BilanzPage() {
           >
             <Printer className="h-4 w-4 mr-2" />
             Drucken
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileDown className="h-4 w-4 mr-2" />
+                Exportieren
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                Als PDF exportieren
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                Als Excel exportieren
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                Als CSV exportieren
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            onClick={() => handleEmailToAccountant()}
+            variant="default"
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            An Steuerberater senden
           </Button>
         </div>
       </div>

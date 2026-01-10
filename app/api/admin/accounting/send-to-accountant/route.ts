@@ -44,8 +44,6 @@ export async function POST(request: NextRequest) {
     console.log('[SEND TO ACCOUNTANT] Format:', format)
     console.log('[SEND TO ACCOUNTANT] Documents:', documents)
 
-    console.log('[SEND TO ACCOUNTANT] Documents:', documents)
-
     // Validate accountant email
     if (!accountant?.email) {
       return NextResponse.json({

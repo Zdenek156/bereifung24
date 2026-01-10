@@ -713,8 +713,17 @@ async function generateJournalPDF(entries: any[], year: number): Promise<Buffer>
       doc.moveDown(0.5)
       
       doc.fontSize(8)
-      doc.text(`Summe (${entries.length} Buchungen)`, 30, doc.y, { width: 525, align: 'right', continued: true })
-      doc.text(formatEUR(totalAmount), { width: 70, align: 'right' })
+      const totalY = doc.y
+      // Label für Summe (linksbündig im Beschreibungsbereich)
+      doc.text(`Summe (${entries.length} Buchungen)`, 30 + colWidths.nr + colWidths.datum + colWidths.konto + colWidths.gegenkonto, totalY, { 
+        width: colWidths.beschreibung, 
+        align: 'right' 
+      })
+      // Betrag (rechtsbündig im Betrags-Bereich)
+      doc.text(formatEUR(totalAmount), 30 + colWidths.nr + colWidths.datum + colWidths.konto + colWidths.gegenkonto + colWidths.beschreibung, totalY, { 
+        width: colWidths.betrag, 
+        align: 'right' 
+      })
 
       // Footer
       doc.fontSize(6)

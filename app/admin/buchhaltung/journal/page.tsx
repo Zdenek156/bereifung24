@@ -47,6 +47,8 @@ export default function JournalPage() {
   const [stornoReason, setStornoReason] = useState('')
   const [stornoLoading, setStornoLoading] = useState(false)
   const [uploadingFiles, setUploadingFiles] = useState(false)
+  const [sortBy, setSortBy] = useState<'date' | 'entryNumber' | 'amount'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -198,6 +200,37 @@ export default function JournalPage() {
     }
   }
 
+  const handleSort = (field: 'date' | 'entryNumber' | 'amount') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const getSortedEntries = () => {
+    const sorted = [...entries].sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime()
+          break
+        case 'entryNumber':
+          comparison = a.entryNumber.localeCompare(b.entryNumber)
+          break
+        case 'amount':
+          comparison = a.amount - b.amount
+          break
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+    
+    return sorted
+  }
+
   const handleRemoveDocument = async (entryId: string, fileUrl: string) => {
     if (!confirm('Beleg wirklich entfernen?')) return
 
@@ -329,11 +362,27 @@ export default function JournalPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Belegnr.
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('entryNumber')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Belegnr.
+                      {sortBy === 'entryNumber' && (
+                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Datum
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Datum
+                      {sortBy === 'date' && (
+                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Soll
@@ -341,8 +390,16 @@ export default function JournalPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Haben
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Betrag
+                  <th 
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      Betrag
+                      {sortBy === 'amount' && (
+                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Beschreibung
@@ -375,7 +432,7 @@ export default function JournalPage() {
                     </td>
                   </tr>
                 ) : (
-                  entries.map((entry) => (
+                  getSortedEntries().map((entry) => (
                     <tr 
                       key={entry.id} 
                       className={`hover:bg-gray-50 ${entry.isStorno ? 'bg-red-50' : ''}`}

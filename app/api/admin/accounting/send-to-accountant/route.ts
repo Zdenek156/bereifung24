@@ -307,6 +307,16 @@ export async function POST(request: NextRequest) {
       console.log('[SEND TO ACCOUNTANT] Attachments:', emailAttachments.length)
       console.log('[SEND TO ACCOUNTANT] Attachment details:', emailAttachments.map(a => `${a.filename} (${a.content.length} bytes)`).join(', '))
       
+      // Debug: Log each attachment structure
+      emailAttachments.forEach((att, idx) => {
+        console.log(`[SEND TO ACCOUNTANT] Attachment ${idx + 1}:`, {
+          filename: att.filename,
+          contentType: att.contentType,
+          contentLength: att.content?.length || 0,
+          contentIsBuffer: Buffer.isBuffer(att.content)
+        })
+      })
+      
       await smtpService.sendEmail({
         from: `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`,
         to: accountant.email,

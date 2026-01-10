@@ -10,18 +10,18 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, XCircle, PieChart } from 'lucide-react';
+import { Plus, BookOpen, XCircle, PieChart, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Provision {
   id: string;
   type: string;
   description: string;
   amount: number;
-  status: 'pending' | 'booked' | 'released';
-  createdAt: string;
-  bookedAt?: string;
+  released: boolean;
   releasedAt?: string;
-  fiscalYear: number;
+  year: number;
+  createdAt: string;
 }
 
 interface ProvisionTotals {
@@ -30,27 +30,29 @@ interface ProvisionTotals {
 }
 
 const PROVISION_TYPES = [
-  { value: 'warranties', label: 'Warranties & Guarantees' },
-  { value: 'legal', label: 'Legal Costs' },
-  { value: 'tax', label: 'Tax Provisions' },
-  { value: 'pensions', label: 'Pensions' },
-  { value: 'restructuring', label: 'Restructuring' },
-  { value: 'onerous', label: 'Onerous Contracts' },
-  { value: 'other', label: 'Other' },
+  { value: 'TAX', label: 'Steuerrückstellungen' },
+  { value: 'VACATION', label: 'Urlaubsrückstellungen' },
+  { value: 'WARRANTY', label: 'Gewährleistungsrückstellungen' },
+  { value: 'LEGAL', label: 'Rechtliche Verpflichtungen' },
+  { value: 'RESTRUCTURING', label: 'Restrukturierung' },
+  { value: 'PENSION', label: 'Pensionsrückstellungen' },
+  { value: 'OTHER', label: 'Sonstige' },
 ];
 
 export default function RueckstellungenPage() {
+  const router = useRouter();
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [totals, setTotals] = useState<ProvisionTotals[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
   const [formData, setFormData] = useState({
     type: '',
     description: '',
     amount: '',
-    fiscalYear: new Date().getFullYear(),
+    year: new Date().getFullYear(),
+    reason: '',
   });
 
   useEffect(() => {
@@ -61,10 +63,12 @@ export default function RueckstellungenPage() {
   const fetchProvisions = async () => {
     try {
       const response = await fetch('/api/admin/accounting/provisions');
-      const data = await response.json();
-      setProvisions(data);
+      const result = await response.json();
+      if (result.success && result.data) {
+        setProvisions(result.data);
+      }
     } catch (error) {
-      console.error('Failed to fetch provisions:', error);
+      console.error('Fehler beim Laden der Rückstellungen:', error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +87,7 @@ export default function RueckstellungenPage() {
         setTotals(totalsArray);
       }
     } catch (error) {
-      console.error('Failed to fetch totals:', error);
+      console.error('Fehler beim Laden der Summen:', error);
     }
   };
 
@@ -105,28 +109,12 @@ export default function RueckstellungenPage() {
         closeModal();
       }
     } catch (error) {
-      console.error('Failed to create provision:', error);
-    }
-  };
-
-  const handleBook = async (id: string) => {
-    if (!confirm('Book this provision to the accounts?')) return;
-    
-    try {
-      const response = await fetch(`/api/admin/accounting/provisions/${id}/book`, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        await fetchProvisions();
-        await fetchTotals();
-      }
-    } catch (error) {
-      console.error('Failed to book provision:', error);
+      console.error('Fehler beim Erstellen der Rückstellung:', error);
     }
   };
 
   const handleRelease = async (id: string) => {
-    if (!confirm('Release this provision?')) return;
+    if (!confirm('Rückstellung wirklich auflösen?')) return;
     
     try {
       const response = await fetch(`/api/admin/accounting/provisions/${id}/release`, {
@@ -137,7 +125,7 @@ export default function RueckstellungenPage() {
         await fetchTotals();
       }
     } catch (error) {
-      console.error('Failed to release provision:', error);
+      console.error('Fehler beim Auflösen der Rückstellung:', error);
     }
   };
 
@@ -147,65 +135,68 @@ export default function RueckstellungenPage() {
       type: '',
       description: '',
       amount: '',
-      fiscalYear: new Date().getFullYear(),
+      year: new Date().getFullYear(),
+      reason: '',
     });
   };
 
   const filteredProvisions = provisions.filter((provision) => {
     if (selectedType !== 'all' && provision.type !== selectedType) return false;
-    if (selectedStatus !== 'all' && provision.status !== selectedStatus) return false;
+    if (selectedYear !== 'all' && provision.year.toString() !== selectedYear) return false;
     return true;
   });
 
   const totalAmount = filteredProvisions.reduce((sum, p) => sum + p.amount, 0);
 
+  // Unique years for filter
+  const availableYears = Array.from(new Set(provisions.map(p => p.year))).sort((a, b) => b - a);
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Rückstellungen</h1>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/admin/buchhaltung')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück
+          </Button>
+          <h1 className="text-3xl font-bold">Rückstellungen</h1>
+        </div>
         <Button onClick={() => setIsModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Provision
+          Rückstellung anlegen
         </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Provisions</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Gesamt Rückstellungen</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{provisions.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold">{new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(provisions.reduce((sum, p) => sum + p.amount, 0))}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Aktive Rückstellungen</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {provisions.filter((p) => p.status === 'pending').length}
+              {provisions.filter((p) => !p.released).length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Booked</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Aufgelöste Rückstellungen</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {provisions.filter((p) => p.status === 'booked').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Released</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {provisions.filter((p) => p.status === 'released').length}
+              {provisions.filter((p) => p.released).length}
             </div>
           </CardContent>
         </Card>
@@ -217,7 +208,7 @@ export default function RueckstellungenPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <PieChart className="mr-2 h-5 w-5" />
-              Provisions by Type
+              Rückstellungen nach Typ
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -230,7 +221,7 @@ export default function RueckstellungenPage() {
                   <div key={index}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{PROVISION_TYPES.find(t => t.value === item.type)?.label || item.type}</span>
-                      <span className="text-muted-foreground">€{item.total.toFixed(2)}</span>
+                      <span className="text-muted-foreground">{new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(item.total)}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-8">
                       <div className={`${colors[index % colors.length]} h-8 rounded-full flex items-center justify-end pr-2 text-white text-xs font-medium`} style={{ width: `${percentage}%` }}>
@@ -248,11 +239,11 @@ export default function RueckstellungenPage() {
       {/* Filters */}
       <div className="flex gap-4 mb-4">
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by type" />
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Nach Typ filtern" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="all">Alle Typen</SelectItem>
             {PROVISION_TYPES.map((type) => (
               <SelectItem key={type.value} value={type.value}>
                 {type.label}
@@ -261,38 +252,40 @@ export default function RueckstellungenPage() {
           </SelectContent>
         </Select>
 
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Nach Jahr filtern" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="booked">Booked</SelectItem>
-            <SelectItem value="released">Released</SelectItem>
+            <SelectItem value="all">Alle Jahre</SelectItem>
+            {availableYears.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
         <div className="ml-auto text-lg font-semibold">
-          Filtered Total: €{totalAmount.toFixed(2)}
+          Summe: {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(totalAmount)}
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8">Lädt...</div>
       ) : (
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Fiscal Year</TableHead>
+                <TableHead>Typ</TableHead>
+                <TableHead>Beschreibung</TableHead>
+                <TableHead className="text-right">Betrag</TableHead>
+                <TableHead>Jahr</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Erstellt</TableHead>
+                <TableHead>Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -302,34 +295,22 @@ export default function RueckstellungenPage() {
                     {PROVISION_TYPES.find((t) => t.value === provision.type)?.label || provision.type}
                   </TableCell>
                   <TableCell className="max-w-xs truncate">{provision.description}</TableCell>
-                  <TableCell className="text-right">€{provision.amount.toFixed(2)}</TableCell>
-                  <TableCell>{provision.fiscalYear}</TableCell>
+                  <TableCell className="text-right">{new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(provision.amount)}</TableCell>
+                  <TableCell>{provision.year}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        provision.status === 'booked'
-                          ? 'default'
-                          : provision.status === 'pending'
-                          ? 'secondary'
-                          : 'outline'
-                      }
+                      variant={provision.released ? 'outline' : 'default'}
                     >
-                      {provision.status}
+                      {provision.released ? 'Aufgelöst' : 'Aktiv'}
                     </Badge>
                   </TableCell>
                   <TableCell>{new Date(provision.createdAt).toLocaleDateString('de-DE')}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      {provision.status === 'pending' && (
-                        <Button size="sm" variant="outline" onClick={() => handleBook(provision.id)}>
-                          <BookOpen className="h-4 w-4 mr-1" />
-                          Book
-                        </Button>
-                      )}
-                      {provision.status === 'booked' && (
+                      {!provision.released && (
                         <Button size="sm" variant="outline" onClick={() => handleRelease(provision.id)}>
                           <XCircle className="h-4 w-4 mr-1" />
-                          Release
+                          Auflösen
                         </Button>
                       )}
                     </div>
@@ -345,19 +326,19 @@ export default function RueckstellungenPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create New Provision</DialogTitle>
+            <DialogTitle>Neue Rückstellung anlegen</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate}>
             <div className="grid gap-4 py-4">
               <div>
-                <Label htmlFor="type">Provision Type</Label>
+                <Label htmlFor="type">Rückstellungstyp</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) => setFormData({ ...formData, type: value })}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Typ auswählen" />
                   </SelectTrigger>
                   <SelectContent>
                     {PROVISION_TYPES.map((type) => (
@@ -370,19 +351,31 @@ export default function RueckstellungenPage() {
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Beschreibung</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   required
                   rows={3}
+                  placeholder="Beschreibung der Rückstellung"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="reason">Begründung (optional)</Label>
+                <Textarea
+                  id="reason"
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  rows={2}
+                  placeholder="Rechtliche oder wirtschaftliche Begründung"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="amount">Amount (€)</Label>
+                  <Label htmlFor="amount">Betrag (€)</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -393,12 +386,12 @@ export default function RueckstellungenPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="fiscalYear">Fiscal Year</Label>
+                  <Label htmlFor="year">Geschäftsjahr</Label>
                   <Input
-                    id="fiscalYear"
+                    id="year"
                     type="number"
-                    value={formData.fiscalYear}
-                    onChange={(e) => setFormData({ ...formData, fiscalYear: parseInt(e.target.value) })}
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
                     required
                   />
                 </div>
@@ -406,9 +399,9 @@ export default function RueckstellungenPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeModal}>
-                Cancel
+                Abbrechen
               </Button>
-              <Button type="submit">Create Provision</Button>
+              <Button type="submit">Rückstellung anlegen</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -297,12 +297,19 @@ export async function POST(request: NextRequest) {
 async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' })
+      const doc = new PDFDocument({ 
+        margin: 50, 
+        size: 'A4',
+        bufferPages: true
+      })
       const chunks: Buffer[] = []
 
       doc.on('data', (chunk) => chunks.push(chunk))
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
+
+      // Use built-in Courier font to avoid font loading issues
+      doc.font('Courier')
 
       // Header
       doc.fontSize(20).text('BILANZ', { align: 'center' })
@@ -408,12 +415,19 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
 async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' })
+      const doc = new PDFDocument({ 
+        margin: 50, 
+        size: 'A4',
+        bufferPages: true
+      })
       const chunks: Buffer[] = []
 
       doc.on('data', (chunk) => chunks.push(chunk))
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
+
+      // Use built-in Courier font to avoid font loading issues
+      doc.font('Courier')
 
       // Header
       doc.fontSize(20).text('GEWINN- UND VERLUSTRECHNUNG', { align: 'center' })

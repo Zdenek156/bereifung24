@@ -153,3 +153,58 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+/**
+ * DELETE /api/admin/accounting/provisions?id=xxx
+ * Delete provision
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Provision ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Check if provision exists
+    const provision = await prisma.provision.findUnique({
+      where: { id }
+    })
+
+    if (!provision) {
+      return NextResponse.json(
+        { success: false, error: 'Provision not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete provision
+    await prisma.provision.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Provision deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting provision:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

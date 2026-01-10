@@ -129,6 +129,22 @@ export default function RueckstellungenPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Rückstellung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/accounting/provisions?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        await fetchProvisions();
+        await fetchTotals();
+      }
+    } catch (error) {
+      console.error('Fehler beim Löschen der Rückstellung:', error);
+    }
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setFormData({
@@ -308,10 +324,15 @@ export default function RueckstellungenPage() {
                   <TableCell>
                     <div className="flex space-x-2">
                       {!provision.released && (
-                        <Button size="sm" variant="outline" onClick={() => handleRelease(provision.id)}>
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Auflösen
-                        </Button>
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => handleRelease(provision.id)}>
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Auflösen
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(provision.id)}>
+                            Löschen
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>

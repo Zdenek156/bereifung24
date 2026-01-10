@@ -406,7 +406,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to generate Bilanz PDF
-async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
+async function generateBalanceSheetPDF(balanceSheet: any, taxNumber?: string | null): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 

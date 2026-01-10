@@ -1,0 +1,57 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Bereifung24 Workspace"
+    }
+  ],
+  "settings": {
+    "dart.enabled": false,
+    "files.watcherExclude": {
+      "**/node_modules": true,
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/*/**": true,
+      "**/.next/**": true,
+      "**/Bereifung24 App/**": true,
+      "**/bereifung24_app/**": true,
+      "**/.dart_tool/**": true,
+      "**/build/**": true,
+      "**/dist/**": true
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.next": true,
+      "**/.dart_tool": true,
+      "node_modules": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/Bereifung24 App/**": true,
+      "**/bereifung24_app/**": true,
+      "**/.dart_tool": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/package-lock.json": true
+    },
+    "typescript.tsserver.maxTsServerMemory": 2048,
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "files.maxMemoryForLargeFilesMB": 512,
+    "editor.minimap.enabled": false,
+    "editor.codeLens": false,
+    "git.enabled": true,
+    "git.autorefresh": false,
+    "git.autofetch": false,
+    "search.maxResults": 2000,
+    "search.followSymlinks": false,
+    "extensions.autoUpdate": false,
+    "telemetry.telemetryLevel": "off",
+    "javascript.validate.enable": false,
+    "files.associations": {
+      "*.js": "javascript",
+      "*.ts": "typescript"
+    }
+  }
+}

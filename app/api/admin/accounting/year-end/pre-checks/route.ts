@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -14,23 +14,18 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[PRE-CHECKS] Starting pre-checks...')
     
-    let session
-    try {
-      session = await getServerSession(authOptions)
-      console.log('[PRE-CHECKS] Session retrieved:', session?.user?.email, session?.user?.role)
-    } catch (sessionError) {
-      console.error('[PRE-CHECKS] Session error:', sessionError)
+    // Get session with proper context for App Router
+    const session = await getServerSession(authOptions)
+    console.log('[PRE-CHECKS] Session retrieved:', session?.user?.email, session?.user?.role)
+    
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      console.log('[PRE-CHECKS] Unauthorized access attempt')
       return NextResponse.json([{
         id: 'error',
         title: 'Fehler bei Prüfungen',
         status: 'failed',
-        message: 'Session-Fehler aufgetreten'
+        message: 'Keine Berechtigung für diese Aktion'
       }])
-    }
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      console.log('[PRE-CHECKS] Unauthorized access attempt')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const searchParams = request.nextUrl.searchParams

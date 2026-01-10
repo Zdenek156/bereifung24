@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    await smtpService.sendMail({
+    await smtpService.sendEmail({
       from: `"${companySettings.accountantName || 'Bereifung24'}" <${emailSettings.smtpUser}>`,
       to: companySettings.accountantEmail,
       subject: `UStVA - Umsatzsteuer-Voranmeldung ${periodText}`,

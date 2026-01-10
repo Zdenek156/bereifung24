@@ -353,29 +353,29 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
       doc.fontSize(11).text('A. ANLAGEVERMÖGEN')
       doc.fontSize(10)
       doc.text(`   I. Immaterielle Vermögensgegenstände`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.anlagevermoegen?.immaterielleVermoegensgegenstaende || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.anlagevermoegen?.immaterielleVermoegensgegenstaende)), { align: 'right' })
       doc.text(`   II. Sachanlagen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.anlagevermoegen?.sachanlagen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.anlagevermoegen?.sachanlagen)), { align: 'right' })
       doc.text(`   III. Finanzanlagen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.anlagevermoegen?.finanzanlagen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.anlagevermoegen?.finanzanlagen)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(11).text('B. UMLAUFVERMÖGEN')
       doc.fontSize(10)
       doc.text(`   I. Vorräte`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.umlaufvermoegen?.vorraete || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.umlaufvermoegen?.vorraete)), { align: 'right' })
       doc.text(`   II. Forderungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.umlaufvermoegen?.forderungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.umlaufvermoegen?.forderungen)), { align: 'right' })
       doc.text(`   III. Kasse, Bank`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.umlaufvermoegen?.kasseBank || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.umlaufvermoegen?.kasseBank)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(11).text('C. RECHNUNGSABGRENZUNGSPOSTEN', 50, doc.y, { continued: true })
-      doc.text(formatEUR(assets.rechnungsabgrenzungsposten || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(assets.rechnungsabgrenzungsposten)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(12).text('SUMME AKTIVA', 50, doc.y, { continued: true, underline: true })
-      doc.text(formatEUR(parseFloat(balanceSheet.totalAssets.toString())), { align: 'right', underline: true })
+      doc.text(formatEUR(toNumber(balanceSheet.totalAssets)), { align: 'right', underline: true })
       doc.moveDown(2)
 
       // PASSIVA
@@ -385,45 +385,45 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
       doc.fontSize(11).text('A. EIGENKAPITAL')
       doc.fontSize(10)
       doc.text(`   I. Gezeichnetes Kapital`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.eigenkapital?.gezeichnetesKapital || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.eigenkapital?.gezeichnetesKapital)), { align: 'right' })
       doc.text(`   II. Kapitalrücklagen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.eigenkapital?.kapitalruecklagen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.eigenkapital?.kapitalruecklagen)), { align: 'right' })
       doc.text(`   III. Gewinnrücklagen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.eigenkapital?.gewinnruecklagen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.eigenkapital?.gewinnruecklagen)), { align: 'right' })
       doc.text(`   IV. Gewinnvortrag`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.eigenkapital?.gewinnvortrag || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.eigenkapital?.gewinnvortrag)), { align: 'right' })
       doc.text(`   V. Jahresüberschuss`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.eigenkapital?.jahresueberschuss || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.eigenkapital?.jahresueberschuss)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(11).text('B. RÜCKSTELLUNGEN')
       doc.fontSize(10)
       doc.text(`   I. Pensionsrückstellungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.rueckstellungen?.pensionsrueckstellungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.rueckstellungen?.pensionsrueckstellungen)), { align: 'right' })
       doc.text(`   II. Steuerrückstellungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.rueckstellungen?.steuerrueckstellungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.rueckstellungen?.steuerrueckstellungen)), { align: 'right' })
       doc.text(`   III. Sonstige Rückstellungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.rueckstellungen?.sonstigeRueckstellungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.rueckstellungen?.sonstigeRueckstellungen)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(11).text('C. VERBINDLICHKEITEN')
       doc.fontSize(10)
       doc.text(`   I. Verbindlichkeiten Kreditinstitute`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.verbindlichkeiten?.verbindlichkeitenKreditinstitute || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.verbindlichkeiten?.verbindlichkeitenKreditinstitute)), { align: 'right' })
       doc.text(`   II. Erhaltene Anzahlungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.verbindlichkeiten?.erhalteneAnzahlungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.verbindlichkeiten?.erhalteneAnzahlungen)), { align: 'right' })
       doc.text(`   III. Verbindlichkeiten Lieferungen`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.verbindlichkeiten?.verbindlichkeitenLieferungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.verbindlichkeiten?.verbindlichkeitenLieferungen)), { align: 'right' })
       doc.text(`   IV. Sonstige Verbindlichkeiten`, 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.verbindlichkeiten?.sonstigeVerbindlichkeiten || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.verbindlichkeiten?.sonstigeVerbindlichkeiten)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(11).text('D. RECHNUNGSABGRENZUNGSPOSTEN', 50, doc.y, { continued: true })
-      doc.text(formatEUR(liabilities.rechnungsabgrenzungsposten || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(liabilities.rechnungsabgrenzungsposten)), { align: 'right' })
       doc.moveDown()
 
       doc.fontSize(12).text('SUMME PASSIVA', 50, doc.y, { continued: true, underline: true })
-      doc.text(formatEUR(parseFloat(balanceSheet.totalLiabilities.toString())), { align: 'right', underline: true })
+      doc.text(formatEUR(toNumber(balanceSheet.totalLiabilities)), { align: 'right', underline: true })
 
       // Footer
       doc.moveDown(2)
@@ -474,19 +474,19 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
 
       doc.fontSize(10)
       doc.text('1. Umsatzerlöse', 50, doc.y, { continued: true })
-      doc.text(formatEUR(revenue.umsatzerloese || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(revenue.umsatzerloese)), { align: 'right' })
       doc.text('2. Bestandsveränderungen', 50, doc.y, { continued: true })
-      doc.text(formatEUR(revenue.bestandsveraenderungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(revenue.bestandsveraenderungen)), { align: 'right' })
       doc.text('3. Andere aktivierte Eigenleistungen', 50, doc.y, { continued: true })
-      doc.text(formatEUR(revenue.andereAktivierteEigenleistungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(revenue.andereAktivierteEigenleistungen)), { align: 'right' })
       doc.text('4. Sonstige betriebliche Erträge', 50, doc.y, { continued: true })
-      doc.text(formatEUR(revenue.sonstigeBetrieblicheErtraege || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(revenue.sonstigeBetrieblicheErtraege)), { align: 'right' })
       doc.moveDown()
 
-      const totalRevenue = (revenue.umsatzerloese || 0) + 
-                          (revenue.bestandsveraenderungen || 0) + 
-                          (revenue.andereAktivierteEigenleistungen || 0) + 
-                          (revenue.sonstigeBetrieblicheErtraege || 0)
+      const totalRevenue = toNumber(revenue.umsatzerloese) + 
+                          toNumber(revenue.bestandsveraenderungen) + 
+                          toNumber(revenue.andereAktivierteEigenleistungen) + 
+                          toNumber(revenue.sonstigeBetrieblicheErtraege)
       doc.fontSize(11).text('Summe Erträge', 50, doc.y, { continued: true })
       doc.text(formatEUR(totalRevenue), { align: 'right' })
       doc.moveDown(2)
@@ -497,31 +497,31 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
 
       doc.fontSize(10)
       doc.text('5. Materialaufwand', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.materialaufwand || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.materialaufwand)), { align: 'right' })
       doc.text('6. Personalaufwand', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.personalaufwand || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.personalaufwand)), { align: 'right' })
       doc.text('7. Abschreibungen', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.abschreibungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.abschreibungen)), { align: 'right' })
       doc.text('8. Sonstige betriebliche Aufwendungen', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.sonstigeBetrieblicheAufwendungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.sonstigeBetrieblicheAufwendungen)), { align: 'right' })
       doc.text('9. Zinsen und ähnliche Aufwendungen', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.zinsenUndAehnlicheAufwendungen || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.zinsenUndAehnlicheAufwendungen)), { align: 'right' })
       doc.text('10. Steuern', 50, doc.y, { continued: true })
-      doc.text(formatEUR(expenses.steuern || 0), { align: 'right' })
+      doc.text(formatEUR(toNumber(expenses.steuern)), { align: 'right' })
       doc.moveDown()
 
-      const totalExpenses = (expenses.materialaufwand || 0) + 
-                           (expenses.personalaufwand || 0) + 
-                           (expenses.abschreibungen || 0) + 
-                           (expenses.sonstigeBetrieblicheAufwendungen || 0) + 
-                           (expenses.zinsenUndAehnlicheAufwendungen || 0) + 
-                           (expenses.steuern || 0)
+      const totalExpenses = toNumber(expenses.materialaufwand) + 
+                           toNumber(expenses.personalaufwand) + 
+                           toNumber(expenses.abschreibungen) + 
+                           toNumber(expenses.sonstigeBetrieblicheAufwendungen) + 
+                           toNumber(expenses.zinsenUndAehnlicheAufwendungen) + 
+                           toNumber(expenses.steuern)
       doc.fontSize(11).text('Summe Aufwendungen', 50, doc.y, { continued: true })
       doc.text(formatEUR(totalExpenses), { align: 'right' })
       doc.moveDown(2)
 
       // JAHRESERGEBNIS
-      const netIncome = parseFloat(incomeStatement.netIncome.toString())
+      const netIncome = toNumber(incomeStatement.netIncome)
       doc.fontSize(14).text('JAHRESERGEBNIS', 50, doc.y, { continued: true, underline: true })
       doc.text(formatEUR(netIncome), { align: 'right', underline: true })
 
@@ -537,9 +537,24 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
 }
 
 // Helper function to format currency
-function formatEUR(amount: number): string {
+function formatEUR(amount: number | null | undefined): string {
+  // Handle null, undefined, NaN
+  if (amount === null || amount === undefined || isNaN(Number(amount))) {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(0)
+  }
+  
   return new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
-  }).format(amount)
+  }).format(Number(amount))
+}
+
+// Helper function to safely convert to number
+function toNumber(value: any): number {
+  if (value === null || value === undefined) return 0
+  const num = Number(value)
+  return isNaN(num) ? 0 : num
 }

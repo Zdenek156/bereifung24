@@ -49,6 +49,17 @@ export async function POST(request: NextRequest) {
     // Get all active assets that need depreciation for this year
     const endDate = new Date(year, 11, 31)
     
+    // First, get count of existing depreciations for this year per asset
+    const existingDepreciations = await prisma.depreciation.groupBy({
+      by: ['assetId'],
+      where: { year },
+      _count: true
+    })
+    
+    const assetsWithDepreciation = new Set(
+      existingDepreciations.map(d => d.assetId)
+    )
+    
     const assets = await prisma.asset.findMany({
       where: {
         acquisitionDate: {
@@ -58,11 +69,6 @@ export async function POST(request: NextRequest) {
           { disposalDate: null },
           { disposalDate: { gt: new Date(year, 0, 1) } }
         ]
-      },
-      include: {
-        depreciations: {
-          where: { year }
-        }
       }
     })
 
@@ -71,19 +77,32 @@ export async function POST(request: NextRequest) {
 
     // Create depreciation entries for assets that don't have them yet
     for (const asset of assets) {
-      if (asset.depreciations.length === 0 && asset.usefulLife > 0) {
-        // Calculate annual depreciation amount (already calculated in Asset)
+      // Skip if already has depreciation for this year
+      if (assetsWithDepreciation.has(asset.id)) {
+        skippedCount++
+        continue
+      }
+      
+      if (asset.usefulLife > 0 && !asset.fullyDepreciated) {
+        // Use the annual depreciation already calculated in Asset
         const annualDepreciation = asset.annualDepreciation
+        const monthlyDepreciation = annualDepreciation / 12
         
-        await prisma.depreciation.create({
-          data: {
-            assetId: asset.id,
-            year,
-            amount: annualDepreciation,
-            method: 'LINEAR',
-            booked: false
-          }
-        })
+        // Create monthly depreciation entries for the year
+        for (let month = 1; month <= 12; month++) {
+          await prisma.depreciation.create({
+            data: {
+              assetId: asset.id,
+              year,
+              month,
+              depreciationRate: (1 / asset.usefulLife) * 100, // Percentage
+              depreciationAmount: monthlyDepreciation,
+              accumulatedDepreciation: 0, // To be calculated
+              bookValue: asset.bookValue,
+              method: asset.afaMethod
+            }
+          })
+        }
         createdCount++
       } else {
         skippedCount++

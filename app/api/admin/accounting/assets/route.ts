@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Received asset creation request:', body)
+
     const {
       name,
       category,
@@ -75,6 +77,15 @@ export async function POST(request: NextRequest) {
       residualValue
     } = body
 
+    // Validate required fields
+    if (!name || !category || !purchaseDate || !purchasePrice || !usefulLife) {
+      console.error('Missing required fields:', { name, category, purchaseDate, purchasePrice, usefulLife })
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
     // Map frontend categories to backend enum values
     const categoryMap: Record<string, string> = {
       'equipment': 'OTHER',
@@ -82,10 +93,14 @@ export async function POST(request: NextRequest) {
       'furniture': 'FURNITURE',
       'software': 'SOFTWARE',
       'buildings': 'OTHER',
-      'computer': 'COMPUTER'
+      'computer': 'COMPUTER',
+      'betriebs- und geschäftsausstattung': 'OTHER',
+      'fuhrpark': 'VEHICLE',
+      'büromöbel': 'FURNITURE'
     }
 
     const mappedCategory = categoryMap[category.toLowerCase()] || 'OTHER'
+    console.log('Mapped category:', category, '->', mappedCategory)
 
     // Generate asset number
     const year = new Date().getFullYear()
@@ -94,6 +109,15 @@ export async function POST(request: NextRequest) {
 
     // Calculate annual depreciation
     const annualDepreciation = (purchasePrice - (residualValue || 0)) / usefulLife
+
+    console.log('Creating asset with data:', {
+      assetNumber,
+      name,
+      category: mappedCategory,
+      acquisitionCost: purchasePrice,
+      usefulLife,
+      userId: session.user.id
+    })
 
     const asset = await prisma.asset.create({
       data: {
@@ -106,11 +130,13 @@ export async function POST(request: NextRequest) {
         afaMethod: depreciationMethod.toUpperCase() === 'LINEAR' ? 'LINEAR' : 'DEGRESSIV',
         annualDepreciation,
         bookValue: purchasePrice,
-        costCenter: 'ADMINISTRATION', // Default
+        costCenter: 'ADMINISTRATION',
         status: 'ACTIVE',
         createdById: session.user.id
       }
     })
+
+    console.log('Asset created successfully:', asset.id)
 
     return NextResponse.json({
       success: true,
@@ -130,8 +156,14 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating asset:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
-      { success: false, error: 'Failed to create asset' },
+      { 
+        success: false, 
+        error: 'Failed to create asset',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

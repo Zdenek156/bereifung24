@@ -114,8 +114,37 @@ export async function POST(request: NextRequest) {
       attachments.push({ name: `Journal_${year}.${format}`, type: 'journal' })
     }
 
-    // Get SMTP settings and email template
-    const smtpSettings = await prisma.companySettings.findFirst()
+    // Get SMTP settings from AdminApiSetting (legacy) or CompanySettings (new)
+    const emailSettingsArray = await prisma.adminApiSetting.findMany({
+      where: {
+        key: {
+          in: ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
+        }
+      }
+    })
+
+    const smtpSettings = {
+      smtpHost: emailSettingsArray.find(s => s.key === 'EMAIL_HOST')?.value || '',
+      smtpPort: emailSettingsArray.find(s => s.key === 'EMAIL_PORT')?.value || '587',
+      smtpUser: emailSettingsArray.find(s => s.key === 'EMAIL_USER')?.value || '',
+      smtpPassword: emailSettingsArray.find(s => s.key === 'EMAIL_PASSWORD')?.value || '',
+      smtpFrom: emailSettingsArray.find(s => s.key === 'EMAIL_FROM')?.value || '',
+      smtpSecure: false
+    }
+
+    // Fallback to CompanySettings if AdminApiSetting is empty
+    if (!smtpSettings.smtpHost) {
+      const companySettings = await prisma.companySettings.findFirst()
+      if (companySettings) {
+        smtpSettings.smtpHost = companySettings.smtpHost || ''
+        smtpSettings.smtpPort = companySettings.smtpPort || '587'
+        smtpSettings.smtpUser = companySettings.smtpUser || ''
+        smtpSettings.smtpPassword = companySettings.smtpPassword || ''
+        smtpSettings.smtpFrom = companySettings.smtpFrom || ''
+        smtpSettings.smtpSecure = companySettings.smtpSecure || false
+      }
+    }
+
     const emailTemplate = await prisma.emailTemplate.findUnique({
       where: { key: 'ACCOUNTANT_DOCUMENTS' }
     })
@@ -130,11 +159,12 @@ export async function POST(request: NextRequest) {
     // Prepare template data
     const templateData = {
       year,
-      sender,
+      senderName: sender,
       format: format.toUpperCase(),
       documents: attachments.map(a => a.name),
       message: message || null,
-      accountantName: accountant.name || accountant.email
+      accountantName: accountant.name || null,
+      companyAddress: null
     }
 
     // Compile Handlebars template

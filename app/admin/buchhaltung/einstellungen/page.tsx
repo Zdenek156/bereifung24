@@ -8,10 +8,7 @@ import Link from 'next/link'
 interface AccountingSettings {
   id: string
   fiscalYearStart: number
-  taxAdvisorName: string | null
-  taxAdvisorEmail: string | null
-  taxAdvisorPhone: string | null
-  taxAdvisorCompany: string | null
+  companyTaxNumber: string | null
   defaultVatRate: number
   reducedVatRate: number
   preferredExportFormat: 'DATEV' | 'EXCEL' | 'PDF'
@@ -28,10 +25,7 @@ export default function SettingsPage() {
 
   const [formData, setFormData] = useState({
     fiscalYearStart: 1,
-    taxAdvisorName: '',
-    taxAdvisorEmail: '',
-    taxAdvisorPhone: '',
-    taxAdvisorCompany: '',
+    companyTaxNumber: '',
     defaultVatRate: 19,
     reducedVatRate: 7,
     preferredExportFormat: 'DATEV' as 'DATEV' | 'EXCEL' | 'PDF'
@@ -60,10 +54,7 @@ export default function SettingsPage() {
         setSettings(data.settings)
         setFormData({
           fiscalYearStart: data.settings.fiscalYearStart,
-          taxAdvisorName: data.settings.taxAdvisorName || '',
-          taxAdvisorEmail: data.settings.taxAdvisorEmail || '',
-          taxAdvisorPhone: data.settings.taxAdvisorPhone || '',
-          taxAdvisorCompany: data.settings.taxAdvisorCompany || '',
+          companyTaxNumber: data.settings.companyTaxNumber || '',
           defaultVatRate: data.settings.defaultVatRate,
           reducedVatRate: data.settings.reducedVatRate,
           preferredExportFormat: data.settings.preferredExportFormat
@@ -206,60 +197,23 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Tax Advisor Section */}
+        {/* Company Tax Number Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Steuerberater</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                value={formData.taxAdvisorName}
-                onChange={(e) => setFormData({ ...formData, taxAdvisorName: e.target.value })}
-                placeholder="z.B. Max Mustermann"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kanzlei / Firma
-              </label>
-              <input
-                type="text"
-                value={formData.taxAdvisorCompany}
-                onChange={(e) => setFormData({ ...formData, taxAdvisorCompany: e.target.value })}
-                placeholder="z.B. Steuerberatung Mustermann GmbH"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  E-Mail
-                </label>
-                <input
-                  type="email"
-                  value={formData.taxAdvisorEmail}
-                  onChange={(e) => setFormData({ ...formData, taxAdvisorEmail: e.target.value })}
-                  placeholder="steuerberater@beispiel.de"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Telefon
-                </label>
-                <input
-                  type="tel"
-                  value={formData.taxAdvisorPhone}
-                  onChange={(e) => setFormData({ ...formData, taxAdvisorPhone: e.target.value })}
-                  placeholder="+49 123 456789"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Firmen-Steuernummer</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Steuernummer der Bereifung24 GmbH
+            </label>
+            <input
+              type="text"
+              value={formData.companyTaxNumber}
+              onChange={(e) => setFormData({ ...formData, companyTaxNumber: e.target.value })}
+              placeholder="z.B. 58575/96587"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Diese Steuernummer erscheint in allen PDF-Dokumenten (Bilanz, GuV, Journal)
+            </p>
           </div>
         </div>
 

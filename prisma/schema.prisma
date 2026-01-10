@@ -3863,3 +3863,39 @@ enum EquityMovementType {
   CONTRIBUTION // Privateinlage (bei Personengesellschaft)
 }
 
+// ============================================
+// COMPANY SETTINGS
+// ============================================
+
+model CompanySettings {
+  id String @id @default(cuid())
+
+  // Company Info
+  companyName    String  @default("Bereifung24 GmbH")
+  companyAddress String?
+  companyPhone   String?
+  companyEmail   String?
+  taxNumber      String?
+  vatNumber      String?
+
+  // Accountant Contact
+  accountantName      String?
+  accountantEmail     String?
+  accountantCompany   String?
+  accountantAddress   String?
+  accountantPhone     String?
+  accountantTaxNumber String?
+
+  // SMTP Settings (for email sending)
+  smtpHost     String?
+  smtpPort     String?
+  smtpUser     String?
+  smtpPassword String?
+  smtpFrom     String?
+  smtpSecure   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("company_settings")
+}

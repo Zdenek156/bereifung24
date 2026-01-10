@@ -143,34 +143,9 @@ export default function ReportsPage() {
               </div>
             </Link>
 
-            {/* EÜR */}
-            <Link href="/admin/buchhaltung/auswertungen/euer">
-              <div className="border border-gray-200 rounded-lg p-6 hover:border-green-500 hover:shadow-md transition-all cursor-pointer">
-                <h3 className="font-semibold text-gray-900 mb-2">📋 EÜR (Einnahmen-Überschuss-Rechnung)</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Jahresabschluss für Kleinunternehmer und Freiberufler nach § 4 Abs. 3 EStG
-                </p>
-                <div className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md text-sm text-center font-medium">
-                  Bericht öffnen →
-                </div>
-              </div>
-            </Link>
-
-            {/* UStVA */}
-            <Link href="/admin/buchhaltung/auswertungen/ustva">
-              <div className="border border-gray-200 rounded-lg p-6 hover:border-purple-500 hover:shadow-md transition-all cursor-pointer">
-                <h3 className="font-semibold text-gray-900 mb-2">🧾 UStVA (Umsatzsteuer-Voranmeldung)</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Monatliche oder quartalsweise Umsatzsteuer-Voranmeldung ans Finanzamt
-                </p>
-                <div className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md text-sm text-center font-medium">
-                  Bericht öffnen →
-                </div>
-              </div>
-            </Link>
-
             {/* Summen & Salden */}
             <Link href="/admin/buchhaltung/auswertungen/summen-salden">
+
               <div className="border border-gray-200 rounded-lg p-6 hover:border-orange-500 hover:shadow-md transition-all cursor-pointer">
                 <h3 className="font-semibold text-gray-900 mb-2">💰 Summen- und Saldenliste</h3>
                 <p className="text-sm text-gray-600 mb-4">
@@ -184,14 +159,15 @@ export default function ReportsPage() {
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-2">🎯 Verfügbare Auswertungen</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">📊 Weitere Berichte & Auswertungen</h4>
             <p className="text-sm text-blue-800 mb-2">
-              Aktuell können Sie folgende Daten bereits einsehen:
+              Zusätzlich zu BWA und Summen- & Saldenliste stehen Ihnen folgende Auswertungen zur Verfügung:
             </p>
             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-              <li><Link href="/admin/buchhaltung/journal" className="hover:underline">Journalbuch</Link> - Alle Buchungen chronologisch</li>
-              <li><Link href="/admin/buchhaltung/kontenplan" className="hover:underline">Kontenplan</Link> - SKR04 Kontenübersicht</li>
-              <li><Link href="/admin/buchhaltung" className="hover:underline">Dashboard</Link> - Kennzahlen (Einnahmen, Ausgaben, Gewinn)</li>
+              <li><Link href="/admin/buchhaltung/bilanz" className="hover:underline">Bilanz</Link> - Vermögensübersicht nach §266 HGB</li>
+              <li><Link href="/admin/buchhaltung/guv" className="hover:underline">GuV</Link> - Gewinn- und Verlustrechnung nach §275 HGB</li>
+              <li><Link href="/admin/buchhaltung/journal" className="hover:underline">Journal</Link> - Chronologische Buchungsübersicht</li>
+              <li><Link href="/admin/buchhaltung/kontenplan" className="hover:underline">Kontenplan</Link> - SKR04 Kontenrahmen</li>
             </ul>
           </div>
         </div>

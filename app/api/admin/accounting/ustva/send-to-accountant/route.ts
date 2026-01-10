@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { SmtpService } from '@/lib/email/smtp-service'
 import PDFDocument from 'pdfkit'
-import nodemailer from 'nodemailer'
 
 /**
  * POST /api/admin/accounting/ustva/send-to-accountant
@@ -110,8 +110,12 @@ export async function POST(request: NextRequest) {
       difference
     })
 
-    // Create email transporter
-    const transporter = nodemailer.createTransporter({
+    // Prepare email
+    const periodText = `${new Date(startDate).toLocaleDateString('de-DE')} - ${new Date(endDate).toLocaleDateString('de-DE')}`
+    const fileName = `UStVA_${startDate}_${endDate}.pdf`
+
+    // Send email using SmtpService
+    const smtpService = new SmtpService({
       host: emailSettings.smtpHost,
       port: emailSettings.smtpPort,
       secure: emailSettings.smtpPort === 465,
@@ -121,11 +125,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Prepare email
-    const periodText = `${new Date(startDate).toLocaleDateString('de-DE')} - ${new Date(endDate).toLocaleDateString('de-DE')}`
-    const fileName = `UStVA_${startDate}_${endDate}.pdf`
-
-    const mailOptions = {
+    await smtpService.sendMail({
       from: `"${companySettings.accountantName || 'Bereifung24'}" <${emailSettings.smtpUser}>`,
       to: companySettings.accountantEmail,
       subject: `UStVA - Umsatzsteuer-Voranmeldung ${periodText}`,
@@ -166,10 +166,7 @@ export async function POST(request: NextRequest) {
           contentType: 'application/pdf'
         }
       ]
-    }
-
-    // Send email
-    await transporter.sendMail(mailOptions)
+    })
 
     return NextResponse.json({ 
       success: true, 

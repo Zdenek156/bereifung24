@@ -339,15 +339,10 @@ export default function RueckstellungenPage() {
                   <TableCell>
                     <div className="flex space-x-2">
                       {!provision.released && (
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => handleRelease(provision.id)}>
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Auflösen
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(provision.id)}>
-                            Löschen
-                          </Button>
-                        </>
+                        <Button size="sm" variant="outline" onClick={() => handleRelease(provision.id)}>
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Auflösen
+                        </Button>
                       )}
                     </div>
                   </TableCell>

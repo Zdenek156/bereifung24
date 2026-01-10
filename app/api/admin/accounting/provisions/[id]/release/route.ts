@@ -24,6 +24,8 @@ export async function POST(
 
     const { id } = params
 
+    console.log('🔍 Release provision - Received ID:', id)
+
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Provision ID is required' },
@@ -43,6 +45,7 @@ export async function POST(
       // No body or invalid JSON - use defaults (full release)
     }
 
+    console.log('📤 Calling releaseProvision with:', { id, userId: session.user.id, amount, reason })
     await releaseProvision(id, session.user.id, amount, reason)
 
     return NextResponse.json({

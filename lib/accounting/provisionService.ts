@@ -171,9 +171,13 @@ export async function releaseProvision(
   releaseReason?: string
 ): Promise<void> {
   try {
+    console.log('🔎 releaseProvision called with ID:', provisionId)
+    
     const provision = await prisma.provision.findUnique({
       where: { id: provisionId }
     })
+
+    console.log('📊 Found provision:', provision ? `Yes (${provision.id})` : 'No')
 
     if (!provision) {
       throw new Error('Provision not found')
@@ -219,12 +223,13 @@ export async function releaseProvision(
     }
 
     // Create reversal entry
+    // Bei Auflösung: Soll Rückstellungskonto / Haben 6850 (Zuführung/Auflösung)
     const bookingService = new AccountingBookingService()
     const bookingDate = new Date()
 
     await bookingService.createBooking({
-      debitAccountNumber: provisionAccount, // Rückstellung
-      creditAccountNumber: '6950', // Auflösung von sonstigen Rückstellungen
+      debitAccountNumber: provisionAccount, // Rückstellung (30xx)
+      creditAccountNumber: '6850', // Zuführung zu / Auflösung von Rückstellungen
       amount: amountToRelease,
       description: `Auflösung Rückstellung: ${provision.description}${releaseReason ? ` - ${releaseReason}` : ''}`,
       bookingDate,

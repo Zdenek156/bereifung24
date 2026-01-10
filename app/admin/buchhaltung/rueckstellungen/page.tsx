@@ -73,8 +73,15 @@ export default function RueckstellungenPage() {
   const fetchTotals = async () => {
     try {
       const response = await fetch('/api/admin/accounting/provisions/totals');
-      const data = await response.json();
-      setTotals(data);
+      const result = await response.json();
+      if (result.success && result.data) {
+        // Convert the totals object to an array format
+        const totalsArray = Object.entries(result.data.totals).map(([type, total]) => ({
+          type,
+          total: total as number
+        }));
+        setTotals(totalsArray);
+      }
     } catch (error) {
       console.error('Failed to fetch totals:', error);
     }

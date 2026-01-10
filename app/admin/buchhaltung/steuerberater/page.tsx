@@ -24,6 +24,7 @@ interface AccountantSettings {
   address: string
   phone: string
   taxNumber: string
+  companyTaxNumber: string
 }
 
 export default function SteuerberaterPage() {
@@ -49,7 +50,8 @@ export default function SteuerberaterPage() {
     company: '',
     address: '',
     phone: '',
-    taxNumber: ''
+    taxNumber: '',
+    companyTaxNumber: ''
   })
 
   // Available years
@@ -366,6 +368,29 @@ export default function SteuerberaterPage() {
 
           {/* Right Column - Accountant Settings */}
           <div className="space-y-6">
+            {/* Company Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Firmendaten</CardTitle>
+                <CardDescription>
+                  Steuernummer der Bereifung24 GmbH (erscheint in den Dokumenten)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company-tax">Firmen-Steuernummer *</Label>
+                  <Input
+                    id="company-tax"
+                    value={settings.companyTaxNumber}
+                    onChange={(e) => setSettings({ ...settings, companyTaxNumber: e.target.value })}
+                    placeholder="58575/98587"
+                  />
+                  <p className="text-xs text-gray-500">Diese Nummer erscheint in allen PDFs (Bilanz, GuV, Journal)</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Steuerberater Settings Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

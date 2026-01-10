@@ -321,7 +321,8 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
       const doc = new PDFDocument({ 
         margin: 50, 
         size: 'A4',
-        bufferPages: true
+        bufferPages: true,
+        autoFirstPage: false
       })
       const chunks: Buffer[] = []
 
@@ -329,6 +330,9 @@ async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
+      // Add page manually to control font initialization
+      doc.addPage()
+      
       // Use built-in Courier font to avoid font loading issues
       doc.font('Courier')
 
@@ -439,7 +443,8 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
       const doc = new PDFDocument({ 
         margin: 50, 
         size: 'A4',
-        bufferPages: true
+        bufferPages: true,
+        autoFirstPage: false
       })
       const chunks: Buffer[] = []
 
@@ -447,6 +452,9 @@ async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer>
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
+      // Add page manually to control font initialization
+      doc.addPage()
+      
       // Use built-in Courier font to avoid font loading issues
       doc.font('Courier')
 

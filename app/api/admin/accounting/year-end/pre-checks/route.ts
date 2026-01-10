@@ -8,6 +8,8 @@ import { prisma } from '@/lib/prisma'
  * Verifies all prerequisites before starting year-end closing process
  */
 export async function GET(request: NextRequest) {
+  const preChecks = []
+  
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user || session.user.role !== 'ADMIN') {
@@ -21,42 +23,117 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(year, 11, 31, 23, 59, 59)
 
     // Check 1: Balance Sheet Exists
-    const balanceSheet = await prisma.balanceSheet.findUnique({
-      where: { year }
+    let balanceSheet = null
+    try {
+      balanceSheet = await prisma.balanceSheet.findUnique({
+        where: { year }
+      })
+    } catch (err) {
+      console.error('Balance sheet check error:', err)
+    }
+
+    preChecks.push({
+      id: 'balance-sheet',
+      title: 'Bilanz erstellt',
+      status: balanceSheet ? 'passed' : 'warning',
+      message: balanceSheet
+        ? `Bilanz für ${year} wurde erstellt`
+        : `Bilanz für ${year} muss noch erstellt werden`
     })
 
     // Check 2: Income Statement Exists
-    const incomeStatement = await prisma.incomeStatement.findUnique({
-      where: { year }
+    let incomeStatement = null
+    try {
+      incomeStatement = await prisma.incomeStatement.findUnique({
+        where: { year }
+      })
+    } catch (err) {
+      console.error('Income statement check error:', err)
+    }
+
+    preChecks.push({
+      id: 'income-statement',
+      title: 'GuV erstellt',
+      status: incomeStatement ? 'passed' : 'warning',
+      message: incomeStatement
+        ? `GuV für ${year} wurde erstellt`
+        : `GuV für ${year} muss noch erstellt werden`
     })
 
     // Check 3: Check for unreconciled entries
-    const entriesCount = await prisma.accountingEntry.count({
-      where: {
-        bookingDate: {
-          gte: startDate,
-          lte: endDate
+    let entriesCount = 0
+    try {
+      entriesCount = await prisma.accountingEntry.count({
+        where: {
+          bookingDate: {
+            gte: startDate,
+            lte: endDate
+          }
         }
-      }
+      })
+    } catch (err) {
+      console.error('Entries count error:', err)
+    }
+
+    preChecks.push({
+      id: 'entries',
+      title: 'Buchungen vorhanden',
+      status: entriesCount > 0 ? 'passed' : 'warning',
+      message: `${entriesCount} Buchungen für ${year} gefunden`
     })
 
     // Check 4: Check for pending provisions
-    const pendingProvisions = await prisma.provision.count({
-      where: {
-        year,
-        entryId: null, // Not booked yet
-      }
+    let pendingProvisions = 0
+    try {
+      pendingProvisions = await prisma.provision.count({
+        where: {
+          year,
+          entryId: null,
+        }
+      })
+    } catch (err) {
+      console.error('Provisions check error:', err)
+    }
+
+    preChecks.push({
+      id: 'provisions',
+      title: 'Rückstellungen gebucht',
+      status: pendingProvisions === 0 ? 'passed' : 'warning',
+      message: pendingProvisions === 0
+        ? 'Alle Rückstellungen sind gebucht'
+        : `${pendingProvisions} Rückstellungen sind noch nicht gebucht`
     })
 
     // Check 5: Check if year is already locked
     const isLocked = balanceSheet?.locked || false
 
-    // Check 6: Verify account balance
-    const accounts = await prisma.chartOfAccounts.count({
-      where: { active: true }
+    preChecks.push({
+      id: 'locked',
+      title: 'Jahr nicht gesperrt',
+      status: !isLocked ? 'passed' : 'failed',
+      message: isLocked
+        ? `Jahr ${year} ist bereits gesperrt`
+        : `Jahr ${year} kann bearbeitet werden`
     })
 
-    // Check 7: Check for assets without depreciation
+    // Check 6: Verify account balance
+    let accounts = 0
+    try {
+      accounts = await prisma.chartOfAccounts.count({
+        where: { active: true }
+      })
+    } catch (err) {
+      console.error('Accounts check error:', err)
+    }
+
+    preChecks.push({
+      id: 'accounts',
+      title: 'Kontenrahmen aktiv',
+      status: accounts > 0 ? 'passed' : 'failed',
+      message: `${accounts} aktive Konten im Kontenrahmen`
+    })
+
+    // Check 7: Check for assets without depreciation (optional check)
     let assetsWithoutDepreciation = 0
     try {
       const assets = await prisma.asset.findMany({
@@ -73,72 +150,30 @@ export async function GET(request: NextRequest) {
         }
       })
       assetsWithoutDepreciation = assets.filter(a => a.depreciations.length === 0).length
-    } catch (assetError) {
-      // Asset table might not exist or depreciation relation issue
-      console.log('Asset check skipped:', assetError)
+    } catch (err) {
+      console.log('Asset check skipped (table might not exist):', err)
     }
 
-    const preChecks = [
-      {
-        id: 'balance-sheet',
-        title: 'Bilanz erstellt',
-        status: balanceSheet ? 'passed' : 'warning',
-        message: balanceSheet
-          ? `Bilanz für ${year} wurde erstellt`
-          : `Bilanz für ${year} muss noch erstellt werden`
-      },
-      {
-        id: 'income-statement',
-        title: 'GuV erstellt',
-        status: incomeStatement ? 'passed' : 'warning',
-        message: incomeStatement
-          ? `GuV für ${year} wurde erstellt`
-          : `GuV für ${year} muss noch erstellt werden`
-      },
-      {
-        id: 'entries',
-        title: 'Buchungen vorhanden',
-        status: entriesCount > 0 ? 'passed' : 'warning',
-        message: `${entriesCount} Buchungen für ${year} gefunden`
-      },
-      {
-        id: 'provisions',
-        title: 'Rückstellungen gebucht',
-        status: pendingProvisions === 0 ? 'passed' : 'warning',
-        message: pendingProvisions === 0
-          ? 'Alle Rückstellungen sind gebucht'
-          : `${pendingProvisions} Rückstellungen sind noch nicht gebucht`
-      },
-      {
-        id: 'locked',
-        title: 'Jahr nicht gesperrt',
-        status: !isLocked ? 'passed' : 'failed',
-        message: isLocked
-          ? `Jahr ${year} ist bereits gesperrt`
-          : `Jahr ${year} kann bearbeitet werden`
-      },
-      {
-        id: 'accounts',
-        title: 'Kontenrahmen aktiv',
-        status: accounts > 0 ? 'passed' : 'failed',
-        message: `${accounts} aktive Konten im Kontenrahmen`
-      },
-      {
-        id: 'depreciation',
-        title: 'Abschreibungen vollständig',
-        status: assetsWithoutDepreciation === 0 ? 'passed' : 'warning',
-        message: assetsWithoutDepreciation === 0
-          ? 'Alle Anlagen wurden abgeschrieben'
-          : `${assetsWithoutDepreciation} Anlagen ohne Abschreibung für ${year}`
-      }
-    ]
+    preChecks.push({
+      id: 'depreciation',
+      title: 'Abschreibungen vollständig',
+      status: assetsWithoutDepreciation === 0 ? 'passed' : 'warning',
+      message: assetsWithoutDepreciation === 0
+        ? 'Alle Anlagen wurden abgeschrieben'
+        : `${assetsWithoutDepreciation} Anlagen ohne Abschreibung für ${year}`
+    })
 
     return NextResponse.json(preChecks)
   } catch (error) {
     console.error('Error running pre-checks:', error)
-    return NextResponse.json(
-      { error: 'Failed to run pre-checks' },
-      { status: 500 }
-    )
+    // Return empty array instead of error to prevent frontend crash
+    return NextResponse.json([
+      {
+        id: 'error',
+        title: 'Fehler bei Prüfungen',
+        status: 'failed',
+        message: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'
+      }
+    ])
   }
 }

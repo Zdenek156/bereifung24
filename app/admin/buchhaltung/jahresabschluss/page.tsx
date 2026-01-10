@@ -519,15 +519,48 @@ export default function JahresabschlussPage() {
     }
   };
 
+  const handleUnlockYear = async () => {
+    if (!confirm(`Jahr ${fiscalYear} wirklich entsperren? Alle Schritte müssen erneut durchlaufen werden.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/accounting/year-end/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year: fiscalYear }),
+      });
+      
+      if (response.ok) {
+        alert(`Jahr ${fiscalYear} wurde entsperrt`);
+        window.location.reload();
+      } else {
+        alert('Fehler beim Entsperren');
+      }
+    } catch (error) {
+      console.error('Unlock error:', error);
+      alert('Fehler beim Entsperren');
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 max-w-5xl">
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-2">
-          <Button variant="outline" onClick={() => router.push('/admin/buchhaltung')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => router.push('/admin/buchhaltung')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
+          </div>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleUnlockYear}
+          >
+            Jahr {fiscalYear} entsperren (Test)
           </Button>
-          <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
         </div>
         <p className="text-muted-foreground">Schritt-für-Schritt Jahresabschlussprozess</p>
       </div>

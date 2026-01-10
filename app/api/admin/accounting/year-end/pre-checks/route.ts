@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
     let accounts = 0
     try {
       accounts = await prisma.chartOfAccounts.count({
-        where: { active: true }
+        where: { isActive: true }
       })
     } catch (err) {
       console.error('Accounts check error:', err)

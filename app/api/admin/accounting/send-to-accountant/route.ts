@@ -210,8 +210,16 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Dynamic import for nodemailer in production
+      const nodemailerModule = await import('nodemailer')
+      const createTransporter = nodemailerModule.default?.createTransporter || nodemailerModule.createTransporter
+      
+      if (!createTransporter) {
+        throw new Error('Nodemailer createTransporter not available')
+      }
+
       // Create transporter
-      const transporter = nodemailer.createTransporter({
+      const transporter = createTransporter({
         host: smtpSettings.smtpHost,
         port: parseInt(smtpSettings.smtpPort || '587'),
         secure: smtpSettings.smtpSecure || false,

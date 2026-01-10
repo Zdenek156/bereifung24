@@ -258,6 +258,34 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (documents.journal) {
+        try {
+          const journalEntries = await prisma.accountingEntry.findMany({
+            where: {
+              bookingDate: {
+                gte: new Date(year, 0, 1),
+                lte: new Date(year, 11, 31, 23, 59, 59)
+              }
+            },
+            orderBy: { entryNumber: 'asc' }
+          })
+          if (journalEntries.length > 0) {
+            console.log('[SEND TO ACCOUNTANT] Generating Journal PDF...')
+            const pdfBuffer = await generateJournalPDF(journalEntries, year)
+            console.log('[SEND TO ACCOUNTANT] Journal PDF generated, size:', pdfBuffer.length, 'bytes')
+            emailAttachments.push({
+              filename: `Journal_${year}.pdf`,
+              content: pdfBuffer,
+              contentType: 'application/pdf'
+            })
+            console.log('[SEND TO ACCOUNTANT] ✅ Journal PDF added to attachments')
+          }
+        } catch (err) {
+          console.error('[SEND TO ACCOUNTANT] ❌ Error generating Journal PDF:', err)
+          throw new Error(`Fehler beim Erstellen der Journal-PDF: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`)
+        }
+      }
+
       console.log('[SEND TO ACCOUNTANT] Total attachments prepared:', emailAttachments.length)
 
       // Create SMTP service
@@ -557,4 +585,134 @@ function toNumber(value: any): number {
   if (value === null || value === undefined) return 0
   const num = Number(value)
   return isNaN(num) ? 0 : num
+}
+
+// Helper function to generate Journal PDF
+async function generateJournalPDF(entries: any[], year: number): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ 
+        margin: 30, 
+        size: 'A4',
+        bufferPages: true,
+        autoFirstPage: false,
+        layout: 'landscape' // Querformat für bessere Tabellenansicht
+      })
+      const chunks: Buffer[] = []
+
+      doc.on('data', (chunk) => chunks.push(chunk))
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+
+      // Add page manually to control font initialization
+      doc.addPage()
+      
+      // Use built-in Courier font to avoid font loading issues
+      doc.font('Courier')
+
+      // Header
+      doc.fontSize(16).text('BUCHUNGSJOURNAL', { align: 'center' })
+      doc.fontSize(10).text(`Geschäftsjahr ${year}`, { align: 'center' })
+      doc.moveDown()
+      doc.fontSize(8).text('Bereifung24 GmbH', { align: 'center' })
+      doc.moveDown(1.5)
+
+      // Table headers
+      const startY = doc.y
+      const colWidths = {
+        nr: 40,
+        datum: 65,
+        konto: 110,
+        gegenkonto: 110,
+        beschreibung: 200,
+        betrag: 70,
+        belegnr: 60
+      }
+      
+      let x = 30
+      doc.fontSize(7)
+      doc.text('Nr', x, startY, { width: colWidths.nr, align: 'left' })
+      x += colWidths.nr
+      doc.text('Datum', x, startY, { width: colWidths.datum, align: 'left' })
+      x += colWidths.datum
+      doc.text('Sollkonto', x, startY, { width: colWidths.konto, align: 'left' })
+      x += colWidths.konto
+      doc.text('Habenkonto', x, startY, { width: colWidths.gegenkonto, align: 'left' })
+      x += colWidths.gegenkonto
+      doc.text('Beschreibung', x, startY, { width: colWidths.beschreibung, align: 'left' })
+      x += colWidths.beschreibung
+      doc.text('Betrag', x, startY, { width: colWidths.betrag, align: 'right' })
+      x += colWidths.betrag
+      doc.text('Beleg', x, startY, { width: colWidths.belegnr, align: 'left' })
+
+      // Line under headers
+      doc.moveTo(30, doc.y + 2).lineTo(820, doc.y + 2).stroke()
+      doc.moveDown(0.5)
+
+      // Entries
+      doc.fontSize(6)
+      let totalAmount = 0
+
+      for (const entry of entries) {
+        // Check if we need a new page
+        if (doc.y > 550) {
+          doc.addPage()
+          doc.font('Courier').fontSize(6)
+        }
+
+        x = 30
+        const rowY = doc.y
+        const amount = toNumber(entry.amount)
+        totalAmount += amount
+
+        // Entry number
+        doc.text(entry.entryNumber || '-', x, rowY, { width: colWidths.nr, align: 'left' })
+        x += colWidths.nr
+
+        // Date
+        const date = new Date(entry.bookingDate)
+        doc.text(date.toLocaleDateString('de-DE'), x, rowY, { width: colWidths.datum, align: 'left' })
+        x += colWidths.datum
+
+        // Debit account
+        doc.text(entry.debitAccount || '-', x, rowY, { width: colWidths.konto, align: 'left' })
+        x += colWidths.konto
+
+        // Credit account
+        doc.text(entry.creditAccount || '-', x, rowY, { width: colWidths.gegenkonto, align: 'left' })
+        x += colWidths.gegenkonto
+
+        // Description (truncate if too long)
+        const description = (entry.description || '-').substring(0, 50)
+        doc.text(description, x, rowY, { width: colWidths.beschreibung, align: 'left' })
+        x += colWidths.beschreibung
+
+        // Amount
+        doc.text(formatEUR(amount), x, rowY, { width: colWidths.betrag, align: 'right' })
+        x += colWidths.betrag
+
+        // Document number
+        doc.text(entry.documentNumber || '-', x, rowY, { width: colWidths.belegnr, align: 'left' })
+
+        doc.moveDown(0.7)
+      }
+
+      // Total line
+      doc.moveDown(0.5)
+      doc.moveTo(30, doc.y).lineTo(820, doc.y).stroke()
+      doc.moveDown(0.5)
+      
+      doc.fontSize(8)
+      doc.text(`Summe (${entries.length} Buchungen)`, 30, doc.y, { width: 525, align: 'right', continued: true })
+      doc.text(formatEUR(totalAmount), { width: 70, align: 'right' })
+
+      // Footer
+      doc.fontSize(6)
+      doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}`, 30, 570, { align: 'center' })
+
+      doc.end()
+    } catch (error) {
+      reject(error)
+    }
+  })
 }

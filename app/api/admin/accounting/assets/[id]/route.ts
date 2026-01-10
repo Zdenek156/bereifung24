@@ -86,17 +86,28 @@ export async function PUT(
       residualValue
     } = body
 
+    // Map frontend categories to backend enum values
+    const categoryMap: Record<string, string> = {
+      'equipment': 'OTHER',
+      'vehicles': 'VEHICLE',
+      'furniture': 'FURNITURE',
+      'software': 'SOFTWARE',
+      'buildings': 'OTHER',
+      'computer': 'COMPUTER'
+    }
+
+    const mappedCategory = categoryMap[category.toLowerCase()] || 'OTHER'
     const annualDepreciation = (purchasePrice - (residualValue || 0)) / usefulLife
 
     const asset = await prisma.asset.update({
       where: { id: params.id },
       data: {
         name,
-        category: category.toUpperCase(),
+        category: mappedCategory,
         acquisitionCost: purchasePrice,
         acquisitionDate: new Date(purchaseDate),
         usefulLife,
-        afaMethod: depreciationMethod.toUpperCase(),
+        afaMethod: depreciationMethod.toUpperCase() === 'LINEAR' ? 'LINEAR' : 'DEGRESSIV',
         annualDepreciation
       }
     })

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import PDFDocument from 'pdfkit'
+import nodemailer from 'nodemailer'
+import Handlebars from 'handlebars'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -113,13 +114,101 @@ export async function POST(request: NextRequest) {
       attachments.push({ name: `Journal_${year}.${format}`, type: 'journal' })
     }
 
-    // In a real implementation, you would:
-    // 1. Generate attachments based on format (PDF, Excel, CSV)
-    // 2. Send email via SMTP using settings from CompanySettings
-    // 3. Log the action in audit trail
-
-    // Get SMTP settings
+    // Get SMTP settings and email template
     const smtpSettings = await prisma.companySettings.findFirst()
+    const emailTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: 'ACCOUNTANT_DOCUMENTS' }
+    })
+
+    if (!emailTemplate || !emailTemplate.isActive) {
+      return NextResponse.json({
+        success: false,
+        error: 'Email-Template nicht gefunden oder inaktiv. Bitte in den Email-Templates aktivieren.'
+      }, { status: 404 })
+    }
+
+    // Prepare template data
+    const templateData = {
+      year,
+      sender,
+      format: format.toUpperCase(),
+      documents: attachments.map(a => a.name),
+      message: message || null,
+      accountantName: accountant.name || accountant.email
+    }
+
+    // Compile Handlebars template
+    Handlebars.registerHelper('each', function(context, options) {
+      let ret = ''
+      for (let i = 0; i < context.length; i++) {
+        ret += options.fn(context[i])
+      }
+      return ret
+    })
+
+    Handlebars.registerHelper('if', function(conditional, options) {
+      if (conditional) {
+        return options.fn(this)
+      }
+      return options.inverse(this)
+    })
+
+    const subjectTemplate = Handlebars.compile(emailTemplate.subject)
+    const htmlTemplate = Handlebars.compile(emailTemplate.htmlContent)
+
+    const emailSubject = subjectTemplate(templateData)
+    const emailHtml = htmlTemplate(templateData)
+
+    // Send email via SMTP
+    console.log('[SEND TO ACCOUNTANT] Preparing email...')
+    console.log('[SEND TO ACCOUNTANT] To:', accountant.email)
+    console.log('[SEND TO ACCOUNTANT] Subject:', emailSubject)
+
+    if (!smtpSettings?.smtpHost || !smtpSettings?.smtpUser) {
+      console.log('[SEND TO ACCOUNTANT] SMTP not configured, simulation only')
+      return NextResponse.json({
+        success: true,
+        message: `${attachments.length} Dokument(e) würden versendet werden (SMTP nicht konfiguriert)`,
+        data: {
+          year,
+          recipient: accountant.email,
+          documents: attachments.map(a => a.name),
+          format,
+          simulation: true
+        }
+      })
+    }
+
+    try {
+      // Create transporter
+      const transporter = nodemailer.createTransporter({
+        host: smtpSettings.smtpHost,
+        port: parseInt(smtpSettings.smtpPort || '587'),
+        secure: smtpSettings.smtpSecure || false,
+        auth: {
+          user: smtpSettings.smtpUser,
+          pass: smtpSettings.smtpPassword
+        }
+      })
+
+      // Send email
+      await transporter.sendMail({
+        from: `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`,
+        to: accountant.email,
+        subject: emailSubject,
+        html: emailHtml,
+        // Note: Actual document generation would go here
+        // For now, we're just sending the email notification
+      })
+
+      console.log('[SEND TO ACCOUNTANT] ✅ Email sent successfully!')
+    } catch (emailError) {
+      console.error('[SEND TO ACCOUNTANT] Email error:', emailError)
+      return NextResponse.json({
+        success: false,
+        error: `Email-Versand fehlgeschlagen: ${emailError instanceof Error ? emailError.message : 'Unbekannter Fehler'}`
+      }, { status: 500 })
+    }
 
     // For now, we'll simulate the email sending
     console.log('[SEND TO ACCOUNTANT] Would send email to:', accountant.email)

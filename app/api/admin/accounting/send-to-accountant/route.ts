@@ -932,7 +932,8 @@ async function generateJournalExcel(entries: any[], year: number): Promise<Buffe
 function generateBalanceSheetCSV(balanceSheet: any, year: number): string {
   const lines: string[] = []
   
-  lines.push(`"BILANZ - AKTIVA"`)
+  // Add UTF-8 BOM for Excel compatibility
+  lines.push('\uFEFF"BILANZ - AKTIVA"')
   lines.push(`"Geschäftsjahr ${year}"`)
   lines.push(`"Bereifung24 GmbH"`)
   lines.push('')
@@ -986,7 +987,8 @@ function generateBalanceSheetCSV(balanceSheet: any, year: number): string {
 function generateIncomeStatementCSV(incomeStatement: any, year: number): string {
   const lines: string[] = []
   
-  lines.push(`"GEWINN- UND VERLUSTRECHNUNG"`)
+  // Add UTF-8 BOM for Excel compatibility
+  lines.push('\uFEFF"GEWINN- UND VERLUSTRECHNUNG"')
   lines.push(`"Geschäftsjahr ${year}"`)
   lines.push(`"Bereifung24 GmbH"`)
   lines.push('')
@@ -1015,7 +1017,8 @@ function generateIncomeStatementCSV(incomeStatement: any, year: number): string 
 function generateJournalCSV(entries: any[], year: number): string {
   const lines: string[] = []
   
-  lines.push(`"BUCHUNGSJOURNAL"`)
+  // Add UTF-8 BOM for Excel compatibility
+  lines.push('\uFEFF"BUCHUNGSJOURNAL"')
   lines.push(`"Geschäftsjahr ${year}"`)
   lines.push(`"Bereifung24 GmbH"`)
   lines.push('')

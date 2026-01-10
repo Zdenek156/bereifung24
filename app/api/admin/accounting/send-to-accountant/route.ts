@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SmtpService } from '@/lib/email/smtp-service'
 import * as Handlebars from 'handlebars'
+import PDFDocument from 'pdfkit'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -215,16 +216,14 @@ export async function POST(request: NextRequest) {
 
       if (documents.balanceSheet) {
         try {
-          const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/accounting/balance-sheet/export?year=${year}&format=pdf`, {
-            headers: {
-              'Cookie': request.headers.get('cookie') || ''
-            }
+          const balanceSheetData = await prisma.balanceSheet.findUnique({
+            where: { year }
           })
-          if (pdfResponse.ok) {
-            const pdfBuffer = await pdfResponse.arrayBuffer()
+          if (balanceSheetData) {
+            const pdfBuffer = await generateBalanceSheetPDF(balanceSheetData)
             emailAttachments.push({
               filename: `Bilanz_${year}.pdf`,
-              content: Buffer.from(pdfBuffer)
+              content: pdfBuffer
             })
             console.log('[SEND TO ACCOUNTANT] Generated Bilanz PDF')
           }
@@ -235,16 +234,14 @@ export async function POST(request: NextRequest) {
 
       if (documents.incomeStatement) {
         try {
-          const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/accounting/income-statement/export?year=${year}&format=pdf`, {
-            headers: {
-              'Cookie': request.headers.get('cookie') || ''
-            }
+          const incomeStatementData = await prisma.incomeStatement.findUnique({
+            where: { year }
           })
-          if (pdfResponse.ok) {
-            const pdfBuffer = await pdfResponse.arrayBuffer()
+          if (incomeStatementData) {
+            const pdfBuffer = await generateIncomeStatementPDF(incomeStatementData)
             emailAttachments.push({
               filename: `GuV_${year}.pdf`,
-              content: Buffer.from(pdfBuffer)
+              content: pdfBuffer
             })
             console.log('[SEND TO ACCOUNTANT] Generated GuV PDF')
           }
@@ -274,6 +271,12 @@ export async function POST(request: NextRequest) {
       })
 
       console.log('[SEND TO ACCOUNTANT] ✅ Email sent successfully with', emailAttachments.length, 'attachments!')
+      
+      return NextResponse.json({
+        success: true,
+        message: `Dokumente erfolgreich an ${accountant.email} gesendet`,
+        attachments: emailAttachments.length
+      })
     } catch (emailError) {
       console.error('[SEND TO ACCOUNTANT] Email error:', emailError)
       return NextResponse.json({
@@ -281,84 +284,6 @@ export async function POST(request: NextRequest) {
         error: `Email-Versand fehlgeschlagen: ${emailError instanceof Error ? emailError.message : 'Unbekannter Fehler'}`
       }, { status: 500 })
     }
-
-    // For now, we'll simulate the email sending
-    console.log('[SEND TO ACCOUNTANT] Would send email to:', accountant.email)
-    console.log('[SEND TO ACCOUNTANT] From:', sender)
-    console.log('[SEND TO ACCOUNTANT] Format:', format)
-    console.log('[SEND TO ACCOUNTANT] Attachments:', attachments.map(a => a.name).join(', '))
-    console.log('[SEND TO ACCOUNTANT] Message:', message)
-
-    // TODO: Implement actual email sending
-    // Example with nodemailer:
-    /*
-    const transporter = nodemailer.createTransporter({
-      host: smtpSettings?.smtpHost,
-      port: parseInt(smtpSettings?.smtpPort || '587'),
-      secure: false,
-      auth: {
-        user: smtpSettings?.smtpUser,
-        pass: smtpSettings?.smtpPassword
-      }
-    })
-
-    const emailBody = `
-Sehr geehrte Damen und Herren,
-
-anbei erhalten Sie folgende Dokumente für das Geschäftsjahr ${year}:
-
-${attachments.map(a => `- ${a.name}`).join('\n')}
-
-${message ? `\nZusätzliche Information:\n${message}\n` : ''}
-
-Mit freundlichen Grüßen
-${sender}
-Bereifung24 GmbH
-    `.trim()
-
-    await transporter.sendMail({
-      from: `${sender} <${smtpSettings?.smtpFrom}>`,
-      to: `${accountant.name} <${accountant.email}>`,
-      subject: `Jahresabschluss ${year} - Bereifung24 GmbH`,
-      text: emailBody,
-      attachments: [
-        // Generate and attach documents based on format
-      ]
-    })
-    */
-
-    // Create audit log entry
-    // TODO: Implement AuditLog model or use existing logging system
-    /*
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'SEND_TO_ACCOUNTANT',
-        entityType: 'ACCOUNTING_DOCUMENTS',
-        entityId: year.toString(),
-        details: {
-          year,
-          sender,
-          format,
-          recipient: accountant.email,
-          recipientName: accountant.name,
-          documents: attachments.map(a => a.type),
-          message: message || null
-        }
-      }
-    })
-    */
-
-    return NextResponse.json({
-      success: true,
-      message: `${attachments.length} Dokument(e) für ${year} wurden an ${accountant.name || accountant.email} gesendet`,
-      data: {
-        year,
-        recipient: accountant.email,
-        documents: attachments.map(a => a.name),
-        format
-      }
-    })
   } catch (error) {
     console.error('[SEND TO ACCOUNTANT] Error:', error)
     return NextResponse.json({
@@ -366,4 +291,212 @@ Bereifung24 GmbH
       error: error instanceof Error ? error.message : 'Fehler beim Versand'
     }, { status: 500 })
   }
+}
+
+// Helper function to generate Bilanz PDF
+async function generateBalanceSheetPDF(balanceSheet: any): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' })
+      const chunks: Buffer[] = []
+
+      doc.on('data', (chunk) => chunks.push(chunk))
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+
+      // Header
+      doc.fontSize(20).text('BILANZ', { align: 'center' })
+      doc.fontSize(12).text(`zum 31. Dezember ${balanceSheet.year}`, { align: 'center' })
+      doc.moveDown()
+      doc.fontSize(10).text('Bereifung24 GmbH', { align: 'center' })
+      doc.moveDown(2)
+
+      const assets = balanceSheet.assets as any
+      const liabilities = balanceSheet.liabilities as any
+
+      // AKTIVA
+      doc.fontSize(14).text('AKTIVA', { underline: true })
+      doc.moveDown()
+
+      doc.fontSize(11).text('A. ANLAGEVERMÖGEN')
+      doc.fontSize(10)
+      doc.text(`   I. Immaterielle Vermögensgegenstände`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.anlagevermoegen?.immaterielleVermoegensgegenstaende || 0), { align: 'right' })
+      doc.text(`   II. Sachanlagen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.anlagevermoegen?.sachanlagen || 0), { align: 'right' })
+      doc.text(`   III. Finanzanlagen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.anlagevermoegen?.finanzanlagen || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(11).text('B. UMLAUFVERMÖGEN')
+      doc.fontSize(10)
+      doc.text(`   I. Vorräte`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.umlaufvermoegen?.vorraete || 0), { align: 'right' })
+      doc.text(`   II. Forderungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.umlaufvermoegen?.forderungen || 0), { align: 'right' })
+      doc.text(`   III. Kasse, Bank`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.umlaufvermoegen?.kasseBank || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(11).text('C. RECHNUNGSABGRENZUNGSPOSTEN', 50, doc.y, { continued: true })
+      doc.text(formatEUR(assets.rechnungsabgrenzungsposten || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(12).text('SUMME AKTIVA', 50, doc.y, { continued: true, underline: true })
+      doc.text(formatEUR(parseFloat(balanceSheet.totalAssets.toString())), { align: 'right', underline: true })
+      doc.moveDown(2)
+
+      // PASSIVA
+      doc.fontSize(14).text('PASSIVA', { underline: true })
+      doc.moveDown()
+
+      doc.fontSize(11).text('A. EIGENKAPITAL')
+      doc.fontSize(10)
+      doc.text(`   I. Gezeichnetes Kapital`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.eigenkapital?.gezeichnetesKapital || 0), { align: 'right' })
+      doc.text(`   II. Kapitalrücklagen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.eigenkapital?.kapitalruecklagen || 0), { align: 'right' })
+      doc.text(`   III. Gewinnrücklagen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.eigenkapital?.gewinnruecklagen || 0), { align: 'right' })
+      doc.text(`   IV. Gewinnvortrag`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.eigenkapital?.gewinnvortrag || 0), { align: 'right' })
+      doc.text(`   V. Jahresüberschuss`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.eigenkapital?.jahresueberschuss || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(11).text('B. RÜCKSTELLUNGEN')
+      doc.fontSize(10)
+      doc.text(`   I. Pensionsrückstellungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.rueckstellungen?.pensionsrueckstellungen || 0), { align: 'right' })
+      doc.text(`   II. Steuerrückstellungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.rueckstellungen?.steuerrueckstellungen || 0), { align: 'right' })
+      doc.text(`   III. Sonstige Rückstellungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.rueckstellungen?.sonstigeRueckstellungen || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(11).text('C. VERBINDLICHKEITEN')
+      doc.fontSize(10)
+      doc.text(`   I. Verbindlichkeiten Kreditinstitute`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.verbindlichkeiten?.verbindlichkeitenKreditinstitute || 0), { align: 'right' })
+      doc.text(`   II. Erhaltene Anzahlungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.verbindlichkeiten?.erhalteneAnzahlungen || 0), { align: 'right' })
+      doc.text(`   III. Verbindlichkeiten Lieferungen`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.verbindlichkeiten?.verbindlichkeitenLieferungen || 0), { align: 'right' })
+      doc.text(`   IV. Sonstige Verbindlichkeiten`, 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.verbindlichkeiten?.sonstigeVerbindlichkeiten || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(11).text('D. RECHNUNGSABGRENZUNGSPOSTEN', 50, doc.y, { continued: true })
+      doc.text(formatEUR(liabilities.rechnungsabgrenzungsposten || 0), { align: 'right' })
+      doc.moveDown()
+
+      doc.fontSize(12).text('SUMME PASSIVA', 50, doc.y, { continued: true, underline: true })
+      doc.text(formatEUR(parseFloat(balanceSheet.totalLiabilities.toString())), { align: 'right', underline: true })
+
+      // Footer
+      doc.moveDown(2)
+      doc.fontSize(8).text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, { align: 'center' })
+
+      doc.end()
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+// Helper function to generate GuV PDF
+async function generateIncomeStatementPDF(incomeStatement: any): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' })
+      const chunks: Buffer[] = []
+
+      doc.on('data', (chunk) => chunks.push(chunk))
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+
+      // Header
+      doc.fontSize(20).text('GEWINN- UND VERLUSTRECHNUNG', { align: 'center' })
+      doc.fontSize(12).text(`für das Geschäftsjahr ${incomeStatement.year}`, { align: 'center' })
+      doc.moveDown()
+      doc.fontSize(10).text('Bereifung24 GmbH', { align: 'center' })
+      doc.moveDown(2)
+
+      const revenue = incomeStatement.revenue as any
+      const expenses = incomeStatement.expenses as any
+
+      // ERTRÄGE
+      doc.fontSize(14).text('ERTRÄGE', { underline: true })
+      doc.moveDown()
+
+      doc.fontSize(10)
+      doc.text('1. Umsatzerlöse', 50, doc.y, { continued: true })
+      doc.text(formatEUR(revenue.umsatzerloese || 0), { align: 'right' })
+      doc.text('2. Bestandsveränderungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(revenue.bestandsveraenderungen || 0), { align: 'right' })
+      doc.text('3. Andere aktivierte Eigenleistungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(revenue.andereAktivierteEigenleistungen || 0), { align: 'right' })
+      doc.text('4. Sonstige betriebliche Erträge', 50, doc.y, { continued: true })
+      doc.text(formatEUR(revenue.sonstigeBetrieblicheErtraege || 0), { align: 'right' })
+      doc.moveDown()
+
+      const totalRevenue = (revenue.umsatzerloese || 0) + 
+                          (revenue.bestandsveraenderungen || 0) + 
+                          (revenue.andereAktivierteEigenleistungen || 0) + 
+                          (revenue.sonstigeBetrieblicheErtraege || 0)
+      doc.fontSize(11).text('Summe Erträge', 50, doc.y, { continued: true })
+      doc.text(formatEUR(totalRevenue), { align: 'right' })
+      doc.moveDown(2)
+
+      // AUFWENDUNGEN
+      doc.fontSize(14).text('AUFWENDUNGEN', { underline: true })
+      doc.moveDown()
+
+      doc.fontSize(10)
+      doc.text('5. Materialaufwand', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.materialaufwand || 0), { align: 'right' })
+      doc.text('6. Personalaufwand', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.personalaufwand || 0), { align: 'right' })
+      doc.text('7. Abschreibungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.abschreibungen || 0), { align: 'right' })
+      doc.text('8. Sonstige betriebliche Aufwendungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.sonstigeBetrieblicheAufwendungen || 0), { align: 'right' })
+      doc.text('9. Zinsen und ähnliche Aufwendungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.zinsenUndAehnlicheAufwendungen || 0), { align: 'right' })
+      doc.text('10. Steuern', 50, doc.y, { continued: true })
+      doc.text(formatEUR(expenses.steuern || 0), { align: 'right' })
+      doc.moveDown()
+
+      const totalExpenses = (expenses.materialaufwand || 0) + 
+                           (expenses.personalaufwand || 0) + 
+                           (expenses.abschreibungen || 0) + 
+                           (expenses.sonstigeBetrieblicheAufwendungen || 0) + 
+                           (expenses.zinsenUndAehnlicheAufwendungen || 0) + 
+                           (expenses.steuern || 0)
+      doc.fontSize(11).text('Summe Aufwendungen', 50, doc.y, { continued: true })
+      doc.text(formatEUR(totalExpenses), { align: 'right' })
+      doc.moveDown(2)
+
+      // JAHRESERGEBNIS
+      const netIncome = parseFloat(incomeStatement.netIncome.toString())
+      doc.fontSize(14).text('JAHRESERGEBNIS', 50, doc.y, { continued: true, underline: true })
+      doc.text(formatEUR(netIncome), { align: 'right', underline: true })
+
+      // Footer
+      doc.moveDown(2)
+      doc.fontSize(8).text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, { align: 'center' })
+
+      doc.end()
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+// Helper function to format currency
+function formatEUR(amount: number): string {
+  return new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(amount)
 }

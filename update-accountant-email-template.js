@@ -96,4 +96,4 @@ async function updateAccountantTemplate() {
   }
 }
 
-addAccountantTemplate().catch(console.error)
+updateAccountantTemplate().catch(console.error)

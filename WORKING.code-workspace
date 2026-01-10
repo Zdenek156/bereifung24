@@ -1,0 +1,22 @@
+﻿{
+  "folders": [
+    { "path": "app", "name": "App" },
+    { "path": "components", "name": "Components" },
+    { "path": "lib", "name": "Lib" },
+    { "path": "prisma", "name": "Prisma" },
+    { "path": "scripts", "name": "Scripts" }
+  ],
+  "settings": {
+    "typescript.tsserver.maxTsServerMemory": 4096,
+    "files.maxMemoryForLargeFilesMB": 1024,
+    "files.exclude": {
+      "**/.next": true,
+      "**/.git": true,
+      "**/node_modules": false
+    },
+    "search.exclude": {
+      "**/.next": true,
+      "**/node_modules": true
+    }
+  }
+}

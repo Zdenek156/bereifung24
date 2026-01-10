@@ -220,15 +220,19 @@ export async function POST(request: NextRequest) {
             where: { year }
           })
           if (balanceSheetData) {
+            console.log('[SEND TO ACCOUNTANT] Generating Bilanz PDF...')
             const pdfBuffer = await generateBalanceSheetPDF(balanceSheetData)
+            console.log('[SEND TO ACCOUNTANT] Bilanz PDF generated, size:', pdfBuffer.length, 'bytes')
             emailAttachments.push({
               filename: `Bilanz_${year}.pdf`,
-              content: pdfBuffer
+              content: pdfBuffer,
+              contentType: 'application/pdf'
             })
-            console.log('[SEND TO ACCOUNTANT] Generated Bilanz PDF')
+            console.log('[SEND TO ACCOUNTANT] ✅ Bilanz PDF added to attachments')
           }
         } catch (err) {
-          console.error('[SEND TO ACCOUNTANT] Error generating Bilanz PDF:', err)
+          console.error('[SEND TO ACCOUNTANT] ❌ Error generating Bilanz PDF:', err)
+          throw new Error(`Fehler beim Erstellen der Bilanz-PDF: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`)
         }
       }
 
@@ -238,19 +242,26 @@ export async function POST(request: NextRequest) {
             where: { year }
           })
           if (incomeStatementData) {
+            console.log('[SEND TO ACCOUNTANT] Generating GuV PDF...')
             const pdfBuffer = await generateIncomeStatementPDF(incomeStatementData)
+            console.log('[SEND TO ACCOUNTANT] GuV PDF generated, size:', pdfBuffer.length, 'bytes')
             emailAttachments.push({
               filename: `GuV_${year}.pdf`,
-              content: pdfBuffer
+              content: pdfBuffer,
+              contentType: 'application/pdf'
             })
-            console.log('[SEND TO ACCOUNTANT] Generated GuV PDF')
+            console.log('[SEND TO ACCOUNTANT] ✅ GuV PDF added to attachments')
           }
         } catch (err) {
-          console.error('[SEND TO ACCOUNTANT] Error generating GuV PDF:', err)
+          console.error('[SEND TO ACCOUNTANT] ❌ Error generating GuV PDF:', err)
+          throw new Error(`Fehler beim Erstellen der GuV-PDF: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`)
         }
       }
 
+      console.log('[SEND TO ACCOUNTANT] Total attachments prepared:', emailAttachments.length)
+
       // Create SMTP service
+      console.log('[SEND TO ACCOUNTANT] Creating SMTP service...')
       const smtpService = new SmtpService({
         host: smtpSettings.smtpHost,
         port: parseInt(smtpSettings.smtpPort || '587'),
@@ -262,6 +273,12 @@ export async function POST(request: NextRequest) {
       })
 
       // Send email with attachments
+      console.log('[SEND TO ACCOUNTANT] Sending email to:', accountant.email)
+      console.log('[SEND TO ACCOUNTANT] From:', `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`)
+      console.log('[SEND TO ACCOUNTANT] Subject:', emailSubject)
+      console.log('[SEND TO ACCOUNTANT] Attachments:', emailAttachments.length)
+      console.log('[SEND TO ACCOUNTANT] Attachment details:', emailAttachments.map(a => `${a.filename} (${a.content.length} bytes)`).join(', '))
+      
       await smtpService.sendEmail({
         from: `${sender} <${smtpSettings.smtpFrom || smtpSettings.smtpUser}>`,
         to: accountant.email,
@@ -275,7 +292,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: `Dokumente erfolgreich an ${accountant.email} gesendet`,
-        attachments: emailAttachments.length
+        attachments: emailAttachments.length,
+        attachmentDetails: emailAttachments.map(a => ({
+          filename: a.filename,
+          size: a.content.length
+        }))
       })
     } catch (emailError) {
       console.error('[SEND TO ACCOUNTANT] Email error:', emailError)

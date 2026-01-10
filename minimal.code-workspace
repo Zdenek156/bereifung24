@@ -1,0 +1,37 @@
+﻿{
+  "folders": [
+    {
+      "path": "app",
+      "name": "App"
+    }
+  ],
+  "settings": {
+    "dart.enabled": false,
+    "files.exclude": {
+      "Bereifung24 App": true,
+      "_IGNORE_Bereifung24 App": true,
+      "bereifung24_app": true,
+      "**/.next": true,
+      "**/.git": true,
+      "node_modules": true
+    },
+    "search.exclude": {
+      "Bereifung24 App/**": true,
+      "_IGNORE_Bereifung24 App/**": true,
+      "bereifung24_app/**": true,
+      "**/.next/**": true,
+      "**/node_modules/**": true
+    },
+    "files.watcherExclude": {
+      "Bereifung24 App/**": true,
+      "_IGNORE_Bereifung24 App/**": true,
+      "bereifung24_app/**": true,
+      "**/.next/**": true,
+      "**/node_modules/**": true,
+      "**/.git/**": true
+    },
+    "typescript.tsserver.maxTsServerMemory": 2048,
+    "files.maxMemoryForLargeFilesMB": 512,
+    "extensions.autoUpdate": false
+  }
+}

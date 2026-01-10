@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, FileText, FileSpreadsheet } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -269,32 +269,13 @@ export default function GuvPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Neu generieren
           </Button>
-          <div className="relative group">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <button
-                onClick={() => {
-                  window.open(`/api/admin/accounting/income-statement/export?year=${selectedYear}&format=pdf`, '_blank')
-                }}
-                className="flex items-center w-full text-left px-4 py-3 hover:bg-gray-100 rounded-t-lg"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                PDF herunterladen
-              </button>
-              <button
-                onClick={() => {
-                  window.open(`/api/admin/accounting/income-statement/export?year=${selectedYear}&format=excel`, '_blank')
-                }}
-                className="flex items-center w-full text-left px-4 py-3 hover:bg-gray-100 rounded-b-lg"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Excel herunterladen
-              </button>
-            </div>
-          </div>
+          <Button
+            onClick={() => window.print()}
+            variant="outline"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Drucken
+          </Button>
         </div>
       </div>
 

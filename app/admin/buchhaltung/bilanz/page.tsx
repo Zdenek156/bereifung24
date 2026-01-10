@@ -1,10 +1,73 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Lock, CheckCircle, Calendar, RefreshCw, FileText, FileSpreadsheet } from 'lucide-react'
+import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
+
+// Print styles
+const printStyles = `
+  @media print {
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+    
+    body * {
+      visibility: hidden;
+    }
+    
+    #print-content, #print-content * {
+      visibility: visible;
+    }
+    
+    #print-content {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    
+    .print-hide {
+      display: none !important;
+    }
+    
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .print-table th,
+    .print-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .print-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    
+    .print-section {
+      margin-top: 30px;
+      page-break-inside: avoid;
+    }
+    
+    .print-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .print-total {
+      font-weight: bold;
+      border-top: 2px solid #000;
+      margin-top: 10px;
+    }
+  }
+`
 
 interface BalanceSheetData {
   year: number
@@ -249,10 +312,12 @@ export default function BilanzPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Bilanz</h1>
-        <div className="flex gap-3 items-center">
+    <>
+      <style>{printStyles}</style>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6 print-hide">
+          <h1 className="text-3xl font-bold">Bilanz</h1>
+          <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <select
@@ -310,32 +375,13 @@ export default function BilanzPage() {
               Freigeben
             </Button>
           )}
-          <div className="relative group">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <button
-                onClick={() => {
-                  window.open(`/api/admin/accounting/balance-sheet/export?year=${selectedYear}&format=pdf`, '_blank')
-                }}
-                className="flex items-center w-full text-left px-4 py-3 hover:bg-gray-100 rounded-t-lg"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                PDF herunterladen
-              </button>
-              <button
-                onClick={() => {
-                  window.open(`/api/admin/accounting/balance-sheet/export?year=${selectedYear}&format=excel`, '_blank')
-                }}
-                className="flex items-center w-full text-left px-4 py-3 hover:bg-gray-100 rounded-b-lg"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Excel herunterladen
-              </button>
-            </div>
-          </div>
+          <Button
+            onClick={() => window.print()}
+            variant="outline"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Drucken
+          </Button>
         </div>
       </div>
 
@@ -542,13 +588,230 @@ export default function BilanzPage() {
       </div>
 
       {balanceSheet && Math.abs(calculateActivaTotal() - calculatePassivaTotal()) > 0.01 && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded print-hide">
           <div className="text-red-800 font-semibold">
             ⚠️ Warnung: Aktiva und Passiva sind nicht ausgeglichen!
             Differenz: {formatEUR(calculateActivaTotal() - calculatePassivaTotal())}
           </div>
         </div>
       )}
+
+      {/* Print-only content */}
+      <div id="print-content" className="hidden print:block">
+        <div className="print-header">
+          <h1 className="text-2xl font-bold">BILANZ</h1>
+          <p className="text-lg">zum 31. Dezember {selectedYear}</p>
+          <p className="text-sm mt-2">Bereifung24 GmbH</p>
+        </div>
+
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th style={{ width: '50%' }}>AKTIVA</th>
+              <th style={{ width: '20%', textAlign: 'right' }}>EUR</th>
+              <th style={{ width: '30%' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={3}><strong>A. ANLAGEVERMÖGEN</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>I. Immaterielle Vermögensgegenstände</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.anlagevermoegen.immaterielleVermoegensgegenstaende || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>II. Sachanlagen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.anlagevermoegen.sachanlagen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>III. Finanzanlagen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.anlagevermoegen.finanzanlagen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Summe Anlagevermögen</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((balanceSheet?.aktiva.anlagevermoegen.immaterielleVermoegensgegenstaende || 0) + 
+                          (balanceSheet?.aktiva.anlagevermoegen.sachanlagen || 0) + 
+                          (balanceSheet?.aktiva.anlagevermoegen.finanzanlagen || 0))}
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={3}><strong>B. UMLAUFVERMÖGEN</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>I. Vorräte</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.umlaufvermoegen.vorraete || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>II. Forderungen und sonstige Vermögensgegenstände</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.umlaufvermoegen.forderungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>III. Kassenbestand, Guthaben bei Kreditinstituten</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.umlaufvermoegen.kasseBank || 0)}</td>
+              <td></td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Summe Umlaufvermögen</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((balanceSheet?.aktiva.umlaufvermoegen.vorraete || 0) + 
+                          (balanceSheet?.aktiva.umlaufvermoegen.forderungen || 0) + 
+                          (balanceSheet?.aktiva.umlaufvermoegen.kasseBank || 0))}
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={3}><strong>C. RECHNUNGSABGRENZUNGSPOSTEN</strong></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.aktiva.rechnungsabgrenzungsposten || 0)}</td>
+              <td></td>
+            </tr>
+            <tr className="print-total">
+              <td><strong>SUMME AKTIVA</strong></td>
+              <td style={{ textAlign: 'right' }}><strong>{formatEUR(calculateActivaTotal())}</strong></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="print-table" style={{ marginTop: '40px' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '50%' }}>PASSIVA</th>
+              <th style={{ width: '20%', textAlign: 'right' }}>EUR</th>
+              <th style={{ width: '30%' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={3}><strong>A. EIGENKAPITAL</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>I. Gezeichnetes Kapital</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.stammkapital || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>II. Kapitalrücklage</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.kapitalruecklage || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>III. Gewinnrücklagen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.gewinnruecklagen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>IV. Gewinnvortrag/Verlustvortrag</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.gewinnvortrag || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>V. Jahresüberschuss/Jahresfehlbetrag</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.jahresueberschuss || 0)}</td>
+              <td></td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Summe Eigenkapital</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((balanceSheet?.passiva.eigenkapital.stammkapital || 0) + 
+                          (balanceSheet?.passiva.eigenkapital.kapitalruecklage || 0) + 
+                          (balanceSheet?.passiva.eigenkapital.gewinnruecklagen || 0) + 
+                          (balanceSheet?.passiva.eigenkapital.gewinnvortrag || 0) + 
+                          (balanceSheet?.passiva.eigenkapital.jahresueberschuss || 0))}
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={3}><strong>B. RÜCKSTELLUNGEN</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>1. Rückstellungen für Pensionen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.rueckstellungen.pensionsrueckstellungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>2. Steuerrückstellungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.rueckstellungen.steuerrueckstellungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>3. Sonstige Rückstellungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.rueckstellungen.sonstigeRueckstellungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Summe Rückstellungen</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((balanceSheet?.passiva.rueckstellungen.pensionsrueckstellungen || 0) + 
+                          (balanceSheet?.passiva.rueckstellungen.steuerrueckstellungen || 0) + 
+                          (balanceSheet?.passiva.rueckstellungen.sonstigeRueckstellungen || 0))}
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={3}><strong>C. VERBINDLICHKEITEN</strong></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>1. Verbindlichkeiten gegenüber Kreditinstituten</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenKreditinstitute || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>2. Erhaltene Anzahlungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.erhalteneAnzahlungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>3. Verbindlichkeiten aus Lieferungen und Leistungen</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungenLeistungen || 0)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style={{ paddingLeft: '20px' }}>4. Sonstige Verbindlichkeiten</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.sonstigeVerbindlichkeiten || 0)}</td>
+              <td></td>
+            </tr>
+            <tr style={{ fontWeight: 'bold' }}>
+              <td>Summe Verbindlichkeiten</td>
+              <td style={{ textAlign: 'right' }}>
+                {formatEUR((balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenKreditinstitute || 0) + 
+                          (balanceSheet?.passiva.verbindlichkeiten.erhalteneAnzahlungen || 0) + 
+                          (balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungenLeistungen || 0) + 
+                          (balanceSheet?.passiva.verbindlichkeiten.sonstigeVerbindlichkeiten || 0))}
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={3}><strong>D. RECHNUNGSABGRENZUNGSPOSTEN</strong></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.rechnungsabgrenzungsposten || 0)}</td>
+              <td></td>
+            </tr>
+            <tr className="print-total">
+              <td><strong>SUMME PASSIVA</strong></td>
+              <td style={{ textAlign: 'right' }}><strong>{formatEUR(calculatePassivaTotal())}</strong></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ marginTop: '40px', fontSize: '12px', textAlign: 'center' }}>
+          <p>Erstellt am: {new Date().toLocaleDateString('de-DE')}</p>
+        </div>
+      </div>
     </div>
+    </>
   )
 }

@@ -49,56 +49,56 @@ export default function JahresabschlussPage() {
   const [steps, setSteps] = useState<YearEndStep[]>([
     {
       id: 1,
-      title: 'Pre-Flight Checks',
-      description: 'Verify all prerequisites are met',
+      title: 'Vorprüfungen',
+      description: 'Alle Voraussetzungen prüfen',
       icon: CheckSquare,
       completed: false,
       canProceed: true,
     },
     {
       id: 2,
-      title: 'Reconcile Accounts',
-      description: 'Reconcile all accounts and fix discrepancies',
+      title: 'Kontenabstimmung',
+      description: 'Alle Konten abstimmen und Unstimmigkeiten beheben',
       icon: Calculator,
       completed: false,
       canProceed: false,
     },
     {
       id: 3,
-      title: 'Run Depreciation',
-      description: 'Calculate final depreciation for the year',
+      title: 'Abschreibungen',
+      description: 'Finale Abschreibungen für das Jahr berechnen',
       icon: TrendingDown,
       completed: false,
       canProceed: false,
     },
     {
       id: 4,
-      title: 'Review Provisions',
-      description: 'Review and adjust all provisions',
+      title: 'Rückstellungen',
+      description: 'Alle Rückstellungen prüfen und anpassen',
       icon: BookOpen,
       completed: false,
       canProceed: false,
     },
     {
       id: 5,
-      title: 'Generate Reports',
-      description: 'Generate P&L, balance sheet, and other reports',
+      title: 'Berichte erstellen',
+      description: 'GuV, Bilanz und weitere Berichte generieren',
       icon: FileText,
       completed: false,
       canProceed: false,
     },
     {
       id: 6,
-      title: 'Close Period',
-      description: 'Lock the fiscal year for further changes',
+      title: 'Periode abschließen',
+      description: 'Geschäftsjahr für weitere Änderungen sperren',
       icon: Archive,
       completed: false,
       canProceed: false,
     },
     {
       id: 7,
-      title: 'Complete',
-      description: 'Year-end closing completed successfully',
+      title: 'Abgeschlossen',
+      description: 'Jahresabschluss erfolgreich durchgeführt',
       icon: CheckCircle2,
       completed: false,
       canProceed: false,
@@ -161,7 +161,7 @@ export default function JahresabschlussPage() {
   const handleStep2Complete = async () => {
     const allChecked = Object.values(step2Data).every((v) => v);
     if (!allChecked) {
-      alert('Please complete all reconciliations');
+      alert('Bitte schließen Sie alle Abstimmungen ab');
       return;
     }
 
@@ -181,7 +181,7 @@ export default function JahresabschlussPage() {
   const handleStep3Complete = async () => {
     const allChecked = Object.values(step3Data).every((v) => v);
     if (!allChecked) {
-      alert('Please complete all depreciation tasks');
+      alert('Bitte schließen Sie alle Abschreibungsaufgaben ab');
       return;
     }
 
@@ -204,7 +204,7 @@ export default function JahresabschlussPage() {
   const handleStep4Complete = async () => {
     const allChecked = Object.values(step4Data).every((v) => v);
     if (!allChecked) {
-      alert('Please complete all provision tasks');
+      alert('Bitte schließen Sie alle Rückstellungsaufgaben ab');
       return;
     }
 
@@ -230,7 +230,7 @@ export default function JahresabschlussPage() {
   };
 
   const handleStep6Complete = async () => {
-    if (!confirm(`Lock fiscal year ${fiscalYear}? This cannot be undone.`)) return;
+    if (!confirm(`Geschäftsjahr ${fiscalYear} sperren? Dies kann nicht rückgängig gemacht werden.`)) return;
 
     setLoading(true);
     try {
@@ -269,7 +269,7 @@ export default function JahresabschlussPage() {
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <Label htmlFor="fiscalYear">Fiscal Year</Label>
+              <Label htmlFor="fiscalYear">Geschäftsjahr</Label>
               <Select
                 value={fiscalYear.toString()}
                 onValueChange={(value) => setFiscalYear(parseInt(value))}
@@ -291,7 +291,7 @@ export default function JahresabschlussPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8">Running pre-checks...</div>
+              <div className="text-center py-8">Prüfungen werden durchgeführt...</div>
             ) : (
               <div className="space-y-3">
                 {preChecks.map((check) => (
@@ -313,7 +313,7 @@ export default function JahresabschlussPage() {
             )}
 
             <Button onClick={runPreChecks} variant="outline" className="w-full">
-              Re-run Checks
+              Prüfungen erneut durchführen
             </Button>
           </div>
         );
@@ -322,7 +322,7 @@ export default function JahresabschlussPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Ensure all accounts are properly reconciled before proceeding.
+              Stellen Sie sicher, dass alle Konten ordnungsgemäß abgestimmt sind, bevor Sie fortfahren.
             </p>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -333,7 +333,7 @@ export default function JahresabschlussPage() {
                     setStep2Data({ ...step2Data, bankReconciled: checked as boolean })
                   }
                 />
-                <Label htmlFor="bankReconciled">Bank accounts reconciled</Label>
+                <Label htmlFor="bankReconciled">Bankkonten abgestimmt</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -343,7 +343,7 @@ export default function JahresabschlussPage() {
                     setStep2Data({ ...step2Data, arReconciled: checked as boolean })
                   }
                 />
-                <Label htmlFor="arReconciled">Accounts receivable reconciled</Label>
+                <Label htmlFor="arReconciled">Forderungen abgestimmt</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -353,7 +353,7 @@ export default function JahresabschlussPage() {
                     setStep2Data({ ...step2Data, apReconciled: checked as boolean })
                   }
                 />
-                <Label htmlFor="apReconciled">Accounts payable reconciled</Label>
+                <Label htmlFor="apReconciled">Verbindlichkeiten abgestimmt</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -363,11 +363,11 @@ export default function JahresabschlussPage() {
                     setStep2Data({ ...step2Data, inventoryReconciled: checked as boolean })
                   }
                 />
-                <Label htmlFor="inventoryReconciled">Inventory reconciled</Label>
+                <Label htmlFor="inventoryReconciled">Inventar abgestimmt</Label>
               </div>
             </div>
             <Button onClick={handleStep2Complete} className="w-full">
-              Complete Reconciliation
+              Abstimmung abschließen
             </Button>
           </div>
         );
@@ -376,7 +376,7 @@ export default function JahresabschlussPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Calculate final depreciation for all assets in fiscal year {fiscalYear}.
+              Berechnen Sie die finalen Abschreibungen für alle Anlagen im Geschäftsjahr {fiscalYear}.
             </p>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -387,7 +387,7 @@ export default function JahresabschlussPage() {
                     setStep3Data({ ...step3Data, depreciationRun: checked as boolean })
                   }
                 />
-                <Label htmlFor="depreciationRun">Depreciation calculated for all assets</Label>
+                <Label htmlFor="depreciationRun">Abschreibungen für alle Anlagen berechnet</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -397,11 +397,11 @@ export default function JahresabschlussPage() {
                     setStep3Data({ ...step3Data, assetsReviewed: checked as boolean })
                   }
                 />
-                <Label htmlFor="assetsReviewed">Asset register reviewed and verified</Label>
+                <Label htmlFor="assetsReviewed">Anlageverzeichnis geprüft und verifiziert</Label>
               </div>
             </div>
             <Button onClick={handleStep3Complete} className="w-full" disabled={loading}>
-              {loading ? 'Processing...' : 'Complete Depreciation'}
+              {loading ? 'Wird verarbeitet...' : 'Abschreibungen abschließen'}
             </Button>
           </div>
         );
@@ -410,7 +410,7 @@ export default function JahresabschlussPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Review all provisions and make necessary adjustments.
+              Überprüfen Sie alle Rückstellungen und nehmen Sie notwendige Anpassungen vor.
             </p>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -421,7 +421,7 @@ export default function JahresabschlussPage() {
                     setStep4Data({ ...step4Data, provisionsReviewed: checked as boolean })
                   }
                 />
-                <Label htmlFor="provisionsReviewed">All provisions reviewed</Label>
+                <Label htmlFor="provisionsReviewed">Alle Rückstellungen geprüft</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -431,11 +431,11 @@ export default function JahresabschlussPage() {
                     setStep4Data({ ...step4Data, adjustmentsMade: checked as boolean })
                   }
                 />
-                <Label htmlFor="adjustmentsMade">Necessary adjustments made</Label>
+                <Label htmlFor="adjustmentsMade">Notwendige Anpassungen vorgenommen</Label>
               </div>
             </div>
             <Button onClick={handleStep4Complete} className="w-full">
-              Complete Provisions Review
+              Rückstellungsprüfung abschließen
             </Button>
           </div>
         );
@@ -444,24 +444,24 @@ export default function JahresabschlussPage() {
         return (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Generate all required financial reports for fiscal year {fiscalYear}.
+              Erstellen Sie alle erforderlichen Finanzberichte für das Geschäftsjahr {fiscalYear}.
             </p>
             <div className="space-y-2">
               <div className="p-3 border rounded-lg">
-                <h4 className="font-medium">Profit & Loss Statement</h4>
-                <p className="text-sm text-muted-foreground">Income and expenses summary</p>
+                <h4 className="font-medium">Gewinn- und Verlustrechnung</h4>
+                <p className="text-sm text-muted-foreground">Zusammenfassung der Erlöse und Aufwendungen</p>
               </div>
               <div className="p-3 border rounded-lg">
-                <h4 className="font-medium">Balance Sheet</h4>
-                <p className="text-sm text-muted-foreground">Assets, liabilities, and equity</p>
+                <h4 className="font-medium">Bilanz</h4>
+                <p className="text-sm text-muted-foreground">Aktiva, Passiva und Eigenkapital</p>
               </div>
               <div className="p-3 border rounded-lg">
-                <h4 className="font-medium">Cash Flow Statement</h4>
-                <p className="text-sm text-muted-foreground">Cash movements during the period</p>
+                <h4 className="font-medium">Kapitalflussrechnung</h4>
+                <p className="text-sm text-muted-foreground">Cashflows während der Periode</p>
               </div>
             </div>
             <Button onClick={handleStep5Complete} className="w-full" disabled={loading}>
-              {loading ? 'Generating...' : 'Generate Reports'}
+              {loading ? 'Wird generiert...' : 'Berichte erstellen'}
             </Button>
           </div>
         );
@@ -473,22 +473,21 @@ export default function JahresabschlussPage() {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                 <div>
-                  <div className="font-medium text-red-800 mb-1">Warning</div>
+                  <div className="font-medium text-red-800 mb-1">Warnung</div>
                   <div className="text-sm text-red-700">
-                    Closing the fiscal year will lock all transactions for year {fiscalYear}. This action cannot be
-                    undone.
+                    Das Abschließen des Geschäftsjahres sperrt alle Transaktionen für das Jahr {fiscalYear}. Diese Aktion kann nicht rückgängig gemacht werden.
                   </div>
                 </div>
               </div>
             </div>
             <div className="space-y-2 text-sm">
-              <p>✓ All accounts reconciled</p>
-              <p>✓ Depreciation calculated</p>
-              <p>✓ Provisions reviewed</p>
-              <p>✓ Reports generated</p>
+              <p>✓ Alle Konten abgestimmt</p>
+              <p>✓ Abschreibungen berechnet</p>
+              <p>✓ Rückstellungen geprüft</p>
+              <p>✓ Berichte erstellt</p>
             </div>
             <Button onClick={handleStep6Complete} className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={loading}>
-              {loading ? 'Closing...' : 'Close Fiscal Year'}
+              {loading ? 'Wird abgeschlossen...' : 'Geschäftsjahr abschließen'}
             </Button>
           </div>
         );
@@ -497,12 +496,12 @@ export default function JahresabschlussPage() {
         return (
           <div className="text-center space-y-4">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-            <h3 className="text-2xl font-bold">Year-End Closing Complete!</h3>
+            <h3 className="text-2xl font-bold">Jahresabschluss abgeschlossen!</h3>
             <p className="text-muted-foreground">
-              Fiscal year {fiscalYear} has been successfully closed.
+              Geschäftsjahr {fiscalYear} wurde erfolgreich abgeschlossen.
             </p>
             <Button onClick={() => window.location.reload()} className="w-full">
-              Start New Year-End Process
+              Neuen Jahresabschluss starten
             </Button>
           </div>
         );
@@ -522,13 +521,13 @@ export default function JahresabschlussPage() {
           </Button>
           <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
         </div>
-        <p className="text-muted-foreground">Step-by-step year-end closing process</p>
+        <p className="text-muted-foreground">Schritt-für-Schritt Jahresabschlussprozess</p>
       </div>
 
       {/* Progress */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Progress</span>
+          <span className="text-sm font-medium">Fortschritt</span>
           <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -587,14 +586,14 @@ export default function JahresabschlussPage() {
           disabled={currentStep === 1}
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
-          Previous
+          Zurück
         </Button>
         <Button
           variant="outline"
           onClick={() => setCurrentStep((prev) => Math.min(7, prev + 1))}
           disabled={currentStep === 7 || !steps[currentStep].canProceed}
         >
-          Next
+          Weiter
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>

@@ -283,7 +283,7 @@ export default function BuchhaltungPage() {
             <div className="flex-1 border-t border-gray-300"></div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-6">
             <Link
               href="/admin/buchhaltung/bilanz"
               className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-blue-200"
@@ -352,6 +352,20 @@ export default function BuchhaltungPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Jahresabschluss</h3>
               <p className="text-sm text-gray-600 mb-4">Abschluss-Wizard & Bilanzprüfung</p>
               <div className="text-red-700 font-medium">Zum Abschluss →</div>
+            </Link>
+
+            <Link
+              href="/admin/buchhaltung/steuerberater"
+              className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-indigo-200"
+            >
+              <div className="flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-lg mb-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Steuerberater</h3>
+              <p className="text-sm text-gray-600 mb-4">Dokumente versenden & Kontaktdaten</p>
+              <div className="text-indigo-700 font-medium">Zur Kommunikation →</div>
             </Link>
           </div>
         </div>

@@ -38,8 +38,6 @@ async function testAvailableEmployeeLogic() {
     
     console.log(`Found ${workshop.employees.length} employee(s)\n`)
     
-    const dayOfWeek = 'wednesday' // 15. Januar 2026 ist Mittwoch
-    
     for (const emp of workshop.employees) {
       console.log(`👤 Employee: ${emp.name}`)
       

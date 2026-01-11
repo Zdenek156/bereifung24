@@ -48,6 +48,24 @@ export default function MitarbeiterDashboard() {
 
   const fetchStats = async () => {
     try {
+      // Trigger email sync before fetching stats (warten auf Abschluss)
+      try {
+        const syncRes = await fetch('/api/email/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder: 'INBOX', limit: 50 })
+        })
+        if (syncRes.ok) {
+          console.log('Email sync completed successfully')
+        } else {
+          console.log('Email sync returned non-OK status:', syncRes.status)
+        }
+      } catch (syncError) {
+        console.log('Email sync failed (non-critical):', syncError)
+        // Continue even if sync fails
+      }
+
+      // Jetzt Stats abrufen (nach dem Sync)
       const res = await fetch('/api/employee/dashboard/stats')
       if (res.ok) {
         const data = await res.json()

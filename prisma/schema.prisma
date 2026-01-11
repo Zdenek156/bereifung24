@@ -1031,6 +1031,7 @@ model B24Employee {
   employeeCreatedTasks   EmployeeTask[]        @relation("EmployeeCreatedTasks")
   employeeCompletedTasks EmployeeTask[]        @relation("EmployeeCompletedTasks")
   employeeTaskComments   EmployeeTaskComment[] @relation("EmployeeTaskComments")
+  employeeTaskAttachments EmployeeTaskAttachment[] @relation("EmployeeTaskAttachments")
   knowledgeArticles      KnowledgeArticle[]    @relation("KnowledgeArticles")
   editedArticles         KnowledgeArticle[]    @relation("EditedArticles")
 
@@ -3159,6 +3160,9 @@ model EmployeeTask {
   // Kommentare & Aktivitäten
   comments EmployeeTaskComment[]
 
+  // Dateianhänge
+  attachments EmployeeTaskAttachment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -3201,6 +3205,27 @@ model EmployeeTaskComment {
 
   @@index([taskId])
   @@map("employee_task_comments")
+}
+
+model EmployeeTaskAttachment {
+  id String @id @default(cuid())
+
+  taskId String
+  task   EmployeeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   B24Employee @relation("EmployeeTaskAttachments", fields: [uploadedById], references: [id])
+
+  fileName     String
+  fileSize     Int
+  fileType     String
+  filePath     String // Pfad im Dateisystem oder Cloud Storage
+  downloadUrl  String? // Optional: Pre-signed URL für Download
+
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("employee_task_attachments")
 }
 
 // WISSENSDATENBANK (Knowledge Base)

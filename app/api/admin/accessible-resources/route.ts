@@ -25,6 +25,8 @@ export async function GET() {
       'billing',
       'commissions',
       'accounting',
+      'buchhaltung',
+      'hr',
       'influencers',
       'territories',
       'cleanup',

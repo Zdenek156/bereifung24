@@ -156,14 +156,14 @@ export default function HRDataEditPage() {
     setSaving(true)
     try {
       const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(hrData)
       })
 
       if (response.ok) {
         alert('HR-Daten erfolgreich gespeichert!')
-        router.push(`/admin/b24-employees/${employeeId}`)
+        router.push('/admin/hr/mitarbeiter')
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error || 'Unbekannter Fehler'}`)

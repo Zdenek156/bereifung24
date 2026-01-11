@@ -48,6 +48,7 @@ export default function MitarbeiterDashboard() {
 
   const fetchStats = async () => {
     try {
+      console.log('[Dashboard] Starting email sync...')
       // Trigger email sync before fetching stats (warten auf Abschluss)
       try {
         const syncRes = await fetch('/api/email/sync', {
@@ -55,27 +56,31 @@ export default function MitarbeiterDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ folder: 'INBOX', limit: 50 })
         })
+        
         if (syncRes.ok) {
-          console.log('Email sync completed successfully')
+          const syncData = await syncRes.json()
+          console.log('[Dashboard] Email sync completed successfully:', syncData)
         } else {
-          console.log('Email sync returned non-OK status:', syncRes.status)
+          const errorText = await syncRes.text()
+          console.log('[Dashboard] Email sync returned non-OK status:', syncRes.status, errorText)
         }
-      } catch (syncError) {
-        console.log('Email sync failed (non-critical):', syncError)
+      } catch (syncError: any) {
+        console.log('[Dashboard] Email sync failed (non-critical):', syncError.message)
         // Continue even if sync fails
       }
 
+      console.log('[Dashboard] Fetching dashboard stats...')
       // Jetzt Stats abrufen (nach dem Sync)
       const res = await fetch('/api/employee/dashboard/stats')
       if (res.ok) {
         const data = await res.json()
-        console.log('Dashboard stats loaded:', data)
+        console.log('[Dashboard] Stats loaded:', data)
         setStats(data)
       } else {
-        console.error('Failed to fetch stats:', res.status, await res.text())
+        console.error('[Dashboard] Failed to fetch stats:', res.status, await res.text())
       }
     } catch (error) {
-      console.error('Error fetching stats:', error)
+      console.error('[Dashboard] Error fetching stats:', error)
     } finally {
       setLoading(false)
     }

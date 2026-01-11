@@ -34,6 +34,7 @@ export default function ManuelleBuchungPage() {
   const [templateName, setTemplateName] = useState('')
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [autocompleteResults, setAutocompleteResults] = useState<BookingTemplate[]>([])
+  const [showTemplateList, setShowTemplateList] = useState(false)
   const autocompleteRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState({
@@ -270,16 +271,30 @@ export default function ManuelleBuchungPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <Link 
-          href="/admin/buchhaltung"
-          className="text-blue-600 hover:underline mb-2 inline-block"
-        >
-          ← Zurück zur Buchhaltung
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Manuelle Buchung</h1>
-        <p className="text-gray-600 mt-2">
-          Erstellen Sie eine manuelle Buchung nach dem Soll/Haben-Prinzip (SKR04)
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <Link 
+              href="/admin/buchhaltung"
+              className="text-blue-600 hover:underline mb-2 inline-block"
+            >
+              ← Zurück zur Buchhaltung
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">Manuelle Buchung</h1>
+            <p className="text-gray-600 mt-2">
+              Erstellen Sie eine manuelle Buchung nach dem Soll/Haben-Prinzip (SKR04)
+            </p>
+          </div>
+          {templates.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowTemplateList(!showTemplateList)}
+              className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg border border-yellow-300 flex items-center gap-2 transition-colors"
+            >
+              <Star className="w-4 h-4" />
+              {showTemplateList ? 'Vorlagen ausblenden' : `${templates.length} Vorlagen anzeigen`}
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -498,7 +513,7 @@ export default function ManuelleBuchungPage() {
       </div>
 
       {/* Saved Templates List */}
-      {templates.length > 0 && (
+      {templates.length > 0 && showTemplateList && (
         <div className="mt-6 bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Star className="w-5 h-5 mr-2 text-yellow-600" />

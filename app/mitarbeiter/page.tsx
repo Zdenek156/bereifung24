@@ -35,6 +35,7 @@ export default function MitarbeiterDashboard() {
     totalCommissions: 0
   })
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -45,6 +46,32 @@ export default function MitarbeiterDashboard() {
       fetchStats()
     }
   }, [status, session, router])
+
+  const handleManualSync = async () => {
+    setSyncing(true)
+    try {
+      const syncRes = await fetch('/api/email/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'INBOX', limit: 50 })
+      })
+      
+      if (syncRes.ok) {
+        console.log('Manual sync completed')
+        // Nach Sync Stats neu laden
+        await new Promise(resolve => setTimeout(resolve, 500))
+        const res = await fetch('/api/employee/dashboard/stats')
+        if (res.ok) {
+          const data = await res.json()
+          setStats(data)
+        }
+      }
+    } catch (error) {
+      console.error('Manual sync failed:', error)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const fetchStats = async () => {
     try {
@@ -100,12 +127,26 @@ export default function MitarbeiterDashboard() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Willkommen im Mitarbeiter-Portal!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Hallo {session?.user?.email}, schön dass Sie da sind.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Willkommen im Mitarbeiter-Portal!
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Hallo {session?.user?.email}, schön dass Sie da sind.
+            </p>
+          </div>
+          <button
+            onClick={handleManualSync}
+            disabled={syncing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {syncing ? 'Synchronisiere...' : 'E-Mails synchronisieren'}
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats */}

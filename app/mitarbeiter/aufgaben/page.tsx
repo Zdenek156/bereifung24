@@ -40,6 +40,10 @@ interface Task {
     firstName: string
     lastName: string
   }
+  assignedTo?: {
+    firstName: string
+    lastName: string
+  }
   attachments?: TaskAttachment[]
 }
 
@@ -467,6 +471,12 @@ export default function TasksPage() {
                         <User className="w-4 h-4" />
                         <span>Von {task.createdBy.firstName} {task.createdBy.lastName}</span>
                       </div>
+                      {task.assignedTo && (
+                        <div className="flex items-center gap-1">
+                          <User className="w-4 h-4 text-blue-600" />
+                          <span>→ {task.assignedTo.firstName} {task.assignedTo.lastName}</span>
+                        </div>
+                      )}
                       {task.dueDate && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />

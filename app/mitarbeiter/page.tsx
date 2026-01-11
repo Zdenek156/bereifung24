@@ -60,6 +60,8 @@ export default function MitarbeiterDashboard() {
         if (syncRes.ok) {
           const syncData = await syncRes.json()
           console.log('[Dashboard] Email sync completed successfully:', syncData)
+          // Kleine Verzögerung, damit DB-Schreibvorgänge abgeschlossen sind
+          await new Promise(resolve => setTimeout(resolve, 500))
         } else {
           const errorText = await syncRes.text()
           console.log('[Dashboard] Email sync returned non-OK status:', syncRes.status, errorText)

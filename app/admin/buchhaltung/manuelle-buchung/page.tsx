@@ -35,6 +35,14 @@ export default function ManuelleBuchungPage() {
   const [autocompleteResults, setAutocompleteResults] = useState<BookingTemplate[]>([])
   const [showTemplateList, setShowTemplateList] = useState(false)
   const autocompleteRef = useRef<HTMLDivElement>(null)
+  
+  // Konten-Autocomplete
+  const [debitSearch, setDebitSearch] = useState('')
+  const [creditSearch, setCreditSearch] = useState('')
+  const [showDebitDropdown, setShowDebitDropdown] = useState(false)
+  const [showCreditDropdown, setShowCreditDropdown] = useState(false)
+  const debitRef = useRef<HTMLDivElement>(null)
+  const creditRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState({
     bookingDate: new Date().toISOString().split('T')[0],
@@ -69,6 +77,12 @@ export default function ManuelleBuchungPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
         setShowAutocomplete(false)
+      }
+      if (debitRef.current && !debitRef.current.contains(event.target as Node)) {
+        setShowDebitDropdown(false)
+      }
+      if (creditRef.current && !creditRef.current.contains(event.target as Node)) {
+        setShowCreditDropdown(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -128,6 +142,14 @@ export default function ManuelleBuchungPage() {
       amount: template.amount.toString(),
       description: template.description,
     })
+
+    // Update search fields
+    if (debitAcc) {
+      setDebitSearch(`${debitAcc.accountNumber} - ${debitAcc.accountName}`)
+    }
+    if (creditAcc) {
+      setCreditSearch(`${creditAcc.accountNumber} - ${creditAcc.accountName}`)
+    }
 
     setShowAutocomplete(false)
 
@@ -369,43 +391,111 @@ export default function ManuelleBuchungPage() {
           </div>
 
           {/* Debit Account (Soll) */}
-          <div className="mb-6">
+          <div className="mb-6 relative" ref={debitRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Soll-Konto * <span className="text-gray-500 text-xs">(Wohin geht das Geld?)</span>
+              Soll-Konto * <span className="text-gray-500 text-xs">(Wohin geht das Geld? - Tippen zum Suchen)</span>
             </label>
-            <select
+            <input
+              type="text"
               required
-              value={formData.debitAccountId}
-              onChange={(e) => setFormData({ ...formData, debitAccountId: e.target.value })}
+              value={debitSearch}
+              onChange={(e) => {
+                setDebitSearch(e.target.value)
+                setShowDebitDropdown(true)
+                // Clear selection when typing
+                if (formData.debitAccountId) {
+                  setFormData({ ...formData, debitAccountId: '' })
+                }
+              }}
+              onFocus={() => setShowDebitDropdown(true)}
+              placeholder="z.B. 1000 oder Kasse"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- Konto auswählen --</option>
-              {accounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.accountNumber} - {account.accountName} ({accountTypeName(account.accountType)})
-                </option>
-              ))}
-            </select>
+            />
+            {showDebitDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {accounts
+                  .filter(acc => 
+                    debitSearch === '' ||
+                    acc.accountNumber.includes(debitSearch) ||
+                    acc.accountName.toLowerCase().includes(debitSearch.toLowerCase())
+                  )
+                  .map(account => (
+                    <div
+                      key={account.id}
+                      onClick={() => {
+                        setFormData({ ...formData, debitAccountId: account.id })
+                        setDebitSearch(`${account.accountNumber} - ${account.accountName}`)
+                        setShowDebitDropdown(false)
+                      }}
+                      className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
+                        formData.debitAccountId === account.id ? 'bg-blue-100' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{account.accountNumber}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${accountTypeColor(account.accountType)}`}>
+                          {accountTypeName(account.accountType)}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">{account.accountName}</div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Credit Account (Haben) */}
-          <div className="mb-6">
+          <div className="mb-6 relative" ref={creditRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Haben-Konto * <span className="text-gray-500 text-xs">(Woher kommt das Geld?)</span>
+              Haben-Konto * <span className="text-gray-500 text-xs">(Woher kommt das Geld? - Tippen zum Suchen)</span>
             </label>
-            <select
+            <input
+              type="text"
               required
-              value={formData.creditAccountId}
-              onChange={(e) => setFormData({ ...formData, creditAccountId: e.target.value })}
+              value={creditSearch}
+              onChange={(e) => {
+                setCreditSearch(e.target.value)
+                setShowCreditDropdown(true)
+                // Clear selection when typing
+                if (formData.creditAccountId) {
+                  setFormData({ ...formData, creditAccountId: '' })
+                }
+              }}
+              onFocus={() => setShowCreditDropdown(true)}
+              placeholder="z.B. 1800 oder Bank"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- Konto auswählen --</option>
-              {accounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.accountNumber} - {account.accountName} ({accountTypeName(account.accountType)})
-                </option>
-              ))}
-            </select>
+            />
+            {showCreditDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {accounts
+                  .filter(acc => 
+                    creditSearch === '' ||
+                    acc.accountNumber.includes(creditSearch) ||
+                    acc.accountName.toLowerCase().includes(creditSearch.toLowerCase())
+                  )
+                  .map(account => (
+                    <div
+                      key={account.id}
+                      onClick={() => {
+                        setFormData({ ...formData, creditAccountId: account.id })
+                        setCreditSearch(`${account.accountNumber} - ${account.accountName}`)
+                        setShowCreditDropdown(false)
+                      }}
+                      className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
+                        formData.creditAccountId === account.id ? 'bg-blue-100' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{account.accountNumber}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${accountTypeColor(account.accountType)}`}>
+                          {accountTypeName(account.accountType)}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">{account.accountName}</div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Reference Number */}

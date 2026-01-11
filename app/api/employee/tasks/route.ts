@@ -16,8 +16,12 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get('status')
 
+    // Zeige Aufgaben, die dem Mitarbeiter zugewiesen sind ODER die er erstellt hat
     const where: any = {
-      assignedToId: employeeId
+      OR: [
+        { assignedToId: employeeId }, // Mir zugewiesene Aufgaben
+        { createdById: employeeId }   // Von mir erstellte Aufgaben
+      ]
     }
 
     if (status) {
@@ -28,6 +32,13 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         createdBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+            profileImage: true
+          }
+        },
+        assignedTo: {
           select: {
             firstName: true,
             lastName: true,

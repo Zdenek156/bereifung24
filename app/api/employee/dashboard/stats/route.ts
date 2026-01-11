@@ -77,14 +77,26 @@ export async function GET(request: NextRequest) {
     // Get unread emails count
     let unreadEmails = 0
     try {
+      console.log('[Dashboard Stats] Fetching email stats for user:', session.user.id)
       const emailService = new EmailService(session.user.id)
       const hasSettings = await emailService.hasSettings()
+      console.log('[Dashboard Stats] User has email settings:', hasSettings)
+      
       if (hasSettings) {
         const messages = await emailService.getCachedMessages('INBOX', 100)
-        unreadEmails = messages.filter(msg => !msg.isRead).length
+        console.log('[Dashboard Stats] Total cached messages:', messages.length)
+        const unreadMessages = messages.filter(msg => !msg.isRead)
+        console.log('[Dashboard Stats] Unread messages:', unreadMessages.length)
+        unreadEmails = unreadMessages.length
+        
+        // Debug: Log first few unread message subjects
+        if (unreadMessages.length > 0) {
+          console.log('[Dashboard Stats] Sample unread messages:', 
+            unreadMessages.slice(0, 3).map(m => ({ subject: m.subject, date: m.date })))
+        }
       }
     } catch (emailError) {
-      console.error('Error fetching email stats:', emailError)
+      console.error('[Dashboard Stats] Error fetching email stats:', emailError)
       // Continue without email stats
     }
 

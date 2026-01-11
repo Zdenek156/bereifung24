@@ -48,6 +48,7 @@ export default function MitarbeiterDashboard() {
   }, [status, session, router])
 
   const handleManualSync = async () => {
+    console.log('[Manual Sync] Starting manual email sync...')
     setSyncing(true)
     try {
       const syncRes = await fetch('/api/email/sync', {
@@ -57,19 +58,32 @@ export default function MitarbeiterDashboard() {
       })
       
       if (syncRes.ok) {
-        console.log('Manual sync completed')
-        // Nach Sync Stats neu laden
+        const syncData = await syncRes.json()
+        console.log('[Manual Sync] Sync completed:', syncData)
+        
+        // Nach Sync Stats neu laden (mit Verzögerung für DB-Schreibvorgänge)
+        console.log('[Manual Sync] Waiting 500ms for DB writes...')
         await new Promise(resolve => setTimeout(resolve, 500))
+        
+        console.log('[Manual Sync] Fetching updated stats...')
         const res = await fetch('/api/employee/dashboard/stats')
         if (res.ok) {
           const data = await res.json()
+          console.log('[Manual Sync] Stats updated:', data)
+          console.log('[Manual Sync] Previous unreadEmails:', stats.unreadEmails)
+          console.log('[Manual Sync] New unreadEmails:', data.unreadEmails)
           setStats(data)
+        } else {
+          console.error('[Manual Sync] Failed to fetch stats:', res.status, await res.text())
         }
+      } else {
+        console.error('[Manual Sync] Sync failed:', syncRes.status, await syncRes.text())
       }
     } catch (error) {
-      console.error('Manual sync failed:', error)
+      console.error('[Manual Sync] Error:', error)
     } finally {
       setSyncing(false)
+      console.log('[Manual Sync] Completed')
     }
   }
 

@@ -73,20 +73,72 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { email, firstName, lastName, phone, position, department, isActive, permissions } = body
+    const { 
+      email, firstName, lastName, phone, position, department, isActive, permissions,
+      // HR fields
+      managerId, hierarchyLevel,
+      employmentType, workTimeModel, weeklyHours, monthlyHours, dailyHours,
+      workDaysPerWeek, workStartTime, workEndTime,
+      coreTimeStart, coreTimeEnd, flexTimeStart, flexTimeEnd,
+      contractStart, contractEnd, probationEndDate, noticePeriod,
+      salaryType, monthlySalary, annualSalary, hourlyRate, isMinijob, miniJobExempt,
+      taxId, taxClass, childAllowance, religion,
+      socialSecurityNumber, healthInsurance, healthInsuranceRate, isChildless,
+      bankName, iban, bic
+    } = body
 
-    // Update employee basic info
+    // Prepare update data
+    const updateData: any = {
+      email,
+      firstName,
+      lastName,
+      phone,
+      position,
+      department,
+      isActive
+    }
+
+    // Add HR fields if provided
+    if (managerId !== undefined) updateData.managerId = managerId
+    if (hierarchyLevel !== undefined) updateData.hierarchyLevel = hierarchyLevel
+    if (employmentType !== undefined) updateData.employmentType = employmentType
+    if (workTimeModel !== undefined) updateData.workTimeModel = workTimeModel
+    if (weeklyHours !== undefined) updateData.weeklyHours = weeklyHours
+    if (monthlyHours !== undefined) updateData.monthlyHours = monthlyHours
+    if (dailyHours !== undefined) updateData.dailyHours = dailyHours
+    if (workDaysPerWeek !== undefined) updateData.workDaysPerWeek = workDaysPerWeek
+    if (workStartTime !== undefined) updateData.workStartTime = workStartTime
+    if (workEndTime !== undefined) updateData.workEndTime = workEndTime
+    if (coreTimeStart !== undefined) updateData.coreTimeStart = coreTimeStart
+    if (coreTimeEnd !== undefined) updateData.coreTimeEnd = coreTimeEnd
+    if (flexTimeStart !== undefined) updateData.flexTimeStart = flexTimeStart
+    if (flexTimeEnd !== undefined) updateData.flexTimeEnd = flexTimeEnd
+    if (contractStart !== undefined) updateData.contractStart = contractStart ? new Date(contractStart) : null
+    if (contractEnd !== undefined) updateData.contractEnd = contractEnd ? new Date(contractEnd) : null
+    if (probationEndDate !== undefined) updateData.probationEndDate = probationEndDate ? new Date(probationEndDate) : null
+    if (noticePeriod !== undefined) updateData.noticePeriod = noticePeriod
+    if (salaryType !== undefined) updateData.salaryType = salaryType
+    if (monthlySalary !== undefined) updateData.monthlySalary = monthlySalary
+    if (annualSalary !== undefined) updateData.annualSalary = annualSalary
+    if (hourlyRate !== undefined) updateData.hourlyRate = hourlyRate
+    if (isMinijob !== undefined) updateData.isMinijob = isMinijob
+    if (miniJobExempt !== undefined) updateData.miniJobExempt = miniJobExempt
+    if (taxId !== undefined) updateData.taxId = taxId
+    if (taxClass !== undefined) updateData.taxClass = taxClass
+    if (childAllowance !== undefined) updateData.childAllowance = childAllowance
+    if (religion !== undefined) updateData.religion = religion
+    if (socialSecurityNumber !== undefined) updateData.socialSecurityNumber = socialSecurityNumber
+    if (healthInsurance !== undefined) updateData.healthInsurance = healthInsurance
+    if (healthInsuranceRate !== undefined) updateData.healthInsuranceRate = healthInsuranceRate
+    if (isChildless !== undefined) updateData.isChildless = isChildless
+    if (bankName !== undefined) updateData.bankName = bankName
+    if (iban !== undefined) updateData.iban = iban
+    if (bic !== undefined) updateData.bic = bic
+
+    // Update employee
     const employee = await prisma.b24Employee.update({
       where: { id: params.id },
-      data: {
-        email,
-        firstName,
-        lastName,
-        phone,
-        position,
-        department,
-        isActive
-      }
+      data: updateData
     })
 
     // Update permissions if provided

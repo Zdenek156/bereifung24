@@ -1,0 +1,55 @@
+Subject: Re: Action Required - Verification for Project 195663420076
+
+Dear Google Third Party Data Safety Team,
+
+Thank you for reviewing our application. We have prepared the requested demo videos:
+
+**1. OAuth Consent Screen Workflow:**
+[FÜGE HIER DEN YOUTUBE-LINK VON VIDEO 1 EIN]
+
+This video demonstrates:
+- User initiating Google Calendar connection from Bereifung24 workshop dashboard
+- Complete OAuth consent screen with requested scope (calendar)
+- User granting permission
+- Successful redirect and token storage
+
+**2. Application Functionality:**
+[FÜGE HIER DEN YOUTUBE-LINK VON VIDEO 2 EIN]
+
+This video demonstrates:
+- How customers book tire change appointments through Bereifung24
+- Automatic synchronization of bookings to workshop's Google Calendar
+- Real-time updates when appointments are modified or cancelled
+- Why calendar scope is required for core business functionality
+
+**Application Context:**
+Bereifung24 is a tire service booking platform connecting customers with tire workshops in Germany.
+Workshops need calendar access to:
+- Automatically receive customer appointments in their Google Calendar
+- Manage availability and prevent double-bookings
+- Update/delete events when appointments change
+
+**Scopes Requested:**
+- https://www.googleapis.com/auth/calendar (to create, read, update, delete calendar events)
+
+**Data Usage:**
+- Calendar data is only used for appointment management
+- No data is shared with third parties
+- Data is stored securely in our PostgreSQL database
+- Users can disconnect their calendar at any time from the workshop settings page
+- Upon disconnection, all calendar tokens are immediately deleted from our database
+
+**Privacy Policy:**
+Our privacy policy is available at: https://bereifung24.de/datenschutz
+It includes detailed information about:
+- What data we collect and why
+- How we use Google Calendar API
+- User rights (access, deletion, data portability)
+- GDPR compliance measures
+
+We are committed to data privacy and security. Please let us know if you need any additional information.
+
+Best regards,
+Zdenek Mikula
+Bereifung24 Team
+https://bereifung24.de

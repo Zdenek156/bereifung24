@@ -3210,19 +3210,19 @@ model EmployeeTaskComment {
 model EmployeeTaskAttachment {
   id String @id @default(cuid())
 
-  taskId String
+  taskId String      @map("taskid")
   task   EmployeeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
-  uploadedById String
+  uploadedById String      @map("uploadedbyid")
   uploadedBy   B24Employee @relation("EmployeeTaskAttachments", fields: [uploadedById], references: [id])
 
-  fileName     String
-  fileSize     Int
-  fileType     String
-  filePath     String // Pfad im Dateisystem oder Cloud Storage
-  downloadUrl  String? // Optional: Pre-signed URL für Download
+  fileName    String  @map("filename")
+  fileSize    Int     @map("filesize")
+  fileType    String  @map("filetype")
+  filePath    String  @map("filepath") // Pfad im Dateisystem oder Cloud Storage
+  downloadUrl String? @map("downloadurl") // Optional: Pre-signed URL für Download
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("createdat")
 
   @@index([taskId])
   @@map("employee_task_attachments")

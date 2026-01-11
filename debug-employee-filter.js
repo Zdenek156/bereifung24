@@ -86,4 +86,4 @@ async function testAvailableEmployeeLogic() {
   }
 }
 
-checkAvailableEmployees()
+testAvailableEmployeeLogic()

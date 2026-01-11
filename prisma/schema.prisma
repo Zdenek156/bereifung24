@@ -134,6 +134,7 @@ model User {
   createdAccountingEntries AccountingEntry[]    @relation("AccountingEntryCreator")
   lockedAccountingEntries  AccountingEntry[]    @relation("AccountingEntryLocker")
   accountingAuditLogs      AccountingAuditLog[] @relation("AccountingAuditor")
+  bookingTemplates         BookingTemplate[]    @relation("BookingTemplateCreator")
 
   @@map("users")
 }
@@ -3387,6 +3388,27 @@ model AccountingAuditLog {
   @@index([entryId])
   @@index([timestamp])
   @@map("accounting_audit_logs")
+}
+
+// Buchungsvorlagen (für wiederkehrende manuelle Buchungen)
+model BookingTemplate {
+  id            String  @id @default(cuid())
+  name          String // Anzeigename (z.B. "Büromiete Januar")
+  description   String // Suchbar im Autocomplete
+  debitAccount  String // SKR04 Soll-Konto (4-stellig)
+  creditAccount String // SKR04 Haben-Konto (4-stellig)
+  amount        Decimal @db.Decimal(10, 2) // Standard-Betrag (änderbar beim Buchen)
+  useCount      Int     @default(0) // Wie oft verwendet (für Sortierung)
+
+  createdById String
+  createdBy   User   @relation("BookingTemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([description])
+  @@index([useCount])
+  @@map("booking_templates")
 }
 
 // Gehaltsabrechnungen

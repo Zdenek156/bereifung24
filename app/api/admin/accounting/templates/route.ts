@@ -30,7 +30,13 @@ export async function GET(request: NextRequest) {
       take: 20, // Limit for autocomplete
     })
 
-    return NextResponse.json({ success: true, templates })
+    // Convert Decimal to number for JSON serialization
+    const templatesWithNumbers = templates.map((t) => ({
+      ...t,
+      amount: parseFloat(t.amount.toString()),
+    }))
+
+    return NextResponse.json({ success: true, templates: templatesWithNumbers })
   } catch (error) {
     console.error('Error fetching booking templates:', error)
     return NextResponse.json(
@@ -73,7 +79,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ success: true, template })
+    return NextResponse.json({
+      success: true,
+      template: {
+        ...template,
+        amount: parseFloat(template.amount.toString()),
+      },
+    })
   } catch (error) {
     console.error('Error creating booking template:', error)
     return NextResponse.json(

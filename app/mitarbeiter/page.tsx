@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NewsFeed from '@/components/NewsFeed'
+import AnnouncementsFeed from '@/components/AnnouncementsFeed'
 import EmployeeAdminTiles from '@/components/EmployeeAdminTiles'
 
 interface DashboardStats {
@@ -179,6 +180,11 @@ export default function MitarbeiterDashboard() {
             </div>
           </div>
         </Link>
+      </div>
+
+      {/* Schwarzes Brett */}
+      <div className="mb-8">
+        <AnnouncementsFeed />
       </div>
 
       {/* News Feed Stripe */}

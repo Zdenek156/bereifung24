@@ -35,7 +35,6 @@ export default function MitarbeiterDashboard() {
     totalCommissions: 0
   })
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -47,50 +46,9 @@ export default function MitarbeiterDashboard() {
     }
   }, [status, session, router])
 
-  const handleManualSync = async () => {
-    console.log('[Manual Sync] Starting manual email sync...')
-    setSyncing(true)
-    try {
-      const syncRes = await fetch('/api/email/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folder: 'INBOX', limit: 50 })
-      })
-      
-      if (syncRes.ok) {
-        const syncData = await syncRes.json()
-        console.log('[Manual Sync] Sync completed:', syncData)
-        
-        // Nach Sync Stats neu laden (mit Verzögerung für DB-Schreibvorgänge)
-        console.log('[Manual Sync] Waiting 500ms for DB writes...')
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        console.log('[Manual Sync] Fetching updated stats...')
-        const res = await fetch('/api/employee/dashboard/stats')
-        if (res.ok) {
-          const data = await res.json()
-          console.log('[Manual Sync] Stats updated:', data)
-          console.log('[Manual Sync] Previous unreadEmails:', stats.unreadEmails)
-          console.log('[Manual Sync] New unreadEmails:', data.unreadEmails)
-          setStats(data)
-        } else {
-          console.error('[Manual Sync] Failed to fetch stats:', res.status, await res.text())
-        }
-      } else {
-        console.error('[Manual Sync] Sync failed:', syncRes.status, await syncRes.text())
-      }
-    } catch (error) {
-      console.error('[Manual Sync] Error:', error)
-    } finally {
-      setSyncing(false)
-      console.log('[Manual Sync] Completed')
-    }
-  }
-
   const fetchStats = async () => {
     try {
-      console.log('[Dashboard] Starting email sync...')
-      // Trigger email sync before fetching stats (warten auf Abschluss)
+      // Trigger email sync before fetching stats
       try {
         const syncRes = await fetch('/api/email/sync', {
           method: 'POST',
@@ -99,31 +57,22 @@ export default function MitarbeiterDashboard() {
         })
         
         if (syncRes.ok) {
-          const syncData = await syncRes.json()
-          console.log('[Dashboard] Email sync completed successfully:', syncData)
-          // Kleine Verzögerung, damit DB-Schreibvorgänge abgeschlossen sind
+          // Wait for DB writes to complete
           await new Promise(resolve => setTimeout(resolve, 500))
-        } else {
-          const errorText = await syncRes.text()
-          console.log('[Dashboard] Email sync returned non-OK status:', syncRes.status, errorText)
         }
-      } catch (syncError: any) {
-        console.log('[Dashboard] Email sync failed (non-critical):', syncError.message)
+      } catch (syncError) {
         // Continue even if sync fails
+        console.error('Email sync failed:', syncError)
       }
 
-      console.log('[Dashboard] Fetching dashboard stats...')
-      // Jetzt Stats abrufen (nach dem Sync)
+      // Fetch dashboard stats
       const res = await fetch('/api/employee/dashboard/stats')
       if (res.ok) {
         const data = await res.json()
-        console.log('[Dashboard] Stats loaded:', data)
         setStats(data)
-      } else {
-        console.error('[Dashboard] Failed to fetch stats:', res.status, await res.text())
       }
     } catch (error) {
-      console.error('[Dashboard] Error fetching stats:', error)
+      console.error('Error fetching stats:', error)
     } finally {
       setLoading(false)
     }
@@ -141,26 +90,12 @@ export default function MitarbeiterDashboard() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Willkommen im Mitarbeiter-Portal!
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Hallo {session?.user?.email}, schön dass Sie da sind.
-            </p>
-          </div>
-          <button
-            onClick={handleManualSync}
-            disabled={syncing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
-            <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {syncing ? 'Synchronisiere...' : 'E-Mails synchronisieren'}
-          </button>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Willkommen im Mitarbeiter-Portal!
+        </h1>
+        <p className="mt-2 text-gray-600">
+          Hallo {session?.user?.email}, schön dass Sie da sind.
+        </p>
       </div>
 
       {/* Quick Stats */}

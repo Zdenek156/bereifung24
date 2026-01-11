@@ -63,13 +63,29 @@ async function syncMandateFromAPI() {
     console.log('   Created:', mandate.created_at);
     console.log('');
 
-    // Compare status
+    // Compare and update status if needed
     if (mandate.status !== workshop.gocardlessMandateStatus) {
-      console.log('⚠️  STATUS MISMATCH:');
+      console.log('⚠️  STATUS MISMATCH DETECTED:');
       console.log('   Database status:', workshop.gocardlessMandateStatus);
       console.log('   GoCardless status:', mandate.status);
-      console.log('\n💡 The database is out of sync with GoCardless.');
-      console.log('   This should normally be updated via webhooks automatically.');
+      console.log('\n🔄 Updating database to match GoCardless...');
+
+      await prisma.workshop.update({
+        where: { id: workshop.id },
+        data: {
+          gocardlessMandateStatus: mandate.status,
+          gocardlessMandateRef: mandate.reference || workshop.gocardlessMandateRef
+        }
+      });
+
+      console.log('✅ DATABASE UPDATED!');
+      console.log('   New status:', mandate.status);
+      
+      if (mandate.status === 'active') {
+        console.log('\n🎉 Mandate is now ACTIVE!');
+        console.log('   The workshop can now use SEPA direct debit.');
+        console.log('   Automatic commission payments are enabled.');
+      }
     } else {
       console.log('✅ Status matches:');
       console.log('   Both database and GoCardless show:', mandate.status);

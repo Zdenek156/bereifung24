@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Star, Trash2, RefreshCw } from 'lucide-react'
 
 interface Account {
   id: string
@@ -12,12 +13,28 @@ interface Account {
   accountType: 'REVENUE' | 'EXPENSE' | 'ASSET' | 'LIABILITY'
 }
 
+interface BookingTemplate {
+  id: string
+  name: string
+  description: string
+  debitAccount: string
+  creditAccount: string
+  amount: number
+  useCount: number
+}
+
 export default function ManuelleBuchungPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [templates, setTemplates] = useState<BookingTemplate[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const [autocompleteResults, setAutocompleteResults] = useState<BookingTemplate[]>([])
+  const autocompleteRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState({
     bookingDate: new Date().toISOString().split('T')[0],
@@ -43,9 +60,20 @@ export default function ManuelleBuchungPage() {
       router.push('/dashboard')
       return
     }
-    // Load accounts
     loadAccounts()
+    loadTemplates()
   }, [session, status, router])
+
+  // Close autocomplete when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowAutocomplete(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const loadAccounts = async () => {
     try {
@@ -56,6 +84,71 @@ export default function ManuelleBuchungPage() {
     } catch (err) {
       console.error('Error loading accounts:', err)
       setError('Konten konnten nicht geladen werden')
+    }
+  }
+
+  const loadTemplates = async () => {
+    try {
+      const res = await fetch('/api/admin/accounting/templates')
+      if (!res.ok) throw new Error('Fehler beim Laden der Vorlagen')
+      const data = await res.json()
+      setTemplates(data.templates || [])
+    } catch (err) {
+      console.error('Error loading templates:', err)
+    }
+  }
+
+  const searchTemplates = async (query: string) => {
+    if (!query || query.length < 2) {
+      setAutocompleteResults([])
+      setShowAutocomplete(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/admin/accounting/templates?search=${encodeURIComponent(query)}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setAutocompleteResults(data.templates || [])
+      setShowAutocomplete(data.templates.length > 0)
+    } catch (err) {
+      console.error('Error searching templates:', err)
+    }
+  }
+
+  const loadTemplate = async (template: BookingTemplate) => {
+    // Find accounts by account number (4-digit)
+    const debitAcc = accounts.find(a => a.accountNumber === template.debitAccount)
+    const creditAcc = accounts.find(a => a.accountNumber === template.creditAccount)
+
+    setFormData({
+      ...formData,
+      debitAccountId: debitAcc?.id || '',
+      creditAccountId: creditAcc?.id || '',
+      amount: template.amount.toString(),
+      description: template.description,
+    })
+
+    setShowAutocomplete(false)
+
+    // Increment use count
+    try {
+      await fetch(`/api/admin/accounting/templates/${template.id}`, { method: 'POST' })
+      loadTemplates() // Refresh list
+    } catch (err) {
+      console.error('Error updating template use count:', err)
+    }
+  }
+
+  const deleteTemplate = async (id: string) => {
+    if (!confirm('Möchten Sie diese Vorlage wirklich löschen?')) return
+
+    try {
+      const res = await fetch(`/api/admin/accounting/templates/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Fehler beim Löschen')
+      loadTemplates()
+    } catch (err: any) {
+      alert(err.message || 'Fehler beim Löschen der Vorlage')
     }
   }
 
@@ -93,6 +186,29 @@ export default function ManuelleBuchungPage() {
         throw new Error('Soll- und Haben-Konto müssen unterschiedlich sein')
       }
 
+      // Save as template if requested
+      if (saveAsTemplate) {
+        if (!templateName.trim()) {
+          throw new Error('Bitte einen Namen für die Vorlage eingeben')
+        }
+
+        const debitAcc = accounts.find(a => a.id === formData.debitAccountId)
+        const creditAcc = accounts.find(a => a.id === formData.creditAccountId)
+
+        await fetch('/api/admin/accounting/templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: templateName,
+            description: formData.description,
+            debitAccount: debitAcc?.accountNumber,
+            creditAccount: creditAcc?.accountNumber,
+            amount: parseFloat(formData.amount),
+          }),
+        })
+      }
+
+      // Create booking
       const res = await fetch('/api/admin/accounting/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -188,6 +304,53 @@ export default function ManuelleBuchungPage() {
             />
           </div>
 
+          {/* Description with Autocomplete */}
+          <div className="mb-6 relative" ref={autocompleteRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Beschreibung * <span className="text-xs text-gray-500">(Tippen Sie für Vorschläge)</span>
+            </label>
+            <textarea
+              required
+              value={formData.description}
+              onChange={(e) => {
+                setFormData({ ...formData, description: e.target.value })
+                searchTemplates(e.target.value)
+              }}
+              onFocus={(e) => searchTemplates(e.target.value)}
+              placeholder="z.B. Büromaterial Einkauf bei XY GmbH"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            
+            {/* Autocomplete Dropdown */}
+            {showAutocomplete && autocompleteResults.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                {autocompleteResults.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => loadTemplate(template)}
+                    className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">{template.name}</div>
+                        <div className="text-sm text-gray-600">{template.description}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {template.debitAccount} → {template.creditAccount} | {template.amount.toFixed(2)} €
+                        </div>
+                      </div>
+                      <div className="ml-4 flex items-center text-xs text-gray-500">
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        {template.useCount}x
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Amount */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,21 +408,6 @@ export default function ManuelleBuchungPage() {
             </select>
           </div>
 
-          {/* Description */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Beschreibung *
-            </label>
-            <textarea
-              required
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="z.B. Büromaterial Einkauf bei XY GmbH"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
           {/* Reference Number */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -272,6 +420,31 @@ export default function ManuelleBuchungPage() {
               placeholder="z.B. RE-2026-001"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Save as Template */}
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={saveAsTemplate}
+                onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="flex items-center text-sm font-medium text-gray-900">
+                <Star className="w-4 h-4 mr-2 text-yellow-600" />
+                Als Vorlage speichern
+              </span>
+            </label>
+            {saveAsTemplate && (
+              <input
+                type="text"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Name der Vorlage (z.B. 'Büromiete')"
+                className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
           </div>
 
           {/* Preview */}
@@ -324,6 +497,47 @@ export default function ManuelleBuchungPage() {
         </form>
       </div>
 
+      {/* Saved Templates List */}
+      {templates.length > 0 && (
+        <div className="mt-6 bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Star className="w-5 h-5 mr-2 text-yellow-600" />
+            Gespeicherte Vorlagen ({templates.length})
+          </h2>
+          <div className="space-y-2">
+            {templates.slice(0, 10).map((template) => (
+              <div
+                key={template.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <button
+                  type="button"
+                  onClick={() => loadTemplate(template)}
+                  className="flex-1 text-left"
+                >
+                  <div className="font-medium text-gray-900">{template.name}</div>
+                  <div className="text-sm text-gray-600">
+                    {template.debitAccount} → {template.creditAccount} | {template.amount.toFixed(2)} €
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 flex items-center">
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    {template.useCount}x verwendet
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteTemplate(template.id)}
+                  className="ml-4 text-red-600 hover:text-red-700"
+                  title="Vorlage löschen"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Info Box */}
       <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="font-semibold text-gray-900 mb-2">💡 Hinweise zur Buchung</h3>
@@ -331,8 +545,8 @@ export default function ManuelleBuchungPage() {
           <li><strong>Soll-Konto:</strong> Empfänger (Wo landet das Geld?)</li>
           <li><strong>Haben-Konto:</strong> Quelle (Woher kommt das Geld?)</li>
           <li>Beispiel: Bank (Soll) / Provisionserlös (Haben) = Geld kommt auf Bank-Konto</li>
+          <li><strong>Vorlagen:</strong> Wiederkehrende Buchungen als Vorlage speichern für schnellere Erfassung</li>
           <li>Die Buchung erhält automatisch eine fortlaufende Belegnummer (BEL-YYYY-NNNNNN)</li>
-          <li>Alle Buchungen sind GoBD-konform und werden im Audit-Log protokolliert</li>
         </ul>
       </div>
     </div>

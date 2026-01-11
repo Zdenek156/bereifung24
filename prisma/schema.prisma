@@ -1042,6 +1042,85 @@ model B24Employee {
   emailSettings EmailSettings?
   emailMessages EmailMessage[]
 
+  // ============================================
+  // HR MANAGEMENT - HIERARCHIE
+  // ============================================
+  managerId      String?
+  manager        B24Employee?  @relation("EmployeeHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates   B24Employee[] @relation("EmployeeHierarchy")
+  hierarchyLevel Int           @default(0) // 0=Mitarbeiter, 1=Teamleiter, 2=Manager, 3=Geschäftsführung
+
+  // ============================================
+  // HR MANAGEMENT - ARBEITSVERTRAG
+  // ============================================
+  employmentType   EmploymentType?
+  workTimeModel    WorkTimeModel?
+  weeklyHours      Float? // z.B. 40.0, 37.5, 20.0
+  monthlyHours     Float? // Automatisch berechnet (weeklyHours × 52 ÷ 12)
+  dailyHours       Float? // z.B. 8.0 bei 40h-Woche
+  workDaysPerWeek  Int? // z.B. 5 (Mo-Fr)
+
+  // Arbeitszeiten
+  workStartTime String? // z.B. "08:00"
+  workEndTime   String? // z.B. "17:00"
+  coreTimeStart String? // Kernarbeitszeit von (Gleitzeit)
+  coreTimeEnd   String? // Kernarbeitszeit bis (Gleitzeit)
+  flexTimeStart String? // Gleitzeit von (z.B. "07:00")
+  flexTimeEnd   String? // Gleitzeit bis (z.B. "20:00")
+
+  contractStart    DateTime?
+  contractEnd      DateTime?
+  probationEndDate DateTime?
+  noticePeriod     String? // z.B. "4 Wochen zum Monatsende"
+
+  // ============================================
+  // HR MANAGEMENT - GEHALT & LOHN
+  // ============================================
+  salaryType    SalaryType?
+  monthlySalary Decimal? // Bei Festgehalt
+  annualSalary  Decimal? // Bei Jahresgehalt (÷ 12 = Monat)
+  hourlyRate    Decimal? // Bei Stundenlohn
+
+  // Minijob
+  isMinijob     Boolean @default(false)
+  miniJobExempt Boolean @default(false) // Von RV-Pflicht befreit
+
+  // ============================================
+  // HR MANAGEMENT - STEUER & SOZIALVERSICHERUNG
+  // ============================================
+  taxId               String? // Steuer-ID (11-stellig)
+  taxClass            TaxClass?
+  childAllowance      Float? // z.B. 0.5, 1.0, 1.5
+  religion            Religion        @default(NONE)
+  socialSecurityNumber String? // SV-Nummer
+  healthInsurance     String? // Name der Krankenkasse
+  healthInsuranceRate Float? // Zusatzbeitrag (z.B. 1.7)
+  isChildless         Boolean         @default(true) // Für PV-Zuschlag (+0.6%)
+
+  // ============================================
+  // HR MANAGEMENT - URLAUBSANSPRUCH
+  // ============================================
+  annualVacationDays Int @default(30) // Gesetzlich: 24 Tage bei 6-Tage-Woche
+
+  // ============================================
+  // HR MANAGEMENT - BANKVERBINDUNG
+  // ============================================
+  bankName String?
+  iban     String?
+  bic      String?
+
+  // ============================================
+  // HR MANAGEMENT - ZUSÄTZLICHE RELATIONS
+  // ============================================
+  payrollsReceived   Payroll[]          @relation("EmployeePayrollReceived")
+  reviewedPayrolls   Payroll[]          @relation("PayrollReviewer")
+  approvedPayrolls   Payroll[]          @relation("PayrollApprover")
+  jobApplications    JobApplication[]   @relation("ApplicationReviewer")
+  createdJobPostings JobPosting[]       @relation("JobPostingCreator")
+  approvalWorkflowsRequested ApprovalWorkflow[] @relation("WorkflowRequester")
+  approvalWorkflowsCurrent   ApprovalWorkflow[] @relation("WorkflowApprover")
+  approvalSteps              ApprovalStep[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -3437,53 +3516,9 @@ model BookingTemplate {
 }
 
 // Gehaltsabrechnungen
-model Payroll {
-  id         String      @id @default(cuid())
-  employeeId String
-  employee   B24Employee @relation("EmployeePayroll", fields: [employeeId], references: [id], onDelete: Cascade)
-
-  // Zeitraum
-  month Int // 1-12
-  year  Int // z.B. 2026
-
-  // Beträge
-  grossSalary    Decimal @db.Decimal(10, 2) // Brutto-Gehalt
-  netSalary      Decimal @db.Decimal(10, 2) // Netto-Gehalt
-  taxAmount      Decimal @default(0) @db.Decimal(10, 2) // Lohnsteuer
-  socialSecurity Decimal @default(0) @db.Decimal(10, 2) // Sozialversicherung (Gesamt)
-
-  // Zusätzliche Beträge
-  bonuses    Decimal @default(0) @db.Decimal(10, 2) // Bonuszahlungen
-  deductions Decimal @default(0) @db.Decimal(10, 2) // Abzüge
-
-  // Details (optional, JSON)
-  taxBreakdown String? @db.Text // JSON: {incomeTax, churchTax, solidarityTax}
-  svBreakdown  String? @db.Text // JSON: {health, pension, unemployment, care}
-
-  // Status & Workflow
-  status PayrollStatus @default(DRAFT)
-  paidAt DateTime? // Wann ausgezahlt?
-
-  // Dokument
-  documentUrl String? // URL zum PDF der Gehaltsabrechnung
-
-  // Notizen
-  notes String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([employeeId, month, year])
-  @@index([status])
-  @@index([month, year])
-  @@map("payroll")
-}
-
-enum PayrollStatus {
-  DRAFT // Entwurf
-  APPROVED // Genehmigt
-  PAID // Ausgezahlt
-}
+// ============================================
+// FAHRZEUGKOSTEN (Bereifung24 Geschäftsfahrzeuge)
+// ============================================
 
 // Fahrzeugkosten
 model VehicleCost {
@@ -3945,4 +3980,379 @@ model CompanySettings {
   updatedAt DateTime @updatedAt
 
   @@map("company_settings")
+}
+
+// ============================================
+// HR MANAGEMENT SYSTEM - ENUMS
+// ============================================
+
+enum WorkTimeModel {
+  FULLTIME_40H           // Vollzeit 40h
+  FULLTIME_37_5H         // Vollzeit 37,5h
+  FULLTIME_35H           // Vollzeit 35h
+  PARTTIME_30H           // Teilzeit 30h (75%)
+  PARTTIME_25H           // Teilzeit 25h (62,5%)
+  PARTTIME_20H           // Teilzeit 20h (50%)
+  PARTTIME_15H           // Teilzeit 15h (37,5%)
+  MINIJOB_603            // Minijob 603€ (Stand 2026)
+  SHORTTERM_EMPLOYMENT   // Kurzfristige Beschäftigung
+  FLEXTIME               // Gleitzeit
+  TRUST_BASED            // Vertrauensarbeitszeit
+  SHIFT_WORK             // Schichtarbeit
+  CUSTOM                 // Benutzerdefiniert
+}
+
+enum EmploymentType {
+  PERMANENT              // Unbefristet
+  TEMPORARY              // Befristet
+  INTERN                 // Praktikum
+  APPRENTICE             // Ausbildung
+  FREELANCE              // Freiberufler
+  MINIJOB                // Geringfügig beschäftigt
+  SHORTTERM              // Kurzfristig beschäftigt
+}
+
+enum SalaryType {
+  MONTHLY                // Monatsgehalt
+  HOURLY                 // Stundenlohn
+  ANNUAL                 // Jahresgehalt (bei Führungskräften)
+}
+
+enum TaxClass {
+  CLASS_I                // Steuerklasse I
+  CLASS_II               // Steuerklasse II (Alleinerziehend)
+  CLASS_III              // Steuerklasse III
+  CLASS_IV               // Steuerklasse IV
+  CLASS_V                // Steuerklasse V
+  CLASS_VI               // Steuerklasse VI (Zweitjob)
+}
+
+enum Religion {
+  NONE                   // Keine (-)
+  CATHOLIC               // Römisch-Katholisch (rk)
+  PROTESTANT             // Evangelisch (ev)
+  OTHER                  // Andere
+}
+
+enum PayrollStatus {
+  DRAFT                  // Entwurf (automatisch erstellt)
+  REVIEW                 // In Prüfung
+  APPROVED               // Genehmigt
+  PAID                   // Ausgezahlt
+  CANCELLED              // Storniert
+}
+
+enum ApprovalStatus {
+  PENDING                // Wartend
+  APPROVED               // Genehmigt
+  REJECTED               // Abgelehnt
+  CANCELLED              // Storniert
+}
+
+enum JobApplicationStatus {
+  NEW                    // Neu
+  REVIEWED               // Geprüft
+  INVITED                // Eingeladen
+  REJECTED               // Abgelehnt
+  HIRED                  // Eingestellt
+}
+
+// ============================================
+// HR MANAGEMENT - PAYROLL (ERWEITERT)
+// ============================================
+
+model Payroll {
+  id         String  @id @default(cuid())
+  employeeId String
+  employee   B24Employee @relation("EmployeePayrollReceived", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Abrechnungszeitraum
+  month       Int // 1-12
+  year        Int
+  periodStart DateTime // 01.12.2025
+  periodEnd   DateTime // 31.12.2025
+
+  // Arbeitstage
+  workDaysInMonth     Int // z.B. 21 Tage
+  calendarDaysInMonth Int // z.B. 31 Tage
+
+  // ============================================
+  // BRUTTO-ENTGELT
+  // ============================================
+  baseSalary Decimal // Grundgehalt (Monatsgehalt oder Stundenlohn × Stunden)
+
+  // Stundenlohn-spezifisch
+  workedHours Float?   // Geleistete Stunden
+  hourlyRate  Decimal? // Stundensatz
+
+  // Zuschläge (steuerpflichtig)
+  overtimePay    Decimal @default(0) // Überstunden-Vergütung
+  bonusPayment   Decimal @default(0) // Bonuszahlungen
+  christmasBonus Decimal @default(0) // Weihnachtsgeld
+  vacationBonus  Decimal @default(0) // Urlaubsgeld
+
+  // Zuschläge (steuerfrei nach § 3b EStG)
+  nightWorkBonus   Decimal @default(0) // Nachtzuschlag (25%)
+  sundayWorkBonus  Decimal @default(0) // Sonntagszuschlag (50%)
+  holidayWorkBonus Decimal @default(0) // Feiertagszuschlag (125%)
+
+  // Sonstige Bezüge
+  travelAllowance Decimal @default(0) // Fahrtkostenzuschuss (steuerfrei bis 100€)
+  vwl             Decimal @default(0) // Vermögenswirksame Leistungen (AG-Anteil)
+  childBenefit    Decimal @default(0) // Kindergeldzuschlag
+
+  grossTotal Decimal // Brutto-Gesamt
+
+  // ============================================
+  // SOZIALVERSICHERUNG (Arbeitnehmer-Anteil)
+  // ============================================
+  healthInsurance       Decimal // KV (7,3%)
+  healthInsuranceExtra  Decimal // KV-Zusatzbeitrag (Ø 1,7%)
+  nursingInsurance      Decimal // PV (1,7% + 0,6% wenn kinderlos)
+  pensionInsurance      Decimal // RV (9,3%)
+  unemploymentInsurance Decimal // ALV (1,3%)
+
+  totalSocialSecurity Decimal // Gesamt SV (AN)
+
+  // ============================================
+  // SOZIALVERSICHERUNG (Arbeitgeber-Anteil)
+  // ============================================
+  employerHealthInsurance           Decimal // AG-Anteil KV (7,3%)
+  employerHealthInsuranceExtra      Decimal // AG-Anteil KV-Zusatz (0,85%)
+  employerNursingInsurance          Decimal // AG-Anteil PV (1,7%)
+  employerPensionInsurance          Decimal // AG-Anteil RV (9,3%)
+  employerUnemploymentInsurance     Decimal // AG-Anteil ALV (1,3%)
+
+  // Umlagen
+  u1Levy Decimal @default(0) // U1-Umlage Krankheit (1,5%)
+  u2Levy Decimal @default(0) // U2-Umlage Mutterschaft (0,3%)
+  u3Levy Decimal @default(0) // U3-Umlage Insolvenz (0,1%)
+  bgLevy Decimal @default(0) // Berufsgenossenschaft (ca. 1%)
+
+  totalEmployerCosts Decimal // AG-Gesamtkosten
+
+  // ============================================
+  // STEUERN
+  // ============================================
+  taxableIncome Decimal // Steuerpflichtiges Einkommen
+  incomeTax     Decimal // Lohnsteuer
+  solidarityTax Decimal // Solidaritätszuschlag (5,5%)
+  churchTax     Decimal // Kirchensteuer (8-9%)
+
+  totalTax Decimal // Gesamt Steuern
+
+  // ============================================
+  // NETTOLOHN
+  // ============================================
+  netSalary Decimal // Auszahlungsbetrag
+
+  // ============================================
+  // ABWESENHEITEN
+  // ============================================
+  vacationDays  Int   @default(0) // Urlaubstage im Monat
+  sickDays      Int   @default(0) // Kranktage im Monat
+  overtimeHours Float @default(0) // Überstunden diesen Monat
+
+  // ============================================
+  // STATUS & WORKFLOW
+  // ============================================
+  status PayrollStatus @default(DRAFT)
+
+  generatedAt DateTime @default(now()) // Automatisch erstellt am
+
+  reviewedById String?
+  reviewedBy   B24Employee? @relation("PayrollReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+
+  approvedById String?
+  approvedBy   B24Employee? @relation("PayrollApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt   DateTime?
+
+  paidAt       DateTime? // Auszahlung erfolgt am
+  transferDate DateTime? // Überweisungsdatum
+
+  // ============================================
+  // DOKUMENT
+  // ============================================
+  pdfUrl         String? // Link zur Gehaltsabrechnung-PDF
+  sentToEmployee Boolean  @default(false) // Per E-Mail versendet
+  sentAt         DateTime?
+
+  // ============================================
+  // BUCHHALTUNGS-INTEGRATION
+  // ============================================
+  accountingEntryId String? @unique // Verknüpfung zu AccountingEntry
+
+  // ============================================
+  // NOTIZEN
+  // ============================================
+  internalNotes String? @db.Text // Interne Notizen (nicht auf PDF)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@index([status])
+  @@index([month, year])
+  @@map("payrolls")
+}
+
+// ============================================
+// ARBEITSZEIT-KONFIGURATION
+// ============================================
+
+model WorkTimeConfiguration {
+  id          String   @id @default(cuid())
+  model       WorkTimeModel
+  name        String // z.B. "Vollzeit 40h", "Teilzeit 20h"
+  description String? // Beschreibung
+
+  // Zeiten
+  weeklyHours     Float // z.B. 40.0, 20.0
+  monthlyHours    Float // Berechnet: weeklyHours × 52 ÷ 12
+  dailyHours      Float? // z.B. 8.0
+  workDaysPerWeek Int? // z.B. 5
+
+  // Standard-Arbeitszeiten
+  defaultStartTime String? // z.B. "08:00"
+  defaultEndTime   String? // z.B. "17:00"
+
+  // Urlaubsanspruch
+  defaultVacationDays Int @default(30)
+
+  // Sozialversicherungspflichtig
+  socialSecurityRequired Boolean @default(true)
+
+  // Aktiv/Inaktiv
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("work_time_configurations")
+}
+
+// ============================================
+// STELLENAUSSCHREIBUNGEN
+// ============================================
+
+model JobPosting {
+  id          String  @id @default(cuid())
+  title       String // "Backend Developer"
+  department  String // "IT"
+  position    String // "Backend Developer"
+
+  description String   @db.Text // HTML/Markdown
+  requirements String[] // Array von Anforderungen
+  benefits    String[] // Array von Benefits
+
+  workTimeModel     WorkTimeModel
+  weeklyHours       Float?
+  salaryMin         Decimal?
+  salaryMax         Decimal?
+  remoteAllowed     Boolean          @default(false)
+
+  applicationDeadline DateTime?
+
+  // Sichtbarkeit
+  isActive    Boolean   @default(true)
+  isPublic    Boolean   @default(true) // Auf Startseite sichtbar
+  publishedAt DateTime?
+
+  // Relations
+  applications JobApplication[]
+
+  createdById String
+  createdBy   B24Employee @relation("JobPostingCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_postings")
+}
+
+// ============================================
+// BEWERBUNGEN
+// ============================================
+
+model JobApplication {
+  id           String @id @default(cuid())
+  jobPostingId String
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  // Bewerber
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+
+  // Dokumente
+  cvUrl           String // PDF/DOCX
+  coverLetterText String? @db.Text
+
+  // Status
+  status          JobApplicationStatus @default(NEW)
+  reviewedById    String?
+  reviewedBy      B24Employee?         @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?
+  rejectionReason String?              @db.Text
+
+  // Notizen
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_applications")
+}
+
+// ============================================
+// GENEHMIGUNGS-WORKFLOW
+// ============================================
+
+model ApprovalWorkflow {
+  id       String @id @default(cuid())
+  type     String // "leave_request", "sick_leave", "expense", "payroll"
+  entityId String // ID des betreffenden Datensatzes
+
+  requesterId String
+  requester   B24Employee @relation("WorkflowRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  currentApproverId String?
+  currentApprover   B24Employee? @relation("WorkflowApprover", fields: [currentApproverId], references: [id], onDelete: SetNull)
+
+  status          ApprovalStatus @default(PENDING)
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  steps ApprovalStep[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("approval_workflows")
+}
+
+model ApprovalStep {
+  id         String   @id @default(cuid())
+  workflowId String
+  workflow   ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  stepOrder  Int // 1, 2, 3...
+  approverId String
+  approver   B24Employee @relation(fields: [approverId], references: [id])
+
+  status     ApprovalStatus @default(PENDING)
+  approvedAt DateTime?
+  rejectedAt DateTime?
+  comment    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("approval_steps")
+}
+
+  HIRED                  // Eingestellt
 }

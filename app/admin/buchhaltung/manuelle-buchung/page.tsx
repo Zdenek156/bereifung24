@@ -284,16 +284,6 @@ export default function ManuelleBuchungPage() {
               Erstellen Sie eine manuelle Buchung nach dem Soll/Haben-Prinzip (SKR04)
             </p>
           </div>
-          {templates.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowTemplateList(!showTemplateList)}
-              className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg border border-yellow-300 flex items-center gap-2 transition-colors"
-            >
-              <Star className="w-4 h-4" />
-              {showTemplateList ? 'Vorlagen ausblenden' : `${templates.length} Vorlagen anzeigen`}
-            </button>
-          )}
         </div>
       </div>
 
@@ -459,6 +449,16 @@ export default function ManuelleBuchungPage() {
                 placeholder="Name der Vorlage (z.B. 'Büromiete')"
                 className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            )}
+            {templates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowTemplateList(!showTemplateList)}
+                className="mt-3 w-full px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg border border-yellow-300 flex items-center justify-center gap-2 transition-colors"
+              >
+                <Star className="w-4 h-4" />
+                {showTemplateList ? 'Vorlagen ausblenden' : `${templates.length} Vorlagen anzeigen`}
+              </button>
             )}
           </div>
 

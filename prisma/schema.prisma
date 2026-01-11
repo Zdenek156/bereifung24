@@ -1025,18 +1025,15 @@ model B24Employee {
   approvedTravelExpenses TravelExpense[] @relation("ApprovedTravelExpenses")
 
   // Phase 7: Communication & Organization Relations
-  announcements          Announcement[]        @relation("AnnouncementAuthor")
-  readAnnouncements      AnnouncementRead[]    @relation("ReadAnnouncements")
-  employeeAssignedTasks  EmployeeTask[]        @relation("EmployeeAssignedTasks")
-  employeeCreatedTasks   EmployeeTask[]        @relation("EmployeeCreatedTasks")
-  employeeCompletedTasks EmployeeTask[]        @relation("EmployeeCompletedTasks")
-  employeeTaskComments   EmployeeTaskComment[] @relation("EmployeeTaskComments")
+  announcements           Announcement[]           @relation("AnnouncementAuthor")
+  readAnnouncements       AnnouncementRead[]       @relation("ReadAnnouncements")
+  employeeAssignedTasks   EmployeeTask[]           @relation("EmployeeAssignedTasks")
+  employeeCreatedTasks    EmployeeTask[]           @relation("EmployeeCreatedTasks")
+  employeeCompletedTasks  EmployeeTask[]           @relation("EmployeeCompletedTasks")
+  employeeTaskComments    EmployeeTaskComment[]    @relation("EmployeeTaskComments")
   employeeTaskAttachments EmployeeTaskAttachment[] @relation("EmployeeTaskAttachments")
-  knowledgeArticles      KnowledgeArticle[]    @relation("KnowledgeArticles")
-  editedArticles         KnowledgeArticle[]    @relation("EditedArticles")
-
-  // Buchhaltung Relations
-  payrolls Payroll[] @relation("EmployeePayroll")
+  knowledgeArticles       KnowledgeArticle[]       @relation("KnowledgeArticles")
+  editedArticles          KnowledgeArticle[]       @relation("EditedArticles")
 
   // Email Settings
   emailSettings EmailSettings?
@@ -1053,12 +1050,12 @@ model B24Employee {
   // ============================================
   // HR MANAGEMENT - ARBEITSVERTRAG
   // ============================================
-  employmentType   EmploymentType?
-  workTimeModel    WorkTimeModel?
-  weeklyHours      Float? // z.B. 40.0, 37.5, 20.0
-  monthlyHours     Float? // Automatisch berechnet (weeklyHours × 52 ÷ 12)
-  dailyHours       Float? // z.B. 8.0 bei 40h-Woche
-  workDaysPerWeek  Int? // z.B. 5 (Mo-Fr)
+  employmentType  EmploymentType?
+  workTimeModel   WorkTimeModel?
+  weeklyHours     Float? // z.B. 40.0, 37.5, 20.0
+  monthlyHours    Float? // Automatisch berechnet (weeklyHours × 52 ÷ 12)
+  dailyHours      Float? // z.B. 8.0 bei 40h-Woche
+  workDaysPerWeek Int? // z.B. 5 (Mo-Fr)
 
   // Arbeitszeiten
   workStartTime String? // z.B. "08:00"
@@ -1088,14 +1085,14 @@ model B24Employee {
   // ============================================
   // HR MANAGEMENT - STEUER & SOZIALVERSICHERUNG
   // ============================================
-  taxId               String? // Steuer-ID (11-stellig)
-  taxClass            TaxClass?
-  childAllowance      Float? // z.B. 0.5, 1.0, 1.5
-  religion            Religion        @default(NONE)
+  taxId                String? // Steuer-ID (11-stellig)
+  taxClass             TaxClass?
+  childAllowance       Float? // z.B. 0.5, 1.0, 1.5
+  religion             Religion  @default(NONE)
   socialSecurityNumber String? // SV-Nummer
-  healthInsurance     String? // Name der Krankenkasse
-  healthInsuranceRate Float? // Zusatzbeitrag (z.B. 1.7)
-  isChildless         Boolean         @default(true) // Für PV-Zuschlag (+0.6%)
+  healthInsurance      String? // Name der Krankenkasse
+  healthInsuranceRate  Float? // Zusatzbeitrag (z.B. 1.7)
+  isChildless          Boolean   @default(true) // Für PV-Zuschlag (+0.6%)
 
   // ============================================
   // HR MANAGEMENT - URLAUBSANSPRUCH
@@ -1112,11 +1109,11 @@ model B24Employee {
   // ============================================
   // HR MANAGEMENT - ZUSÄTZLICHE RELATIONS
   // ============================================
-  payrollsReceived   Payroll[]          @relation("EmployeePayrollReceived")
-  reviewedPayrolls   Payroll[]          @relation("PayrollReviewer")
-  approvedPayrolls   Payroll[]          @relation("PayrollApprover")
-  jobApplications    JobApplication[]   @relation("ApplicationReviewer")
-  createdJobPostings JobPosting[]       @relation("JobPostingCreator")
+  payrollsReceived           Payroll[]          @relation("EmployeePayrollReceived")
+  reviewedPayrolls           Payroll[]          @relation("PayrollReviewer")
+  approvedPayrolls           Payroll[]          @relation("PayrollApprover")
+  jobApplications            JobApplication[]   @relation("ApplicationReviewer")
+  createdJobPostings         JobPosting[]       @relation("JobPostingCreator")
   approvalWorkflowsRequested ApprovalWorkflow[] @relation("WorkflowRequester")
   approvalWorkflowsCurrent   ApprovalWorkflow[] @relation("WorkflowApprover")
   approvalSteps              ApprovalStep[]
@@ -3289,7 +3286,7 @@ model EmployeeTaskComment {
 model EmployeeTaskAttachment {
   id String @id @default(cuid())
 
-  taskId String      @map("taskid")
+  taskId String       @map("taskid")
   task   EmployeeTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   uploadedById String      @map("uploadedbyid")
@@ -3639,8 +3636,8 @@ model BalanceSheet {
   totalLiabilities Decimal @db.Decimal(12, 2)
 
   // Status
-  locked    Boolean   @default(false) // Nach Feststellung gesperrt
-  lockedAt  DateTime?
+  locked     Boolean   @default(false) // Nach Feststellung gesperrt
+  lockedAt   DateTime?
   approvedBy String? // Admin/Geschäftsführer
   notes      String?   @db.Text
 
@@ -3687,8 +3684,8 @@ model IncomeStatement {
   netIncome Decimal @db.Decimal(12, 2)
 
   // Status
-  locked    Boolean   @default(false)
-  lockedAt  DateTime?
+  locked     Boolean   @default(false)
+  lockedAt   DateTime?
   approvedBy String?
   notes      String?   @db.Text
 
@@ -3711,10 +3708,10 @@ model Depreciation {
   month Int // 1-12
 
   // Abschreibung
-  depreciationRate   Decimal @db.Decimal(5, 2) // z.B. 20.00% für 5 Jahre
-  depreciationAmount Decimal @db.Decimal(10, 2) // Monatlicher Abschreibungsbetrag
+  depreciationRate        Decimal @db.Decimal(5, 2) // z.B. 20.00% für 5 Jahre
+  depreciationAmount      Decimal @db.Decimal(10, 2) // Monatlicher Abschreibungsbetrag
   accumulatedDepreciation Decimal @db.Decimal(10, 2) // Kumulierte Abschreibung bis dato
-  bookValue          Decimal @db.Decimal(10, 2) // Restbuchwert
+  bookValue               Decimal @db.Decimal(10, 2) // Restbuchwert
 
   // Verknüpfung zur Buchung
   entryId String? // Verknüpfung zu AccountingEntry (monatliche Afa-Buchung)
@@ -3735,19 +3732,19 @@ model Depreciation {
 
 // Rückstellungen (GmbH-Pflicht)
 model Provision {
-  id   String @id @default(cuid())
+  id   String        @id @default(cuid())
   type ProvisionType
 
   // Details
   year        Int
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Decimal @db.Decimal(10, 2)
   description String
-  reason      String?  @db.Text // Begründung der Rückstellung
+  reason      String? @db.Text // Begründung der Rückstellung
 
   // Status
-  released    Boolean   @default(false) // Wurde aufgelöst?
-  releasedAt  DateTime?
-  releasedAmount Decimal? @db.Decimal(10, 2)
+  released       Boolean   @default(false) // Wurde aufgelöst?
+  releasedAt     DateTime?
+  releasedAmount Decimal?  @db.Decimal(10, 2)
 
   // Verknüpfung
   entryId String? // Verknüpfung zur Bildungs-Buchung
@@ -3775,16 +3772,16 @@ enum ProvisionType {
 
 // Forderungen und Verbindlichkeiten (für Bilanzbuchhaltung)
 model AccountsReceivable {
-  id             String  @id @default(cuid())
-  invoiceNumber  String  @unique // Rechnungsnummer
-  customerName   String
-  customerId     String? // Optional: Verknüpfung zu User
+  id            String  @id @default(cuid())
+  invoiceNumber String  @unique // Rechnungsnummer
+  customerName  String
+  customerId    String? // Optional: Verknüpfung zu User
 
   // Betrag
-  amount        Decimal  @db.Decimal(10, 2) // Brutto
-  netAmount     Decimal? @db.Decimal(10, 2)
-  vatAmount     Decimal? @db.Decimal(10, 2)
-  vatRate       Int?     @default(19)
+  amount    Decimal  @db.Decimal(10, 2) // Brutto
+  netAmount Decimal? @db.Decimal(10, 2)
+  vatAmount Decimal? @db.Decimal(10, 2)
+  vatRate   Int?     @default(19)
 
   // Datum
   invoiceDate DateTime
@@ -3796,7 +3793,7 @@ model AccountsReceivable {
 
   // Zahlungseingang
   paidAmount Decimal? @db.Decimal(10, 2)
-  
+
   // Verknüpfung zu Buchungen
   invoiceEntryId String? // Buchung bei Rechnungsstellung
   paymentEntryId String? // Buchung bei Zahlungseingang
@@ -3822,16 +3819,16 @@ enum ReceivableStatus {
 }
 
 model AccountsPayable {
-  id             String  @id @default(cuid())
-  invoiceNumber  String // Lieferantenrechnungsnummer
-  vendorName     String
-  vendorId       String? // Optional: Verknüpfung
+  id            String  @id @default(cuid())
+  invoiceNumber String // Lieferantenrechnungsnummer
+  vendorName    String
+  vendorId      String? // Optional: Verknüpfung
 
   // Betrag
-  amount     Decimal  @db.Decimal(10, 2)
-  netAmount  Decimal? @db.Decimal(10, 2)
-  vatAmount  Decimal? @db.Decimal(10, 2)
-  vatRate    Int?     @default(19)
+  amount    Decimal  @db.Decimal(10, 2)
+  netAmount Decimal? @db.Decimal(10, 2)
+  vatAmount Decimal? @db.Decimal(10, 2)
+  vatRate   Int?     @default(19)
 
   // Datum
   invoiceDate DateTime
@@ -3872,17 +3869,17 @@ enum PayableStatus {
 
 // Rechnungsabgrenzungsposten (RAP)
 model DeferredItem {
-  id   String @id @default(cuid())
+  id   String       @id @default(cuid())
   type DeferredType
 
   // Details
   description String
-  amount      Decimal  @db.Decimal(10, 2)
-  
+  amount      Decimal @db.Decimal(10, 2)
+
   // Zeitraum
   startDate DateTime // Beginn der Periode
   endDate   DateTime // Ende der Periode
-  
+
   // Buchungsjahr
   fiscalYear Int
 
@@ -3890,8 +3887,8 @@ model DeferredItem {
   entryId String? // Ursprüngliche Buchung
 
   // Status
-  released    Boolean   @default(false)
-  releasedAt  DateTime?
+  released   Boolean   @default(false)
+  releasedAt DateTime?
 
   // Notizen
   notes String? @db.Text
@@ -3911,7 +3908,7 @@ enum DeferredType {
 
 // Eigenkapital-Entwicklung
 model EquityMovement {
-  id   String @id @default(cuid())
+  id   String             @id @default(cuid())
   year Int
   type EquityMovementType
 
@@ -3987,74 +3984,74 @@ model CompanySettings {
 // ============================================
 
 enum WorkTimeModel {
-  FULLTIME_40H           // Vollzeit 40h
-  FULLTIME_37_5H         // Vollzeit 37,5h
-  FULLTIME_35H           // Vollzeit 35h
-  PARTTIME_30H           // Teilzeit 30h (75%)
-  PARTTIME_25H           // Teilzeit 25h (62,5%)
-  PARTTIME_20H           // Teilzeit 20h (50%)
-  PARTTIME_15H           // Teilzeit 15h (37,5%)
-  MINIJOB_603            // Minijob 603€ (Stand 2026)
-  SHORTTERM_EMPLOYMENT   // Kurzfristige Beschäftigung
-  FLEXTIME               // Gleitzeit
-  TRUST_BASED            // Vertrauensarbeitszeit
-  SHIFT_WORK             // Schichtarbeit
-  CUSTOM                 // Benutzerdefiniert
+  FULLTIME_40H // Vollzeit 40h
+  FULLTIME_37_5H // Vollzeit 37,5h
+  FULLTIME_35H // Vollzeit 35h
+  PARTTIME_30H // Teilzeit 30h (75%)
+  PARTTIME_25H // Teilzeit 25h (62,5%)
+  PARTTIME_20H // Teilzeit 20h (50%)
+  PARTTIME_15H // Teilzeit 15h (37,5%)
+  MINIJOB_603 // Minijob 603€ (Stand 2026)
+  SHORTTERM_EMPLOYMENT // Kurzfristige Beschäftigung
+  FLEXTIME // Gleitzeit
+  TRUST_BASED // Vertrauensarbeitszeit
+  SHIFT_WORK // Schichtarbeit
+  CUSTOM // Benutzerdefiniert
 }
 
 enum EmploymentType {
-  PERMANENT              // Unbefristet
-  TEMPORARY              // Befristet
-  INTERN                 // Praktikum
-  APPRENTICE             // Ausbildung
-  FREELANCE              // Freiberufler
-  MINIJOB                // Geringfügig beschäftigt
-  SHORTTERM              // Kurzfristig beschäftigt
+  PERMANENT // Unbefristet
+  TEMPORARY // Befristet
+  INTERN // Praktikum
+  APPRENTICE // Ausbildung
+  FREELANCE // Freiberufler
+  MINIJOB // Geringfügig beschäftigt
+  SHORTTERM // Kurzfristig beschäftigt
 }
 
 enum SalaryType {
-  MONTHLY                // Monatsgehalt
-  HOURLY                 // Stundenlohn
-  ANNUAL                 // Jahresgehalt (bei Führungskräften)
+  MONTHLY // Monatsgehalt
+  HOURLY // Stundenlohn
+  ANNUAL // Jahresgehalt (bei Führungskräften)
 }
 
 enum TaxClass {
-  CLASS_I                // Steuerklasse I
-  CLASS_II               // Steuerklasse II (Alleinerziehend)
-  CLASS_III              // Steuerklasse III
-  CLASS_IV               // Steuerklasse IV
-  CLASS_V                // Steuerklasse V
-  CLASS_VI               // Steuerklasse VI (Zweitjob)
+  CLASS_I // Steuerklasse I
+  CLASS_II // Steuerklasse II (Alleinerziehend)
+  CLASS_III // Steuerklasse III
+  CLASS_IV // Steuerklasse IV
+  CLASS_V // Steuerklasse V
+  CLASS_VI // Steuerklasse VI (Zweitjob)
 }
 
 enum Religion {
-  NONE                   // Keine (-)
-  CATHOLIC               // Römisch-Katholisch (rk)
-  PROTESTANT             // Evangelisch (ev)
-  OTHER                  // Andere
+  NONE // Keine (-)
+  CATHOLIC // Römisch-Katholisch (rk)
+  PROTESTANT // Evangelisch (ev)
+  OTHER // Andere
 }
 
 enum PayrollStatus {
-  DRAFT                  // Entwurf (automatisch erstellt)
-  REVIEW                 // In Prüfung
-  APPROVED               // Genehmigt
-  PAID                   // Ausgezahlt
-  CANCELLED              // Storniert
+  DRAFT // Entwurf (automatisch erstellt)
+  REVIEW // In Prüfung
+  APPROVED // Genehmigt
+  PAID // Ausgezahlt
+  CANCELLED // Storniert
 }
 
 enum ApprovalStatus {
-  PENDING                // Wartend
-  APPROVED               // Genehmigt
-  REJECTED               // Abgelehnt
-  CANCELLED              // Storniert
+  PENDING // Wartend
+  APPROVED // Genehmigt
+  REJECTED // Abgelehnt
+  CANCELLED // Storniert
 }
 
 enum JobApplicationStatus {
-  NEW                    // Neu
-  REVIEWED               // Geprüft
-  INVITED                // Eingeladen
-  REJECTED               // Abgelehnt
-  HIRED                  // Eingestellt
+  NEW // Neu
+  REVIEWED // Geprüft
+  INVITED // Eingeladen
+  REJECTED // Abgelehnt
+  HIRED // Eingestellt
 }
 
 // ============================================
@@ -4062,7 +4059,7 @@ enum JobApplicationStatus {
 // ============================================
 
 model Payroll {
-  id         String  @id @default(cuid())
+  id         String      @id @default(cuid())
   employeeId String
   employee   B24Employee @relation("EmployeePayrollReceived", fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -4082,7 +4079,7 @@ model Payroll {
   baseSalary Decimal // Grundgehalt (Monatsgehalt oder Stundenlohn × Stunden)
 
   // Stundenlohn-spezifisch
-  workedHours Float?   // Geleistete Stunden
+  workedHours Float? // Geleistete Stunden
   hourlyRate  Decimal? // Stundensatz
 
   // Zuschläge (steuerpflichtig)
@@ -4117,11 +4114,11 @@ model Payroll {
   // ============================================
   // SOZIALVERSICHERUNG (Arbeitgeber-Anteil)
   // ============================================
-  employerHealthInsurance           Decimal // AG-Anteil KV (7,3%)
-  employerHealthInsuranceExtra      Decimal // AG-Anteil KV-Zusatz (0,85%)
-  employerNursingInsurance          Decimal // AG-Anteil PV (1,7%)
-  employerPensionInsurance          Decimal // AG-Anteil RV (9,3%)
-  employerUnemploymentInsurance     Decimal // AG-Anteil ALV (1,3%)
+  employerHealthInsurance       Decimal // AG-Anteil KV (7,3%)
+  employerHealthInsuranceExtra  Decimal // AG-Anteil KV-Zusatz (0,85%)
+  employerNursingInsurance      Decimal // AG-Anteil PV (1,7%)
+  employerPensionInsurance      Decimal // AG-Anteil RV (9,3%)
+  employerUnemploymentInsurance Decimal // AG-Anteil ALV (1,3%)
 
   // Umlagen
   u1Levy Decimal @default(0) // U1-Umlage Krankheit (1,5%)
@@ -4175,7 +4172,7 @@ model Payroll {
   // DOKUMENT
   // ============================================
   pdfUrl         String? // Link zur Gehaltsabrechnung-PDF
-  sentToEmployee Boolean  @default(false) // Per E-Mail versendet
+  sentToEmployee Boolean   @default(false) // Per E-Mail versendet
   sentAt         DateTime?
 
   // ============================================
@@ -4202,7 +4199,7 @@ model Payroll {
 // ============================================
 
 model WorkTimeConfiguration {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   model       WorkTimeModel
   name        String // z.B. "Vollzeit 40h", "Teilzeit 20h"
   description String? // Beschreibung
@@ -4237,20 +4234,20 @@ model WorkTimeConfiguration {
 // ============================================
 
 model JobPosting {
-  id          String  @id @default(cuid())
-  title       String // "Backend Developer"
-  department  String // "IT"
-  position    String // "Backend Developer"
+  id         String @id @default(cuid())
+  title      String // "Backend Developer"
+  department String // "IT"
+  position   String // "Backend Developer"
 
-  description String   @db.Text // HTML/Markdown
+  description  String   @db.Text // HTML/Markdown
   requirements String[] // Array von Anforderungen
-  benefits    String[] // Array von Benefits
+  benefits     String[] // Array von Benefits
 
-  workTimeModel     WorkTimeModel
-  weeklyHours       Float?
-  salaryMin         Decimal?
-  salaryMax         Decimal?
-  remoteAllowed     Boolean          @default(false)
+  workTimeModel WorkTimeModel
+  weeklyHours   Float?
+  salaryMin     Decimal?
+  salaryMax     Decimal?
+  remoteAllowed Boolean       @default(false)
 
   applicationDeadline DateTime?
 
@@ -4276,7 +4273,7 @@ model JobPosting {
 // ============================================
 
 model JobApplication {
-  id           String @id @default(cuid())
+  id           String     @id @default(cuid())
   jobPostingId String
   jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
@@ -4335,7 +4332,7 @@ model ApprovalWorkflow {
 }
 
 model ApprovalStep {
-  id         String   @id @default(cuid())
+  id         String           @id @default(cuid())
   workflowId String
   workflow   ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
@@ -4352,7 +4349,4 @@ model ApprovalStep {
   updatedAt DateTime @updatedAt
 
   @@map("approval_steps")
-}
-
-  HIRED                  // Eingestellt
 }

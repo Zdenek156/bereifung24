@@ -34,48 +34,72 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Get pending approvals
-    const pendingApprovals = await prisma.approvalWorkflow.count({
-      where: {
-        status: 'PENDING'
-      }
-    })
-
-    // Get pending payrolls (DRAFT or REVIEW)
-    const pendingPayrolls = await prisma.payroll.count({
-      where: {
-        status: {
-          in: ['DRAFT', 'REVIEW']
+    // Get pending approvals (Phase 3 - skip if table doesn't exist)
+    let pendingApprovals = 0
+    try {
+      pendingApprovals = await prisma.approvalWorkflow.count({
+        where: {
+          status: 'PENDING'
         }
-      }
-    })
+      })
+    } catch (error) {
+      // Table doesn't exist yet (Phase 3)
+      console.log('ApprovalWorkflow table not available yet')
+    }
 
-    // Calculate monthly payroll total (current month)
-    const currentDate = new Date()
-    const currentMonth = currentDate.getMonth() + 1
-    const currentYear = currentDate.getFullYear()
+    // Get pending payrolls (Phase 3 - skip if table doesn't exist)
+    let pendingPayrolls = 0
+    try {
+      pendingPayrolls = await prisma.payroll.count({
+        where: {
+          status: {
+            in: ['DRAFT', 'REVIEW']
+          }
+        }
+      })
+    } catch (error) {
+      // Table doesn't exist yet (Phase 3)
+      console.log('Payroll table not available yet')
+    }
 
-    const payrolls = await prisma.payroll.findMany({
-      where: {
-        month: currentMonth,
-        year: currentYear
-      },
-      select: {
-        totalEmployerCosts: true
-      }
-    })
+    // Calculate monthly payroll total (Phase 3 - skip if table doesn't exist)
+    let monthlyPayrollTotal = 0
+    try {
+      const currentDate = new Date()
+      const currentMonth = currentDate.getMonth() + 1
+      const currentYear = currentDate.getFullYear()
 
-    const monthlyPayrollTotal = payrolls.reduce(
-      (sum, payroll) => sum + Number(payroll.totalEmployerCosts || 0),
-      0
-    )
+      const payrolls = await prisma.payroll.findMany({
+        where: {
+          month: currentMonth,
+          year: currentYear
+        },
+        select: {
+          totalEmployerCosts: true
+        }
+      })
 
-    // Get open job postings
-    const openJobPostings = await prisma.jobPosting.count({
-      where: {
-        isActive: true
-      }
-    })
+      monthlyPayrollTotal = payrolls.reduce(
+        (sum, payroll) => sum + Number(payroll.totalEmployerCosts || 0),
+        0
+      )
+    } catch (error) {
+      // Table doesn't exist yet (Phase 3)
+      console.log('Payroll table not available yet')
+    }
+
+    // Get open job postings (Phase 3 - skip if table doesn't exist)
+    let openJobPostings = 0
+    try {
+      openJobPostings = await prisma.jobPosting.count({
+        where: {
+          isActive: true
+        }
+      })
+    } catch (error) {
+      // Table doesn't exist yet (Phase 3)
+      console.log('JobPosting table not available yet')
+    }
 
     return NextResponse.json({
       totalEmployees,

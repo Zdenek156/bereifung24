@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     let unreadEmails = 0
     try {
       console.log('[Dashboard Stats] Fetching email stats for user:', session.user.id)
-      const emailService = new EmailService(session.user.id)
+      const emailService = new EmailService(session.user.id, true) // true = B24 Employee
       const hasSettings = await emailService.hasSettings()
       console.log('[Dashboard Stats] User has email settings:', hasSettings)
       

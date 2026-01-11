@@ -128,6 +128,22 @@ export default function NewEmployeePage() {
     setSaving(true)
 
     try {
+      // Check if email already exists
+      const checkResponse = await fetch(`/api/admin/hr/employees`)
+      if (checkResponse.ok) {
+        const employees = await checkResponse.json()
+        const emailExists = employees.some((emp: Manager) => 
+          emp.email.toLowerCase() === formData.email.toLowerCase()
+        )
+        
+        if (emailExists) {
+          setError('Diese E-Mail-Adresse wird bereits von einem anderen Mitarbeiter verwendet.')
+          setSaving(false)
+          return
+        }
+      }
+
+      // Create employee
       const response = await fetch('/api/admin/b24-employees', {
         method: 'POST',
         headers: {

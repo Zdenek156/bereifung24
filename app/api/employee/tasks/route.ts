@@ -40,6 +40,19 @@ export async function GET(request: NextRequest) {
             lastName: true
           }
         },
+        attachments: {
+          include: {
+            uploadedBy: {
+              select: {
+                firstName: true,
+                lastName: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
         comments: {
           include: {
             author: {

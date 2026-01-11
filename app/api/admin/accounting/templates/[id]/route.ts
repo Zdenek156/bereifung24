@@ -50,7 +50,13 @@ export async function POST(
       data: { useCount: { increment: 1 } },
     })
 
-    return NextResponse.json({ success: true, template })
+    return NextResponse.json({
+      success: true,
+      template: {
+        ...template,
+        amount: parseFloat(template.amount.toString()),
+      },
+    })
   } catch (error) {
     console.error('Error updating template use count:', error)
     return NextResponse.json(

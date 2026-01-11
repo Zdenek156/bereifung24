@@ -61,10 +61,10 @@ async function testAvailableEmployeeLogic() {
       if (emp.workingHours) {
         try {
           const hours = JSON.parse(emp.workingHours)
-          const dayOfWeek = 'wednesday' // 15. Januar 2026
-          const dayHours = hours[dayOfWeek]
           
-          console.log(`      Working hours for ${dayOfWeek}:`, dayHours)
+          console.log(`   ✓ Working hours for ${dayOfWeek}:`, hours[dayOfWeek])
+          
+          const dayHours = hours[dayOfWeek]
           
           if (!dayHours) {
             console.log(`      ❌ No hours configured for ${dayOfWeek}`)

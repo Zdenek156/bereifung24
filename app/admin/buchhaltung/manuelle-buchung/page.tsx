@@ -31,7 +31,6 @@ export default function ManuelleBuchungPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
-  const [templateName, setTemplateName] = useState('')
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [autocompleteResults, setAutocompleteResults] = useState<BookingTemplate[]>([])
   const [showTemplateList, setShowTemplateList] = useState(false)
@@ -189,10 +188,6 @@ export default function ManuelleBuchungPage() {
 
       // Save as template if requested
       if (saveAsTemplate) {
-        if (!templateName.trim()) {
-          throw new Error('Bitte einen Namen für die Vorlage eingeben')
-        }
-
         const debitAcc = accounts.find(a => a.id === formData.debitAccountId)
         const creditAcc = accounts.find(a => a.id === formData.creditAccountId)
 
@@ -200,7 +195,7 @@ export default function ManuelleBuchungPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: templateName,
+            name: formData.description,
             description: formData.description,
             debitAccount: debitAcc?.accountNumber,
             creditAccount: creditAcc?.accountNumber,
@@ -438,18 +433,9 @@ export default function ManuelleBuchungPage() {
               />
               <span className="flex items-center text-sm font-medium text-gray-900">
                 <Star className="w-4 h-4 mr-2 text-yellow-600" />
-                Als Vorlage speichern
+                Als Vorlage speichern (verwendet Beschreibung als Name)
               </span>
             </label>
-            {saveAsTemplate && (
-              <input
-                type="text"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Name der Vorlage (z.B. 'Büromiete')"
-                className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            )}
             {templates.length > 0 && (
               <button
                 type="button"

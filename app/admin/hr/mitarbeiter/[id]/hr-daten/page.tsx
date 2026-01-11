@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, User, Briefcase, DollarSign, FileText, Building2, Calendar } from 'lucide-react'
+import { ArrowLeft, Save, User, Briefcase, DollarSign, FileText, Building2, Calendar, UserX } from 'lucide-react'
 
 interface HRData {
   // Hierarchy
@@ -176,6 +176,30 @@ export default function HRDataEditPage() {
     }
   }
 
+  const handleDeactivate = async () => {
+    if (!confirm(`Möchten Sie ${employee?.firstName} ${employee?.lastName} wirklich deaktivieren?\n\nDer Mitarbeiter wird aus der aktiven Mitarbeiterliste entfernt, aber alle Daten bleiben erhalten und können in "Ehemalige Mitarbeiter" eingesehen werden.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false })
+      })
+
+      if (response.ok) {
+        alert('Mitarbeiter wurde deaktiviert und in die ehemaligen Mitarbeiter verschoben.')
+        router.push('/admin/hr/mitarbeiter')
+      } else {
+        alert('Fehler beim Deaktivieren')
+      }
+    } catch (error) {
+      console.error('Error deactivating employee:', error)
+      alert('Fehler beim Deaktivieren')
+    }
+  }
+
   if (loading || !employee) {
     return (
       <div className="container mx-auto p-6">
@@ -202,14 +226,24 @@ export default function HRDataEditPage() {
             <p className="text-gray-600 mt-1">{employee.firstName} {employee.lastName}</p>
           </div>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Speichern...' : 'Speichern'}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={handleDeactivate}
+            variant="outline"
+            className="border-red-300 text-red-600 hover:bg-red-50"
+          >
+            <UserX className="h-4 w-4 mr-2" />
+            Mitarbeiter deaktivieren
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? 'Speichern...' : 'Speichern'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">

@@ -42,7 +42,55 @@ export async function POST(request: NextRequest) {
     if (permissionError) return permissionError
 
     const body = await request.json()
-    const { email, firstName, lastName, phone, position, department, permissions } = body
+    const { 
+      email, 
+      firstName, 
+      lastName, 
+      phone, 
+      position, 
+      department, 
+      permissions,
+      // Hierarchy
+      managerId,
+      hierarchyLevel,
+      // Contract
+      employmentType,
+      workTimeModel,
+      weeklyHours,
+      monthlyHours,
+      dailyHours,
+      workDaysPerWeek,
+      workStartTime,
+      workEndTime,
+      coreTimeStart,
+      coreTimeEnd,
+      flexTimeStart,
+      flexTimeEnd,
+      contractStart,
+      contractEnd,
+      probationEndDate,
+      noticePeriod,
+      // Salary
+      salaryType,
+      monthlySalary,
+      annualSalary,
+      hourlyRate,
+      isMinijob,
+      miniJobExempt,
+      // Tax & SV
+      taxId,
+      taxClass,
+      childAllowance,
+      religion,
+      socialSecurityNumber,
+      healthInsurance,
+      healthInsuranceRate,
+      isChildless,
+      // Bank
+      bankName,
+      iban,
+      bic
+    } = body
 
     // Check if email already exists (in B24Employee OR User table)
     const existingEmployee = await prisma.b24Employee.findUnique({
@@ -62,9 +110,10 @@ export async function POST(request: NextRequest) {
     const setupTokenExpiry = new Date()
     setupTokenExpiry.setHours(setupTokenExpiry.getHours() + 24) // Token valid for 24 hours
 
-    // Create employee
+    // Create employee with all HR data
     const employee = await prisma.b24Employee.create({
       data: {
+        // Basic info
         email,
         firstName,
         lastName,
@@ -75,7 +124,47 @@ export async function POST(request: NextRequest) {
         setupTokenExpiry,
         password: null, // Will be set when they use the setup link
         isActive: true,
-        emailVerified: false
+        emailVerified: false,
+        // Hierarchy
+        managerId,
+        hierarchyLevel: hierarchyLevel || 0,
+        // Contract
+        employmentType,
+        workTimeModel,
+        weeklyHours,
+        monthlyHours,
+        dailyHours,
+        workDaysPerWeek,
+        workStartTime,
+        workEndTime,
+        coreTimeStart,
+        coreTimeEnd,
+        flexTimeStart,
+        flexTimeEnd,
+        contractStart: contractStart ? new Date(contractStart) : undefined,
+        contractEnd: contractEnd ? new Date(contractEnd) : undefined,
+        probationEndDate: probationEndDate ? new Date(probationEndDate) : undefined,
+        noticePeriod,
+        // Salary
+        salaryType,
+        monthlySalary,
+        annualSalary,
+        hourlyRate,
+        isMinijob: isMinijob || false,
+        miniJobExempt: miniJobExempt || false,
+        // Tax & SV
+        taxId,
+        taxClass,
+        childAllowance,
+        religion: religion || 'NONE',
+        socialSecurityNumber,
+        healthInsurance,
+        healthInsuranceRate,
+        isChildless: isChildless || false,
+        // Bank
+        bankName,
+        iban,
+        bic
       }
     })
 

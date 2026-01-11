@@ -39,6 +39,7 @@ const AVAILABLE_RESOURCES = [
   { value: 'files', label: 'Dateiverwaltung' },
   { value: 'co2-tracking', label: 'CO₂-Tracking' },
   { value: 'buchhaltung', label: 'Buchhaltung' },
+  { value: 'hr', label: 'HR Management' },
   { value: 'influencer-management', label: 'Influencer-Verwaltung' },
   { value: 'influencer-applications', label: 'Influencer-Bewerbungen' },
   { value: 'influencer-payments', label: 'Influencer-Auszahlungen' },

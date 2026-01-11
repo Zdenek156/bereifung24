@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Bell, Pin, Calendar, User, Eye, Filter, Plus, Pencil, Trash2, X } from 'lucide-react'
 
 interface Author {
+  id: string
   firstName: string
   lastName: string
   profileImage?: string
@@ -56,6 +57,7 @@ export default function AnnouncementsPage() {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -152,8 +154,14 @@ export default function AnnouncementsPage() {
 
     setCreating(true)
     try {
-      const response = await fetch('/api/employee/announcements', {
-        method: 'POST',
+      const url = editingId 
+        ? `/api/employee/announcements/${editingId}`
+        : '/api/employee/announcements'
+      
+      const method = editingId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
@@ -163,6 +171,7 @@ export default function AnnouncementsPage() {
 
       if (response.ok) {
         setShowCreateDialog(false)
+        setEditingId(null)
         setFormData({
           title: '',
           content: '',
@@ -173,11 +182,47 @@ export default function AnnouncementsPage() {
         fetchAnnouncements()
       } else {
         const error = await response.json()
-        alert(error.error || 'Fehler beim Erstellen')
+        alert(error.error || 'Fehler beim Speichern')
       }
     } catch (error) {
-      console.error('Error creating announcement:', error)
-      alert('Fehler beim Erstellen')
+      console.error('Error saving announcement:', error)
+      alert('Fehler beim Speichern')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleEditAnnouncement = (announcement: Announcement) => {
+    setEditingId(announcement.id)
+    setFormData({
+      title: announcement.title,
+      content: announcement.content,
+      type: announcement.type,
+      priority: announcement.priority,
+      expiresAt: announcement.expiresAt ? announcement.expiresAt.split('T')[0] : ''
+    })
+    setShowCreateDialog(true)
+  }
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!confirm('Möchten Sie diese Ankündigung wirklich löschen?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/employee/announcements/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        fetchAnnouncements()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Löschen')
+      }
+    } catch (error) {
+      console.error('Error deleting announcement:', error)
+      alert('Fehler beim Löschen')
     } finally {
       setCreating(false)
     }
@@ -339,11 +384,38 @@ export default function AnnouncementsPage() {
                           <span>{announcement.viewCount}x angesehen</span>
                         </div>
                       </div>
-                      {announcement.isRead && announcement.readAt && (
-                        <span className="text-green-600">
-                          ✓ Gelesen am {formatDate(announcement.readAt)} um {formatTime(announcement.readAt)}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {announcement.isRead && announcement.readAt && (
+                          <span className="text-green-600">
+                            ✓ Gelesen am {formatDate(announcement.readAt)} um {formatTime(announcement.readAt)}
+                          </span>
+                        )}
+                        {/* Edit/Delete Buttons - nur für Ersteller sichtbar */}
+                        {session?.user?.id === announcement.author.id && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditAnnouncement(announcement)
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Bearbeiten"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteAnnouncement(announcement.id)
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Löschen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -358,9 +430,21 @@ export default function AnnouncementsPage() {
             <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Neue Ankündigung</h2>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {editingId ? 'Ankündigung bearbeiten' : 'Neue Ankündigung'}
+                  </h2>
                   <button
-                    onClick={() => setShowCreateDialog(false)}
+                    onClick={() => {
+                      setShowCreateDialog(false)
+                      setEditingId(null)
+                      setFormData({
+                        title: '',
+                        content: '',
+                        type: 'GENERAL',
+                        priority: 'NORMAL',
+                        expiresAt: ''
+                      })
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <X className="w-6 h-6" />
@@ -457,10 +541,20 @@ export default function AnnouncementsPage() {
                     disabled={creating}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {creating ? 'Wird erstellt...' : 'Veröffentlichen'}
+                    {creating ? 'Wird gespeichert...' : editingId ? 'Änderungen speichern' : 'Veröffentlichen'}
                   </button>
                   <button
-                    onClick={() => setShowCreateDialog(false)}
+                    onClick={() => {
+                      setShowCreateDialog(false)
+                      setEditingId(null)
+                      setFormData({
+                        title: '',
+                        content: '',
+                        type: 'GENERAL',
+                        priority: 'NORMAL',
+                        expiresAt: ''
+                      })
+                    }}
                     disabled={creating}
                     className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

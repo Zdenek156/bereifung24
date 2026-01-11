@@ -50,16 +50,11 @@ export default function MitarbeiterDashboard() {
     try {
       // Trigger email sync before fetching stats
       try {
-        const syncRes = await fetch('/api/email/sync', {
+        await fetch('/api/email/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ folder: 'INBOX', limit: 50 })
         })
-        
-        if (syncRes.ok) {
-          // Wait for DB writes to complete
-          await new Promise(resolve => setTimeout(resolve, 500))
-        }
       } catch (syncError) {
         // Continue even if sync fails
         console.error('Email sync failed:', syncError)

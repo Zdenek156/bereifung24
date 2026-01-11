@@ -21,7 +21,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
 
+    // Check query parameter for inactive employees
+    const { searchParams } = new URL(request.url)
+    const showInactive = searchParams.get('inactive') === 'true'
+
     const employees = await prisma.b24Employee.findMany({
+      where: {
+        isActive: !showInactive // true for active, false for inactive
+      },
       select: {
         id: true,
         firstName: true,

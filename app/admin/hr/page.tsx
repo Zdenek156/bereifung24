@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign } from 'lucide-react'
+import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign, UserX } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface HRStats {
@@ -195,6 +195,14 @@ export default function HRDashboard() {
             >
               <Plus className="h-4 w-4 mr-2" />
               Neuen Mitarbeiter anlegen
+            </Button>
+            <Button
+              onClick={() => router.push('/admin/hr/ehemalige-mitarbeiter')}
+              variant="outline"
+              className="w-full justify-start"
+            >
+              <UserX className="h-4 w-4 mr-2" />
+              Ehemalige Mitarbeiter
             </Button>
             <Button
               onClick={() => router.push('/admin/hr/hierarchie')}

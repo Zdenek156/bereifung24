@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Save, Mail, Building2, Activity, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Save, Mail, Building2, Activity, TrendingUp, Briefcase } from 'lucide-react'
 
 const AVAILABLE_RESOURCES = [
   { value: 'workshops', label: 'Werkstattverwaltung' },
@@ -315,10 +315,19 @@ export default function EditEmployeePage() {
                 )}
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={() => router.push('/admin/b24-employees')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="default"
+                onClick={() => router.push(`/admin/hr/mitarbeiter/${employeeId}/hr-daten`)}
+              >
+                <Briefcase className="mr-2 h-4 w-4" />
+                HR-Daten
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/admin/b24-employees')}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück
+              </Button>
+            </div>
           </div>
         </CardHeader>
 

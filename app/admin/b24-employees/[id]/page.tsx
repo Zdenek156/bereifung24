@@ -38,6 +38,13 @@ const AVAILABLE_RESOURCES = [
   { value: 'kvp', label: 'KVP - Verbesserungsvorschläge' },
   { value: 'files', label: 'Dateiverwaltung' },
   { value: 'co2-tracking', label: 'CO₂-Tracking' },
+  { value: 'buchhaltung', label: 'Buchhaltung' },
+  { value: 'influencer-management', label: 'Influencer-Verwaltung' },
+  { value: 'influencer-applications', label: 'Influencer-Bewerbungen' },
+  { value: 'influencer-payments', label: 'Influencer-Auszahlungen' },
+  { value: 'procurement', label: 'Beschaffung & Einkauf' },
+  { value: 'vehicles', label: 'Fahrzeugverwaltung' },
+  { value: 'email-blacklist', label: 'Email-Blacklist' },
 ]
 
 interface Permission {

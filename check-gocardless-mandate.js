@@ -8,22 +8,48 @@ async function checkMandateStatus() {
   try {
     console.log('🔍 Checking GoCardless Mandate Status...\n');
     
-    // Get workshop
-    const workshop = await prisma.workshop.findFirst({
-      where: { companyName: 'Test Reifen Werkstatt' },
+    // Get ALL workshops with mandates
+    const workshops = await prisma.workshop.findMany({
+      where: { 
+        gocardlessMandateId: { not: null }
+      },
       select: {
         id: true,
         companyName: true,
         gocardlessMandateId: true,
         gocardlessMandateStatus: true,
-        gocardlessCustomerId: true
+        gocardlessCustomerId: true,
+        gocardlessMandateRef: true,
+        gocardlessMandateCreatedAt: true,
+        user: {
+          select: {
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        gocardlessMandateCreatedAt: 'desc'
       }
     });
 
-    if (!workshop) {
-      console.log('❌ Workshop not found');
+    if (workshops.length === 0) {
+      console.log('❌ No workshops with GoCardless mandates found');
       return;
     }
+
+    console.log(`Found ${workshops.length} workshop(s) with mandates:\n`);
+    
+    workshops.forEach((w, i) => {
+      console.log(`${i + 1}. ${w.companyName}`);
+      console.log(`   Email: ${w.user.email}`);
+      console.log(`   Mandate ID: ${w.gocardlessMandateId}`);
+      console.log(`   Status: ${w.gocardlessMandateStatus}`);
+      console.log(`   Reference: ${w.gocardlessMandateRef}`);
+      console.log(`   Created: ${w.gocardlessMandateCreatedAt}`);
+      console.log('');
+    });
+
+    const workshop = workshops[0]; // Check first one
 
     console.log('📊 Local Workshop Status:');
     console.log('   Mandate ID:', workshop.gocardlessMandateId);

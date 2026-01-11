@@ -54,6 +54,15 @@ export default function AnnouncementsPage() {
   const [loading, setLoading] = useState(true)
   const [filterType, setFilterType] = useState<string>('ALL')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    type: 'GENERAL',
+    priority: 'NORMAL',
+    expiresAt: ''
+  })
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -135,6 +144,45 @@ export default function AnnouncementsPage() {
 
   const unreadCount = announcements.filter(a => !a.isRead).length
 
+  const handleCreateAnnouncement = async () => {
+    if (!formData.title.trim() || !formData.content.trim()) {
+      alert('Bitte Überschrift und Text ausfüllen')
+      return
+    }
+
+    setCreating(true)
+    try {
+      const response = await fetch('/api/employee/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          expiresAt: formData.expiresAt || null
+        })
+      })
+
+      if (response.ok) {
+        setShowCreateDialog(false)
+        setFormData({
+          title: '',
+          content: '',
+          type: 'GENERAL',
+          priority: 'NORMAL',
+          expiresAt: ''
+        })
+        fetchAnnouncements()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Erstellen')
+      }
+    } catch (error) {
+      console.error('Error creating announcement:', error)
+      alert('Fehler beim Erstellen')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   if (status === 'loading' || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -158,12 +206,21 @@ export default function AnnouncementsPage() {
                 Aktuelle Ankündigungen & News {unreadCount > 0 && `• ${unreadCount} ungelesen`}
               </p>
             </div>
-            <button
-              onClick={() => router.push('/mitarbeiter')}
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-            >
-              ← Zurück
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCreateDialog(true)}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Neue Ankündigung
+              </button>
+              <button
+                onClick={() => router.push('/mitarbeiter')}
+                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+              >
+                ← Zurück
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -292,6 +349,126 @@ export default function AnnouncementsPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Create Dialog */}
+        {showCreateDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Neue Ankündigung</h2>
+                  <button
+                    onClick={() => setShowCreateDialog(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Überschrift *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="z.B. Team-Meeting am Freitag"
+                      maxLength={200}
+                    />
+                  </div>
+
+                  {/* Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kategorie
+                    </label>
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      {Object.entries(TYPE_LABELS).map(([key, { label, emoji }]) => (
+                        <option key={key} value={key}>
+                          {emoji} {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Content */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Text *
+                    </label>
+                    <textarea
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      rows={6}
+                      placeholder="Schreibe hier deine Ankündigung..."
+                    />
+                  </div>
+
+                  {/* Priority */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Priorität
+                    </label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="LOW">Niedrig</option>
+                      <option value="NORMAL">Normal</option>
+                      <option value="HIGH">Hoch</option>
+                      <option value="URGENT">Dringend</option>
+                    </select>
+                  </div>
+
+                  {/* Expiry Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Anzeigen bis (optional)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.expiresAt}
+                      onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wenn leer, wird die Ankündigung unbegrenzt angezeigt
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCreateAnnouncement}
+                    disabled={creating}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {creating ? 'Wird erstellt...' : 'Veröffentlichen'}
+                  </button>
+                  <button
+                    onClick={() => setShowCreateDialog(false)}
+                    disabled={creating}
+                    className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

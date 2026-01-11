@@ -90,21 +90,7 @@ export async function POST(request: NextRequest) {
 
     const employeeId = session.user.id
 
-    // Prüfen ob Berechtigung zum Erstellen von Ankündigungen
-    const hasPermission = await prisma.b24EmployeePermission.findFirst({
-      where: {
-        employeeId,
-        resource: 'announcements',
-        canWrite: true
-      }
-    })
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Keine Berechtigung zum Erstellen von Ankündigungen' },
-        { status: 403 }
-      )
-    }
+    // Alle Mitarbeiter dürfen Ankündigungen erstellen (Schwarzes Brett)
 
     const body = await request.json()
     const {

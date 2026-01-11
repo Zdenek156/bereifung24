@@ -82,7 +82,19 @@ export async function DELETE(
     const employeeId = session.user.id
     const announcementId = params.id
 
-    // Prüfen ob Berechtigung
+    // Ankündigung laden um authorId zu prüfen
+    const announcement = await prisma.announcement.findUnique({
+      where: { id: announcementId }
+    })
+
+    if (!announcement) {
+      return NextResponse.json(
+        { error: 'Ankündigung nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Prüfen ob Berechtigung: Entweder Admin oder Ersteller
     const hasPermission = await prisma.b24EmployeePermission.findFirst({
       where: {
         employeeId,
@@ -91,7 +103,9 @@ export async function DELETE(
       }
     })
 
-    if (!hasPermission) {
+    const isAuthor = announcement.authorId === employeeId
+
+    if (!hasPermission && !isAuthor) {
       return NextResponse.json(
         { error: 'Keine Berechtigung zum Löschen' },
         { status: 403 }
@@ -128,7 +142,19 @@ export async function PUT(
     const employeeId = session.user.id
     const announcementId = params.id
 
-    // Prüfen ob Berechtigung
+    // Ankündigung laden um authorId zu prüfen
+    const existingAnnouncement = await prisma.announcement.findUnique({
+      where: { id: announcementId }
+    })
+
+    if (!existingAnnouncement) {
+      return NextResponse.json(
+        { error: 'Ankündigung nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Prüfen ob Berechtigung: Entweder Admin oder Ersteller
     const hasPermission = await prisma.b24EmployeePermission.findFirst({
       where: {
         employeeId,
@@ -137,7 +163,9 @@ export async function PUT(
       }
     })
 
-    if (!hasPermission) {
+    const isAuthor = existingAnnouncement.authorId === employeeId
+
+    if (!hasPermission && !isAuthor) {
       return NextResponse.json(
         { error: 'Keine Berechtigung zum Bearbeiten' },
         { status: 403 }

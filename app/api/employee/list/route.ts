@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Get all active employees
     const employees = await prisma.b24Employee.findMany({
       where: {
-        status: 'ACTIVE'
+        isActive: true
       },
       select: {
         id: true,

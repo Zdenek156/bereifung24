@@ -33,10 +33,31 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Load email settings
-    const emailSettings = await prisma.emailSettings.findFirst()
+    // Load email settings from AdminApiSetting (legacy) or CompanySettings (new)
+    const emailSettingsArray = await prisma.adminApiSetting.findMany({
+      where: {
+        key: {
+          in: ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
+        }
+      }
+    })
+
+    const smtpSettings = {
+      smtpHost: emailSettingsArray.find(s => s.key === 'EMAIL_HOST')?.value || '',
+      smtpPort: parseInt(emailSettingsArray.find(s => s.key === 'EMAIL_PORT')?.value || '587'),
+      smtpUser: emailSettingsArray.find(s => s.key === 'EMAIL_USER')?.value || '',
+      smtpPassword: emailSettingsArray.find(s => s.key === 'EMAIL_PASSWORD')?.value || '',
+    }
+
+    // Fallback to CompanySettings if AdminApiSetting is empty
+    if (!smtpSettings.smtpHost && companySettings) {
+      smtpSettings.smtpHost = companySettings.smtpHost || ''
+      smtpSettings.smtpPort = parseInt(companySettings.smtpPort || '587')
+      smtpSettings.smtpUser = companySettings.smtpUser || ''
+      smtpSettings.smtpPassword = companySettings.smtpPassword || ''
+    }
     
-    if (!emailSettings?.smtpHost) {
+    if (!smtpSettings.smtpHost) {
       return NextResponse.json({ 
         error: 'Keine E-Mail-Einstellungen konfiguriert. Bitte unter "Admin → Email-Einstellungen" einrichten.' 
       }, { status: 400 })
@@ -116,17 +137,17 @@ export async function POST(request: NextRequest) {
 
     // Send email using SmtpService
     const smtpService = new SmtpService({
-      host: emailSettings.smtpHost,
-      port: emailSettings.smtpPort,
-      secure: emailSettings.smtpPort === 465,
+      host: smtpSettings.smtpHost,
+      port: smtpSettings.smtpPort,
+      secure: smtpSettings.smtpPort === 465,
       auth: {
-        user: emailSettings.smtpUser,
-        pass: emailSettings.smtpPassword,
+        user: smtpSettings.smtpUser,
+        pass: smtpSettings.smtpPassword,
       },
     })
 
     await smtpService.sendEmail({
-      from: `"${companySettings.accountantName || 'Bereifung24'}" <${emailSettings.smtpUser}>`,
+      from: `"${companySettings.accountantName || 'Bereifung24'}" <${smtpSettings.smtpUser}>`,
       to: companySettings.accountantEmail,
       subject: `UStVA - Umsatzsteuer-Voranmeldung ${periodText}`,
       html: `

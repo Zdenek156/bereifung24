@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
       commissionPerCustomerRegistration,
       commissionPerCustomerFirstOffer,
       commissionPerWorkshopRegistration,
-      commissionPerWorkshopFirstOffer,
       isUnlimited
     } = body
 
@@ -98,10 +97,9 @@ export async function POST(req: NextRequest) {
         isRegistered: true,
         password: hashedPassword,
         commissionPer1000Views,
-        commissionPerCustomerRegistration,
-        commissionPerCustomerFirstOffer,
+        commissionPerRegistration: commissionPerCustomerRegistration,
+        commissionPerAcceptedOffer: commissionPerCustomerFirstOffer,
         commissionPerWorkshopRegistration,
-        commissionPerWorkshopFirstOffer,
         isUnlimited
       }
     })

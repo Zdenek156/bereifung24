@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { checkEmployeePermission } from '@/lib/permissions'
 
 interface ProcurementRequest {
   id: string

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { checkEmployeePermission } from '@/lib/permissions'
 
 interface DashboardStats {
   pendingRequests: number
@@ -31,11 +32,32 @@ export default function ProcurementDashboard() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (!session || session.user.role !== 'ADMIN') {
-      router.push('/admin')
-      return
+    
+    const checkAccess = async () => {
+      if (!session) {
+        router.push('/admin')
+        return
+      }
+      
+      // Allow ADMIN or B24_EMPLOYEE with procurement permission
+      if (session.user.role === 'ADMIN') {
+        fetchStats()
+        return
+      }
+      
+      if (session.user.role === 'B24_EMPLOYEE') {
+        const hasAccess = await checkEmployeePermission(session.user.id, 'procurement', 'read')
+        if (hasAccess) {
+          fetchStats()
+        } else {
+          router.push('/mitarbeiter')
+        }
+      } else {
+        router.push('/admin')
+      }
     }
-    fetchStats()
+    
+    checkAccess()
   }, [session, status, router])
 
   const fetchStats = async () => {

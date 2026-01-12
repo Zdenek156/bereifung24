@@ -7,11 +7,36 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // Check permission for B24_EMPLOYEE
+    if (session.user.role === 'B24_EMPLOYEE') {
+      if (!session.user.b24EmployeeId) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+
+      const permission = await prisma.b24EmployeePermission.findFirst({
+        where: {
+          employeeId: session.user.b24EmployeeId,
+          resource: 'buchhaltung',
+          canRead: true
+        }
+      })
+
+      if (!permission) {
+        return NextResponse.json(
+          { error: 'No permission for accounting' },
+          { status: 403 }
+        )
+      }
     }
 
     // Get total account count

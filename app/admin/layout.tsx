@@ -39,12 +39,16 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     }
   }, [session, status, router, pathname])
 
-  if (status === 'loading' || !session) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
+  }
+
+  if (!session) {
+    return null
   }
 
   if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {

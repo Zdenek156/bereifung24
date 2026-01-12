@@ -116,6 +116,26 @@ const defaultApplications = [
     sortOrder: 30
   },
   {
+    key: 'applications',
+    name: 'Anwendungsverwaltung',
+    description: 'Zuweisen von Anwendungen zu Mitarbeitern',
+    icon: 'Grid',
+    adminRoute: '/admin/applications',
+    color: 'purple',
+    category: 'HR',
+    sortOrder: 31
+  },
+  {
+    key: 'applications',
+    name: 'Anwendungsverwaltung',
+    description: 'Zuweisen von Anwendungen zu Mitarbeitern',
+    icon: 'Grid',
+    adminRoute: '/admin/applications',
+    color: 'purple',
+    category: 'HR',
+    sortOrder: 31
+  },
+  {
     key: 'recruitment',
     name: 'Recruiting',
     description: 'Stellenanzeigen und Bewerbermanagement',
@@ -123,7 +143,7 @@ const defaultApplications = [
     adminRoute: '/admin/recruitment',
     color: 'cyan',
     category: 'HR',
-    sortOrder: 31
+    sortOrder: 32
   },
   {
     key: 'payroll',
@@ -133,7 +153,7 @@ const defaultApplications = [
     adminRoute: '/admin/payroll',
     color: 'green',
     category: 'HR',
-    sortOrder: 32
+    sortOrder: 33
   },
 
   // OPERATIONS

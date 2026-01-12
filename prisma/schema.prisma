@@ -978,8 +978,8 @@ model B24Employee {
   lastLoginAt DateTime?
 
   // Relations
-  permissions       B24EmployeePermission[]
-  assignedWorkshops Workshop[]               @relation("WorkshopAssignment")
+  applications      B24EmployeeApplication[] // New: Application-based access
+  assignedWorkshops Workshop[]                @relation("WorkshopAssignment")
   activityLogs      B24EmployeeActivityLog[]
 
   // Sales CRM Relations
@@ -1124,24 +1124,44 @@ model B24Employee {
   @@map("b24_employees")
 }
 
-model B24EmployeePermission {
-  id         String      @id @default(cuid())
-  employeeId String
-  employee   B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+// ============================================
+// APPLICATION-BASED ACCESS CONTROL
+// ============================================
+// Simpler permission model: Employees either have access to an application or not
+// If they have access, they have FULL access (no granular read/write/delete)
 
-  // Which admin page/section
-  resource String // e.g., "customers", "workshops", "analytics", "billing", "email-templates"
-
-  // What they can do
-  canRead   Boolean @default(false)
-  canWrite  Boolean @default(false)
-  canDelete Boolean @default(false)
+model Application {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., "customers", "workshops", "hr", "buchhaltung"
+  name        String // Display name, e.g., "Kundenverwaltung", "Werkstattverwaltung"
+  description String? // Optional description
+  icon        String   @default("Layout") // Lucide icon name
+  adminRoute  String // Route in admin, e.g., "/admin/customers"
+  color       String   @default("blue") // Tailwind color for UI
+  sortOrder   Int      @default(0) // Display order in menus
+  isActive    Boolean  @default(true) // Can be disabled without deleting
+  category    String   @default("GENERAL") // GENERAL, ACCOUNTING, HR, SALES, SUPPORT
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([employeeId, resource])
-  @@map("b24_employee_permissions")
+  employeeAssignments B24EmployeeApplication[]
+
+  @@map("applications")
+}
+
+model B24EmployeeApplication {
+  id             String   @id @default(cuid())
+  employeeId     String
+  applicationKey String
+  assignedAt     DateTime @default(now())
+  assignedBy     String // User ID who assigned the application
+
+  employee    B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationKey], references: [key], onDelete: Cascade)
+
+  @@unique([employeeId, applicationKey])
+  @@map("b24_employee_applications")
 }
 
 model B24EmployeeActivityLog {

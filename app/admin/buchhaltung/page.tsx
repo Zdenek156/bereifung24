@@ -44,6 +44,25 @@ export default function BuchhaltungPage() {
     fetchStats()
   }, [session, status, router])
 
+  // Separate loading check to prevent redirect during session loading
+  if (status === 'loading') {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
+
+  if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+    return null
+  }
+
   const fetchStats = async () => {
     try {
       const response = await fetch('/api/admin/accounting/stats')

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requirePermission } from '@/lib/permissions'
 import { randomBytes } from 'crypto'
 import { sendEmail } from '@/lib/email'
 
@@ -11,11 +12,9 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'hr' write access or ADMIN
+    const permissionError = await requirePermission('hr', 'write')
+    if (permissionError) return permissionError
 
     const employee = await prisma.b24Employee.findUnique({
       where: { id: params.id }

@@ -9,8 +9,8 @@ import { randomBytes } from 'crypto'
 // GET - List all B24 employees
 export async function GET(request: NextRequest) {
   try {
-    // Check permission - requires 'employees' read access or ADMIN
-    const permissionError = await requirePermission('employees', 'read')
+    // Check permission - requires 'hr' read access or ADMIN
+    const permissionError = await requirePermission('hr', 'read')
     if (permissionError) return permissionError
 
     const employees = await prisma.b24Employee.findMany({
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
 // POST - Create new employee
 export async function POST(request: NextRequest) {
   try {
-    // Check permission - requires 'employees' write access or ADMIN
-    const permissionError = await requirePermission('employees', 'write')
+    // Check permission - requires 'hr' write access or ADMIN
+    const permissionError = await requirePermission('hr', 'write')
     if (permissionError) return permissionError
 
     const body = await request.json()

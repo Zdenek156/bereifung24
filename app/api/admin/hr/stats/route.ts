@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { hasApplication } from '@/lib/applications'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,27 +12,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Allow ADMIN and B24_EMPLOYEE with hr permission
+    // Allow ADMIN and B24_EMPLOYEE with hr application
     if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
-    // Check permission for B24_EMPLOYEE
+    // Check application access for B24_EMPLOYEE
     if (session.user.role === 'B24_EMPLOYEE') {
-      if (!session.user.b24EmployeeId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
-      const permission = await prisma.b24EmployeePermission.findFirst({
-        where: {
-          employeeId: session.user.b24EmployeeId,
-          resource: 'hr',
-          canRead: true
-        }
-      })
-
-      if (!permission) {
-        return NextResponse.json({ error: 'No permission for HR' }, { status: 403 })
+      const hasAccess = await hasApplication(session.user.id, 'hr')
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'No access to HR application' }, { status: 403 })
       }
     }
 

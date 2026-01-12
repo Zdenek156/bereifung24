@@ -391,6 +391,7 @@ const allNavigationItems: NavigationItem[] = [
 export default function AdminNavigationClient() {
   const [visibleItems, setVisibleItems] = useState<NavigationItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     fetchAccessibleResources()
@@ -401,13 +402,19 @@ export default function AdminNavigationClient() {
       const response = await fetch('/api/admin/accessible-resources')
       if (response.ok) {
         const data = await response.json()
-        const accessibleResources = new Set(data.accessibleResources)
         
-        const filtered = allNavigationItems.filter(item => 
-          item.resource === '' || accessibleResources.has(item.resource)
-        )
-        
-        setVisibleItems(filtered)
+        // Check if user is ADMIN (will have isAdmin flag)
+        if (data.isAdmin) {
+          setIsAdmin(true)
+          setVisibleItems(allNavigationItems) // Show all tiles for ADMIN
+        } else {
+          // For B24_EMPLOYEE: Filter by assigned applications
+          const accessibleResources = new Set(data.accessibleResources)
+          const filtered = allNavigationItems.filter(item => 
+            item.resource === '' || accessibleResources.has(item.resource)
+          )
+          setVisibleItems(filtered)
+        }
       }
     } catch (error) {
       console.error('Error fetching accessible resources:', error)

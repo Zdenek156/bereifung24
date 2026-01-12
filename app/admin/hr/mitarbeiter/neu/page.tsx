@@ -328,13 +328,13 @@ export default function NewEmployeePage() {
                 className="w-full mt-1 border rounded px-3 py-2"
               >
                 <option value="">Bitte wählen</option>
-                <option value="FULL_TIME">Vollzeit</option>
-                <option value="PART_TIME">Teilzeit</option>
-                <option value="MINI_JOB">Minijob (450€)</option>
-                <option value="MIDI_JOB">Midijob (450-1.300€)</option>
-                <option value="WORKING_STUDENT">Werkstudent</option>
-                <option value="APPRENTICE">Azubi</option>
-                <option value="INTERN">Praktikant</option>
+                <option value="PERMANENT">Unbefristet</option>
+                <option value="TEMPORARY">Befristet</option>
+                <option value="MINIJOB">Minijob</option>
+                <option value="APPRENTICE">Ausbildung</option>
+                <option value="INTERN">Praktikum</option>
+                <option value="FREELANCE">Freiberufler</option>
+                <option value="SHORTTERM">Kurzfristig beschäftigt</option>
               </select>
             </div>
             <div>
@@ -345,10 +345,19 @@ export default function NewEmployeePage() {
                 className="w-full mt-1 border rounded px-3 py-2"
               >
                 <option value="">Bitte wählen</option>
-                <option value="FIXED">Feste Arbeitszeit</option>
-                <option value="FLEX_TIME">Gleitzeit</option>
+                <option value="FULLTIME_40H">Vollzeit 40h</option>
+                <option value="FULLTIME_37_5H">Vollzeit 37,5h</option>
+                <option value="FULLTIME_35H">Vollzeit 35h</option>
+                <option value="PARTTIME_30H">Teilzeit 30h (75%)</option>
+                <option value="PARTTIME_25H">Teilzeit 25h (62,5%)</option>
+                <option value="PARTTIME_20H">Teilzeit 20h (50%)</option>
+                <option value="PARTTIME_15H">Teilzeit 15h (37,5%)</option>
+                <option value="MINIJOB_603">Minijob 603€</option>
+                <option value="SHORTTERM_EMPLOYMENT">Kurzfristige Beschäftigung</option>
+                <option value="FLEXTIME">Gleitzeit</option>
                 <option value="TRUST_BASED">Vertrauensarbeitszeit</option>
                 <option value="SHIFT_WORK">Schichtarbeit</option>
+                <option value="CUSTOM">Benutzerdefiniert</option>
               </select>
             </div>
             <div>

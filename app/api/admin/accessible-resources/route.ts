@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getAllApplications, getEmployeeApplications } from '@/lib/applications'
+import { getEmployeeApplications } from '@/lib/applications'
 
 /**
  * Get accessible resources for the current user
@@ -22,19 +22,23 @@ export async function GET() {
 
     // ADMINs have access to everything
     if (session.user.role === 'ADMIN') {
-      // Get all application keys
-      const allApps = await getAllApplications()
-      const accessibleResources = allApps.map(app => app.key)
-      return NextResponse.json({ accessibleResources })
+      // Return flag indicating this is an admin (no filtering needed on frontend)
+      return NextResponse.json({ 
+        accessibleResources: [], // Not used for ADMIN
+        isAdmin: true 
+      })
     }
 
     // B24_EMPLOYEE: Get assigned application keys
     if (session.user.role === 'B24_EMPLOYEE') {
       const applicationKeys = await getEmployeeApplications(session.user.id)
-      return NextResponse.json({ accessibleResources: applicationKeys })
+      return NextResponse.json({ 
+        accessibleResources: applicationKeys,
+        isAdmin: false 
+      })
     }
 
-    return NextResponse.json({ accessibleResources: [] })
+    return NextResponse.json({ accessibleResources: [], isAdmin: false })
   } catch (error) {
     console.error('Error in accessible-resources:', error)
     return NextResponse.json({ error: 'Internal server error', accessibleResources: [] }, { status: 500 })

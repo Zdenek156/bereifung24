@@ -52,21 +52,23 @@ export async function GET(request: NextRequest) {
     })
 
     // Calculate total revenue (credit entries on revenue accounts 8xxx)
-    const revenueEntries = await prisma.accountingEntry.findMany({
+    // Use aggregate for better performance instead of loading all entries
+    const revenueAggregate = await prisma.accountingEntry.aggregate({
       where: {
         creditAccount: {
           startsWith: '8'
         }
       },
-      select: {
+      _sum: {
         amount: true
       }
     })
 
-    const totalRevenue = revenueEntries.reduce((sum, entry) => sum + entry.amount.toNumber(), 0)
+    const totalRevenue = revenueAggregate._sum.amount?.toNumber() || 0
 
     // Calculate total expenses (debit entries on expense accounts 4xxx and 6xxx)
-    const expenseEntries = await prisma.accountingEntry.findMany({
+    // Use aggregate for better performance
+    const expenseAggregate = await prisma.accountingEntry.aggregate({
       where: {
         OR: [
           {
@@ -81,12 +83,12 @@ export async function GET(request: NextRequest) {
           }
         ]
       },
-      select: {
+      _sum: {
         amount: true
       }
     })
 
-    const totalExpenses = expenseEntries.reduce((sum, entry) => sum + entry.amount.toNumber(), 0)
+    const totalExpenses = expenseAggregate._sum.amount?.toNumber() || 0
 
     const totalProfit = totalRevenue - totalExpenses
 

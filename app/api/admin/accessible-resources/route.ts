@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { getAllApplications, getEmployeeApplications } from '@/lib/applications'
 
+/**
+ * Get accessible resources for the current user
+ * Now uses the new Application-based system
+ */
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -16,55 +20,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
-    // All available resources
-    const resources = [
-      'workshops',
-      'customers',
-      'email',
-      'notifications',
-      'billing',
-      'commissions',
-      'accounting',
-      'buchhaltung',
-      'hr',
-      'influencers',
-      'territories',
-      'cleanup',
-      'sepa-mandates',
-      'api-settings',
-      'email-settings',
-      'email-templates',
-      'procurement',
-      'b24-employees',
-      'analytics',
-      'server-info',
-      'security',
-      'sales',
-      'kvp',
-      'files',
-      'co2-tracking',
-      'vehicles'
-    ]
-
     // ADMINs have access to everything
     if (session.user.role === 'ADMIN') {
-      return NextResponse.json({ accessibleResources: resources })
+      // Get all application keys
+      const allApps = await getAllApplications()
+      const accessibleResources = allApps.map(app => app.key)
+      return NextResponse.json({ accessibleResources })
     }
 
-    // B24_EMPLOYEE: Check permissions
-    if (session.user.role === 'B24_EMPLOYEE' && session.user.b24EmployeeId) {
-      const permissions = await prisma.b24EmployeePermission.findMany({
-        where: {
-          employeeId: session.user.b24EmployeeId,
-          canRead: true
-        },
-        select: {
-          resource: true
-        }
-      })
-
-      const accessibleResources = permissions.map(p => p.resource)
-      return NextResponse.json({ accessibleResources })
+    // B24_EMPLOYEE: Get assigned application keys
+    if (session.user.role === 'B24_EMPLOYEE') {
+      const applicationKeys = await getEmployeeApplications(session.user.id)
+      return NextResponse.json({ accessibleResources: applicationKeys })
     }
 
     return NextResponse.json({ accessibleResources: [] })
@@ -73,3 +40,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error', accessibleResources: [] }, { status: 500 })
   }
 }
+

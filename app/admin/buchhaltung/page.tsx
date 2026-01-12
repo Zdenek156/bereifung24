@@ -1,8 +1,7 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface AccountingStats {
@@ -15,7 +14,6 @@ interface AccountingStats {
 }
 
 export default function BuchhaltungPage() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const [stats, setStats] = useState<AccountingStats>({
     totalRevenue: 0,
@@ -28,40 +26,8 @@ export default function BuchhaltungPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push('/login')
-      return
-    }
-
-    // Allow ADMIN and B24_EMPLOYEE with buchhaltung permissions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
-      router.push('/dashboard')
-      return
-    }
-
     fetchStats()
-  }, [session, status, router])
-
-  // Separate loading check to prevent redirect during session loading
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session) {
-    return null
-  }
-
-  if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
-    return null
-  }
+  }, [])
 
   const fetchStats = async () => {
     try {

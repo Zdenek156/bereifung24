@@ -7,18 +7,32 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.email) {
+    if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true }
-    })
+    // Allow ADMIN and B24_EMPLOYEE with hr permission
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
 
-    if (user?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    // Check permission for B24_EMPLOYEE
+    if (session.user.role === 'B24_EMPLOYEE') {
+      if (!session.user.b24EmployeeId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      const permission = await prisma.b24EmployeePermission.findFirst({
+        where: {
+          employeeId: session.user.b24EmployeeId,
+          resource: 'hr',
+          canRead: true
+        }
+      })
+
+      if (!permission) {
+        return NextResponse.json({ error: 'No permission for HR' }, { status: 403 })
+      }
     }
 
     // Get total employees

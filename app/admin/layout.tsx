@@ -11,11 +11,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === 'loading') return
-
-    if (!session) {
-      router.push('/login')
-      return
-    }
+    if (!session) return
 
     // Allow ADMIN full access
     if (session.user.role === 'ADMIN') {

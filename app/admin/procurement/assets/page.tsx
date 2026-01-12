@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { checkEmployeePermission } from '@/lib/permissions'
 
 interface Asset {
   id: string
@@ -93,8 +92,9 @@ export default function AssetsPage() {
       }
       
       if (session.user.role === 'B24_EMPLOYEE') {
-        const hasAccess = await checkEmployeePermission(session.user.id, 'procurement', 'read')
-        if (hasAccess) {
+        const response = await fetch('/api/employee/check-permission?resource=procurement&action=read')
+        const { hasPermission } = await response.json()
+        if (hasPermission) {
           fetchAssets()
         } else {
           router.push('/mitarbeiter')

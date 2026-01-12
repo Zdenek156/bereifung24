@@ -2,17 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requirePermission } from '@/lib/permissions'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'hr' read access or ADMIN
+    const permissionError = await requirePermission('hr', 'read')
+    if (permissionError) return permissionError
 
     const { searchParams } = new URL(req.url)
     const startDate = searchParams.get('startDate')

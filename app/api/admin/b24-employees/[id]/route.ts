@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requirePermission } from '@/lib/permissions'
 
 // GET - Get single employee
 export async function GET(
@@ -20,8 +21,22 @@ export async function GET(
     const isEmployee = session.user.role === 'B24_EMPLOYEE'
     const isSelf = isEmployee && session.user.b24EmployeeId === params.id
 
-    // B24_EMPLOYEE can only view themselves, ADMIN can view anyone
-    if (!isAdmin && !isSelf) {
+    // ADMIN or B24_EMPLOYEE with hr read permission can view anyone
+    // Or B24_EMPLOYEE can view themselves
+    let hasHrAccess = false
+    if (isEmployee && !isSelf) {
+      const permission = await prisma.b24EmployeePermission.findUnique({
+        where: {
+          employeeId_resource: {
+            employeeId: session.user.b24EmployeeId!,
+            resource: 'hr'
+          }
+        }
+      })
+      hasHrAccess = permission?.canRead ?? false
+    }
+
+    if (!isAdmin && !isSelf && !hasHrAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -66,11 +81,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'hr' write access or ADMIN
+    const permissionError = await requirePermission('hr', 'write')
+    if (permissionError) return permissionError
 
     const body = await request.json()
     const { 
@@ -194,11 +207,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check permission - requires 'hr' delete access or ADMIN
+    const permissionError = await requirePermission('hr', 'delete')
+    if (permissionError) return permissionError
 
     // Delete employee (cascades to permissions and activity logs)
     await prisma.b24Employee.delete({

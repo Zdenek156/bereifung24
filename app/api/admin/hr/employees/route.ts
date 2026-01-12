@@ -2,24 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requirePermission } from '@/lib/permissions'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true }
-    })
-
-    if (user?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
-    }
+    // Check permission - requires 'hr' read access or ADMIN
+    const permissionError = await requirePermission('hr', 'read')
+    if (permissionError) return permissionError
 
     // Check query parameter for inactive employees
     const { searchParams } = new URL(request.url)

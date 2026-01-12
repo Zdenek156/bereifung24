@@ -140,7 +140,7 @@ const allNavigationItems: NavigationItem[] = [
     description: 'Anwendungsverwaltung & Mitarbeiter-Zuweisungen',
     color: 'bg-cyan-100',
     textColor: 'text-primary-600',
-    resource: 'applications',
+    resource: '',  // Always visible for all admins
     highlight: true,
     icon: (
       <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

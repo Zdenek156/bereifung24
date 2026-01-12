@@ -35,7 +35,8 @@ export default function BuchhaltungPage() {
       return
     }
 
-    if (session.user.role !== 'ADMIN') {
+    // Allow ADMIN and B24_EMPLOYEE with buchhaltung permissions
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       router.push('/dashboard')
       return
     }

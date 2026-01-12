@@ -12,7 +12,7 @@ async function main() {
       role: 'ADMIN'
     },
     include: {
-      B24Employee: true
+      b24Employee: true
     }
   })
 
@@ -23,8 +23,8 @@ async function main() {
 
   console.log('Admin user:', admin.email)
 
-  if (!admin.B24Employee) {
-    console.log('❌ Admin has no B24Employee record')
+  if (!admin.b24Employee) {
+    console.log('❌ Admin has no b24Employee record')
     return
   }
 
@@ -32,13 +32,13 @@ async function main() {
   const assignment = await prisma.b24EmployeeApplication.upsert({
     where: {
       employeeId_applicationKey: {
-        employeeId: admin.B24Employee.id,
+        employeeId: admin.b24Employee.id,
         applicationKey: 'applications'
       }
     },
     update: {},
     create: {
-      employeeId: admin.B24Employee.id,
+      employeeId: admin.b24Employee.id,
       applicationKey: 'applications'
     }
   })
@@ -47,7 +47,7 @@ async function main() {
 
   // Show all assigned applications
   const allApps = await prisma.b24EmployeeApplication.findMany({
-    where: { employeeId: admin.B24Employee.id },
+    where: { employeeId: admin.b24Employee.id },
     include: { application: true }
   })
 

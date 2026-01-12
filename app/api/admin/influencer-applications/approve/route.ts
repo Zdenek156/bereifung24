@@ -172,9 +172,6 @@ export async function POST(req: NextRequest) {
                 <div class="commission">
                   <strong>Pro registrierter Werkstatt:</strong> €${(commissionPerWorkshopRegistration / 100).toFixed(2)}
                 </div>
-                <div class="commission">
-                  <strong>Pro erstem Angebot von Werkstatt:</strong> €${(commissionPerWorkshopFirstOffer / 100).toFixed(2)}
-                </div>
               </div>
 
               <div class="info-box">

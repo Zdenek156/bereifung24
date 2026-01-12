@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { checkEmployeePermission } from '@/lib/permissions'
 
 interface Order {
   id: string
@@ -33,11 +34,31 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (!session || session.user.role !== 'ADMIN') {
-      router.push('/admin')
-      return
+    
+    const checkAccess = async () => {
+      if (!session) {
+        router.push('/admin')
+        return
+      }
+      
+      if (session.user.role === 'ADMIN') {
+        fetchOrders()
+        return
+      }
+      
+      if (session.user.role === 'B24_EMPLOYEE') {
+        const hasAccess = await checkEmployeePermission(session.user.id, 'procurement', 'read')
+        if (hasAccess) {
+          fetchOrders()
+        } else {
+          router.push('/mitarbeiter')
+        }
+      } else {
+        router.push('/admin')
+      }
     }
-    fetchOrders()
+    
+    checkAccess()
   }, [session, status, router])
 
   const fetchOrders = async () => {

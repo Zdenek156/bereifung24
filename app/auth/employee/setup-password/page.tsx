@@ -84,11 +84,11 @@ function SetupPasswordForm() {
         })
 
         if (result?.ok) {
-          router.push('/admin')
+          router.push('/mitarbeiter')
         } else {
           // Manual redirect to login if auto-login fails
           alert('Passwort wurde erfolgreich gesetzt. Bitte melden Sie sich an.')
-          router.push('/login')
+          router.push('/mitarbeiter/login')
         }
       } else {
         const error = await response.json()

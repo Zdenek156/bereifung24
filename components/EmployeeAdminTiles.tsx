@@ -97,32 +97,16 @@ export default function EmployeeAdminTiles() {
     )
   }
 
-  // Whitelist of applications that have mitarbeiter routes
-  const mitarbeiterRoutesMap: Record<string, string> = {
-    'customers': '/mitarbeiter/customers',
-    'workshops': '/mitarbeiter/workshops',
-    'hr': '/mitarbeiter/hr',
-    'analytics': '/mitarbeiter/analytics',
-    'buchhaltung': '/mitarbeiter/buchhaltung',
-    'files': '/mitarbeiter/files',
-    'affiliates': '/mitarbeiter/affiliates',
-    'sales': '/mitarbeiter/sales',
-    'recruitment': '/mitarbeiter/recruitment',
-    'payroll': '/mitarbeiter/payroll',
-    'fleet': '/mitarbeiter/fleet',
-    'knowledge': '/mitarbeiter/knowledge',
-    'settings': '/mitarbeiter/settings',
-    'email-templates': '/mitarbeiter/email-templates',
-    // For apps without mitarbeiter routes, use admin route
-  }
+  // Mitarbeiter verwenden die gleichen optimierten Admin-Seiten
+  // Alle Admin-Seiten erlauben bereits B24_EMPLOYEE Zugriff via requireAdminOrEmployee()
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {applications.map((app) => {
         const colors = getColorClasses(app.color)
         
-        // Check if there's a specific mitarbeiter route for this app
-        const href = mitarbeiterRoutesMap[app.key] || app.adminRoute
+        // Alle Anwendungen verwenden die Admin-Routen
+        const href = app.adminRoute
         
         return (
           <Link

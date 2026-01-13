@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface Customer {
@@ -22,14 +24,28 @@ interface Customer {
 type SortOption = 'recent' | 'distance' | 'requests' | 'revenue'
 
 export default function AdminCustomersPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      router.push('/dashboard')
+      return
+    }
+
     fetchCustomers()
-  }, [sortBy])
+  }, [session, status, router, sortBy])
 
   const fetchCustomers = async () => {
     try {

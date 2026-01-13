@@ -67,7 +67,7 @@ export default function MitarbeiterCustomersPage() {
       const response = await fetch('/api/admin/customers')
       if (response.ok) {
         const result = await response.json()
-        setCustomers(result.data || [])
+        setCustomers(result.customers || [])
       }
     } catch (error) {
       console.error('Error fetching customers:', error)

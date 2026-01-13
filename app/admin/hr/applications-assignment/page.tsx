@@ -50,9 +50,19 @@ export default function ApplicationsAssignmentPage() {
     try {
       // Fetch employees
       const empResponse = await fetch('/api/admin/hr/employees')
+      let empData: Employee[] = []
+      
       if (empResponse.ok) {
         const empResult = await empResponse.json()
-        setEmployees(empResult.data || [])
+        console.log('🔍 API Response:', empResult)
+        console.log('🔍 Data field:', empResult.data)
+        console.log('🔍 Data type:', typeof empResult.data)
+        console.log('🔍 Is Array:', Array.isArray(empResult.data))
+        empData = empResult.data || []
+        console.log('🔍 empData length:', empData.length)
+        setEmployees(empData)
+      } else {
+        console.error('❌ Employee fetch failed:', empResponse.status, empResponse.statusText)
       }
 
       // Fetch applications
@@ -63,26 +73,21 @@ export default function ApplicationsAssignmentPage() {
       }
 
       // Fetch assignments for each employee
-      if (empResponse.ok) {
-        const empResult = await empResponse.json()
-        const empData = empResult.data || []
-        
-        const assignmentsData: Record<string, string[]> = {}
-        
-        for (const emp of empData) {
-          const assignResponse = await fetch(
-            `/api/admin/hr/employee-applications/${emp.id}`
+      const assignmentsData: Record<string, string[]> = {}
+      
+      for (const emp of empData) {
+        const assignResponse = await fetch(
+          `/api/admin/hr/employee-applications/${emp.id}`
+        )
+        if (assignResponse.ok) {
+          const assignResult = await assignResponse.json()
+          assignmentsData[emp.id] = (assignResult.data || []).map(
+            (app: Application) => app.key
           )
-          if (assignResponse.ok) {
-            const assignResult = await assignResponse.json()
-            assignmentsData[emp.id] = (assignResult.data || []).map(
-              (app: Application) => app.key
-            )
-          }
         }
-        
-        setAssignments(assignmentsData)
       }
+      
+      setAssignments(assignmentsData)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {

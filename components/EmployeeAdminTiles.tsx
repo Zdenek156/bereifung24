@@ -97,12 +97,24 @@ export default function EmployeeAdminTiles() {
     )
   }
 
+  // Whitelist of applications that have mitarbeiter routes
+  const mitarbeiterRoutesMap: Record<string, string> = {
+    'customers': '/mitarbeiter/customers',
+    'workshops': '/mitarbeiter/workshops',
+    'hr': '/mitarbeiter/hr',
+    'analytics': '/mitarbeiter/analytics',
+    'buchhaltung': '/mitarbeiter/buchhaltung',
+    'files': '/mitarbeiter/files',
+    // For apps without mitarbeiter routes, use admin route
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {applications.map((app) => {
         const colors = getColorClasses(app.color)
-        // Use mitarbeiter route if it exists, otherwise admin route
-        const href = app.adminRoute.replace('/admin/', '/mitarbeiter/')
+        
+        // Check if there's a specific mitarbeiter route for this app
+        const href = mitarbeiterRoutesMap[app.key] || app.adminRoute
         
         return (
           <Link

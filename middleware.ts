@@ -168,6 +168,9 @@ export async function middleware(request: NextRequest) {
           dashboardUrl.searchParams.set('module', applicationKey)
           return NextResponse.redirect(dashboardUrl)
         }
+        
+        console.log(`[MIDDLEWARE] Access granted to ${url.pathname} for user ${userId}`)
+        return NextResponse.next()
       }
     }
 
@@ -208,6 +211,9 @@ export async function middleware(request: NextRequest) {
             dashboardUrl.searchParams.set('module', applicationKey)
             return NextResponse.redirect(dashboardUrl)
           }
+          
+          console.log(`[MIDDLEWARE] Access granted to ${url.pathname} for user ${userId}`)
+          return NextResponse.next()
         }
       }
     }
@@ -224,6 +230,9 @@ export async function middleware(request: NextRequest) {
         dashboardUrl.searchParams.set('module', 'sales')
         return NextResponse.redirect(dashboardUrl)
       }
+      
+      console.log(`[MIDDLEWARE] Access granted to /sales for user ${userId}`)
+      return NextResponse.next()
     }
 
     // Check API routes
@@ -243,6 +252,9 @@ export async function middleware(request: NextRequest) {
             { status: 403 }
           )
         }
+        
+        console.log(`[MIDDLEWARE] API access granted to ${url.pathname} for user ${userId}`)
+        return NextResponse.next()
       }
     }
   }

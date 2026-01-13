@@ -54,11 +54,14 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    return NextResponse.json(employees)
+    return NextResponse.json({ 
+      success: true, 
+      data: employees 
+    })
   } catch (error) {
     console.error('Error fetching employees:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch employees' },
+      { success: false, error: 'Failed to fetch employees' },
       { status: 500 }
     )
   }

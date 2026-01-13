@@ -216,8 +216,10 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(dashboardUrl)
           }
           
-          console.log(`[MIDDLEWARE] Access granted to ${url.pathname} for user ${userId}`)
-          return NextResponse.next()
+          // Access granted - rewrite /mitarbeiter/* to /admin/*
+          console.log(`[MIDDLEWARE] Rewriting ${url.pathname} to ${adminPath}`)
+          url.pathname = adminPath
+          return NextResponse.rewrite(url)
         }
       }
       

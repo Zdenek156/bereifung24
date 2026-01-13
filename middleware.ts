@@ -172,6 +172,10 @@ export async function middleware(request: NextRequest) {
         console.log(`[MIDDLEWARE] Access granted to ${url.pathname} for user ${userId}`)
         return NextResponse.next()
       }
+      
+      // No application key found, allow access (e.g., /admin dashboard)
+      console.log(`[MIDDLEWARE] No app key for ${url.pathname}, allowing access`)
+      return NextResponse.next()
     }
 
     // Check /mitarbeiter/* routes that map to admin modules
@@ -216,6 +220,10 @@ export async function middleware(request: NextRequest) {
           return NextResponse.next()
         }
       }
+      
+      // Personal page or mitarbeiter dashboard - allow access
+      console.log(`[MIDDLEWARE] Personal page ${url.pathname}, allowing access`)
+      return NextResponse.next()
     }
 
     // Check /sales route (special case - not under /admin)
@@ -252,7 +260,17 @@ export async function middleware(request: NextRequest) {
             { status: 403 }
           )
         }
-        
+      
+      // No application key found for API route, allow access
+      console.log(`[MIDDLEWARE] No app key for API ${url.pathname}, allowing access`)
+      return NextResponse.next()
+    }
+  }
+  
+  // Authenticated user accessing non-protected route
+  if (token) {
+    console.log(`[MIDDLEWARE] Authenticated user accessing ${url.pathname}`)
+    return NextResponse.next()   
         console.log(`[MIDDLEWARE] API access granted to ${url.pathname} for user ${userId}`)
         return NextResponse.next()
       }

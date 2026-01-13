@@ -120,7 +120,7 @@ const defaultApplications = [
     name: 'Anwendungsverwaltung',
     description: 'Zuweisen von Anwendungen zu Mitarbeitern',
     icon: 'Grid',
-    adminRoute: '/admin/applications',
+    adminRoute: '/admin/hr/applications-assignment',
     color: 'purple',
     category: 'HR',
     sortOrder: 31

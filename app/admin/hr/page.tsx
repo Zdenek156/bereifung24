@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign, UserX, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 interface HRStats {
   totalEmployees: number

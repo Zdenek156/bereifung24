@@ -62,11 +62,11 @@ const defaultApplications = [
 
   // SALES & CRM
   {
-    key: 'crm',
+    key: 'sales',
     name: 'CRM & Vertrieb',
     description: 'Prospect-Management, Leads und Sales Pipeline',
     icon: 'Target',
-    adminRoute: '/admin/sales/prospects',
+    adminRoute: '/admin/sales',
     color: 'blue',
     category: 'SALES',
     sortOrder: 10
@@ -114,16 +114,6 @@ const defaultApplications = [
     color: 'blue',
     category: 'HR',
     sortOrder: 30
-  },
-  {
-    key: 'applications',
-    name: 'Anwendungsverwaltung',
-    description: 'Zuweisen von Anwendungen zu Mitarbeitern',
-    icon: 'Grid',
-    adminRoute: '/admin/applications',
-    color: 'purple',
-    category: 'HR',
-    sortOrder: 31
   },
   {
     key: 'applications',
@@ -190,7 +180,7 @@ const defaultApplications = [
 
   // SUPPORT & COMMUNICATION
   {
-    key: 'email',
+    key: 'email-templates',
     name: 'E-Mail-Vorlagen',
     description: 'Verwalte E-Mail-Templates und Massenmails',
     icon: 'Mail',

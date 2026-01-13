@@ -8,8 +8,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 /**
- * Check if user has access to an application
- * @param userId - User ID (can be ADMIN or B24_EMPLOYEE)
+ * Check if user has access to an application (direct database check)
+ * @param userId - User ID
  * @param applicationKey - Application key (e.g., "customers", "workshops", "hr")
  * @returns true if user has access, false otherwise
  */
@@ -18,27 +18,16 @@ export async function hasApplication(
   applicationKey: string
 ): Promise<boolean> {
   try {
-    // Get user session to check role
-    const session = await getServerSession(authOptions)
-    if (!session?.user) return false
-
-    // ADMIN users have access to all applications
-    if (session.user.role === 'ADMIN') return true
-
-    // B24_EMPLOYEE users need to check their assigned applications
-    if (session.user.role === 'B24_EMPLOYEE') {
-      const assignment = await prisma.b24EmployeeApplication.findUnique({
-        where: {
-          employeeId_applicationKey: {
-            employeeId: userId,
-            applicationKey
-          }
+    // Direct database check without session
+    const assignment = await prisma.b24EmployeeApplication.findUnique({
+      where: {
+        employeeId_applicationKey: {
+          employeeId: userId,
+          applicationKey
         }
-      })
-      return !!assignment
-    }
-
-    return false
+      }
+    })
+    return !!assignment
   } catch (error) {
     console.error('Error checking application access:', error)
     return false

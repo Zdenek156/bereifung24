@@ -66,7 +66,7 @@ const defaultApplications = [
     name: 'Sales CRM',
     description: 'Werkstatt-Akquise mit Google Places',
     icon: 'Target',
-    adminRoute: '/sales',
+    adminRoute: '/admin/sales',
     color: 'blue',
     category: 'SALES',
     sortOrder: 10

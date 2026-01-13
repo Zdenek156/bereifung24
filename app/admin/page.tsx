@@ -1,5 +1,20 @@
 'use client'
 
+/**
+ * ADMIN DASHBOARD
+ * 
+ * 🔧 ENTWICKLER-HINWEIS:
+ * Beim Hinzufügen einer neuen Admin-Anwendung, bitte folgende Checkliste beachten:
+ * 📋 Siehe: .github/NEW_ADMIN_APPLICATION_CHECKLIST.md
+ * 
+ * Wichtigste Schritte:
+ * 1. Datenbankeintrag in Application-Tabelle
+ * 2. Route in middleware.ts registrieren (ROUTE_TO_APPLICATION_MAP)
+ * 3. Optional: PermissionGuard in Seite einbauen
+ * 4. Deployment mit npm build & PM2 restart
+ * 5. Berechtigungen über HR → Anwendungsverwaltung vergeben
+ */
+
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'

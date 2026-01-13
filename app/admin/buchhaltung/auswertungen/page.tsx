@@ -15,7 +15,7 @@ export default function ReportsPage() {
       router.push('/login')
       return
     }
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       router.push('/dashboard')
       return
     }

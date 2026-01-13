@@ -43,7 +43,9 @@ export default function HRMitarbeiterPage() {
     try {
       const response = await fetch('/api/admin/hr/employees')
       if (response.ok) {
-        const data = await response.json()
+        const result = await response.json()
+        // Handle both response formats: direct array or { success, data } wrapper
+        const data = Array.isArray(result) ? result : (result.data || [])
         setEmployees(data)
       }
     } catch (error) {

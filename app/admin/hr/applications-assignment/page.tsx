@@ -60,7 +60,13 @@ export default function ApplicationsAssignmentPage() {
         console.log('🔍 Is Array:', Array.isArray(empResult.data))
         empData = empResult.data || []
         console.log('🔍 empData length:', empData.length)
+        console.log('🔍 First employee:', empData[0])
+        console.log('🔍 isActive field:', empData[0]?.isActive)
         setEmployees(empData)
+        console.log('🔍 After setEmployees, calling filter...')
+        const activeEmps = empData.filter((emp: Employee) => emp.isActive)
+        console.log('🔍 Active employees count:', activeEmps.length)
+        console.log('🔍 Active employees:', activeEmps)
       } else {
         console.error('❌ Employee fetch failed:', empResponse.status, empResponse.statusText)
       }

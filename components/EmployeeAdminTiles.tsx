@@ -105,6 +105,14 @@ export default function EmployeeAdminTiles() {
     'analytics': '/mitarbeiter/analytics',
     'buchhaltung': '/mitarbeiter/buchhaltung',
     'files': '/mitarbeiter/files',
+    'affiliates': '/mitarbeiter/affiliates',
+    'sales': '/mitarbeiter/sales',
+    'recruitment': '/mitarbeiter/recruitment',
+    'payroll': '/mitarbeiter/payroll',
+    'fleet': '/mitarbeiter/fleet',
+    'knowledge': '/mitarbeiter/knowledge',
+    'settings': '/mitarbeiter/settings',
+    'email-templates': '/mitarbeiter/email-templates',
     // For apps without mitarbeiter routes, use admin route
   }
 

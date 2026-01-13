@@ -22,6 +22,18 @@ const nextConfig = {
     },
     instrumentationHook: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/mitarbeiter/sales',
+        destination: '/sales',
+      },
+      {
+        source: '/mitarbeiter/:path*',
+        destination: '/admin/:path*',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import * as Icons from 'lucide-react'
 
 interface Application {
@@ -17,6 +18,7 @@ interface Application {
 }
 
 export default function EmployeeAdminTiles() {
+  const { data: session } = useSession()
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -105,8 +107,16 @@ export default function EmployeeAdminTiles() {
       {applications.map((app) => {
         const colors = getColorClasses(app.color)
         
-        // Alle Anwendungen verwenden die Admin-Routen
-        const href = app.adminRoute
+        // Für B24_EMPLOYEE: URLs zeigen /mitarbeiter/* statt /admin/*
+        // Next.js Rewrites mappen /mitarbeiter/* → /admin/* intern
+        let href = app.adminRoute
+        if (session?.user?.role === 'B24_EMPLOYEE') {
+          href = href.replace('/admin/', '/mitarbeiter/')
+          // Handle /sales route (not under /admin)
+          if (href.startsWith('/sales')) {
+            href = '/mitarbeiter/sales'
+          }
+        }
         
         return (
           <Link

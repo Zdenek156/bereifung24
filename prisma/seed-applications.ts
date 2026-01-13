@@ -63,10 +63,10 @@ const defaultApplications = [
   // SALES & CRM
   {
     key: 'sales',
-    name: 'CRM & Vertrieb',
-    description: 'Prospect-Management, Leads und Sales Pipeline',
+    name: 'Sales CRM',
+    description: 'Werkstatt-Akquise mit Google Places',
     icon: 'Target',
-    adminRoute: '/admin/sales/prospects',
+    adminRoute: '/sales',
     color: 'blue',
     category: 'SALES',
     sortOrder: 10

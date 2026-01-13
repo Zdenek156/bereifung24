@@ -76,10 +76,18 @@ export default function SalesDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'loading') return;
+    
+    if (!session) {
       router.push('/login');
+      return;
     }
-  }, [status, router]);
+    
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      router.push('/dashboard');
+      return;
+    }
+  }, [status, session, router]);
 
   useEffect(() => {
     if (status === 'authenticated') {

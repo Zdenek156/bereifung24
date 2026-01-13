@@ -160,6 +160,16 @@ const defaultApplications = [
     sortOrder: 50
   },
   {
+    key: 'email-blacklist',
+    name: 'E-Mail Blacklist',
+    description: 'Gesperrte E-Mails verwalten und freischalten',
+    icon: 'ShieldAlert',
+    adminRoute: '/admin/email-blacklist',
+    color: 'red',
+    category: 'SUPPORT',
+    sortOrder: 50.5
+  },
+  {
     key: 'email',
     name: 'E-Mail Versand',
     description: 'Newsletter und Updates versenden',

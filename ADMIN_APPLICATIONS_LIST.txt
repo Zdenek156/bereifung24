@@ -1,10 +1,10 @@
 ═══════════════════════════════════════════════════════════════════
   BEREIFUNG24 ADMIN-ANWENDUNGEN - DASHBOARD-KACHELN
   Erstellt: 13. Januar 2026
-  Aktualisiert: 13. Januar 2026, 21:52 Uhr
+  Aktualisiert: 13. Januar 2026, 22:05 Uhr
 ═══════════════════════════════════════════════════════════════════
 
-GESAMT: 28 Anwendungen
+GESAMT: 29 Anwendungen
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -94,12 +94,22 @@ GESAMT: 28 Anwendungen
 [31] Anwendungsverwaltung
      Link: /admin/hr/applications-assignment
      Icon: Grid | Farbe: Lila
-     Beschreibung: Zuweisen von Anwendungen zu Mitarbeitern━━━━━━━━━━━
+     Beschreibung: Zuweisen von Anwendungen zu Mitarbeitern
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛠️ SUPPORT - 7 Anwendungen
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [50] E-Mail-Vorlagen
      Link: /admin/email-templates
      Icon: Mail | Farbe: Blau
      Beschreibung: Verwalte E-Mail-Templates und Massenmails
+
+[50.5] E-Mail Blacklist
+     Link: /admin/email-blacklist
+     Icon: ShieldAlert | Farbe: Rot
+     Beschreibung: Gesperrte E-Mails verwalten und freischalten
 
 [51] E-Mail Versand
      Link: /admin/email

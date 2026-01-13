@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         firstName: true,
         lastName: true,
         email: true,
+        isActive: true,
         department: true,
         position: true,
         employmentType: true,

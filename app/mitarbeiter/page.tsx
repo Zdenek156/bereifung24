@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import NewsFeed from '@/components/NewsFeed'
 import AnnouncementsFeed from '@/components/AnnouncementsFeed'
@@ -26,6 +26,7 @@ interface DashboardStats {
 export default function MitarbeiterDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [stats, setStats] = useState<DashboardStats>({
     newDocuments: 0,
     pendingTasks: 0,
@@ -36,6 +37,24 @@ export default function MitarbeiterDashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [showNewsfeed, setShowNewsfeed] = useState(true)
+  const [permissionError, setPermissionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check for permission error from URL params
+    const error = searchParams.get('error')
+    const module = searchParams.get('module')
+    
+    if (error === 'no-permission' && module) {
+      setPermissionError(module)
+      // Clear URL params after showing error
+      setTimeout(() => {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('error')
+        url.searchParams.delete('module')
+        window.history.replaceState({}, '', url)
+      }, 100)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     // Load newsfeed preference from localStorage
@@ -98,6 +117,39 @@ export default function MitarbeiterDashboard() {
 
   return (
     <div className="p-6">
+      {/* Permission Error Banner */}
+      {permissionError && (
+        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Zugriff verweigert
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>
+                  Sie haben keine Berechtigung für das Modul <strong className="font-semibold">{permissionError}</strong>.
+                  Wenden Sie sich an Ihren Administrator, wenn Sie Zugriff benötigen.
+                </p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => setPermissionError(null)}
+                  className="text-sm font-medium text-red-800 hover:text-red-900"
+                >
+                  Schließen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dashboard Header */}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">

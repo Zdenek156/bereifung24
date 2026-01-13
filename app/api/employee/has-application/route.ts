@@ -1,6 +1,7 @@
 /**
  * GET /api/employee/has-application?key=customers
  * Check if current user has access to an application
+ * Supports both session-based and header-based authentication (for middleware)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -10,12 +11,6 @@ import { hasApplication } from '@/lib/applications'
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const searchParams = req.nextUrl.searchParams
     const applicationKey = searchParams.get('key')
 
@@ -24,6 +19,32 @@ export async function GET(req: NextRequest) {
         { error: 'Application key is required' },
         { status: 400 }
       )
+    }
+
+    // Check if this is a middleware request (has x-user-id header)
+    const userIdHeader = req.headers.get('x-user-id')
+    const userRoleHeader = req.headers.get('x-user-role')
+
+    if (userIdHeader && userRoleHeader) {
+      // Middleware request - use headers
+      if (userRoleHeader === 'ADMIN') {
+        return NextResponse.json({ success: true, hasAccess: true })
+      }
+
+      const hasAccess = await hasApplication(userIdHeader, applicationKey)
+      return NextResponse.json({ success: true, hasAccess })
+    }
+
+    // Regular request - use session
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // ADMIN has access to everything
+    if (session.user.role === 'ADMIN') {
+      return NextResponse.json({ success: true, hasAccess: true })
     }
 
     const hasAccess = await hasApplication(session.user.id, applicationKey)

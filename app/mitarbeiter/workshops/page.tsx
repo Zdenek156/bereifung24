@@ -68,7 +68,7 @@ export default function MitarbeiterWorkshopsPage() {
       const response = await fetch('/api/admin/workshops')
       if (response.ok) {
         const result = await response.json()
-        setWorkshops(result.data || [])
+        setWorkshops(result || [])
       }
     } catch (error) {
       console.error('Error fetching workshops:', error)

@@ -93,16 +93,6 @@ const defaultApplications = [
     category: 'ACCOUNTING',
     sortOrder: 21
   },
-  {
-    key: 'billing',
-    name: 'Rechnungsverwaltung',
-    description: 'Rechnungen, SEPA-Mandate und Zahlungen',
-    icon: 'FileText',
-    adminRoute: '/admin/billing',
-    color: 'indigo',
-    category: 'ACCOUNTING',
-    sortOrder: 22
-  },
 
   // HR
   {
@@ -124,26 +114,6 @@ const defaultApplications = [
     color: 'purple',
     category: 'HR',
     sortOrder: 31
-  },
-  {
-    key: 'recruitment',
-    name: 'Recruiting',
-    description: 'Stellenanzeigen und Bewerbermanagement',
-    icon: 'UserPlus',
-    adminRoute: '/admin/recruitment',
-    color: 'cyan',
-    category: 'HR',
-    sortOrder: 32
-  },
-  {
-    key: 'payroll',
-    name: 'Lohnabrechnung',
-    description: 'Gehaltsabrechnungen und Lohnsteuer',
-    icon: 'CreditCard',
-    adminRoute: '/admin/payroll',
-    color: 'green',
-    category: 'HR',
-    sortOrder: 33
   },
 
   // OPERATIONS
@@ -330,18 +300,6 @@ const defaultApplications = [
     color: 'red',
     category: 'GENERAL',
     sortOrder: 68
-  },
-
-  // SETTINGS
-  {
-    key: 'settings',
-    name: 'Einstellungen',
-    description: 'Systemeinstellungen und Konfiguration',
-    icon: 'Settings',
-    adminRoute: '/admin/settings',
-    color: 'gray',
-    category: 'GENERAL',
-    sortOrder: 100
   }
 ]
 

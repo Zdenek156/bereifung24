@@ -1,9 +1,10 @@
 ═══════════════════════════════════════════════════════════════════
   BEREIFUNG24 ADMIN-ANWENDUNGEN - DASHBOARD-KACHELN
   Erstellt: 13. Januar 2026
+  Aktualisiert: 13. Januar 2026, 21:52 Uhr
 ═══════════════════════════════════════════════════════════════════
 
-GESAMT: 20 Anwendungen
+GESAMT: 28 Anwendungen
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -40,11 +41,6 @@ GESAMT: 20 Anwendungen
      Icon: Car | Farbe: Rot
      Beschreibung: Firmenfahrzeuge, Fahrten und Tankbelege
 
-[100] Einstellungen
-      Link: /admin/settings
-      Icon: Settings | Farbe: Grau
-      Beschreibung: Systemeinstellungen und Konfiguration
-
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💰 SALES (Vertrieb) - 3 Anwendungen
@@ -72,6 +68,11 @@ GESAMT: 20 Anwendungen
 
 [20] Buchhaltung
      Link: /admin/buchhaltung
+     Icon: Calculator | Farbe:2 Anwendungen
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[20] Buchhaltung
+     Link: /admin/buchhaltung
      Icon: Calculator | Farbe: Grün
      Beschreibung: Bilanz, GuV, Buchungen und Jahresabschluss
 
@@ -80,14 +81,9 @@ GESAMT: 20 Anwendungen
      Icon: Coins | Farbe: Gelb
      Beschreibung: Werkstatt-Provisionen und Auszahlungen
 
-[22] Rechnungsverwaltung
-     Link: /admin/billing
-     Icon: FileText | Farbe: Indigo
-     Beschreibung: Rechnungen, SEPA-Mandate und Zahlungen
-
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👥 HR (Personal) - 4 Anwendungen
+👥 HR (Personal) - 2 Anwendungen
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [30] Personalverwaltung
@@ -98,48 +94,98 @@ GESAMT: 20 Anwendungen
 [31] Anwendungsverwaltung
      Link: /admin/hr/applications-assignment
      Icon: Grid | Farbe: Lila
-     Beschreibung: Zuweisen von Anwendungen zu Mitarbeitern
-
-[32] Recruiting
-     Link: /admin/recruitment
-     Icon: UserPlus | Farbe: Cyan
-     Beschreibung: Stellenanzeigen und Bewerbermanagement
-
-[33] Lohnabrechnung
-     Link: /admin/payroll
-     Icon: CreditCard | Farbe: Grün
-     Beschreibung: Gehaltsabrechnungen und Lohnsteuer
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛠️ SUPPORT (Unterstützung) - 3 Anwendungen
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     Beschreibung: Zuweisen von Anwendungen zu Mitarbeitern━━━━━━━━━━━
 
 [50] E-Mail-Vorlagen
      Link: /admin/email-templates
      Icon: Mail | Farbe: Blau
      Beschreibung: Verwalte E-Mail-Templates und Massenmails
 
-[51] Verbesserungsvorschläge
+[51] E-Mail Versand
+     Link: /admin/email
+     Icon: Send | Farbe: Grün
+     Beschreibung: Newsletter und Updates versenden
+
+[52] E-Mail Einstellungen
+     Link: /admin/email-settings
+     Icon: Settings | Farbe: Lila
+     Beschreibung: SMTP-Konfiguration für Email-Versand
+
+[53] Benachrichtigungen
+     Link: /admin/notifications
+     Icon: Bell | Farbe: Orange
+     Beschreibung: Email-Empfänger für Registrierungen verwalten
+
+[54] Verbesserungsvorschläge
      Link: /admin/kvp
      Icon: Lightbulb | Farbe: Gelb
      Beschreibung: KVP-System für kontinuierliche Verbesserung
 
-[52] Wissensdatenbank
+[55] Wissensdatenbank
      Link: /admin/knowledge
      Icon: BookOpen | Farbe: Indigo
      Beschreibung: Interne Dokumentation und How-To-Artikel
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 SYSTEM & ADMIN - 9 Anwendungen
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[60] Mitarbeiterverwaltung
+     Link: /admin/b24-employees
+     Icon: UserCog | Farbe: Cyan
+     Beschreibung: Bereifung24 Mitarbeiter mit Zugriffsrechten
+
+[61] Gebietsübersicht
+     Link: /admin/territories
+     Icon: Map | Farbe: Teal
+     Beschreibung: Karten, Statistiken und Marktanalyse
+
+[62] CO₂-Tracking
+     Link: /admin/co2-tracking
+     Icon: Leaf | Farbe: Emerald
+     Beschreibung: Emissions-Faktoren und Berechnungen konfigurieren
+
+[63] Firmenfahrzeuge
+     Link: /admin/vehicles
+     Icon: Truck | Farbe: Cyan
+     Beschreibung: Fahrzeugverwaltung & Fahrtenbuch
+
+[64] SEPA-Mandate
+     Link: /admin/sepa-mandates
+     Icon: CreditCard | Farbe: Indigo
+     Beschreibung: GoCardless Status prüfen & synchronisieren
+
+[65] Datenbank Bereinigung
+     Link: /admin/cleanup
+     Icon: Trash2 | Farbe: Rot
+     Beschreibung: Testdaten selektiv löschen
+
+[66] API-Einstellungen
+     Link: /admin/api-settings
+     Icon: Key | Farbe: Teal
+     Beschreibung: GoCardless, Google & andere API-Keys verwalten
+
+[67] Server-Übersicht
+     Link: /admin/server-info
+     Icon: Server | Farbe: Grau
+     Beschreibung: CPU, RAM, Festplatte & Performance-Metriken
+
+[68] Sicherheit & Account
+     Link: /admin/security
+     Icon: Shield | Farbe: Rot
+     Beschreibung: Passwort, 2FA, Backups & Systemsicherheit
 
 
 ═══════════════════════════════════════════════════════════════════
   KATEGORIEN-ÜBERSICHT
 ═══════════════════════════════════════════════════════════════════
 
-🔵 GENERAL:    7 Apps (1,2,3,40,41,42,100)
+🔵 GENERAL:    16 Apps (1,2,3,40,41,42,60,61,62,63,65,66,67,68,100)
 💰 SALES:      3 Apps (4,5,10)
-📊 ACCOUNTING: 3 Apps (20,21,22)
+📊 ACCOUNTING: 4 Apps (20,21,22,64)
 👥 HR:         4 Apps (30,31,32,33)
-🛠️ SUPPORT:    3 Apps (50,51,52)
+🛠️ SUPPORT:    6 Apps (50,51,52,53,54,55)
 
 
 ═══════════════════════════════════════════════════════════════════
@@ -150,6 +196,7 @@ GESAMT: 20 Anwendungen
 2. Sales CRM ist die EINZIGE Seite ohne /admin/ Präfix
 3. Sortierung im Dashboard erfolgt nach sortOrder-Wert
 4. Icons sind Lucide-React Icons
-5. Farben: blue, green, orange, purple, pink, yellow, red, indigo, cyan, gray
-
-Siehe auch: .github/NEW_ADMIN_APPLICATION_CHECKLIST.md
+5. Farben: blue,5 Apps (1,2,3,40,41,42,60,61,62,63,65,66,67,68)
+💰 SALES:      3 Apps (4,5,10)
+📊 ACCOUNTING: 3 Apps (20,21,64)
+👥 HR:         2 Apps (30,31

@@ -1,10 +1,38 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Target, Users, TrendingUp } from 'lucide-react'
 
 export default function SalesPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      router.push('/dashboard')
+      return
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6">
       <div className="mb-8">

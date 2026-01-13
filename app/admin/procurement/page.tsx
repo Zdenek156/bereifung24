@@ -32,32 +32,18 @@ export default function ProcurementDashboard() {
   useEffect(() => {
     if (status === 'loading') return
     
-    const checkAccess = async () => {
-      if (!session) {
-        router.push('/admin')
-        return
-      }
-      
-      // Allow ADMIN or B24_EMPLOYEE with procurement permission
-      if (session.user.role === 'ADMIN') {
-        fetchStats()
-        return
-      }
-      
-      if (session.user.role === 'B24_EMPLOYEE') {
-        const response = await fetch('/api/employee/check-permission?resource=procurement&action=read')
-        const { hasPermission } = await response.json()
-        if (hasPermission) {
-          fetchStats()
-        } else {
-          router.push('/mitarbeiter')
-        }
-      } else {
-        router.push('/admin')
-      }
+    if (!session) {
+      router.push('/login')
+      return
     }
     
-    checkAccess()
+    // Allow ADMIN and B24_EMPLOYEE
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      router.push('/dashboard')
+      return
+    }
+    
+    fetchStats()
   }, [session, status, router])
 
   const fetchStats = async () => {

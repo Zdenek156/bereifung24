@@ -66,7 +66,7 @@ const defaultApplications = [
     name: 'CRM & Vertrieb',
     description: 'Prospect-Management, Leads und Sales Pipeline',
     icon: 'Target',
-    adminRoute: '/admin/sales',
+    adminRoute: '/admin/sales/prospects',
     color: 'blue',
     category: 'SALES',
     sortOrder: 10

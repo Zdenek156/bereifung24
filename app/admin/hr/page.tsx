@@ -64,10 +64,11 @@ export default function HRDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <Button
+    <PermissionGuard applicationKey="hr">
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <Button
             variant="outline"
             onClick={() => router.push('/admin')}
           >
@@ -311,5 +312,6 @@ export default function HRDashboard() {
         </Card>
       </div>
     </div>
+    </PermissionGuard>
   )
 }

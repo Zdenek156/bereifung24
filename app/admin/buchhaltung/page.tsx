@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRoleBasedUrl } from '@/lib/utils/roleBasedUrl'
 
 interface AccountingStats {
   totalRevenue: number
@@ -15,6 +16,7 @@ interface AccountingStats {
 
 export default function BuchhaltungPage() {
   const router = useRouter()
+  const getUrl = useRoleBasedUrl()
   const [stats, setStats] = useState<AccountingStats>({
     totalRevenue: 0,
     totalExpenses: 0,

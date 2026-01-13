@@ -190,6 +190,36 @@ const defaultApplications = [
     sortOrder: 50
   },
   {
+    key: 'email',
+    name: 'E-Mail Versand',
+    description: 'Newsletter und Updates versenden',
+    icon: 'Send',
+    adminRoute: '/admin/email',
+    color: 'green',
+    category: 'SUPPORT',
+    sortOrder: 51
+  },
+  {
+    key: 'email-settings',
+    name: 'E-Mail Einstellungen',
+    description: 'SMTP-Konfiguration für Email-Versand',
+    icon: 'Settings',
+    adminRoute: '/admin/email-settings',
+    color: 'purple',
+    category: 'SUPPORT',
+    sortOrder: 52
+  },
+  {
+    key: 'notifications',
+    name: 'Benachrichtigungen',
+    description: 'Email-Empfänger für Registrierungen verwalten',
+    icon: 'Bell',
+    adminRoute: '/admin/notifications',
+    color: 'orange',
+    category: 'SUPPORT',
+    sortOrder: 53
+  },
+  {
     key: 'kvp',
     name: 'Verbesserungsvorschläge',
     description: 'KVP-System für kontinuierliche Verbesserung',
@@ -197,7 +227,7 @@ const defaultApplications = [
     adminRoute: '/admin/kvp',
     color: 'yellow',
     category: 'SUPPORT',
-    sortOrder: 51
+    sortOrder: 54
   },
   {
     key: 'knowledge',
@@ -207,7 +237,99 @@ const defaultApplications = [
     adminRoute: '/admin/knowledge',
     color: 'indigo',
     category: 'SUPPORT',
-    sortOrder: 52
+    sortOrder: 55
+  },
+
+  // SYSTEM & ADMIN
+  {
+    key: 'b24-employees',
+    name: 'Mitarbeiterverwaltung',
+    description: 'Bereifung24 Mitarbeiter mit Zugriffsrechten',
+    icon: 'UserCog',
+    adminRoute: '/admin/b24-employees',
+    color: 'cyan',
+    category: 'GENERAL',
+    sortOrder: 60
+  },
+  {
+    key: 'territories',
+    name: 'Gebietsübersicht',
+    description: 'Karten, Statistiken und Marktanalyse',
+    icon: 'Map',
+    adminRoute: '/admin/territories',
+    color: 'teal',
+    category: 'GENERAL',
+    sortOrder: 61
+  },
+  {
+    key: 'co2-tracking',
+    name: 'CO₂-Tracking',
+    description: 'Emissions-Faktoren und Berechnungen konfigurieren',
+    icon: 'Leaf',
+    adminRoute: '/admin/co2-tracking',
+    color: 'emerald',
+    category: 'GENERAL',
+    sortOrder: 62
+  },
+  {
+    key: 'vehicles',
+    name: 'Firmenfahrzeuge',
+    description: 'Fahrzeugverwaltung & Fahrtenbuch',
+    icon: 'Truck',
+    adminRoute: '/admin/vehicles',
+    color: 'cyan',
+    category: 'GENERAL',
+    sortOrder: 63
+  },
+  {
+    key: 'sepa-mandates',
+    name: 'SEPA-Mandate',
+    description: 'GoCardless Status prüfen & synchronisieren',
+    icon: 'CreditCard',
+    adminRoute: '/admin/sepa-mandates',
+    color: 'indigo',
+    category: 'ACCOUNTING',
+    sortOrder: 64
+  },
+  {
+    key: 'cleanup',
+    name: 'Datenbank Bereinigung',
+    description: 'Testdaten selektiv löschen',
+    icon: 'Trash2',
+    adminRoute: '/admin/cleanup',
+    color: 'red',
+    category: 'GENERAL',
+    sortOrder: 65
+  },
+  {
+    key: 'api-settings',
+    name: 'API-Einstellungen',
+    description: 'GoCardless, Google & andere API-Keys verwalten',
+    icon: 'Key',
+    adminRoute: '/admin/api-settings',
+    color: 'teal',
+    category: 'GENERAL',
+    sortOrder: 66
+  },
+  {
+    key: 'server-info',
+    name: 'Server-Übersicht',
+    description: 'CPU, RAM, Festplatte & Performance-Metriken',
+    icon: 'Server',
+    adminRoute: '/admin/server-info',
+    color: 'gray',
+    category: 'GENERAL',
+    sortOrder: 67
+  },
+  {
+    key: 'security',
+    name: 'Sicherheit & Account',
+    description: 'Passwort, 2FA, Backups & Systemsicherheit',
+    icon: 'Shield',
+    adminRoute: '/admin/security',
+    color: 'red',
+    category: 'GENERAL',
+    sortOrder: 68
   },
 
   // SETTINGS

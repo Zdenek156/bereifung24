@@ -29,6 +29,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/files': 'files',
   '/admin/fleet': 'fleet',
   '/admin/email-templates': 'email-templates',
+  '/admin/email-blacklist': 'email-blacklist',
   '/admin/kvp': 'kvp',
   '/admin/knowledge': 'knowledge',
   '/admin/settings': 'settings',

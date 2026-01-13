@@ -260,6 +260,10 @@ export async function middleware(request: NextRequest) {
             { status: 403 }
           )
         }
+        
+        console.log(`[MIDDLEWARE] API access granted to ${url.pathname} for user ${userId}`)
+        return NextResponse.next()
+      }
       
       // No application key found for API route, allow access
       console.log(`[MIDDLEWARE] No app key for API ${url.pathname}, allowing access`)
@@ -270,11 +274,7 @@ export async function middleware(request: NextRequest) {
   // Authenticated user accessing non-protected route
   if (token) {
     console.log(`[MIDDLEWARE] Authenticated user accessing ${url.pathname}`)
-    return NextResponse.next()   
-        console.log(`[MIDDLEWARE] API access granted to ${url.pathname} for user ${userId}`)
-        return NextResponse.next()
-      }
-    }
+    return NextResponse.next()
   }
 
   // === END PERMISSION CHECKING ===

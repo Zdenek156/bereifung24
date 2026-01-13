@@ -5,7 +5,7 @@ import { handleAffiliateTracking } from './lib/affiliateTracking'
 
 // List of known static routes to avoid checking database
 const STATIC_ROUTES = [
-  '/api', '/admin', '/dashboard', '/sales', '/auth', '/login', '/register', '/forgot-password',
+  '/api', '/admin', '/dashboard', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
   '/werkstatt', '/mitarbeiter',
@@ -35,7 +35,6 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/influencer-applications': 'influencers',
   '/admin/influencer-management': 'influencers',
   '/admin/influencer-payments': 'influencers',
-  '/sales': 'sales',
 }
 
 // API routes to application mapping

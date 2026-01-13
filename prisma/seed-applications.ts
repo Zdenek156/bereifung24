@@ -34,7 +34,7 @@ const defaultApplications = [
     name: 'Analytics & Berichte',
     description: 'Dashboard, Statistiken und Reports',
     icon: 'BarChart3',
-    adminRoute: '/admin',
+    adminRoute: '/admin/analytics',
     color: 'purple',
     category: 'GENERAL',
     sortOrder: 3

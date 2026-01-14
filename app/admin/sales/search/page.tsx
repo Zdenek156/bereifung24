@@ -43,6 +43,8 @@ export default function SalesSearchPage() {
   // Results
   const [results, setResults] = useState<SearchResult[]>([])
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set())
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
   
   // Detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -100,6 +102,7 @@ export default function SalesSearchPage() {
           prospectId: result.existingId
         }))
         setResults(mappedResults)
+        setNextPageToken(data.nextPageToken || null)
       } else {
         alert('Fehler bei der Suche')
       }
@@ -108,6 +111,53 @@ export default function SalesSearchPage() {
       alert('Fehler bei der Suche')
     } finally {
       setSearching(false)
+    }
+  }
+
+  const loadMoreResults = async () => {
+    if (!nextPageToken || loadingMore) return
+
+    setLoadingMore(true)
+    try {
+      const response = await fetch('/api/sales/search-places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageToken: nextPageToken })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const mappedResults = data.results.map((result: any) => ({
+          placeId: result.googlePlaceId,
+          name: result.name,
+          address: result.address,
+          city: result.city,
+          postalCode: result.postalCode,
+          lat: result.latitude,
+          lng: result.longitude,
+          rating: result.rating,
+          reviewCount: result.reviewCount,
+          photoUrls: result.photoUrls,
+          phone: result.phone,
+          website: result.website,
+          openingHours: result.openingHours,
+          priceLevel: result.priceLevel,
+          leadScore: result.leadScore,
+          leadScoreBreakdown: result.leadScoreBreakdown,
+          alreadyExists: result.isExisting,
+          prospectId: result.existingId
+        }))
+        // Append new results to existing ones
+        setResults(prev => [...prev, ...mappedResults])
+        setNextPageToken(data.nextPageToken || null)
+      } else {
+        alert('Fehler beim Laden weiterer Ergebnisse')
+      }
+    } catch (error) {
+      console.error('Load more error:', error)
+      alert('Fehler beim Laden weiterer Ergebnisse')
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -417,6 +467,32 @@ export default function SalesSearchPage() {
                 </div>
               ))}
             </div>
+
+            {/* Load More Button */}
+            {nextPageToken && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={loadMoreResults}
+                  disabled={loadingMore}
+                  className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Lade weitere Ergebnisse...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5 mr-2" />
+                      Mehr Werkstätten laden
+                    </>
+                  )}
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  Es sind weitere Ergebnisse verfügbar
+                </p>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -18,7 +18,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import AdminNavigationClient from '@/components/AdminNavigationClient'
+import EmployeeAdminTiles from '@/components/EmployeeAdminTiles'
 
 interface DashboardStats {
   totalCustomers: number
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <AdminNavigationClient />
+        <EmployeeAdminTiles />
 
         {/* Recent Activity */}
         <div className="mt-8 bg-white rounded-lg shadow">

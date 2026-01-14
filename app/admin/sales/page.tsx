@@ -84,7 +84,7 @@ export default function SalesDashboard() {
               </p>
             </div>
             <Link
-              href="/admin/sales/search"
+              href="/mitarbeiter/sales/search"
               className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm transition-colors"
             >
               <Search className="h-5 w-5 mr-2" />

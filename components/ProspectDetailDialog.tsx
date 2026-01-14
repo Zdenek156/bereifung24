@@ -19,7 +19,7 @@ interface ProspectDetail {
   openingHours?: string[]
   priceLevel?: number
   leadScore: number
-  leadScoreBreakdown: {
+  leadScoreBreakdown?: {
     label: string
     points: number
   }[]
@@ -38,6 +38,18 @@ export default function ProspectDetailDialog({
   prospect,
   onImport 
 }: ProspectDetailDialogProps) {
+  useEffect(() => {
+    if (isOpen && prospect) {
+      console.log('ProspectDetailDialog - Prospect Data:', {
+        name: prospect.name,
+        address: prospect.address,
+        city: prospect.city,
+        postalCode: prospect.postalCode,
+        leadScoreBreakdown: prospect.leadScoreBreakdown
+      })
+    }
+  }, [isOpen, prospect])
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -183,21 +195,32 @@ export default function ProspectDetailDialog({
             </div>
 
             {/* Lead Score Breakdown */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2" />
-                Lead-Score Breakdown: {prospect.leadScore}/100
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="space-y-2">
-                  {prospect.leadScoreBreakdown.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">✓ {item.label}</span>
-                      <span className={`px-2 py-1 rounded font-medium ${getLeadScoreColor(item.points)}`}>
-                        +{item.points}
-                      </span>
-                    </div>
-                  ))}
+            {prospect.leadScoreBreakdown && prospect.leadScoreBreakdown.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Lead-Score Breakdown: {prospect.leadScore}/100
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="space-y-2">
+                    {prospect.leadScoreBreakdown.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">✓ {item.label}</span>
+                        <span className={`px-2 py-1 rounded font-medium ${
+                          item.points > 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : item.points < 0 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.points > 0 ? '+' : ''}{item.points}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between font-semibold">
                   <span>Gesamt-Score:</span>

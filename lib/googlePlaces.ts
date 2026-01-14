@@ -16,6 +16,7 @@ export interface PlaceSearchParams {
   radius?: number; // in meters (default: 10000 = 10km)
   keyword?: string; // Additional search keyword
   country?: string; // ISO country code: DE, AT, CH
+  pageToken?: string; // For pagination (next_page_token from previous response)
 }
 
 export interface PlaceResult {
@@ -85,8 +86,12 @@ export interface PlaceDetails {
 
 /**
  * Search for nearby car repair shops
+ * Returns results and optional next_page_token for pagination
  */
-export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<PlaceResult[]> {
+export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<{
+  results: PlaceResult[];
+  nextPageToken?: string;
+}> {
   try {
     const country = params.country || 'DE';
     
@@ -101,14 +106,21 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
     
     // Build search URL
     const searchUrl = new URL(`${PLACES_API_BASE}/nearbysearch/json`);
-    searchUrl.searchParams.set('location', location);
-    searchUrl.searchParams.set('radius', radius.toString());
-    searchUrl.searchParams.set('type', 'car_repair');
-    searchUrl.searchParams.set('keyword', keyword);
-    searchUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
     
-    // Add country bias (Google Places uses 'region' for country biasing)
-    searchUrl.searchParams.set('region', country.toLowerCase());
+    // Use pagetoken if provided (for pagination)
+    if (params.pageToken) {
+      searchUrl.searchParams.set('pagetoken', params.pageToken);
+      searchUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+    } else {
+      // Initial search with location and filters
+      searchUrl.searchParams.set('location', location);
+      searchUrl.searchParams.set('radius', radius.toString());
+      searchUrl.searchParams.set('type', 'car_repair');
+      searchUrl.searchParams.set('keyword', keyword);
+      searchUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+      // Add country bias (Google Places uses 'region' for country biasing)
+      searchUrl.searchParams.set('region', country.toLowerCase());
+    }
 
     const response = await fetch(searchUrl.toString());
     const data = await response.json();
@@ -117,7 +129,10 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
       throw new Error(`Google Places API error: ${data.status} - ${data.error_message || ''}`);
     }
 
-    return data.results || [];
+    return {
+      results: data.results || [],
+      nextPageToken: data.next_page_token
+    };
   } catch (error) {
     console.error('Error searching nearby workshops:', error);
     throw error;
@@ -239,6 +254,31 @@ export function parseAddressComponents(formattedAddress: string): {
   }
 
   return { street, city, postalCode, state, country };
+}
+
+/**
+ * Translate English weekday opening hours to German
+ */
+export function translateOpeningHours(weekdayText: string[]): string[] {
+  const translations: { [key: string]: string } = {
+    'Monday': 'Montag',
+    'Tuesday': 'Dienstag',
+    'Wednesday': 'Mittwoch',
+    'Thursday': 'Donnerstag',
+    'Friday': 'Freitag',
+    'Saturday': 'Samstag',
+    'Sunday': 'Sonntag',
+    'Closed': 'Geschlossen',
+    'Open 24 hours': '24 Stunden geöffnet'
+  };
+
+  return weekdayText.map(line => {
+    let translated = line;
+    Object.entries(translations).forEach(([en, de]) => {
+      translated = translated.replace(en, de);
+    });
+    return translated;
+  });
 }
 
 /**

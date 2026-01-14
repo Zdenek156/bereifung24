@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchNearbyWorkshops, getPlaceDetails, getPhotoUrl, parseAddressComponents, calculateLeadScoreBreakdown, isTireServiceShop } from '@/lib/googlePlaces';
+import { searchNearbyWorkshops, getPlaceDetails, getPhotoUrl, parseAddressComponents, calculateLeadScoreBreakdown, isTireServiceShop, translateOpeningHours } from '@/lib/googlePlaces';
 import { prisma } from '@/lib/prisma';
 import { getSalesUser } from '@/lib/sales-auth';
 
@@ -17,22 +17,23 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { location, radius, keyword, country } = body;
+    const { location, radius, keyword, country, pageToken } = body;
 
-    if (!location) {
-      return NextResponse.json({ error: 'Location is required' }, { status: 400 });
+    if (!location && !pageToken) {
+      return NextResponse.json({ error: 'Location or pageToken is required' }, { status: 400 });
     }
 
     // Search nearby places
-    const places = await searchNearbyWorkshops({
+    const { results: places, nextPageToken } = await searchNearbyWorkshops({
       location,
       radius: radius || 10000,
       keyword: keyword || 'Reifenservice Werkstatt',
-      country: country || 'DE'
+      country: country || 'DE',
+      pageToken
     });
 
-    // Filter for tire service shops and limit to 20 results
-    const filteredPlaces = places.filter(isTireServiceShop).slice(0, 20);
+    // Filter for tire service shops and limit to 50 results
+    const filteredPlaces = places.filter(isTireServiceShop).slice(0, 50);
 
     // Enrich with existing prospects data and detailed information
     const enrichedPlaces = await Promise.all(
@@ -58,10 +59,11 @@ export async function POST(request: Request) {
           getPhotoUrl(photo.photo_reference)
         ) || [];
 
-        // Extract opening hours text
-        const openingHours = details?.opening_hours?.weekday_text || [];
+        // Extract and translate opening hours to German
+        const openingHoursRaw = details?.opening_hours?.weekday_text || [];
+        const openingHours = openingHoursRaw.length > 0 ? translateOpeningHours(openingHoursRaw) : [];
 
-        return {
+        const result = {
           googlePlaceId: place.place_id,
           name: place.name,
           ...addressParts,
@@ -82,6 +84,18 @@ export async function POST(request: Request) {
           existingStatus: existing?.status,
           existingId: existing?.id
         };
+
+        // Debug logging
+        console.log('[SEARCH-PLACES] Result:', {
+          name: result.name,
+          address: result.address,
+          city: result.city,
+          postalCode: result.postalCode,
+          hasBreakdown: !!result.leadScoreBreakdown,
+          breakdownLength: result.leadScoreBreakdown?.length || 0
+        });
+
+        return result;
       })
     );
 
@@ -91,6 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       results: enrichedPlaces,
       total: enrichedPlaces.length,
+      nextPageToken,
       searchParams: { location, radius, keyword }
     });
 

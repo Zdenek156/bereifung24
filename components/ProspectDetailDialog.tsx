@@ -218,18 +218,15 @@ export default function ProspectDetailDialog({
                       </div>
                     ))}
                   </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between font-semibold">
+                    <span>Gesamt-Score:</span>
+                    <span className={`px-3 py-1 rounded ${getLeadScoreColor(prospect.leadScore)}`}>
+                      {prospect.leadScore}/100
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
-                </div>
-                <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between font-semibold">
-                  <span>Gesamt-Score:</span>
-                  <span className={`px-3 py-1 rounded ${getLeadScoreColor(prospect.leadScore)}`}>
-                    {prospect.leadScore}/100
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Footer */}

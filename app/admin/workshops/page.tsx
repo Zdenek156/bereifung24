@@ -138,8 +138,8 @@ export default function WorkshopManagementPage() {
       return (
         workshop.customerNumber.toLowerCase().includes(term) ||
         workshop.companyName.toLowerCase().includes(term) ||
-        workshop.user.email.toLowerCase().includes(term) ||
-        workshop.user.city.toLowerCase().includes(term)
+        workshop.user?.email?.toLowerCase().includes(term) ||
+        workshop.user?.city?.toLowerCase().includes(term)
       )
     })
 

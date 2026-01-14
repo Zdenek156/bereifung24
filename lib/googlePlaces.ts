@@ -15,6 +15,7 @@ export interface PlaceSearchParams {
   location: string; // "lat,lng" or address
   radius?: number; // in meters (default: 10000 = 10km)
   keyword?: string; // Additional search keyword
+  country?: string; // ISO country code: DE, AT, CH
 }
 
 export interface PlaceResult {
@@ -87,10 +88,12 @@ export interface PlaceDetails {
  */
 export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<PlaceResult[]> {
   try {
+    const country = params.country || 'DE';
+    
     // Geocode if location is an address
     let location = params.location;
     if (!location.includes(',')) {
-      location = await geocodeAddress(params.location);
+      location = await geocodeAddress(params.location, country);
     }
 
     const radius = params.radius || 10000; // 10km default
@@ -103,6 +106,9 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
     searchUrl.searchParams.set('type', 'car_repair');
     searchUrl.searchParams.set('keyword', keyword);
     searchUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+    
+    // Add country bias (Google Places uses 'region' for country biasing)
+    searchUrl.searchParams.set('region', country.toLowerCase());
 
     const response = await fetch(searchUrl.toString());
     const data = await response.json();
@@ -169,11 +175,15 @@ export function getPhotoUrl(photoReference: string, maxWidth: number = 400): str
 /**
  * Geocode an address to lat,lng
  */
-async function geocodeAddress(address: string): Promise<string> {
+async function geocodeAddress(address: string, country: string = 'DE'): Promise<string> {
   try {
     const geocodeUrl = new URL('https://maps.googleapis.com/maps/api/geocode/json');
     geocodeUrl.searchParams.set('address', address);
     geocodeUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+    
+    // Add country bias to improve geocoding accuracy
+    geocodeUrl.searchParams.set('region', country.toLowerCase());
+    geocodeUrl.searchParams.set('components', `country:${country}`);
 
     const response = await fetch(geocodeUrl.toString());
     const data = await response.json();

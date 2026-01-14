@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { location, radius, keyword } = body;
+    const { location, radius, keyword, country } = body;
 
     if (!location) {
       return NextResponse.json({ error: 'Location is required' }, { status: 400 });
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
     const places = await searchNearbyWorkshops({
       location,
       radius: radius || 10000,
-      keyword: keyword || 'Reifenservice Werkstatt'
+      keyword: keyword || 'Reifenservice Werkstatt',
+      country: country || 'DE'
     });
 
     // Filter for tire service shops
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
         // Parse address (handle undefined formatted_address)
         const addressParts = place.formatted_address 
           ? parseAddressComponents(place.formatted_address)
-          : { street: '', city: '', postalCode: '', state: '', country: 'DE' };
+          : { street: '', city: '', postalCode: '', state: '', country: country || 'DE' };
 
         // Calculate lead score
         const leadScore = calculateLeadScore(place);

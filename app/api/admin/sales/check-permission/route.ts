@@ -21,6 +21,10 @@ export async function GET() {
 
     // For B24_EMPLOYEE, check application assignment
     if (session.user.role === 'B24_EMPLOYEE') {
+      if (!session.user.b24EmployeeId) {
+        return NextResponse.json({ error: 'Employee ID missing' }, { status: 400 })
+      }
+
       const employee = await prisma.b24Employee.findUnique({
         where: { id: session.user.b24EmployeeId },
         include: {
@@ -36,7 +40,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json({ hasPermission: false, error: 'Forbidden' }, { status: 403 })
   } catch (error) {
     console.error('Permission check error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

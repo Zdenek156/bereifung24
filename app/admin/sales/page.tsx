@@ -34,10 +34,14 @@ export default function SalesDashboard() {
   const checkPermission = async () => {
     try {
       const response = await fetch('/api/admin/sales/check-permission')
-      if (!response.ok) {
+      const data = await response.json()
+      
+      if (!response.ok || !data.hasPermission) {
+        console.error('No permission for Sales CRM:', data)
         router.push('/admin')
         return
       }
+      
       fetchStats()
     } catch (error) {
       console.error('Permission check error:', error)

@@ -205,7 +205,7 @@ export default function ProspectDetailDialog({
                   <div className="space-y-2">
                     {prospect.leadScoreBreakdown.map((item, index) => (
                       <div key={index} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700">✓ {item.label}</span>
+                        <span className="text-gray-700">{item.label}</span>
                         <span className={`px-2 py-1 rounded font-medium ${
                           item.points > 0 
                             ? 'bg-green-100 text-green-800' 

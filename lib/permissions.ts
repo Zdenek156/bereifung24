@@ -14,7 +14,7 @@ export async function canAccessResource(
 ): Promise<boolean> {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  if (!session || !session.user) {
     return false
   }
 
@@ -50,7 +50,7 @@ export async function hasPermission(
 ): Promise<{ allowed: boolean; user: any }> {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  if (!session || !session.user) {
     return { allowed: false, user: null }
   }
 
@@ -143,7 +143,7 @@ export async function requirePermission(
 export async function requireAdmin(): Promise<NextResponse | null> {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  if (!session || !session.user) {
     return NextResponse.json(
       { error: 'Unauthorized - Please log in' },
       { status: 401 }
@@ -167,7 +167,7 @@ export async function requireAdmin(): Promise<NextResponse | null> {
 export async function requireAdminOrEmployee(): Promise<NextResponse | null> {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  if (!session || !session.user) {
     return NextResponse.json(
       { error: 'Unauthorized - Please log in' },
       { status: 401 }
@@ -190,7 +190,7 @@ export async function requireAdminOrEmployee(): Promise<NextResponse | null> {
 export async function getUserPermissions(): Promise<Record<string, { canRead: boolean; canWrite: boolean; canDelete: boolean }>> {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  if (!session || !session.user) {
     return {}
   }
 

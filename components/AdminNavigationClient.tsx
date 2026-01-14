@@ -321,7 +321,7 @@ const allNavigationItems: NavigationItem[] = [
     )
   },
   {
-    href: '/sales',
+    href: '/admin/sales',
     title: 'Sales CRM',
     description: 'Werkstatt-Akquise mit Google Places',
     color: 'bg-green-100',

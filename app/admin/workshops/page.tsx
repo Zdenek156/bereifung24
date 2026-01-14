@@ -42,7 +42,7 @@ export default function WorkshopManagementPage() {
   useEffect(() => {
     if (status === 'loading') return
 
-    if (!session) {
+    if (!session || !session.user) {
       router.push('/login')
       return
     }

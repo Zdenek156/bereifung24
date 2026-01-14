@@ -31,8 +31,8 @@ export async function POST(request: Request) {
       country: country || 'DE'
     });
 
-    // Filter for tire service shops
-    const filteredPlaces = places.filter(isTireServiceShop);
+    // Filter for tire service shops and limit to 20 results
+    const filteredPlaces = places.filter(isTireServiceShop).slice(0, 20);
 
     // Enrich with existing prospects data and detailed information
     const enrichedPlaces = await Promise.all(
@@ -64,8 +64,8 @@ export async function POST(request: Request) {
         return {
           googlePlaceId: place.place_id,
           name: place.name,
-          address: place.formatted_address,
           ...addressParts,
+          address: place.formatted_address || '',
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
           rating: place.rating,

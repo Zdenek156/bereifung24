@@ -42,9 +42,7 @@ export async function GET() {
         include: {
           applications: {
             where: {
-              application: {
-                id: 10 // Sales CRM Application ID
-              }
+              applicationKey: 'sales' // Sales CRM Application key
             },
             select: { id: true, applicationKey: true }
           }

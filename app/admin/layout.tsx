@@ -14,8 +14,13 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
     // If no session after loading, redirect to login
     if (status === 'unauthenticated' || !session) {
-      router.push('/login')
-      return
+      // Add small delay to ensure session is fully loaded
+      const timer = setTimeout(() => {
+        if (status === 'unauthenticated' || !session) {
+          router.push('/login')
+        }
+      }, 100)
+      return () => clearTimeout(timer)
     }
 
     // Allow ADMIN full access

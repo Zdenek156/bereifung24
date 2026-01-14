@@ -274,9 +274,27 @@ export function translateOpeningHours(weekdayText: string[]): string[] {
 
   return weekdayText.map(line => {
     let translated = line;
+    
+    // Translate day names
     Object.entries(translations).forEach(([en, de]) => {
       translated = translated.replace(en, de);
     });
+    
+    // Convert AM/PM to 24-hour format
+    // Pattern: "1:00 PM" -> "13:00"
+    translated = translated.replace(/(\d{1,2}):(\d{2})\s*(AM|PM)/gi, (match, hour, minute, period) => {
+      let h = parseInt(hour);
+      const isPM = period.toUpperCase() === 'PM';
+      
+      if (isPM && h !== 12) {
+        h += 12;
+      } else if (!isPM && h === 12) {
+        h = 0;
+      }
+      
+      return `${h.toString().padStart(2, '0')}:${minute}`;
+    });
+    
     return translated;
   });
 }

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const { location, radius, keyword, country, pageToken } = body;
 
     if (!location && !pageToken) {
-      return NextResponse.json({ error: 'Location or pageToken is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Location is required for initial search' }, { status: 400 });
     }
 
     // Search nearby places
@@ -32,8 +32,8 @@ export async function POST(request: Request) {
       pageToken
     });
 
-    // Filter for tire service shops and limit to 50 results
-    const filteredPlaces = places.filter(isTireServiceShop).slice(0, 50);
+    // Filter for tire service shops
+    const filteredPlaces = places.filter(isTireServiceShop);
 
     // Enrich with existing prospects data and detailed information
     const enrichedPlaces = await Promise.all(

@@ -104,8 +104,8 @@ async function checkApplicationAccess(
       return !!assignment
     } catch (error) {
       console.error('[MIDDLEWARE] Error checking application access:', error)
-      // On error, DENY access to be safe (user can refresh)
-      return false
+      // On error, allow access to prevent lockout (logged for monitoring)
+      return true
     }
   }
 

@@ -346,7 +346,7 @@ export default function SearchProspectsPage() {
 
                         {result.isExisting && (
                           <Link
-                            href={`/sales/prospects/${result.existingId}`}
+                            href={`/admin/sales/prospects/${result.existingId}`}
                             className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
                           >
                             Bereits vorhanden

@@ -22,14 +22,10 @@ export function PermissionGuard({ applicationKey, children, fallback }: Permissi
 
   useEffect(() => {
     if (!loading) {
-      if (!hasAccess(applicationKey) && !isAdmin) {
-        // User doesn't have access - redirect to dashboard
-        router.push('/mitarbeiter')
-      } else {
-        setChecking(false)
-      }
+      // Only set checking to false, don't redirect here
+      setChecking(false)
     }
-  }, [hasAccess, applicationKey, loading, isAdmin, router])
+  }, [loading])
 
   if (loading || checking) {
     return (

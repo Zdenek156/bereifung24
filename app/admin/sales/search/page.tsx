@@ -289,9 +289,9 @@ export default function SalesSearchPage() {
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
-                        {result.photoUrl ? (
+                        {result.photoUrls && result.photoUrls.length > 0 ? (
                           <img
-                            src={result.photoUrl}
+                            src={result.photoUrls[0]}
                             alt={result.name}
                             className="w-20 h-20 rounded-lg object-cover shadow-sm flex-shrink-0"
                           />
@@ -324,7 +324,10 @@ export default function SalesSearchPage() {
                                   </span>
                                 </div>
                               )}
-                              <div className="flex items-center">
+                              <div 
+                                className="flex items-center cursor-help" 
+                                title={result.leadScoreBreakdown?.map(b => `${b.label}: ${b.points > 0 ? '+' : ''}${b.points}`).join('\n') || ''}
+                              >
                                 <TrendingUp className="h-4 w-4 mr-1" />
                                 <span className={`px-2 py-1 rounded text-xs font-medium ${getLeadScoreColor(result.leadScore)}`}>
                                   Score: {result.leadScore}

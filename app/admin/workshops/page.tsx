@@ -23,7 +23,7 @@ interface Workshop {
     street: string
     zipCode: string
     city: string
-  }
+  } | null
 }
 
 type SortOption = 'recent' | 'distance' | 'offers' | 'revenue'
@@ -321,20 +321,20 @@ export default function WorkshopManagementPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-gray-600">
-                            <strong>Kontakt:</strong> {workshop.user.firstName} {workshop.user.lastName}
+                            <strong>Kontakt:</strong> {workshop.user?.firstName || 'N/A'} {workshop.user?.lastName || ''}
                           </p>
                           <p className="text-gray-600">
-                            <strong>E-Mail:</strong> {workshop.user.email}
+                            <strong>E-Mail:</strong> {workshop.user?.email || 'Nicht verfügbar'}
                           </p>
                           <p className="text-gray-600">
-                            <strong>Telefon:</strong> {workshop.user.phone || 'Nicht angegeben'}
+                            <strong>Telefon:</strong> {workshop.user?.phone || 'Nicht angegeben'}
                           </p>
                         </div>
                         <div>
                           <p className="text-gray-600">
                             <strong>Adresse:</strong><br />
-                            {workshop.user.street}<br />
-                            {workshop.user.zipCode} {workshop.user.city}
+                            {workshop.user?.street || 'Nicht verfügbar'}<br />
+                            {workshop.user?.zipCode || ''} {workshop.user?.city || ''}
                           </p>
                         </div>
                       </div>

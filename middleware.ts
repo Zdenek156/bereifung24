@@ -166,37 +166,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // Check /mitarbeiter/* routes that map to admin modules
+    // Check /mitarbeiter/* routes
     if (url.pathname.startsWith('/mitarbeiter/')) {
-      // Personal employee pages don't need permission checks (profil, urlaub, etc.)
-      const personalPages = [
-        '/mitarbeiter/profil',
-        '/mitarbeiter/dokumente',
-        '/mitarbeiter/urlaub',
-        '/mitarbeiter/spesen',
-        '/mitarbeiter/reisekosten',
-        '/mitarbeiter/krankmeldung',
-        '/mitarbeiter/zeit',
-        '/mitarbeiter/fahrtenbuch',
-        '/mitarbeiter/news',
-        '/mitarbeiter/aufgaben',
-        '/mitarbeiter/wiki',
-        '/mitarbeiter/files',
-        '/mitarbeiter/email',
-      ]
-
-      const isPersonalPage = personalPages.some(page => url.pathname.startsWith(page))
-
-      if (!isPersonalPage && url.pathname !== '/mitarbeiter') {
-        // This is an admin module accessed via /mitarbeiter/* - rewrite to /admin/*
-        const adminPath = url.pathname.replace('/mitarbeiter/', '/admin/')
-        console.log(`[MIDDLEWARE] Rewriting ${url.pathname} to ${adminPath}`)
-        url.pathname = adminPath
-        return NextResponse.rewrite(url)
-      }
-      
-      // Personal page or mitarbeiter dashboard - allow access
-      console.log(`[MIDDLEWARE] Personal page ${url.pathname}, allowing access`)
+      // Allow access - next.config.js rewrites handle the /mitarbeiter/* -> /admin/* mapping
+      // No need to rewrite here, Next.js handles it automatically
+      console.log(`[MIDDLEWARE] Allowing access to ${url.pathname} (next.config.js handles rewrite)`)
       return NextResponse.next()
     }
 

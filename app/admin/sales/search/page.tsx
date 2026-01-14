@@ -78,7 +78,28 @@ export default function SalesSearchPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setResults(data.results)
+        // Map API response to match SearchResult interface
+        const mappedResults = data.results.map((result: any) => ({
+          placeId: result.googlePlaceId,
+          name: result.name,
+          address: result.address,
+          city: result.city,
+          postalCode: result.postalCode,
+          lat: result.latitude,
+          lng: result.longitude,
+          rating: result.rating,
+          reviewCount: result.reviewCount,
+          photoUrls: result.photoUrls,
+          phone: result.phone,
+          website: result.website,
+          openingHours: result.openingHours,
+          priceLevel: result.priceLevel,
+          leadScore: result.leadScore,
+          leadScoreBreakdown: result.leadScoreBreakdown,
+          alreadyExists: result.isExisting,
+          prospectId: result.existingId
+        }))
+        setResults(mappedResults)
       } else {
         alert('Fehler bei der Suche')
       }

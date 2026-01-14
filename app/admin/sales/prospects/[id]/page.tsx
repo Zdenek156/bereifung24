@@ -398,7 +398,7 @@ export default function ProspectDetailPage({ params }: { params: { id: string } 
             <div className="flex-1">
               <div className="flex items-center space-x-4">
                 <Link
-                  href="/sales/prospects"
+                  href="/admin/sales/prospects"
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

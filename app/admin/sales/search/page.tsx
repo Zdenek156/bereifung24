@@ -3,7 +3,8 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Search, MapPin, Star, TrendingUp, ArrowLeft, Plus } from 'lucide-react'
+import { Search, MapPin, Star, TrendingUp, ArrowLeft, Plus, Info } from 'lucide-react'
+import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 
 interface SearchResult {
   placeId: string
@@ -16,7 +17,13 @@ interface SearchResult {
   rating?: number
   reviewCount: number
   photoUrl?: string
+  photoUrls?: string[]
+  phone?: string
+  website?: string
+  openingHours?: string[]
+  priceLevel?: number
   leadScore: number
+  leadScoreBreakdown?: { label: string; points: number }[]
   alreadyExists: boolean
   prospectId?: string
 }
@@ -36,6 +43,10 @@ export default function SalesSearchPage() {
   // Results
   const [results, setResults] = useState<SearchResult[]>([])
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set())
+  
+  // Detail dialog
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [selectedProspect, setSelectedProspect] = useState<SearchResult | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -87,6 +98,20 @@ export default function SalesSearchPage() {
       newSet.add(placeId)
     }
     setSelectedPlaces(newSet)
+  }
+
+  const showDetails = (result: SearchResult) => {
+    setSelectedProspect(result)
+    setDetailDialogOpen(true)
+  }
+
+  const handleImportFromDialog = () => {
+    if (selectedProspect) {
+      setSelectedPlaces(new Set([selectedProspect.placeId]))
+      setTimeout(() => {
+        handleImport()
+      }, 100)
+    }
   }
 
   const handleImport = async () => {
@@ -264,12 +289,16 @@ export default function SalesSearchPage() {
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
-                        {result.photoUrl && (
+                        {result.photoUrl ? (
                           <img
                             src={result.photoUrl}
                             alt={result.name}
-                            className="w-24 h-24 rounded-lg object-cover"
+                            className="w-20 h-20 rounded-lg object-cover shadow-sm flex-shrink-0"
                           />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-8 w-8 text-gray-400" />
+                          </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-start justify-between">
@@ -308,13 +337,20 @@ export default function SalesSearchPage() {
                     </div>
                     
                     <div className="mt-4 flex items-center justify-between">
-                      {result.alreadyExists ? (
-                        <span className="text-sm text-gray-600">
-                          Bereits als Prospect vorhanden
-                        </span>
-                      ) : (
-                        <div></div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => showDetails(result)}
+                          className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          <Info className="h-4 w-4 mr-2" />
+                          Details
+                        </button>
+                        {result.alreadyExists && (
+                          <span className="text-sm text-gray-600">
+                            Bereits als Prospect vorhanden
+                          </span>
+                        )}
+                      </div>
                       <button
                         onClick={() => toggleSelection(result.placeId)}
                         disabled={result.alreadyExists}
@@ -324,7 +360,7 @@ export default function SalesSearchPage() {
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        {selectedPlaces.has(result.placeId) ? 'Ausgewählt' : 'Auswählen'}
+                        {selectedPlaces.has(result.placeId) ? '✓ Ausgewählt' : 'Auswählen'}
                       </button>
                     </div>
                   </div>
@@ -334,6 +370,14 @@ export default function SalesSearchPage() {
           </>
         )}
       </div>
+
+      {/* Detail Dialog */}
+      <ProspectDetailDialog
+        isOpen={detailDialogOpen}
+        onClose={() => setDetailDialogOpen(false)}
+        prospect={selectedProspect}
+        onImport={handleImportFromDialog}
+      />
     </div>
   )
 }

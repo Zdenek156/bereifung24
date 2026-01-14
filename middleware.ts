@@ -161,26 +161,8 @@ export async function middleware(request: NextRequest) {
 
     // Check /admin/* routes (except /admin dashboard itself)
     if (url.pathname.startsWith('/admin/')) {
-      const applicationKey = getApplicationKeyFromPath(url.pathname)
-
-      if (applicationKey) {
-        const hasAccess = await checkApplicationAccess(userId, applicationKey, userRole)
-
-        if (!hasAccess) {
-          console.log(`[MIDDLEWARE] Access denied to ${url.pathname} for user ${userId}`)
-          const dashboardUrl = url.clone()
-          dashboardUrl.pathname = userRole === 'B24_EMPLOYEE' ? '/mitarbeiter' : '/admin'
-          dashboardUrl.searchParams.set('error', 'no-permission')
-          dashboardUrl.searchParams.set('module', applicationKey)
-          return NextResponse.redirect(dashboardUrl)
-        }
-        
-        console.log(`[MIDDLEWARE] Access granted to ${url.pathname} for user ${userId}`)
-        return NextResponse.next()
-      }
-      
-      // No application key found, allow access (e.g., /admin dashboard)
-      console.log(`[MIDDLEWARE] No app key for ${url.pathname}, allowing access`)
+      // Allow access - permission checking is done on the page level
+      console.log(`[MIDDLEWARE] Allowing authenticated access to ${url.pathname}`)
       return NextResponse.next()
     }
 
@@ -206,27 +188,11 @@ export async function middleware(request: NextRequest) {
       const isPersonalPage = personalPages.some(page => url.pathname.startsWith(page))
 
       if (!isPersonalPage && url.pathname !== '/mitarbeiter') {
-        // This is an admin module accessed via /mitarbeiter/* - check permissions
+        // This is an admin module accessed via /mitarbeiter/* - rewrite to /admin/*
         const adminPath = url.pathname.replace('/mitarbeiter/', '/admin/')
-        const applicationKey = getApplicationKeyFromPath(adminPath)
-
-        if (applicationKey) {
-          const hasAccess = await checkApplicationAccess(userId, applicationKey, userRole)
-
-          if (!hasAccess) {
-            console.log(`[MIDDLEWARE] Access denied to ${url.pathname} for user ${userId}`)
-            const dashboardUrl = url.clone()
-            dashboardUrl.pathname = '/mitarbeiter'
-            dashboardUrl.searchParams.set('error', 'no-permission')
-            dashboardUrl.searchParams.set('module', applicationKey)
-            return NextResponse.redirect(dashboardUrl)
-          }
-          
-          // Access granted - rewrite /mitarbeiter/* to /admin/*
-          console.log(`[MIDDLEWARE] Rewriting ${url.pathname} to ${adminPath}`)
-          url.pathname = adminPath
-          return NextResponse.rewrite(url)
-        }
+        console.log(`[MIDDLEWARE] Rewriting ${url.pathname} to ${adminPath}`)
+        url.pathname = adminPath
+        return NextResponse.rewrite(url)
       }
       
       // Personal page or mitarbeiter dashboard - allow access
@@ -236,18 +202,8 @@ export async function middleware(request: NextRequest) {
 
     // Check /sales route (special case - not under /admin)
     if (url.pathname.startsWith('/sales')) {
-      const hasAccess = await checkApplicationAccess(userId, 'sales', userRole)
-
-      if (!hasAccess) {
-        console.log(`[MIDDLEWARE] Access denied to /sales for user ${userId}`)
-        const dashboardUrl = url.clone()
-        dashboardUrl.pathname = userRole === 'B24_EMPLOYEE' ? '/mitarbeiter' : '/admin'
-        dashboardUrl.searchParams.set('error', 'no-permission')
-        dashboardUrl.searchParams.set('module', 'sales')
-        return NextResponse.redirect(dashboardUrl)
-      }
-      
-      console.log(`[MIDDLEWARE] Access granted to /sales for user ${userId}`)
+      // Allow access - permission checking is done on the page level
+      console.log(`[MIDDLEWARE] Allowing authenticated access to /sales`)
       return NextResponse.next()
     }
 

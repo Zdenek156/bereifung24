@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import * as Icons from 'lucide-react'
 
 interface Application {
@@ -19,6 +20,7 @@ interface Application {
 
 export default function EmployeeAdminTiles() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -102,34 +104,39 @@ export default function EmployeeAdminTiles() {
   // Mitarbeiter verwenden die gleichen optimierten Admin-Seiten
   // Alle Admin-Seiten erlauben bereits B24_EMPLOYEE Zugriff via requireAdminOrEmployee()
 
+  const handleNavigation = (adminRoute: string) => {
+    // Für B24_EMPLOYEE: URLs zeigen /mitarbeiter/* statt /admin/*
+    // Next.js Rewrites mappen /mitarbeiter/* → /admin/* intern
+    let href = adminRoute
+    if (session?.user?.role === 'B24_EMPLOYEE') {
+      href = href.replace('/admin/', '/mitarbeiter/')
+      // Handle /sales route (not under /admin)
+      if (href.startsWith('/sales')) {
+        href = '/mitarbeiter/sales'
+      }
+    }
+    
+    // Use router.push with explicit prefetch to avoid white screen
+    router.push(href)
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {applications.map((app) => {
         const colors = getColorClasses(app.color)
         
-        // Für B24_EMPLOYEE: URLs zeigen /mitarbeiter/* statt /admin/*
-        // Next.js Rewrites mappen /mitarbeiter/* → /admin/* intern
-        let href = app.adminRoute
-        if (session?.user?.role === 'B24_EMPLOYEE') {
-          href = href.replace('/admin/', '/mitarbeiter/')
-          // Handle /sales route (not under /admin)
-          if (href.startsWith('/sales')) {
-            href = '/mitarbeiter/sales'
-          }
-        }
-        
         return (
-          <Link
+          <button
             key={app.id}
-            href={href}
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            onClick={() => handleNavigation(app.adminRoute)}
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow text-left w-full"
           >
             <div className={`flex items-center justify-center w-12 h-12 ${colors.bg} rounded-lg mb-4`}>
               <span className={colors.text}>{getIcon(app.icon)}</span>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{app.name}</h3>
             <p className="text-sm text-gray-600">{app.description}</p>
-          </Link>
+          </button>
         )
       })}
     </div>

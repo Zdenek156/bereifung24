@@ -368,8 +368,8 @@ export function calculateLeadScore(place: PlaceResult | PlaceDetails): number {
  * Check if place is likely a tire/car service shop
  */
 export function isTireServiceShop(place: PlaceResult | PlaceDetails): boolean {
-  const name = place.name.toLowerCase();
-  const types = place.types || [];
+  const name = place.name?.toLowerCase() || '';
+  const types = Array.isArray(place.types) ? place.types : [];
   
   const tireKeywords = [
     'reifen',

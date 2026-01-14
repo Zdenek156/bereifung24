@@ -41,8 +41,12 @@ export async function GET() {
         where: { id: session.user.b24EmployeeId },
         include: {
           applications: {
-            where: { applicationId: 10 }, // Sales CRM Application
-            select: { id: true, applicationId: true }
+            where: {
+              application: {
+                id: 10 // Sales CRM Application ID
+              }
+            },
+            select: { id: true, applicationKey: true }
           }
         }
       })

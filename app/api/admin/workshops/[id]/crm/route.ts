@@ -149,7 +149,7 @@ export async function PUT(
         workshop: {
           select: {
             id: true,
-            name: true,
+            companyName: true,
             user: {
               select: {
                 firstName: true,

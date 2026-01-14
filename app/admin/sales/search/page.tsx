@@ -335,6 +335,32 @@ export default function SalesSearchPage() {
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Lead Score Breakdown */}
+                          {result.leadScoreBreakdown && result.leadScoreBreakdown.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <div className="text-xs font-semibold text-gray-500 mb-2 flex items-center">
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                Lead-Score Breakdown:
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {result.leadScoreBreakdown.map((item, index) => (
+                                  <span
+                                    key={index}
+                                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+                                      item.points > 0 
+                                        ? 'bg-green-50 text-green-700' 
+                                        : item.points < 0 
+                                        ? 'bg-red-50 text-red-700' 
+                                        : 'bg-gray-50 text-gray-600'
+                                    }`}
+                                  >
+                                    {item.label}: {item.points > 0 ? '+' : ''}{item.points}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -234,22 +234,43 @@ export function parseAddressComponents(formattedAddress: string): {
   let state = '';
   let country = 'DE';
 
-  if (parts.length >= 3) {
-    street = parts[0];
-    
-    // PLZ und Stadt (z.B. "10115 Berlin")
-    const cityPart = parts[1];
-    const plzMatch = cityPart.match(/(\d{5})\s+(.+)/);
+  // Try to extract postal code from anywhere in the address
+  const plzRegex = /\b(\d{5})\b/; // German postal code (5 digits)
+  for (let i = 0; i < parts.length; i++) {
+    const plzMatch = parts[i].match(plzRegex);
     if (plzMatch) {
       postalCode = plzMatch[1];
-      city = plzMatch[2];
-    } else {
-      city = cityPart;
+      // Extract city name after the postal code
+      const afterPLZ = parts[i].replace(plzMatch[0], '').trim();
+      if (afterPLZ) {
+        city = afterPLZ;
+      }
+      break;
     }
-    
-    // Land
-    if (parts[2]) {
-      country = parts[2] === 'Deutschland' ? 'DE' : parts[2];
+  }
+
+  // Street is typically the first part
+  if (parts.length > 0 && !parts[0].match(plzRegex)) {
+    street = parts[0];
+  }
+
+  // If no city found yet, try second-to-last part
+  if (!city && parts.length >= 2) {
+    const secondPart = parts[parts.length - 2];
+    if (!secondPart.match(plzRegex)) {
+      city = secondPart;
+    }
+  }
+
+  // Country is typically the last part
+  if (parts.length > 0) {
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.toLowerCase().includes('deutschland') || lastPart.toLowerCase().includes('germany')) {
+      country = 'DE';
+    } else if (lastPart.toLowerCase().includes('österreich') || lastPart.toLowerCase().includes('austria')) {
+      country = 'AT';
+    } else if (lastPart.toLowerCase().includes('schweiz') || lastPart.toLowerCase().includes('switzerland')) {
+      country = 'CH';
     }
   }
 

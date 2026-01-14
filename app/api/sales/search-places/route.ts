@@ -63,11 +63,21 @@ export async function POST(request: Request) {
         const openingHoursRaw = details?.opening_hours?.weekday_text || [];
         const openingHours = openingHoursRaw.length > 0 ? translateOpeningHours(openingHoursRaw) : [];
 
+        // Build address with fallback
+        let finalAddress = place.formatted_address || '';
+        if (!finalAddress && (addressParts.street || addressParts.city)) {
+          const parts = [
+            addressParts.street,
+            addressParts.postalCode && addressParts.city ? `${addressParts.postalCode} ${addressParts.city}` : (addressParts.city || '')
+          ].filter(Boolean);
+          finalAddress = parts.join(', ');
+        }
+
         const result = {
           googlePlaceId: place.place_id,
           name: place.name,
           ...addressParts,
-          address: place.formatted_address || `${addressParts.street}, ${addressParts.postalCode} ${addressParts.city}`.trim(),
+          address: finalAddress || 'Adresse nicht verfügbar',
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
           rating: place.rating,

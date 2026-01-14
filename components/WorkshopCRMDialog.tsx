@@ -189,6 +189,7 @@ export function WorkshopCRMDialog({
         const data = await response.json()
         setCrmData(data)
         alert('CRM-Daten erfolgreich gespeichert')
+        onClose() // Close dialog after successful save
       }
     } catch (error) {
       console.error('Error saving CRM data:', error)

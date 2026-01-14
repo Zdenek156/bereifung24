@@ -36,7 +36,7 @@ export default function AdminNotificationSettings() {
   useEffect(() => {
     if (status === 'loading') return
 
-    if (!session) {
+    if (!session || !session.user) {
       router.push('/login')
       return
     }

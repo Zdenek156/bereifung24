@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // GET - List all improvement suggestions
 export async function GET(request: NextRequest) {
   try {
-    // Check permission - requires 'kvp' read access
-    const permissionError = await requirePermission('kvp', 'read')
+    // Check permission - requires admin or employee access
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const { searchParams } = new URL(request.url)
@@ -81,25 +81,9 @@ export async function POST(request: NextRequest) {
       b24EmployeeId: session?.user?.b24EmployeeId 
     })
     
-    if (!session?.user) {
-      console.log('[KVP POST] No session found - returning 401')
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in' },
-        { status: 401 }
-      )
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
     
-    // ADMINs can always create suggestions
-    if (session.user.role !== 'ADMIN') {
-      // For non-admins, check permission
-      const permissionError = await requirePermission('kvp', 'write')
-      if (permissionError) {
-        console.log('[KVP POST] Permission denied for non-admin')
-        return permissionError
-      }
-    } else {
-      console.log('[KVP POST] Admin user - bypassing permission check')
-    }
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

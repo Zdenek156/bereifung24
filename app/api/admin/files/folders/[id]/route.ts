@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
@@ -13,7 +13,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('files', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const body = await request.json()
@@ -90,7 +90,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('files', 'delete')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const folder = await prisma.fileFolder.findUnique({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // GET - Get single suggestion
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('kvp', 'read')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const suggestion = await prisma.improvementSuggestion.findUnique({
@@ -72,7 +72,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('kvp', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const session = await getServerSession(authOptions)
@@ -191,7 +191,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('kvp', 'delete')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     await prisma.improvementSuggestion.delete({

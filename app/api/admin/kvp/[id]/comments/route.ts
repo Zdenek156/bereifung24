@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // POST - Add comment to suggestion
 export async function POST(
@@ -10,7 +10,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('kvp', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const session = await getServerSession(authOptions)

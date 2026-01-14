@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
@@ -14,7 +14,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('files', 'read')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const file = await prisma.fileUpload.findUnique({
@@ -79,7 +79,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('files', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const body = await request.json()
@@ -129,7 +129,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const permissionError = await requirePermission('files', 'delete')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const file = await prisma.fileUpload.findUnique({

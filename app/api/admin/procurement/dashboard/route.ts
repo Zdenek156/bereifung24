@@ -2,24 +2,12 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user has procurement read permission
-    if (session.user.role !== 'ADMIN') {
-      const permissionCheck = await requirePermission('procurement', 'read')
-      if (permissionCheck) return permissionCheck
-    }
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
     // Get current year
     const currentYear = new Date().getFullYear()

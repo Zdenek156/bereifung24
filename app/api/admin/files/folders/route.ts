@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 
 // POST - Create folder
 export async function POST(request: NextRequest) {
   try {
     console.log('[FILES/FOLDERS POST] Starting folder creation')
-    const permissionError = await requirePermission('files', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) {
       console.log('[FILES/FOLDERS POST] Permission check failed')
       return permissionError

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requirePermission } from '@/lib/permissions'
+import { requireAdminOrEmployee } from '@/lib/permissions'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
@@ -21,7 +21,7 @@ async function ensureUploadDir() {
 // GET - List files and folders
 export async function GET(request: NextRequest) {
   try {
-    const permissionError = await requirePermission('files', 'read')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const { searchParams } = new URL(request.url)
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
 // POST - Upload file
 export async function POST(request: NextRequest) {
   try {
-    const permissionError = await requirePermission('files', 'write')
+    const permissionError = await requireAdminOrEmployee()
     if (permissionError) return permissionError
 
     const session = await getServerSession(authOptions)

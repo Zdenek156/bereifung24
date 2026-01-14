@@ -576,13 +576,13 @@ export function WorkshopCRMDialog({
                 <h4 className="font-semibold mb-3">Werkstatt-Kontaktdaten</h4>
                 <div className="space-y-2 text-sm">
                   <p>
-                    <strong>Name:</strong> {crmData?.workshop.user.firstName}{' '}
-                    {crmData?.workshop.user.lastName}
+                    <strong>Name:</strong> {crmData?.workshop.user?.firstName}{' '}
+                    {crmData?.workshop.user?.lastName}
                   </p>
                   <p>
-                    <strong>E-Mail:</strong> {crmData?.workshop.user.email}
+                    <strong>E-Mail:</strong> {crmData?.workshop.user?.email}
                   </p>
-                  {crmData?.workshop.user.phone && (
+                  {crmData?.workshop.user?.phone && (
                     <p>
                       <strong>Telefon:</strong> {crmData.workshop.user.phone}
                     </p>

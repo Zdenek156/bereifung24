@@ -264,7 +264,7 @@ export default function ProspectsListPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {prospects.map((prospect) => (
-                <tr key={prospect.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/sales/prospects/${prospect.id}`)}>
+                <tr key={prospect.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/admin/sales/prospects/${prospect.id}`)}>
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{prospect.name}</div>

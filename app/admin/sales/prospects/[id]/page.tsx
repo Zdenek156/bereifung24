@@ -191,7 +191,7 @@ export default function ProspectDetailPage({ params }: { params: { id: string } 
         const data = await response.json();
         setProspect(data.prospect);
       } else if (response.status === 404) {
-        router.push('/sales/prospects');
+        router.push('/admin/sales/prospects');
       }
     } catch (error) {
       console.error('Error fetching prospect:', error);

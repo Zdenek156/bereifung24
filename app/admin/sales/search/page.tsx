@@ -31,6 +31,7 @@ export default function SalesSearchPage() {
   const [location, setLocation] = useState('')
   const [radius, setRadius] = useState(10000)
   const [keyword, setKeyword] = useState('Reifenservice Werkstatt')
+  const [country, setCountry] = useState('DE')
   
   // Results
   const [results, setResults] = useState<SearchResult[]>([])
@@ -61,7 +62,7 @@ export default function SalesSearchPage() {
       const response = await fetch('/api/sales/search-places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location, radius, keyword })
+        body: JSON.stringify({ location, radius, keyword, country })
       })
 
       if (response.ok) {
@@ -152,7 +153,22 @@ export default function SalesSearchPage() {
         {/* Search Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Land
+                </label>
+                <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="DE">🇩🇪 Deutschland</option>
+                  <option value="AT">🇦🇹 Österreich</option>
+                  <option value="CH">🇨🇭 Schweiz</option>
+                </select>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Standort (Stadt oder PLZ)

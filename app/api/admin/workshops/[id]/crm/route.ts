@@ -146,6 +146,18 @@ export async function PUT(
         contractStartDate: contractStartDate ? new Date(contractStartDate) : null,
       },
       include: {
+        workshop: {
+          select: {
+            id: true,
+            name: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        },
         interactions: {
           orderBy: { date: 'desc' },
           take: 20

@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    // Allow both ADMIN and B24_EMPLOYEE to view applications
+    if (!session || !session.user || (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

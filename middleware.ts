@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { handleAffiliateTracking } from './lib/affiliateTracking'
-import { prisma } from './lib/prisma'
 
 // List of known static routes to avoid checking database
 const STATIC_ROUTES = [
@@ -80,7 +79,7 @@ function getApplicationKeyFromPath(pathname: string): string | null {
 
 /**
  * Check if user has access to a specific application
- * Optimized version: direct database access instead of API call
+ * Uses API call with timeout - Prisma cannot run in Edge Runtime (middleware)
  */
 async function checkApplicationAccess(
   userId: string,
@@ -90,18 +89,27 @@ async function checkApplicationAccess(
   // ADMIN has access to everything
   if (userRole === 'ADMIN') return true
 
-  // For B24_EMPLOYEE, check database directly (no API call)
+  // For B24_EMPLOYEE, check via API (cannot use Prisma in middleware)
   if (userRole === 'B24_EMPLOYEE') {
     try {
-      const assignment = await prisma.b24EmployeeApplication.findUnique({
-        where: {
-          employeeId_applicationKey: {
-            employeeId: userId,
-            applicationKey
-          }
-        }
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 1500) // 1.5s timeout
+      
+      const response = await fetch(`${baseUrl}/api/employee/has-application?key=${applicationKey}`, {
+        headers: {
+          'x-user-id': userId,
+          'x-user-role': userRole,
+        },
+        signal: controller.signal,
       })
-      return !!assignment
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) {
+        const { hasAccess } = await response.json()
+        return hasAccess
+      }
     } catch (error) {
       console.error('[MIDDLEWARE] Error checking application access:', error)
       // On error, allow access to prevent lockout (logged for monitoring)

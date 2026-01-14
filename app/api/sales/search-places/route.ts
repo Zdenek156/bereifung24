@@ -67,7 +67,7 @@ export async function POST(request: Request) {
           googlePlaceId: place.place_id,
           name: place.name,
           ...addressParts,
-          address: place.formatted_address || '',
+          address: place.formatted_address || `${addressParts.street}, ${addressParts.postalCode} ${addressParts.city}`.trim(),
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
           rating: place.rating,
@@ -77,23 +77,13 @@ export async function POST(request: Request) {
           website: details?.website,
           openingHours,
           photoUrls,
-          placeTypes: place.types,
+          placeTypes: place.types || [],
           leadScore: scoreData.total,
           leadScoreBreakdown: scoreData.breakdown,
           isExisting: !!existing,
           existingStatus: existing?.status,
           existingId: existing?.id
         };
-
-        // Debug logging
-        console.log('[SEARCH-PLACES] Result:', {
-          name: result.name,
-          address: result.address,
-          city: result.city,
-          postalCode: result.postalCode,
-          hasBreakdown: !!result.leadScoreBreakdown,
-          breakdownLength: result.leadScoreBreakdown?.length || 0
-        });
 
         return result;
       })

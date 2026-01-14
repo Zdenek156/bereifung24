@@ -39,18 +39,6 @@ export default function ProspectDetailDialog({
   onImport 
 }: ProspectDetailDialogProps) {
   useEffect(() => {
-    if (isOpen && prospect) {
-      console.log('ProspectDetailDialog - Prospect Data:', {
-        name: prospect.name,
-        address: prospect.address,
-        city: prospect.city,
-        postalCode: prospect.postalCode,
-        leadScoreBreakdown: prospect.leadScoreBreakdown
-      })
-    }
-  }, [isOpen, prospect])
-
-  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
     } else {

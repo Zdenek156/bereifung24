@@ -1,328 +1,211 @@
-'use client';
+'use client'
 
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Search, TrendingUp, Users, Target, MapPin } from 'lucide-react'
 
-interface SalesStats {
-  summary: {
-    totalProspects: number;
-    newProspects: number;
-    contactedThisWeek: number;
-    wonThisMonth: number;
-    myProspects: number;
-    myTasks: number;
-    conversionRate: number;
-  };
-  pipeline: Array<{
-    status: string;
-    count: number;
-    totalValue: number;
-  }>;
-  upcomingTasks: Array<{
-    id: string;
-    title: string;
-    dueDate: string;
-    priority: string;
-    prospect: {
-      id: string;
-      name: string;
-      status: string;
-    };
-  }>;
-  recentActivity: Array<{
-    id: string;
-    type: string;
-    subject: string;
-    createdAt: string;
-    prospect: {
-      id: string;
-      name: string;
-      status: string;
-    };
-  }>;
+interface Stats {
+  totalProspects: number
+  newThisWeek: number
+  contactedThisWeek: number
+  conversionRate: number
 }
 
-const statusLabels: Record<string, string> = {
-  NEW: 'Neu',
-  CONTACTED: 'Kontaktiert',
-  QUALIFIED: 'Qualifiziert',
-  MEETING_SCHEDULED: 'Termin geplant',
-  DEMO_COMPLETED: 'Demo durchgeführt',
-  PROPOSAL_SENT: 'Angebot versendet',
-  NEGOTIATING: 'Verhandlung',
-  VERBAL_AGREEMENT: 'Mündliche Zusage',
-  CONTRACT_SENT: 'Vertrag versendet',
-  WON: 'Gewonnen',
-  LOST: 'Verloren',
-  NOT_INTERESTED: 'Kein Interesse',
-  NOT_REACHABLE: 'Nicht erreichbar',
-  CALLBACK: 'Follow-up geplant',
-  ON_HOLD: 'Pausiert'
-};
-
-const priorityColors: Record<string, string> = {
-  URGENT: 'bg-red-100 text-red-800',
-  HIGH: 'bg-orange-100 text-orange-800',
-  MEDIUM: 'bg-yellow-100 text-yellow-800',
-  LOW: 'bg-gray-100 text-gray-800'
-};
-
-export default function SalesDashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [stats, setStats] = useState<SalesStats | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function SalesDashboard() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<Stats | null>(null)
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === 'loading') return
     
     if (!session || !session.user) {
-      router.push('/login');
-      return;
+      router.push('/login')
+      return
     }
     
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
-      router.push('/dashboard');
-      return;
-    }
-  }, [status, session, router]);
+    // Check if user has Sales CRM permission (Application ID 10)
+    checkPermission()
+  }, [status, session, router])
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchStats();
+  const checkPermission = async () => {
+    try {
+      const response = await fetch('/api/admin/sales/check-permission')
+      if (!response.ok) {
+        router.push('/admin')
+        return
+      }
+      fetchStats()
+    } catch (error) {
+      console.error('Permission check error:', error)
+      router.push('/admin')
     }
-  }, [status]);
+  }
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/sales/stats');
+      const response = await fetch('/api/sales/stats')
       if (response.ok) {
-        const data = await response.json();
-        setStats(data);
+        const data = await response.json()
+        setStats(data.summary)
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error fetching stats:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
   }
 
-  if (!stats) {
+  if (loading || !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Fehler beim Laden der Statistiken</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Lädt...</div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/admin"
-                className="text-gray-400 hover:text-gray-600"
-                title="Zurück zum Dashboard"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Sales Dashboard</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  Werkstatt-Akquise & Lead-Management
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Sales CRM</h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Werkstatt-Akquise & Lead-Management
+              </p>
             </div>
-            <div className="flex space-x-3">
-              <Link
-                href="/admin/sales/search"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-              >
-                <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Werkstätten suchen
-              </Link>
-              <Link
-                href="/admin/sales/prospects"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Alle Prospects
-              </Link>
-            </div>
+            <Link
+              href="/admin/sales/search"
+              className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm transition-colors"
+            >
+              <Search className="h-5 w-5 mr-2" />
+              Werkstätten suchen
+            </Link>
           </div>
         </div>
       </div>
 
+      {/* Stats Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Prospects</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.summary.totalProspects}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Neue Leads</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.summary.newProspects}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Kontakte (Woche)</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.summary.contactedThisWeek}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Gewonnen (Monat)</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.summary.wonThisMonth}</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            icon={<Users className="h-6 w-6" />}
+            title="Gesamt Prospects"
+            value={stats.totalProspects}
+            color="blue"
+          />
+          <StatCard
+            icon={<TrendingUp className="h-6 w-6" />}
+            title="Neue (7 Tage)"
+            value={stats.newThisWeek}
+            color="green"
+          />
+          <StatCard
+            icon={<Target className="h-6 w-6" />}
+            title="Kontaktiert (7 Tage)"
+            value={stats.contactedThisWeek}
+            color="purple"
+          />
+          <StatCard
+            icon={<MapPin className="h-6 w-6" />}
+            title="Conversion Rate"
+            value={`${stats.conversionRate.toFixed(1)}%`}
+            color="orange"
+          />
         </div>
 
-        {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Meine Prospects</h3>
-            <p className="text-3xl font-bold text-primary-600">{stats.summary.myProspects}</p>
-            <Link href="/admin/sales/prospects?assignedToMe=true" className="text-sm text-primary-600 hover:text-primary-700 mt-2 inline-block">
-              Alle anzeigen →
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Offene Tasks</h3>
-            <p className="text-3xl font-bold text-orange-600">{stats.summary.myTasks}</p>
-            <p className="text-sm text-gray-500 mt-2">Nächste 7 Tage</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Conversion Rate</h3>
-            <p className="text-3xl font-bold text-green-600">{stats.summary.conversionRate}%</p>
-            <p className="text-sm text-gray-500 mt-2">Kontaktiert → Gewonnen</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Pipeline Overview */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Pipeline</h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {stats.pipeline.map((stage) => (
-                  <div key={stage.status} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700">
-                          {statusLabels[stage.status] || stage.status}
-                        </span>
-                        <span className="text-sm text-gray-600">{stage.count}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-primary-600 h-2 rounded-full"
-                          style={{
-                            width: `${(stage.count / stats.summary.totalProspects) * 100}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming Tasks */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Anstehende Aufgaben</h2>
-            </div>
-            <div className="p-6">
-              {stats.upcomingTasks.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Keine anstehenden Aufgaben</p>
-              ) : (
-                <div className="space-y-4">
-                  {stats.upcomingTasks.map((task) => (
-                    <div key={task.id} className="border-l-4 border-primary-500 pl-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                          <Link
-                            href={`/admin/sales/prospects/${task.prospect.id}`}
-                            className="text-sm text-gray-600 hover:text-primary-600"
-                          >
-                            {task.prospect.name}
-                          </Link>
-                        </div>
-                        <span className={`px-2 py-1 text-xs rounded-full ${priorityColors[task.priority]}`}>
-                          {task.priority}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Fällig: {new Date(task.dueDate).toLocaleDateString('de-DE')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Schnellzugriff</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <ActionCard
+              href="/admin/sales/search"
+              icon={<Search className="h-8 w-8" />}
+              title="Werkstätten suchen"
+              description="Google Places Integration mit Lead-Scoring"
+              color="blue"
+            />
+            <ActionCard
+              href="/admin/sales/prospects"
+              icon={<Users className="h-8 w-8" />}
+              title="Alle Prospects"
+              description="Übersicht und Verwaltung aller Leads"
+              color="green"
+            />
+            <ActionCard
+              href="/admin/sales/reports"
+              icon={<TrendingUp className="h-8 w-8" />}
+              title="Reports & Analytics"
+              description="Performance-Tracking und Auswertungen"
+              color="purple"
+            />
           </div>
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+interface StatCardProps {
+  icon: React.ReactNode
+  title: string
+  value: string | number
+  color: 'blue' | 'green' | 'purple' | 'orange'
+}
+
+function StatCard({ icon, title, value, color }: StatCardProps) {
+  const colorClasses = {
+    blue: 'bg-blue-50 text-blue-600',
+    green: 'bg-green-50 text-green-600',
+    purple: 'bg-purple-50 text-purple-600',
+    orange: 'bg-orange-50 text-orange-600',
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface ActionCardProps {
+  href: string
+  icon: React.ReactNode
+  title: string
+  description: string
+  color: 'blue' | 'green' | 'purple'
+}
+
+function ActionCard({ href, icon, title, description, color }: ActionCardProps) {
+  const colorClasses = {
+    blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100',
+    green: 'bg-green-50 text-green-600 group-hover:bg-green-100',
+    purple: 'bg-purple-50 text-purple-600 group-hover:bg-purple-100',
+  }
+
+  return (
+    <Link
+      href={href}
+      className="group block p-6 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all"
+    >
+      <div className={`inline-flex p-3 rounded-lg mb-4 ${colorClasses[color]}`}>
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600">{description}</p>
+    </Link>
+  )
 }

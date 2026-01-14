@@ -1,192 +1,174 @@
-'use client';
+'use client'
 
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Search, MapPin, Star, TrendingUp, ArrowLeft, Plus } from 'lucide-react'
 
 interface SearchResult {
-  googlePlaceId: string;
-  name: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  latitude: number;
-  longitude: number;
-  rating?: number;
-  reviewCount: number;
-  photoUrls: string[];
-  leadScore: number;
-  isExisting: boolean;
-  existingStatus?: string;
-  existingId?: string;
+  placeId: string
+  name: string
+  address: string
+  city: string
+  postalCode: string
+  lat: number
+  lng: number
+  rating?: number
+  reviewCount: number
+  photoUrl?: string
+  leadScore: number
+  alreadyExists: boolean
+  prospectId?: string
 }
 
-export default function SearchProspectsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [importing, setImporting] = useState(false);
+export default function SalesSearchPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [searching, setSearching] = useState(false)
   
   // Search params
-  const [searchLocation, setSearchLocation] = useState('');
-  const [radius, setRadius] = useState(10000);
-  const [keyword, setKeyword] = useState('Reifenservice Werkstatt');
+  const [location, setLocation] = useState('')
+  const [radius, setRadius] = useState(10000)
+  const [keyword, setKeyword] = useState('Reifenservice Werkstatt')
   
   // Results
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [assignToMe, setAssignToMe] = useState(true);
-  const [autoEnrich, setAutoEnrich] = useState(true);
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === 'loading') return
+    
+    if (!session || !session.user) {
+      router.push('/login')
+      return
     }
-  }, [status, router]);
+  }, [status, session, router])
 
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearching(true);
-    setResults([]);
-    setSelectedIds(new Set());
+    e.preventDefault()
+    
+    if (!location.trim()) {
+      alert('Bitte Standort eingeben')
+      return
+    }
+
+    setSearching(true)
+    setResults([])
+    setSelectedPlaces(new Set())
 
     try {
       const response = await fetch('/api/sales/search-places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: searchLocation,
-          radius,
-          keyword
-        })
-      });
+        body: JSON.stringify({ location, radius, keyword })
+      })
 
       if (response.ok) {
-        const data = await response.json();
-        setResults(data.results);
+        const data = await response.json()
+        setResults(data.results)
       } else {
-        const error = await response.json();
-        alert(`Fehler: ${error.error}`);
+        alert('Fehler bei der Suche')
       }
     } catch (error) {
-      console.error('Search error:', error);
-      alert('Fehler bei der Suche');
+      console.error('Search error:', error)
+      alert('Fehler bei der Suche')
     } finally {
-      setSearching(false);
+      setSearching(false)
     }
-  };
+  }
 
   const toggleSelection = (placeId: string) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(placeId)) {
-      newSelected.delete(placeId);
+    const newSet = new Set(selectedPlaces)
+    if (newSet.has(placeId)) {
+      newSet.delete(placeId)
     } else {
-      newSelected.add(placeId);
+      newSet.add(placeId)
     }
-    setSelectedIds(newSelected);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === results.filter(r => !r.isExisting).length) {
-      setSelectedIds(new Set());
-    } else {
-      const newSelected = new Set(results.filter(r => !r.isExisting).map(r => r.googlePlaceId));
-      setSelectedIds(newSelected);
-    }
-  };
+    setSelectedPlaces(newSet)
+  }
 
   const handleImport = async () => {
-    if (selectedIds.size === 0) {
-      alert('Bitte wählen Sie mindestens einen Prospect aus');
-      return;
+    if (selectedPlaces.size === 0) {
+      alert('Bitte mindestens eine Werkstatt auswählen')
+      return
     }
 
-    setImporting(true);
-
+    setLoading(true)
     try {
-      const response = await fetch('/api/sales/import-prospects', {
+      const selectedResults = results.filter(r => selectedPlaces.has(r.placeId))
+      
+      const response = await fetch('/api/sales/prospects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          placeIds: Array.from(selectedIds),
-          assignToMe,
-          autoEnrich
-        })
-      });
+        body: JSON.stringify({ prospects: selectedResults })
+      })
 
       if (response.ok) {
-        const data = await response.json();
-        alert(`Import erfolgreich!\n\nImportiert: ${data.summary.imported}\nÜbersprungen: ${data.summary.skipped}\nFehler: ${data.summary.errors}`);
-        
-        // Clear selection and reload results
-        setSelectedIds(new Set());
-        handleSearch(new Event('submit') as any);
+        alert(`${selectedPlaces.size} Werkstätten erfolgreich importiert!`)
+        router.push('/admin/sales/prospects')
       } else {
-        const error = await response.json();
-        alert(`Fehler: ${error.error}`);
+        alert('Fehler beim Import')
       }
     } catch (error) {
-      console.error('Import error:', error);
-      alert('Fehler beim Import');
+      console.error('Import error:', error)
+      alert('Fehler beim Import')
     } finally {
-      setImporting(false);
+      setLoading(false)
     }
-  };
+  }
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
+  const getLeadScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600 bg-green-50'
+    if (score >= 60) return 'text-yellow-600 bg-yellow-50'
+    return 'text-red-600 bg-red-50'
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Werkstätten suchen</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Finden Sie neue Werkstätten über Google Places
-              </p>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/admin/sales')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Werkstätten suchen</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Google Places Integration mit automatischem Lead-Scoring
+                </p>
+              </div>
             </div>
-            <Link
-              href="/sales"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              ← Zurück zum Dashboard
-            </Link>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Form */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <form onSubmit={handleSearch} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <form onSubmit={handleSearch} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ort / PLZ / Adresse
+                  Standort (Stadt oder PLZ)
                 </label>
                 <input
                   type="text"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  placeholder="z.B. 10115 Berlin oder München"
-                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="z.B. München oder 80331"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Umkreis (km)
+                  Radius (Meter)
                 </label>
                 <select
                   value={radius}
@@ -199,40 +181,35 @@ export default function SearchProspectsPage() {
                   <option value="50000">50 km</option>
                 </select>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Suchbegriff (optional)
-              </label>
-              <input
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="z.B. Reifenservice, Autowerkstatt, KFZ"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Suchbegriff
+                </label>
+                <input
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="Reifenservice Werkstatt"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={searching}
-              className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={searching || !location.trim()}
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               {searching ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Suche läuft...
                 </>
               ) : (
                 <>
-                  <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Suchen
+                  <Search className="h-5 w-5 mr-2" />
+                  Werkstätten suchen
                 </>
               )}
             </button>
@@ -241,138 +218,106 @@ export default function SearchProspectsPage() {
 
         {/* Results */}
         {results.length > 0 && (
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {results.length} Werkstätten gefunden
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {selectedIds.size} ausgewählt
-                  </p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <label className="flex items-center text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={assignToMe}
-                      onChange={(e) => setAssignToMe(e.target.checked)}
-                      className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    Mir zuweisen
-                  </label>
-                  <label className="flex items-center text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={autoEnrich}
-                      onChange={(e) => setAutoEnrich(e.target.checked)}
-                      className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    Details automatisch laden
-                  </label>
-                  <button
-                    onClick={toggleSelectAll}
-                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                  >
-                    {selectedIds.size === results.filter(r => !r.isExisting).length ? 'Alle abwählen' : 'Alle auswählen'}
-                  </button>
-                  <button
-                    onClick={handleImport}
-                    disabled={selectedIds.size === 0 || importing}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {importing ? 'Importiere...' : `${selectedIds.size} Importieren`}
-                  </button>
-                </div>
-              </div>
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-600">
+                {results.length} Werkstätten gefunden · {selectedPlaces.size} ausgewählt
+              </p>
+              {selectedPlaces.size > 0 && (
+                <button
+                  onClick={handleImport}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {loading ? 'Importiere...' : `${selectedPlaces.size} importieren`}
+                </button>
+              )}
             </div>
 
-            <div className="divide-y divide-gray-200">
+            <div className="grid grid-cols-1 gap-4">
               {results.map((result) => (
                 <div
-                  key={result.googlePlaceId}
-                  className={`p-6 hover:bg-gray-50 ${result.isExisting ? 'opacity-50' : ''}`}
+                  key={result.placeId}
+                  className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
+                    selectedPlaces.has(result.placeId)
+                      ? 'border-primary-500'
+                      : 'border-gray-200 hover:border-gray-300'
+                  } ${result.alreadyExists ? 'opacity-50' : ''}`}
                 >
-                  <div className="flex items-start space-x-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(result.googlePlaceId)}
-                      onChange={() => toggleSelection(result.googlePlaceId)}
-                      disabled={result.isExisting}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded disabled:opacity-30"
-                    />
-
-                    {result.photoUrls.length > 0 && (
-                      <img
-                        src={result.photoUrls[0]}
-                        alt={result.name}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
-                    )}
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-lg font-medium text-gray-900">
-                            {result.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">{result.address}</p>
-                          
-                          <div className="flex items-center space-x-4 mt-2">
-                            {result.rating && (
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4 flex-1">
+                        {result.photoUrl && (
+                          <img
+                            src={result.photoUrl}
+                            alt={result.name}
+                            className="w-24 h-24 rounded-lg object-cover"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {result.name}
+                              </h3>
+                              <div className="flex items-center text-sm text-gray-600 mt-1">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {result.address}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {result.postalCode} {result.city}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end space-y-2">
+                              {result.rating && (
+                                <div className="flex items-center">
+                                  <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                                  <span className="font-medium">{result.rating.toFixed(1)}</span>
+                                  <span className="text-sm text-gray-600 ml-1">
+                                    ({result.reviewCount})
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex items-center">
-                                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <span className="ml-1 text-sm text-gray-700">
-                                  {result.rating} ({result.reviewCount})
+                                <TrendingUp className="h-4 w-4 mr-1" />
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${getLeadScoreColor(result.leadScore)}`}>
+                                  Score: {result.leadScore}
                                 </span>
                               </div>
-                            )}
-                            
-                            <div className="flex items-center">
-                              <span className="text-sm font-medium text-gray-700">Lead Score:</span>
-                              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                                result.leadScore >= 75 ? 'bg-green-100 text-green-800' :
-                                result.leadScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {result.leadScore}/100
-                              </span>
                             </div>
                           </div>
                         </div>
-
-                        {result.isExisting && (
-                          <Link
-                            href={`/admin/sales/prospects/${result.existingId}`}
-                            className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
-                          >
-                            Bereits vorhanden
-                          </Link>
-                        )}
                       </div>
+                    </div>
+                    
+                    <div className="mt-4 flex items-center justify-between">
+                      {result.alreadyExists ? (
+                        <span className="text-sm text-gray-600">
+                          Bereits als Prospect vorhanden
+                        </span>
+                      ) : (
+                        <div></div>
+                      )}
+                      <button
+                        onClick={() => toggleSelection(result.placeId)}
+                        disabled={result.alreadyExists}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          selectedPlaces.has(result.placeId)
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {selectedPlaces.has(result.placeId) ? 'Ausgewählt' : 'Auswählen'}
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {!searching && results.length === 0 && searchLocation && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Keine Ergebnisse</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Versuchen Sie eine andere Suche
-            </p>
-          </div>
+          </>
         )}
       </div>
     </div>
-  );
+  )
 }

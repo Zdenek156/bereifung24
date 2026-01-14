@@ -1,6 +1,6 @@
 'use client'
 
-import { SessionProvider, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -14,13 +14,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
     // If no session after loading, redirect to login
     if (status === 'unauthenticated' || !session) {
-      // Add small delay to ensure session is fully loaded
-      const timer = setTimeout(() => {
-        if (status === 'unauthenticated' || !session) {
-          router.push('/login')
-        }
-      }, 100)
-      return () => clearTimeout(timer)
+      router.push('/login')
+      return
     }
 
     // Allow ADMIN full access
@@ -75,9 +70,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <SessionProvider>
-      <AdminGuard>{children}</AdminGuard>
-    </SessionProvider>
-  )
+  return <AdminGuard>{children}</AdminGuard>
 }

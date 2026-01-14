@@ -242,41 +242,68 @@ export function parseAddressComponents(formattedAddress: string): {
 }
 
 /**
- * Calculate lead score based on Google Places data
+ * Calculate lead score with breakdown
  */
-export function calculateLeadScore(place: PlaceResult | PlaceDetails): number {
-  let score = 50; // Base score
+export function calculateLeadScoreBreakdown(place: PlaceResult | PlaceDetails): {
+  total: number;
+  breakdown: Array<{ reason: string; points: number }>;
+} {
+  const breakdown: Array<{ reason: string; points: number }> = [
+    { reason: 'Basis-Score', points: 50 }
+  ];
 
   // Rating bonus
   if (place.rating) {
-    if (place.rating >= 4.5) score += 20;
-    else if (place.rating >= 4.0) score += 15;
-    else if (place.rating >= 3.5) score += 10;
-    else if (place.rating < 3.0) score -= 10;
+    if (place.rating >= 4.5) breakdown.push({ reason: 'Sehr gute Bewertung (≥4.5⭐)', points: 20 });
+    else if (place.rating >= 4.0) breakdown.push({ reason: 'Gute Bewertung (≥4.0⭐)', points: 15 });
+    else if (place.rating >= 3.5) breakdown.push({ reason: 'Solide Bewertung (≥3.5⭐)', points: 10 });
+    else if (place.rating < 3.0) breakdown.push({ reason: 'Niedrige Bewertung (<3.0⭐)', points: -10 });
   }
 
   // Review count bonus
   if (place.user_ratings_total) {
-    if (place.user_ratings_total >= 100) score += 15;
-    else if (place.user_ratings_total >= 50) score += 10;
-    else if (place.user_ratings_total >= 20) score += 5;
+    if (place.user_ratings_total >= 100) breakdown.push({ reason: 'Viele Bewertungen (≥100)', points: 15 });
+    else if (place.user_ratings_total >= 50) breakdown.push({ reason: 'Gute Anzahl Bewertungen (≥50)', points: 10 });
+    else if (place.user_ratings_total >= 20) breakdown.push({ reason: 'Einige Bewertungen (≥20)', points: 5 });
   }
 
   // Has website bonus
-  if ('website' in place && place.website) score += 10;
+  if ('website' in place && place.website) {
+    breakdown.push({ reason: 'Website vorhanden', points: 10 });
+  }
 
   // Has phone bonus
-  if ('formatted_phone_number' in place && place.formatted_phone_number) score += 10;
+  if ('formatted_phone_number' in place && place.formatted_phone_number) {
+    breakdown.push({ reason: 'Telefonnummer vorhanden', points: 10 });
+  }
 
   // Has photos bonus
-  if (place.photos && place.photos.length > 0) score += 5;
+  if (place.photos && place.photos.length > 0) {
+    breakdown.push({ reason: 'Fotos vorhanden', points: 5 });
+  }
 
   // Business status check
-  if (place.business_status === 'OPERATIONAL') score += 5;
-  else if (place.business_status === 'CLOSED_PERMANENTLY') score = 0;
+  if (place.business_status === 'OPERATIONAL') {
+    breakdown.push({ reason: 'Betrieb aktiv', points: 5 });
+  } else if (place.business_status === 'CLOSED_PERMANENTLY') {
+    breakdown.push({ reason: 'Betrieb geschlossen', points: -100 });
+  }
+
+  // Calculate total
+  const total = breakdown.reduce((sum, item) => sum + item.points, 0);
 
   // Ensure score is within 0-100
-  return Math.max(0, Math.min(100, score));
+  return {
+    total: Math.max(0, Math.min(100, total)),
+    breakdown
+  };
+}
+
+/**
+ * Calculate lead score based on Google Places data (legacy function)
+ */
+export function calculateLeadScore(place: PlaceResult | PlaceDetails): number {
+  return calculateLeadScoreBreakdown(place).total;
 }
 
 /**

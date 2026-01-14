@@ -1,0 +1,238 @@
+'use client'
+
+import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp } from 'lucide-react'
+import { useEffect } from 'react'
+
+interface ProspectDetail {
+  placeId: string
+  name: string
+  address: string
+  city: string
+  postalCode: string
+  lat: number
+  lng: number
+  rating?: number
+  reviewCount: number
+  photoUrls?: string[]
+  phone?: string
+  website?: string
+  openingHours?: string[]
+  priceLevel?: number
+  leadScore: number
+  leadScoreBreakdown: {
+    label: string
+    points: number
+  }[]
+}
+
+interface ProspectDetailDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  prospect: ProspectDetail | null
+  onImport?: () => void
+}
+
+export default function ProspectDetailDialog({ 
+  isOpen, 
+  onClose, 
+  prospect,
+  onImport 
+}: ProspectDetailDialogProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  if (!isOpen || !prospect) return null
+
+  const getPriceLevelText = (level?: number) => {
+    if (!level) return 'Keine Angabe'
+    return '€'.repeat(level)
+  }
+
+  const getLeadScoreColor = (score: number) => {
+    if (score >= 80) return 'bg-green-100 text-green-800'
+    if (score >= 60) return 'bg-blue-100 text-blue-800'
+    if (score >= 40) return 'bg-yellow-100 text-yellow-800'
+    return 'bg-gray-100 text-gray-800'
+  }
+
+  const handleGoogleMaps = () => {
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(prospect.name)}&query_place_id=${prospect.placeId}`,
+      '_blank'
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Overlay */}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onClose}
+      />
+      
+      {/* Dialog */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">{prospect.name}</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Photo Gallery */}
+            {prospect.photoUrls && prospect.photoUrls.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  📸 Galerie ({prospect.photoUrls.length} {prospect.photoUrls.length === 1 ? 'Foto' : 'Fotos'})
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {prospect.photoUrls.map((url, index) => (
+                    <img
+                      key={index}
+                      src={url}
+                      alt={`${prospect.name} - Foto ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => window.open(url, '_blank')}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Information */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">ℹ️ Informationen</h3>
+              <div className="space-y-3">
+                {/* Rating */}
+                {prospect.rating && (
+                  <div className="flex items-center text-sm">
+                    <Star className="h-5 w-5 text-yellow-400 fill-current mr-2" />
+                    <span className="font-medium">{prospect.rating.toFixed(1)} Sterne</span>
+                    <span className="text-gray-600 ml-1">({prospect.reviewCount} Bewertungen)</span>
+                  </div>
+                )}
+
+                {/* Address */}
+                <div className="flex items-start text-sm">
+                  <MapPin className="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-medium">{prospect.address}</div>
+                    <div className="text-gray-600">{prospect.postalCode} {prospect.city}</div>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                {prospect.phone && (
+                  <div className="flex items-center text-sm">
+                    <Phone className="h-5 w-5 text-gray-400 mr-2" />
+                    <a href={`tel:${prospect.phone}`} className="text-primary-600 hover:underline">
+                      {prospect.phone}
+                    </a>
+                  </div>
+                )}
+
+                {/* Website */}
+                {prospect.website && (
+                  <div className="flex items-center text-sm">
+                    <Globe className="h-5 w-5 text-gray-400 mr-2" />
+                    <a 
+                      href={prospect.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:underline truncate"
+                    >
+                      {prospect.website}
+                    </a>
+                  </div>
+                )}
+
+                {/* Opening Hours */}
+                {prospect.openingHours && prospect.openingHours.length > 0 && (
+                  <div className="flex items-start text-sm">
+                    <Clock className="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      {prospect.openingHours.map((hours, index) => (
+                        <div key={index} className="text-gray-600">{hours}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Price Level */}
+                <div className="flex items-center text-sm">
+                  <Euro className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="font-medium">Preisniveau:</span>
+                  <span className="ml-2 text-gray-600">{getPriceLevelText(prospect.priceLevel)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lead Score Breakdown */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2" />
+                Lead-Score Breakdown: {prospect.leadScore}/100
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="space-y-2">
+                  {prospect.leadScoreBreakdown.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700">✓ {item.label}</span>
+                      <span className={`px-2 py-1 rounded font-medium ${getLeadScoreColor(item.points)}`}>
+                        +{item.points}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between font-semibold">
+                  <span>Gesamt-Score:</span>
+                  <span className={`px-3 py-1 rounded ${getLeadScoreColor(prospect.leadScore)}`}>
+                    {prospect.leadScore}/100
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <button
+              onClick={handleGoogleMaps}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              In Google Maps öffnen
+            </button>
+            
+            {onImport && (
+              <button
+                onClick={() => {
+                  onImport()
+                  onClose()
+                }}
+                className="flex items-center px-6 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                ✓ Als Prospect importieren
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

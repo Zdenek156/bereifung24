@@ -13,7 +13,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     if (status === 'loading') return
 
     // If no session after loading, redirect to login
-    if (status === 'unauthenticated' || !session) {
+    if (status === 'unauthenticated' || !session || !session.user) {
       router.push('/login')
       return
     }
@@ -53,7 +53,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   }
 
   // If session exists and user has proper role, show content
-  if (session && (session.user.role === 'ADMIN' || session.user.role === 'B24_EMPLOYEE')) {
+  if (session && session.user && (session.user.role === 'ADMIN' || session.user.role === 'B24_EMPLOYEE')) {
     return <>{children}</>
   }
 

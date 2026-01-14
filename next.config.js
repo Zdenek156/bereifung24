@@ -25,10 +25,6 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/mitarbeiter/sales',
-        destination: '/sales',
-      },
-      {
         source: '/mitarbeiter/:path*',
         destination: '/admin/:path*',
       },

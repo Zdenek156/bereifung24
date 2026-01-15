@@ -32,6 +32,26 @@ interface Note {
   createdBy?: string
 }
 
+interface Task {
+  id: string
+  title: string
+  description?: string
+  status: 'NEW' | 'IN_PROGRESS' | 'COMPLETED'
+  priority: 'LOW' | 'MEDIUM' | 'HIGH'
+  dueDate?: string
+  assignedTo?: string
+  assignedToName?: string
+  createdAt: string
+  createdBy?: string
+}
+
+interface Employee {
+  id: string
+  firstName: string
+  lastName: string
+  position?: string
+}
+
 interface ProspectDetailDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -47,10 +67,24 @@ export default function ProspectDetailDialog({
 }: ProspectDetailDialogProps) {
   // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
+  
+  // Notes State
   const [notes, setNotes] = useState<Note[]>([])
   const [newNoteContent, setNewNoteContent] = useState('')
   const [loadingNotes, setLoadingNotes] = useState(false)
   const [savingNote, setSavingNote] = useState(false)
+  
+  // Tasks State
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [newTaskDescription, setNewTaskDescription] = useState('')
+  const [newTaskAssignedTo, setNewTaskAssignedTo] = useState('')
+  const [newTaskDueDate, setNewTaskDueDate] = useState('')
+  const [newTaskPriority, setNewTaskPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
+  const [loadingTasks, setLoadingTasks] = useState(false)
+  const [savingTask, setSavingTask] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -85,6 +119,26 @@ export default function ProspectDetailDialog({
         })
     }
   }, [activeTab, prospect?.placeId])
+
+  // Load tasks when Tasks tab is opened
+  useEffect(() => {
+    if (activeTab === 'tasks' && prospect?.placeId) {
+      setLoadingTasks(true)
+      fetch(`/api/sales/prospects/${prospect.placeId}/tasks`)
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => setTasks(data.tasks || []))
+        .catch(error => console.error('Error loading tasks:', error))
+        .finally(() => setLoadingTasks(false))
+    }
+  }, [activeTab, prospect?.placeId])
+
+  // Load employees list once
+  useEffect(() => {
+    fetch('/api/employee/list')
+      .then(response => response.ok ? response.json() : Promise.reject())
+      .then(data => setEmployees(data.employees || []))
+      .catch(error => console.error('Error loading employees:', error))
+  }, [])
 
   const loadNotes = useCallback(async () => {
     if (!prospect?.placeId) return
@@ -176,6 +230,137 @@ export default function ProspectDetailDialog({
       }
     } catch (error) {
       console.error('Error deleting note:', error)
+    }
+  }
+
+  const loadTasks = useCallback(async () => {
+    if (!prospect?.placeId) return
+    
+    setLoadingTasks(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/tasks`)
+      if (response.ok) {
+        const data = await response.json()
+        setTasks(data.tasks || [])
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error)
+    } finally {
+      setLoadingTasks(false)
+    }
+  }, [prospect?.placeId])
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim() || !prospect) return
+    
+    setSavingTask(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: newTaskTitle,
+          description: newTaskDescription || undefined,
+          assignedTo: newTaskAssignedTo || undefined,
+          dueDate: newTaskDueDate || undefined,
+          priority: newTaskPriority,
+          prospectData: {
+            name: prospect.name,
+            address: prospect.address,
+            city: prospect.city,
+            postalCode: prospect.postalCode,
+            lat: prospect.lat,
+            lng: prospect.lng,
+            phone: prospect.phone,
+            website: prospect.website,
+            rating: prospect.rating,
+            reviewCount: prospect.reviewCount,
+            priceLevel: prospect.priceLevel,
+            photoUrls: prospect.photoUrls
+          }
+        })
+      })
+      
+      if (response.ok) {
+        setNewTaskTitle('')
+        setNewTaskDescription('')
+        setNewTaskAssignedTo('')
+        setNewTaskDueDate('')
+        setNewTaskPriority('MEDIUM')
+        await loadTasks()
+      }
+    } catch (error) {
+      console.error('Error adding task:', error)
+    } finally {
+      setSavingTask(false)
+    }
+  }
+
+  const handleUpdateTaskStatus = async (taskId: string, newStatus: 'NEW' | 'IN_PROGRESS' | 'COMPLETED') => {
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      
+      if (response.ok) {
+        await loadTasks()
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error)
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Aufgabe wirklich löschen?')) return
+    
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/tasks/${taskId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        await loadTasks()
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'NEW': return 'bg-blue-100 text-blue-800'
+      case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800'
+      case 'COMPLETED': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'NEW': return 'Neu'
+      case 'IN_PROGRESS': return 'In Bearbeitung'
+      case 'COMPLETED': return 'Erledigt'
+      default: return status
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return 'text-red-600'
+      case 'MEDIUM': return 'text-yellow-600'
+      case 'LOW': return 'text-green-600'
+      default: return 'text-gray-600'
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return 'Hoch'
+      case 'MEDIUM': return 'Mittel'
+      case 'LOW': return 'Niedrig'
+      default: return priority
     }
   }
 
@@ -455,10 +640,181 @@ export default function ProspectDetailDialog({
 
             {activeTab === 'tasks' && (
               <div className="space-y-4">
-                <div className="text-center py-12 text-gray-500">
-                  <CheckSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>Aufgaben-Funktion wird in Kürze verfügbar sein</p>
+                {/* Add New Task */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Neue Aufgabe erstellen</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Titel <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newTaskTitle}
+                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                        placeholder="z.B. Angebot erstellen"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={savingTask}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Beschreibung
+                      </label>
+                      <textarea
+                        value={newTaskDescription}
+                        onChange={(e) => setNewTaskDescription(e.target.value)}
+                        placeholder="Weitere Details zur Aufgabe..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={2}
+                        disabled={savingTask}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zuweisen an
+                        </label>
+                        <select
+                          value={newTaskAssignedTo}
+                          onChange={(e) => setNewTaskAssignedTo(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          disabled={savingTask}
+                        >
+                          <option value="">Nicht zugewiesen</option>
+                          {employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.firstName} {emp.lastName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Fälligkeitsdatum
+                        </label>
+                        <input
+                          type="date"
+                          value={newTaskDueDate}
+                          onChange={(e) => setNewTaskDueDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          disabled={savingTask}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Priorität
+                        </label>
+                        <select
+                          value={newTaskPriority}
+                          onChange={(e) => setNewTaskPriority(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          disabled={savingTask}
+                        >
+                          <option value="LOW">Niedrig</option>
+                          <option value="MEDIUM">Mittel</option>
+                          <option value="HIGH">Hoch</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handleAddTask}
+                      disabled={!newTaskTitle.trim() || savingTask}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    >
+                      {savingTask ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                          Wird erstellt...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4" />
+                          Aufgabe erstellen
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
+
+                {/* Tasks List */}
+                {loadingTasks ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-8 w-8 border-3 border-blue-600 border-t-transparent rounded-full mx-auto" />
+                    <p className="text-sm text-gray-600 mt-2">Lade Aufgaben...</p>
+                  </div>
+                ) : tasks.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <CheckSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>Noch keine Aufgaben vorhanden</p>
+                    <p className="text-sm mt-1">Erstelle oben eine neue Aufgabe</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {tasks.map(task => (
+                      <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-gray-900 truncate">{task.title}</h4>
+                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(task.status)}`}>
+                                {getStatusLabel(task.status)}
+                              </span>
+                              <span className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                ⬆ {getPriorityLabel(task.priority)}
+                              </span>
+                            </div>
+                            
+                            {task.description && (
+                              <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                            )}
+                            
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                              {task.assignedToName && (
+                                <span className="flex items-center gap-1">
+                                  👤 {task.assignedToName}
+                                </span>
+                              )}
+                              {task.dueDate && (
+                                <span className="flex items-center gap-1">
+                                  📅 Fällig: {new Date(task.dueDate).toLocaleDateString('de-DE')}
+                                </span>
+                              )}
+                              <span>
+                                Erstellt: {new Date(task.createdAt).toLocaleDateString('de-DE')}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={task.status}
+                              onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
+                              className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="NEW">Neu</option>
+                              <option value="IN_PROGRESS">In Bearbeitung</option>
+                              <option value="COMPLETED">Erledigt</option>
+                            </select>
+                            
+                            <button
+                              onClick={() => handleDeleteTask(task.id)}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition-colors"
+                              title="Aufgabe löschen"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

@@ -2,6 +2,67 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSalesUser } from '@/lib/sales-auth';
 
+/**
+ * PUT - Update Task (used by frontend for status updates)
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string; taskId: string } }
+) {
+  try {
+    const employee = await getSalesUser();
+
+    if (!employee) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { title, description, dueDate, priority, status, assignedTo } = body;
+
+    const task = await prisma.prospectTask.update({
+      where: { id: params.taskId },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+        ...(priority !== undefined && { priority }),
+        ...(status !== undefined && { status }),
+        ...(assignedTo !== undefined && { assignedToId: assignedTo || null }),
+        ...(status === 'COMPLETED' && { completedAt: new Date() })
+      },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      task: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate?.toISOString(),
+        assignedTo: task.assignedTo?.id,
+        assignedToName: task.assignedTo 
+          ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`.trim()
+          : undefined,
+        createdAt: task.createdAt.toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error updating task:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // PATCH - Update Task
 export async function PATCH(
   request: NextRequest,

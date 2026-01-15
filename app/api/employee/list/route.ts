@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    return NextResponse.json(employees)
+    return NextResponse.json({ employees })
   } catch (error) {
     console.error('Error fetching employee list:', error)
     return NextResponse.json(

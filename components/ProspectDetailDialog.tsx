@@ -136,7 +136,10 @@ export default function ProspectDetailDialog({
   useEffect(() => {
     fetch('/api/employee/list')
       .then(response => response.ok ? response.json() : Promise.reject())
-      .then(data => setEmployees(data.employees || []))
+      .then(data => {
+        console.log('Loaded employees:', data.employees)
+        setEmployees(data.employees || [])
+      })
       .catch(error => console.error('Error loading employees:', error))
   }, [])
 

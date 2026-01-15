@@ -124,7 +124,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/employee/tasks/[id] - Aufgabe löschen
+// DELETE /api/employee/tasks/[id] - Aufgabe löschen (beide Task-Typen)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -139,25 +139,44 @@ export async function DELETE(
     const employeeId = session.user.id
     const taskId = params.id
 
-    // Prüfen ob Aufgabe existiert
-    const task = await prisma.employeeTask.findUnique({
+    // Try EmployeeTask first
+    let employeeTask = await prisma.employeeTask.findUnique({
       where: { id: taskId }
     })
 
-    if (!task) {
-      return NextResponse.json({ error: 'Aufgabe nicht gefunden' }, { status: 404 })
+    if (employeeTask) {
+      // Nur Ersteller darf löschen
+      if (employeeTask.createdById !== employeeId) {
+        return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+      }
+
+      await prisma.employeeTask.delete({
+        where: { id: taskId }
+      })
+
+      return NextResponse.json({ success: true })
     }
 
-    // Nur Ersteller darf löschen
-    if (task.createdById !== employeeId) {
-      return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
-    }
-
-    await prisma.employeeTask.delete({
+    // Try ProspectTask
+    let prospectTask = await prisma.prospectTask.findUnique({
       where: { id: taskId }
     })
 
-    return NextResponse.json({ success: true })
+    if (prospectTask) {
+      // Nur Ersteller darf löschen
+      if (prospectTask.createdById !== employeeId) {
+        return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+      }
+
+      await prisma.prospectTask.delete({
+        where: { id: taskId }
+      })
+
+      return NextResponse.json({ success: true })
+    }
+
+    // Keine Task gefunden
+    return NextResponse.json({ error: 'Aufgabe nicht gefunden' }, { status: 404 })
   } catch (error) {
     console.error('Error deleting task:', error)
     return NextResponse.json(

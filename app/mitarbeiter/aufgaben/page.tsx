@@ -38,10 +38,12 @@ interface Task {
   progress: number
   createdAt: string
   createdBy: {
+    id: string
     firstName: string
     lastName: string
   }
   assignedTo?: {
+    id: string
     firstName: string
     lastName: string
   }
@@ -229,6 +231,26 @@ export default function TasksPage() {
     } catch (error) {
       console.error('Error deleting attachment:', error)
       alert('Fehler beim Löschen der Datei')
+    }
+  }
+
+  const deleteTask = async (taskId: string) => {
+    if (!confirm('Möchten Sie diese Aufgabe wirklich löschen?')) return
+
+    try {
+      const response = await fetch(`/api/employee/tasks/${taskId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        fetchTasks()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Löschen')
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      alert('Fehler beim Löschen der Aufgabe')
     }
   }
 
@@ -500,6 +522,17 @@ export default function TasksPage() {
                         <option value="IN_PROGRESS">In Arbeit</option>
                         <option value="COMPLETED">Abgeschlossen</option>
                       </select>
+
+                      {/* Löschen-Button nur für Ersteller */}
+                      {session?.user?.id === task.createdBy.id && (
+                        <button
+                          onClick={() => deleteTask(task.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Aufgabe löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

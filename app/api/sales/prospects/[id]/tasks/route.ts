@@ -130,10 +130,10 @@ export async function POST(
         prospectId: prospect.id,
         title,
         description: description || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default: 7 Tage
         priority: priority || 'MEDIUM',
-        status: 'NEW',
-        assignedToId: assignedTo || null,
+        status: 'PENDING',
+        assignedToId: assignedTo || employee.id, // Default: Aktueller User
         createdById: employee.id
       },
       include: {

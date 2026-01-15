@@ -46,13 +46,14 @@ export async function POST(request: Request) {
           where: { googlePlaceId: place.place_id }
         });
 
-        // Use formatted_address OR vicinity (Google Nearby Search often doesn't return formatted_address)
-        const addressString = place.formatted_address || place.vicinity || '';
+        // Use formatted_address from details (has full address with PLZ), then place, then vicinity
+        const addressString = details?.formatted_address || place.formatted_address || place.vicinity || '';
         
         // DEBUG: Log address data
         console.log('\n=== DEBUG WERKSTATT ===');
         console.log('Name:', place.name);
-        console.log('formatted_address:', place.formatted_address);
+        console.log('details.formatted_address:', details?.formatted_address);
+        console.log('place.formatted_address:', place.formatted_address);
         console.log('vicinity:', place.vicinity);
         console.log('addressString (used):', addressString);
         

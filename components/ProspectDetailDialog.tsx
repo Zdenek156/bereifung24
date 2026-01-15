@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity } from 'lucide-react'
+import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ProspectDetail {
@@ -23,6 +23,13 @@ interface ProspectDetail {
     label: string
     points: number
   }[]
+}
+
+interface Note {
+  id: string
+  content: string
+  createdAt: string
+  createdBy?: string
 }
 
 interface ProspectDetailDialogProps {
@@ -71,6 +78,70 @@ export default function ProspectDetailDialog({
   }
 
   const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
+  const [notes, setNotes] = useState<Note[]>([])
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [loadingNotes, setLoadingNotes] = useState(false)
+  const [savingNote, setSavingNote] = useState(false)
+
+  // Load notes when Notes tab is opened
+  useEffect(() => {
+    if (activeTab === 'notes' && prospect) {
+      loadNotes()
+    }
+  }, [activeTab, prospect])
+
+  const loadNotes = async () => {
+    setLoadingNotes(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/notes`)
+      if (response.ok) {
+        const data = await response.json()
+        setNotes(data.notes || [])
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error)
+    } finally {
+      setLoadingNotes(false)
+    }
+  }
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim()) return
+    
+    setSavingNote(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newNoteContent })
+      })
+      
+      if (response.ok) {
+        setNewNoteContent('')
+        await loadNotes()
+      }
+    } catch (error) {
+      console.error('Error adding note:', error)
+    } finally {
+      setSavingNote(false)
+    }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Notiz wirklich löschen?')) return
+    
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/notes/${noteId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        await loadNotes()
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error)
+    }
+  }
 
   const tabs = [
     { id: 'info' as const, label: 'Informationen', icon: Info },
@@ -259,10 +330,90 @@ export default function ProspectDetailDialog({
 
             {activeTab === 'notes' && (
               <div className="space-y-4">
-                <div className="text-center py-12 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>Notizen-Funktion wird in Kürze verfügbar sein</p>
+                {/* Add New Note */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Neue Notiz hinzufügen
+                  </label>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={newNoteContent}
+                      onChange={(e) => setNewNoteContent(e.target.value)}
+                      placeholder="Notiz eingeben..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      rows={3}
+                      disabled={savingNote}
+                    />
+                    <button
+                      onClick={handleAddNote}
+                      disabled={!newNoteContent.trim() || savingNote}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 h-fit"
+                    >
+                      {savingNote ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                          Speichern...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Speichern
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
+
+                {/* Notes List */}
+                {loadingNotes ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-8 w-8 border-3 border-blue-600 border-t-transparent rounded-full mx-auto" />
+                    <p className="text-sm text-gray-600 mt-2">Lade Notizen...</p>
+                  </div>
+                ) : notes.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>Noch keine Notizen vorhanden</p>
+                    <p className="text-sm mt-1">Füge oben eine neue Notiz hinzu</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {notes.map((note) => (
+                      <div
+                        key={note.id}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <p className="text-gray-800 whitespace-pre-wrap">{note.content}</p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {new Date(note.createdAt).toLocaleDateString('de-DE', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                              {note.createdBy && (
+                                <span className="ml-2">• {note.createdBy}</span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteNote(note.id)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition-colors flex-shrink-0"
+                            title="Notiz löschen"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

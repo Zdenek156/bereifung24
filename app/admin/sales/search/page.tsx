@@ -60,6 +60,7 @@ export default function SalesSearchPage() {
   const [selectedPlaces, setSelectedPlaces] = useState<Set<string>>(new Set())
   const [nextPageToken, setNextPageToken] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [sortBy, setSortBy] = useState<'distance' | 'leadScore' | 'rating' | 'reviewCount' | 'name'>('leadScore')
   
   // Detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -73,6 +74,36 @@ export default function SalesSearchPage() {
       return
     }
   }, [status, session, router])
+
+  // Re-sort results when sort option changes
+  useEffect(() => {
+    if (results.length > 0) {
+      setResults(sortResults(results))
+    }
+  }, [sortBy])
+
+  // Sort results based on selected criteria
+  const sortResults = (resultsToSort: SearchResult[]) => {
+    const sorted = [...resultsToSort];
+    switch (sortBy) {
+      case 'distance':
+        return sorted.sort((a, b) => {
+          if (searchLocation.lat === 0) return 0;
+          const distA = calculateDistance(searchLocation.lat, searchLocation.lng, a.latitude, a.longitude);
+          const distB = calculateDistance(searchLocation.lat, searchLocation.lng, b.latitude, b.longitude);
+          return distA - distB;
+        });
+      case 'rating':
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'reviewCount':
+        return sorted.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
+      case 'name':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'leadScore':
+      default:
+        return sorted.sort((a, b) => (b.leadScore || 0) - (a.leadScore || 0));
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,7 +148,8 @@ export default function SalesSearchPage() {
           alreadyExists: result.isExisting,
           prospectId: result.existingId
         }))
-        setResults(mappedResults)
+        const sortedResults = sortResults(mappedResults)
+        setResults(sortedResults)
         setNextPageToken(data.nextPageToken || null)
         if (data.searchLocation) {
           setSearchLocation(data.searchLocation)
@@ -168,7 +200,9 @@ export default function SalesSearchPage() {
           prospectId: result.existingId
         }))
         // Append new results to existing ones
-        setResults(prev => [...prev, ...mappedResults])
+        const combined = [...results, ...mappedResults]
+        const sortedResults = sortResults(combined)
+        setResults(sortedResults)
         setNextPageToken(data.nextPageToken || null)
       } else {
         alert('Fehler beim Laden weiterer Ergebnisse')
@@ -356,9 +390,25 @@ export default function SalesSearchPage() {
         {results.length > 0 && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-600">
-                {results.length} Werkstätten gefunden · {selectedPlaces.size} ausgewählt
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-600">
+                  {results.length} Werkstätten gefunden · {selectedPlaces.size} ausgewählt
+                </p>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Sortieren:</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="leadScore">Lead-Score (höchste zuerst)</option>
+                    <option value="distance">Entfernung (nächste zuerst)</option>
+                    <option value="rating">Bewertung (beste zuerst)</option>
+                    <option value="reviewCount">Anzahl Bewertungen (meiste zuerst)</option>
+                    <option value="name">Name (A-Z)</option>
+                  </select>
+                </div>
+              </div>
               {selectedPlaces.size > 0 && (
                 <button
                   onClick={handleImport}

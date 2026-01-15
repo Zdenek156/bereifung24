@@ -209,8 +209,6 @@ export default function ProspectDetailDialog({
     }
   }
 
-  if (!isOpen || !prospect) return null
-
   const getPriceLevelText = (level?: number) => {
     if (!level) return 'Keine Angabe'
     return '€'.repeat(level)
@@ -265,6 +263,8 @@ export default function ProspectDetailDialog({
       '_blank'
     )
   }
+
+  if (!isOpen || !prospect) return null
 
   const isImported = !!prospect.id
 

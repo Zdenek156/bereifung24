@@ -524,23 +524,32 @@ export default function TasksPage() {
                       </select>
 
                       {/* Löschen-Button nur für Ersteller */}
-                      {session?.user?.id === task.createdBy.id ? (
-                        <button
-                          onClick={() => deleteTask(task.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Aufgabe löschen"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          className="p-2 text-gray-400 cursor-not-allowed rounded"
-                          title={`Nur Ersteller kann löschen. Session: ${session?.user?.id} | Ersteller: ${task.createdBy.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <div className="flex flex-col items-end">
+                        {session?.user?.id === task.createdBy.id ? (
+                          <button
+                            onClick={() => deleteTask(task.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Aufgabe löschen"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="p-2 text-gray-400 cursor-not-allowed rounded"
+                            title="Nur Ersteller kann löschen"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="text-xs text-gray-500 mt-1 max-w-sm">
+                          <div>Session: {session?.user?.id || 'undefined'}</div>
+                          <div>Creator: {task.createdBy?.id || 'undefined'}</div>
+                          <div className={session?.user?.id === task.createdBy?.id ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                            Match: {String(session?.user?.id === task.createdBy?.id)}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

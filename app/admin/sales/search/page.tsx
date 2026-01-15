@@ -6,14 +6,28 @@ import { useEffect, useState } from 'react'
 import { Search, MapPin, Star, TrendingUp, ArrowLeft, Plus, Info } from 'lucide-react'
 import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 
+// Calculate distance between two coordinates using Haversine formula
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 interface SearchResult {
   placeId: string
   name: string
   address: string
+  street: string
   city: string
   postalCode: string
-  lat: number
-  lng: number
+  latitude: number
+  longitude: number
   rating?: number
   reviewCount: number
   photoUrl?: string
@@ -39,6 +53,7 @@ export default function SalesSearchPage() {
   const [radius, setRadius] = useState(10000)
   const [keyword, setKeyword] = useState('Reifenservice Werkstatt')
   const [country, setCountry] = useState('DE')
+  const [searchLocation, setSearchLocation] = useState({ lat: 0, lng: 0 })
   
   // Results
   const [results, setResults] = useState<SearchResult[]>([])
@@ -85,10 +100,11 @@ export default function SalesSearchPage() {
           placeId: result.googlePlaceId,
           name: result.name,
           address: result.address,
+          street: result.street,
           city: result.city,
           postalCode: result.postalCode,
-          lat: result.latitude,
-          lng: result.longitude,
+          latitude: result.latitude,
+          longitude: result.longitude,
           rating: result.rating,
           reviewCount: result.reviewCount,
           photoUrls: result.photoUrls,
@@ -103,6 +119,9 @@ export default function SalesSearchPage() {
         }))
         setResults(mappedResults)
         setNextPageToken(data.nextPageToken || null)
+        if (data.searchLocation) {
+          setSearchLocation(data.searchLocation)
+        }
       } else {
         alert('Fehler bei der Suche')
       }
@@ -131,10 +150,11 @@ export default function SalesSearchPage() {
           placeId: result.googlePlaceId,
           name: result.name,
           address: result.address,
+          street: result.street,
           city: result.city,
           postalCode: result.postalCode,
-          lat: result.latitude,
-          lng: result.longitude,
+          latitude: result.latitude,
+          longitude: result.longitude,
           rating: result.rating,
           reviewCount: result.reviewCount,
           photoUrls: result.photoUrls,
@@ -377,14 +397,26 @@ export default function SalesSearchPage() {
                         )}
                         <div className="flex-1">
                           <div className="flex items-start justify-between">
-                            <div>
+                            <div className="flex-1">
                               <h3 className="text-lg font-semibold text-gray-900">
                                 {result.name}
                               </h3>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                {result.address}
+                                {result.street && `${result.street}, `}
+                                {result.postalCode && `${result.postalCode} `}
+                                {result.city}
                               </div>
+                              {searchLocation.lat !== 0 && result.latitude !== 0 && (
+                                <div className="text-xs text-gray-500 mt-1 ml-5">
+                                  {calculateDistance(
+                                    searchLocation.lat,
+                                    searchLocation.lng,
+                                    result.latitude,
+                                    result.longitude
+                                  ).toFixed(1)} km entfernt
+                                </div>
+                              )}
                             </div>
                             <div className="flex flex-col items-end space-y-2">
                               {result.rating && (

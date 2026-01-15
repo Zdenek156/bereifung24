@@ -91,14 +91,23 @@ export interface PlaceDetails {
 export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<{
   results: PlaceResult[];
   nextPageToken?: string;
+  searchLocation?: { lat: number; lng: number };
 }> {
   try {
     const country = params.country || 'DE';
     
     // Geocode if location is an address (skip for pagination requests)
     let location = params.location;
+    let searchCoords = { lat: 0, lng: 0 };
+    
     if (location && !location.includes(',')) {
       location = await geocodeAddress(params.location, country);
+    }
+    
+    // Extract coordinates from location string (format: "lat,lng")
+    if (location && location.includes(',')) {
+      const [lat, lng] = location.split(',').map(s => parseFloat(s.trim()));
+      searchCoords = { lat, lng };
     }
 
     const radius = params.radius || 10000; // 10km default
@@ -131,7 +140,8 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
 
     return {
       results: data.results || [],
-      nextPageToken: data.next_page_token
+      nextPageToken: data.next_page_token,
+      searchLocation: searchCoords
     };
   } catch (error) {
     console.error('Error searching nearby workshops:', error);

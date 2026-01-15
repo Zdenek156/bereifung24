@@ -157,6 +157,23 @@ export default function ProspectDetailDialog({
     }
   }, [prospect?.placeId])
 
+  const loadTasks = useCallback(async () => {
+    if (!prospect?.placeId) return
+    
+    setLoadingTasks(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/tasks`)
+      if (response.ok) {
+        const data = await response.json()
+        setTasks(data.tasks || [])
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error)
+    } finally {
+      setLoadingTasks(false)
+    }
+  }, [prospect?.placeId])
+
   // NOW the conditional return AFTER all hooks
   if (!isOpen || !prospect) return null
 
@@ -232,23 +249,6 @@ export default function ProspectDetailDialog({
       console.error('Error deleting note:', error)
     }
   }
-
-  const loadTasks = useCallback(async () => {
-    if (!prospect?.placeId) return
-    
-    setLoadingTasks(true)
-    try {
-      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/tasks`)
-      if (response.ok) {
-        const data = await response.json()
-        setTasks(data.tasks || [])
-      }
-    } catch (error) {
-      console.error('Error loading tasks:', error)
-    } finally {
-      setLoadingTasks(false)
-    }
-  }, [prospect?.placeId])
 
   const handleAddTask = async () => {
     if (!newTaskTitle.trim() || !prospect) return

@@ -490,31 +490,15 @@ export default function TasksPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Status Dropdown */}
+                      {/* Status Dropdown - Einheitlich für alle Task-Typen */}
                       <select
                         value={task.status}
                         onChange={(e) => updateTaskStatus(task.id, e.target.value)}
                         className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        {task.taskType === 'PROSPECT' ? (
-                          // ProspectTask: Nur PENDING, IN_PROGRESS, COMPLETED
-                          <>
-                            <option value="PENDING">Offen</option>
-                            <option value="IN_PROGRESS">In Arbeit</option>
-                            <option value="COMPLETED">Abgeschlossen</option>
-                          </>
-                        ) : (
-                          // EmployeeTask: Alle Status
-                          <>
-                            <option value="TODO">Zu erledigen</option>
-                            <option value="PENDING">Offen</option>
-                            <option value="IN_PROGRESS">In Arbeit</option>
-                            <option value="REVIEW">Überprüfung</option>
-                            <option value="BLOCKED">Blockiert</option>
-                            <option value="COMPLETED">Abgeschlossen</option>
-                            <option value="CANCELLED">Abgebrochen</option>
-                          </>
-                        )}
+                        <option value="PENDING">Offen</option>
+                        <option value="IN_PROGRESS">In Arbeit</option>
+                        <option value="COMPLETED">Abgeschlossen</option>
                       </select>
                     </div>
                   </div>

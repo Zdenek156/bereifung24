@@ -137,7 +137,6 @@ export default function ProspectDetailDialog({
     fetch('/api/employee/list')
       .then(response => response.ok ? response.json() : Promise.reject())
       .then(data => {
-        console.log('Loaded employees:', data.employees)
         setEmployees(data.employees || [])
       })
       .catch(error => console.error('Error loading employees:', error))
@@ -291,9 +290,13 @@ export default function ProspectDetailDialog({
         setNewTaskDueDate('')
         setNewTaskPriority('MEDIUM')
         await loadTasks()
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
+        alert(`Fehler beim Erstellen der Aufgabe: ${errorData.error || response.statusText}`)
       }
     } catch (error) {
       console.error('Error adding task:', error)
+      alert('Fehler beim Erstellen der Aufgabe. Bitte versuche es erneut.')
     } finally {
       setSavingTask(false)
     }

@@ -45,6 +45,13 @@ export default function ProspectDetailDialog({
   prospect,
   onImport 
 }: ProspectDetailDialogProps) {
+  // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
+  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
+  const [notes, setNotes] = useState<Note[]>([])
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [loadingNotes, setLoadingNotes] = useState(false)
+  const [savingNote, setSavingNote] = useState(false)
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -55,33 +62,6 @@ export default function ProspectDetailDialog({
       document.body.style.overflow = 'unset'
     }
   }, [isOpen])
-
-  if (!isOpen || !prospect) return null
-
-  const getPriceLevelText = (level?: number) => {
-    if (!level) return 'Keine Angabe'
-    return '€'.repeat(level)
-  }
-
-  const getLeadScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100 text-green-800'
-    if (score >= 60) return 'bg-blue-100 text-blue-800'
-    if (score >= 40) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-gray-100 text-gray-800'
-  }
-
-  const handleGoogleMaps = () => {
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(prospect.name)}&query_place_id=${prospect.placeId}`,
-      '_blank'
-    )
-  }
-
-  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
-  const [notes, setNotes] = useState<Note[]>([])
-  const [newNoteContent, setNewNoteContent] = useState('')
-  const [loadingNotes, setLoadingNotes] = useState(false)
-  const [savingNote, setSavingNote] = useState(false)
 
   // Load notes when Notes tab is opened
   useEffect(() => {
@@ -122,6 +102,28 @@ export default function ProspectDetailDialog({
       setLoadingNotes(false)
     }
   }, [prospect?.placeId])
+
+  // NOW the conditional return AFTER all hooks
+  if (!isOpen || !prospect) return null
+
+  const getPriceLevelText = (level?: number) => {
+    if (!level) return 'Keine Angabe'
+    return '€'.repeat(level)
+  }
+
+  const getLeadScoreColor = (score: number) => {
+    if (score >= 80) return 'bg-green-100 text-green-800'
+    if (score >= 60) return 'bg-blue-100 text-blue-800'
+    if (score >= 40) return 'bg-yellow-100 text-yellow-800'
+    return 'bg-gray-100 text-gray-800'
+  }
+
+  const handleGoogleMaps = () => {
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(prospect.name)}&query_place_id=${prospect.placeId}`,
+      '_blank'
+    )
+  }
 
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return

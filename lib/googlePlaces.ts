@@ -325,47 +325,47 @@ export function translateOpeningHours(weekdayText: string[]): string[] {
  */
 export function calculateLeadScoreBreakdown(place: PlaceResult | PlaceDetails): {
   total: number;
-  breakdown: Array<{ reason: string; points: number }>;
+  breakdown: Array<{ label: string; points: number }>;
 } {
-  const breakdown: Array<{ reason: string; points: number }> = [
-    { reason: 'Basis-Score', points: 50 }
+  const breakdown: Array<{ label: string; points: number }> = [
+    { label: 'Basis-Score', points: 50 }
   ];
 
   // Rating bonus
   if (place.rating) {
-    if (place.rating >= 4.5) breakdown.push({ reason: 'Sehr gute Bewertung (≥4.5⭐)', points: 20 });
-    else if (place.rating >= 4.0) breakdown.push({ reason: 'Gute Bewertung (≥4.0⭐)', points: 15 });
-    else if (place.rating >= 3.5) breakdown.push({ reason: 'Solide Bewertung (≥3.5⭐)', points: 10 });
-    else if (place.rating < 3.0) breakdown.push({ reason: 'Niedrige Bewertung (<3.0⭐)', points: -10 });
+    if (place.rating >= 4.5) breakdown.push({ label: 'Sehr gute Bewertung (≥4.5⭐)', points: 20 });
+    else if (place.rating >= 4.0) breakdown.push({ label: 'Gute Bewertung (≥4.0⭐)', points: 15 });
+    else if (place.rating >= 3.5) breakdown.push({ label: 'Solide Bewertung (≥3.5⭐)', points: 10 });
+    else if (place.rating < 3.0) breakdown.push({ label: 'Niedrige Bewertung (<3.0⭐)', points: -10 });
   }
 
   // Review count bonus
   if (place.user_ratings_total) {
-    if (place.user_ratings_total >= 100) breakdown.push({ reason: 'Viele Bewertungen (≥100)', points: 15 });
-    else if (place.user_ratings_total >= 50) breakdown.push({ reason: 'Gute Anzahl Bewertungen (≥50)', points: 10 });
-    else if (place.user_ratings_total >= 20) breakdown.push({ reason: 'Einige Bewertungen (≥20)', points: 5 });
+    if (place.user_ratings_total >= 100) breakdown.push({ label: 'Viele Bewertungen (≥100)', points: 15 });
+    else if (place.user_ratings_total >= 50) breakdown.push({ label: 'Gute Anzahl Bewertungen (≥50)', points: 10 });
+    else if (place.user_ratings_total >= 20) breakdown.push({ label: 'Einige Bewertungen (≥20)', points: 5 });
   }
 
   // Has website bonus
   if ('website' in place && place.website) {
-    breakdown.push({ reason: 'Website vorhanden', points: 10 });
+    breakdown.push({ label: 'Website vorhanden', points: 10 });
   }
 
   // Has phone bonus
   if ('formatted_phone_number' in place && place.formatted_phone_number) {
-    breakdown.push({ reason: 'Telefonnummer vorhanden', points: 10 });
+    breakdown.push({ label: 'Telefonnummer vorhanden', points: 10 });
   }
 
   // Has photos bonus
   if (place.photos && place.photos.length > 0) {
-    breakdown.push({ reason: 'Fotos vorhanden', points: 5 });
+    breakdown.push({ label: 'Fotos vorhanden', points: 5 });
   }
 
   // Business status check
   if (place.business_status === 'OPERATIONAL') {
-    breakdown.push({ reason: 'Betrieb aktiv', points: 5 });
+    breakdown.push({ label: 'Betrieb aktiv', points: 5 });
   } else if (place.business_status === 'CLOSED_PERMANENTLY') {
-    breakdown.push({ reason: 'Betrieb geschlossen', points: -100 });
+    breakdown.push({ label: 'Betrieb geschlossen', points: -100 });
   }
 
   // Calculate total

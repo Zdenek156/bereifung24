@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         const openingHours = openingHoursRaw.length > 0 ? translateOpeningHours(openingHoursRaw) : [];
 
         // Build final display address (use parsed addressString as primary source)
-        let finalAddress = addressString;
+        let finalAddress = addressString.replace(/, Germany$/i, '').replace(/, Deutschland$/i, '');
         
         // If no address from Google, build from parsed parts
         if (!finalAddress && (addressParts.street || addressParts.city)) {

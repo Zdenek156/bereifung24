@@ -488,26 +488,22 @@ export default function TasksPage() {
                       )}
                     </div>
 
-                    {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && (
-                      <div className="flex gap-2">
-                        {task.status === 'TODO' && (
-                          <button
-                            onClick={() => updateTaskStatus(task.id, 'IN_PROGRESS')}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                          >
-                            Starten
-                          </button>
-                        )}
-                        {task.status === 'IN_PROGRESS' && (
-                          <button
-                            onClick={() => updateTaskStatus(task.id, 'COMPLETED')}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                          >
-                            Abschließen
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* Status Dropdown */}
+                      <select
+                        value={task.status}
+                        onChange={(e) => updateTaskStatus(task.id, e.target.value)}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="TODO">Zu erledigen</option>
+                        <option value="PENDING">Offen</option>
+                        <option value="IN_PROGRESS">In Arbeit</option>
+                        <option value="REVIEW">Überprüfung</option>
+                        <option value="BLOCKED">Blockiert</option>
+                        <option value="COMPLETED">Abgeschlossen</option>
+                        <option value="CANCELLED">Abgebrochen</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               )

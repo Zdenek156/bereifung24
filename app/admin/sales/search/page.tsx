@@ -403,9 +403,7 @@ export default function SalesSearchPage() {
                               </h3>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                {result.street && `${result.street}, `}
-                                {result.postalCode && `${result.postalCode} `}
-                                {result.city}
+                                {result.address}
                               </div>
                               {searchLocation.lat !== 0 && result.latitude !== 0 && (
                                 <div className="text-xs text-gray-500 mt-1 ml-5">

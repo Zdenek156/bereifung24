@@ -455,6 +455,11 @@ export default function SalesSearchPage() {
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {result.address}
                               </div>
+                              {result.postalCode && result.city && (
+                                <div className="text-sm text-gray-500 mt-0.5 ml-5">
+                                  {result.postalCode} {result.city}
+                                </div>
+                              )}
                               {searchLocation.lat !== 0 && result.latitude !== 0 && (
                                 <div className="text-xs text-gray-500 mt-1 ml-5">
                                   {calculateDistance(

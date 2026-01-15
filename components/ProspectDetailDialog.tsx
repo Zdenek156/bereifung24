@@ -130,9 +130,10 @@ export default function ProspectDetailDialog({
                 {/* Address */}
                 <div className="flex items-start text-sm">
                   <MapPin className="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="font-medium">{prospect.address}</div>
-                    <div className="text-gray-600">{prospect.postalCode} {prospect.city}</div>
+                  <div className="font-medium">
+                    {prospect.street && `${prospect.street}, `}
+                    {prospect.postalCode && `${prospect.postalCode} `}
+                    {prospect.city}
                   </div>
                 </div>
 

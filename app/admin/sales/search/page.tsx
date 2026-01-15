@@ -453,10 +453,10 @@ export default function SalesSearchPage() {
                               </h3>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                {result.address}
+                                {result.street || result.address}
                               </div>
                               {result.postalCode && result.city && (
-                                <div className="text-sm text-gray-500 mt-0.5 ml-5">
+                                <div className="text-sm text-gray-600 mt-0.5 ml-5">
                                   {result.postalCode} {result.city}
                                 </div>
                               )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface ProspectDetail {
   placeId: string
@@ -83,17 +83,12 @@ export default function ProspectDetailDialog({
   const [loadingNotes, setLoadingNotes] = useState(false)
   const [savingNote, setSavingNote] = useState(false)
 
-  // Load notes when Notes tab is opened
-  useEffect(() => {
-    if (activeTab === 'notes' && prospect) {
-      loadNotes()
-    }
-  }, [activeTab, prospect])
-
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
+    if (!prospect?.placeId) return
+    
     setLoadingNotes(true)
     try {
-      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/notes`)
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/notes`)
       if (response.ok) {
         const data = await response.json()
         setNotes(data.notes || [])
@@ -103,7 +98,14 @@ export default function ProspectDetailDialog({
     } finally {
       setLoadingNotes(false)
     }
-  }
+  }, [prospect?.placeId])
+
+  // Load notes when Notes tab is opened
+  useEffect(() => {
+    if (activeTab === 'notes' && prospect?.placeId) {
+      loadNotes()
+    }
+  }, [activeTab, prospect?.placeId, loadNotes])
 
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return

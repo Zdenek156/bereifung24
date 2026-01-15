@@ -1,7 +1,7 @@
 'use client'
 
-import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp } from 'lucide-react'
-import { useEffect } from 'react'
+import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface ProspectDetail {
   placeId: string
@@ -70,6 +70,15 @@ export default function ProspectDetailDialog({
     )
   }
 
+  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
+
+  const tabs = [
+    { id: 'info' as const, label: 'Informationen', icon: Info },
+    { id: 'notes' as const, label: 'Notizen', icon: FileText },
+    { id: 'tasks' as const, label: 'Aufgaben', icon: CheckSquare },
+    { id: 'activity' as const, label: 'Aktivitäten', icon: Activity },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Overlay */}
@@ -80,7 +89,7 @@ export default function ProspectDetailDialog({
       
       {/* Dialog */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">{prospect.name}</h2>
@@ -92,9 +101,35 @@ export default function ProspectDetailDialog({
             </button>
           </div>
 
+          {/* Tabs */}
+          <div className="border-b border-gray-200 bg-gray-50">
+            <div className="flex space-x-8 px-6">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                      ${activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Photo Gallery */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {activeTab === 'info' && (
+              <div className="space-y-6">{/* Photo Gallery */}
             {prospect.photoUrls && prospect.photoUrls.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
@@ -216,6 +251,35 @@ export default function ProspectDetailDialog({
                       {prospect.leadScore}/100
                     </span>
                   </div>
+                </div>
+              </div>
+            )}
+              </div>
+            )}
+
+            {activeTab === 'notes' && (
+              <div className="space-y-4">
+                <div className="text-center py-12 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p>Notizen-Funktion wird in Kürze verfügbar sein</p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'tasks' && (
+              <div className="space-y-4">
+                <div className="text-center py-12 text-gray-500">
+                  <CheckSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p>Aufgaben-Funktion wird in Kürze verfügbar sein</p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'activity' && (
+              <div className="space-y-4">
+                <div className="text-center py-12 text-gray-500">
+                  <Activity className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p>Aktivitäten-Timeline wird in Kürze verfügbar sein</p>
                 </div>
               </div>
             )}

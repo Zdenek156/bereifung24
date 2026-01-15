@@ -66,6 +66,23 @@ export async function POST(
       );
     }
 
+    // Ensure prospect exists (create if from Google Places)
+    let prospect = await prisma.prospectWorkshop.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!prospect) {
+      // Create prospect from Google Places data
+      prospect = await prisma.prospectWorkshop.create({
+        data: {
+          id: params.id,
+          name: 'Google Places Prospect',
+          source: 'GOOGLE_PLACES',
+          status: 'NEW'
+        }
+      });
+    }
+
     const note = await prisma.prospectNote.create({
       data: {
         prospectId: params.id,
@@ -84,7 +101,17 @@ export async function POST(
       }
     });
 
-    return NextResponse.json({ note });
+    return NextResponse.json({ 
+      success: true,
+      note: {
+        id: note.id,
+        content: note.content,
+        createdAt: note.createdAt.toISOString(),
+        createdBy: note.createdBy 
+          ? `${note.createdBy.firstName} ${note.createdBy.lastName}`.trim()
+          : 'Unbekannt'
+      }
+    });
   } catch (error) {
     console.error('Error creating note:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

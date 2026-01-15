@@ -126,14 +126,30 @@ export default function ProspectDetailDialog({
   }
 
   const handleAddNote = async () => {
-    if (!newNoteContent.trim()) return
+    if (!newNoteContent.trim() || !prospect) return
     
     setSavingNote(true)
     try {
-      const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/notes`, {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newNoteContent })
+        body: JSON.stringify({ 
+          content: newNoteContent,
+          prospectData: {
+            name: prospect.name,
+            address: prospect.address,
+            city: prospect.city,
+            postalCode: prospect.postalCode,
+            lat: prospect.lat,
+            lng: prospect.lng,
+            phone: prospect.phone,
+            website: prospect.website,
+            rating: prospect.rating,
+            reviewCount: prospect.reviewCount,
+            priceLevel: prospect.priceLevel,
+            photoUrls: prospect.photoUrls
+          }
+        })
       })
       
       if (response.ok) {

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       include: {
         createdBy: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profileImage: true
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
         },
         assignedTo: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profileImage: true
@@ -48,6 +50,7 @@ export async function GET(request: NextRequest) {
         },
         completedBy: {
           select: {
+            id: true,
             firstName: true,
             lastName: true
           }
@@ -56,6 +59,7 @@ export async function GET(request: NextRequest) {
           include: {
             uploadedBy: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true
               }
@@ -69,6 +73,7 @@ export async function GET(request: NextRequest) {
           include: {
             author: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
                 profileImage: true
@@ -93,6 +98,7 @@ export async function GET(request: NextRequest) {
       include: {
         createdBy: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profileImage: true
@@ -100,6 +106,7 @@ export async function GET(request: NextRequest) {
         },
         assignedTo: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             profileImage: true

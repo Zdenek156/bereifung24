@@ -524,11 +524,19 @@ export default function TasksPage() {
                       </select>
 
                       {/* Löschen-Button nur für Ersteller */}
-                      {session?.user?.id === task.createdBy.id && (
+                      {session?.user?.id === task.createdBy.id ? (
                         <button
                           onClick={() => deleteTask(task.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Aufgabe löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="p-2 text-gray-400 cursor-not-allowed rounded"
+                          title={`Nur Ersteller kann löschen. Session: ${session?.user?.id} | Ersteller: ${task.createdBy.id}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

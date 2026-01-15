@@ -225,8 +225,13 @@ export function parseAddressComponents(formattedAddress: string): {
   state: string;
   country: string;
 } {
+  // Handle empty or null address
+  if (!formattedAddress || formattedAddress.trim().length === 0) {
+    return { street: '', city: '', postalCode: '', state: '', country: 'DE' };
+  }
+
   // Beispiel: "Hauptstraße 123, 10115 Berlin, Deutschland"
-  const parts = formattedAddress.split(',').map(p => p.trim());
+  const parts = formattedAddress.split(',').map(p => p.trim()).filter(Boolean);
   
   let street = '';
   let city = '';
@@ -265,11 +270,12 @@ export function parseAddressComponents(formattedAddress: string): {
   // Country is typically the last part
   if (parts.length > 0) {
     const lastPart = parts[parts.length - 1];
-    if (lastPart.toLowerCase().includes('deutschland') || lastPart.toLowerCase().includes('germany')) {
+    const lastPartLower = lastPart?.toLowerCase() || '';
+    if (lastPartLower.includes('deutschland') || lastPartLower.includes('germany')) {
       country = 'DE';
-    } else if (lastPart.toLowerCase().includes('österreich') || lastPart.toLowerCase().includes('austria')) {
+    } else if (lastPartLower.includes('österreich') || lastPartLower.includes('austria')) {
       country = 'AT';
-    } else if (lastPart.toLowerCase().includes('schweiz') || lastPart.toLowerCase().includes('switzerland')) {
+    } else if (lastPartLower.includes('schweiz') || lastPartLower.includes('switzerland')) {
       country = 'CH';
     }
   }

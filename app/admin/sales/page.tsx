@@ -128,21 +128,21 @@ export default function SalesDashboard() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Schnellzugriff</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ActionCard
-              href="/admin/sales/search"
+              href="/mitarbeiter/sales/search"
               icon={<Search className="h-8 w-8" />}
               title="Werkstätten suchen"
               description="Google Places Integration mit Lead-Scoring"
               color="blue"
             />
             <ActionCard
-              href="/admin/sales/prospects"
+              href="/mitarbeiter/sales/prospects"
               icon={<Users className="h-8 w-8" />}
               title="Alle Prospects"
               description="Übersicht und Verwaltung aller Leads"
               color="green"
             />
             <ActionCard
-              href="/admin/sales/reports"
+              href="/mitarbeiter/sales/reports"
               icon={<TrendingUp className="h-8 w-8" />}
               title="Reports & Analytics"
               description="Performance-Tracking und Auswertungen"

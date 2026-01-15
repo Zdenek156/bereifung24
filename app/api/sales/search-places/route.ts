@@ -76,8 +76,8 @@ export async function POST(request: Request) {
         const result = {
           googlePlaceId: place.place_id,
           name: place.name,
-          ...addressParts,
           address: finalAddress || 'Adresse nicht verfügbar',
+          ...addressParts,
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
           rating: place.rating,

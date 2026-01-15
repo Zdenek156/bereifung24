@@ -385,9 +385,6 @@ export default function SalesSearchPage() {
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {result.address}
                               </div>
-                              <div className="text-sm text-gray-600">
-                                {result.postalCode} {result.city}
-                              </div>
                             </div>
                             <div className="flex flex-col items-end space-y-2">
                               {result.rating && (

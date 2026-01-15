@@ -125,6 +125,7 @@ export async function GET(request: NextRequest) {
         ...task,
         taskType: 'EMPLOYEE',
         category: task.category || 'Intern',
+        status: task.status === 'TODO' ? 'PENDING' : task.status, // Status-Mapping TODO -> PENDING
         attachments: task.attachments || [],
         comments: task.comments || [],
         progress: task.progress || 0

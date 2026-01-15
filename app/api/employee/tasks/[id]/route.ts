@@ -31,10 +31,14 @@ export async function PATCH(
         return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
       }
 
+      // Status-Mapping: PENDING -> TODO für EmployeeTask
+      const mappedStatus = body.status === 'PENDING' ? 'TODO' : body.status
+
       const updatedTask = await prisma.employeeTask.update({
         where: { id: taskId },
         data: {
           ...body,
+          status: mappedStatus,
           dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
           completedAt: body.status === 'COMPLETED' && !employeeTask.completedAt 
             ? new Date() 

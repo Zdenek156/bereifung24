@@ -290,6 +290,17 @@ export default function ProspectDetailDialog({
         setNewTaskDueDate('')
         setNewTaskPriority('MEDIUM')
         await loadTasks()
+        
+        // Success message
+        alert('✓ Aufgabe erfolgreich erstellt!')
+        
+        // Scroll to top of tasks list after short delay
+        setTimeout(() => {
+          const tasksContainer = document.querySelector('[data-tasks-container]')
+          if (tasksContainer) {
+            tasksContainer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }, 100)
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }))
         alert(`Fehler beim Erstellen der Aufgabe: ${errorData.error || response.statusText}`)
@@ -761,7 +772,7 @@ export default function ProspectDetailDialog({
                     <p className="text-sm mt-1">Erstelle oben eine neue Aufgabe</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3" data-tasks-container>
                     {tasks.map(task => (
                       <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between gap-3">

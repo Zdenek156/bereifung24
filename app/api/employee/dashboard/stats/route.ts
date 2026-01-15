@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Count pending tasks (TODO, IN_PROGRESS, REVIEW, BLOCKED)
-    const pendingTasks = await prisma.employeeTask.count({
+    // Count pending tasks (TODO, IN_PROGRESS, REVIEW, BLOCKED, PENDING)
+    const pendingEmployeeTasks = await prisma.employeeTask.count({
       where: {
         assignedToId: employee.id,
         status: {
@@ -70,6 +70,17 @@ export async function GET(request: NextRequest) {
         }
       }
     })
+
+    const pendingProspectTasks = await prisma.prospectTask.count({
+      where: {
+        assignedToId: employee.id,
+        status: {
+          in: ['PENDING', 'IN_PROGRESS']
+        }
+      }
+    })
+
+    const pendingTasks = pendingEmployeeTasks + pendingProspectTasks
 
     // TODO: Implement overtime hours
     const overtimeHours = undefined

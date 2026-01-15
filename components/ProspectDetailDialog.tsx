@@ -83,6 +83,29 @@ export default function ProspectDetailDialog({
   const [loadingNotes, setLoadingNotes] = useState(false)
   const [savingNote, setSavingNote] = useState(false)
 
+  // Load notes when Notes tab is opened
+  useEffect(() => {
+    if (activeTab === 'notes' && prospect?.placeId) {
+      setLoadingNotes(true)
+      fetch(`/api/sales/prospects/${prospect.placeId}/notes`)
+        .then(response => {
+          if (response.ok) {
+            return response.json()
+          }
+          throw new Error('Failed to fetch notes')
+        })
+        .then(data => {
+          setNotes(data.notes || [])
+        })
+        .catch(error => {
+          console.error('Error loading notes:', error)
+        })
+        .finally(() => {
+          setLoadingNotes(false)
+        })
+    }
+  }, [activeTab, prospect?.placeId])
+
   const loadNotes = useCallback(async () => {
     if (!prospect?.placeId) return
     
@@ -99,13 +122,6 @@ export default function ProspectDetailDialog({
       setLoadingNotes(false)
     }
   }, [prospect?.placeId])
-
-  // Load notes when Notes tab is opened
-  useEffect(() => {
-    if (activeTab === 'notes' && prospect?.placeId) {
-      loadNotes()
-    }
-  }, [activeTab, prospect?.placeId, loadNotes])
 
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return

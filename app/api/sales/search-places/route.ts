@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Search nearby places
-    const { results: places, nextPageToken } = await searchNearbyWorkshops({
+    const { results: places, nextPageToken, searchLocation: searchCoords } = await searchNearbyWorkshops({
       location,
       radius: radius || 10000,
       keyword: keyword || 'Reifenservice Werkstatt',
@@ -115,6 +115,7 @@ export async function POST(request: Request) {
       results: enrichedPlaces,
       total: enrichedPlaces.length,
       nextPageToken,
+      searchLocation: searchCoords,
       searchParams: { location, radius, keyword }
     });
 

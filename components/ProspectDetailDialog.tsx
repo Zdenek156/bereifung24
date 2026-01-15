@@ -209,17 +209,6 @@ export default function ProspectDetailDialog({
     }
   }
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
   if (!isOpen || !prospect) return null
 
   const getPriceLevelText = (level?: number) => {

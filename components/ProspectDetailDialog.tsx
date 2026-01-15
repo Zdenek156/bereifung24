@@ -36,7 +36,7 @@ interface Task {
   id: string
   title: string
   description?: string
-  status: 'NEW' | 'IN_PROGRESS' | 'COMPLETED'
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH'
   dueDate?: string
   assignedTo?: string
@@ -299,7 +299,7 @@ export default function ProspectDetailDialog({
     }
   }
 
-  const handleUpdateTaskStatus = async (taskId: string, newStatus: 'NEW' | 'IN_PROGRESS' | 'COMPLETED') => {
+  const handleUpdateTaskStatus = async (taskId: string, newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') => {
     try {
       const response = await fetch(`/api/sales/prospects/${prospect!.placeId}/tasks/${taskId}`, {
         method: 'PUT',
@@ -333,7 +333,7 @@ export default function ProspectDetailDialog({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'NEW': return 'bg-blue-100 text-blue-800'
+      case 'PENDING': return 'bg-blue-100 text-blue-800'
       case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800'
       case 'COMPLETED': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -342,7 +342,7 @@ export default function ProspectDetailDialog({
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'NEW': return 'Neu'
+      case 'PENDING': return 'Offen'
       case 'IN_PROGRESS': return 'In Bearbeitung'
       case 'COMPLETED': return 'Erledigt'
       default: return status
@@ -800,7 +800,7 @@ export default function ProspectDetailDialog({
                               onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
                               className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
-                              <option value="NEW">Neu</option>
+                              <option value="PENDING">Offen</option>
                               <option value="IN_PROGRESS">In Bearbeitung</option>
                               <option value="COMPLETED">Erledigt</option>
                             </select>

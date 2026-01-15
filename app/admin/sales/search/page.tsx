@@ -280,18 +280,22 @@ export default function SalesSearchPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Radius (Meter)
+                  Radius: {(radius / 1000).toFixed(0)} km
                 </label>
-                <select
+                <input
+                  type="range"
+                  min="1000"
+                  max="50000"
+                  step="1000"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="5000">5 km</option>
-                  <option value="10000">10 km</option>
-                  <option value="25000">25 km</option>
-                  <option value="50000">50 km</option>
-                </select>
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>1 km</span>
+                  <span>25 km</span>
+                  <span>50 km</span>
+                </div>
               </div>
               
               <div>

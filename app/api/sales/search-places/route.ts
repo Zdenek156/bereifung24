@@ -41,19 +41,17 @@ export async function POST(request: Request) {
         // Get detailed information (phone, website, opening hours)
         const details = await getPlaceDetails(place.place_id);
         
-        // DEBUG: Log what Google returns for address
-        console.log('[SEARCH-PLACES] Place:', place.name);
-        console.log('[SEARCH-PLACES] formatted_address:', place.formatted_address);
-        console.log('[SEARCH-PLACES] vicinity:', place.vicinity);
-        
         // Check if already exists
         const existing = await prisma.prospectWorkshop.findUnique({
           where: { googlePlaceId: place.place_id }
         });
 
-        // Parse address (handle undefined formatted_address)
-        const addressParts = place.formatted_address 
-          ? parseAddressComponents(place.formatted_address)
+        // Use formatted_address OR vicinity (Google Nearby Search often doesn't return formatted_address)
+        const addressString = place.formatted_address || place.vicinity || '';
+        
+        // Parse address
+        const addressParts = addressString 
+          ? parseAddressComponents(addressString)
           : { street: '', city: '', postalCode: '', state: '', country: country || 'DE' };
 
         // Calculate lead score with breakdown
@@ -68,8 +66,10 @@ export async function POST(request: Request) {
         const openingHoursRaw = details?.opening_hours?.weekday_text || [];
         const openingHours = openingHoursRaw.length > 0 ? translateOpeningHours(openingHoursRaw) : [];
 
-        // Build address with fallback
-        let finalAddress = place.formatted_address || '';
+        // Build final display address (use parsed addressString as primary source)
+        let finalAddress = addressString;
+        
+        // If no address from Google, build from parsed parts
         if (!finalAddress && (addressParts.street || addressParts.city)) {
           const parts = [
             addressParts.street,

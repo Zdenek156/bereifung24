@@ -52,6 +52,23 @@ interface Employee {
   position?: string
 }
 
+interface Activity {
+  id: string
+  type: 'NOTE' | 'TASK' | 'EMAIL' | 'CALL' | 'MEETING'
+  title: string
+  description?: string
+  status?: string
+  priority?: string
+  createdBy: {
+    id: string
+    firstName: string
+    lastName: string
+    profileImage?: string
+  }
+  createdAt: string
+  icon: string
+}
+
 interface ProspectDetailDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -85,6 +102,10 @@ export default function ProspectDetailDialog({
   const [loadingTasks, setLoadingTasks] = useState(false)
   const [savingTask, setSavingTask] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+
+  // Activities State
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loadingActivities, setLoadingActivities] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -132,6 +153,13 @@ export default function ProspectDetailDialog({
     }
   }, [activeTab, prospect?.placeId])
 
+  // Load activities when Activity tab is opened
+  useEffect(() => {
+    if (activeTab === 'activity' && prospect?.placeId) {
+      loadActivities()
+    }
+  }, [activeTab, prospect?.placeId, loadActivities])
+
   // Load employees list once
   useEffect(() => {
     fetch('/api/employee/list')
@@ -173,6 +201,23 @@ export default function ProspectDetailDialog({
       console.error('Error loading tasks:', error)
     } finally {
       setLoadingTasks(false)
+    }
+  }, [prospect?.placeId])
+
+  const loadActivities = useCallback(async () => {
+    if (!prospect?.placeId) return
+    
+    setLoadingActivities(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/activities`)
+      if (response.ok) {
+        const data = await response.json()
+        setActivities(data.activities || [])
+      }
+    } catch (error) {
+      console.error('Error loading activities:', error)
+    } finally {
+      setLoadingActivities(false)
     }
   }, [prospect?.placeId])
 
@@ -837,10 +882,96 @@ export default function ProspectDetailDialog({
 
             {activeTab === 'activity' && (
               <div className="space-y-4">
-                <div className="text-center py-12 text-gray-500">
-                  <Activity className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>Aktivitäten-Timeline wird in Kürze verfügbar sein</p>
-                </div>
+                {loadingActivities ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  </div>
+                ) : activities.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Activity className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>Noch keine Aktivitäten vorhanden</p>
+                    <p className="text-sm mt-2">Notizen und Aufgaben werden hier angezeigt</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activities.map((activity) => (
+                      <div key={`${activity.type}-${activity.id}`} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex gap-3">
+                          {/* Icon */}
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-xl">
+                              {activity.icon}
+                            </div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <h4 className="text-sm font-semibold text-gray-900">
+                                  {activity.title}
+                                </h4>
+                                {activity.description && (
+                                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+                                    {activity.description}
+                                  </p>
+                                )}
+                                {activity.status && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                      activity.status === 'COMPLETED' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : activity.status === 'IN_PROGRESS'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {activity.status === 'COMPLETED' ? 'Abgeschlossen' : 
+                                       activity.status === 'IN_PROGRESS' ? 'In Arbeit' : 'Offen'}
+                                    </span>
+                                    {activity.priority && (
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                        activity.priority === 'HIGH' 
+                                          ? 'bg-red-100 text-red-800' 
+                                          : activity.priority === 'MEDIUM'
+                                          ? 'bg-yellow-100 text-yellow-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {activity.priority === 'HIGH' ? 'Hoch' : 
+                                         activity.priority === 'MEDIUM' ? 'Mittel' : 'Niedrig'}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Meta Info */}
+                            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <span className="font-medium">
+                                  {activity.createdBy.firstName} {activity.createdBy.lastName}
+                                </span>
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {new Date(activity.createdAt).toLocaleDateString('de-DE', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric'
+                                })}
+                                {' um '}
+                                {new Date(activity.createdAt).toLocaleTimeString('de-DE', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

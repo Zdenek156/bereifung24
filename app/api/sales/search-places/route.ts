@@ -41,6 +41,11 @@ export async function POST(request: Request) {
         // Get detailed information (phone, website, opening hours)
         const details = await getPlaceDetails(place.place_id);
         
+        // DEBUG: Log what Google returns for address
+        console.log('[SEARCH-PLACES] Place:', place.name);
+        console.log('[SEARCH-PLACES] formatted_address:', place.formatted_address);
+        console.log('[SEARCH-PLACES] vicinity:', place.vicinity);
+        
         // Check if already exists
         const existing = await prisma.prospectWorkshop.findUnique({
           where: { googlePlaceId: place.place_id }

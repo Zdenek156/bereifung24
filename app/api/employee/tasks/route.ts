@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
     const allTasks = [
       ...employeeTasks.map(task => ({
         ...task,
+        taskType: 'EMPLOYEE',
         category: task.category || 'Intern',
         attachments: task.attachments || [],
         comments: task.comments || [],
@@ -130,6 +131,7 @@ export async function GET(request: NextRequest) {
       })),
       ...prospectTasks.map(task => ({
         ...task,
+        taskType: 'PROSPECT',
         category: 'Vertrieb',
         description: task.description ? `${task.description}\n\nProspect: ${task.prospect.name} (${task.prospect.city})` : `Prospect: ${task.prospect.name} (${task.prospect.city})`,
         attachments: [],

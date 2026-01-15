@@ -61,12 +61,12 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Count pending tasks (TODO, IN_PROGRESS, REVIEW, BLOCKED, PENDING)
+    // Count pending tasks (nur TODO/IN_PROGRESS, ohne REVIEW/BLOCKED)
     const pendingEmployeeTasks = await prisma.employeeTask.count({
       where: {
         assignedToId: employee.id,
         status: {
-          in: ['TODO', 'IN_PROGRESS', 'REVIEW', 'BLOCKED']
+          in: ['TODO', 'IN_PROGRESS']
         }
       }
     })

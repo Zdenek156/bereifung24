@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    const tasks = await prisma.employeeTask.findMany({
+    // 1. Lade EmployeeTasks (interne Aufgaben)
+    const employeeTasks = await prisma.employeeTask.findMany({
       where,
       include: {
         createdBy: {
@@ -86,7 +87,78 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    return NextResponse.json(tasks)
+    // 2. Lade ProspectTasks (Sales-Aufgaben)
+    const prospectTasks = await prisma.prospectTask.findMany({
+      where,
+      include: {
+        createdBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+            profileImage: true
+          }
+        },
+        assignedTo: {
+          select: {
+            firstName: true,
+            lastName: true,
+            profileImage: true
+          }
+        },
+        prospect: {
+          select: {
+            name: true,
+            city: true
+          }
+        }
+      },
+      orderBy: [
+        { status: 'asc' },
+        { priority: 'desc' },
+        { dueDate: 'asc' }
+      ]
+    })
+
+    // 3. Kombiniere beide Task-Typen mit category Tag
+    const allTasks = [
+      ...employeeTasks.map(task => ({
+        ...task,
+        category: task.category || 'Intern',
+        attachments: task.attachments || [],
+        comments: task.comments || [],
+        progress: task.progress || 0
+      })),
+      ...prospectTasks.map(task => ({
+        ...task,
+        category: 'Vertrieb',
+        description: task.description ? `${task.description}\n\nProspect: ${task.prospect.name} (${task.prospect.city})` : `Prospect: ${task.prospect.name} (${task.prospect.city})`,
+        attachments: [],
+        comments: [],
+        progress: task.status === 'COMPLETED' ? 100 : task.status === 'IN_PROGRESS' ? 50 : 0,
+        completedBy: null
+      }))
+    ]
+
+    // 4. Sortiere kombinierte Liste
+    allTasks.sort((a, b) => {
+      // Erst nach Status
+      if (a.status !== b.status) {
+        const statusOrder = { TODO: 0, PENDING: 0, IN_PROGRESS: 1, REVIEW: 2, BLOCKED: 3, COMPLETED: 4, CANCELLED: 5 }
+        return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0)
+      }
+      // Dann nach Priorität
+      const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
+      if (a.priority !== b.priority) {
+        return (priorityOrder[a.priority as keyof typeof priorityOrder] || 2) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 2)
+      }
+      // Dann nach Fälligkeitsdatum
+      if (a.dueDate && b.dueDate) {
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      }
+      return 0
+    })
+
+    return NextResponse.json(allTasks)
   } catch (error) {
     console.error('Error fetching tasks:', error)
     return NextResponse.json(

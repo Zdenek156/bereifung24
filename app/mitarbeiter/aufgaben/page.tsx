@@ -49,6 +49,7 @@ interface Task {
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   TODO: { label: 'Zu erledigen', color: 'bg-gray-100 text-gray-800' },
+  PENDING: { label: 'Offen', color: 'bg-gray-100 text-gray-800' },
   IN_PROGRESS: { label: 'In Arbeit', color: 'bg-blue-100 text-blue-800' },
   REVIEW: { label: 'Überprüfung', color: 'bg-purple-100 text-purple-800' },
   BLOCKED: { label: 'Blockiert', color: 'bg-red-100 text-red-800' },
@@ -106,7 +107,7 @@ export default function TasksPage() {
       const response = await fetch('/api/employee/list')
       if (response.ok) {
         const data = await response.json()
-        setEmployees(data)
+        setEmployees(data.employees || [])
         // Set self as default assignee
         if (session?.user?.id) {
           setNewTask(prev => ({ ...prev, assignedToId: session.user.id }))
@@ -240,7 +241,7 @@ export default function TasksPage() {
     ? tasks 
     : tasks.filter(t => t.status === filterStatus)
 
-  const todoTasks = tasks.filter(t => t.status === 'TODO').length
+  const todoTasks = tasks.filter(t => t.status === 'TODO' || t.status === 'PENDING').length
   const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS').length
   const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length
 

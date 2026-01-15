@@ -95,9 +95,9 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
   try {
     const country = params.country || 'DE';
     
-    // Geocode if location is an address
+    // Geocode if location is an address (skip for pagination requests)
     let location = params.location;
-    if (!location.includes(',')) {
+    if (location && !location.includes(',')) {
       location = await geocodeAddress(params.location, country);
     }
 

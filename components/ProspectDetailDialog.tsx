@@ -156,9 +156,14 @@ export default function ProspectDetailDialog({
   // Load activities when Activity tab is opened
   useEffect(() => {
     if (activeTab === 'activity' && prospect?.placeId) {
-      loadActivities()
+      setLoadingActivities(true)
+      fetch(`/api/sales/prospects/${prospect.placeId}/activities`)
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => setActivities(data.activities || []))
+        .catch(error => console.error('Error loading activities:', error))
+        .finally(() => setLoadingActivities(false))
     }
-  }, [activeTab, prospect?.placeId, loadActivities])
+  }, [activeTab, prospect?.placeId])
 
   // Load employees list once
   useEffect(() => {
@@ -201,23 +206,6 @@ export default function ProspectDetailDialog({
       console.error('Error loading tasks:', error)
     } finally {
       setLoadingTasks(false)
-    }
-  }, [prospect?.placeId])
-
-  const loadActivities = useCallback(async () => {
-    if (!prospect?.placeId) return
-    
-    setLoadingActivities(true)
-    try {
-      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/activities`)
-      if (response.ok) {
-        const data = await response.json()
-        setActivities(data.activities || [])
-      }
-    } catch (error) {
-      console.error('Error loading activities:', error)
-    } finally {
-      setLoadingActivities(false)
     }
   }, [prospect?.placeId])
 

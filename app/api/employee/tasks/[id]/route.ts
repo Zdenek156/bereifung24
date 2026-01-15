@@ -19,53 +19,98 @@ export async function PATCH(
     const taskId = params.id
     const body = await request.json()
 
-    // Prüfen ob Aufgabe existiert
-    const task = await prisma.employeeTask.findUnique({
+    // Versuche zuerst EmployeeTask zu finden
+    let employeeTask = await prisma.employeeTask.findUnique({
       where: { id: taskId }
     })
 
-    if (!task) {
-      return NextResponse.json({ error: 'Aufgabe nicht gefunden' }, { status: 404 })
-    }
+    if (employeeTask) {
+      // Es ist eine EmployeeTask
+      // Nur zugewiesene Person oder Ersteller darf bearbeiten
+      if (employeeTask.assignedToId !== employeeId && employeeTask.createdById !== employeeId) {
+        return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+      }
 
-    // Nur zugewiesene Person oder Ersteller darf bearbeiten
-    if (task.assignedToId !== employeeId && task.createdById !== employeeId) {
-      return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
-    }
-
-    const updatedTask = await prisma.employeeTask.update({
-      where: { id: taskId },
-      data: {
-        ...body,
-        dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
-        completedAt: body.status === 'COMPLETED' && !task.completedAt 
-          ? new Date() 
-          : body.status !== 'COMPLETED' 
-          ? null 
-          : undefined,
-        completedById: body.status === 'COMPLETED' && !task.completedAt 
-          ? employeeId 
-          : body.status !== 'COMPLETED' 
-          ? null 
-          : undefined
-      },
-      include: {
-        createdBy: {
-          select: {
-            firstName: true,
-            lastName: true
-          }
+      const updatedTask = await prisma.employeeTask.update({
+        where: { id: taskId },
+        data: {
+          ...body,
+          dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+          completedAt: body.status === 'COMPLETED' && !employeeTask.completedAt 
+            ? new Date() 
+            : body.status !== 'COMPLETED' 
+            ? null 
+            : undefined,
+          completedById: body.status === 'COMPLETED' && !employeeTask.completedAt 
+            ? employeeId 
+            : body.status !== 'COMPLETED' 
+            ? null 
+            : undefined
         },
-        completedBy: {
-          select: {
-            firstName: true,
-            lastName: true
+        include: {
+          createdBy: {
+            select: {
+              firstName: true,
+              lastName: true
+            }
+          },
+          completedBy: {
+            select: {
+              firstName: true,
+              lastName: true
+            }
           }
         }
-      }
+      })
+
+      return NextResponse.json(updatedTask)
+    }
+
+    // Versuche ProspectTask zu finden
+    let prospectTask = await prisma.prospectTask.findUnique({
+      where: { id: taskId }
     })
 
-    return NextResponse.json(updatedTask)
+    if (prospectTask) {
+      // Es ist eine ProspectTask
+      // Nur zugewiesene Person oder Ersteller darf bearbeiten
+      if (prospectTask.assignedToId !== employeeId && prospectTask.createdById !== employeeId) {
+        return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+      }
+
+      const updatedTask = await prisma.prospectTask.update({
+        where: { id: taskId },
+        data: {
+          status: body.status,
+          priority: body.priority,
+          completedAt: body.status === 'COMPLETED' && !prospectTask.completedAt 
+            ? new Date() 
+            : body.status !== 'COMPLETED' 
+            ? null 
+            : undefined
+        },
+        include: {
+          createdBy: {
+            select: {
+              firstName: true,
+              lastName: true
+            }
+          },
+          assignedTo: {
+            select: {
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      })
+
+      return NextResponse.json(updatedTask)
+    }
+
+    // Keine Task gefunden
+    return NextResponse.json({ error: 'Aufgabe nicht gefunden' }, { status: 404 })
+
   } catch (error) {
     console.error('Error updating task:', error)
     return NextResponse.json(

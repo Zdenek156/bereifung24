@@ -49,10 +49,20 @@ export async function POST(request: Request) {
         // Use formatted_address OR vicinity (Google Nearby Search often doesn't return formatted_address)
         const addressString = place.formatted_address || place.vicinity || '';
         
+        // DEBUG: Log address data
+        console.log('\n=== DEBUG WERKSTATT ===');
+        console.log('Name:', place.name);
+        console.log('formatted_address:', place.formatted_address);
+        console.log('vicinity:', place.vicinity);
+        console.log('addressString (used):', addressString);
+        
         // Parse address
         const addressParts = addressString 
           ? parseAddressComponents(addressString)
           : { street: '', city: '', postalCode: '', state: '', country: country || 'DE' };
+        
+        console.log('Parsed addressParts:', addressParts);
+        console.log('===================\n');
 
         // Calculate lead score with breakdown
         const scoreData = calculateLeadScoreBreakdown(details || place);

@@ -207,7 +207,8 @@ export default function ProspectsListPage() {
                             ...prospect,
                             placeId: prospect.googlePlaceId,
                             lat: prospect.latitude,
-                            lng: prospect.longitude
+                            lng: prospect.longitude,
+                            status: prospect.status
                           } as any)
                           setDetailDialogOpen(true)
                         }}

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSalesUser } from '@/lib/sales-auth';
+import bcrypt from 'bcryptjs';
 
-// POST - Convert Prospect to Workshop
+/**
+ * POST /api/sales/prospects/[id]/convert
+ * Convert a prospect into an active workshop
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -14,90 +18,129 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { email, password } = body;
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Get prospect
+    // Get prospect by googlePlaceId (since route param is googlePlaceId)
     const prospect = await prisma.prospectWorkshop.findUnique({
-      where: { id: params.id }
+      where: { googlePlaceId: params.id }
     });
 
     if (!prospect) {
       return NextResponse.json({ error: 'Prospect not found' }, { status: 404 });
     }
 
+    // Check if already converted
     if (prospect.convertedToWorkshopId) {
       return NextResponse.json(
-        { error: 'Prospect already converted' },
+        { error: 'Prospect already converted', workshopId: prospect.convertedToWorkshopId },
         { status: 400 }
       );
     }
 
-    // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Get request body for email
+    const body = await request.json();
+    const { email } = body;
+
+    // Use prospect email or provided email
+    const workshopEmail = email || prospect.email;
+
+    if (!workshopEmail) {
+      return NextResponse.json(
+        { error: 'Email address required for workshop creation' },
+        { status: 400 }
+      );
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: workshopEmail }
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email address already in use' },
+        { status: 400 }
+      );
+    }
+
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Generate unique customer number
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const customerNumber = `WS-${dateStr}-${randomStr}`;
+
+    // Create workshop user
+    const user = await prisma.user.create({
+      data: {
+        email: workshopEmail,
+        password: hashedPassword,
+        role: 'WORKSHOP',
+        isVerified: false, // Requires email verification
+        city: prospect.city,
+        postalCode: prospect.postalCode
+      }
+    });
 
     // Create workshop
     const workshop = await prisma.workshop.create({
       data: {
-        name: prospect.name,
-        email,
-        password: hashedPassword,
-        phone: prospect.phone || '',
-        address: prospect.address,
-        city: prospect.city,
-        postalCode: prospect.postalCode,
+        userId: user.id,
+        customerNumber,
+        companyName: prospect.name,
         website: prospect.website,
-        // Transfer pricing data
-        baseInstallationPrice: 0,
-        pricePerTire: 0,
-        // Set initial status
-        isActive: true,
-        // Link back to prospect
-        prospectSource: {
-          connect: { id: params.id }
-        }
+        
+        // Initial verification status
+        isVerified: false,
+        
+        // Email notifications (all enabled by default)
+        emailNotifyRequests: true,
+        emailNotifyOfferAccepted: true,
+        emailNotifyBookings: true,
+        emailNotifyReviews: true,
+        emailNotifyReminders: true,
+        emailNotifyCommissions: true
       }
     });
 
-    // Update prospect status
+    // Update prospect with conversion info
     await prisma.prospectWorkshop.update({
-      where: { id: params.id },
+      where: { id: prospect.id },
       data: {
-        status: 'WON',
-        convertedToWorkshopId: workshop.id
+        status: 'CONVERTED',
+        convertedToWorkshopId: workshop.id,
+        convertedAt: new Date()
       }
     });
 
-    // Create final interaction
+    // Create interaction log
     await prisma.prospectInteraction.create({
       data: {
-        prospectId: params.id,
-        type: 'CONTRACT',
-        notes: `Erfolgreich zu Werkstatt konvertiert (ID: ${workshop.id})`,
-        outcome: 'SUCCESS',
-        channel: 'SYSTEM',
-        createdById: employee.id
+        prospectId: prospect.id,
+        type: 'NOTE',
+        notes: `Prospect converted to Workshop (ID: ${workshop.id}, Customer: ${customerNumber})`,
+        createdById: employee.id,
+        channel: 'SYSTEM'
       }
     });
 
-    return NextResponse.json({ 
+    // TODO: Send welcome email with credentials
+
+    return NextResponse.json({
       success: true,
       workshop: {
         id: workshop.id,
-        name: workshop.name,
-        email: workshop.email
-      }
+        customerNumber: customerNumber,
+        companyName: workshop.companyName,
+        email: user.email
+      },
+      tempPassword // Send temp password (should be sent via email in production)
     });
   } catch (error) {
     console.error('Error converting prospect:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

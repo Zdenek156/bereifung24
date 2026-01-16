@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ArrowLeft, MapPin, Phone, Globe, Star } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Globe, Star, Info } from 'lucide-react'
 import Link from 'next/link'
 import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 

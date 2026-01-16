@@ -259,7 +259,7 @@ export default function ProspectDetailDialog({
       
       if (response.ok) {
         setEditingEmail(false)
-        if (onImport) onImport() // Refresh list
+        // Email saved successfully, no need to refresh full list
       }
     } catch (error) {
       console.error('Error saving email:', error)

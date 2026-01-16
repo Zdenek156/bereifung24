@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       by: ['city'],
       where: {
         createdAt: { gte: startDate },
-        city: { not: null }
+        city: { not: { equals: null } }
       },
       _count: true,
       orderBy: {

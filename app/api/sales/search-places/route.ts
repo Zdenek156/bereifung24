@@ -112,7 +112,8 @@ export async function POST(request: Request) {
           leadScoreBreakdown: scoreData.breakdown,
           isExisting: !!existing,
           existingStatus: existing?.status,
-          existingId: existing?.id
+          existingId: existing?.id,
+          email: existing?.email || details?.website // Use prospect email if exists, otherwise fall back to website
         };
 
         return result;

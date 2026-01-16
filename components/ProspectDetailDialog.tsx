@@ -629,8 +629,8 @@ export default function ProspectDetailDialog({
                   <MapPin className="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="font-medium">{prospect.street || prospect.address}</div>
-                    {/* Only show PLZ/Stadt if address doesn't already contain them (no comma in address) */}
-                    {prospect.postalCode && prospect.city && !prospect.address?.includes(',') && (
+                    {/* Only show PLZ/Stadt if we have street (not full address) */}
+                    {prospect.street && prospect.postalCode && prospect.city && (
                       <div className="text-gray-600 mt-0.5">
                         {prospect.postalCode} {prospect.city}
                       </div>

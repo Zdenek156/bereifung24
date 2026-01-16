@@ -34,6 +34,7 @@ interface SearchResult {
   photoUrls?: string[]
   phone?: string
   website?: string
+  email?: string
   openingHours?: string[]
   priceLevel?: number
   leadScore: number

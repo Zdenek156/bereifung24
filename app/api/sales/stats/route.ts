@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     // Calculate conversion rate
     const totalConverted = await prisma.prospectWorkshop.count({
       where: {
-        status: 'CONVERTED',
+        status: 'WON',
         createdAt: { gte: startDate }
       }
     });

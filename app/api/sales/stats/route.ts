@@ -53,20 +53,23 @@ export async function GET(request: Request) {
     });
 
     // Get prospects by city (top cities)
-    const byCities = await prisma.prospectWorkshop.groupBy({
+    const byCitiesRaw = await prisma.prospectWorkshop.groupBy({
       by: ['city'],
       where: {
-        createdAt: { gte: startDate },
-        city: { not: { equals: null } }
+        createdAt: { gte: startDate }
       },
       _count: true,
       orderBy: {
         _count: {
           city: 'desc'
         }
-      },
-      take: 10
+      }
     });
+    
+    // Filter out null cities and take top 10
+    const byCities = byCitiesRaw
+      .filter(item => item.city !== null)
+      .slice(0, 10);
 
     // Calculate conversion rate
     const totalConverted = await prisma.prospectWorkshop.count({

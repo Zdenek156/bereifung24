@@ -14,7 +14,8 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const prospect = await prisma.prospectWorkshop.findUnique({
+    // Try to find by id first, then by googlePlaceId
+    let prospect = await prisma.prospectWorkshop.findUnique({
       where: { id: params.id },
       include: {
         assignedTo: {
@@ -85,6 +86,80 @@ export async function GET(
       }
     });
 
+    // If not found by id, try googlePlaceId
+    if (!prospect) {
+      prospect = await prisma.prospectWorkshop.findUnique({
+        where: { googlePlaceId: params.id },
+        include: {
+          assignedTo: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
+          interactions: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          },
+          tasks: {
+            include: {
+              assignedTo: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true
+                }
+              },
+              createdBy: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            },
+            orderBy: { dueDate: 'asc' }
+          },
+          notes: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            },
+            orderBy: [
+              { isPinned: 'desc' },
+              { createdAt: 'desc' }
+            ]
+          },
+          convertedWorkshop: {
+            select: {
+              id: true,
+              companyName: true,
+              user: {
+                select: {
+                  city: true
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     if (!prospect) {
       return NextResponse.json({ error: 'Prospect not found' }, { status: 404 });
     }
@@ -123,9 +198,24 @@ export async function PATCH(
       notes: noteText
     } = body;
 
+    // Find prospect by id or googlePlaceId
+    let prospectToUpdate = await prisma.prospectWorkshop.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!prospectToUpdate) {
+      prospectToUpdate = await prisma.prospectWorkshop.findUnique({
+        where: { googlePlaceId: params.id }
+      });
+    }
+
+    if (!prospectToUpdate) {
+      return NextResponse.json({ error: 'Prospect not found' }, { status: 404 });
+    }
+
     // Update prospect
     const prospect = await prisma.prospectWorkshop.update({
-      where: { id: params.id },
+      where: { id: prospectToUpdate.id },
       data: {
         ...(name && { name }),
         ...(phone !== undefined && { phone }),
@@ -183,22 +273,37 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Find prospect by id or googlePlaceId
+    let prospectToDelete = await prisma.prospectWorkshop.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!prospectToDelete) {
+      prospectToDelete = await prisma.prospectWorkshop.findUnique({
+        where: { googlePlaceId: params.id }
+      });
+    }
+
+    if (!prospectToDelete) {
+      return NextResponse.json({ error: 'Prospect not found' }, { status: 404 });
+    }
+
     // Delete all related data first
     await prisma.prospectNote.deleteMany({
-      where: { prospectId: params.id }
+      where: { prospectId: prospectToDelete.id }
     });
 
     await prisma.prospectTask.deleteMany({
-      where: { prospectId: params.id }
+      where: { prospectId: prospectToDelete.id }
     });
 
     await prisma.prospectInteraction.deleteMany({
-      where: { prospectId: params.id }
+      where: { prospectId: prospectToDelete.id }
     });
 
     // Delete prospect
     await prisma.prospectWorkshop.delete({
-      where: { id: params.id }
+      where: { id: prospectToDelete.id }
     });
 
     return NextResponse.json({ success: true });

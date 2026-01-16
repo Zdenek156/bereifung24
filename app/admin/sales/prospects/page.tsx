@@ -136,16 +136,7 @@ export default function ProspectsListPage() {
             {prospects.map((prospect) => (
               <div
                 key={prospect.id}
-                onClick={() => {
-                  setSelectedProspect({
-                    ...prospect,
-                    placeId: prospect.googlePlaceId,
-                    lat: prospect.latitude,
-                    lng: prospect.longitude
-                  } as any)
-                  setDetailDialogOpen(true)
-                }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -198,15 +189,33 @@ export default function ProspectsListPage() {
                       )}
                     </div>
 
-                    <div className="mt-4 flex items-center gap-2">
-                      <span className="text-xs text-gray-600">Status:</span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                        {statusLabels[prospect.status] || prospect.status}
-                      </span>
-                      <span className="text-xs text-gray-600">Lead Score:</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                        {prospect.leadScore}/100
-                      </span>
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Status:</span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          {statusLabels[prospect.status] || prospect.status}
+                        </span>
+                        <span className="text-xs text-gray-600">Lead Score:</span>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                          {prospect.leadScore}/100
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedProspect({
+                            ...prospect,
+                            placeId: prospect.googlePlaceId,
+                            lat: prospect.latitude,
+                            lng: prospect.longitude
+                          } as any)
+                          setDetailDialogOpen(true)
+                        }}
+                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <Info className="h-4 w-4" />
+                        Details anzeigen
+                      </button>
                     </div>
                   </div>
                 </div>

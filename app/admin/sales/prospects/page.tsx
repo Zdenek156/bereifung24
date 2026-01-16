@@ -5,20 +5,29 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, MapPin, Phone, Globe, Star } from 'lucide-react'
 import Link from 'next/link'
+import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 
 interface Prospect {
   id: string
+  googlePlaceId: string
   name: string
   city: string
   postalCode: string
   address: string
   phone?: string
   website?: string
+  email?: string
   rating?: number
   reviewCount: number
   status: string
   priority: string
   leadScore: number
+  latitude: number
+  longitude: number
+  photoUrls?: string[]
+  openingHours?: any
+  priceLevel?: number
+  leadScoreBreakdown?: { label: string; points: number }[]
 }
 
 const statusLabels: Record<string, string> = {
@@ -40,6 +49,8 @@ export default function ProspectsListPage() {
   const router = useRouter()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -125,7 +136,16 @@ export default function ProspectsListPage() {
             {prospects.map((prospect) => (
               <div
                 key={prospect.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setSelectedProspect({
+                    ...prospect,
+                    placeId: prospect.googlePlaceId,
+                    lat: prospect.latitude,
+                    lng: prospect.longitude
+                  } as any)
+                  setDetailDialogOpen(true)
+                }}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -195,6 +215,14 @@ export default function ProspectsListPage() {
           </div>
         )}
       </div>
+
+      {/* Detail Dialog */}
+      <ProspectDetailDialog
+        isOpen={detailDialogOpen}
+        onClose={() => setDetailDialogOpen(false)}
+        prospect={selectedProspect}
+        onImport={fetchProspects}
+      />
     </div>
   )
 }

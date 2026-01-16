@@ -24,6 +24,7 @@ interface ProspectDetail {
     label: string
     points: number
   }[]
+  status?: string
 }
 
 interface Note {
@@ -688,12 +689,14 @@ export default function ProspectDetailDialog({
                       ) : (
                         <span className="text-gray-400 italic">Keine Email hinterlegt</span>
                       )}
-                      <button
-                        onClick={() => setEditingEmail(true)}
-                        className="text-blue-600 hover:text-blue-700 text-xs underline"
-                      >
-                        {emailValue ? 'Bearbeiten' : 'Hinzufügen'}
-                      </button>
+                      {prospect.status !== 'CONVERTED' && (
+                        <button
+                          onClick={() => setEditingEmail(true)}
+                          className="text-blue-600 hover:text-blue-700 text-xs underline"
+                        >
+                          {emailValue ? 'Bearbeiten' : 'Hinzufügen'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

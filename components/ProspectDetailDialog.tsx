@@ -106,6 +106,13 @@ export default function ProspectDetailDialog({
   // Activities State
   const [activities, setActivities] = useState<Activity[]>([])
   const [loadingActivities, setLoadingActivities] = useState(false)
+  
+  // Edit State
+  const [editingEmail, setEditingEmail] = useState(false)
+  const [emailValue, setEmailValue] = useState('')
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [converting, setConverting] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -209,6 +216,13 @@ export default function ProspectDetailDialog({
     }
   }, [prospect?.placeId])
 
+  // Initialize email value when prospect changes
+  useEffect(() => {
+    if (prospect) {
+      setEmailValue(prospect.email || '')
+    }
+  }, [prospect])
+
   // NOW the conditional return AFTER all hooks
   if (!isOpen || !prospect) return null
 
@@ -229,6 +243,83 @@ export default function ProspectDetailDialog({
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(prospect.name)}&query_place_id=${prospect.placeId}`,
       '_blank'
     )
+  }
+
+  const handleSaveEmail = async () => {
+    if (!prospect) return
+    
+    setSavingEmail(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailValue })
+      })
+      
+      if (response.ok) {
+        setEditingEmail(false)
+        if (onImport) onImport() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error saving email:', error)
+    } finally {
+      setSavingEmail(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!prospect || !confirm('Möchten Sie diesen Prospect wirklich löschen? Er wird dann wieder in der Suche sichtbar.')) return
+    
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        onClose()
+        if (onImport) onImport() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error deleting prospect:', error)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleConvert = async () => {
+    if (!prospect) return
+    
+    if (!emailValue) {
+      alert('Bitte geben Sie eine Email-Adresse ein, bevor Sie den Prospect konvertieren.')
+      return
+    }
+    
+    if (!confirm('Möchten Sie diesen Prospect in eine aktive Werkstatt konvertieren?')) return
+    
+    setConverting(true)
+    try {
+      const response = await fetch(`/api/sales/prospects/${prospect.placeId}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailValue })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        alert(`Prospect erfolgreich konvertiert! Workshop-ID: ${data.workshop.id}`)
+        onClose()
+        if (onImport) onImport() // Refresh list
+      } else {
+        alert(`Fehler: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Error converting prospect:', error)
+      alert('Fehler beim Konvertieren')
+    } finally {
+      setConverting(false)
+    }
   }
 
   const handleAddNote = async () => {
@@ -434,13 +525,40 @@ export default function ProspectDetailDialog({
         <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">{prospect.name}</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{prospect.name}</h2>
+              <p className="text-sm text-gray-500 mt-1">{prospect.city}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleGoogleMaps}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Google Maps
+              </button>
+              <button
+                onClick={handleConvert}
+                disabled={converting}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+              >
+                {converting ? 'Konvertiere...' : 'In Werkstatt konvertieren'}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleting ? 'Lösche...' : 'Löschen'}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -526,6 +644,58 @@ export default function ProspectDetailDialog({
                     </a>
                   </div>
                 )}
+
+                {/* Email */}
+                <div className="flex items-center text-sm">
+                  <svg className="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  {editingEmail ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <input
+                        type="email"
+                        value={emailValue}
+                        onChange={(e) => setEmailValue(e.target.value)}
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="email@beispiel.de"
+                        disabled={savingEmail}
+                      />
+                      <button
+                        onClick={handleSaveEmail}
+                        disabled={savingEmail}
+                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-400"
+                      >
+                        {savingEmail ? 'Speichern...' : 'Speichern'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingEmail(false)
+                          setEmailValue(prospect.email || '')
+                        }}
+                        disabled={savingEmail}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-1">
+                      {emailValue ? (
+                        <a href={`mailto:${emailValue}`} className="text-primary-600 hover:underline">
+                          {emailValue}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 italic">Keine Email hinterlegt</span>
+                      )}
+                      <button
+                        onClick={() => setEditingEmail(true)}
+                        className="text-blue-600 hover:text-blue-700 text-xs underline"
+                      >
+                        {emailValue ? 'Bearbeiten' : 'Hinzufügen'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Website */}
                 {prospect.website && (

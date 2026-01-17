@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search, TrendingUp, Users, Target, MapPin } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 interface Stats {
   totalProspects: number
@@ -80,11 +81,14 @@ export default function SalesDashboard() {
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sales CRM</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Werkstatt-Akquise & Lead-Management
-              </p>
+            <div className="flex items-center gap-4">
+              <BackButton />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Sales CRM</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Werkstatt-Akquise & Lead-Management
+                </p>
+              </div>
             </div>
             <Link
               href="/mitarbeiter/sales/search"

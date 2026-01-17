@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer, ArrowLeft, Mail, FileDown, ChevronDown } from 'lucide-react'
+import { Download, Lock, CheckCircle, Calendar, RefreshCw, Printer, Mail, FileDown, ChevronDown } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
+import BackButton from '@/components/BackButton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -299,13 +300,7 @@ export default function BilanzPage() {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/buchhaltung')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <BackButton />
             <h1 className="text-3xl font-bold">Bilanz</h1>
           </div>
           <div className="flex gap-3 items-center">
@@ -363,13 +358,7 @@ export default function BilanzPage() {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6 print-hide">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/buchhaltung')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <BackButton />
             <h1 className="text-3xl font-bold">Bilanz</h1>
           </div>
           <div className="flex gap-3 items-center">

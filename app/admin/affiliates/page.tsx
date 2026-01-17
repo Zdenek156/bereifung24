@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, TrendingUp, DollarSign, Link as LinkIcon } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 export default function AffiliatesPage() {
   return (
     <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Affiliate-Verwaltung</h1>
+      <div className="mb-8 flex items-center gap-4">
+        <BackButton />
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Affiliate-Verwaltung</h1>
         <p className="mt-2 text-gray-600">
           Verwalte Affiliate-Partner und Tracking
         </p>

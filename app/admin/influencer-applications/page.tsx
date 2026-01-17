@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import ApplicationsList from '@/components/admin/ApplicationsList'
 import ApprovalModal from '@/components/admin/ApprovalModal'
 import RejectionModal from '@/components/admin/RejectionModal'
+import BackButton from '@/components/BackButton'
 
 export default function InfluencerApplicationsPage() {
   const { data: session, status } = useSession()
@@ -56,12 +57,9 @@ export default function InfluencerApplicationsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push('/admin/influencer-management')}
-            className="text-blue-600 hover:text-blue-800 mb-3 inline-flex items-center text-sm"
-          >
-            ← Zurück zum Influencer Management
-          </button>
+          <div className="mb-3">
+            <BackButton />
+          </div>
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Influencer-Bewerbungen</h1>

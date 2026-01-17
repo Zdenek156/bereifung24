@@ -3,7 +3,8 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Search, MapPin, Star, TrendingUp, ArrowLeft, Plus, Info } from 'lucide-react'
+import { Search, MapPin, Star, TrendingUp, Plus, Info } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 
 // Calculate distance between two coordinates using Haversine formula
@@ -283,12 +284,7 @@ export default function SalesSearchPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/admin/sales')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
+              <BackButton />
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Werkstätten suchen</h1>
                 <p className="mt-1 text-sm text-gray-600">

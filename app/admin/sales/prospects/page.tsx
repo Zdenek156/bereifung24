@@ -149,9 +149,6 @@ export default function ProspectsListPage() {
                           <MapPin className="h-4 w-4 mr-1" />
                           {prospect.address}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          {prospect.postalCode} {prospect.city}
-                        </div>
                       </div>
                       <div className="flex flex-col items-end space-y-2">
                         {prospect.rating && (

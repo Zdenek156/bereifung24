@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { BookOpen, Search, FileText, Video, HelpCircle } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 export default function WikiPage() {
   const { data: session, status } = useSession()
@@ -40,12 +41,7 @@ export default function WikiPage() {
                 FAQ, Anleitungen & Vorlagen
               </p>
             </div>
-            <button
-              onClick={() => router.push('/mitarbeiter')}
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-            >
-              ← Zurück
-            </button>
+            <BackButton />
           </div>
         </div>
       </div>

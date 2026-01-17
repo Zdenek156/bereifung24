@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Document {
   id: string
@@ -198,12 +198,9 @@ export default function DokumentePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <Link
-                href="/mitarbeiter"
-                className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block"
-              >
-                ← Zurück zum Dashboard
-              </Link>
+              <div className="mb-2">
+                <BackButton />
+              </div>
               <h1 className="text-2xl font-bold text-gray-900">Meine Dokumente</h1>
               <p className="text-sm text-gray-600 mt-1">
                 {documents.length} {documents.length === 1 ? 'Dokument' : 'Dokumente'} insgesamt

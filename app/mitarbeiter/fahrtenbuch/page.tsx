@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 export default function FahrtenbuchPage() {
   const { data: session, status } = useSession()
@@ -62,7 +62,9 @@ export default function FahrtenbuchPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <Link href="/mitarbeiter" className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block"> Zurück</Link>
+          <div className="mb-2">
+            <BackButton />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Fahrtenbuch</h1>
         </div>
       </div>

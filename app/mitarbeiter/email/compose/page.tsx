@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import EmployeePicker, { Employee } from '@/components/email/EmployeePicker'
+import BackButton from '@/components/BackButton'
 import 'react-quill/dist/quill.snow.css'
 
 // Dynamically import ReactQuill to avoid SSR issues
@@ -154,6 +155,11 @@ export default function ComposePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton />
+        </div>
+        
         <div className="bg-white rounded-lg shadow-md">
           {/* Header */}
           <div className="border-b px-6 py-4 flex items-center justify-between">

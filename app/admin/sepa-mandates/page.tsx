@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import BackButton from '@/components/BackButton'
 
 interface SepaMandateInfo {
   id: string
@@ -122,9 +123,9 @@ export default function SepaMandatesPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <a href="/admin" className="text-primary-600 hover:text-primary-700 text-sm mb-2 inline-block">
-          ← Zurück zum Dashboard
-        </a>
+        <div className="mb-2">
+          <BackButton />
+        </div>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">SEPA-Mandate</h1>

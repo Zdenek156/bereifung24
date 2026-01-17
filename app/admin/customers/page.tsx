@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Customer {
   id: string
@@ -114,9 +114,9 @@ export default function AdminCustomersPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/admin" className="text-primary-600 hover:text-primary-700 mb-4 inline-block">
-            ← Zurück zum Dashboard
-          </Link>
+          <div className="mb-4">
+            <BackButton />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Kundenverwaltung</h1>
           <p className="text-gray-600 mt-2">Übersicht aller registrierten Kunden</p>
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import { useRoleBasedUrl } from '@/lib/utils/roleBasedUrl'
 import { PermissionGuard } from '@/components/PermissionGuard'
 
@@ -54,12 +54,9 @@ export default function BuchhaltungPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <Link 
-                  href="/admin" 
-                  className="text-primary-600 hover:text-primary-700 mb-2 inline-block"
-                >
-                  ← Zurück zum Dashboard
-              </Link>
+                <div className="mb-2">
+                  <BackButton />
+                </div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Buchhaltung
               </h1>

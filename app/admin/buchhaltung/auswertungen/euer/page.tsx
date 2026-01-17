@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import '../print.css'
 
 interface EuerData {
@@ -138,12 +138,7 @@ export default function EuerPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <Link 
-                href="/admin/buchhaltung/auswertungen"
-                className="text-primary-600 hover:text-primary-700 mb-2 inline-block"
-              >
-                ← Zurück zu Auswertungen
-              </Link>
+              <BackButton />
               <h1 className="text-3xl font-bold text-gray-900">
                 Einnahmen-Überschuss-Rechnung (EÜR)
               </h1>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface BlacklistEntry {
   id: string
@@ -102,12 +102,9 @@ export default function EmailBlacklistPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            href="/admin"
-            className="text-blue-600 hover:text-blue-700 mb-4 inline-block"
-          >
-            ← Zurück zum Dashboard
-          </Link>
+          <div className="mb-4">
+            <BackButton />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">E-Mail Blacklist</h1>
           <p className="mt-2 text-gray-600">
             Gesperrte E-Mail-Adressen von gelöschten Accounts

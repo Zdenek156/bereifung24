@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 type RecipientGroup = 'workshops_no_revenue' | 'workshops_with_revenue' | 'customers_no_requests' | 'customers_with_pending_offers' | 'all_customers' | 'all_employees'
 
@@ -141,9 +141,9 @@ export default function AdminEmailPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/admin" className="text-primary-600 hover:text-primary-700 mb-4 inline-block">
-            ← Zurück zum Dashboard
-          </Link>
+          <div className="mb-4">
+            <BackButton />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">E-Mail Versand</h1>
           <p className="text-gray-600 mt-2">Senden Sie Nachrichten und Updates an Ihre Nutzer</p>
         </div>

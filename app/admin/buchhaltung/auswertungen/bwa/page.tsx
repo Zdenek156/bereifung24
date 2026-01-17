@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import '../print.css'
 
 interface BWAData {
@@ -147,12 +147,7 @@ export default function BWAPage() {
 
       {/* Header */}
       <div className="mb-6 no-print">
-        <Link 
-          href="/admin/buchhaltung/auswertungen"
-          className="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
-        >
-          ← Zurück zu Auswertungen
-        </Link>
+        <BackButton />
         <h1 className="text-3xl font-bold text-gray-900">
           Betriebswirtschaftliche Auswertung (BWA)
         </h1>

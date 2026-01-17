@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 export default function ReportsPage() {
   const { data: session, status } = useSession()
@@ -33,12 +33,7 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link 
-            href="/admin/buchhaltung" 
-            className="text-primary-600 hover:text-primary-700 mb-2 inline-block"
-          >
-            ← Zurück zur Buchhaltung
-          </Link>
+          <BackButton />
           <h1 className="text-3xl font-bold text-gray-900">Auswertungen</h1>
           <p className="mt-1 text-sm text-gray-600">BWA, GuV, Bilanz und Reports</p>
         </div>

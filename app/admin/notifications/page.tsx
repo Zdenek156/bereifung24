@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface NotificationSetting {
   id: string
@@ -187,9 +187,9 @@ export default function AdminNotificationSettings() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <Link href="/admin" className="text-sm text-primary-600 hover:text-primary-700 mb-2 inline-block">
-                ← Zurück zum Dashboard
-              </Link>
+              <div className="mb-2">
+                <BackButton />
+              </div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Benachrichtigungseinstellungen
               </h1>

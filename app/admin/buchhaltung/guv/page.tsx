@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer, ArrowLeft } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -275,13 +276,7 @@ export default function GuvPage() {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/buchhaltung')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <BackButton />
             <h1 className="text-3xl font-bold">Gewinn- und Verlustrechnung (GuV)</h1>
           </div>
           <div className="flex gap-3 items-center">

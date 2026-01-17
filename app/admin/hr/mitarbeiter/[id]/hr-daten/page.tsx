@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, User, Briefcase, DollarSign, FileText, Building2, Calendar, UserX } from 'lucide-react'
+import { Save, User, Briefcase, DollarSign, FileText, Building2, Calendar, UserX } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 interface HRData {
   // Hierarchy
@@ -214,13 +215,7 @@ export default function HRDataEditPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/admin/b24-employees/${employeeId}`)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
+          <BackButton href={`/admin/b24-employees/${employeeId}`} />
           <div>
             <h1 className="text-3xl font-bold">HR-Daten bearbeiten</h1>
             <p className="text-gray-600 mt-1">{employee.firstName} {employee.lastName}</p>

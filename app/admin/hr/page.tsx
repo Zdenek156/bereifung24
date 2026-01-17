@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign, UserX, ArrowLeft } from 'lucide-react'
+import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign, UserX } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
 import { PermissionGuard } from '@/components/PermissionGuard'
 
@@ -68,13 +69,7 @@ export default function HRDashboard() {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Button
-            variant="outline"
-            onClick={() => router.push('/admin')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
+            <BackButton />
           <div>
             <h1 className="text-3xl font-bold">HR Management</h1>
             <p className="text-gray-600 mt-1">Personal, Gehälter & Genehmigungen</p>

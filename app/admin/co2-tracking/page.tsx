@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Save, Info, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { Leaf, Save, Info, CheckCircle, XCircle } from 'lucide-react';
+import BackButton from '@/components/BackButton';
 
 interface CO2Settings {
   workshopsToCompare: number;
@@ -118,12 +119,9 @@ export default function CO2TrackingPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
-        <Link href="/admin">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Zurück zum Admin Dashboard
-          </Button>
-        </Link>
+        <div className="mb-6">
+          <BackButton />
+        </div>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">

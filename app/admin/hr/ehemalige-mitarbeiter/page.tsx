@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Search, Users, Building2, Clock, Euro, FileText, RotateCcw } from 'lucide-react'
+import { Search, Users, Building2, Clock, Euro, FileText, RotateCcw } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
 
 interface Employee {
@@ -138,13 +139,7 @@ export default function EhemaligeMitarbeiterPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/admin/hr')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
+          <BackButton />
           <div>
             <h1 className="text-3xl font-bold">Ehemalige Mitarbeiter</h1>
             <p className="text-gray-600">Ausgeschiedene und gekündigte Mitarbeiter</p>

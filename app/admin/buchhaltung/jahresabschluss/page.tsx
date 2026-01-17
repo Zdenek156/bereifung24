@@ -21,8 +21,8 @@ import {
   FileText,
   Archive,
   CheckSquare,
-  ArrowLeft,
 } from 'lucide-react';
+import BackButton from '@/components/BackButton';
 
 interface PreCheck {
   id: string;
@@ -548,10 +548,7 @@ export default function JahresabschlussPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => router.push('/admin/buchhaltung')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <BackButton />
             <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
           </div>
           <Button 

@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, XCircle, PieChart, ArrowLeft } from 'lucide-react';
+import { Plus, BookOpen, XCircle, PieChart } from 'lucide-react';
+import BackButton from '@/components/BackButton';
 import { useRouter } from 'next/navigation';
 
 interface Provision {
@@ -171,13 +172,7 @@ export default function RueckstellungenPage() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/admin/buchhaltung')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
+          <BackButton />
           <h1 className="text-3xl font-bold">Rückstellungen</h1>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import {
   Select,
   SelectContent,
@@ -188,14 +188,7 @@ export default function KVPPage() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Button
-                onClick={() => router.push('/admin')}
-                variant="outline"
-                size="sm"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Zurück
-              </Button>
+              <BackButton />
               <div>
                 <CardTitle className="text-2xl">KVP - Kontinuierlicher Verbesserungsprozess</CardTitle>
                 <CardDescription>

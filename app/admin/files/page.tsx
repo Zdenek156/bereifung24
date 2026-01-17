@@ -12,11 +12,11 @@ import {
   Trash2,
   Edit2,
   X,
-  ArrowLeft,
   Home,
   ChevronRight,
   HardDrive
 } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -312,10 +312,7 @@ export default function FilesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Dateiverwaltung</h1>
           <p className="text-gray-600 mt-1">Dokumente und Dateien verwalten</p>
         </div>
-        <Button onClick={() => router.push('/admin')} variant="outline">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Zurück
-        </Button>
+        <BackButton />
       </div>
 
       {/* Storage Info */}

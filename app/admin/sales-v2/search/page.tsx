@@ -3,7 +3,8 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Search, MapPin, Star, Plus, ArrowLeft } from 'lucide-react'
+import { Search, MapPin, Star, Plus } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import Link from 'next/link'
 
 interface SearchResult {
@@ -139,12 +140,7 @@ export default function SalesSearchPage() {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center space-x-4">
-            <Link
-              href="/admin/sales-v2"
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </Link>
+            <BackButton href="/admin/sales-v2" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Werkstätten suchen</h1>
               <p className="text-sm text-gray-600">Google Places Integration</p>

@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
-import { ArrowLeft, Save, UserPlus, AlertCircle } from 'lucide-react'
+import { Save, UserPlus, AlertCircle } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 interface Manager {
   id: string
@@ -187,13 +188,7 @@ export default function NewEmployeePage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/admin/hr/mitarbeiter')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück
-          </Button>
+          <BackButton />
           <div>
             <h1 className="text-3xl font-bold">Neuer Mitarbeiter</h1>
             <p className="text-gray-600">Legen Sie einen neuen Mitarbeiter an</p>

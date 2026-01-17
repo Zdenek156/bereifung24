@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Send, Save, Mail, FileText, Calculator, BookOpen, Settings } from 'lucide-react'
+import { Send, Save, Mail, FileText, Calculator, BookOpen, Settings } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -184,13 +185,7 @@ export default function SteuerberaterPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/buchhaltung')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <BackButton />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Steuerberater-Kommunikation

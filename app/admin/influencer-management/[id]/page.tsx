@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
+import BackButton from '@/components/BackButton'
 
 interface Influencer {
   id: string
@@ -203,12 +204,9 @@ export default function InfluencerDetailPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <button
-              onClick={() => router.push('/admin/influencer-management')}
-              className="text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center"
-            >
-              ← Zurück zur Übersicht
-            </button>
+            <div className="mb-2">
+              <BackButton />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">
               {isEditing ? 'Influencer bearbeiten' : 'Influencer Details'}
             </h1>

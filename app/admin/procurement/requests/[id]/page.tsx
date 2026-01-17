@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Request {
   id: string
@@ -156,8 +156,10 @@ export default function RequestDetailPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <Link href="/admin/procurement/requests" className="text-sm text-gray-600 hover:text-gray-900">← Zurück</Link>
-              <h1 className="text-3xl font-bold text-gray-900 mt-2">{request.requestNumber}</h1>
+              <div className="mb-2">
+                <BackButton />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">{request.requestNumber}</h1>
             </div>
             <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[request.status as keyof typeof statusColors]}`}>
               {request.status}

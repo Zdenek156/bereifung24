@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import BackButton from '@/components/BackButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -217,9 +218,7 @@ export default function KVPDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-4">
-        <Button variant="outline" onClick={() => router.push('/admin/kvp')}>
-          ← Zurück zur Übersicht
-        </Button>
+        <BackButton />
       </div>
 
       <div className="grid grid-cols-3 gap-6">

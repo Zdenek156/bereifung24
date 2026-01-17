@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface WorkshopBooking {
   id: string
@@ -126,12 +126,7 @@ export default function AdminBillingPage() {
               <h1 className="text-3xl font-bold text-gray-900">Monatliche Abrechnung</h1>
               <p className="text-gray-600 mt-1">Buchungsübersicht und GoCardless-Abrechnung</p>
             </div>
-            <Link
-              href="/admin"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Zurück zum Dashboard
-            </Link>
+            <BackButton />
           </div>
 
           {/* Month/Year Selector */}

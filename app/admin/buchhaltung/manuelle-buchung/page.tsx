@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import { Star, Trash2, RefreshCw } from 'lucide-react'
 
 interface Account {
@@ -290,12 +290,7 @@ export default function ManuelleBuchungPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <Link 
-              href="/admin/buchhaltung"
-              className="text-blue-600 hover:underline mb-2 inline-block"
-            >
-              ← Zurück zur Buchhaltung
-            </Link>
+            <BackButton />
             <h1 className="text-3xl font-bold text-gray-900">Manuelle Buchung</h1>
             <p className="text-gray-600 mt-2">
               Erstellen Sie eine manuelle Buchung nach dem Soll/Haben-Prinzip (SKR04)

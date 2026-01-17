@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface AccountingSettings {
   id: string
@@ -110,12 +110,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <Link 
-          href="/admin/buchhaltung" 
-          className="text-blue-600 hover:underline mb-2 inline-block"
-        >
-          ← Zurück zur Buchhaltung
-        </Link>
+        <BackButton />
         <h1 className="text-3xl font-bold text-gray-900">Buchhaltungs-Einstellungen</h1>
         <p className="text-gray-600 mt-2">
           Konfigurieren Sie USt-Sätze, Steuerberater-Daten und Export-Optionen

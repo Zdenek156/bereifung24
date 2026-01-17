@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 type Tab = 'account' | 'monitoring' | 'system' | 'emergency' | 'audit' | 'backup' | 'ratelimit'
 
@@ -172,9 +172,9 @@ export default function SecurityPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/admin" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-            ← Zurück zum Admin-Dashboard
-          </Link>
+          <div className="mb-2">
+            <BackButton />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             🔐 Sicherheit & Account-Verwaltung
           </h1>

@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import Image from 'next/image'
 
 interface Document {
@@ -148,12 +148,7 @@ export default function DocumentsPage() {
     <main className="flex-1 p-8 bg-gray-50">
       {/* Header */}
       <div className="mb-6">
-        <Link 
-          href="/admin/buchhaltung"
-          className="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
-        >
-          ← Zurück zur Buchhaltung
-        </Link>
+        <BackButton />
         <h1 className="text-3xl font-bold text-gray-900">
           Beleg-Verwaltung
         </h1>

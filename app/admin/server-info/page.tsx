@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface ServerInfo {
   system: {
@@ -159,9 +159,9 @@ export default function ServerInfoPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <Link href="/admin" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-              ← Zurück zum Admin-Dashboard
-            </Link>
+            <div className="mb-2">
+              <BackButton />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">Server-Übersicht</h1>
             <p className="text-gray-600 mt-2">
               Hostname: {serverInfo.system.hostname} | Uptime: {formatUptime(serverInfo.system.uptime)}

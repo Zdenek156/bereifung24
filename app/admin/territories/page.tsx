@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import BackButton from '@/components/BackButton';
 
 // Dynamically import map component to avoid SSR issues
 const TerritoryMap = dynamic(() => import('./TerritoryMap'), {
@@ -142,9 +142,7 @@ export default function TerritoriesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Gebietsübersicht</h1>
             <p className="text-gray-600 mt-1">Visualisierung und Analyse Ihrer Marktabdeckung</p>
           </div>
-          <Link href="/admin" className="text-primary-600 hover:text-primary-700 font-medium">
-            ← Zurück zum Dashboard
-          </Link>
+          <BackButton />
         </div>
 
         {/* Overall Statistics Cards */}

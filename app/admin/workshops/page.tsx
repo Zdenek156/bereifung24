@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 import { WorkshopCRMDialog } from '@/components/WorkshopCRMDialog'
 
 interface Workshop {
@@ -158,9 +158,9 @@ export default function WorkshopManagementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link href="/admin" className="text-primary-600 hover:text-primary-700 text-sm mb-2 inline-block">
-                ← Zurück zum Dashboard
-              </Link>
+              <div className="mb-2">
+                <BackButton />
+              </div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Werkstattverwaltung
               </h1>

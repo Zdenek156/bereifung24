@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Expense {
   id: string
@@ -215,12 +215,9 @@ export default function SpesenPage() {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <Link
-              href="/mitarbeiter"
-              className="text-blue-600 hover:text-blue-700 mb-2 inline-block"
-            >
-              ← Zurück zum Dashboard
-            </Link>
+            <div className="mb-2">
+              <BackButton />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">
               💰 Spesenverwaltung
             </h1>

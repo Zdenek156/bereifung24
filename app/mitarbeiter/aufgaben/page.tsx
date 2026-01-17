@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { CheckSquare, Plus, Calendar, AlertCircle, Clock, User, Filter, Paperclip, Download, Trash2, Upload, X } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 interface Employee {
   id: string
@@ -299,12 +300,7 @@ export default function TasksPage() {
                 <Plus className="w-4 h-4" />
                 Neue Aufgabe
               </button>
-              <button
-                onClick={() => router.push('/mitarbeiter')}
-                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-              >
-                ← Zurück
-              </button>
+              <BackButton />
             </div>
           </div>
         </div>

@@ -13,11 +13,11 @@ import {
   Trash2,
   Edit2,
   X,
-  ArrowLeft,
   Home,
   ChevronRight,
   HardDrive
 } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -352,12 +352,7 @@ export default function MitarbeiterFilesPage() {
                 Gemeinsame Dateien & Ordner
               </p>
             </div>
-            <button
-              onClick={() => router.push('/mitarbeiter')}
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-            >
-              ← Zurück zum Portal
-            </button>
+            <BackButton />
           </div>
         </div>
       </div>

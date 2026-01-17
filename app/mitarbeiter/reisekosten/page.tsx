@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface TravelExpense {
   id: string
@@ -178,12 +178,9 @@ export default function ReisekostenPage() {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <Link
-              href="/mitarbeiter/spesen"
-              className="text-blue-600 hover:text-blue-700 mb-2 inline-block"
-            >
-              ← Zurück zu Spesen
-            </Link>
+            <div className="mb-2">
+              <BackButton href="/mitarbeiter/spesen" />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">
               ✈️ Reisekostenabrechnung
             </h1>

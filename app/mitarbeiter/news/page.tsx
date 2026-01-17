@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Bell, Pin, Calendar, User, Eye, Filter, Plus, Pencil, Trash2, X } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 interface Author {
   id: string
@@ -259,12 +260,7 @@ export default function AnnouncementsPage() {
                 <Plus className="w-4 h-4" />
                 Neue Ankündigung
               </button>
-              <button
-                onClick={() => router.push('/mitarbeiter')}
-                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-              >
-                ← Zurück
-              </button>
+              <BackButton />
             </div>
           </div>
         </div>

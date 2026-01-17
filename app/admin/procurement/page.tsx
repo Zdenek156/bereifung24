@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface DashboardStats {
   pendingRequests: number
@@ -71,7 +71,8 @@ export default function ProcurementDashboard() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <BackButton />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Einkauf & Investitionen
@@ -80,12 +81,6 @@ export default function ProcurementDashboard() {
                 Bedarfsanforderungen, Bestellungen und Anlagenvermögen verwalten
               </p>
             </div>
-            <Link
-              href="/admin"
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-            >
-              Zurück zum Admin
-            </Link>
           </div>
         </div>
       </header>

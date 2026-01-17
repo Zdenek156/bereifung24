@@ -89,10 +89,12 @@ export default function HRDataEditPage() {
 
   const fetchEmployee = async () => {
     try {
-      const response = await fetch(`/api/admin/b24-employees/${employeeId}`)
+      const response = await fetch(`/api/admin/hr/employees?id=${employeeId}`)
       if (response.ok) {
-        const data = await response.json()
-        setEmployee(data)
+        const result = await response.json()
+        const data = result.success ? result.data.find((e: Employee) => e.id === employeeId) : null
+        if (data) {
+          setEmployee(data)
         
         // Set HR data from employee
         setHRData({
@@ -144,7 +146,8 @@ export default function HRDataEditPage() {
     try {
       const response = await fetch('/api/admin/hr/employees')
       if (response.ok) {
-        const data = await response.json()
+        const result = await response.json()
+        const data = result.success ? result.data : []
         // Filter out current employee and show only potential managers (hierarchyLevel >= 1)
         setManagers(data.filter((e: Employee) => e.id !== employeeId))
       }
@@ -156,7 +159,7 @@ export default function HRDataEditPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
+      const response = await fetch(`/api/admin/hr/employees/${employeeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(hrData)

@@ -96,10 +96,10 @@ export default function HRDataEditPage() {
         if (data) {
           setEmployee(data)
         
-        // Set HR data from employee
-        setHRData({
-          managerId: data.managerId,
-          hierarchyLevel: data.hierarchyLevel || 0,
+          // Set HR data from employee
+          setHRData({
+            managerId: data.managerId,
+            hierarchyLevel: data.hierarchyLevel || 0,
           employmentType: data.employmentType,
           workTimeModel: data.workTimeModel,
           weeklyHours: data.weeklyHours,
@@ -134,6 +134,7 @@ export default function HRDataEditPage() {
           iban: data.iban,
           bic: data.bic
         })
+        }
       }
     } catch (error) {
       console.error('Error fetching employee:', error)

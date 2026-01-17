@@ -8,9 +8,12 @@ import { Search, TrendingUp, Users, Target, MapPin } from 'lucide-react'
 
 interface Stats {
   totalProspects: number
-  newThisWeek: number
-  contactedThisWeek: number
+  byStatus: { status: string; count: number }[]
+  byCities: { city: string; count: number }[]
   conversionRate: number
+  avgLeadScore: number
+  activeTasks: number
+  recentActivity: any[]
 }
 
 export default function SalesDashboard() {
@@ -54,7 +57,7 @@ export default function SalesDashboard() {
       const response = await fetch('/api/sales/stats')
       if (response.ok) {
         const data = await response.json()
-        setStats(data.summary)
+        setStats(data)
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -105,14 +108,14 @@ export default function SalesDashboard() {
           />
           <StatCard
             icon={<TrendingUp className="h-6 w-6" />}
-            title="Neue (7 Tage)"
-            value={stats.newThisWeek}
+            title="Lead Score (Ø)"
+            value={stats.avgLeadScore.toFixed(1)}
             color="green"
           />
           <StatCard
             icon={<Target className="h-6 w-6" />}
-            title="Kontaktiert (7 Tage)"
-            value={stats.contactedThisWeek}
+            title="Offene Aufgaben"
+            value={stats.activeTasks}
             color="purple"
           />
           <StatCard

@@ -219,7 +219,7 @@ export default function HRDataEditPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <BackButton href={`/admin/b24-employees/${employeeId}`} />
+          <BackButton href={`/admin/hr/mitarbeiter/${employeeId}`} />
           <div>
             <h1 className="text-3xl font-bold">HR-Daten bearbeiten</h1>
             <p className="text-gray-600 mt-1">{employee.firstName} {employee.lastName}</p>
@@ -706,7 +706,7 @@ export default function HRDataEditPage() {
         <div className="flex justify-end gap-3">
           <Button
             variant="outline"
-            onClick={() => router.push(`/admin/b24-employees/${employeeId}`)}
+            onClick={() => router.push(`/admin/hr/mitarbeiter/${employeeId}`)}
           >
             Abbrechen
           </Button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Placeholder {
   key: string
@@ -170,12 +170,9 @@ export default function EditEmailTemplatePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="flex items-center mb-6">
-        <Link
-          href="/admin/email-templates"
-          className="text-blue-600 hover:text-blue-800 mr-4"
-        >
-          ← Zurück
-        </Link>
+        <div className="mr-4">
+          <BackButton />
+        </div>
         <h1 className="text-3xl font-bold">
           {isNew ? 'Neues Email Template' : 'Email Template bearbeiten'}
         </h1>

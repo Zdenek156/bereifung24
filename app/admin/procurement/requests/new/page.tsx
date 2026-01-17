@@ -87,8 +87,10 @@ export default function NewRequestPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/admin/procurement/requests" className="text-sm text-gray-600 hover:text-gray-900">← Zurück</Link>
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">Neue Bedarfsanforderung</h1>
+          <div className="mb-2">
+            <BackButton />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Neue Bedarfsanforderung</h1>
         </div>
       </header>
 

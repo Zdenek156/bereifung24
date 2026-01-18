@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     console.log('[YEAR-END UNLOCK] Session:', session?.user?.email, session?.user?.role)
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'B24EMPLOYEE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

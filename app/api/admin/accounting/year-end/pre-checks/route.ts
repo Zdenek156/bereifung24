@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     console.log('[PRE-CHECKS] Session retrieved:', session?.user?.email, session?.user?.role)
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'B24EMPLOYEE')) {
       console.log('[PRE-CHECKS] Unauthorized access attempt')
       return NextResponse.json([{
         id: 'error',

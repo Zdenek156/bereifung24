@@ -2,15 +2,21 @@
 
 import { Card } from '@/components/ui/card'
 import { Car, Truck, Fuel, Wrench } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 export default function FleetPage() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Fuhrparkverwaltung</h1>
-        <p className="mt-2 text-gray-600">
-          Firmenfahrzeuge, Fahrten und Tankbelege
-        </p>
+        <div className="flex items-center gap-4 mb-4">
+          <BackButton />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Fuhrparkverwaltung</h1>
+            <p className="mt-2 text-gray-600">
+              Firmenfahrzeuge, Fahrten und Tankbelege
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

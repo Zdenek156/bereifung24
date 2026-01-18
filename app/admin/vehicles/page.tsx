@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 interface Vehicle {
   id: string
@@ -54,7 +55,7 @@ export default function VehiclesAdminPage() {
     try {
       const [vehiclesRes, employeesRes] = await Promise.all([
         fetch('/api/admin/vehicles'),
-        fetch('/api/admin/b24-employees')
+        fetch('/api/admin/hr/employees')
       ])
       if (vehiclesRes.ok) {
         const data = await vehiclesRes.json()
@@ -97,6 +98,7 @@ export default function VehiclesAdminPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
+          <BackButton />
           <Link href="/admin" className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block"> Admin Dashboard</Link>
           <h1 className="text-2xl font-bold text-gray-900">Firmenfahrzeuge</h1>
           <p className="text-sm text-gray-600">Verwaltung der Firmenfahrzeuge</p>

@@ -2,10 +2,12 @@
 
 import { Card } from '@/components/ui/card'
 import { BookOpen, FileText, HelpCircle, Video } from 'lucide-react'
+import BackButton from '@/components/BackButton'
 
 export default function KnowledgePage() {
   return (
     <div className="p-6">
+      <BackButton />
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Wissensdatenbank</h1>
         <p className="mt-2 text-gray-600">

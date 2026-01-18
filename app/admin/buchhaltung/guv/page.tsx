@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer } from 'lucide-react'
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, RefreshCw, Printer, ArrowLeft } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

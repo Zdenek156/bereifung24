@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Plus, Edit, Trash2, TrendingDown } from 'lucide-react';
+import BackButton from '@/components/BackButton';
 
 interface Asset {
   id: string;
@@ -169,6 +170,9 @@ export default function AnlagenPage() {
 
   return (
     <div className="container mx-auto py-8">
+      <div className="mb-4">
+        <BackButton />
+      </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Anlagenverwaltung</h1>
         <div className="space-x-2">

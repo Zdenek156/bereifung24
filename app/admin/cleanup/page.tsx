@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import BackButton from '@/components/BackButton'
 
 export default function AdminCleanupPage() {
   const { data: session, status } = useSession()
@@ -91,6 +92,7 @@ export default function AdminCleanupPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
+        <BackButton />
         <div className="mb-8">
           <Link
             href="/admin"

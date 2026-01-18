@@ -14,30 +14,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check permission for B24EMPLOYEE
-    if (session.user.role === 'B24_EMPLOYEE') {
-      if (!session.user.b24EmployeeId) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        )
-      }
-
-      const permission = await prisma.b24EmployeePermission.findFirst({
-        where: {
-          employeeId: session.user.b24EmployeeId,
-          resource: 'buchhaltung',
-          canRead: true
-        }
-      })
-
-      if (!permission) {
-        return NextResponse.json(
-          { error: 'No permission for accounting' },
-          { status: 403 }
-        )
-      }
-    }
+    // B24_EMPLOYEE access is controlled by middleware/PermissionGuard
+    // No additional permission check needed here
 
     // Get total account count
     const accountCount = await prisma.chartOfAccounts.count()

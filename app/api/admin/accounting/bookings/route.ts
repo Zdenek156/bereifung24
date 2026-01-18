@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       referenceNumber: referenceNumber || undefined,
       sourceType: sourceType || 'MANUAL',
       sourceId: null,
-      createdByUserId: session.user.id
+      createdByUserId: null // B24_EMPLOYEE has no User record
     })
 
     console.log(`✅ Manual booking created: ${entry.entryNumber}`)

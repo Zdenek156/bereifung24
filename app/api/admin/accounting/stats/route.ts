@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'B24EMPLOYEE')) {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permission for B24EMPLOYEE
-    if (session.user.role === 'B24EMPLOYEE') {
+    if (session.user.role === 'B24_EMPLOYEE') {
       if (!session.user.b24EmployeeId) {
         return NextResponse.json(
           { error: 'Unauthorized' },

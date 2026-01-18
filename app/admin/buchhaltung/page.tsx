@@ -153,7 +153,7 @@ export default function BuchhaltungPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Link
-              href="/admin/buchhaltung/journal"
+              href={getUrl('/buchhaltung/journal')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
@@ -167,7 +167,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/kontenplan"
+              href={getUrl('/buchhaltung/kontenplan')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
@@ -181,7 +181,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/manuelle-buchung"
+              href={getUrl('/buchhaltung/manuelle-buchung')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-2 border-green-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
@@ -195,7 +195,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/belege"
+              href={getUrl('/buchhaltung/belege')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
@@ -209,7 +209,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/auswertungen"
+              href={getUrl('/buchhaltung/auswertungen')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg mb-4">
@@ -223,7 +223,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/auswertungen/ustva"
+              href={getUrl('/buchhaltung/auswertungen/ustva')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-2 border-purple-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
@@ -237,7 +237,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/einstellungen"
+              href={getUrl('/buchhaltung/einstellungen')}
               className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-4">
@@ -265,7 +265,7 @@ export default function BuchhaltungPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-6">
             <Link
-              href="/admin/buchhaltung/bilanz"
+              href={getUrl('/buchhaltung/bilanz')}
               className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-blue-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-blue-600 rounded-lg mb-4">
@@ -279,7 +279,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/guv"
+              href={getUrl('/buchhaltung/guv')}
               className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-green-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-green-600 rounded-lg mb-4">
@@ -293,7 +293,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/anlagen"
+              href={getUrl('/buchhaltung/anlagen')}
               className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-purple-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-purple-600 rounded-lg mb-4">
@@ -307,7 +307,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/rueckstellungen"
+              href={getUrl('/buchhaltung/rueckstellungen')}
               className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-orange-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-orange-600 rounded-lg mb-4">
@@ -321,7 +321,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/jahresabschluss"
+              href={getUrl('/buchhaltung/jahresabschluss')}
               className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-red-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-red-600 rounded-lg mb-4">
@@ -335,7 +335,7 @@ export default function BuchhaltungPage() {
             </Link>
 
             <Link
-              href="/admin/buchhaltung/steuerberater"
+              href={getUrl('/buchhaltung/steuerberater')}
               className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg shadow p-6 hover:shadow-xl transition-all border-2 border-indigo-200"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-lg mb-4">

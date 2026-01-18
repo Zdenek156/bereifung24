@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has access to HR application or is ADMIN
-    if (session.user.role !== 'ADMIN') {
+    // Check if user has access to HR application or is ADMIN/B24_EMPLOYEE
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       const hasAccess = await hasApplication(session.user.id, 'hr')
       if (!hasAccess) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

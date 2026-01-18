@@ -33,7 +33,7 @@ export async function GET(
     }
 
     // Check if user is ADMIN or has HR/Admin permissions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24EMPLOYEE') {
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

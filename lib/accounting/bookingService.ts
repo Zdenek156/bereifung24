@@ -16,7 +16,7 @@ interface BookingParams {
   sourceType: 'COMMISSION' | 'EXPENSE' | 'TRAVEL_EXPENSE' | 'PAYROLL' | 'PROCUREMENT' | 'INFLUENCER' | 'VEHICLE' | 'MANUAL'
   sourceId?: string
   referenceNumber?: string
-  createdByUserId: string
+  createdByUserId?: string | null
 }
 
 export class AccountingBookingService {
@@ -113,7 +113,7 @@ export class AccountingBookingService {
         documentNumber: params.referenceNumber,
         locked: false,
         isStorno: false,
-        createdById: params.createdByUserId
+        createdById: params.createdByUserId || null
       }
     })
 
@@ -122,7 +122,7 @@ export class AccountingBookingService {
       data: {
         entryId: entry.id,
         action: 'CREATED',
-        userId: params.createdByUserId,
+        userId: params.createdByUserId || null,
         changes: JSON.stringify({
           entryNumber,
           debitAccount: params.debitAccountNumber,

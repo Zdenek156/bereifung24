@@ -13,17 +13,9 @@ cd /var/www/bereifung24
 echo "📥 Pulling latest changes from Git..."
 git pull origin main
 
-# Install dependencies
+# Install dependencies (Prisma generate runs in postinstall)
 echo "📦 Installing dependencies..."
 npm install
-
-# Generate Prisma Client
-echo "🔄 Generating Prisma Client..."
-npx prisma generate
-
-# Run database migrations (if needed)
-echo "🗄️ Running database migrations..."
-npx prisma migrate deploy
 
 # Build application (PM2 keeps old server running)
 echo "🏗️ Building application..."

@@ -225,7 +225,7 @@ export default function EditEmployeePage() {
         {/* Grunddaten */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            👤 Grunddaten <span className="text-red-500">*Pflichtfelder</span>
+            👤 Grunddaten <span className="text-red-500 text-sm">*Pflichtfelder</span>
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -326,6 +326,17 @@ export default function EditEmployeePage() {
             </div>
           </div>
         </Card>
+
+        {/* Quick Actions */}
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            onClick={() => router.push(`/admin/hr/mitarbeiter/${employeeId}/hr-daten`)}
+            variant="outline"
+          >
+            Zu HR-Daten (Vertrag, Gehalt, etc.)
+          </Button>
+        </div>
       </form>
     </div>
   )

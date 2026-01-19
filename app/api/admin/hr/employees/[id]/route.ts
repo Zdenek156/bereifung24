@@ -4,6 +4,59 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { hasApplication } from '@/lib/applications'
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user has access to HR application or is ADMIN/B24_EMPLOYEE
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
+      const hasAccess = await hasApplication(session.user.id, 'hr')
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    const employeeId = params.id
+
+    // Get employee with full data
+    const employee = await prisma.b24Employee.findUnique({
+      where: { id: employeeId },
+      include: {
+        manager: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    if (!employee) {
+      return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      data: employee 
+    })
+  } catch (error) {
+    console.error('Error fetching employee:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch employee' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -26,54 +79,91 @@ export async function PUT(
     const employeeId = params.id
     const body = await request.json()
 
-    // Update employee HR data
+    // Check if email is being changed and if it's unique
+    if (body.email) {
+      const existingEmployee = await prisma.b24Employee.findFirst({
+        where: {
+          email: body.email,
+          id: { not: employeeId }
+        }
+      })
+
+      if (existingEmployee) {
+        return NextResponse.json(
+          { success: false, error: 'Email already in use by another employee' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Update employee with all provided data
+    const updateData: any = {}
+    
+    // Basic data
+    if (body.firstName !== undefined) updateData.firstName = body.firstName
+    if (body.lastName !== undefined) updateData.lastName = body.lastName
+    if (body.email !== undefined) updateData.email = body.email
+    if (body.phone !== undefined) updateData.phone = body.phone
+    if (body.position !== undefined) updateData.position = body.position
+    if (body.department !== undefined) updateData.department = body.department
+    
+    // Hierarchy
+    if (body.managerId !== undefined) updateData.managerId = body.managerId || null
+    if (body.hierarchyLevel !== undefined) updateData.hierarchyLevel = body.hierarchyLevel || 0
+    
+    // Contract
+    if (body.employmentType !== undefined) updateData.employmentType = body.employmentType
+    if (body.workTimeModel !== undefined) updateData.workTimeModel = body.workTimeModel
+    if (body.weeklyHours !== undefined) updateData.weeklyHours = body.weeklyHours
+    if (body.monthlyHours !== undefined) updateData.monthlyHours = body.monthlyHours
+    if (body.dailyHours !== undefined) updateData.dailyHours = body.dailyHours
+    if (body.workDaysPerWeek !== undefined) updateData.workDaysPerWeek = body.workDaysPerWeek
+    if (body.workStartTime !== undefined) updateData.workStartTime = body.workStartTime
+    if (body.workEndTime !== undefined) updateData.workEndTime = body.workEndTime
+    if (body.coreTimeStart !== undefined) updateData.coreTimeStart = body.coreTimeStart
+    if (body.coreTimeEnd !== undefined) updateData.coreTimeEnd = body.coreTimeEnd
+    if (body.flexTimeStart !== undefined) updateData.flexTimeStart = body.flexTimeStart
+    if (body.flexTimeEnd !== undefined) updateData.flexTimeEnd = body.flexTimeEnd
+    if (body.contractStart !== undefined) updateData.contractStart = body.contractStart ? new Date(body.contractStart) : null
+    if (body.contractEnd !== undefined) updateData.contractEnd = body.contractEnd ? new Date(body.contractEnd) : null
+    if (body.probationEndDate !== undefined) updateData.probationEndDate = body.probationEndDate ? new Date(body.probationEndDate) : null
+    if (body.noticePeriod !== undefined) updateData.noticePeriod = body.noticePeriod
+    
+    // Salary
+    if (body.salaryType !== undefined) updateData.salaryType = body.salaryType
+    if (body.monthlySalary !== undefined) updateData.monthlySalary = body.monthlySalary
+    if (body.annualSalary !== undefined) updateData.annualSalary = body.annualSalary
+    if (body.hourlyRate !== undefined) updateData.hourlyRate = body.hourlyRate
+    if (body.isMinijob !== undefined) updateData.isMinijob = body.isMinijob || false
+    if (body.miniJobExempt !== undefined) updateData.miniJobExempt = body.miniJobExempt || false
+    
+    // Tax & SV
+    if (body.taxId !== undefined) updateData.taxId = body.taxId
+    if (body.taxClass !== undefined) updateData.taxClass = body.taxClass
+    if (body.childAllowance !== undefined) updateData.childAllowance = body.childAllowance
+    if (body.religion !== undefined) updateData.religion = body.religion || 'NONE'
+    if (body.socialSecurityNumber !== undefined) updateData.socialSecurityNumber = body.socialSecurityNumber
+    if (body.healthInsurance !== undefined) updateData.healthInsurance = body.healthInsurance
+    if (body.healthInsuranceRate !== undefined) updateData.healthInsuranceRate = body.healthInsuranceRate
+    if (body.isChildless !== undefined) updateData.isChildless = body.isChildless || false
+    
+    // Bank
+    if (body.bankName !== undefined) updateData.bankName = body.bankName
+    if (body.iban !== undefined) updateData.iban = body.iban
+    if (body.bic !== undefined) updateData.bic = body.bic
+
     const employee = await prisma.b24Employee.update({
       where: { id: employeeId },
-      data: {
-        // Hierarchy
-        managerId: body.managerId || null,
-        hierarchyLevel: body.hierarchyLevel || 0,
-        
-        // Contract
-        employmentType: body.employmentType,
-        workTimeModel: body.workTimeModel,
-        weeklyHours: body.weeklyHours,
-        monthlyHours: body.monthlyHours,
-        dailyHours: body.dailyHours,
-        workDaysPerWeek: body.workDaysPerWeek,
-        workStartTime: body.workStartTime,
-        workEndTime: body.workEndTime,
-        coreTimeStart: body.coreTimeStart,
-        coreTimeEnd: body.coreTimeEnd,
-        flexTimeStart: body.flexTimeStart,
-        flexTimeEnd: body.flexTimeEnd,
-        contractStart: body.contractStart ? new Date(body.contractStart) : null,
-        contractEnd: body.contractEnd ? new Date(body.contractEnd) : null,
-        probationEndDate: body.probationEndDate ? new Date(body.probationEndDate) : null,
-        noticePeriod: body.noticePeriod,
-        
-        // Salary
-        salaryType: body.salaryType,
-        monthlySalary: body.monthlySalary,
-        annualSalary: body.annualSalary,
-        hourlyRate: body.hourlyRate,
-        isMinijob: body.isMinijob || false,
-        miniJobExempt: body.miniJobExempt || false,
-        
-        // Tax & SV
-        taxId: body.taxId,
-        taxClass: body.taxClass,
-        childAllowance: body.childAllowance,
-        religion: body.religion || 'NONE',
-        socialSecurityNumber: body.socialSecurityNumber,
-        healthInsurance: body.healthInsurance,
-        healthInsuranceRate: body.healthInsuranceRate,
-        isChildless: body.isChildless || false,
-        
-        // Bank
-        bankName: body.bankName,
-        iban: body.iban,
-        bic: body.bic,
+      data: updateData,
+      include: {
+        manager: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     })
 

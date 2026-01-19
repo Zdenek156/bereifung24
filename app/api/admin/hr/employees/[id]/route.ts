@@ -158,8 +158,8 @@ export async function PUT(
     if (body.hierarchyLevel !== undefined) updateData.hierarchyLevel = body.hierarchyLevel ?? 3
     
     // Contract
-    if (body.employmentType !== undefined) updateData.employmentType = body.employmentType
-    if (body.workTimeModel !== undefined) updateData.workTimeModel = body.workTimeModel
+    if (body.employmentType !== undefined) updateData.employmentType = body.employmentType || null
+    if (body.workTimeModel !== undefined) updateData.workTimeModel = body.workTimeModel || null
     if (body.weeklyHours !== undefined) updateData.weeklyHours = body.weeklyHours
     if (body.monthlyHours !== undefined) updateData.monthlyHours = body.monthlyHours
     if (body.dailyHours !== undefined) updateData.dailyHours = body.dailyHours
@@ -176,7 +176,7 @@ export async function PUT(
     if (body.noticePeriod !== undefined) updateData.noticePeriod = body.noticePeriod
     
     // Salary
-    if (body.salaryType !== undefined) updateData.salaryType = body.salaryType
+    if (body.salaryType !== undefined) updateData.salaryType = body.salaryType || null
     if (body.monthlySalary !== undefined) updateData.monthlySalary = body.monthlySalary
     if (body.annualSalary !== undefined) updateData.annualSalary = body.annualSalary
     if (body.hourlyRate !== undefined) updateData.hourlyRate = body.hourlyRate
@@ -185,7 +185,7 @@ export async function PUT(
     
     // Tax & SV
     if (body.taxId !== undefined) updateData.taxId = body.taxId
-    if (body.taxClass !== undefined) updateData.taxClass = body.taxClass
+    if (body.taxClass !== undefined) updateData.taxClass = body.taxClass || null
     if (body.childAllowance !== undefined) updateData.childAllowance = body.childAllowance
     if (body.religion !== undefined) updateData.religion = body.religion || 'NONE'
     if (body.socialSecurityNumber !== undefined) updateData.socialSecurityNumber = body.socialSecurityNumber

@@ -118,14 +118,27 @@ export async function PUT(request: NextRequest) {
     // Upsert profile
     const profile = await prisma.employeeProfile.upsert({
       where: {
-        employeeId: employee.id,
+        b24EmployeeId: employee.id,
       },
       create: {
-        employeeId: employee.id,
+        b24EmployeeId: employee.id,
         ...dataToSave,
       },
       update: dataToSave,
     })
+
+    // Sync bank data to B24Employee (for HR view)
+    const bankUpdateData: any = {}
+    if (body.bankAccount !== undefined) bankUpdateData.iban = body.bankAccount
+    if (body.bic !== undefined) bankUpdateData.bic = body.bic
+    if (body.bankName !== undefined) bankUpdateData.bankName = body.bankName
+    
+    if (Object.keys(bankUpdateData).length > 0) {
+      await prisma.b24Employee.update({
+        where: { id: employee.id },
+        data: bankUpdateData,
+      })
+    }
 
     return NextResponse.json({ success: true, profile })
   } catch (error) {

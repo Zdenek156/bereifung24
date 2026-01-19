@@ -129,18 +129,6 @@ export default function EhemaligeMitarbeiterPage() {
 
     return matchesSearch && matchesDepartment
   })
-    }
-
-    const matchesSearch = 
-      emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (emp.position && emp.position.toLowerCase().includes(searchTerm.toLowerCase()))
-    
-    const matchesDepartment = !filterDepartment || emp.department === filterDepartment
-
-    return matchesSearch && matchesDepartment
-  })
 
   const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean))) as string[]
 

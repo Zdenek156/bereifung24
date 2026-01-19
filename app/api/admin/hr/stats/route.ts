@@ -25,20 +25,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total employees (exclude admins by email pattern)
+    // Get total employees (exclude admins and system users)
     const totalEmployees = await prisma.b24Employee.count({
       where: {
-        email: { not: { contains: 'admin@bereifung24.de' } }
+        AND: [
+          { email: { not: { contains: 'admin@bereifung24.de' } } },
+          { email: { not: { contains: 'system@' } } }
+        ]
       }
     })
 
-    // Get active employees (those with active contracts, exclude admins)
+    // Get active employees (those with active contracts, exclude admins and system)
     const activeEmployees = await prisma.b24Employee.count({
       where: {
-        email: { not: { contains: 'admin@bereifung24.de' } },
-        OR: [
-          { contractEnd: null },
-          { contractEnd: { gte: new Date() } }
+        AND: [
+          { email: { not: { contains: 'admin@bereifung24.de' } } },
+          { email: { not: { contains: 'system@' } } },
+          {
+            OR: [
+              { contractEnd: null },
+              { contractEnd: { gte: new Date() } }
+            ]
+          }
         ]
       }
     })

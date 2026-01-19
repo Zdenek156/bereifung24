@@ -25,10 +25,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total employees (exclude admins and system users)
+    // Get total employees (exclude admins, system users, and inactive employees)
     const totalEmployees = await prisma.b24Employee.count({
       where: {
         AND: [
+          { isActive: true },
           { email: { not: { contains: 'admin@bereifung24.de' } } },
           { email: { not: { contains: 'system@' } } }
         ]
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
     const activeEmployees = await prisma.b24Employee.count({
       where: {
         AND: [
+          { isActive: true },
           { email: { not: { contains: 'admin@bereifung24.de' } } },
           { email: { not: { contains: 'system@' } } },
           {

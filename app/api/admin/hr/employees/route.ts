@@ -26,7 +26,11 @@ export async function GET(request: NextRequest) {
 
     const employees = await prisma.b24Employee.findMany({
       where: {
-        isActive: !showInactive // true for active, false for inactive
+        AND: [
+          { isActive: !showInactive }, // true for active, false for inactive
+          { email: { not: { contains: 'admin@bereifung24.de' } } },
+          { email: { not: { contains: 'system@' } } }
+        ]
       },
       select: {
         id: true,
@@ -36,6 +40,7 @@ export async function GET(request: NextRequest) {
         isActive: true,
         department: true,
         position: true,
+        profileImage: true,
         employmentType: true,
         workTimeModel: true,
         monthlySalary: true,

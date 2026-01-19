@@ -24,6 +24,7 @@ interface Employee {
   contractStart?: string
   contractEnd?: string
   hierarchyLevel: number
+  profileImage?: string
   manager?: {
     firstName: string
     lastName: string
@@ -102,11 +103,8 @@ export default function HRMitarbeiterPage() {
   }
 
   const filteredEmployees = employees.filter(emp => {
-    // Exclude admin accounts (role ADMIN or specific email domains)
-    if (emp.role === 'ADMIN' || emp.email.includes('admin@bereifung24.de')) {
-      return false
-    }
-
+    // API already filters out admin and system users
+    
     const matchesSearch = 
       emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -197,9 +195,17 @@ export default function HRMitarbeiterPage() {
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
+                {employee.profileImage ? (
+                  <img 
+                    src={employee.profileImage} 
+                    alt={`${employee.firstName} ${employee.lastName}`}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                )}
                 <div>
                   <h3 className="font-bold text-lg">{employee.firstName} {employee.lastName}</h3>
                   <p className="text-sm text-gray-600">{employee.email}</p>

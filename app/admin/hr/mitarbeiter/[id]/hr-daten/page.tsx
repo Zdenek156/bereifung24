@@ -16,6 +16,20 @@ interface HRData {
   managerId?: string
   hierarchyLevel: number
   
+  // Personal Data (from EmployeeProfile)
+  birthDate?: string
+  birthPlace?: string
+  nationality?: string
+  address?: string
+  city?: string
+  postalCode?: string
+  country?: string
+  
+  // Emergency Contact (from EmployeeProfile)
+  emergencyContactName?: string
+  emergencyContactPhone?: string
+  emergencyContactRelation?: string
+  
   // Contract
   employmentType?: string
   workTimeModel?: string
@@ -92,10 +106,10 @@ export default function HRDataEditPage() {
 
   const fetchEmployee = async () => {
     try {
-      const response = await fetch(`/api/admin/hr/employees?id=${employeeId}`)
+      const response = await fetch(`/api/admin/hr/employees/${employeeId}`)
       if (response.ok) {
         const result = await response.json()
-        const data = result.success ? result.data.find((e: Employee) => e.id === employeeId) : null
+        const data = result.success ? result.data : result
         if (data) {
           setEmployee(data)
         
@@ -103,40 +117,55 @@ export default function HRDataEditPage() {
           setHRData({
             managerId: data.managerId,
             hierarchyLevel: data.hierarchyLevel || 0,
-          employmentType: data.employmentType,
-          workTimeModel: data.workTimeModel,
-          weeklyHours: data.weeklyHours,
-          monthlyHours: data.monthlyHours,
-          dailyHours: data.dailyHours,
-          workDaysPerWeek: data.workDaysPerWeek,
-          workStartTime: data.workStartTime,
-          workEndTime: data.workEndTime,
-          coreTimeStart: data.coreTimeStart,
-          coreTimeEnd: data.coreTimeEnd,
-          flexTimeStart: data.flexTimeStart,
-          flexTimeEnd: data.flexTimeEnd,
-          contractStart: data.contractStart,
-          contractEnd: data.contractEnd,
-          probationEndDate: data.probationEndDate,
-          noticePeriod: data.noticePeriod,
-          salaryType: data.salaryType,
-          monthlySalary: data.monthlySalary,
-          annualSalary: data.annualSalary,
-          hourlyRate: data.hourlyRate,
-          isMinijob: data.isMinijob || false,
-          miniJobExempt: data.miniJobExempt || false,
-          taxId: data.taxId,
-          taxClass: data.taxClass,
-          childAllowance: data.childAllowance,
-          religion: data.religion || 'NONE',
-          socialSecurityNumber: data.socialSecurityNumber,
-          healthInsurance: data.healthInsurance,
-          healthInsuranceRate: data.healthInsuranceRate,
-          isChildless: data.isChildless || false,
-          bankName: data.bankName,
-          iban: data.iban,
-          bic: data.bic
-        })
+            // Personal data from profile
+            birthDate: data.profile?.birthDate,
+            birthPlace: data.profile?.birthPlace,
+            nationality: data.profile?.nationality,
+            address: data.profile?.address,
+            city: data.profile?.city,
+            postalCode: data.profile?.postalCode,
+            country: data.profile?.country || 'Deutschland',
+            emergencyContactName: data.profile?.emergencyContactName,
+            emergencyContactPhone: data.profile?.emergencyContactPhone,
+            emergencyContactRelation: data.profile?.emergencyContactRelation,
+            // Contract data
+            employmentType: data.employmentType,
+            workTimeModel: data.workTimeModel,
+            weeklyHours: data.weeklyHours,
+            monthlyHours: data.monthlyHours,
+            dailyHours: data.dailyHours,
+            workDaysPerWeek: data.workDaysPerWeek,
+            workStartTime: data.workStartTime,
+            workEndTime: data.workEndTime,
+            coreTimeStart: data.coreTimeStart,
+            coreTimeEnd: data.coreTimeEnd,
+            flexTimeStart: data.flexTimeStart,
+            flexTimeEnd: data.flexTimeEnd,
+            contractStart: data.contractStart,
+            contractEnd: data.contractEnd,
+            probationEndDate: data.probationEndDate,
+            noticePeriod: data.noticePeriod,
+            // Salary
+            salaryType: data.salaryType,
+            monthlySalary: data.monthlySalary,
+            annualSalary: data.annualSalary,
+            hourlyRate: data.hourlyRate,
+            isMinijob: data.isMinijob || false,
+            miniJobExempt: data.miniJobExempt || false,
+            // Tax & SV
+            taxId: data.taxId,
+            taxClass: data.taxClass,
+            childAllowance: data.childAllowance,
+            religion: data.religion || 'NONE',
+            socialSecurityNumber: data.socialSecurityNumber,
+            healthInsurance: data.healthInsurance,
+            healthInsuranceRate: data.healthInsuranceRate,
+            isChildless: data.isChildless || false,
+            // Bank
+            bankName: data.bankName,
+            iban: data.iban,
+            bic: data.bic
+          })
         }
       }
     } catch (error) {
@@ -249,46 +278,6 @@ export default function HRDataEditPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Hierarchie & Vorgesetzter */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="text-xl font-bold">Hierarchie & Organisation</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="hierarchyLevel">Hierarchieebene *</Label>
-              <select
-                id="hierarchyLevel"
-                value={hrData.hierarchyLevel}
-                onChange={(e) => setHRData({ ...hrData, hierarchyLevel: parseInt(e.target.value) })}
-                className="w-full border rounded px-3 py-2 mt-1"
-              >
-                <option value="0">Mitarbeiter</option>
-                <option value="1">Teamleiter</option>
-                <option value="2">Manager</option>
-                <option value="3">Geschäftsführer</option>
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="managerId">Vorgesetzter</Label>
-              <select
-                id="managerId"
-                value={hrData.managerId || ''}
-                onChange={(e) => setHRData({ ...hrData, managerId: e.target.value || undefined })}
-                className="w-full border rounded px-3 py-2 mt-1"
-              >
-                <option value="">Kein Vorgesetzter</option>
-                {managers.map(mgr => (
-                  <option key={mgr.id} value={mgr.id}>
-                    {mgr.firstName} {mgr.lastName} - {mgr.position || mgr.department}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </Card>
-
         {/* Beschäftigungsverhältnis */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -354,6 +343,143 @@ export default function HRDataEditPage() {
                 onChange={(e) => setHRData({ ...hrData, noticePeriod: e.target.value })}
                 className="mt-1"
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* Persönliche Stammdaten */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <User className="h-5 w-5 text-blue-600" />
+            <h2 className="text-xl font-bold">Persönliche Stammdaten</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="birthDate">Geburtsdatum</Label>
+              <Input
+                id="birthDate"
+                type="date"
+                value={hrData.birthDate ? new Date(hrData.birthDate).toISOString().split('T')[0] : ''}
+                onChange={(e) => setHRData({ ...hrData, birthDate: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="birthPlace">Geburtsort</Label>
+              <Input
+                id="birthPlace"
+                type="text"
+                placeholder="z.B. München"
+                value={hrData.birthPlace || ''}
+                onChange={(e) => setHRData({ ...hrData, birthPlace: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="nationality">Nationalität</Label>
+              <Input
+                id="nationality"
+                type="text"
+                placeholder="z.B. Deutsch"
+                value={hrData.nationality || ''}
+                onChange={(e) => setHRData({ ...hrData, nationality: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="address">Straße und Hausnummer</Label>
+              <Input
+                id="address"
+                type="text"
+                placeholder="z.B. Musterstraße 123"
+                value={hrData.address || ''}
+                onChange={(e) => setHRData({ ...hrData, address: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="postalCode">PLZ</Label>
+              <Input
+                id="postalCode"
+                type="text"
+                placeholder="12345"
+                value={hrData.postalCode || ''}
+                onChange={(e) => setHRData({ ...hrData, postalCode: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="city">Ort</Label>
+              <Input
+                id="city"
+                type="text"
+                placeholder="z.B. Berlin"
+                value={hrData.city || ''}
+                onChange={(e) => setHRData({ ...hrData, city: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="country">Land</Label>
+              <Input
+                id="country"
+                type="text"
+                placeholder="Deutschland"
+                value={hrData.country || 'Deutschland'}
+                onChange={(e) => setHRData({ ...hrData, country: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Notfallkontakt */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Building2 className="h-5 w-5 text-orange-600" />
+            <h2 className="text-xl font-bold">Notfallkontakt</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="emergencyContactName">Name</Label>
+              <Input
+                id="emergencyContactName"
+                type="text"
+                placeholder="z.B. Maria Mustermann"
+                value={hrData.emergencyContactName || ''}
+                onChange={(e) => setHRData({ ...hrData, emergencyContactName: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="emergencyContactPhone">Telefon</Label>
+              <Input
+                id="emergencyContactPhone"
+                type="tel"
+                placeholder="+49 123 456789"
+                value={hrData.emergencyContactPhone || ''}
+                onChange={(e) => setHRData({ ...hrData, emergencyContactPhone: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="emergencyContactRelation">Beziehung</Label>
+              <select
+                id="emergencyContactRelation"
+                value={hrData.emergencyContactRelation || ''}
+                onChange={(e) => setHRData({ ...hrData, emergencyContactRelation: e.target.value })}
+                className="w-full border rounded px-3 py-2 mt-1"
+              >
+                <option value="">Bitte wählen</option>
+                <option value="Ehepartner">Ehepartner/in</option>
+                <option value="Partner">Partner/in</option>
+                <option value="Vater">Vater</option>
+                <option value="Mutter">Mutter</option>
+                <option value="Geschwister">Geschwister</option>
+                <option value="Kind">Kind</option>
+                <option value="Freund">Freund/in</option>
+                <option value="Sonstige">Sonstige</option>
+              </select>
             </div>
           </div>
         </Card>

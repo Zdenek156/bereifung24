@@ -36,7 +36,8 @@ export async function GET(
             lastName: true,
             email: true
           }
-        }
+        },
+        profile: true  // Include EmployeeProfile for personal data
       }
     })
 
@@ -198,6 +199,7 @@ export async function PUT(
     if (body.iban !== undefined) updateData.iban = body.iban
     if (body.bic !== undefined) updateData.bic = body.bic
 
+    // Update employee
     const employee = await prisma.b24Employee.update({
       where: { id: employeeId },
       data: updateData,
@@ -212,6 +214,31 @@ export async function PUT(
         }
       }
     })
+
+    // Update or create EmployeeProfile with personal data
+    const profileData: any = {}
+    if (body.birthDate !== undefined) profileData.birthDate = body.birthDate ? new Date(body.birthDate) : null
+    if (body.birthPlace !== undefined) profileData.birthPlace = body.birthPlace
+    if (body.nationality !== undefined) profileData.nationality = body.nationality
+    if (body.address !== undefined) profileData.address = body.address
+    if (body.city !== undefined) profileData.city = body.city
+    if (body.postalCode !== undefined) profileData.postalCode = body.postalCode
+    if (body.country !== undefined) profileData.country = body.country || 'Deutschland'
+    if (body.emergencyContactName !== undefined) profileData.emergencyContactName = body.emergencyContactName
+    if (body.emergencyContactPhone !== undefined) profileData.emergencyContactPhone = body.emergencyContactPhone
+    if (body.emergencyContactRelation !== undefined) profileData.emergencyContactRelation = body.emergencyContactRelation
+
+    // Only update profile if there's data to update
+    if (Object.keys(profileData).length > 0) {
+      await prisma.employeeProfile.upsert({
+        where: { employeeId: employeeId },
+        update: profileData,
+        create: {
+          employeeId: employeeId,
+          ...profileData
+        }
+      })
+    }
 
     return NextResponse.json({ 
       success: true, 

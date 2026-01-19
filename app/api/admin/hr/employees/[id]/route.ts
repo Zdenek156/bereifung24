@@ -227,6 +227,11 @@ export async function PUT(
     if (body.emergencyContactName !== undefined) profileData.emergencyContactName = body.emergencyContactName
     if (body.emergencyContactPhone !== undefined) profileData.emergencyContactPhone = body.emergencyContactPhone
     if (body.emergencyContactRelation !== undefined) profileData.emergencyContactRelation = body.emergencyContactRelation
+    
+    // Sync bank data to profile (for employee profile view)
+    if (body.iban !== undefined) profileData.bankAccount = body.iban
+    if (body.bic !== undefined) profileData.bic = body.bic
+    if (body.bankName !== undefined) profileData.bankName = body.bankName
 
     // Only update profile if there's data to update
     if (Object.keys(profileData).length > 0) {

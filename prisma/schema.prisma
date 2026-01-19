@@ -1045,7 +1045,7 @@ model B24Employee {
   managerId      String?
   manager        B24Employee?  @relation("EmployeeHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
   subordinates   B24Employee[] @relation("EmployeeHierarchy")
-  hierarchyLevel Int           @default(0) // 0=Mitarbeiter, 1=Teamleiter, 2=Manager, 3=Geschäftsführung
+  hierarchyLevel Int           @default(3) // 0=Geschäftsführung, 1=Manager, 2=Teamleiter, 3=Mitarbeiter
 
   // ============================================
   // HR MANAGEMENT - ARBEITSVERTRAG

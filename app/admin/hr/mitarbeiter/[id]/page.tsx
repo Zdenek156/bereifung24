@@ -93,7 +93,7 @@ export default function EditEmployeePage() {
           position: data.position || '',
           department: data.department || '',
           managerId: data.managerId || '',
-          hierarchyLevel: data.hierarchyLevel || 0,
+          hierarchyLevel: data.hierarchyLevel ?? 3,
           employmentType: data.employmentType || '',
           workTimeModel: data.workTimeModel || '',
           weeklyHours: data.weeklyHours || 40,
@@ -321,14 +321,18 @@ export default function EditEmployeePage() {
 
             <div>
               <Label htmlFor="hierarchyLevel">Hierarchie-Ebene</Label>
-              <Input
+              <select
                 id="hierarchyLevel"
-                type="number"
-                min="0"
                 value={formData.hierarchyLevel}
-                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value) || 0)}
-              />
-              <p className="text-xs text-gray-500 mt-1">0 = Mitarbeiter, 1 = Teamleiter, 2 = Abteilungsleiter, etc.</p>
+                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value))}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value={0}>Geschäftsführung</option>
+                <option value={1}>Manager</option>
+                <option value={2}>Teamleiter</option>
+                <option value={3}>Mitarbeiter</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">0 = Geschäftsführung (höchste), 3 = Mitarbeiter</p>
             </div>
           </div>
         </Card>

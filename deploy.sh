@@ -1,11 +1,8 @@
 #!/bin/bash
-
 # Deployment Script für Bereifung24
-# Auf dem Server als /var/www/bereifung24/deploy.sh speichern
+# Server läuft während des Builds weiter, PM2 managed den Neustart
 
-# Load NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+set -e  # Exit on error
 
 echo "🚀 Starting deployment..."
 
@@ -24,16 +21,17 @@ npm install
 echo "🔄 Generating Prisma Client..."
 npx prisma generate
 
-# Run database migrations
+# Run database migrations (if needed)
 echo "🗄️ Running database migrations..."
 npx prisma migrate deploy
 
-# Build application
+# Build application (PM2 keeps old server running)
 echo "🏗️ Building application..."
 npm run build
 
-# Restart PM2
-echo "♻️ Restarting application..."
-pm2 restart bereifung24
+# Restart with PM2 (graceful restart)
+echo "♻️ Restarting application with PM2..."
+pm2 restart bereifung24 || pm2 start npm --name bereifung24 -- start
 
 echo "✅ Deployment completed successfully!"
+pm2 status bereifung24

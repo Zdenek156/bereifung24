@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { hasApplication } from '@/lib/applications'
+import { encrypt, decrypt } from '@/lib/encryption'
 
 export async function GET(
   request: NextRequest,
@@ -45,9 +46,17 @@ export async function GET(
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
     }
 
+    // Decrypt bank account from profile if it exists
+    const responseData = {
+      ...employee,
+      iban: employee.profile?.bankAccount ? decrypt(employee.profile.bankAccount) : null,
+      bic: employee.profile?.bic || null,
+      bankName: employee.profile?.bankName || null,
+    }
+
     return NextResponse.json({ 
       success: true, 
-      data: employee 
+      data: responseData
     })
   } catch (error) {
     console.error('Error fetching employee:', error)
@@ -194,10 +203,7 @@ export async function PUT(
     if (body.healthInsuranceRate !== undefined) updateData.healthInsuranceRate = body.healthInsuranceRate
     if (body.isChildless !== undefined) updateData.isChildless = body.isChildless || false
     
-    // Bank
-    if (body.bankName !== undefined) updateData.bankName = body.bankName
-    if (body.iban !== undefined) updateData.iban = body.iban
-    if (body.bic !== undefined) updateData.bic = body.bic
+    // Bank data removed - now stored in EmployeeProfile only
 
     // Update employee
     const employee = await prisma.b24Employee.update({
@@ -228,8 +234,10 @@ export async function PUT(
     if (body.emergencyContactPhone !== undefined) profileData.emergencyContactPhone = body.emergencyContactPhone
     if (body.emergencyContactRelation !== undefined) profileData.emergencyContactRelation = body.emergencyContactRelation
     
-    // Sync bank data to profile (for employee profile view)
-    if (body.iban !== undefined) profileData.bankAccount = body.iban
+    // Bank data (encrypted) - Single Source of Truth
+    if (body.iban !== undefined) {
+      profileData.bankAccount = body.iban ? encrypt(body.iban) : null
+    }
     if (body.bic !== undefined) profileData.bic = body.bic
     if (body.bankName !== undefined) profileData.bankName = body.bankName
 

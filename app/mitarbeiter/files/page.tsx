@@ -179,7 +179,7 @@ export default function MitarbeiterFilesPage() {
       })
       
       xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 || xhr.status === 201) {
           fetchFiles()
           setUploading(false)
           setUploadProgress(0)

@@ -121,6 +121,9 @@ export default function EditEmployeePage() {
           iban: data.iban || '',
           bic: data.bic || ''
         })
+      } else {
+        console.error('Failed to fetch employee:', response.status)
+        setError(`Fehler beim Laden der Mitarbeiterdaten (${response.status})`)
       }
     } catch (error) {
       console.error('Error fetching employee:', error)

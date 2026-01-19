@@ -1100,11 +1100,10 @@ model B24Employee {
   annualVacationDays Int @default(30) // Gesetzlich: 24 Tage bei 6-Tage-Woche
 
   // ============================================
-  // HR MANAGEMENT - BANKVERBINDUNG
+  // HR MANAGEMENT - BANKVERBINDUNG (DEPRECATED)
   // ============================================
-  bankName String?
-  iban     String?
-  bic      String?
+  // Bank data moved to EmployeeProfile (encrypted)
+  // These fields will be removed in future migration
 
   // ============================================
   // HR MANAGEMENT - ZUSÄTZLICHE RELATIONS

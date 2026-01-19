@@ -127,18 +127,7 @@ export async function PUT(request: NextRequest) {
       update: dataToSave,
     })
 
-    // Sync bank data to B24Employee (for HR view)
-    const bankUpdateData: any = {}
-    if (body.bankAccount !== undefined) bankUpdateData.iban = body.bankAccount
-    if (body.bic !== undefined) bankUpdateData.bic = body.bic
-    if (body.bankName !== undefined) bankUpdateData.bankName = body.bankName
-    
-    if (Object.keys(bankUpdateData).length > 0) {
-      await prisma.b24Employee.update({
-        where: { id: employee.id },
-        data: bankUpdateData,
-      })
-    }
+    // No sync to B24Employee needed - EmployeeProfile is single source of truth for bank data
 
     return NextResponse.json({ success: true, profile })
   } catch (error) {

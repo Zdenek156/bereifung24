@@ -93,17 +93,21 @@ export async function PUT(
       const isSelf = currentEmployee?.id === employeeId
       
       if (!isSelf) {
-        // Check if user is Geschäftsführer or manager (hierarchyLevel >= 3)
+        // Check if user is Geschäftsführer, Manager or Teamleiter (hierarchyLevel >= 1)
+        // OR if position contains CEO, CCO, Geschäftsführer, Manager, Head, Director
         const isManager = currentEmployee && (
           currentEmployee.position?.toLowerCase().includes('geschäftsführer') ||
           currentEmployee.position?.toLowerCase().includes('ceo') ||
           currentEmployee.position?.toLowerCase().includes('cco') ||
-          (currentEmployee.hierarchyLevel && currentEmployee.hierarchyLevel >= 3)
+          currentEmployee.position?.toLowerCase().includes('head of') ||
+          currentEmployee.position?.toLowerCase().includes('director') ||
+          currentEmployee.position?.toLowerCase().includes('manager') ||
+          (currentEmployee.hierarchyLevel !== null && currentEmployee.hierarchyLevel >= 1)
         )
         
         if (!isManager) {
           return NextResponse.json(
-            { error: 'Forbidden - You can only edit your own data' },
+            { error: 'Forbidden - You can only edit your own data. Requires manager role or higher.' },
             { status: 403 }
           )
         }
@@ -142,7 +146,7 @@ export async function PUT(
     
     // Hierarchy
     if (body.managerId !== undefined) updateData.managerId = body.managerId || null
-    if (body.hierarchyLevel !== undefined) updateData.hierarchyLevel = body.hierarchyLevel || 0
+    if (body.hierarchyLevel !== undefined) updateData.hierarchyLevel = body.hierarchyLevel ?? 3
     
     // Contract
     if (body.employmentType !== undefined) updateData.employmentType = body.employmentType

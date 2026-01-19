@@ -81,7 +81,7 @@ export default function NewEmployeePage() {
     firstName: '',
     lastName: '',
     email: '',
-    hierarchyLevel: 0,
+    hierarchyLevel: 3,
     isMinijob: false,
     miniJobExempt: false,
     religion: 'NONE',
@@ -301,16 +301,18 @@ export default function NewEmployeePage() {
             </div>
             <div>
               <Label>Hierarchie-Ebene</Label>
-              <Input
-                type="number"
+              <select
                 value={formData.hierarchyLevel}
-                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value) || 0)}
-                min="0"
-                max="10"
-                className="mt-1"
-              />
+                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value))}
+                className="w-full border rounded px-3 py-2 mt-1"
+              >
+                <option value={0}>Geschäftsführung</option>
+                <option value={1}>Manager</option>
+                <option value={2}>Teamleiter</option>
+                <option value={3}>Mitarbeiter</option>
+              </select>
               <p className="text-xs text-gray-500 mt-1">
-                0 = Mitarbeiter, 1 = Teamleiter, 2 = Abteilungsleiter, etc.
+                0 = Geschäftsführung (höchste), 3 = Mitarbeiter
               </p>
             </div>
           </div>

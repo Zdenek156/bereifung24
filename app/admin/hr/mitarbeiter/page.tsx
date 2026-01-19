@@ -97,7 +97,7 @@ export default function HRMitarbeiterPage() {
   }
 
   const getHierarchyLabel = (level: number) => {
-    const labels = ['Mitarbeiter', 'Teamleiter', 'Manager', 'Geschäftsführer']
+    const labels = ['Geschäftsführung', 'Manager', 'Teamleiter', 'Mitarbeiter']
     return labels[level] || 'Mitarbeiter'
   }
 
@@ -203,9 +203,9 @@ export default function HRMitarbeiterPage() {
               <div className="text-right">
                 <span className={`
                   px-2 py-1 text-xs rounded-full
-                  ${employee.hierarchyLevel === 3 ? 'bg-purple-100 text-purple-700' :
-                    employee.hierarchyLevel === 2 ? 'bg-blue-100 text-blue-700' :
-                    employee.hierarchyLevel === 1 ? 'bg-green-100 text-green-700' :
+                  ${employee.hierarchyLevel === 0 ? 'bg-purple-100 text-purple-700' :
+                    employee.hierarchyLevel === 1 ? 'bg-blue-100 text-blue-700' :
+                    employee.hierarchyLevel === 2 ? 'bg-green-100 text-green-700' :
                     'bg-gray-100 text-gray-700'}
                 `}>
                   {getHierarchyLabel(employee.hierarchyLevel)}

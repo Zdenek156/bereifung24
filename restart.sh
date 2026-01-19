@@ -11,7 +11,9 @@ echo "📦 Checking dependencies..."
 npm install --production=false
 
 echo "⚙️  Stopping old server..."
-pkill -f 'node.*next start' || true
+pkill -9 -f 'npm start' || true
+pkill -9 -f 'node.*next' || true
+sleep 2
 
 echo "🚀 Starting server..."
 nohup npm start > /var/log/bereifung24.log 2>&1 &

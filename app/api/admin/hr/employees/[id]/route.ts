@@ -68,15 +68,48 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has access to HR application or is ADMIN
+    const employeeId = params.id
+    
+    // Get the current user's employee record to check permissions
+    const currentEmployee = await prisma.b24Employee.findFirst({
+      where: { userId: session.user.id }
+    })
+
+    // Permission logic:
+    // 1. ADMIN can edit anyone
+    // 2. B24_EMPLOYEE with HR application AND (editing themselves OR they are manager/Geschäftsführer)
     if (session.user.role !== 'ADMIN') {
+      // Must be B24_EMPLOYEE with HR access
+      if (session.user.role !== 'B24_EMPLOYEE') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      
       const hasAccess = await hasApplication(session.user.id, 'hr')
       if (!hasAccess) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        return NextResponse.json({ error: 'Forbidden - No HR access' }, { status: 403 })
+      }
+
+      // Check if editing themselves (allowed) or others (requires manager/Geschäftsführer role)
+      const isSelf = currentEmployee?.id === employeeId
+      
+      if (!isSelf) {
+        // Check if user is Geschäftsführer or manager (hierarchyLevel >= 3)
+        const isManager = currentEmployee && (
+          currentEmployee.position?.toLowerCase().includes('geschäftsführer') ||
+          currentEmployee.position?.toLowerCase().includes('ceo') ||
+          currentEmployee.position?.toLowerCase().includes('cco') ||
+          (currentEmployee.hierarchyLevel && currentEmployee.hierarchyLevel >= 3)
+        )
+        
+        if (!isManager) {
+          return NextResponse.json(
+            { error: 'Forbidden - You can only edit your own data' },
+            { status: 403 }
+          )
+        }
       }
     }
 
-    const employeeId = params.id
     const body = await request.json()
 
     // Check if email is being changed and if it's unique

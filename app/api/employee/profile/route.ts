@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         phone: employee.phone,
         position: employee.position,
         department: employee.department,
+        profileImage: employee.profileImage,
       },
       profile,
     })

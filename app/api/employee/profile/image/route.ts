@@ -14,6 +14,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Find employee by email
+    const employee = await prisma.b24Employee.findFirst({
+      where: { email: session.user.email }
+    })
+
+    if (!employee) {
+      return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('image') as File
 
@@ -39,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Generiere eindeutigen Dateinamen
     const timestamp = Date.now()
     const fileExtension = file.name.split('.').pop()
-    const fileName = `${session.user.b24EmployeeId}-${timestamp}.${fileExtension}`
+    const fileName = `${employee.id}-${timestamp}.${fileExtension}`
     const filePath = join(uploadsDir, fileName)
 
     // Speichere Datei
@@ -52,16 +61,16 @@ export async function POST(request: NextRequest) {
     
     // Update B24Employee
     await prisma.b24Employee.update({
-      where: { id: session.user.b24EmployeeId },
+      where: { id: employee.id },
       data: { profileImage: imageUrl }
     })
 
     // Update oder erstelle EmployeeProfile (für Profil-Seite)
     await prisma.employeeProfile.upsert({
-      where: { b24EmployeeId: session.user.b24EmployeeId },
+      where: { employeeId: employee.id },
       update: { profileImageUrl: imageUrl },
       create: {
-        b24EmployeeId: session.user.b24EmployeeId,
+        employeeId: employee.id,
         profileImageUrl: imageUrl
       }
     })

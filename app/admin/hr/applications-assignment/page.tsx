@@ -201,6 +201,7 @@ export default function ApplicationsAssignmentPage() {
       <div className="space-y-6">
         {employees
           .filter((emp) => emp.isActive)
+          .filter((emp) => emp.role !== 'ADMIN' && !emp.email.includes('admin@bereifung24.de'))
           .map((employee) => (
             <Card key={employee.id} className="p-6">
               <div className="mb-4">
@@ -264,7 +265,7 @@ export default function ApplicationsAssignmentPage() {
           ))}
       </div>
 
-      {employees.filter((emp) => emp.isActive).length === 0 && (
+      {employees.filter((emp) => emp.isActive && emp.role !== 'ADMIN' && !emp.email.includes('admin@bereifung24.de')).length === 0 && (
         <Card className="p-12 text-center">
           <div className="max-w-md mx-auto space-y-4">
             <div className="text-6xl mb-4">👥</div>

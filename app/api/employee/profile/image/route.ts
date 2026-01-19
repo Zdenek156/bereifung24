@@ -47,12 +47,23 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
     await writeFile(filePath, buffer)
 
-    // Update Datenbankli
+    // Update Datenbank (beide Modelle für Konsistenz)
     const imageUrl = `/uploads/profiles/${fileName}`
     
+    // Update B24Employee
     await prisma.b24Employee.update({
       where: { id: session.user.b24EmployeeId },
       data: { profileImage: imageUrl }
+    })
+
+    // Update oder erstelle EmployeeProfile (für Profil-Seite)
+    await prisma.employeeProfile.upsert({
+      where: { b24EmployeeId: session.user.b24EmployeeId },
+      update: { profileImageUrl: imageUrl },
+      create: {
+        b24EmployeeId: session.user.b24EmployeeId,
+        profileImageUrl: imageUrl
+      }
     })
 
     return NextResponse.json({

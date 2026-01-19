@@ -102,6 +102,11 @@ export default function HRMitarbeiterPage() {
   }
 
   const filteredEmployees = employees.filter(emp => {
+    // Exclude admin accounts (role ADMIN or specific email domains)
+    if (emp.role === 'ADMIN' || emp.email.includes('admin@bereifung24.de')) {
+      return false
+    }
+
     const matchesSearch = 
       emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||

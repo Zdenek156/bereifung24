@@ -141,28 +141,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get or find employee ID
-    let employeeId = session.user.b24EmployeeId
-    if (!employeeId && session.user.role === 'ADMIN') {
-      const employee = await prisma.b24Employee.findUnique({
-        where: { email: session.user.email! }
-      })
-      if (employee) {
-        employeeId = employee.id
-      } else {
-        return NextResponse.json(
-          { error: 'Admin employee profile not found. Please re-login.' },
-          { status: 401 }
-        )
-      }
-    }
-
-    if (!employeeId) {
+    // Find employee by email (works for both ADMIN and B24_EMPLOYEE)
+    const employee = await prisma.b24Employee.findUnique({
+      where: { email: session.user.email! }
+    })
+    
+    if (!employee) {
       return NextResponse.json(
-        { error: 'Employee profile required' },
-        { status: 401 }
+        { error: 'Employee profile not found' },
+        { status: 404 }
       )
     }
+    
+    const employeeId = employee.id
 
     // Check total storage limit
     const totalSize = await prisma.fileUpload.aggregate({

@@ -220,7 +220,12 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating employee:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to update employee' },
+      { 
+        success: false, 
+        error: 'Failed to update employee',
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

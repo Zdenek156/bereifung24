@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Save, AlertCircle } from 'lucide-react'
 import BackButton from '@/components/BackButton'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface Manager {
   id: string
@@ -63,6 +65,7 @@ interface EmployeeData {
 export default function EditEmployeePage() {
   const router = useRouter()
   const params = useParams()
+  const { data: session } = useSession()
   const employeeId = params.id as string
   
   const [formData, setFormData] = useState<EmployeeData | null>(null)
@@ -169,7 +172,7 @@ export default function EditEmployeePage() {
       })
 
       if (response.ok) {
-        router.push('/admin/hr/mitarbeiter')
+        router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Aktualisieren des Mitarbeiters')
@@ -334,7 +337,7 @@ export default function EditEmployeePage() {
         <div className="flex gap-3">
           <Button
             type="button"
-            onClick={() => router.push(`/admin/hr/mitarbeiter/${employeeId}/hr-daten`)}
+            onClick={() => router.push(getEmployeeUrl(`/admin/hr/mitarbeiter/${employeeId}/hr-daten`, session?.user?.role))}
             variant="outline"
           >
             Zu HR-Daten (Vertrag, Gehalt, etc.)

@@ -185,7 +185,7 @@ export default function HRMitarbeiterPage() {
           <Card 
             key={employee.id} 
             className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push(`/admin/hr/mitarbeiter/${employee.id}/hr-daten`)}
+            onClick={() => router.push(`/admin/hr/mitarbeiter/${employee.id}`)}
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">

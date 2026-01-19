@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import BackButton from '@/components/BackButton'
+import Link from 'next/link'
 
 type RecipientGroup = 'workshops_no_revenue' | 'workshops_with_revenue' | 'customers_no_requests' | 'customers_with_pending_offers' | 'all_customers' | 'all_employees'
 

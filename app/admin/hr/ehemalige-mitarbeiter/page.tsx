@@ -42,7 +42,9 @@ export default function EhemaligeMitarbeiterPage() {
     try {
       const response = await fetch('/api/admin/hr/employees?inactive=true')
       if (response.ok) {
-        const data = await response.json()
+        const result = await response.json()
+        // Handle both response formats: direct array or { success, data } wrapper
+        const data = Array.isArray(result) ? result : (result.data || [])
         setEmployees(data)
       }
     } catch (error) {
@@ -115,9 +117,18 @@ export default function EhemaligeMitarbeiterPage() {
   }
 
   const filteredEmployees = employees.filter(emp => {
-    // Exclude admin accounts
-    if (emp.role === 'ADMIN' || emp.email.includes('admin@bereifung24.de')) {
-      return false
+    // API already filters out admin and system users
+    
+    const matchesSearch = 
+      emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.position?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesDepartment = !filterDepartment || emp.department === filterDepartment
+
+    return matchesSearch && matchesDepartment
+  })
     }
 
     const matchesSearch = 

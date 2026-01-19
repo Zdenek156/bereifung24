@@ -118,10 +118,10 @@ export async function PUT(request: NextRequest) {
     // Upsert profile
     const profile = await prisma.employeeProfile.upsert({
       where: {
-        b24EmployeeId: employee.id,
+        employeeId: employee.id,
       },
       create: {
-        b24EmployeeId: employee.id,
+        employeeId: employee.id,
         ...dataToSave,
       },
       update: dataToSave,

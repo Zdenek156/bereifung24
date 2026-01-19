@@ -10,6 +10,9 @@ git pull
 echo "📦 Checking dependencies..."
 npm install --production=false
 
+echo "🔨 Building application..."
+npm run build
+
 echo "⚙️  Stopping old server..."
 pkill -9 -f 'npm start' || true
 pkill -9 -f 'node.*next' || true

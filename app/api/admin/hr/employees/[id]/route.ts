@@ -93,8 +93,9 @@ export async function PUT(
       const isSelf = currentEmployee?.id === employeeId
       
       if (!isSelf) {
-        // Check if user is Geschäftsführer, Manager or Teamleiter (hierarchyLevel >= 1)
-        // OR if position contains CEO, CCO, Geschäftsführer, Manager, Head, Director
+        // Check if user is Geschäftsführer or Manager (hierarchyLevel <= 1)
+        // 0 = Geschäftsführung, 1 = Manager (can edit all)
+        // 2 = Teamleiter, 3+ = Mitarbeiter (can only edit self)
         const isManager = currentEmployee && (
           currentEmployee.position?.toLowerCase().includes('geschäftsführer') ||
           currentEmployee.position?.toLowerCase().includes('ceo') ||
@@ -102,7 +103,7 @@ export async function PUT(
           currentEmployee.position?.toLowerCase().includes('head of') ||
           currentEmployee.position?.toLowerCase().includes('director') ||
           currentEmployee.position?.toLowerCase().includes('manager') ||
-          (currentEmployee.hierarchyLevel !== null && currentEmployee.hierarchyLevel >= 1)
+          (currentEmployee.hierarchyLevel !== null && currentEmployee.hierarchyLevel <= 1)
         )
         
         if (!isManager) {

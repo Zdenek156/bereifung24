@@ -111,8 +111,8 @@ GESAMT: 29 Anwendungen
      Icon: ShieldAlert | Farbe: Rot
      Beschreibung: Gesperrte E-Mails verwalten und freischalten
 
-[51] E-Mail Versand
-     Link: /admin/email
+[51] Newsletter
+     Link: /admin/newsletter
      Icon: Send | Farbe: Grün
      Beschreibung: Newsletter und Updates versenden
 

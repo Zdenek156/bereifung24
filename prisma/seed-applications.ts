@@ -170,11 +170,11 @@ const defaultApplications = [
     sortOrder: 50.5
   },
   {
-    key: 'email',
-    name: 'E-Mail Versand',
+    key: 'newsletter',
+    name: 'Newsletter',
     description: 'Newsletter und Updates versenden',
     icon: 'Send',
-    adminRoute: '/admin/email',
+    adminRoute: '/admin/newsletter',
     color: 'green',
     category: 'SUPPORT',
     sortOrder: 51

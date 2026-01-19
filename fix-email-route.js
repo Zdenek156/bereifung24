@@ -2,14 +2,17 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🔧 Fixing email application route...')
+  console.log('🔧 Renaming email application to newsletter...')
   
+  // Update existing 'email' key to 'newsletter'
   const result = await prisma.application.updateMany({
     where: {
       key: 'email'
     },
     data: {
-      adminRoute: '/admin/email'
+      key: 'newsletter',
+      name: 'Newsletter',
+      adminRoute: '/admin/newsletter'
     }
   })
   
@@ -17,10 +20,10 @@ async function main() {
   
   // Verify
   const app = await prisma.application.findUnique({
-    where: { key: 'email' }
+    where: { key: 'newsletter' }
   })
   
-  console.log('📧 Email application route:', app?.adminRoute)
+  console.log('📧 Newsletter application:', app?.name, '→', app?.adminRoute)
 }
 
 main()

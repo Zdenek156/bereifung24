@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 type RecipientGroup = 'workshops_no_revenue' | 'workshops_with_revenue' | 'customers_no_requests' | 'customers_with_pending_offers' | 'all_customers' | 'all_employees'
 
-export default function AdminEmailPage() {
+export default function AdminNewsletterPage() {
   const [recipientGroup, setRecipientGroup] = useState<RecipientGroup>('all_customers')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
@@ -145,7 +145,7 @@ export default function AdminEmailPage() {
           <div className="mb-4">
             <BackButton />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">E-Mail Versand</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Newsletter</h1>
           <p className="text-gray-600 mt-2">Senden Sie Nachrichten und Updates an Ihre Nutzer</p>
         </div>
 

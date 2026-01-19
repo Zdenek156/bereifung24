@@ -94,15 +94,7 @@ export default function AdminCleanupPage() {
         {/* Header */}
         <BackButton />
         <div className="mb-8">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Zurück zum Admin-Dashboard
-          </Link>
+
           <h1 className="text-4xl font-bold text-gray-900">Datenbank Bereinigung</h1>
           <p className="mt-2 text-lg text-gray-600">
             Löschen Sie selektiv Daten aus der Datenbank

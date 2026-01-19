@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Search, Users, Building2, Clock, Euro, FileText, RotateCcw } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface Employee {
   id: string
@@ -26,6 +28,7 @@ interface Employee {
 
 export default function EhemaligeMitarbeiterPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -268,7 +271,7 @@ export default function EhemaligeMitarbeiterPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/admin/hr/mitarbeiter/${employee.id}/hr-daten`)}
+                onClick={() => router.push(getEmployeeUrl(`/admin/hr/mitarbeiter/${employee.id}/hr-daten`, session?.user?.role))}
                 className="flex-1"
               >
                 <FileText className="h-4 w-4 mr-2" />

@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Save, UserPlus, AlertCircle } from 'lucide-react'
 import BackButton from '@/components/BackButton'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface Manager {
   id: string
@@ -73,6 +75,7 @@ interface NewEmployeeData {
 
 export default function NewEmployeePage() {
   const router = useRouter()
+  const { data: session } = useSession()
   
   const [formData, setFormData] = useState<NewEmployeeData>({
     firstName: '',
@@ -157,7 +160,7 @@ export default function NewEmployeePage() {
 
       if (response.ok) {
         const newEmployee = await response.json()
-        router.push('/admin/hr/mitarbeiter')
+        router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Erstellen des Mitarbeiters')
@@ -637,7 +640,7 @@ export default function NewEmployeePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push('/admin/hr/mitarbeiter')}
+            onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))}
             disabled={saving}
           >
             Abbrechen

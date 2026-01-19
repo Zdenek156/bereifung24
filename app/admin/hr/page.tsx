@@ -7,6 +7,8 @@ import { Users, FileText, CheckCircle, AlertCircle, Plus, TrendingUp, DollarSign
 import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
 import { PermissionGuard } from '@/components/PermissionGuard'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface HRStats {
   totalEmployees: number
@@ -19,6 +21,7 @@ interface HRStats {
 
 export default function HRDashboard() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [stats, setStats] = useState<HRStats>({
     totalEmployees: 0,
     activeEmployees: 0,
@@ -77,14 +80,14 @@ export default function HRDashboard() {
         </div>
         <div className="flex gap-3">
           <Button
-            onClick={() => router.push('/admin/hr/mitarbeiter/neu')}
+            onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter/neu', session?.user?.role))}
             className="bg-green-600 hover:bg-green-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             Neuer Mitarbeiter
           </Button>
           <Button
-            onClick={() => router.push('/admin/hr/gehaltsabrechnungen/generieren')}
+            onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen/generieren', session?.user?.role))}
             variant="outline"
           >
             <FileText className="h-4 w-4 mr-2" />
@@ -96,7 +99,7 @@ export default function HRDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {/* Mitarbeiter */}
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/hr/mitarbeiter')}>
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Mitarbeiter</p>
@@ -110,7 +113,7 @@ export default function HRDashboard() {
         </Card>
 
         {/* Monatliche Lohnkosten */}
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/hr/gehaltsabrechnungen')}>
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Monatliche Lohnkosten</p>
@@ -124,7 +127,7 @@ export default function HRDashboard() {
         </Card>
 
         {/* Pendente Genehmigungen */}
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/hr/genehmigungen')}>
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/genehmigungen', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pendente Genehmigungen</p>
@@ -138,7 +141,7 @@ export default function HRDashboard() {
         </Card>
 
         {/* Offene Gehaltsentwürfe */}
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/hr/gehaltsabrechnungen?status=DRAFT')}>
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen?status=DRAFT', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Gehalts-Entwürfe</p>
@@ -152,7 +155,7 @@ export default function HRDashboard() {
         </Card>
 
         {/* Offene Stellenausschreibungen */}
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/hr/stellen')}>
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/stellen', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Offene Stellen</p>
@@ -187,7 +190,7 @@ export default function HRDashboard() {
           <h2 className="text-xl font-bold mb-4">Mitarbeiter-Management</h2>
           <div className="space-y-3">
             <Button
-              onClick={() => router.push('/admin/hr/mitarbeiter')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -195,7 +198,7 @@ export default function HRDashboard() {
               Mitarbeiter verwalten
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/mitarbeiter/neu')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter/neu', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -203,7 +206,7 @@ export default function HRDashboard() {
               Neuen Mitarbeiter anlegen
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/ehemalige-mitarbeiter')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/ehemalige-mitarbeiter', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -211,7 +214,7 @@ export default function HRDashboard() {
               Ehemalige Mitarbeiter
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/hierarchie')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/hierarchie', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -226,7 +229,7 @@ export default function HRDashboard() {
           <h2 className="text-xl font-bold mb-4">Gehaltsabrechnung</h2>
           <div className="space-y-3">
             <Button
-              onClick={() => router.push('/admin/hr/gehaltsabrechnungen')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -234,7 +237,7 @@ export default function HRDashboard() {
               Alle Gehaltsabrechnungen
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/gehaltsabrechnungen/generieren')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen/generieren', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -242,7 +245,7 @@ export default function HRDashboard() {
               Monatsabrechnung generieren
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/gehaltsabrechnungen/auswertungen')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/gehaltsabrechnungen/auswertungen', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -257,7 +260,7 @@ export default function HRDashboard() {
           <h2 className="text-xl font-bold mb-4">Recruiting</h2>
           <div className="space-y-3">
             <Button
-              onClick={() => router.push('/admin/hr/stellen')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/stellen', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -265,7 +268,7 @@ export default function HRDashboard() {
               Stellenausschreibungen
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/bewerbungen')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/bewerbungen', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -273,7 +276,7 @@ export default function HRDashboard() {
               Bewerbungen verwalten
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/stellen/neu')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/stellen/neu', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -288,7 +291,7 @@ export default function HRDashboard() {
           <h2 className="text-xl font-bold mb-4">Genehmigungen</h2>
           <div className="space-y-3">
             <Button
-              onClick={() => router.push('/admin/hr/genehmigungen')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/genehmigungen', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >
@@ -296,7 +299,7 @@ export default function HRDashboard() {
               Pendente Genehmigungen ({stats.pendingApprovals})
             </Button>
             <Button
-              onClick={() => router.push('/admin/hr/genehmigungen/historie')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/genehmigungen/historie', session?.user?.role))}
               variant="outline"
               className="w-full justify-start"
             >

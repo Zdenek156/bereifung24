@@ -8,6 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Save, User, Briefcase, DollarSign, FileText, Building2, Calendar, UserX } from 'lucide-react'
 import BackButton from '@/components/BackButton'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface HRData {
   // Hierarchy
@@ -68,6 +72,7 @@ interface Employee {
 export default function HRDataEditPage() {
   const router = useRouter()
   const params = useParams()
+  const { data: session } = useSession()
   const employeeId = params.id as string
 
   const [employee, setEmployee] = useState<Employee | null>(null)
@@ -168,7 +173,7 @@ export default function HRDataEditPage() {
 
       if (response.ok) {
         alert('HR-Daten erfolgreich gespeichert!')
-        router.push('/admin/hr/mitarbeiter')
+        router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error || 'Unbekannter Fehler'}`)
@@ -195,7 +200,7 @@ export default function HRDataEditPage() {
 
       if (response.ok) {
         alert('Mitarbeiter wurde deaktiviert und in die ehemaligen Mitarbeiter verschoben.')
-        router.push('/admin/hr/mitarbeiter')
+        router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))
       } else {
         alert('Fehler beim Deaktivieren')
       }
@@ -219,7 +224,7 @@ export default function HRDataEditPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <BackButton href={`/admin/hr/mitarbeiter/${employeeId}`} />
+          <BackButton href={getEmployeeUrl(`/admin/hr/mitarbeiter/${employeeId}`, session?.user?.role)} />
           <div>
             <h1 className="text-3xl font-bold">HR-Daten bearbeiten</h1>
             <p className="text-gray-600 mt-1">{employee.firstName} {employee.lastName}</p>
@@ -706,7 +711,7 @@ export default function HRDataEditPage() {
         <div className="flex justify-end gap-3">
           <Button
             variant="outline"
-            onClick={() => router.push(`/admin/hr/mitarbeiter/${employeeId}`)}
+            onClick={() => router.push(getEmployeeUrl(`/admin/hr/mitarbeiter/${employeeId}`, session?.user?.role))}
           >
             Abbrechen
           </Button>

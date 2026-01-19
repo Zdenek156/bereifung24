@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Plus, Search, Users, Building2, Clock, Euro, FileText } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { getEmployeeUrl } from '@/lib/utils/employeeRoutes'
 
 interface Employee {
   id: string
@@ -30,6 +32,7 @@ interface Employee {
 
 export default function HRMitarbeiterPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -135,7 +138,7 @@ export default function HRMitarbeiterPage() {
           </div>
         </div>
         <Button
-          onClick={() => router.push('/admin/hr/mitarbeiter/neu')}
+          onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter/neu', session?.user?.role))}
           className="bg-green-600 hover:bg-green-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -185,7 +188,7 @@ export default function HRMitarbeiterPage() {
           <Card 
             key={employee.id} 
             className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push(`/admin/hr/mitarbeiter/${employee.id}`)}
+            onClick={() => router.push(getEmployeeUrl(`/admin/hr/mitarbeiter/${employee.id}`, session?.user?.role))}
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
@@ -279,7 +282,7 @@ export default function HRMitarbeiterPage() {
           </p>
           {!searchTerm && !filterDepartment && !filterEmploymentType && (
             <Button
-              onClick={() => router.push('/admin/hr/mitarbeiter/neu')}
+              onClick={() => router.push(getEmployeeUrl('/admin/hr/mitarbeiter/neu', session?.user?.role))}
               className="mt-4"
             >
               <Plus className="h-4 w-4 mr-2" />

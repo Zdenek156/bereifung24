@@ -301,18 +301,16 @@ export default function NewEmployeePage() {
             </div>
             <div>
               <Label>Hierarchie-Ebene</Label>
-              <select
+              <input
+                type="number"
+                min="0"
+                max="10"
                 value={formData.hierarchyLevel}
-                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value))}
+                onChange={(e) => updateField('hierarchyLevel', parseInt(e.target.value) || 3)}
                 className="w-full border rounded px-3 py-2 mt-1"
-              >
-                <option value={0}>Geschäftsführung</option>
-                <option value={1}>Manager</option>
-                <option value={2}>Teamleiter</option>
-                <option value={3}>Mitarbeiter</option>
-              </select>
+              />
               <p className="text-xs text-gray-500 mt-1">
-                0 = Geschäftsführung (höchste), 3 = Mitarbeiter
+                0 = Geschäftsführung (höchste Ebene), 1 = Manager, 2 = Teamleiter, 3 = Mitarbeiter, 4+ = weitere Ebenen
               </p>
             </div>
           </div>

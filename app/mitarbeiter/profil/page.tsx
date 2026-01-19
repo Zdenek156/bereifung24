@@ -54,13 +54,27 @@ export default function ProfilPage() {
     }
   }, [status, session, router])
 
+  // Helper function to format date for input[type="date"]
+  const formatDateForInput = (dateString?: string) => {
+    if (!dateString) return ''
+    // Convert ISO DateTime to yyyy-MM-dd format
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return ''
+    return date.toISOString().split('T')[0]
+  }
+
   const fetchProfile = async () => {
     try {
       const res = await fetch('/api/employee/profile')
       if (res.ok) {
         const data = await res.json()
         setEmployee(data.employee)
-        setProfile(data.profile || {})
+        // Format birthDate for input[type="date"]
+        const profileData = data.profile || {}
+        if (profileData.birthDate) {
+          profileData.birthDate = formatDateForInput(profileData.birthDate)
+        }
+        setProfile(profileData)
         setProfileImage(data.employee?.profileImage || null)
       }
     } catch (error) {

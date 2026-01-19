@@ -99,7 +99,6 @@ export default function VehiclesAdminPage() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <BackButton />
-          <Link href="/admin" className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block"> Admin Dashboard</Link>
           <h1 className="text-2xl font-bold text-gray-900">Firmenfahrzeuge</h1>
           <p className="text-sm text-gray-600">Verwaltung der Firmenfahrzeuge</p>
         </div>

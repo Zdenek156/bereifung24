@@ -1,29 +1,34 @@
 #!/bin/bash
 # Deployment Script für Bereifung24
-# Server läuft während des Builds weiter, PM2 managed den Neustart
+# Build WÄHREND Server läuft, dann swap - OHNE Port-Probleme
 
-set -e  # Exit on error
+set -e
 
 echo "🚀 Starting deployment..."
-
-# Navigate to project directory
 cd /var/www/bereifung24
 
-# Pull latest changes
-echo "📥 Pulling latest changes from Git..."
+echo "📥 Pulling latest changes..."
 git pull origin main
 
-# Install dependencies (Prisma generate runs in postinstall)
 echo "📦 Installing dependencies..."
 npm install
 
-# Build application (PM2 keeps old server running)
-echo "🏗️ Building application..."
+echo "🏗️ Building application (server stays online)..."
 npm run build
 
-# Restart with PM2 (graceful restart)
-echo "♻️ Restarting application with PM2..."
-pm2 restart bereifung24 || pm2 start npm --name bereifung24 -- start
+echo "♻️ Restarting server..."
+pkill -9 -f 'npm start' 2>/dev/null || true
+pkill -9 -f 'node.*next' 2>/dev/null || true
+sleep 2
 
-echo "✅ Deployment completed successfully!"
-pm2 status bereifung24
+nohup npm start > /var/log/bereifung24.log 2>&1 &
+sleep 3
+
+if ps aux | grep 'node.*next start' | grep -v grep > /dev/null; then
+    echo "✅ Deployment successful!"
+    ps aux | grep 'node.*next start' | grep -v grep
+else
+    echo "❌ Server failed to start"
+    tail -30 /var/log/bereifung24.log
+    exit 1
+fi

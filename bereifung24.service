@@ -1,0 +1,18 @@
+[Unit]
+Description=Bereifung24 Next.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/bereifung24
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/local/bin/node /var/www/bereifung24/node_modules/.bin/next start
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/bereifung24.log
+StandardError=append:/var/log/bereifung24.log
+
+[Install]
+WantedBy=multi-user.target

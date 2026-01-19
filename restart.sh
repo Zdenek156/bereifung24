@@ -10,15 +10,14 @@ git pull
 echo "📦 Checking dependencies..."
 npm install --production=false
 
-echo "🔨 Building application..."
+echo "🔨 Building application (server keeps running)..."
 npm run build
 
 echo "⚙️  Stopping old server..."
-pkill -9 -f 'npm start' || true
-pkill -9 -f 'node.*next' || true
+killall -9 node 2>/dev/null || true
 sleep 2
 
-echo "🚀 Starting server..."
+echo "🚀 Starting new server..."
 nohup npm start > /var/log/bereifung24.log 2>&1 &
 
 sleep 3

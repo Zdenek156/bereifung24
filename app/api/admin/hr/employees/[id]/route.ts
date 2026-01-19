@@ -72,7 +72,7 @@ export async function PUT(
     
     // Get the current user's employee record to check permissions
     const currentEmployee = await prisma.b24Employee.findFirst({
-      where: { userId: session.user.id }
+      where: { email: session.user.email }
     })
 
     // Permission logic:

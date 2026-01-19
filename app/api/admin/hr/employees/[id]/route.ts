@@ -70,10 +70,18 @@ export async function PUT(
 
     const employeeId = params.id
     
+    console.log('[PUT /api/admin/hr/employees/[id]] Session user:', {
+      email: session.user.email,
+      role: session.user.role,
+      id: session.user.id
+    })
+    
     // Get the current user's employee record to check permissions
     const currentEmployee = await prisma.b24Employee.findFirst({
       where: { email: session.user.email }
     })
+    
+    console.log('[PUT /api/admin/hr/employees/[id]] Current employee:', currentEmployee ? { id: currentEmployee.id, email: currentEmployee.email } : 'null')
 
     // Permission logic:
     // 1. ADMIN can edit anyone

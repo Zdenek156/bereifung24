@@ -132,8 +132,13 @@ export default function NeueStelleErstellenPage() {
                 >
                   <option value="FULL_TIME">Vollzeit</option>
                   <option value="PART_TIME">Teilzeit</option>
+                  <option value="MINI_JOB">Minijob</option>
+                  <option value="MIDI_JOB">Midijob</option>
                   <option value="INTERN">Praktikum</option>
-                  <option value="FREELANCE">Freelance</option>
+                  <option value="APPRENTICE">Azubi</option>
+                  <option value="WORKING_STUDENT">Werkstudent</option>
+                  <option value="FREELANCE">Freelancer</option>
+                  <option value="TEMPORARY">Zeitarbeit</option>
                 </select>
               </div>
 

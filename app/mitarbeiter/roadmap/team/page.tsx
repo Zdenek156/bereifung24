@@ -117,6 +117,9 @@ export default function TeamRoadmapPage() {
 
   const groupTasksByPhase = () => {
     const grouped = tasks.reduce((acc, task) => {
+      // Skip tasks without phase
+      if (!task.phase) return acc
+      
       if (!acc[task.phase.id]) {
         acc[task.phase.id] = {
           phase: task.phase,

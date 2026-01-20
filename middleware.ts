@@ -36,6 +36,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/influencer-applications': 'influencers',
   '/admin/influencer-management': 'influencers',
   '/admin/influencer-payments': 'influencers',
+  '/admin/roadmap': 'roadmap',
 }
 
 // API routes to application mapping
@@ -49,6 +50,8 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/commissions': 'commissions',
   '/api/admin/billing': 'billing',
   '/api/admin/influencer': 'influencers',
+  '/api/admin/roadmap': 'roadmap',
+  '/api/mitarbeiter/roadmap': 'roadmap',
 }
 
 /**

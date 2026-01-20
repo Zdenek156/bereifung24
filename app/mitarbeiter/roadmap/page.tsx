@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, ChevronDown } from 'lucide-react'
+import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, ChevronDown, Plus, Edit2, Users, BarChart3, HandHeart } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import BackButton from '@/components/BackButton'
+import TaskEditModal from '@/components/TaskEditModal'
+import HelpOfferModal from '@/components/HelpOfferModal'
+import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +19,7 @@ interface RoadmapTask {
   id: string
   title: string
   description: string | null
-  priority: 'P0_CRITICAL' | 'P1_HIGH' | 'P2_MEDIUM' | 'P3_LOW'
+  priority: 'P0' | 'P1' | 'P2' | 'P3'
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED'
   phase: {
     id: string
@@ -25,6 +28,7 @@ interface RoadmapTask {
     startMonth: string
     endMonth: string
   }
+  phaseId: string
   month: string
   dueDate: string | null
   startDate: string | null
@@ -41,10 +45,10 @@ interface RoadmapTask {
 }
 
 const priorityConfig = {
-  P0_CRITICAL: { label: 'P0 Critical', color: 'bg-red-100 text-red-800 border-red-300', icon: '🔴' },
-  P1_HIGH: { label: 'P1 High', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: '🟡' },
-  P2_MEDIUM: { label: 'P2 Medium', color: 'bg-green-100 text-green-800 border-green-300', icon: '🟢' },
-  P3_LOW: { label: 'P3 Low', color: 'bg-blue-100 text-blue-800 border-blue-300', icon: '🔵' },
+  P0: { label: 'P0 Critical', color: 'bg-red-100 text-red-800 border-red-300', icon: '🔴' },
+  P1: { label: 'P1 High', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: '🟡' },
+  P2: { label: 'P2 Medium', color: 'bg-green-100 text-green-800 border-green-300', icon: '🟢' },
+  P3: { label: 'P3 Low', color: 'bg-blue-100 text-blue-800 border-blue-300', icon: '🔵' },
 }
 
 const statusConfig = {
@@ -54,14 +58,39 @@ const statusConfig = {
   BLOCKED: { label: 'Blockiert', icon: AlertCircle, color: 'text-red-500' },
 }
 
+interface Permissions {
+  canCreateTasks: boolean
+  canEditTasks: boolean
+  isCEO: boolean
+}
+
 export default function MyRoadmapPage() {
   const [tasks, setTasks] = useState<RoadmapTask[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<Permissions | null>(null)
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedTask, setSelectedTask] = useState<RoadmapTask | null>(null)
+  const [helpOfferModalOpen, setHelpOfferModalOpen] = useState(false)
+  const [helpOfferTask, setHelpOfferTask] = useState<{ id: string; title: string } | null>(null)
 
   useEffect(() => {
     fetchMyTasks()
+    fetchPermissions()
   }, [statusFilter])
+
+  const fetchPermissions = async () => {
+    try {
+      const response = await fetch('/api/mitarbeiter/roadmap/my-permissions')
+      if (response.ok) {
+        const result = await response.json()
+        setPermissions(result.data)
+      }
+    } catch (error) {
+      console.error('Error fetching permissions:', error)
+    }
+  }
 
   const fetchMyTasks = async () => {
     setLoading(true)
@@ -84,16 +113,20 @@ export default function MyRoadmapPage() {
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/admin/roadmap/tasks/${taskId}`, {
+      const response = await fetch(`/api/mitarbeiter/roadmap/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       })
       if (response.ok) {
         fetchMyTasks()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Aktualisieren des Status')
       }
     } catch (error) {
       console.error('Error updating task:', error)
+      alert('Fehler beim Aktualisieren des Status')
     }
   }
 
@@ -147,28 +180,56 @@ export default function MyRoadmapPage() {
             <p className="text-gray-600">Roadmap 2026 - Persönliche Übersicht</p>
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <div className="flex gap-3 items-center">
+          <Link href="/mitarbeiter/roadmap/team">
             <Button variant="outline">
-              Filter: {statusFilter ? statusConfig[statusFilter as keyof typeof statusConfig].label : 'Alle'}
-              <ChevronDown className="h-4 w-4 ml-2" />
+              <Users className="h-4 w-4 mr-2" />
+              Team Übersicht
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setStatusFilter(null)}>
-              Alle Aufgaben
-            </DropdownMenuItem>
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <DropdownMenuItem
-                key={key}
-                onClick={() => setStatusFilter(key)}
-              >
-                <config.icon className={`h-4 w-4 mr-2 ${config.color}`} />
-                {config.label}
+          </Link>
+          {permissions?.isCEO && (
+            <Link href="/mitarbeiter/roadmap/stats">
+              <Button variant="outline">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Statistiken
+              </Button>
+            </Link>
+          )}
+          {permissions?.canCreateTasks && (
+            <Button
+              onClick={() => {
+                setTaskModalMode('create')
+                setSelectedTask(null)
+                setTaskModalOpen(true)
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Neue Aufgabe
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Filter: {statusFilter ? statusConfig[statusFilter as keyof typeof statusConfig].label : 'Alle'}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                Alle Aufgaben
               </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {Object.entries(statusConfig).map(([key, config]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                >
+                  <config.icon className={`h-4 w-4 mr-2 ${config.color}`} />
+                  {config.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -302,6 +363,20 @@ export default function MyRoadmapPage() {
                     )}
 
                     <div className="mt-3 flex gap-2">
+                      {permissions?.canEditTasks && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setTaskModalMode('edit')
+                            setSelectedTask(task)
+                            setTaskModalOpen(true)
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Bearbeiten
+                        </Button>
+                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="outline">
@@ -329,6 +404,33 @@ export default function MyRoadmapPage() {
           })}
         </div>
       )}
+      
+      {/* Modals */}
+      <TaskEditModal
+        isOpen={taskModalOpen}
+        onClose={() => {
+          setTaskModalOpen(false)
+          setSelectedTask(null)
+        }}
+        onSuccess={() => {
+          fetchMyTasks()
+        }}
+        task={selectedTask}
+        mode={taskModalMode}
+      />
+      
+      <HelpOfferModal
+        isOpen={helpOfferModalOpen}
+        onClose={() => {
+          setHelpOfferModalOpen(false)
+          setHelpOfferTask(null)
+        }}
+        onSuccess={() => {
+          fetchMyTasks()
+        }}
+        taskId={helpOfferTask?.id || ''}
+        taskTitle={helpOfferTask?.title || ''}
+      />
     </div>
   )
 }

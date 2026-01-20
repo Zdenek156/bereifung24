@@ -4262,27 +4262,27 @@ model JobPosting {
   requirements String[] // Array von Anforderungen
   benefits     String[] // Array von Benefits
 
-  workTimeModel WorkTimeModel
-  weeklyHours   Float?
-  salaryMin     Decimal?
-  salaryMax     Decimal?
-  remoteAllowed Boolean       @default(false)
+  workTimeModel WorkTimeModel @map("work_time_model")
+  weeklyHours   Float?        @map("weekly_hours")
+  salaryMin     Decimal?      @map("salary_min")
+  salaryMax     Decimal?      @map("salary_max")
+  remoteAllowed Boolean       @default(false) @map("remote_allowed")
 
-  applicationDeadline DateTime?
+  applicationDeadline DateTime? @map("application_deadline")
 
   // Sichtbarkeit
-  isActive    Boolean   @default(true)
-  isPublic    Boolean   @default(true) // Auf Startseite sichtbar
-  publishedAt DateTime?
+  isActive    Boolean   @default(true) @map("is_active")
+  isPublic    Boolean   @default(true) @map("is_public") // Auf Startseite sichtbar
+  publishedAt DateTime? @map("published_at")
 
   // Relations
   applications JobApplication[]
 
-  createdById String
+  createdById String      @map("created_by_id")
   createdBy   B24Employee @relation("JobPostingCreator", fields: [createdById], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("job_postings")
 }
@@ -4293,31 +4293,31 @@ model JobPosting {
 
 model JobApplication {
   id           String     @id @default(cuid())
-  jobPostingId String
+  jobPostingId String     @map("job_posting_id")
   jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   // Bewerber
-  firstName String
-  lastName  String
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
   email     String
   phone     String?
 
   // Dokumente
-  cvUrl           String // PDF/DOCX
-  coverLetterText String? @db.Text
+  cvUrl           String  @map("cv_url") // PDF/DOCX
+  coverLetterText String? @map("cover_letter_text") @db.Text
 
   // Status
   status          JobApplicationStatus @default(NEW)
-  reviewedById    String?
+  reviewedById    String?              @map("reviewed_by_id")
   reviewedBy      B24Employee?         @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-  reviewedAt      DateTime?
-  rejectionReason String?              @db.Text
+  reviewedAt      DateTime?            @map("reviewed_at")
+  rejectionReason String?              @map("rejection_reason") @db.Text
 
   // Notizen
   notes String? @db.Text
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("job_applications")
 }

@@ -5,9 +5,9 @@ async function main() {
   console.log('🌱 Starting Roadmap 2026 seed...')
 
   // Get employees
-  const matthias = await prisma.b24Employee.findFirst({ where: { email: 'matthias@bereifung24.de' } })
-  const eduard = await prisma.b24Employee.findFirst({ where: { email: 'eduard@bereifung24.de' } })
-  const zdenek = await prisma.b24Employee.findFirst({ where: { email: 'zdenek@bereifung24.de' } })
+  const matthias = await prisma.b24Employee.findFirst({ where: { email: 'matthias.krott@bereifung24.de' } })
+  const eduard = await prisma.b24Employee.findFirst({ where: { email: 'eduard.sommer@bereifung24.de' } })
+  const zdenek = await prisma.b24Employee.findFirst({ where: { email: 'zdenek.kyzlink@bereifung24.de' } })
   const admin = await prisma.b24Employee.findFirst({ where: { email: 'admin@bereifung24.de' } })
 
   if (!matthias || !eduard || !zdenek) {

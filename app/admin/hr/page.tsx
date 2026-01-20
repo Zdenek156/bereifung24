@@ -130,7 +130,7 @@ export default function HRDashboard() {
         <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(getEmployeeUrl('/admin/hr/genehmigungen', session?.user?.role))}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pendente Genehmigungen</p>
+              <p className="text-sm text-gray-600">Ausstehende Genehmigungen</p>
               <p className="text-3xl font-bold mt-1">{stats.pendingApprovals}</p>
               <p className="text-xs text-gray-500 mt-1">warten auf Freigabe</p>
             </div>
@@ -296,7 +296,7 @@ export default function HRDashboard() {
               className="w-full justify-start"
             >
               <AlertCircle className="h-4 w-4 mr-2" />
-              Pendente Genehmigungen ({stats.pendingApprovals})
+              Ausstehende Genehmigungen ({stats.pendingApprovals})
             </Button>
             <Button
               onClick={() => router.push(getEmployeeUrl('/admin/hr/genehmigungen/historie', session?.user?.role))}

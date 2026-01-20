@@ -55,7 +55,8 @@ async function main() {
     await prisma.b24EmployeeApplication.create({
       data: {
         employeeId: employee.id,
-        applicationId: app.id
+        applicationKey: app.key,
+        assignedBy: 'system'
       }
     })
     console.log(`✅ Assigned to ${employee.firstName} ${employee.lastName}`)

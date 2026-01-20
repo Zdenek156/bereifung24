@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         position: true,
-        employeeApplications: {
+        applications: {
           where: { applicationKey: 'roadmap' },
           select: {
             canCreateTasks: true,
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     const isCEO = employee.position === 'Geschäftsführer'
-    const permissions = employee.employeeApplications[0]
+    const permissions = employee.applications[0]
 
     return NextResponse.json({
       success: true,

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       select: { 
         id: true,
         position: true,
-        employeeApplications: {
+        applications: {
           where: { applicationKey: 'roadmap' },
           select: { canCreateTasks: true }
         }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isCEO = currentEmployee.position === 'Geschäftsführer'
-    const canCreate = currentEmployee.employeeApplications[0]?.canCreateTasks || isCEO
+    const canCreate = currentEmployee.applications[0]?.canCreateTasks || isCEO
 
     if (!canCreate) {
       return NextResponse.json({ error: 'No permission to create tasks' }, { status: 403 })

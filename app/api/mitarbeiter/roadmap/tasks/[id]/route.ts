@@ -16,10 +16,10 @@ export async function PATCH(
 
     const currentEmployee = await prisma.b24Employee.findUnique({
       where: { email: session.user.email },
-      select: { 
+      select: {
         id: true,
         position: true,
-        employeeApplications: {
+        applications: {
           where: { applicationKey: 'roadmap' },
           select: { canEditTasks: true }
         }
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     const isCEO = currentEmployee.position === 'Geschäftsführer'
-    const canEdit = currentEmployee.employeeApplications[0]?.canEditTasks || isCEO
+    const canEdit = currentEmployee.applications[0]?.canEditTasks || isCEO
     const isOwnTask = task.assignedToId === currentEmployee.id
 
     if (!canEdit || (!isOwnTask && !isCEO)) {

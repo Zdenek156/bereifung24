@@ -1117,6 +1117,13 @@ model B24Employee {
   approvalWorkflowsCurrent   ApprovalWorkflow[] @relation("WorkflowApprover")
   approvalSteps              ApprovalStep[]
 
+  // ============================================
+  // ROADMAP MANAGEMENT - RELATIONS
+  // ============================================
+  assignedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskAssignee")
+  completedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskCompleter")
+  createdRoadmapTasks   RoadmapTask[] @relation("RoadmapTaskCreator")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -4368,4 +4375,86 @@ model ApprovalStep {
   updatedAt DateTime @updatedAt
 
   @@map("approval_steps")
+}
+
+// ============================================
+// ROADMAP & TASK MANAGEMENT
+// ============================================
+
+model RoadmapPhase {
+  id          String   @id @default(cuid())
+  name        String   // "Phase 1: Pre-Gründung"
+  description String?  @db.Text
+  startMonth  String   // "2026-01"
+  endMonth    String   // "2026-02"
+  order       Int      // 1, 2, 3 für Sortierung
+  color       String   @default("#3B82F6") // Phasen-Farbe
+  isActive    Boolean  @default(true)
+
+  tasks RoadmapTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roadmap_phases")
+}
+
+model RoadmapTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  priority    RoadmapTaskPriority // P0, P1, P2, P3
+  status      RoadmapTaskStatus   @default(NOT_STARTED)
+
+  // Zuordnung
+  assignedToId String?
+  assignedTo   B24Employee? @relation("RoadmapTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  phaseId      String
+  phase        RoadmapPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  // Timing
+  month    String    // "2026-01"
+  dueDate  DateTime?
+  startDate DateTime?
+
+  // Organisation
+  category String?  // "Finance", "Marketing", "Product", "Operations"
+  tags     String[] // ["Förderung", "Launch", "Critical"]
+  order    Int      @default(0) // Manuelle Sortierung innerhalb Monat
+
+  // Tracking
+  completedAt   DateTime?
+  completedById String?
+  completedBy   B24Employee? @relation("RoadmapTaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  blockedReason String?      @db.Text // Wenn Status = BLOCKED
+
+  // Notes & Comments
+  notes String? @db.Text
+
+  createdById String
+  createdBy   B24Employee @relation("RoadmapTaskCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+  @@index([phaseId])
+  @@index([month])
+  @@index([status])
+  @@index([priority])
+  @@map("roadmap_tasks")
+}
+
+enum RoadmapTaskPriority {
+  P0_CRITICAL // 🔴 Blockiert andere Tasks, sofort erledigen
+  P1_HIGH     // 🟡 Wichtig für Erfolg, zeitnah erledigen
+  P2_MEDIUM   // 🟢 Wichtig, aber flexibel
+  P3_LOW      // 🔵 Nice-to-have
+}
+
+enum RoadmapTaskStatus {
+  NOT_STARTED  // Noch nicht begonnen
+  IN_PROGRESS  // Aktuell in Bearbeitung
+  COMPLETED    // Abgeschlossen
+  BLOCKED      // Blockiert (mit Grund in blockedReason)
 }

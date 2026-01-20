@@ -8,6 +8,11 @@ module.exports = {
     autorestart: true,
     watch: false,
     max_memory_restart: '1G',
+    error_file: '/var/log/bereifung24-error.log',
+    out_file: '/var/log/bereifung24-out.log',
+    log_file: '/var/log/bereifung24.log',
+    time: true,
+    merge_logs: true,
     env: {
       NODE_ENV: 'production',
       PORT: 3000,

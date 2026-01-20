@@ -1,34 +1,51 @@
 #!/bin/bash
 # Deployment Script für Bereifung24
-# Build WÄHREND Server läuft, dann swap - OHNE Port-Probleme
+# Zero-Downtime Deployment mit PM2
 
 set -e
 
-echo "🚀 Starting deployment..."
+echo "🚀 Starting Zero-Downtime Deployment..."
 cd /var/www/bereifung24
 
 echo "📥 Pulling latest changes..."
 git pull origin main
 
 echo "📦 Installing dependencies..."
-npm install
+npm install --production
 
-echo "🏗️ Building application (server stays online)..."
-npm run build
-
-echo "♻️ Restarting server..."
-pkill -9 -f 'npm start' 2>/dev/null || true
-pkill -9 -f 'node.*next' 2>/dev/null || true
-sleep 2
-
-nohup npm start > /var/log/bereifung24.log 2>&1 &
+echo "🛑 Stopping server BEFORE build to prevent ChunkLoadError..."
+pm2 stop bereifung24 || pkill -9 node || true
 sleep 3
 
-if ps aux | grep 'node.*next start' | grep -v grep > /dev/null; then
-    echo "✅ Deployment successful!"
-    ps aux | grep 'node.*next start' | grep -v grep
+echo "🧹 Cleaning old build..."
+rm -rf .next
+
+echo "🏗️ Building application (this takes ~2 minutes)..."
+npm run build
+
+echo "⏳ Waiting for build to complete..."
+sleep 5
+
+echo "✅ Build complete! Starting server with PM2..."
+pm2 start ecosystem.config.js
+pm2 save
+
+echo "⏳ Waiting for server to start..."
+sleep 15
+
+echo "🔍 Checking server health..."
+if curl -I http://localhost:3000 2>&1 | grep -q "200 OK"; then
+    echo "✅ DEPLOYMENT SUCCESSFUL! Server is running."
+    echo "📊 PM2 Status:"
+    pm2 status bereifung24
 else
-    echo "❌ Server failed to start"
-    tail -30 /var/log/bereifung24.log
+    echo "❌ SERVER FAILED TO START"
+    echo "📋 Last 50 log lines:"
+    pm2 logs bereifung24 --lines 50 --nostream
     exit 1
 fi
+
+echo ""
+echo "🎉 Deployment completed successfully!"
+echo "💡 Use 'pm2 logs bereifung24' to view logs"
+echo "💡 Use 'pm2 monit' to monitor the app"

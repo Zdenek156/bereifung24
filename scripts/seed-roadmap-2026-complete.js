@@ -34,32 +34,32 @@ async function main() {
 
   // Matthias Q1 Tasks - Legal & Finance Setup
   const matthiasPhase1Tasks = [
-    { title: 'Gesellschaftsvertrag erstellen', category: 'Legal', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-15', description: 'Notartermin vereinbaren, Gesellschaftsvertrag ausarbeiten lassen' },
-    { title: 'Stammkapital 25.000€ einzahlen', category: 'Finance', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-20', description: 'Geschäftskonto eröffnen bei Postbank, Stammkapital einzahlen' },
-    { title: 'Handelsregister Anmeldung', category: 'Legal', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-25', description: 'Nach Notartermin: GmbH im Handelsregister eintragen lassen' },
-    { title: 'Steuerberater beauftragen', category: 'Finance', priority: 'P1_HIGH', month: '2026-01', dueDate: '2026-01-30', description: 'Kanzlei Peters & Schmidt für laufende Buchhaltung und Jahresabschluss' },
-    { title: 'Geschäftsversicherungen abschließen', category: 'Finance', priority: 'P1_HIGH', month: '2026-02', dueDate: '2026-02-15', description: 'Betriebshaftpflicht, Rechtsschutz, D&O-Versicherung für Geschäftsführer' },
-    { title: 'Büroräume anmieten', category: 'Operations', priority: 'P1_HIGH', month: '2026-02', dueDate: '2026-02-20', description: '120qm Büro in Stuttgart-Mitte, Gewerbemietvertrag unterzeichnen' },
-    { title: 'Buchhaltungssoftware einrichten', category: 'Finance', priority: 'P2_MEDIUM', month: '2026-02', dueDate: '2026-02-28', description: 'DATEV oder lexoffice für GmbH-Buchhaltung, SKR04 Kontenrahmen' }
+    { title: 'Gesellschaftsvertrag erstellen', category: 'Legal', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-15'), description: 'Notartermin vereinbaren, Gesellschaftsvertrag ausarbeiten lassen' },
+    { title: 'Stammkapital 25.000€ einzahlen', category: 'Finance', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-20'), description: 'Geschäftskonto eröffnen bei Postbank, Stammkapital einzahlen' },
+    { title: 'Handelsregister Anmeldung', category: 'Legal', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-25'), description: 'Nach Notartermin: GmbH im Handelsregister eintragen lassen' },
+    { title: 'Steuerberater beauftragen', category: 'Finance', priority: 'P1_HIGH', month: '2026-01', dueDate: new Date('2026-01-30'), description: 'Kanzlei Peters & Schmidt für laufende Buchhaltung und Jahresabschluss' },
+    { title: 'Geschäftsversicherungen abschließen', category: 'Finance', priority: 'P1_HIGH', month: '2026-02', dueDate: new Date('2026-02-15'), description: 'Betriebshaftpflicht, Rechtsschutz, D&O-Versicherung für Geschäftsführer' },
+    { title: 'Büroräume anmieten', category: 'Operations', priority: 'P1_HIGH', month: '2026-02', dueDate: new Date('2026-02-20'), description: '120qm Büro in Stuttgart-Mitte, Gewerbemietvertrag unterzeichnen' },
+    { title: 'Buchhaltungssoftware einrichten', category: 'Finance', priority: 'P2_MEDIUM', month: '2026-02', dueDate: new Date('2026-02-28'), description: 'DATEV oder lexoffice für GmbH-Buchhaltung, SKR04 Kontenrahmen' }
   ]
 
   // Eduard Q1 Tasks - Brand & Marketing Setup
   const eduardPhase1Tasks = [
-    { title: 'Corporate Design entwickeln', category: 'Marketing', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-31', description: 'Logo, Farbschema, Schriftarten - mit Designagentur Berlin' },
-    { title: 'Domain & Social Media Handles sichern', category: 'Marketing', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-10', description: 'bereifung24.de Domain, @bereifung24 Instagram/Facebook/TikTok' },
-    { title: 'Geschäftsausstattung bestellen', category: 'Marketing', priority: 'P2_MEDIUM', month: '2026-02', dueDate: '2026-02-15', description: 'Visitenkarten, Briefpapier, Stempel mit neuem Corporate Design' },
-    { title: 'Marketing Budget 2026 planen', category: 'Marketing', priority: 'P1_HIGH', month: '2026-02', dueDate: '2026-02-28', description: '€50k für Q1-Q2: Google Ads, Meta Ads, Influencer Kampagnen' },
-    { title: 'Influencer Partnerschaften aufbauen', category: 'Marketing', priority: 'P2_MEDIUM', month: '2026-02', dueDate: '2026-02-28', description: 'Kontakt zu 5 Auto-Influencern (50k+ Follower) herstellen' }
+    { title: 'Corporate Design entwickeln', category: 'Marketing', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-31'), description: 'Logo, Farbschema, Schriftarten - mit Designagentur Berlin' },
+    { title: 'Domain & Social Media Handles sichern', category: 'Marketing', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-10'), description: 'bereifung24.de Domain, @bereifung24 Instagram/Facebook/TikTok' },
+    { title: 'Geschäftsausstattung bestellen', category: 'Marketing', priority: 'P2_MEDIUM', month: '2026-02', dueDate: new Date('2026-02-15'), description: 'Visitenkarten, Briefpapier, Stempel mit neuem Corporate Design' },
+    { title: 'Marketing Budget 2026 planen', category: 'Marketing', priority: 'P1_HIGH', month: '2026-02', dueDate: new Date('2026-02-28'), description: '€50k für Q1-Q2: Google Ads, Meta Ads, Influencer Kampagnen' },
+    { title: 'Influencer Partnerschaften aufbauen', category: 'Marketing', priority: 'P2_MEDIUM', month: '2026-02', dueDate: new Date('2026-02-28'), description: 'Kontakt zu 5 Auto-Influencern (50k+ Follower) herstellen' }
   ]
 
   // Zdenek Q1 Tasks - Tech Infrastructure
   const zdenekPhase1Tasks = [
-    { title: 'Hetzner Server aufsetzen', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-15', description: 'CPX41 mit 8 vCPU, 16GB RAM, Ubuntu 24.04 LTS, PostgreSQL 16' },
-    { title: 'Next.js 14 Projekt initialisieren', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-20', description: 'TypeScript, Tailwind CSS, Prisma ORM, NextAuth.js Setup' },
-    { title: 'Prisma Schema Design', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: '2026-01-25', description: 'User, Workshop, Booking, Offer, Review Models mit Relations' },
-    { title: 'CI/CD Pipeline einrichten', category: 'Tech', priority: 'P1_HIGH', month: '2026-02', dueDate: '2026-02-10', description: 'GitHub Actions: Test → Build → Deploy to Production mit PM2' },
-    { title: 'Monitoring Setup', category: 'Tech', priority: 'P2_MEDIUM', month: '2026-02', dueDate: '2026-02-20', description: 'Sentry für Error Tracking, Uptime Robot für Availability Monitoring' },
-    { title: 'Email Service Integration', category: 'Tech', priority: 'P1_HIGH', month: '2026-02', dueDate: '2026-02-28', description: 'Brevo/SendinBlue für Transaktional Emails: Buchungsbestätigungen, Receipts' }
+    { title: 'Hetzner Server aufsetzen', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-15'), description: 'CPX41 mit 8 vCPU, 16GB RAM, Ubuntu 24.04 LTS, PostgreSQL 16' },
+    { title: 'Next.js 14 Projekt initialisieren', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-20'), description: 'TypeScript, Tailwind CSS, Prisma ORM, NextAuth.js Setup' },
+    { title: 'Prisma Schema Design', category: 'Tech', priority: 'P0_CRITICAL', month: '2026-01', dueDate: new Date('2026-01-25'), description: 'User, Workshop, Booking, Offer, Review Models mit Relations' },
+    { title: 'CI/CD Pipeline einrichten', category: 'Tech', priority: 'P1_HIGH', month: '2026-02', dueDate: new Date('2026-02-10'), description: 'GitHub Actions: Test → Build → Deploy to Production mit PM2' },
+    { title: 'Monitoring Setup', category: 'Tech', priority: 'P2_MEDIUM', month: '2026-02', dueDate: new Date('2026-02-20'), description: 'Sentry für Error Tracking, Uptime Robot für Availability Monitoring' },
+    { title: 'Email Service Integration', category: 'Tech', priority: 'P1_HIGH', month: '2026-02', dueDate: new Date('2026-02-28'), description: 'Brevo/SendinBlue für Transaktional Emails: Buchungsbestätigungen, Receipts' }
   ]
 
   let order = 0

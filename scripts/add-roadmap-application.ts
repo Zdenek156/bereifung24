@@ -42,25 +42,23 @@ async function main() {
 
   console.log('✅ Roadmap application created:', app)
 
-  // Assign to all admin users
-  const admins = await prisma.b24Employee.findMany({
+  // Assign to all employees (they can access it)
+  const employees = await prisma.b24Employee.findMany({
     where: {
-      permissions: {
-        has: 'FULL_ACCESS'
-      }
+      isActive: true
     }
   })
 
-  console.log(`📋 Found ${admins.length} admin users`)
+  console.log(`📋 Found ${employees.length} active employees`)
 
-  for (const admin of admins) {
-    await prisma.employeeApplication.create({
+  for (const employee of employees) {
+    await prisma.b24EmployeeApplication.create({
       data: {
-        employeeId: admin.id,
+        employeeId: employee.id,
         applicationId: app.id
       }
     })
-    console.log(`✅ Assigned to ${admin.firstName} ${admin.lastName}`)
+    console.log(`✅ Assigned to ${employee.firstName} ${employee.lastName}`)
   }
 
   console.log('🎉 Done!')

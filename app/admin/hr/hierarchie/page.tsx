@@ -245,7 +245,9 @@ export default function HierarchyPage() {
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault()
+                console.log('Expanding all nodes...')
                 const allIds = new Set<string>()
                 const collectIds = (emps: Employee[]) => {
                   emps.forEach(emp => {
@@ -254,18 +256,24 @@ export default function HierarchyPage() {
                   })
                 }
                 collectIds(employees)
+                console.log('Expanded nodes:', allIds.size)
                 setExpandedNodes(allIds)
               }}
               variant="outline"
+              type="button"
             >
               Alle ausklappen
             </Button>
             <Button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault()
+                console.log('Collapsing all nodes...')
                 const topLevelIds = new Set(employees.map(e => e.id))
+                console.log('Top level nodes:', topLevelIds.size)
                 setExpandedNodes(topLevelIds)
               }}
               variant="outline"
+              type="button"
             >
               Alle einklappen
             </Button>

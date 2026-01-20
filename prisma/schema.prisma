@@ -1123,6 +1123,7 @@ model B24Employee {
   assignedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskAssignee")
   completedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskCompleter")
   createdRoadmapTasks   RoadmapTask[] @relation("RoadmapTaskCreator")
+  helpOffersRoadmapTasks RoadmapTaskHelpOffer[] @relation("RoadmapTaskHelper")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1162,6 +1163,10 @@ model B24EmployeeApplication {
   applicationKey String
   assignedAt     DateTime @default(now())
   assignedBy     String // User ID who assigned the application
+
+  // Roadmap Permissions (only for 'roadmap' application)
+  canCreateTasks Boolean @default(false)
+  canEditTasks   Boolean @default(false)
 
   employee    B24Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   application Application @relation(fields: [applicationKey], references: [key], onDelete: Cascade)
@@ -4431,6 +4436,9 @@ model RoadmapTask {
   // Notes & Comments
   notes String? @db.Text
 
+  // Hilfe anbieten (Helpers who can assist)
+  helpOffers RoadmapTaskHelpOffer[]
+
   createdById String
   createdBy   B24Employee @relation("RoadmapTaskCreator", fields: [createdById], references: [id])
 
@@ -4443,6 +4451,24 @@ model RoadmapTask {
   @@index([status])
   @@index([priority])
   @@map("roadmap_tasks")
+}
+
+// Mitarbeiter können Hilfe bei Tasks anbieten
+model RoadmapTaskHelpOffer {
+  id       String   @id @default(cuid())
+  taskId   String
+  task     RoadmapTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  helperId String
+  helper   B24Employee @relation("RoadmapTaskHelper", fields: [helperId], references: [id], onDelete: Cascade)
+  message  String?     @db.Text // Optional: "Ich kann bei der API-Integration helfen"
+  
+  status    String   @default("OFFERED") // OFFERED, ACCEPTED, DECLINED
+  acceptedAt DateTime?
+  
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, helperId]) // Ein Mitarbeiter kann nur einmal Hilfe anbieten
+  @@map("roadmap_task_help_offers")
 }
 
 enum RoadmapTaskPriority {

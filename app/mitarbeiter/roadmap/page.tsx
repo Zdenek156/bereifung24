@@ -325,12 +325,14 @@ export default function MyRoadmapPage() {
                     </div>
 
                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                      <div
-                        className="flex items-center gap-1 px-2 py-1 rounded"
-                        style={{ backgroundColor: `${task.phase.color}20` }}
-                      >
-                        {task.phase.name}
-                      </div>
+                      {task.phase && (
+                        <div
+                          className="flex items-center gap-1 px-2 py-1 rounded"
+                          style={{ backgroundColor: `${task.phase.color}20` }}
+                        >
+                          {task.phase.name}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {formatMonth(task.month)}

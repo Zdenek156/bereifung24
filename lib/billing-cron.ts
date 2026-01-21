@@ -45,16 +45,9 @@ async function runMonthlyBilling(year: number, month: number) {
       }
     },
     include: {
-      bookings: {
+      commissions: {
         where: {
-          status: 'COMPLETED',
-          completedAt: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        include: {
-          offer: true
+          status: 'PENDING' // Get all PENDING commissions
         }
       }
     }
@@ -62,73 +55,32 @@ async function runMonthlyBilling(year: number, month: number) {
 
   const results = {
     totalWorkshops: 0,
-    totalBookings: 0,
+    totalCommissions: 0,
     totalGrossAmount: 0,
     successfulPayments: 0,
     failedPayments: 0
   }
 
   for (const workshop of workshops) {
-    if (workshop.bookings.length === 0) continue
+    if (workshop.commissions.length === 0) continue
 
-    // Calculate commissions
-    const totalRevenue = workshop.bookings.reduce((sum: number, booking: any) => sum + (booking.offer?.price || 0), 0)
-    const commissionNet = totalRevenue * COMMISSION_RATE
-    const commissionTax = commissionNet * TAX_RATE
-    const commissionGross = commissionNet + commissionTax
+    // Calculate total commission amount from PENDING commissions
+    const commissionGross = workshop.commissions.reduce(
+      (sum, commission) => sum + Number(commission.commissionAmount), 
+      0
+    )
 
     if (commissionGross < 0.01) continue // Skip if less than 1 cent
 
     results.totalWorkshops++
-    results.totalBookings += workshop.bookings.length
+    results.totalCommissions += workshop.commissions.length
     results.totalGrossAmount += commissionGross
 
-    // Check if already billed
-    const existingBilling = await prisma.commission.findFirst({
-        where: {
-          workshopId: workshop.id,
-          billingMonth: month,
-          billingYear: year
-        }
-      })
-    
-    if (existingBilling) {
-      console.log(`⚠️  Workshop ${workshop.companyName} already billed for ${month}/${year}`)
-      continue
-    }
+    results.totalWorkshops++
+    results.totalCommissions += workshop.commissions.length
+    results.totalGrossAmount += commissionGross
 
-    // Create commission records for each booking
-    const commissionRecords = await Promise.all(
-      workshop.bookings.map(async (booking: any) => {
-        const bookingPrice = booking.offer?.price || 0
-        const bookingCommission = {
-          net: bookingPrice * COMMISSION_RATE,
-          tax: (bookingPrice * COMMISSION_RATE) * TAX_RATE,
-          gross: (bookingPrice * COMMISSION_RATE) * (1 + TAX_RATE)
-        }
-
-        return prisma.commission.create({
-          data: {
-            workshopId: workshop.id,
-            bookingId: booking.id,
-            orderTotal: bookingPrice,
-            commissionRate: COMMISSION_RATE * 100, // Store as percentage (4.9)
-            commissionAmount: bookingCommission.gross, // Total commission (gross)
-            netAmount: bookingCommission.net,
-            taxRate: TAX_RATE * 100, // Store as percentage (19.0)
-            taxAmount: bookingCommission.tax,
-            grossAmount: bookingCommission.gross,
-            status: 'BILLED',
-            billedAt: new Date(),
-            billingMonth: month,
-            billingYear: year,
-            notes: `Automatische Abrechnung für ${month}/${year}`
-          }
-        })
-      })
-    )
-
-    // Create GoCardless payment
+    // Create GoCardless payment for all PENDING commissions
     try {
       const payment = await createPayment({
         amount: Math.round(commissionGross * 100), // in cents
@@ -139,36 +91,40 @@ async function runMonthlyBilling(year: number, month: number) {
           workshopId: workshop.id,
           billingYear: String(year),
           billingMonth: String(month),
-          bookingsCount: String(workshop.bookings.length)
+          commissionsCount: String(workshop.commissions.length)
         }
       })
 
-      // Update commissions with payment info
+      // Update commissions with payment info and mark as COLLECTED
       await prisma.commission.updateMany({
         where: {
           id: {
-            in: commissionRecords.map((c: any) => c.id)
+            in: workshop.commissions.map(c => c.id)
           }
         },
         data: {
           gocardlessPaymentId: payment.id,
           gocardlessPaymentStatus: payment.status,
           gocardlessChargeDate: payment.charge_date ? new Date(payment.charge_date) : null,
-          status: 'COLLECTED'
+          status: 'COLLECTED',
+          billedAt: new Date(),
+          billingMonth: month,
+          billingYear: year,
+          notes: `Automatische Abrechnung für ${month}/${year} - Payment ID: ${payment.id}`
         }
       })
 
       results.successfulPayments++
-      console.log(`✅ Payment created for ${workshop.companyName}: ${commissionGross.toFixed(2)}€`)
+      console.log(`✅ Payment created for ${workshop.companyName}: ${commissionGross.toFixed(2)}€ (${workshop.commissions.length} commissions)`)
     } catch (paymentError) {
       console.error(`❌ Failed to create payment for ${workshop.companyName}:`, paymentError)
       results.failedPayments++
 
-      // Mark commissions as failed
+      // Mark commissions as FAILED
       await prisma.commission.updateMany({
         where: {
           id: {
-            in: commissionRecords.map((c: any) => c.id)
+            in: workshop.commissions.map(c => c.id)
           }
         },
         data: {

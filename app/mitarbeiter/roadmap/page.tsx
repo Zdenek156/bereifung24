@@ -102,7 +102,12 @@ export default function MyRoadmapPage() {
       const response = await fetch(url)
       if (response.ok) {
         const result = await response.json()
-        setTasks(result.data || [])
+        // Filter out tasks with invalid data
+        const validTasks = (result.data || []).map((task: RoadmapTask) => ({
+          ...task,
+          phase: task.phase && task.phase.color && task.phase.name ? task.phase : null
+        }))
+        setTasks(validTasks)
       }
     } catch (error) {
       console.error('Error fetching my tasks:', error)

@@ -214,8 +214,9 @@ export default function TeamRoadmapPage() {
     )
   }
 
-  const employeeStats = getEmployeeStats()
-  const phaseGroups = groupTasksByPhase()
+  // Only calculate these when needed
+  const employeeStats = viewMode === 'stats' ? getEmployeeStats() : []
+  const phaseGroups = (viewMode === 'timeline' && mounted) ? groupTasksByPhase() : []
 
   return (
     <div className="container mx-auto p-6">
@@ -325,9 +326,14 @@ export default function TeamRoadmapPage() {
       )}
 
       {/* Phase Timeline View - Only render on client to prevent hydration errors */}
-      {viewMode === 'timeline' && mounted && (
+      {viewMode === 'timeline' && mounted && phaseGroups && phaseGroups.length > 0 && (
         <div className="space-y-6">
           {phaseGroups.map(group => {
+            // Safety check for group
+            if (!group || !group.phase || !group.phase.id || !group.tasks) {
+              return null
+            }
+
             // Filter valid tasks BEFORE mapping to prevent undefined returns
             const validTasks = group.tasks.filter(task => 
               task && 
@@ -436,18 +442,18 @@ export default function TeamRoadmapPage() {
                 </div>
               </div>
             )
-          })}
-          
-          {phaseGroups.length === 0 && (
-            <Card className="p-12 text-center">
-              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
-              <p className="text-gray-600">
-                Es sind noch keine Tasks in Phasen vorhanden
-              </p>
-            </Card>
-          )}
+          }).filter(Boolean)}
         </div>
+      )}
+
+      {viewMode === 'timeline' && mounted && phaseGroups && phaseGroups.length === 0 && (
+        <Card className="p-12 text-center">
+          <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
+          <p className="text-gray-600">
+            Es sind noch keine Tasks in Phasen vorhanden
+          </p>
+        </Card>
       )}
 
       {tasks.length === 0 && (

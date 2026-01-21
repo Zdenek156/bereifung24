@@ -327,22 +327,30 @@ export default function TeamRoadmapPage() {
       {/* Phase Timeline View - Only render on client to prevent hydration errors */}
       {viewMode === 'timeline' && mounted && (
         <div className="space-y-6">
-          {phaseGroups.map(group => (
-            <div key={group.phase.id}>
-              <div 
-                className="flex items-center gap-3 mb-4 pb-2 border-b-2"
-                style={{ borderColor: group.phase.color }}
-              >
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: group.phase.color }}
-                />
-                <h2 className="text-xl font-bold">{group.phase.name}</h2>
-                <span className="text-gray-500">({group.tasks.length} Tasks)</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {group.tasks.map(task => {
-                  if (!task || !task.id || !task.status) return null
+          {phaseGroups.map(group => {
+            // Filter valid tasks BEFORE mapping to prevent undefined returns
+            const validTasks = group.tasks.filter(task => 
+              task && 
+              task.id && 
+              task.status && 
+              statusConfig[task.status]
+            )
+
+            return (
+              <div key={group.phase.id}>
+                <div 
+                  className="flex items-center gap-3 mb-4 pb-2 border-b-2"
+                  style={{ borderColor: group.phase.color }}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: group.phase.color }}
+                  />
+                  <h2 className="text-xl font-bold">{group.phase.name}</h2>
+                  <span className="text-gray-500">({validTasks.length} Tasks)</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {validTasks.map(task => {
                   
                   const StatusIcon = statusConfig[task.status]?.icon || Circle
                   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
@@ -424,10 +432,11 @@ export default function TeamRoadmapPage() {
                       </div>
                     </Card>
                   )
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           
           {phaseGroups.length === 0 && (
             <Card className="p-12 text-center">

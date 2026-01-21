@@ -77,14 +77,16 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const phaseStats = phases.map(phase => ({
-      id: phase.id,
-      name: phase.name,
-      color: phase.color,
-      total: phase.tasks.length,
-      completed: phase.tasks.filter(t => t.status === 'COMPLETED').length,
-      progress: Math.round((phase.tasks.filter(t => t.status === 'COMPLETED').length / phase.tasks.length) * 100) || 0
-    }))
+    const phaseStats = phases
+      .filter(phase => phase && phase.color) // Nur Phasen mit gültiger Farbe
+      .map(phase => ({
+        id: phase.id,
+        name: phase.name,
+        color: phase.color,
+        total: phase.tasks.length,
+        completed: phase.tasks.filter(t => t.status === 'COMPLETED').length,
+        progress: Math.round((phase.tasks.filter(t => t.status === 'COMPLETED').length / phase.tasks.length) * 100) || 0
+      }))
 
     // Gesamtstatistiken
     const totalStats = {

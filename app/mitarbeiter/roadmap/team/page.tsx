@@ -122,22 +122,22 @@ export default function TeamRoadmapPage() {
         
         if (result.success && Array.isArray(result.data)) {
           console.log('Tasks loaded:', result.data.length)
-          setTasks(result.data)
+          
+          // Filter valid tasks
+          const validTasks = result.data.filter((task: any) => {
+            return task && 
+                   typeof task === 'object' && 
+                   task.id && 
+                   task.title &&
+                   task.status
+          })
+          
+          console.log('Valid tasks after filtering:', validTasks.length)
+          setTasks(validTasks)
         } else {
           console.error('Invalid API response structure:', result)
           setTasks([])
         }
-        
-        // Filter valid tasks
-        const validTasks = rawTasks.filter((task: any) => {
-          return task && 
-                 typeof task === 'object' && 
-                 task.id && 
-                 task.title &&
-                 task.status
-        })
-        
-        setTasks(validTasks)
       }
     } catch (error) {
       console.error('Error fetching team tasks:', error)

@@ -239,7 +239,7 @@ export default function RoadmapStatsPage() {
       <Card className="p-6">
         <h2 className="text-xl font-bold mb-4">📅 Phasen-Übersicht</h2>
         <div className="space-y-4">
-          {stats.phases.map(phase => (
+          {stats.phases.filter(phase => phase && phase.color).map(phase => (
             <div key={phase.id}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">

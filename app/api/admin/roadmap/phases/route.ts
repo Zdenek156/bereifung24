@@ -19,6 +19,15 @@ export async function GET(request: NextRequest) {
       include: {
         tasks: {
           include: {
+            phase: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                startMonth: true,
+                endMonth: true,
+              }
+            },
             assignedTo: {
               select: {
                 id: true,

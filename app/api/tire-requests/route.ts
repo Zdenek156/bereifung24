@@ -22,7 +22,7 @@ const tireRequestSchema = z.object({
   additionalNotes: z.string().optional(),
   needByDate: z.string(),
   zipCode: z.string().length(5),
-  radiusKm: z.number().min(5).max(100).default(25),
+  radiusKm: z.coerce.number().min(5).max(100).default(25), // Coerce string to number
   vehicleId: z.string().optional(),
 })
 
@@ -51,7 +51,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = tireRequestSchema.parse(body)
+    console.log('📝 Received tire request body:', JSON.stringify(body, null, 2))
+    
+    // Validate with better error messages
+    const validationResult = tireRequestSchema.safeParse(body)
+    if (!validationResult.success) {
+      console.error('❌ Validation failed:', validationResult.error.errors)
+      return NextResponse.json(
+        { 
+          error: 'Validierungsfehler', 
+          details: validationResult.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      )
+    }
+    
+    const validatedData = validationResult.data
 
     // Check if needByDate is at least 7 days in the future
     const needByDate = new Date(validatedData.needByDate)

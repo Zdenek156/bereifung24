@@ -27,7 +27,7 @@ interface RoadmapTask {
     color: string
     startMonth: string
     endMonth: string
-  }
+  } | null
   phaseId: string
   month: string
   dueDate: string | null

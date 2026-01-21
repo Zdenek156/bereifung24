@@ -22,7 +22,7 @@ interface RoadmapTask {
     id: string
     name: string
     color: string
-  }
+  } | null
   assignedTo: {
     id: string
     firstName: string

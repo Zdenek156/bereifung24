@@ -102,10 +102,10 @@ export default function MyRoadmapPage() {
       const response = await fetch(url)
       if (response.ok) {
         const result = await response.json()
-        // Filter out tasks with invalid data
+        // Filter out tasks with invalid data - ensure phase has all required properties
         const validTasks = (result.data || []).map((task: RoadmapTask) => ({
           ...task,
-          phase: task.phase && task.phase.color && task.phase.name ? task.phase : null
+          phase: (task.phase && typeof task.phase === 'object' && 'color' in task.phase && 'name' in task.phase && task.phase.color && task.phase.name) ? task.phase : null
         }))
         setTasks(validTasks)
       }

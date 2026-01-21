@@ -90,10 +90,10 @@ export default function TeamRoadmapPage() {
       const response = await fetch(`/api/mitarbeiter/roadmap/team-tasks?${params}`)
       if (response.ok) {
         const result = await response.json()
-        // Sanitize tasks to ensure phase has color and name
+        // Sanitize tasks to ensure phase has all required properties
         const validTasks = (result.data || []).map((task: RoadmapTask) => ({
           ...task,
-          phase: task.phase && task.phase.color && task.phase.name ? task.phase : null
+          phase: (task.phase && typeof task.phase === 'object' && 'color' in task.phase && 'name' in task.phase && task.phase.color && task.phase.name) ? task.phase : null
         }))
         setTasks(validTasks)
         

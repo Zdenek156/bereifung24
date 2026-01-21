@@ -36,11 +36,13 @@ export async function POST(request: Request) {
 
     console.log(`📅 Starting monthly billing for ${year}-${month}...`)
 
-    // Get all workshops with active SEPA mandates
+    // Get all workshops with valid SEPA mandates and PENDING commissions
     const workshops = await prisma.workshop.findMany({
       where: {
         gocardlessMandateId: { not: null },
-        gocardlessMandateStatus: 'active'
+        gocardlessMandateStatus: {
+          in: ['pending_submission', 'submitted', 'active']
+        }
       },
       select: {
         id: true,
@@ -51,30 +53,19 @@ export async function POST(request: Request) {
             email: true
           }
         },
-        bookings: {
+        commissions: {
           where: {
-            status: 'CONFIRMED',
-            appointmentDate: {
-              gte: billingStart,
-              lte: billingEnd
-            }
+            status: 'PENDING'
           },
           select: {
             id: true,
-            appointmentDate: true,
-            tireRequest: {
-              select: {
-                season: true,
-                width: true,
-                aspectRatio: true,
-                diameter: true
-              }
-            },
-            offer: {
-              select: {
-                price: true
-              }
-            }
+            commissionAmount: true,
+            netAmount: true,
+            taxAmount: true,
+            orderTotal: true,
+            commissionRate: true,
+            bookingId: true,
+            createdAt: true
           }
         }
       }
@@ -87,21 +78,28 @@ export async function POST(request: Request) {
 
     for (const workshop of workshops) {
       try {
-        // Calculate total revenue for this workshop in the billing period
-        const totalRevenue = workshop.bookings.reduce(
-          (sum, booking) => sum + (booking.offer?.price || 0),
+        // Calculate total commission from PENDING records
+        const totalCommission = workshop.commissions.reduce(
+          (sum, commission) => sum + Number(commission.commissionAmount),
           0
         )
 
-        // Skip if no revenue
-        if (totalRevenue === 0) {
-          console.log(`⏭️ Workshop ${workshop.companyName} - No revenue for ${year}-${month}`)
+        // Skip if no pending commissions
+        if (totalCommission === 0 || workshop.commissions.length === 0) {
+          console.log(`⏭️ Workshop ${workshop.companyName} - No pending commissions`)
           totalSkipped++
           continue
         }
 
-        // Calculate commission
-        const commission = calculateCommission(totalRevenue, 4.9)
+        // Calculate totals
+        const totalNet = workshop.commissions.reduce(
+          (sum, c) => sum + Number(c.netAmount || 0),
+          0
+        )
+        const totalTax = workshop.commissions.reduce(
+          (sum, c) => sum + Number(c.taxAmount || 0),
+          0
+        )
 
         // Get next invoice sequence number for this month
         const existingInvoices = await prisma.commission.count({
@@ -112,40 +110,13 @@ export async function POST(request: Request) {
         })
         const invoiceNumber = generateInvoiceNumber(year, month, existingInvoices + 1)
 
-        // Create commission records for each booking
-        const commissionRecords = await Promise.all(
-          workshop.bookings.map(async (booking) => {
-            const bookingCommission = calculateCommission(booking.offer?.price || 0, 4.9)
-
-            return prisma.commission.create({
-              data: {
-                workshopId: workshop.id,
-                bookingId: booking.id,
-                orderTotal: booking.offer?.price || 0,
-                commissionRate: 4.9,
-                commissionAmount: bookingCommission.commissionGross,
-                netAmount: bookingCommission.commissionNet,
-                grossAmount: bookingCommission.commissionGross,
-                taxAmount: bookingCommission.taxAmount,
-                taxRate: 19.0,
-                status: 'PENDING',
-                billingPeriodStart: billingStart,
-                billingPeriodEnd: billingEnd,
-                billingMonth: month,
-                billingYear: year,
-                invoiceNumber
-              }
-            })
-          })
-        )
-
-        // Create GoCardless payment
+        // Create GoCardless payment for all PENDING commissions
         const chargeDate = new Date()
         chargeDate.setDate(chargeDate.getDate() + 3) // 3 days from now
         const chargeDateStr = chargeDate.toISOString().split('T')[0]
 
         const payment = await createPayment({
-          amount: formatAmountForGoCardless(commission.commissionGross),
+          amount: formatAmountForGoCardless(totalCommission),
           currency: 'EUR',
           mandateId: workshop.gocardlessMandateId!,
           description: `Bereifung24 Provision ${year}/${month.toString().padStart(2, '0')}`,
@@ -155,37 +126,42 @@ export async function POST(request: Request) {
             workshopId: workshop.id,
             billingMonth: month.toString(),
             billingYear: year.toString(),
-            invoiceNumber
+            invoiceNumber,
+            commissionsCount: workshop.commissions.length.toString()
           }
         })
 
-        // Update commission records with payment ID
+        // Update PENDING commissions to COLLECTED with payment info
         await prisma.commission.updateMany({
           where: {
             id: {
-              in: commissionRecords.map((c) => c.id)
+              in: workshop.commissions.map((c) => c.id)
             }
           },
           data: {
             gocardlessPaymentId: payment.id,
             gocardlessPaymentStatus: payment.status,
-            gocardlessChargeDate: new Date(payment.charge_date)
+            gocardlessChargeDate: new Date(payment.charge_date),
+            status: 'COLLECTED',
+            billedAt: new Date(),
+            billingMonth: month,
+            billingYear: year,
+            invoiceNumber
           }
         })
 
-        console.log(`✅ Workshop ${workshop.companyName}: €${commission.commissionGross.toFixed(2)} scheduled for ${chargeDateStr}`)
+        console.log(`✅ Workshop ${workshop.companyName}: €${totalCommission.toFixed(2)} scheduled for ${chargeDateStr} (${workshop.commissions.length} commissions)`)
 
         results.push({
           workshopId: workshop.id,
           workshopName: workshop.companyName,
-          totalRevenue,
-          commission: commission.commissionGross,
-          commissionNet: commission.commissionNet,
-          taxAmount: commission.taxAmount,
+          commission: totalCommission,
+          commissionNet: totalNet,
+          taxAmount: totalTax,
           invoiceNumber,
           paymentId: payment.id,
           chargeDate: chargeDateStr,
-          bookingsCount: workshop.bookings.length,
+          commissionsCount: workshop.commissions.length,
           success: true
         })
 
@@ -193,6 +169,20 @@ export async function POST(request: Request) {
 
       } catch (error: any) {
         console.error(`❌ Error processing workshop ${workshop.companyName}:`, error.message)
+        
+        // Mark commissions as FAILED
+        await prisma.commission.updateMany({
+          where: {
+            id: {
+              in: workshop.commissions.map(c => c.id)
+            }
+          },
+          data: {
+            status: 'FAILED',
+            notes: `GoCardless payment failed: ${error.message}`
+          }
+        })
+        
         results.push({
           workshopId: workshop.id,
           workshopName: workshop.companyName,

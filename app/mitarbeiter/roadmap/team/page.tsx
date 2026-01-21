@@ -325,25 +325,19 @@ export default function TeamRoadmapPage() {
         </div>
       )}
 
-      {/* Phase Timeline View - Only render on client to prevent hydration errors */}
-      {viewMode === 'timeline' && mounted && phaseGroups && phaseGroups.length > 0 && (
+      {/* Phase Timeline View - Simple and clean */}
+      {viewMode === 'timeline' && mounted && (
         <div className="space-y-6">
-          {phaseGroups.map(group => {
-            // Safety check for group
-            if (!group || !group.phase || !group.phase.id || !group.tasks) {
-              return null
-            }
-
-            // Filter valid tasks BEFORE mapping to prevent undefined returns
-            const validTasks = group.tasks.filter(task => 
-              task && 
-              task.id && 
-              task.status && 
-              statusConfig[task.status]
-            )
-
-            return (
-              <div key={group.phase.id}>
+          {phaseGroups.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
+              <p className="text-gray-600">Es sind noch keine Tasks in Phasen vorhanden</p>
+            </Card>
+          ) : (
+            phaseGroups.map(group => (
+              <div key={group.phase.id} className="mb-8">
+                {/* Phase Header */}
                 <div 
                   className="flex items-center gap-3 mb-4 pb-2 border-b-2"
                   style={{ borderColor: group.phase.color }}
@@ -353,107 +347,102 @@ export default function TeamRoadmapPage() {
                     style={{ backgroundColor: group.phase.color }}
                   />
                   <h2 className="text-xl font-bold">{group.phase.name}</h2>
-                  <span className="text-gray-500">({validTasks.length} Tasks)</span>
+                  <span className="text-gray-500">({group.tasks.length} Tasks)</span>
                 </div>
+
+                {/* Task Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {validTasks.map(task => {
-                  
-                  const StatusIcon = statusConfig[task.status]?.icon || Circle
-                  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
-                  const helpOffersCount = task.helpOffers ? task.helpOffers.length : 0
+                  {group.tasks.map(task => {
+                    const StatusIcon = statusConfig[task.status]?.icon || Circle
+                    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
+                    const helpOffersCount = task.helpOffers?.length || 0
 
-                  return (
-                    <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-xs px-2 py-0.5 rounded border ${priorityConfig[task.priority]?.color || 'bg-gray-100'}`}>
-                              {priorityConfig[task.priority]?.icon || ''} {priorityConfig[task.priority]?.label || task.priority}
-                            </span>
-                            <StatusIcon className={`h-4 w-4 ${statusConfig[task.status]?.color || 'text-gray-400'}`} />
+                    return (
+                      <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
+                        {/* Priority Badge & Status Icon */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-xs px-2 py-0.5 rounded border ${priorityConfig[task.priority]?.color || 'bg-gray-100'}`}>
+                            {priorityConfig[task.priority]?.icon || ''} {priorityConfig[task.priority]?.label || task.priority}
+                          </span>
+                          <StatusIcon className={`h-4 w-4 ${statusConfig[task.status]?.color || 'text-gray-400'}`} />
+                        </div>
+                        
+                        {/* Task Title */}
+                        <h3 className={`font-medium mb-1 ${isOverdue ? 'text-red-600' : ''}`}>
+                          {task.title}
+                        </h3>
+                        
+                        {/* Description */}
+                        {task.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                            {task.description}
+                          </p>
+                        )}
+
+                        {/* Assigned To */}
+                        {task.assignedTo && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                            <Users className="h-3 w-3" />
+                            <span>{task.assignedTo.firstName} {task.assignedTo.lastName}</span>
                           </div>
-                          
-                          <h3 className={`font-medium mb-1 ${isOverdue ? 'text-red-600' : ''}`}>
-                            {task.title}
-                          </h3>
-                          
-                          {task.description && (
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
-                              {task.description}
-                            </p>
-                          )}
+                        )}
 
-                          {task.assignedTo && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                              <Users className="h-3 w-3" />
-                              <span>{task.assignedTo.firstName} {task.assignedTo.lastName}</span>
-                            </div>
-                          )}
+                        {/* Due Date */}
+                        {task.dueDate && (
+                          <div className={`flex items-center gap-1 text-xs mb-2 ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                            <Clock className="h-3 w-3" />
+                            <span>{new Date(task.dueDate).toLocaleDateString('de-DE')}</span>
+                          </div>
+                        )}
 
-                          {task.dueDate && (
-                            <div className={`flex items-center gap-1 text-xs mb-2 ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                              <Clock className="h-3 w-3" />
-                              <span>{new Date(task.dueDate).toLocaleDateString('de-DE')}</span>
-                            </div>
-                          )}
+                        {/* Blocked Reason */}
+                        {task.blockedReason && (
+                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 mb-2">
+                            <strong>Blockiert:</strong> {task.blockedReason}
+                          </div>
+                        )}
 
-                          {task.blockedReason && (
-                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 mb-2">
-                              <strong>Blockiert:</strong> {task.blockedReason}
-                            </div>
-                          )}
+                        {/* Help Offers Count */}
+                        {helpOffersCount > 0 && (
+                          <div className="mt-2 text-xs text-green-600 mb-2">
+                            💚 {helpOffersCount} Hilfsangebot(e) verfügbar
+                          </div>
+                        )}
 
-                          {helpOffersCount > 0 && (
-                            <div className="mt-2 text-xs text-green-600 mb-2">
-                              💚 {helpOffersCount} Hilfsangebot(e) verfügbar
-                            </div>
-                          )}
-
-                          <div className="flex gap-2 mt-3">
-                            {permissions?.canEditTasks && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setTaskModalMode('edit')
-                                  setSelectedTask(task)
-                                  setTaskModalOpen(true)
-                                }}
-                              >
-                                <Edit2 className="h-3 w-3 mr-1" />
-                                Bearbeiten
-                              </Button>
-                            )}
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 mt-3">
+                          {permissions?.canEditTasks && (
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-green-600 hover:bg-green-50 border-green-300"
-                              onClick={() => offerHelp(task.id)}
+                              onClick={() => {
+                                setTaskModalMode('edit')
+                                setSelectedTask(task)
+                                setTaskModalOpen(true)
+                              }}
                             >
-                              <HandHeart className="h-3 w-3 mr-1" />
-                              Hilfe anbieten
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Bearbeiten
                             </Button>
-                          </div>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:bg-green-50 border-green-300"
+                            onClick={() => offerHelp(task.id)}
+                          >
+                            <HandHeart className="h-3 w-3 mr-1" />
+                            Hilfe anbieten
+                          </Button>
                         </div>
-                      </div>
-                    </Card>
-                  )
+                      </Card>
+                    )
                   })}
                 </div>
               </div>
-            )
-          }).filter(Boolean)}
+            ))
+          )}
         </div>
-      )}
-
-      {viewMode === 'timeline' && mounted && phaseGroups && phaseGroups.length === 0 && (
-        <Card className="p-12 text-center">
-          <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
-          <p className="text-gray-600">
-            Es sind noch keine Tasks in Phasen vorhanden
-          </p>
-        </Card>
       )}
 
       {tasks.length === 0 && (

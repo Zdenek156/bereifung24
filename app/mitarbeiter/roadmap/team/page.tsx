@@ -230,6 +230,11 @@ export default function TeamRoadmapPage() {
   }
 
   const TaskCard = ({ task }: { task: RoadmapTask }) => {
+    // Safety check
+    if (!task || !task.status || !statusConfig[task.status]) {
+      return null
+    }
+
     const StatusIcon = statusConfig[task.status].icon
     const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
 
@@ -281,7 +286,7 @@ export default function TeamRoadmapPage() {
               </div>
             )}
 
-            {task.helpOffers.length > 0 && (
+            {task.helpOffers && task.helpOffers.length > 0 && (
               <div className="mt-2 text-xs text-green-600 mb-2">
                 💚 {task.helpOffers.length} Hilfsangebot(e) verfügbar
               </div>
@@ -305,7 +310,7 @@ export default function TeamRoadmapPage() {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-green-600 hover:bg-green-50"
+                className="text-green-600 hover:bg-green-50 border-green-300"
                 onClick={() => offerHelp(task.id)}
               >
                 <HandHeart className="h-3 w-3 mr-1" />
@@ -527,7 +532,7 @@ export default function TeamRoadmapPage() {
       {/* Phase Timeline View */}
       {viewMode === 'timeline' && (
         <div className="space-y-6">
-          {groupTasksByPhase().map(({ phase, tasks }) => (
+          {groupTasksByPhase().map(({ phase, tasks: phaseTasks }) => (
             <div key={phase.id}>
               <div 
                 className="flex items-center gap-3 mb-4 pb-2 border-b-2"
@@ -538,15 +543,27 @@ export default function TeamRoadmapPage() {
                   style={{ backgroundColor: phase?.color || '#gray' }}
                 />
                 <h2 className="text-xl font-bold">{phase.name}</h2>
-                <span className="text-gray-500">({tasks.length} Tasks)</span>
+                <span className="text-gray-500">({phaseTasks.length} Tasks)</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tasks.map(task => (
-                  <TaskCard key={task.id} task={task} />
-                ))}
+                {phaseTasks.map(task => {
+                  // Extra safety check
+                  if (!task || !task.id) return null
+                  return <TaskCard key={task.id} task={task} />
+                })}
               </div>
             </div>
           ))}
+          
+          {groupTasksByPhase().length === 0 && (
+            <Card className="p-12 text-center">
+              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
+              <p className="text-gray-600">
+                Es sind noch keine Tasks in Phasen vorhanden
+              </p>
+            </Card>
+          )}
         </div>
       )}
 

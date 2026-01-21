@@ -43,7 +43,7 @@ interface RoadmapTask {
     id: string
     name: string
     color: string
-  }
+  } | null
   month: string
   dueDate: string | null
   startDate: string | null
@@ -73,6 +73,7 @@ const statusConfig = {
   BLOCKED: { label: 'Blockiert', icon: AlertCircle, color: 'text-red-500' },
 }
 
+// Admin Roadmap Page - Fixed phase color handling
 export default function RoadmapPage() {
   const [phases, setPhases] = useState<RoadmapPhase[]>([])
   const [loading, setLoading] = useState(true)

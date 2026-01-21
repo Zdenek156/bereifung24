@@ -118,7 +118,15 @@ export default function TeamRoadmapPage() {
       const response = await fetch('/api/mitarbeiter/roadmap/team-tasks')
       if (response.ok) {
         const result = await response.json()
-        const rawTasks = result.data || []
+        console.log('API Response:', result)
+        
+        if (result.success && Array.isArray(result.data)) {
+          console.log('Tasks loaded:', result.data.length)
+          setTasks(result.data)
+        } else {
+          console.error('Invalid API response structure:', result)
+          setTasks([])
+        }
         
         // Filter valid tasks
         const validTasks = rawTasks.filter((task: any) => {
@@ -197,10 +205,25 @@ export default function TeamRoadmapPage() {
   }
 
   const groupTasksByPhase = () => {
+    console.log('groupTasksByPhase called with tasks:', tasks.length)
+    
     const grouped: Record<string, { phase: RoadmapPhase, tasks: RoadmapTask[] }> = {}
     
-    tasks.forEach(task => {
-      if (!task.phase || !task.phase.id || !task.phase.color || !task.phase.name) return
+    tasks.forEach((task, index) => {
+      if (!task) {
+        console.warn(`Task at index ${index} is null/undefined`)
+        return
+      }
+      
+      if (!task.phase) {
+        console.warn(`Task ${task.id || index} has no phase`)
+        return
+      }
+      
+      if (!task.phase.id || !task.phase.color || !task.phase.name) {
+        console.warn(`Task ${task.id || index} has incomplete phase data:`, task.phase)
+        return
+      }
       
       if (!grouped[task.phase.id]) {
         grouped[task.phase.id] = {
@@ -211,9 +234,12 @@ export default function TeamRoadmapPage() {
       grouped[task.phase.id].tasks.push(task)
     })
     
-    return Object.values(grouped).sort((a, b) => 
+    const result = Object.values(grouped).sort((a, b) => 
       a.phase.name.localeCompare(b.phase.name)
     )
+    
+    console.log('Grouped phases:', result.length, result)
+    return result
   }
 
   if (loading) {

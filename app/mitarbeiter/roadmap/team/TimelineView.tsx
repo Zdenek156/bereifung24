@@ -67,6 +67,27 @@ const priorityConfig: Record<string, { icon: string; label: string; color: strin
 }
 
 export default function TimelineView({ phaseGroups, canEdit, onEditTask, onOfferHelp }: TimelineViewProps) {
+  // DEBUG: Log data structure
+  React.useEffect(() => {
+    console.log('TimelineView rendered with:', { 
+      phaseGroupsLength: phaseGroups?.length,
+      phaseGroups: phaseGroups,
+      canEdit 
+    })
+  }, [phaseGroups, canEdit])
+
+  // Safety check - ensure phaseGroups is valid
+  if (!phaseGroups || !Array.isArray(phaseGroups)) {
+    console.error('TimelineView: Invalid phaseGroups', phaseGroups)
+    return (
+      <Card className="p-12 text-center">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h3 className="text-xl font-semibold mb-2">Fehler beim Laden</h3>
+        <p className="text-gray-600">Die Phasen-Daten konnten nicht geladen werden.</p>
+      </Card>
+    )
+  }
+
   if (phaseGroups.length === 0) {
     return (
       <Card className="p-12 text-center">
@@ -80,6 +101,52 @@ export default function TimelineView({ phaseGroups, canEdit, onEditTask, onOffer
   return (
     <div className="space-y-8">
       {phaseGroups.map(group => {
+        // Defensive checks for each group
+        if (!group) {
+          console.error('TimelineView: Invalid group (null/undefined)', group)
+          return null
+        }
+        
+        if (!group.phase) {
+          console.error('TimelineView: Group missing phase', group)
+          return null
+        }
+        
+        if (!group.phase.id || !group.phase.name || !group.phase.color) {
+          console.error('TimelineView: Invalid phase data', group.phase)
+          return null
+        }
+        
+        if (!group.tasks || !Array.isArray(group.tasks)) {
+          console.error('TimelineView: Invalid tasks array', group.tasks)
+          return null
+        }
+
+        // Filter out any invalid tasks
+        const validTasks = group.tasks.filter(task => {
+          if (!task) {
+            console.warn('TimelineView: Null task in group', group.phase.name)
+            return false
+          }
+          if (!task.id) {
+            console.warn('TimelineView: Task missing id', task)
+            return false
+          }
+          if (!task.status || !statusConfig[task.status]) {
+            console.warn('TimelineView: Invalid task status', task)
+            return false
+          }
+          if (!task.priority || !priorityConfig[task.priority]) {
+            console.warn('TimelineView: Invalid task priority', task)
+            return false
+          }
+          return true
+        })
+
+        if (validTasks.length === 0) {
+          return null
+        }
+        
         const StatusIcon = statusConfig['TODO']?.icon || Circle
         
         return (
@@ -93,11 +160,11 @@ export default function TimelineView({ phaseGroups, canEdit, onEditTask, onOffer
                 style={{ backgroundColor: group.phase.color }}
               />
               <h2 className="text-xl font-bold">{group.phase.name}</h2>
-              <span className="text-gray-500">({group.tasks.length} Tasks)</span>
+              <span className="text-gray-500">({validTasks.length} Tasks)</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.tasks.map(task => {
+              {validTasks.map(task => {
                 const taskStatusIcon = statusConfig[task.status]?.icon || Circle
                 const TaskIcon = taskStatusIcon
                 const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
@@ -175,7 +242,7 @@ export default function TimelineView({ phaseGroups, canEdit, onEditTask, onOffer
             </div>
           </div>
         )
-      })}
+      }).filter(element => element !== null)}
     </div>
   )
 }

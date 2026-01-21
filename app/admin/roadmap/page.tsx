@@ -93,10 +93,10 @@ export default function RoadmapPage() {
       const response = await fetch('/api/admin/roadmap/phases')
       if (response.ok) {
         const result = await response.json()
-        // Sanitize phases and add phase reference to each task
-        const validPhases = (result.data || []).map((phase: RoadmapPhase) => {
+        // Sanitize phases and add phase reference to each task - filter out null/undefined phases
+        const validPhases = (result.data || []).filter((phase: RoadmapPhase) => phase && typeof phase === 'object').map((phase: RoadmapPhase) => {
           // Ensure phase has color before using it in tasks
-          const phaseColor = phase.color || '#gray'
+          const phaseColor = phase?.color || '#gray'
           return {
             ...phase,
             color: phaseColor,

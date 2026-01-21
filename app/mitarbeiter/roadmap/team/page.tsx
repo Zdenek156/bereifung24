@@ -1,36 +1,17 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, Users, Edit2, HandHeart, TrendingUp, Award, ChevronDown, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, Users, Edit2, HandHeart, TrendingUp, Award } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import BackButton from '@/components/BackButton'
 import TaskEditModal from '@/components/TaskEditModal'
-
-// Type guards - prevent any invalid data from reaching render
-function isValidPhase(phase: any): phase is RoadmapPhase {
-  return !!(
-    phase &&
-    typeof phase === 'object' &&
-    typeof phase.id === 'string' &&
-    phase.id.length > 0 &&
-    typeof phase.name === 'string' &&
-    phase.name.length > 0 &&
-    typeof phase.color === 'string' &&
-    phase.color.length > 0
-  )
-}
-
-function isValidTask(task: any): task is RoadmapTask {
-  return !!(
-    task &&
-    typeof task === 'object' &&
-    typeof task.id === 'string' &&
-    task.id.length > 0 &&
-    typeof task.title === 'string' &&
-    task.title.length > 0 &&
-    typeof task.status === 'string' &&
-    ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'COMPLETED'].includes(task.status) &&
-    isValidPhase(task.phase)
-  )
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface RoadmapPhase {
   id: string
@@ -42,209 +23,179 @@ interface RoadmapTask {
   id: string
   title: string
   description: string | null
-  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'BLOCKED' | 'COMPLETED'
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
-  dueDate: string | null
-  phase: RoadmapPhase
+  priority: 'P0' | 'P1' | 'P2' | 'P3'
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED'
+  phase: RoadmapPhase | null
   assignedTo: {
     id: string
-    name: string
-    email: string
+    firstName: string
+    lastName: string
+    position: string | null
   } | null
-  helpOffers?: Array<{
+  assignedToId: string | null
+  dueDate: string | null
+  month: string
+  category: string | null
+  blockedReason: string | null
+  helpOffers: Array<{
     id: string
-    offeredBy: {
-      id: string
-      name: string
-      email: string
+    status: string
+    helper: {
+      firstName: string
+      lastName: string
     }
-  }>
-}
-
-interface EmployeeStats {
-  employeeId: string
-  employeeName: string
-  employeeEmail: string
-  totalTasks: number
-  completedTasks: number
-  inProgressTasks: number
-  blockedTasks: number
-  notStartedTasks: number
-  completionRate: number
+  }> | null
 }
 
 interface Permissions {
+  canCreateTasks: boolean
   canEditTasks: boolean
-}
-
-const statusConfig = {
-  NOT_STARTED: { label: 'Nicht begonnen', color: 'text-gray-500', icon: Circle, bgColor: 'bg-gray-100' },
-  IN_PROGRESS: { label: 'In Bearbeitung', color: 'text-blue-500', icon: Clock, bgColor: 'bg-blue-100' },
-  BLOCKED: { label: 'Blockiert', color: 'text-red-500', icon: AlertCircle, bgColor: 'bg-red-100' },
-  COMPLETED: { label: 'Abgeschlossen', color: 'text-green-500', icon: CheckCircle2, bgColor: 'bg-green-100' }
+  isCEO: boolean
 }
 
 const priorityConfig = {
-  LOW: { label: 'Niedrig', color: 'text-gray-600' },
-  MEDIUM: { label: 'Mittel', color: 'text-yellow-600' },
-  HIGH: { label: 'Hoch', color: 'text-orange-600' },
-  URGENT: { label: 'Dringend', color: 'text-red-600' }
+  P0: { label: 'P0', color: 'bg-red-100 text-red-800 border-red-300', icon: '🔴' },
+  P1: { label: 'P1', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: '🟡' },
+  P2: { label: 'P2', color: 'bg-green-100 text-green-800 border-green-300', icon: '🟢' },
+  P3: { label: 'P3', color: 'bg-blue-100 text-blue-800 border-blue-300', icon: '🔵' },
+}
+
+const statusConfig = {
+  NOT_STARTED: { label: 'Nicht gestartet', icon: Circle, color: 'text-gray-400' },
+  IN_PROGRESS: { label: 'In Arbeit', icon: Loader2, color: 'text-blue-500' },
+  COMPLETED: { label: 'Erledigt', icon: CheckCircle2, color: 'text-green-500' },
+  BLOCKED: { label: 'Blockiert', icon: AlertCircle, color: 'text-red-500' },
 }
 
 export default function TeamRoadmapPage() {
   const [tasks, setTasks] = useState<RoadmapTask[]>([])
-  const [employeeStats, setEmployeeStats] = useState<EmployeeStats[]>([])
   const [permissions, setPermissions] = useState<Permissions | null>(null)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'stats' | 'timeline'>('stats')
-  const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set())
+  
   const [taskModalOpen, setTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<RoadmapTask | null>(null)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedTask, setSelectedTask] = useState<any>(null)
 
   useEffect(() => {
-    loadData()
+    fetchTasks()
+    fetchPermissions()
   }, [])
 
-  const loadData = async () => {
+  const fetchPermissions = async () => {
+    try {
+      const response = await fetch('/api/mitarbeiter/roadmap/my-permissions')
+      if (response.ok) {
+        const result = await response.json()
+        setPermissions(result.data || null)
+      }
+    } catch (error) {
+      console.error('Error fetching permissions:', error)
+    }
+  }
+
+  const fetchTasks = async () => {
     setLoading(true)
     try {
-      await Promise.all([
-        fetchTasks(),
-        fetchPermissions()
-      ])
+      const response = await fetch('/api/mitarbeiter/roadmap/team-tasks')
+      if (response.ok) {
+        const result = await response.json()
+        const rawTasks = result.data || []
+        
+        // Filter valid tasks
+        const validTasks = rawTasks.filter((task: any) => {
+          return task && 
+                 typeof task === 'object' && 
+                 task.id && 
+                 task.title &&
+                 task.status
+        })
+        
+        setTasks(validTasks)
+      }
     } catch (error) {
-      console.error('Error loading team roadmap:', error)
+      console.error('Error fetching team tasks:', error)
+      setTasks([])
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch('/api/mitarbeiter/roadmap/team-tasks')
-      if (!response.ok) {
-        console.error('Failed to fetch tasks:', response.status)
-        return
-      }
-      
-      const result = await response.json()
-      if (!result.success) {
-        console.error('API returned error:', result.error)
-        return
-      }
-      
-      // Filter out invalid tasks BEFORE setting state
-      const rawTasks = Array.isArray(result.data) ? result.data : []
-      const validTasks = rawTasks.filter(isValidTask)
-      
-      setTasks(validTasks)
-      calculateEmployeeStats(validTasks)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-      setTasks([])
-    }
-  }
-
-  const fetchPermissions = async () => {
-    try {
-      const response = await fetch('/api/mitarbeiter/roadmap/my-permissions')
-      if (!response.ok) {
-        console.error('Failed to fetch permissions:', response.status)
-        return
-      }
-      
-      const result = await response.json()
-      setPermissions(result.data || null)
-    } catch (error) {
-      console.error('Error fetching permissions:', error)
-      setPermissions(null)
-    }
-  }
-
-  const calculateEmployeeStats = (taskList: RoadmapTask[]) => {
-    const employeeMap = new Map<string, EmployeeStats>()
-
-    for (const task of taskList) {
-      if (!task.assignedTo || !task.assignedTo.id) continue
-
-      const employeeId = task.assignedTo.id
-      
-      if (!employeeMap.has(employeeId)) {
-        employeeMap.set(employeeId, {
-          employeeId,
-          employeeName: task.assignedTo.name || 'Unbekannt',
-          employeeEmail: task.assignedTo.email || '',
-          totalTasks: 0,
-          completedTasks: 0,
-          inProgressTasks: 0,
-          blockedTasks: 0,
-          notStartedTasks: 0,
-          completionRate: 0
-        })
-      }
-
-      const stats = employeeMap.get(employeeId)!
-      stats.totalTasks++
-
-      if (task.status === 'COMPLETED') stats.completedTasks++
-      else if (task.status === 'IN_PROGRESS') stats.inProgressTasks++
-      else if (task.status === 'BLOCKED') stats.blockedTasks++
-      else if (task.status === 'NOT_STARTED') stats.notStartedTasks++
-    }
-
-    // Calculate completion rates
-    for (const stats of employeeMap.values()) {
-      stats.completionRate = stats.totalTasks > 0 
-        ? Math.round((stats.completedTasks / stats.totalTasks) * 100)
-        : 0
-    }
-
-    setEmployeeStats(Array.from(employeeMap.values()).sort((a, b) => 
-      b.completionRate - a.completionRate
-    ))
-  }
-
-  const toggleEmployeeExpansion = (employeeId: string) => {
-    setExpandedEmployees(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(employeeId)) {
-        newSet.delete(employeeId)
-      } else {
-        newSet.add(employeeId)
-      }
-      return newSet
-    })
-  }
-
-  const getTasksForEmployee = (employeeId: string) => {
-    return tasks.filter(task => 
-      task.assignedTo && task.assignedTo.id === employeeId
-    )
-  }
-
   const offerHelp = async (taskId: string) => {
     try {
-      const response = await fetch(`/api/mitarbeiter/roadmap/tasks/${taskId}/offer-help`, {
-        method: 'POST'
+      const response = await fetch('/api/mitarbeiter/roadmap/help-offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId })
       })
-
       if (response.ok) {
-        alert('Hilfsangebot wurde erfolgreich gesendet!')
-        await fetchTasks()
+        alert('✅ Hilfsangebot wurde erfolgreich übermittelt!')
+        fetchTasks()
       } else {
-        alert('Fehler beim Senden des Hilfsangebots')
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Konnte Hilfsangebot nicht erstellen'}`)
       }
     } catch (error) {
       console.error('Error offering help:', error)
-      alert('Fehler beim Senden des Hilfsangebots')
+      alert('Fehler beim Anbieten von Hilfe')
     }
   }
 
-  const handleTaskSaved = async () => {
-    setTaskModalOpen(false)
-    setSelectedTask(null)
-    await fetchTasks()
+  const getEmployeeStats = () => {
+    const employeeMap = new Map()
+    
+    tasks.forEach(task => {
+      if (!task.assignedTo || !task.assignedToId) return
+      
+      if (!employeeMap.has(task.assignedToId)) {
+        employeeMap.set(task.assignedToId, {
+          employee: {
+            id: task.assignedTo.id,
+            name: `${task.assignedTo.firstName} ${task.assignedTo.lastName}`,
+            firstName: task.assignedTo.firstName,
+            lastName: task.assignedTo.lastName
+          },
+          notStarted: 0,
+          inProgress: 0,
+          completed: 0,
+          blocked: 0,
+          total: 0
+        })
+      }
+      
+      const stats = employeeMap.get(task.assignedToId)
+      stats.total++
+      
+      if (task.status === 'NOT_STARTED') stats.notStarted++
+      else if (task.status === 'IN_PROGRESS') stats.inProgress++
+      else if (task.status === 'COMPLETED') stats.completed++
+      else if (task.status === 'BLOCKED') stats.blocked++
+    })
+    
+    return Array.from(employeeMap.values()).map(stat => ({
+      ...stat,
+      completionRate: stat.total > 0 ? (stat.completed / stat.total) * 100 : 0
+    })).sort((a, b) => b.completionRate - a.completionRate)
+  }
+
+  const groupTasksByPhase = () => {
+    const grouped: Record<string, { phase: RoadmapPhase, tasks: RoadmapTask[] }> = {}
+    
+    tasks.forEach(task => {
+      if (!task.phase || !task.phase.id || !task.phase.color || !task.phase.name) return
+      
+      if (!grouped[task.phase.id]) {
+        grouped[task.phase.id] = {
+          phase: task.phase,
+          tasks: []
+        }
+      }
+      grouped[task.phase.id].tasks.push(task)
+    })
+    
+    return Object.values(grouped).sort((a, b) => 
+      a.phase.name.localeCompare(b.phase.name)
+    )
   }
 
   if (loading) {
@@ -257,372 +208,255 @@ export default function TeamRoadmapPage() {
     )
   }
 
+  const employeeStats = getEmployeeStats()
+  const phaseGroups = groupTasksByPhase()
+
   return (
     <div className="container mx-auto p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Team Roadmap</h1>
-        <p className="text-gray-600">Übersicht über alle Mitarbeiter-Tasks und Fortschritt</p>
+      <div className="flex items-center gap-4 mb-6">
+        <BackButton />
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Users className="h-8 w-8" />
+            Team Roadmap
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Alle Tasks des Teams im Überblick - {tasks.length} Aufgaben
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'stats' ? 'default' : 'outline'}
+            onClick={() => setViewMode('stats')}
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Mitarbeiter Statistik
+          </Button>
+          <Button
+            variant={viewMode === 'timeline' ? 'default' : 'outline'}
+            onClick={() => setViewMode('timeline')}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Phasen Timeline
+          </Button>
+        </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="mb-6 flex gap-2">
-        <button
-          onClick={() => setViewMode('stats')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            viewMode === 'stats'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          <TrendingUp className="inline h-4 w-4 mr-2" />
-          Mitarbeiter-Statistiken
-        </button>
-        <button
-          onClick={() => setViewMode('timeline')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            viewMode === 'timeline'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          <Calendar className="inline h-4 w-4 mr-2" />
-          Phasen-Timeline
-        </button>
-      </div>
-
-      {/* Stats View */}
+      {/* Employee Statistics View */}
       {viewMode === 'stats' && (
         <div className="space-y-4">
-          {employeeStats.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-600">Keine Mitarbeiter-Tasks vorhanden</p>
-            </div>
-          ) : (
-            employeeStats.map(stats => {
-              const isExpanded = expandedEmployees.has(stats.employeeId)
-              const employeeTasks = getTasksForEmployee(stats.employeeId)
-
-              return (
-                <div key={stats.employeeId} className="bg-white rounded-lg shadow-sm border p-4">
-                  {/* Employee Header */}
-                  <div 
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => toggleEmployeeExpansion(stats.employeeId)}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      {isExpanded ? (
-                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      )}
-                      
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{stats.employeeName}</h3>
-                        <p className="text-sm text-gray-600">{stats.employeeEmail}</p>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {stats.completionRate}%
-                          </div>
-                          <div className="text-xs text-gray-500">Abschlussrate</div>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="text-sm font-medium">
-                            {stats.completedTasks} / {stats.totalTasks}
-                          </div>
-                          <div className="text-xs text-gray-500">Tasks abgeschlossen</div>
-                        </div>
-                      </div>
-                    </div>
+          {employeeStats.map(stat => (
+            <Card key={stat.employee.id} className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                    {stat.employee.firstName[0]}{stat.employee.lastName[0]}
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="mt-3 mb-2">
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-500 transition-all"
-                        style={{ width: `${stats.completionRate}%` }}
-                      />
-                    </div>
+                  <div>
+                    <h3 className="text-xl font-bold">{stat.employee.name}</h3>
+                    <p className="text-sm text-gray-600">{stat.total} Tasks gesamt</p>
                   </div>
-
-                  {/* Task Stats */}
-                  <div className="flex gap-4 text-sm mt-2">
-                    <div className="flex items-center gap-1">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span>{stats.completedTasks} Abgeschlossen</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4 text-blue-500" />
-                      <span>{stats.inProgressTasks} In Arbeit</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                      <span>{stats.blockedTasks} Blockiert</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Circle className="h-4 w-4 text-gray-500" />
-                      <span>{stats.notStartedTasks} Nicht begonnen</span>
-                    </div>
-                  </div>
-
-                  {/* Expanded Task List */}
-                  {isExpanded && employeeTasks.length > 0 && (
-                    <div className="mt-4 pt-4 border-t space-y-3">
-                      {employeeTasks.map(task => {
-                        if (!isValidTask(task)) return null
-
-                        const StatusIcon = statusConfig[task.status].icon
-                        const isOverdue = task.dueDate && 
-                          new Date(task.dueDate) < new Date() && 
-                          task.status !== 'COMPLETED'
-
-                        return (
-                          <div 
-                            key={task.id} 
-                            className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <StatusIcon className={`h-4 w-4 ${statusConfig[task.status].color}`} />
-                                  <h4 className="font-medium">{task.title}</h4>
-                                </div>
-
-                                {task.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                                )}
-
-                                <div className="flex flex-wrap gap-2 text-xs">
-                                  <span 
-                                    className="px-2 py-1 rounded-full"
-                                    style={{ 
-                                      backgroundColor: task.phase.color + '20',
-                                      color: task.phase.color
-                                    }}
-                                  >
-                                    {task.phase.name}
-                                  </span>
-
-                                  <span className={`px-2 py-1 rounded-full bg-gray-200 ${priorityConfig[task.priority].color}`}>
-                                    {priorityConfig[task.priority].label}
-                                  </span>
-
-                                  {task.dueDate && (
-                                    <span className={`px-2 py-1 rounded-full ${
-                                      isOverdue ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                      <Calendar className="inline h-3 w-3 mr-1" />
-                                      {new Date(task.dueDate).toLocaleDateString('de-DE')}
-                                    </span>
-                                  )}
-
-                                  {task.helpOffers && task.helpOffers.length > 0 && (
-                                    <span className="px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                      💚 {task.helpOffers.length} Hilfsangebot(e)
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-2 mt-3">
-                                  {permissions?.canEditTasks && (
-                                    <button
-                                      onClick={() => {
-                                        setTaskModalMode('edit')
-                                        setSelectedTask(task)
-                                        setTaskModalOpen(true)
-                                      }}
-                                      className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1"
-                                    >
-                                      <Edit2 className="h-3 w-3" />
-                                      Bearbeiten
-                                    </button>
-                                  )}
-                                  
-                                  <button
-                                    onClick={() => offerHelp(task.id)}
-                                    className="px-3 py-1.5 text-sm border border-green-300 rounded-lg hover:bg-green-50 text-green-600 transition-colors flex items-center gap-1"
-                                  >
-                                    <HandHeart className="h-3 w-3" />
-                                    Hilfe anbieten
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
                 </div>
-              )
-            })
-          )}
+                <div className="flex items-center gap-2">
+                  <Award className={`h-6 w-6 ${stat.completionRate >= 80 ? 'text-yellow-500' : stat.completionRate >= 50 ? 'text-blue-500' : 'text-gray-400'}`} />
+                  <span className="text-3xl font-bold">{Math.round(stat.completionRate)}%</span>
+                </div>
+              </div>
+
+              <div className="relative w-full h-8 bg-gray-100 rounded-lg overflow-hidden mb-4">
+                {stat.completed > 0 && (
+                  <div 
+                    className="absolute left-0 top-0 h-full bg-green-500 transition-all"
+                    style={{ width: `${stat.completionRate}%` }}
+                  />
+                )}
+                {stat.inProgress > 0 && (
+                  <div 
+                    className="absolute top-0 h-full bg-blue-500 transition-all"
+                    style={{ 
+                      left: `${stat.completionRate}%`,
+                      width: `${(stat.inProgress / stat.total) * 100}%` 
+                    }}
+                  />
+                )}
+                {stat.blocked > 0 && (
+                  <div 
+                    className="absolute top-0 h-full bg-red-500 transition-all"
+                    style={{ 
+                      left: `${stat.completionRate + (stat.inProgress / stat.total) * 100}%`,
+                      width: `${(stat.blocked / stat.total) * 100}%` 
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-green-700">{stat.completed}</div>
+                  <div className="text-xs text-gray-600">Erledigt</div>
+                </div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <Loader2 className="h-6 w-6 text-blue-500 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-blue-700">{stat.inProgress}</div>
+                  <div className="text-xs text-gray-600">In Arbeit</div>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <Circle className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-gray-700">{stat.notStarted}</div>
+                  <div className="text-xs text-gray-600">Offen</div>
+                </div>
+                <div className="text-center p-3 bg-red-50 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-red-700">{stat.blocked}</div>
+                  <div className="text-xs text-gray-600">Blockiert</div>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Timeline View */}
+      {/* Phase Timeline View */}
       {viewMode === 'timeline' && (
         <div className="space-y-6">
-          {(() => {
-            // Group tasks by phase - do this in a safe way
-            const phaseMap = new Map<string, { phase: RoadmapPhase, tasks: RoadmapTask[] }>()
-            
-            for (const task of tasks) {
-              if (!isValidTask(task)) continue
-              
-              const phaseId = task.phase.id
-              
-              if (!phaseMap.has(phaseId)) {
-                phaseMap.set(phaseId, {
-                  phase: task.phase,
-                  tasks: []
-                })
-              }
-              
-              phaseMap.get(phaseId)!.tasks.push(task)
-            }
-            
-            const phaseGroups = Array.from(phaseMap.values())
-              .sort((a, b) => a.phase.name.localeCompare(b.phase.name))
-            
-            if (phaseGroups.length === 0) {
-              return (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                  <p className="text-gray-600">Keine Tasks in Phasen vorhanden</p>
-                </div>
-              )
-            }
-            
-            return phaseGroups.map(group => {
-              if (!isValidPhase(group.phase)) return null
-              
-              return (
-                <div key={group.phase.id}>
-                  {/* Phase Header */}
-                  <div 
-                    className="flex items-center gap-3 mb-4 pb-2 border-b-2"
-                    style={{ borderColor: group.phase.color }}
-                  >
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: group.phase.color }}
-                    />
-                    <h2 className="text-xl font-bold">{group.phase.name}</h2>
-                    <span className="text-gray-500">({group.tasks.length} Tasks)</span>
-                  </div>
+          {phaseGroups.map(group => (
+            <div key={group.phase.id}>
+              <div 
+                className="flex items-center gap-3 mb-4 pb-2 border-b-2"
+                style={{ borderColor: group.phase.color }}
+              >
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: group.phase.color }}
+                />
+                <h2 className="text-xl font-bold">{group.phase.name}</h2>
+                <span className="text-gray-500">({group.tasks.length} Tasks)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.tasks.map(task => {
+                  if (!task || !task.id || !task.status) return null
+                  
+                  const StatusIcon = statusConfig[task.status]?.icon || Circle
+                  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
+                  const helpOffersCount = task.helpOffers ? task.helpOffers.length : 0
 
-                  {/* Phase Tasks */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {group.tasks.map(task => {
-                      if (!isValidTask(task)) return null
-
-                      const StatusIcon = statusConfig[task.status].icon
-                      const isOverdue = task.dueDate && 
-                        new Date(task.dueDate) < new Date() && 
-                        task.status !== 'COMPLETED'
-
-                      return (
-                        <div 
-                          key={task.id}
-                          className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-start gap-2 mb-2">
-                            <StatusIcon className={`h-5 w-5 ${statusConfig[task.status].color} flex-shrink-0 mt-0.5`} />
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold mb-1">{task.title}</h3>
-                              {task.description && (
-                                <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                              )}
-                            </div>
+                  return (
+                    <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`text-xs px-2 py-0.5 rounded border ${priorityConfig[task.priority]?.color || 'bg-gray-100'}`}>
+                              {priorityConfig[task.priority]?.icon || ''} {priorityConfig[task.priority]?.label || task.priority}
+                            </span>
+                            <StatusIcon className={`h-4 w-4 ${statusConfig[task.status]?.color || 'text-gray-400'}`} />
                           </div>
+                          
+                          <h3 className={`font-medium mb-1 ${isOverdue ? 'text-red-600' : ''}`}>
+                            {task.title}
+                          </h3>
+                          
+                          {task.description && (
+                            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                              {task.description}
+                            </p>
+                          )}
 
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-xs ${statusConfig[task.status].bgColor} ${statusConfig[task.status].color}`}>
-                                {statusConfig[task.status].label}
-                              </span>
-                              <span className={`px-2 py-0.5 rounded text-xs bg-gray-100 ${priorityConfig[task.priority].color}`}>
-                                {priorityConfig[task.priority].label}
-                              </span>
+                          {task.assignedTo && (
+                            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                              <Users className="h-3 w-3" />
+                              <span>{task.assignedTo.firstName} {task.assignedTo.lastName}</span>
                             </div>
+                          )}
 
-                            {task.assignedTo && (
-                              <div className="flex items-center gap-2 text-gray-600">
-                                <Users className="h-4 w-4" />
-                                <span className="truncate">{task.assignedTo.name}</span>
-                              </div>
-                            )}
+                          {task.dueDate && (
+                            <div className={`flex items-center gap-1 text-xs mb-2 ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                              <Clock className="h-3 w-3" />
+                              <span>{new Date(task.dueDate).toLocaleDateString('de-DE')}</span>
+                            </div>
+                          )}
 
-                            {task.dueDate && (
-                              <div className={`flex items-center gap-2 ${isOverdue ? 'text-red-600' : 'text-gray-600'}`}>
-                                <Calendar className="h-4 w-4" />
-                                <span>{new Date(task.dueDate).toLocaleDateString('de-DE')}</span>
-                              </div>
-                            )}
+                          {task.blockedReason && (
+                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 mb-2">
+                              <strong>Blockiert:</strong> {task.blockedReason}
+                            </div>
+                          )}
 
-                            {task.helpOffers && task.helpOffers.length > 0 && (
-                              <div className="text-green-600">
-                                💚 {task.helpOffers.length} Hilfsangebot(e) verfügbar
-                              </div>
-                            )}
-                          </div>
+                          {helpOffersCount > 0 && (
+                            <div className="mt-2 text-xs text-green-600 mb-2">
+                              💚 {helpOffersCount} Hilfsangebot(e) verfügbar
+                            </div>
+                          )}
 
-                          {/* Action Buttons */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t">
+                          <div className="flex gap-2 mt-3">
                             {permissions?.canEditTasks && (
-                              <button
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => {
                                   setTaskModalMode('edit')
                                   setSelectedTask(task)
                                   setTaskModalOpen(true)
                                 }}
-                                className="flex-1 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-1"
                               >
-                                <Edit2 className="h-3 w-3" />
+                                <Edit2 className="h-3 w-3 mr-1" />
                                 Bearbeiten
-                              </button>
+                              </Button>
                             )}
-                            
-                            <button
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:bg-green-50 border-green-300"
                               onClick={() => offerHelp(task.id)}
-                              className="flex-1 px-3 py-1.5 text-sm border border-green-300 rounded-lg hover:bg-green-50 text-green-600 transition-colors flex items-center justify-center gap-1"
                             >
-                              <HandHeart className="h-3 w-3" />
+                              <HandHeart className="h-3 w-3 mr-1" />
                               Hilfe anbieten
-                            </button>
+                            </Button>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })
-          })()}
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          
+          {phaseGroups.length === 0 && (
+            <Card className="p-12 text-center">
+              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
+              <p className="text-gray-600">
+                Es sind noch keine Tasks in Phasen vorhanden
+              </p>
+            </Card>
+          )}
         </div>
       )}
 
-      {/* Task Edit Modal */}
-      {taskModalOpen && (
-        <TaskEditModal
-          isOpen={taskModalOpen}
-          onClose={() => {
-            setTaskModalOpen(false)
-            setSelectedTask(null)
-          }}
-          onTaskSaved={handleTaskSaved}
-          task={selectedTask}
-          mode={taskModalMode}
-        />
+      {tasks.length === 0 && (
+        <Card className="p-12 text-center">
+          <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Keine Tasks gefunden</h3>
+          <p className="text-gray-600">
+            Das Team hat noch keine Tasks
+          </p>
+        </Card>
       )}
+
+      <TaskEditModal
+        isOpen={taskModalOpen}
+        onClose={() => {
+          setTaskModalOpen(false)
+          setSelectedTask(null)
+        }}
+        onSuccess={() => {
+          fetchTasks()
+        }}
+        task={selectedTask}
+        mode={taskModalMode}
+      />
     </div>
   )
 }

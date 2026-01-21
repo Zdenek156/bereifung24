@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, ChevronDown, Plus, Edit2, Users, BarChart3, HandHeart } from 'lucide-react'
+import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, ChevronDown, Plus, Edit2, Users, BarChart3 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import BackButton from '@/components/BackButton'
 import TaskEditModal from '@/components/TaskEditModal'
-import HelpOfferModal from '@/components/HelpOfferModal'
 import Link from 'next/link'
 import {
   DropdownMenu,
@@ -15,19 +14,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+interface RoadmapPhase {
+  id: string
+  name: string
+  color: string
+  startMonth: string
+  endMonth: string
+}
+
 interface RoadmapTask {
   id: string
   title: string
   description: string | null
   priority: 'P0' | 'P1' | 'P2' | 'P3'
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED'
-  phase: {
-    id: string
-    name: string
-    color: string
-    startMonth: string
-    endMonth: string
-  } | null
+  phase: RoadmapPhase | null
   phaseId: string
   month: string
   dueDate: string | null
@@ -44,6 +45,12 @@ interface RoadmapTask {
   notes: string | null
 }
 
+interface Permissions {
+  canCreateTasks: boolean
+  canEditTasks: boolean
+  isCEO: boolean
+}
+
 const priorityConfig = {
   P0: { label: 'P0 Critical', color: 'bg-red-100 text-red-800 border-red-300', icon: '🔴' },
   P1: { label: 'P1 High', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: '🟡' },
@@ -58,10 +65,26 @@ const statusConfig = {
   BLOCKED: { label: 'Blockiert', icon: AlertCircle, color: 'text-red-500' },
 }
 
-interface Permissions {
-  canCreateTasks: boolean
-  canEditTasks: boolean
-  isCEO: boolean
+// CRITICAL SAFETY: Check if phase has all required properties
+function isValidPhase(phase: any): phase is RoadmapPhase {
+  return !!(
+    phase &&
+    typeof phase === 'object' &&
+    typeof phase.id === 'string' &&
+    typeof phase.name === 'string' &&
+    typeof phase.color === 'string' &&
+    phase.color.length > 0
+  )
+}
+
+// CRITICAL SAFETY: Check if task is valid and has valid phase
+function isValidTask(task: any): task is RoadmapTask {
+  return !!(
+    task &&
+    typeof task === 'object' &&
+    typeof task.id === 'string' &&
+    isValidPhase(task.phase)
+  )
 }
 
 export default function MyRoadmapPage() {
@@ -72,8 +95,6 @@ export default function MyRoadmapPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
   const [selectedTask, setSelectedTask] = useState<RoadmapTask | null>(null)
-  const [helpOfferModalOpen, setHelpOfferModalOpen] = useState(false)
-  const [helpOfferTask, setHelpOfferTask] = useState<{ id: string; title: string } | null>(null)
 
   useEffect(() => {
     fetchMyTasks()
@@ -85,7 +106,7 @@ export default function MyRoadmapPage() {
       const response = await fetch('/api/mitarbeiter/roadmap/my-permissions')
       if (response.ok) {
         const result = await response.json()
-        setPermissions(result.data)
+        setPermissions(result.data || null)
       }
     } catch (error) {
       console.error('Error fetching permissions:', error)
@@ -102,25 +123,17 @@ export default function MyRoadmapPage() {
       const response = await fetch(url)
       if (response.ok) {
         const result = await response.json()
-        // CRITICAL: Filter out ANY tasks that don't have valid phase data
-        // This prevents "Cannot read properties of undefined (reading 'color')" errors
-        const rawTasks = result.data || []
-        const validTasks = rawTasks
-          .filter((task: any) => {
-            // Must have a task object
-            if (!task) return false
-            // Must have a phase object
-            if (!task.phase || typeof task.phase !== 'object') return false
-            // Phase must have both color and name
-            if (!task.phase.color || !task.phase.name) return false
-            return true
-          })
-          .map((task: RoadmapTask) => task)
+        const rawTasks = Array.isArray(result.data) ? result.data : []
         
+        // CRITICAL FILTER: Only keep tasks with VALID phase data
+        const validTasks = rawTasks.filter(isValidTask)
+        
+        console.log(`Fetched ${rawTasks.length} tasks, ${validTasks.length} valid`)
         setTasks(validTasks)
       }
     } catch (error) {
       console.error('Error fetching my tasks:', error)
+      setTasks([])
     } finally {
       setLoading(false)
     }
@@ -146,17 +159,25 @@ export default function MyRoadmapPage() {
   }
 
   const formatMonth = (month: string) => {
-    const [year, monthNum] = month.split('-')
-    const date = new Date(parseInt(year), parseInt(monthNum) - 1)
-    return date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+    try {
+      const [year, monthNum] = month.split('-')
+      const date = new Date(parseInt(year), parseInt(monthNum) - 1)
+      return date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+    } catch {
+      return month
+    }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
+    try {
+      return new Date(dateString).toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    } catch {
+      return dateString
+    }
   }
 
   const getStatusCounts = () => {
@@ -170,7 +191,11 @@ export default function MyRoadmapPage() {
 
   const isOverdue = (task: RoadmapTask) => {
     if (!task.dueDate || task.status === 'COMPLETED') return false
-    return new Date(task.dueDate) < new Date()
+    try {
+      return new Date(task.dueDate) < new Date()
+    } catch {
+      return false
+    }
   }
 
   if (loading) {
@@ -225,7 +250,7 @@ export default function MyRoadmapPage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
-                Filter: {statusFilter ? statusConfig[statusFilter as keyof typeof statusConfig].label : 'Alle'}
+                Filter: {statusFilter ? statusConfig[statusFilter as keyof typeof statusConfig]?.label || 'Alle' : 'Alle'}
                 <ChevronDown className="h-4 w-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
@@ -295,7 +320,7 @@ export default function MyRoadmapPage() {
             <h2 className="text-2xl font-bold mb-2">Keine offenen Aufgaben</h2>
             <p className="text-gray-600">
               {statusFilter
-                ? `Du hast keine Aufgaben mit dem Status "${statusConfig[statusFilter as keyof typeof statusConfig].label}".`
+                ? `Du hast keine Aufgaben mit dem Status "${statusConfig[statusFilter as keyof typeof statusConfig]?.label || 'unbekannt'}".`
                 : 'Du hast momentan keine Aufgaben zugewiesen.'}
             </p>
           </div>
@@ -303,13 +328,16 @@ export default function MyRoadmapPage() {
       ) : (
         <div className="space-y-3">
           {tasks.map(task => {
-            // CRITICAL: Skip tasks without valid phase data to prevent crash
-            if (!task || !task.phase || !task.phase.color || !task.phase.name) {
+            // DEFENSIVE: This should never happen due to filter, but extra safety
+            if (!isValidTask(task)) {
+              console.warn('Invalid task in render:', task?.id)
               return null
             }
-            
-            const StatusIcon = statusConfig[task.status].icon
+
+            const StatusIcon = statusConfig[task.status]?.icon || Circle
             const overdue = isOverdue(task)
+            const phaseColor = task.phase.color
+            const phaseName = task.phase.name
             
             return (
               <Card
@@ -320,7 +348,7 @@ export default function MyRoadmapPage() {
               >
                 <div className="flex items-start gap-3">
                   <StatusIcon
-                    className={`h-5 w-5 mt-0.5 ${statusConfig[task.status].color} ${
+                    className={`h-5 w-5 mt-0.5 ${statusConfig[task.status]?.color || 'text-gray-400'} ${
                       task.status === 'IN_PROGRESS' ? 'animate-spin' : ''
                     }`}
                   />
@@ -336,23 +364,21 @@ export default function MyRoadmapPage() {
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                          priorityConfig[task.priority].color
+                          priorityConfig[task.priority]?.color || 'bg-gray-100'
                         }`}
                       >
-                        {priorityConfig[task.priority].icon}{' '}
-                        {priorityConfig[task.priority].label}
+                        {priorityConfig[task.priority]?.icon || ''}{' '}
+                        {priorityConfig[task.priority]?.label || task.priority}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                      {task.phase && task.phase.color && task.phase.name && (
-                        <div
-                          className="flex items-center gap-1 px-2 py-1 rounded"
-                          style={{ backgroundColor: `${task.phase?.color}20` }}
-                        >
-                          {task.phase?.name}
-                        </div>
-                      )}
+                      <div
+                        className="flex items-center gap-1 px-2 py-1 rounded"
+                        style={{ backgroundColor: `${phaseColor}20` }}
+                      >
+                        {phaseName}
+                      </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {formatMonth(task.month)}
@@ -427,7 +453,6 @@ export default function MyRoadmapPage() {
         </div>
       )}
       
-      {/* Modals */}
       <TaskEditModal
         isOpen={taskModalOpen}
         onClose={() => {
@@ -439,19 +464,6 @@ export default function MyRoadmapPage() {
         }}
         task={selectedTask}
         mode={taskModalMode}
-      />
-      
-      <HelpOfferModal
-        isOpen={helpOfferModalOpen}
-        onClose={() => {
-          setHelpOfferModalOpen(false)
-          setHelpOfferTask(null)
-        }}
-        onSuccess={() => {
-          fetchMyTasks()
-        }}
-        taskId={helpOfferTask?.id || ''}
-        taskTitle={helpOfferTask?.title || ''}
       />
     </div>
   )

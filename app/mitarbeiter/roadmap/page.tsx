@@ -292,7 +292,9 @@ export default function MyRoadmapPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {tasks.map(task => {
+          {tasks
+            .filter(task => task && task.phase && task.phase.color)
+            .map(task => {
             const StatusIcon = statusConfig[task.status].icon
             const overdue = isOverdue(task)
             

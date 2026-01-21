@@ -43,7 +43,9 @@ export async function PATCH(
     const canEdit = currentEmployee.applications[0]?.canEditTasks || isCEO
     const isOwnTask = task.assignedToId === currentEmployee.id
 
-    if (!canEdit || (!isOwnTask && !isCEO)) {
+    // Mitarbeiter können IMMER ihre eigenen Tasks bearbeiten
+    // Andere Tasks nur mit Permission oder als CEO
+    if (!isOwnTask && !canEdit && !isCEO) {
       return NextResponse.json({ error: 'No permission to edit this task' }, { status: 403 })
     }
 

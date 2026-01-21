@@ -95,6 +95,8 @@ export default function MyRoadmapPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
   const [selectedTask, setSelectedTask] = useState<RoadmapTask | null>(null)
+  const [helpModalOpen, setHelpModalOpen] = useState(false)
+  const [helpTaskId, setHelpTaskId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchMyTasks()
@@ -155,6 +157,27 @@ export default function MyRoadmapPage() {
     } catch (error) {
       console.error('Error updating task:', error)
       alert('Fehler beim Aktualisieren des Status')
+    }
+  }
+
+  const offerHelp = async (taskId: string, message: string) => {
+    try {
+      const response = await fetch('/api/mitarbeiter/roadmap/help-offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, message })
+      })
+      if (response.ok) {
+        alert('Deine Hilfe wurde angeboten!')
+        setHelpModalOpen(false)
+        setHelpTaskId(null)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Anbieten von Hilfe')
+      }
+    } catch (error) {
+      console.error('Error offering help:', error)
+      alert('Fehler beim Anbieten von Hilfe')
     }
   }
 
@@ -411,20 +434,30 @@ export default function MyRoadmapPage() {
                     )}
 
                     <div className="mt-3 flex gap-2">
-                      {permissions?.canEditTasks && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setTaskModalMode('edit')
-                            setSelectedTask(task)
-                            setTaskModalOpen(true)
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Bearbeiten
-                        </Button>
-                      )}
+                      {/* Jeder Mitarbeiter kann seine eigenen Tasks bearbeiten */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setTaskModalMode('edit')
+                          setSelectedTask(task)
+                          setTaskModalOpen(true)
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Bearbeiten
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-blue-50 hover:bg-blue-100"
+                        onClick={() => {
+                          setHelpTaskId(task.id)
+                          setHelpModalOpen(true)
+                        }}
+                      >
+                        🤝 Hilfe anbieten
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="outline">
@@ -465,6 +498,46 @@ export default function MyRoadmapPage() {
         task={selectedTask}
         mode={taskModalMode}
       />
+
+      {/* Hilfe anbieten Modal */}
+      {helpModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Hilfe anbieten</h3>
+            <p className="text-gray-600 mb-4">
+              Möchtest du bei dieser Aufgabe helfen? Schreibe eine kurze Nachricht:
+            </p>
+            <textarea
+              id="help-message"
+              className="w-full border rounded p-2 mb-4"
+              rows={4}
+              placeholder="Ich kann bei dieser Aufgabe helfen mit..."
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setHelpModalOpen(false)
+                  setHelpTaskId(null)
+                }}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                onClick={() => {
+                  const textarea = document.getElementById('help-message') as HTMLTextAreaElement
+                  const message = textarea?.value || 'Ich möchte bei dieser Aufgabe helfen.'
+                  if (helpTaskId) {
+                    offerHelp(helpTaskId, message)
+                  }
+                }}
+              >
+                Hilfe anbieten
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

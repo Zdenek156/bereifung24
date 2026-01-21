@@ -92,7 +92,16 @@ export default function RoadmapPage() {
       const response = await fetch('/api/admin/roadmap/phases')
       if (response.ok) {
         const result = await response.json()
-        setPhases(result.data || [])
+        // Sanitize phases to ensure they have color property
+        const validPhases = (result.data || []).map((phase: RoadmapPhase) => ({
+          ...phase,
+          color: phase.color || '#gray',
+          tasks: (phase.tasks || []).map((task: RoadmapTask) => ({
+            ...task,
+            phase: task.phase && task.phase.color && task.phase.name ? task.phase : null
+          }))
+        }))
+        setPhases(validPhases)
       }
     } catch (error) {
       console.error('Error fetching phases:', error)
@@ -317,7 +326,7 @@ export default function RoadmapPage() {
               <div className="flex items-center gap-4 mb-6">
                 <div
                   className="w-2 h-12 rounded"
-                  style={{ backgroundColor: phase.color }}
+                  style={{ backgroundColor: phase?.color || '#gray' }}
                 />
                 <div>
                   <h2 className="text-2xl font-bold">{phase.name}</h2>

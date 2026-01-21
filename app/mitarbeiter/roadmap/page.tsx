@@ -102,11 +102,21 @@ export default function MyRoadmapPage() {
       const response = await fetch(url)
       if (response.ok) {
         const result = await response.json()
-        // Filter out tasks with invalid data - ensure phase has all required properties
-        const validTasks = (result.data || []).map((task: RoadmapTask) => ({
-          ...task,
-          phase: (task.phase && typeof task.phase === 'object' && 'color' in task.phase && 'name' in task.phase && task.phase.color && task.phase.name) ? task.phase : null
-        }))
+        // CRITICAL: Filter out ANY tasks that don't have valid phase data
+        // This prevents "Cannot read properties of undefined (reading 'color')" errors
+        const rawTasks = result.data || []
+        const validTasks = rawTasks
+          .filter((task: any) => {
+            // Must have a task object
+            if (!task) return false
+            // Must have a phase object
+            if (!task.phase || typeof task.phase !== 'object') return false
+            // Phase must have both color and name
+            if (!task.phase.color || !task.phase.name) return false
+            return true
+          })
+          .map((task: RoadmapTask) => task)
+        
         setTasks(validTasks)
       }
     } catch (error) {

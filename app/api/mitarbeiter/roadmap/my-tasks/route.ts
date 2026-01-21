@@ -53,9 +53,12 @@ export async function GET(request: NextRequest) {
       ]
     })
 
+    // Filter out tasks without valid phase data
+    const validTasks = tasks.filter(task => task.phase && task.phase.color)
+
     return NextResponse.json({
       success: true,
-      data: tasks
+      data: validTasks
     })
   } catch (error) {
     console.error('Error fetching my tasks:', error)

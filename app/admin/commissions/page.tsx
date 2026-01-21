@@ -147,7 +147,30 @@ export default function AdminCommissionsPage() {
       
       if (response.ok) {
         setBillingResult(result)
-        alert(`✅ Abbuchung erfolgreich!\n\n${result.summary.processed} Werkstätten abgerechnet\n${result.summary.skipped} übersprungen\n${result.summary.errors} Fehler`)
+        
+        // Build detailed message
+        let message = `📊 Abbuchung abgeschlossen!\n\n${result.summary.processed} Werkstätten abgerechnet\n${result.summary.skipped} übersprungen\n${result.summary.errors} Fehler`
+        
+        // Show error details if any
+        if (result.results && result.results.length > 0) {
+          const errors = result.results.filter((r: any) => !r.success)
+          if (errors.length > 0) {
+            message += '\n\n❌ Fehlerdetails:'
+            errors.forEach((err: any) => {
+              message += `\n- ${err.workshopName}: ${err.error}`
+            })
+          }
+          
+          const successes = result.results.filter((r: any) => r.success)
+          if (successes.length > 0) {
+            message += '\n\n✅ Erfolgreich:'
+            successes.forEach((s: any) => {
+              message += `\n- ${s.workshopName}: ${s.commission?.toFixed(2)} €`
+            })
+          }
+        }
+        
+        alert(message)
         fetchCommissions() // Refresh list
       } else {
         alert(`❌ Fehler: ${result.error}`)

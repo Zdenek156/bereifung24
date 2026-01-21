@@ -154,7 +154,8 @@ export async function createPayment(data: {
   metadata?: Record<string, string>
 }) {
   try {
-    const payment = await getGocardlessClient().payments.create({
+    const client = await getGocardlessClient()
+    const payment = await client.payments.create({
       amount: Math.round(data.amount), // Must be integer (cents)
       currency: data.currency || 'EUR',
       description: data.description,

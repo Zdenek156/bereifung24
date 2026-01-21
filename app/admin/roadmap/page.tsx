@@ -93,19 +93,23 @@ export default function RoadmapPage() {
       if (response.ok) {
         const result = await response.json()
         // Sanitize phases and add phase reference to each task
-        const validPhases = (result.data || []).map((phase: RoadmapPhase) => ({
-          ...phase,
-          color: phase.color || '#gray',
-          tasks: (phase.tasks || []).map((task: RoadmapTask) => ({
-            ...task,
-            // Tasks in phases don't have phase property, inherit from parent phase
-            phase: task.phase || {
-              id: phase.id,
-              name: phase.name,
-              color: phase.color
-            }
-          }))
-        }))
+        const validPhases = (result.data || []).map((phase: RoadmapPhase) => {
+          // Ensure phase has color before using it in tasks
+          const phaseColor = phase.color || '#gray'
+          return {
+            ...phase,
+            color: phaseColor,
+            tasks: (phase.tasks || []).map((task: RoadmapTask) => ({
+              ...task,
+              // Tasks in phases don't have phase property, inherit from parent phase
+              phase: task.phase || {
+                id: phase.id,
+                name: phase.name,
+                color: phaseColor  // Use sanitized color
+              }
+            }))
+          }
+        })
         setPhases(validPhases)
       }
     } catch (error) {

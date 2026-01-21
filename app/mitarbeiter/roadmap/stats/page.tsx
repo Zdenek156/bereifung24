@@ -245,9 +245,9 @@ export default function RoadmapStatsPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: phase.color }}
+                    style={{ backgroundColor: phase?.color || '#gray' }}
                   />
-                  <span className="font-medium">{phase.name}</span>
+                  <span className="font-medium">{phase?.name}</span>
                 </div>
                 <span className="text-sm text-gray-600">
                   {phase.completed}/{phase.total} Tasks
@@ -258,8 +258,8 @@ export default function RoadmapStatsPage() {
                   <div
                     className="h-3 rounded-full transition-all"
                     style={{ 
-                      width: `${phase.progress}%`,
-                      backgroundColor: phase.color
+                      width: `${phase?.progress || 0}%`,
+                      backgroundColor: phase?.color || '#gray'
                     }}
                   />
                 </div>

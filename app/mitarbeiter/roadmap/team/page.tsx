@@ -90,7 +90,12 @@ export default function TeamRoadmapPage() {
       const response = await fetch(`/api/mitarbeiter/roadmap/team-tasks?${params}`)
       if (response.ok) {
         const result = await response.json()
-        setTasks(result.data || [])
+        // Sanitize tasks to ensure phase has color and name
+        const validTasks = (result.data || []).map((task: RoadmapTask) => ({
+          ...task,
+          phase: task.phase && task.phase.color && task.phase.name ? task.phase : null
+        }))
+        setTasks(validTasks)
         
         // Extract unique employees
         const uniqueEmployees = Array.from(
@@ -117,8 +122,8 @@ export default function TeamRoadmapPage() {
 
   const groupTasksByPhase = () => {
     const grouped = tasks.reduce((acc, task) => {
-      // Skip tasks without phase
-      if (!task.phase) return acc
+      // Skip tasks without phase or without phase.color
+      if (!task.phase || !task.phase.color || !task.phase.name) return acc
       
       if (!acc[task.phase.id]) {
         acc[task.phase.id] = {
@@ -314,11 +319,11 @@ export default function TeamRoadmapPage() {
             <div key={phase.id}>
               <div 
                 className="flex items-center gap-3 mb-4 pb-2 border-b-2"
-                style={{ borderColor: phase.color }}
+                style={{ borderColor: phase?.color || '#gray' }}
               >
                 <div
                   className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: phase.color }}
+                  style={{ backgroundColor: phase?.color || '#gray' }}
                 />
                 <h2 className="text-xl font-bold">{phase.name}</h2>
                 <span className="text-gray-500">({tasks.length} Tasks)</span>

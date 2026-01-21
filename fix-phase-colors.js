@@ -2,24 +2,22 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function fixPhaseColors() {
-  console.log('🔍 Checking for phases without color...')
+  console.log('🔍 Checking all phases...')
   
-  const phasesWithoutColor = await prisma.roadmapPhase.findMany({
-    where: {
-      OR: [
-        { color: null },
-        { color: '' }
-      ]
-    }
-  })
+  const allPhases = await prisma.roadmapPhase.findMany()
   
-  console.log(`Found ${phasesWithoutColor.length} phases without color:`)
+  console.log(`Found ${allPhases.length} phases total`)
+  
+  const phasesWithoutColor = allPhases.filter(p => !p.color || p.color === '')
+  
+  console.log(`Phases without color: ${phasesWithoutColor.length}`)
   phasesWithoutColor.forEach(phase => {
-    console.log(`  - ${phase.name} (ID: ${phase.id})`)
+    console.log(`  - ${phase.name} (ID: ${phase.id}) - color: "${phase.color}"`)
   })
   
   if (phasesWithoutColor.length === 0) {
     console.log('✅ All phases have colors!')
+    allPhases.forEach(p => console.log(`  ✓ ${p.name}: ${p.color}`))
     return
   }
   

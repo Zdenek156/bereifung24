@@ -40,6 +40,8 @@ export default function AdminCommissionsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [billing, setBilling] = useState(false)
+  const [billingResult, setBillingResult] = useState<any>(null)
 
   useEffect(() => {
     fetchCommissions()
@@ -122,13 +124,70 @@ export default function AdminCommissionsPage() {
     }
   }
 
+  const handleManualBilling = async () => {
+    if (!confirm('Möchtest du alle ausstehenden Provisionen jetzt per SEPA abbuchen?\n\nDies erstellt GoCardless Payments für alle Werkstätten mit PENDING Commissions.')) {
+      return
+    }
+
+    setBilling(true)
+    setBillingResult(null)
+
+    try {
+      const now = new Date()
+      const response = await fetch('/api/admin/commissions/bill-month', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year: now.getFullYear(),
+          month: now.getMonth() + 1
+        })
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        setBillingResult(result)
+        alert(`✅ Abbuchung erfolgreich!\n\n${result.summary.processed} Werkstätten abgerechnet\n${result.summary.skipped} übersprungen\n${result.summary.errors} Fehler`)
+        fetchCommissions() // Refresh list
+      } else {
+        alert(`❌ Fehler: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error triggering billing:', error)
+      alert('❌ Fehler beim Auslösen der Abbuchung')
+    } finally {
+      setBilling(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <BackButton />
+            {pendingCommissions.length > 0 && (
+              <button
+                onClick={handleManualBilling}
+                disabled={billing}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {billing ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Wird abgerechnet...
+                  </>
+                ) : (
+                  <>
+                    💶 SEPA-Abbuchung jetzt ausführen ({pendingCommissions.length} Provisionen)
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Provisionsverwaltung</h1>
           <p className="text-gray-600 mt-2">Übersicht aller Provisionen und Zahlungen</p>

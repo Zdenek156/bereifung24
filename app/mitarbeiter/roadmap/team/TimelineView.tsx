@@ -52,6 +52,7 @@ interface TimelineViewProps {
 }
 
 const statusConfig: Record<string, { icon: any; color: string }> = {
+  NOT_STARTED: { icon: Circle, color: 'text-gray-400' },
   TODO: { icon: Circle, color: 'text-gray-400' },
   IN_PROGRESS: { icon: Circle, color: 'text-blue-500' },
   BLOCKED: { icon: Circle, color: 'text-red-500' },
@@ -62,8 +63,10 @@ const statusConfig: Record<string, { icon: any; color: string }> = {
 const priorityConfig: Record<string, { icon: string; label: string; color: string }> = {
   LOW: { icon: '⬇️', label: 'Niedrig', color: 'bg-gray-100 border-gray-300' },
   MEDIUM: { icon: '➡️', label: 'Mittel', color: 'bg-blue-50 border-blue-300' },
+  NORMAL: { icon: '➡️', label: 'Normal', color: 'bg-blue-50 border-blue-300' },
   HIGH: { icon: '⬆️', label: 'Hoch', color: 'bg-orange-50 border-orange-300' },
-  URGENT: { icon: '🔥', label: 'Dringend', color: 'bg-red-50 border-red-300' }
+  URGENT: { icon: '🔥', label: 'Dringend', color: 'bg-red-50 border-red-300' },
+  CRITICAL: { icon: '🔥', label: 'Kritisch', color: 'bg-red-50 border-red-300' }
 }
 
 export default function TimelineView({ phaseGroups, canEdit, onEditTask, onOfferHelp }: TimelineViewProps) {

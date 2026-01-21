@@ -72,10 +72,16 @@ export default function TeamRoadmapPage() {
   const [permissions, setPermissions] = useState<Permissions | null>(null)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'stats' | 'timeline'>('stats')
+  const [mounted, setMounted] = useState(false)
   
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
   const [selectedTask, setSelectedTask] = useState<any>(null)
+
+  // Prevent hydration errors - only render timeline on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     fetchTasks()
@@ -318,8 +324,8 @@ export default function TeamRoadmapPage() {
         </div>
       )}
 
-      {/* Phase Timeline View */}
-      {viewMode === 'timeline' && (
+      {/* Phase Timeline View - Only render on client to prevent hydration errors */}
+      {viewMode === 'timeline' && mounted && (
         <div className="space-y-6">
           {phaseGroups.map(group => (
             <div key={group.phase.id}>

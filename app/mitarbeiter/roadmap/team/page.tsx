@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, Users, Edit2, HandHeart, TrendingUp, Award } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+
+// Dynamic import with NO SSR
+const TimelineView = dynamic(() => import('./TimelineView'), { 
+  ssr: false,
+  loading: () => (
+    <Card className="p-12 text-center">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+      <p className="text-gray-600">Timeline wird geladen...</p>
+    </Card>
+  )
+})
 
 interface RoadmapPhase {
   id: string
@@ -325,124 +337,18 @@ export default function TeamRoadmapPage() {
         </div>
       )}
 
-      {/* Phase Timeline View - Simple and clean */}
-      {viewMode === 'timeline' && mounted && (
-        <div className="space-y-6">
-          {phaseGroups.length === 0 ? (
-            <Card className="p-12 text-center">
-              <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Keine Phasen gefunden</h3>
-              <p className="text-gray-600">Es sind noch keine Tasks in Phasen vorhanden</p>
-            </Card>
-          ) : (
-            phaseGroups.map(group => (
-              <div key={group.phase.id} className="mb-8">
-                {/* Phase Header */}
-                <div 
-                  className="flex items-center gap-3 mb-4 pb-2 border-b-2"
-                  style={{ borderColor: group.phase.color }}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: group.phase.color }}
-                  />
-                  <h2 className="text-xl font-bold">{group.phase.name}</h2>
-                  <span className="text-gray-500">({group.tasks.length} Tasks)</span>
-                </div>
-
-                {/* Task Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {group.tasks.map(task => {
-                    const StatusIcon = statusConfig[task.status]?.icon || Circle
-                    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
-                    const helpOffersCount = task.helpOffers?.length || 0
-
-                    return (
-                      <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
-                        {/* Priority Badge & Status Icon */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-xs px-2 py-0.5 rounded border ${priorityConfig[task.priority]?.color || 'bg-gray-100'}`}>
-                            {priorityConfig[task.priority]?.icon || ''} {priorityConfig[task.priority]?.label || task.priority}
-                          </span>
-                          <StatusIcon className={`h-4 w-4 ${statusConfig[task.status]?.color || 'text-gray-400'}`} />
-                        </div>
-                        
-                        {/* Task Title */}
-                        <h3 className={`font-medium mb-1 ${isOverdue ? 'text-red-600' : ''}`}>
-                          {task.title}
-                        </h3>
-                        
-                        {/* Description */}
-                        {task.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
-                            {task.description}
-                          </p>
-                        )}
-
-                        {/* Assigned To */}
-                        {task.assignedTo && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                            <Users className="h-3 w-3" />
-                            <span>{task.assignedTo.firstName} {task.assignedTo.lastName}</span>
-                          </div>
-                        )}
-
-                        {/* Due Date */}
-                        {task.dueDate && (
-                          <div className={`flex items-center gap-1 text-xs mb-2 ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                            <Clock className="h-3 w-3" />
-                            <span>{new Date(task.dueDate).toLocaleDateString('de-DE')}</span>
-                          </div>
-                        )}
-
-                        {/* Blocked Reason */}
-                        {task.blockedReason && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 mb-2">
-                            <strong>Blockiert:</strong> {task.blockedReason}
-                          </div>
-                        )}
-
-                        {/* Help Offers Count */}
-                        {helpOffersCount > 0 && (
-                          <div className="mt-2 text-xs text-green-600 mb-2">
-                            💚 {helpOffersCount} Hilfsangebot(e) verfügbar
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 mt-3">
-                          {permissions?.canEditTasks && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setTaskModalMode('edit')
-                                setSelectedTask(task)
-                                setTaskModalOpen(true)
-                              }}
-                            >
-                              <Edit2 className="h-3 w-3 mr-1" />
-                              Bearbeiten
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 hover:bg-green-50 border-green-300"
-                            onClick={() => offerHelp(task.id)}
-                          >
-                            <HandHeart className="h-3 w-3 mr-1" />
-                            Hilfe anbieten
-                          </Button>
-                        </div>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+      {/* Phase Timeline View - Dynamic Component (NO SSR) */}
+      {viewMode === 'timeline' && (
+        <TimelineView
+          phaseGroups={phaseGroups}
+          canEdit={permissions?.canEditTasks || false}
+          onEditTask={(task) => {
+            setTaskModalMode('edit')
+            setSelectedTask(task)
+            setTaskModalOpen(true)
+          }}
+          onOfferHelp={(taskId) => offerHelp(taskId)}
+        />
       )}
 
       {tasks.length === 0 && (

@@ -330,12 +330,12 @@ export default function MyRoadmapPage() {
                     </div>
 
                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                      {task.phase?.color && task.phase?.name && (
+                      {task.phase && task.phase.color && task.phase.name && (
                         <div
                           className="flex items-center gap-1 px-2 py-1 rounded"
-                          style={{ backgroundColor: `${task.phase.color}20` }}
+                          style={{ backgroundColor: `${task.phase?.color}20` }}
                         >
-                          {task.phase.name}
+                          {task.phase?.name}
                         </div>
                       )}
                       <div className="flex items-center gap-1">

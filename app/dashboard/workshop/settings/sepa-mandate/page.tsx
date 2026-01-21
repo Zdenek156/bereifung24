@@ -174,6 +174,7 @@ export default function SEPAMandatePage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</p>
                   <p className="font-semibold text-gray-900 dark:text-white">
                     {mandate.mandate.status === 'active' && '✓ Aktiv'}
+                    {(mandate.mandate.status === 'pending_submission' || mandate.mandate.status === 'submitted') && '⏳ Bereit (wird nach erster Zahlung aktiviert)'}
                     {mandate.mandate.status === 'pending_submission' && '⏳ Wird aktiviert...'}
                     {mandate.mandate.status === 'submitted' && 'Eingereicht'}
                   </p>

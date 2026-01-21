@@ -35,10 +35,14 @@ async function runMonthlyBilling(year: number, month: number) {
   console.log(`📅 Billing for ${month}/${year}`)
 
   // Get all workshops with SEPA mandates
+  // Note: pending_submission and submitted are valid states for payment creation
+  // Mandate becomes 'active' only after first successful payment
   const workshops = await prisma.workshop.findMany({
     where: {
       gocardlessMandateId: { not: null },
-      gocardlessMandateStatus: 'active'
+      gocardlessMandateStatus: {
+        in: ['pending_submission', 'submitted', 'active']
+      }
     },
     include: {
       bookings: {

@@ -98,15 +98,19 @@ export async function POST(request: NextRequest) {
 
     // Geocode to get coordinates for workshop matching (but keep profile city)
     if (customer.user.street && customer.user.city) {
-      const geocodeResult = await geocodeAddress(
-        customer.user.street,
-        validatedData.zipCode,
-        customer.user.city
-      )
-      
-      if (geocodeResult) {
-        latitude = geocodeResult.latitude
-        longitude = geocodeResult.longitude
+      try {
+        const geocodeResult = await geocodeAddress(
+          customer.user.street,
+          validatedData.zipCode,
+          customer.user.city
+        )
+        
+        if (geocodeResult) {
+          latitude = geocodeResult.latitude
+          longitude = geocodeResult.longitude
+        }
+      } catch (error) {
+        console.warn(`Failed to geocode address:`, error)
       }
     }
     

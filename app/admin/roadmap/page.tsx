@@ -73,7 +73,7 @@ const statusConfig = {
   BLOCKED: { label: 'Blockiert', icon: AlertCircle, color: 'text-red-500' },
 }
 
-// Admin Roadmap Page - Fixed phase color handling
+// Admin Roadmap Page - Null-safe everywhere v2
 export default function RoadmapPage() {
   const [phases, setPhases] = useState<RoadmapPhase[]>([])
   const [loading, setLoading] = useState(true)
@@ -136,7 +136,9 @@ export default function RoadmapPage() {
   }
 
   const getFilteredTasks = (tasks: RoadmapTask[]) => {
+    if (!tasks || !Array.isArray(tasks)) return []
     return tasks.filter(task => {
+      if (!task) return false
       if (selectedEmployee && task.assignedToId !== selectedEmployee) return false
       if (selectedPriority && task.priority !== selectedPriority) return false
       if (selectedStatus && task.status !== selectedStatus) return false
@@ -147,8 +149,8 @@ export default function RoadmapPage() {
 
   const getEmployees = () => {
     const employeeMap = new Map()
-    phases.forEach(phase => {
-      phase.tasks.forEach(task => {
+    phases.filter(phase => phase && phase.tasks).forEach(phase => {
+      (phase.tasks || []).filter(task => task).forEach(task => {
         if (task.assignedTo) {
           employeeMap.set(task.assignedTo.id, task.assignedTo)
         }
@@ -159,8 +161,8 @@ export default function RoadmapPage() {
 
   const getMonths = () => {
     const monthSet = new Set<string>()
-    phases.forEach(phase => {
-      phase.tasks.forEach(task => {
+    phases.filter(phase => phase && phase.tasks).forEach(phase => {
+      (phase.tasks || []).filter(task => task && task.month).forEach(task => {
         monthSet.add(task.month)
       })
     })
@@ -326,8 +328,8 @@ export default function RoadmapPage() {
 
       {/* Timeline View */}
       <div className="space-y-8">
-        {phases.map(phase => {
-          const filteredTasks = getFilteredTasks(phase.tasks)
+        {phases.filter(phase => phase && phase.color && phase.tasks).map(phase => {
+          const filteredTasks = getFilteredTasks(phase.tasks || [])
           
           if (filteredTasks.length === 0) return null
 

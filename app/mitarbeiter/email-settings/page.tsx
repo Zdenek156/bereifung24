@@ -516,9 +516,9 @@ export default function EmailSettingsPage() {
           <h3 className="font-semibold text-amber-900 mb-2">📋 Beispiel-Konfiguration</h3>
           <div className="text-sm text-amber-800 space-y-1">
             <p><strong>E-Mail:</strong> vorname.nachname@bereifung24.de</p>
-            <p><strong>Server:</strong> mail.bereifung24.de</p>
+            <p><strong>Server:</strong> mail.your-server.de</p>
             <p><strong>IMAP Port:</strong> 993 (mit TLS/SSL)</p>
-            <p><strong>SMTP Port:</strong> 465 (mit SSL) oder 587 (mit STARTTLS)</p>
+            <p><strong>SMTP Port:</strong> 587</p>
           </div>
         </div>
       </div>

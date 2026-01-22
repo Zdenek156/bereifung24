@@ -12,7 +12,7 @@ async function runMigration() {
       
       "CREATE TYPE \"RoadmapTaskPriority\" AS ENUM ('P0', 'P1', 'P2', 'P3')",
       
-      `ALTER TABLE "RoadmapTask" 
+      `ALTER TABLE "roadmap_tasks" 
        ALTER COLUMN priority TYPE "RoadmapTaskPriority" 
        USING (
          CASE priority::text 

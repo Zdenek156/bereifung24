@@ -78,6 +78,7 @@ export default function TeamRoadmapPage() {
   const [filterPhase, setFilterPhase] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority'>('dueDate')
+  const [searchText, setSearchText] = useState<string>('')
   
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
@@ -164,6 +165,15 @@ export default function TeamRoadmapPage() {
       if (filterPriority !== 'all' && task.priority !== filterPriority) return false
       if (filterPhase !== 'all' && task.phase?.id !== filterPhase) return false
       if (filterStatus !== 'all' && task.status !== filterStatus) return false
+      
+      // Text search in title and description
+      if (searchText.trim()) {
+        const search = searchText.toLowerCase()
+        const titleMatch = task.title.toLowerCase().includes(search)
+        const descMatch = task.description?.toLowerCase().includes(search)
+        if (!titleMatch && !descMatch) return false
+      }
+      
       return true
     })
     
@@ -213,6 +223,16 @@ export default function TeamRoadmapPage() {
     }
     if (filterStatus !== 'all') {
       filtered = filtered.filter(t => t.status === filterStatus)
+    }
+    
+    // Text search
+    if (searchText.trim()) {
+      const search = searchText.toLowerCase()
+      filtered = filtered.filter(task => {
+        const titleMatch = task.title.toLowerCase().includes(search)
+        const descMatch = task.description?.toLowerCase().includes(search)
+        return titleMatch || descMatch
+      })
     }
     
     // Apply sorting
@@ -276,6 +296,17 @@ export default function TeamRoadmapPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-600" />
             <span className="font-semibold text-sm">Filter:</span>
+          </div>
+          
+          {/* Suchfeld */}
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="🔍 Tasks durchsuchen..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full px-3 py-1.5 border rounded-lg text-sm"
+            />
           </div>
           
           {/* Mitarbeiter Filter */}
@@ -422,7 +453,7 @@ export default function TeamRoadmapPage() {
           </DropdownMenu>
 
           {/* Reset Filter Button */}
-          {(filterEmployee !== 'all' || filterPriority !== 'all' || filterPhase !== 'all' || filterStatus !== 'all') && (
+          {(filterEmployee !== 'all' || filterPriority !== 'all' || filterPhase !== 'all' || filterStatus !== 'all' || searchText) && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -431,6 +462,7 @@ export default function TeamRoadmapPage() {
                 setFilterPriority('all')
                 setFilterPhase('all')
                 setFilterStatus('all')
+                setSearchText('')
               }}
             >
               Filter zurücksetzen

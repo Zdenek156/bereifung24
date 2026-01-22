@@ -336,7 +336,7 @@ export default function TeamRoadmapPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4 mb-4">
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-1" />
                   <div className="text-2xl font-bold text-green-700">{stat.completed}</div>
@@ -356,6 +356,70 @@ export default function TeamRoadmapPage() {
                   <AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-1" />
                   <div className="text-2xl font-bold text-red-700">{stat.blocked}</div>
                   <div className="text-xs text-gray-600">Blockiert</div>
+                </div>
+              </div>
+
+              {/* Task Liste */}
+              <div className="mt-4 border-t pt-4">
+                <h4 className="font-semibold mb-3 text-sm text-gray-700">Aufgaben:</h4>
+                <div className="space-y-2">
+                  {tasks
+                    .filter(t => t.assignedToId === stat.employee.id)
+                    .map(task => {
+                      const StatusIcon = statusConfig[task.status].icon
+                      const priorityInfo = priorityConfig[task.priority]
+                      
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          onClick={() => {
+                            setTaskModalMode('edit')
+                            setSelectedTask(task)
+                            setTaskModalOpen(true)
+                          }}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <StatusIcon className={`h-4 w-4 flex-shrink-0 ${statusConfig[task.status].color}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium truncate">{task.title}</span>
+                                <span className={`px-2 py-0.5 text-xs rounded border flex-shrink-0 ${priorityInfo.color}`}>
+                                  {priorityInfo.icon} {priorityInfo.label}
+                                </span>
+                              </div>
+                              {task.description && (
+                                <p className="text-xs text-gray-600 truncate mt-0.5">{task.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          {task.dueDate && (
+                            <div className="flex items-center gap-1 text-xs text-gray-500 ml-3 flex-shrink-0">
+                              <Clock className="h-3 w-3" />
+                              {new Date(task.dueDate).toLocaleDateString('de-DE', {
+                                day: '2-digit',
+                                month: '2-digit'
+                              })}
+                            </div>
+                          )}
+                          {permissions?.canEditTasks && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-2 flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setTaskModalMode('edit')
+                                setSelectedTask(task)
+                                setTaskModalOpen(true)
+                              }}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      )
+                    })}
                 </div>
               </div>
             </Card>

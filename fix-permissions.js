@@ -23,7 +23,7 @@ async function fixPermissions() {
       // Update Roadmap App Permissions
       await prisma.b24EmployeeApplication.updateMany({
         where: {
-          b24EmployeeId: ceo.id,
+          employeeId: ceo.id,
           applicationKey: 'roadmap'
         },
         data: {

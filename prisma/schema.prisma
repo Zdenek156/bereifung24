@@ -269,6 +269,7 @@ model Workshop {
   bookings             Booking[]
   reviews              Review[]
   commissions          Commission[]
+  commissionInvoices   CommissionInvoice[] @relation("WorkshopInvoices")
   employees            Employee[]
   workshopVacations    WorkshopVacation[]
   workshopServices     WorkshopService[]
@@ -3483,6 +3484,9 @@ model AccountingEntry {
 
   // Audit-Log
   auditLogs AccountingAuditLog[]
+  
+  // Invoice Relation (für Provisionsrechnungen)
+  commissionInvoice CommissionInvoice? @relation("InvoiceAccountingEntry")
 
   @@index([bookingDate])
   @@index([entryNumber])
@@ -4483,4 +4487,121 @@ enum RoadmapTaskStatus {
   IN_PROGRESS  // Aktuell in Bearbeitung
   COMPLETED    // Abgeschlossen
   BLOCKED      // Blockiert (mit Grund in blockedReason)
+}
+
+// ============================================================================
+// COMMISSION INVOICING SYSTEM
+// ============================================================================
+
+// Provisionsrechnungen für Werkstätten
+model CommissionInvoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique // B24-INV-2026-0001
+  
+  // Werkstatt
+  workshopId      String
+  workshop        Workshop @relation("WorkshopInvoices", fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  // Rechnungszeitraum (Vormonat)
+  periodStart     DateTime // 01.01.2026
+  periodEnd       DateTime // 31.01.2026
+  
+  // Positionen (JSON Array)
+  // [{
+  //   position: 1,
+  //   description: "Reifen mit Montage",
+  //   quantity: 12,
+  //   unitPrice: 25.00,
+  //   total: 300.00,
+  //   vatRate: 19
+  // }, ...]
+  lineItems       Json
+  
+  // Beträge
+  subtotal        Float    // Netto-Summe
+  vatAmount       Float    // MwSt-Betrag (19%)
+  totalAmount     Float    // Brutto-Summe
+  
+  // Status
+  status          String   @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  sentAt          DateTime? // Wann Email versendet wurde
+  paidAt          DateTime? // Wann bezahlt wurde
+  dueDate         DateTime? // Zahlungsziel (bei SEPA-Fehler: +14 Tage)
+  
+  // PDF
+  pdfUrl          String?  // Pfad zum generierten PDF
+  
+  // Referenzen
+  commissionIds   String[] // IDs der einbezogenen Commission-Einträge
+  sepaPaymentId   String?  // GoCardless Payment ID
+  sepaStatus      String?  // pending_submission, submitted, confirmed, paid_out, cancelled, failed
+  
+  // Buchhaltung
+  accountingEntryId String? @unique // Verknüpfung zu AccountingEntry (Buchungssatz)
+  accountingEntry   AccountingEntry? @relation("InvoiceAccountingEntry", fields: [accountingEntryId], references: [id])
+  
+  // Metadaten
+  createdAt       DateTime @default(now())
+  createdBy       String?  // B24Employee ID
+  updatedAt       DateTime @updatedAt
+  notes           String?  @db.Text // Interne Notizen
+  
+  @@index([workshopId])
+  @@index([status])
+  @@index([periodStart, periodEnd])
+  @@index([invoiceNumber])
+  @@map("commission_invoices")
+}
+
+// Einstellungen für Rechnungsgenerierung
+model InvoiceSettings {
+  id                  String   @id @default(cuid())
+  
+  // Rechnungsnummer
+  currentNumber       Int      @default(1) // Fortlaufende Nummer
+  prefix              String   @default("B24-INV") // Präfix für Rechnungsnummer
+  
+  // Bereifung24 GmbH Firmendaten
+  companyName         String   @default("Bereifung24 GmbH")
+  companyStreet       String?  // z.B. "Musterstraße 123"
+  companyZip          String?  // z.B. "10115"
+  companyCity         String?  // z.B. "Berlin"
+  companyCountry      String   @default("Deutschland")
+  
+  // Steuerdaten
+  taxId               String?  // USt-IdNr. (z.B. DE123456789)
+  taxNumber           String?  // Steuernummer
+  
+  // Handelsregister
+  registerCourt       String?  // z.B. "Amtsgericht Berlin"
+  registerNumber      String?  // z.B. "HRB 12345"
+  managingDirector    String?  // Geschäftsführer
+  
+  // Kontakt
+  email               String?  // buchhaltung@bereifung24.de
+  phone               String?
+  website             String   @default("www.bereifung24.de")
+  
+  // Banking
+  bankName            String?  // z.B. "Deutsche Bank"
+  iban                String?  // z.B. "DE89370400440532013000"
+  bic                 String?  // z.B. "COBADEFFXXX"
+  
+  // GoCardless
+  gocardlessCreditorId String? // Gläubiger-ID für SEPA
+  
+  // Logo
+  logoUrl             String?  // Pfad zum hochgeladenen Logo
+  
+  // Template (Optional: Custom HTML)
+  templateHtml        String?  @db.Text
+  
+  // Footer-Text
+  footerText          String?  @db.Text // Kleingedrucktes
+  
+  // Metadaten
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@map("invoice_settings")
 }

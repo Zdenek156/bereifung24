@@ -70,9 +70,17 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating task:', error)
-    return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta
+    })
+    return NextResponse.json({ 
+      error: 'Failed to update task',
+      details: error.message 
+    }, { status: 500 })
   }
 }
 

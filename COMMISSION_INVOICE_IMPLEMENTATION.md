@@ -182,17 +182,161 @@ if (!hasAccess) {
 
 ---
 
-## 🔜 Phase 6: Testing & Deployment
+## ⏳ Phase 6: Testing & Deployment (IN PROGRESS)
 
-- [ ] Unit Tests für Services
-- [ ] Integration Tests für Cron-Job
-- [ ] Manual Testing auf Staging
-- [ ] Production Deployment
-- [ ] Monitoring Setup
+### 6.1 Deployment Scripts ✅ COMPLETED
+- [x] `scripts/deploy-invoice-system.sh` - Vollautomatisches Deployment
+  - SSH-Verbindungsprüfung
+  - Git Pull Latest Code
+  - Datenbank-Migrationen ausführen
+  - Dependencies installieren (puppeteer + Chromium)
+  - Prisma Client generieren
+  - Next.js Build
+  - Invoice-Verzeichnisse erstellen
+  - PM2 Restart
+- [x] `scripts/test-invoice-system.sh` - Umfassende Test-Suite
+  - Database Structure Tests
+  - API Endpoint Tests
+  - PDF Generation Tests (puppeteer)
+  - File System Permission Tests
+  - Environment Variable Tests
+  - Service Integration Tests (SMTP, DB)
+- [x] `scripts/setup-cron-job.sh` - Interaktives Cron-Setup
+  - PM2 Method (empfohlen)
+  - System Crontab Method
+  - GitHub Actions Method
+  - Manual Instructions
+- [x] `scripts/quick-test.js` - Schnelle lokale Validierung
+  - File existence checks
+  - Puppeteer installation check
+  - Directory creation
+  - Environment variable validation
+  - Test PDF generation
+  - Database connection test
+
+### 6.2 Documentation ✅ COMPLETED
+- [x] `DEPLOYMENT_CHECKLIST.md` - Vollständiger Deployment-Guide
+  - Pre-Deployment Tests
+  - Deployment Checklist (8 Schritte)
+  - Post-Deployment Verification
+  - Monitoring Setup
+  - Rollback Plan
+  - Go-Live Checklist
+  - Troubleshooting Section
+- [x] `INVOICE_SYSTEM_QUICKSTART.md` - Schnellstart-Anleitung
+  - 5-Minuten Quick Start
+  - Detaillierte Schritt-für-Schritt Anleitung
+  - Testing Checklist
+  - Monthly Workflow Dokumentation
+  - Troubleshooting Guide
+
+### 6.3 Production Deployment ⏳ TODO
+- [ ] SSH to production server (root@167.235.24.110)
+- [ ] Execute `./scripts/deploy-invoice-system.sh`
+- [ ] Verify database migrations successful
+- [ ] Check puppeteer + Chromium installed
+- [ ] Verify invoice directories created
+- [ ] Confirm PM2 restart successful
+
+### 6.4 Configuration ⏳ TODO
+- [ ] Login to admin UI: https://bereifung24.de/admin/invoices/settings
+- [ ] Configure invoice settings (Firmendaten):
+  - [ ] Firmenname: Bereifung24 GmbH
+  - [ ] Adresse, PLZ, Ort
+  - [ ] USt-IdNr, Steuernummer
+  - [ ] Registergericht, Registernummer
+  - [ ] Geschäftsführung
+  - [ ] Email, Telefon, Website
+  - [ ] Bank: IBAN, BIC
+  - [ ] GoCardless Gläubiger-ID
+- [ ] Upload company logo (max 2MB, PNG/JPG/SVG)
+- [ ] Save and verify settings
+
+### 6.5 Cron Job Setup ⏳ TODO
+- [ ] Execute `./scripts/setup-cron-job.sh`
+- [ ] Choose Method: PM2 (recommended)
+- [ ] Verify CRON_SECRET in .env
+- [ ] Test manual trigger:
+  ```bash
+  curl -X POST https://bereifung24.de/api/cron/generate-commission-invoices \
+    -H "Authorization: Bearer <CRON_SECRET>"
+  ```
+- [ ] Verify cron scheduled: 1st of month at 09:00
+
+### 6.6 GoCardless Webhook ⏳ TODO
+- [ ] Login: https://manage.gocardless.com
+- [ ] Navigate: Settings → Webhooks
+- [ ] Add Endpoint:
+  - URL: https://bereifung24.de/api/webhooks/gocardless
+  - Secret: (from .env: GOCARDLESS_WEBHOOK_SECRET)
+  - Events: payments.confirmed, payments.failed, payments.cancelled
+- [ ] Test webhook delivery
+
+### 6.7 Testing ⏳ TODO
+- [ ] Run local quick test: `node scripts/quick-test.js`
+- [ ] Run production tests: `./scripts/test-invoice-system.sh`
+- [ ] Manual invoice generation test:
+  - [ ] Via Admin UI: "Monatliche Rechnungen generieren"
+  - [ ] Verify invoice created in database
+  - [ ] Check PDF generated in /public/invoices/
+  - [ ] Confirm accounting entry created (1400/8400/1776)
+  - [ ] Verify email sent to workshop
+  - [ ] Check commission status changed to BILLED
+- [ ] SEPA payment test (sandbox):
+  - [ ] Create test mandate in GoCardless
+  - [ ] Generate test invoice
+  - [ ] Verify payment initiated
+  - [ ] Test webhook: payments.confirmed
+  - [ ] Verify payment booking created (1200/1400)
+
+### 6.8 Monitoring & Alerts ⏳ TODO
+- [ ] Configure error logging:
+  - [ ] PM2 logs: `pm2 logs bereifung24`
+  - [ ] Cron logs: `pm2 logs invoice-cron`
+  - [ ] System logs: /var/log/invoice-cron.log
+- [ ] Setup health checks:
+  - [ ] Server: curl https://bereifung24.de/api/health
+  - [ ] Invoice API: curl https://bereifung24.de/api/admin/invoices/settings
+- [ ] Configure alerts:
+  - [ ] Failed cron runs
+  - [ ] Failed SEPA payments
+  - [ ] Failed email deliveries
+  - [ ] Overdue invoices
+
+### 6.9 First Production Run ⏳ TODO (February 1, 2026)
+- [ ] Monitor cron execution at 09:00
+- [ ] Check logs: `pm2 logs invoice-cron --lines 100`
+- [ ] Verify invoices generated for all workshops
+- [ ] Confirm PDFs created
+- [ ] Check emails delivered
+- [ ] Verify SEPA payments initiated
+- [ ] Review accounting entries
+- [ ] Handle any failed payments (bank transfer fallback)
+- [ ] Document any issues
+- [ ] Collect feedback from team
 
 ---
 
-## 📋 Wichtige Entscheidungen/Notizen
+## 📊 Progress: 90% Complete (Phase 6 in progress)
+
+**Timeline:**
+- Phase 1-5: January 22-23, 2026 ✅ COMPLETED
+- Phase 6: January 23, 2026 ⏳ IN PROGRESS (Scripts & Docs ✅, Deployment pending)
+
+**Git Commits:**
+1. `aac23da` - Phase 1.1: Database models
+2. `a2c904c` - Phase 1.2: CEO authorization helper
+3. `ae8fb6d` - Phase 2: Accounting services
+4. `7a768ee` - Phase 3: PDF generation
+5. `c7852b1` - Phase 4: Admin interface
+6. `7c3eabf` - Phase 5: Cron automation with SEPA
+7. `0b4887a` - Phase 6: Deployment scripts & documentation ← **CURRENT**
+
+**Next Action:** Execute deployment on production server
+
+---
+
+## 🔜 Phase 6: Testing & Deployment
 
 ### Provisionsabrechnung
 - **Zeitraum:** Immer Vormonat (Rechnung am 1. des Monats für letzten Monat)

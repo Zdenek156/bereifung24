@@ -110,10 +110,18 @@ export async function GET(request: NextRequest) {
     // Get total registered workshops count (all workshops, not just active)
     const totalWorkshops = await prisma.workshop.count()
 
-    // Get total commissions (all approved commissions, not just current month)
+    // Get total commissions for current month only
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
     const commissions = await prisma.commission.findMany({
       where: {
         status: 'APPROVED',
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
       },
       select: {
         commissionAmount: true,
@@ -121,6 +129,16 @@ export async function GET(request: NextRequest) {
     })
 
     const totalCommissions = commissions.reduce((sum, c) => sum + c.commissionAmount, 0)
+
+    // Get count of not-activated workshops (not approved by us)
+    const notActivatedWorkshops = await prisma.workshop.count({
+      where: {
+        OR: [
+          { activatedAt: null },
+          { activatedBy: null },
+        ],
+      },
+    })
 
     return NextResponse.json({
       leaveBalance: leaveBalance
@@ -137,6 +155,7 @@ export async function GET(request: NextRequest) {
       totalCustomers,
       totalWorkshops,
       totalCommissions,
+      notActivatedWorkshops,
     })
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error)

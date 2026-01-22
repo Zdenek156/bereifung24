@@ -21,6 +21,7 @@ interface DashboardStats {
   totalCustomers: number
   totalWorkshops: number
   totalCommissions: number
+  notActivatedWorkshops: number
 }
 
 export default function MitarbeiterDashboard() {
@@ -33,7 +34,8 @@ export default function MitarbeiterDashboard() {
     unreadEmails: 0,
     totalCustomers: 0,
     totalWorkshops: 0,
-    totalCommissions: 0
+    totalCommissions: 0,
+    notActivatedWorkshops: 0
   })
   const [loading, setLoading] = useState(true)
   const [showNewsfeed, setShowNewsfeed] = useState(true)
@@ -178,18 +180,18 @@ export default function MitarbeiterDashboard() {
           </div>
         </Link>
 
-        {/* Neue Dokumente */}
-        <Link href="/mitarbeiter/dokumente" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
+        {/* Nicht freigeschaltete Werkstätten */}
+        <Link href="/admin/workshops?filter=not-activated" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">📄</span>
+                <span className="text-xl">⏳</span>
               </div>
             </div>
             <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Neue Dokumente</p>
-              <p className="text-xl font-bold text-gray-900">{stats.newDocuments}</p>
-              <p className="text-xs text-gray-500 truncate">Ungelesen</p>
+              <p className="text-xs font-medium text-gray-600 truncate">Nicht freigeschaltet</p>
+              <p className="text-xl font-bold text-gray-900">{stats.notActivatedWorkshops}</p>
+              <p className="text-xs text-gray-500 truncate">Werkstätten</p>
             </div>
           </div>
         </Link>
@@ -253,7 +255,7 @@ export default function MitarbeiterDashboard() {
             <div className="ml-3 flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-600 truncate">Provision</p>
               <p className="text-xl font-bold text-gray-900 truncate">{stats.totalCommissions.toFixed(2)} €</p>
-              <p className="text-xs text-gray-500 truncate">Gesamt</p>
+              <p className="text-xs text-gray-500 truncate">Aktueller Monat</p>
             </div>
           </div>
         </Link>

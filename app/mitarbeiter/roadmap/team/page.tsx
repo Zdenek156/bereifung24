@@ -366,6 +366,16 @@ export default function TeamRoadmapPage() {
                         return null
                       }
                       
+                      if (!task.status || !statusConfig[task.status]) {
+                        console.warn('Task with invalid status:', task.id, task.status)
+                        return null
+                      }
+                      
+                      if (!task.priority || !priorityConfig[task.priority]) {
+                        console.warn('Task with invalid priority:', task.id, task.priority)
+                        return null
+                      }
+                      
                       const StatusIcon = statusConfig[task.status].icon
                       const priorityInfo = priorityConfig[task.priority]
                       

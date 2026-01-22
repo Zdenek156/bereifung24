@@ -250,14 +250,12 @@ export default function MyRoadmapPage() {
               Team Übersicht
             </Button>
           </Link>
-          {permissions?.isCEO && (
-            <Link href="/mitarbeiter/roadmap/stats">
-              <Button variant="outline">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Statistiken
-              </Button>
-            </Link>
-          )}
+          <Link href="/mitarbeiter/roadmap/stats">
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Statistiken
+            </Button>
+          </Link>
           {permissions?.canCreateTasks && (
             <Button
               onClick={() => {

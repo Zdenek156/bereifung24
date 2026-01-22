@@ -27,6 +27,13 @@ interface Task {
   category?: string | null
 }
 
+interface Employee {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
 interface TaskEditModalProps {
   isOpen: boolean
   onClose: () => void
@@ -38,6 +45,7 @@ interface TaskEditModalProps {
 export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }: TaskEditModalProps) {
   const [loading, setLoading] = useState(false)
   const [phases, setPhases] = useState<Phase[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,12 +53,14 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
     phaseId: '',
     month: '',
     dueDate: '',
-    category: ''
+    category: '',
+    assignedToId: ''
   })
 
   useEffect(() => {
     if (isOpen) {
       fetchPhases()
+      fetchEmployees()
       if (mode === 'edit' && task) {
         setFormData({
           title: task.title,
@@ -59,7 +69,8 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
           phaseId: task.phaseId,
           month: task.month || '',
           dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
-          category: task.category || ''
+          category: task.category || '',
+          assignedToId: (task as any).assignedToId || ''
         })
       } else {
         // Reset form for create mode
@@ -70,7 +81,8 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
           phaseId: '',
           month: '',
           dueDate: '',
-          category: ''
+          category: '',
+          assignedToId: ''
         })
       }
     }
@@ -88,6 +100,18 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
       }
     } catch (error) {
       console.error('Error fetching phases:', error)
+    }
+  }
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/mitarbeiter/roadmap/employees')
+      if (response.ok) {
+        const result = await response.json()
+        setEmployees(result.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error)
     }
   }
 
@@ -186,6 +210,25 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
               className="w-full border rounded px-3 py-2"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Zugewiesen an <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.assignedToId}
+              onChange={(e) => setFormData({ ...formData, assignedToId: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+              <option value="">Mitarbeiter auswählen</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.firstName} {emp.lastName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

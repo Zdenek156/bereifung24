@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
-import { Calendar, Clock, AlertCircle, CheckCircle2, Circle, Loader2, Users, Edit2, HandHeart, TrendingUp, Award } from 'lucide-react'
+import { Clock, AlertCircle, CheckCircle2, Circle, Loader2, Users, Edit2, Award, Filter, ArrowUpDown } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import BackButton from '@/components/BackButton'
@@ -13,17 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-
-// Dynamic import with NO SSR
-const TimelineView = dynamic(() => import('./TimelineView'), { 
-  ssr: false,
-  loading: () => (
-    <Card className="p-12 text-center">
-      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-      <p className="text-gray-600">Timeline wird geladen...</p>
-    </Card>
-  )
-})
 
 interface RoadmapPhase {
   id: string
@@ -83,17 +71,17 @@ export default function TeamRoadmapPage() {
   const [tasks, setTasks] = useState<RoadmapTask[]>([])
   const [permissions, setPermissions] = useState<Permissions | null>(null)
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'stats' | 'timeline'>('stats')
-  const [mounted, setMounted] = useState(false)
+  
+  // Filter states
+  const [filterPriority, setFilterPriority] = useState<string>('all')
+  const [filterEmployee, setFilterEmployee] = useState<string>('all')
+  const [filterPhase, setFilterPhase] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'dueDate' | 'priority'>('dueDate')
   
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create')
   const [selectedTask, setSelectedTask] = useState<any>(null)
-
-  // Prevent hydration errors - only render timeline on client
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     fetchTasks()
@@ -170,7 +158,16 @@ export default function TeamRoadmapPage() {
   const getEmployeeStats = () => {
     const employeeMap = new Map()
     
-    tasks.forEach(task => {
+    // Apply filters
+    const filteredTasks = tasks.filter(task => {
+      if (filterEmployee !== 'all' && task.assignedToId !== filterEmployee) return false
+      if (filterPriority !== 'all' && task.priority !== filterPriority) return false
+      if (filterPhase !== 'all' && task.phase?.id !== filterPhase) return false
+      if (filterStatus !== 'all' && task.status !== filterStatus) return false
+      return true
+    })
+    
+    filteredTasks.forEach(task => {
       if (!task.assignedTo || !task.assignedToId) return
       
       if (!employeeMap.has(task.assignedToId)) {
@@ -203,39 +200,48 @@ export default function TeamRoadmapPage() {
       completionRate: stat.total > 0 ? (stat.completed / stat.total) * 100 : 0
     })).sort((a, b) => b.completionRate - a.completionRate)
   }
-
-  const groupTasksByPhase = () => {
-    console.log('groupTasksByPhase called with tasks:', tasks.length)
+  
+  const getFilteredAndSortedTasks = (employeeId: string) => {
+    let filtered = tasks.filter(t => t.assignedToId === employeeId)
     
-    const grouped: Record<string, { phase: RoadmapPhase, tasks: RoadmapTask[] }> = {}
+    // Apply filters
+    if (filterPriority !== 'all') {
+      filtered = filtered.filter(t => t.priority === filterPriority)
+    }
+    if (filterPhase !== 'all') {
+      filtered = filtered.filter(t => t.phase?.id === filterPhase)
+    }
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(t => t.status === filterStatus)
+    }
     
-    tasks.forEach((task, index) => {
-      if (!task) {
-        console.warn(`Task at index ${index} is null/undefined`)
-        return
-      }
-      
-      if (!task.phase || !task.phase.id || !task.phase.color || !task.phase.name) {
-        console.warn(`Task ${task.id || index} has no or incomplete phase data:`, task.phase)
-        return
-      }
-      
-      if (!grouped[task.phase.id]) {
-        grouped[task.phase.id] = {
-          phase: task.phase,
-          tasks: []
-        }
-      }
-      grouped[task.phase.id].tasks.push(task)
-    })
+    // Apply sorting
+    if (sortBy === 'dueDate') {
+      filtered.sort((a, b) => {
+        if (!a.dueDate) return 1
+        if (!b.dueDate) return -1
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      })
+    } else if (sortBy === 'priority') {
+      const priorityOrder = { P0: 0, P1: 1, P2: 2, P3: 3 }
+      filtered.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+    }
     
-    const result = Object.values(grouped).sort((a, b) => 
-      a.phase.name.localeCompare(b.phase.name)
-    )
-    
-    console.log('Grouped phases:', result.length, result)
-    return result
+    return filtered
   }
+  
+  // Get unique employees, phases for dropdowns
+  const uniqueEmployees = Array.from(new Set(
+    tasks
+      .filter(t => t.assignedTo)
+      .map(t => JSON.stringify({ id: t.assignedToId, name: `${t.assignedTo!.firstName} ${t.assignedTo!.lastName}` }))
+  )).map(s => JSON.parse(s))
+  
+  const uniquePhases = Array.from(new Set(
+    tasks
+      .filter(t => t.phase)
+      .map(t => JSON.stringify({ id: t.phase!.id, name: t.phase!.name, color: t.phase!.color }))
+  )).map(s => JSON.parse(s))
 
   if (loading) {
     return (
@@ -247,9 +253,7 @@ export default function TeamRoadmapPage() {
     )
   }
 
-  // Only calculate these when needed
-  const employeeStats = viewMode === 'stats' ? getEmployeeStats() : []
-  const phaseGroups = (viewMode === 'timeline' && mounted) ? groupTasksByPhase() : []
+  const employeeStats = getEmployeeStats()
 
   return (
     <div className="container mx-auto p-6">
@@ -264,28 +268,179 @@ export default function TeamRoadmapPage() {
             Alle Tasks des Teams im Überblick - {tasks.length} Aufgaben
           </p>
         </div>
-        
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'stats' ? 'default' : 'outline'}
-            onClick={() => setViewMode('stats')}
-          >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Mitarbeiter Statistik
-          </Button>
-          <Button
-            variant={viewMode === 'timeline' ? 'default' : 'outline'}
-            onClick={() => setViewMode('timeline')}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Phasen Timeline
-          </Button>
-        </div>
       </div>
 
+      {/* Filter und Sortierung */}
+      <Card className="p-4 mb-6">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-600" />
+            <span className="font-semibold text-sm">Filter:</span>
+          </div>
+          
+          {/* Mitarbeiter Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                {filterEmployee === 'all' 
+                  ? 'Alle Mitarbeiter' 
+                  : uniqueEmployees.find(e => e.id === filterEmployee)?.name || 'Mitarbeiter'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setFilterEmployee('all')}>
+                Alle Mitarbeiter
+              </DropdownMenuItem>
+              {uniqueEmployees.map(emp => (
+                <DropdownMenuItem key={emp.id} onClick={() => setFilterEmployee(emp.id)}>
+                  {emp.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Priorität Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                {filterPriority === 'all' ? '🔘' : priorityConfig[filterPriority as keyof typeof priorityConfig]?.icon}
+                <span className="ml-2">
+                  {filterPriority === 'all' ? 'Alle Prioritäten' : filterPriority}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setFilterPriority('all')}>
+                Alle Prioritäten
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterPriority('P0')}>
+                🔴 P0 - Critical
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterPriority('P1')}>
+                🟡 P1 - High
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterPriority('P2')}>
+                🟢 P2 - Medium
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterPriority('P3')}>
+                🔵 P3 - Low
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Phase Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <div 
+                  className="w-3 h-3 rounded-full mr-2" 
+                  style={{ 
+                    backgroundColor: filterPhase === 'all' 
+                      ? '#9CA3AF' 
+                      : uniquePhases.find(p => p.id === filterPhase)?.color 
+                  }}
+                />
+                {filterPhase === 'all' 
+                  ? 'Alle Phasen' 
+                  : uniquePhases.find(p => p.id === filterPhase)?.name || 'Phase'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setFilterPhase('all')}>
+                Alle Phasen
+              </DropdownMenuItem>
+              {uniquePhases.map(phase => (
+                <DropdownMenuItem key={phase.id} onClick={() => setFilterPhase(phase.id)}>
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: phase.color }}
+                  />
+                  {phase.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Status Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                {filterStatus === 'all' 
+                  ? <Circle className="h-4 w-4 mr-2" />
+                  : React.createElement(statusConfig[filterStatus as keyof typeof statusConfig]?.icon || Circle, { className: 'h-4 w-4 mr-2' })}
+                {filterStatus === 'all' 
+                  ? 'Alle Status' 
+                  : statusConfig[filterStatus as keyof typeof statusConfig]?.label || 'Status'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+                Alle Status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('NOT_STARTED')}>
+                <Circle className="h-4 w-4 mr-2 text-gray-400" />
+                Nicht gestartet
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('IN_PROGRESS')}>
+                <Loader2 className="h-4 w-4 mr-2 text-blue-500" />
+                In Arbeit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('COMPLETED')}>
+                <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                Erledigt
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('BLOCKED')}>
+                <AlertCircle className="h-4 w-4 mr-2 text-red-500" />
+                Blockiert
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="h-6 w-px bg-gray-300 mx-2" />
+
+          {/* Sortierung */}
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-gray-600" />
+            <span className="font-semibold text-sm">Sortiert nach:</span>
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                {sortBy === 'dueDate' ? '📅 Fälligkeitsdatum' : '⚡ Priorität'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setSortBy('dueDate')}>
+                📅 Fälligkeitsdatum
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('priority')}>
+                ⚡ Priorität
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Reset Filter Button */}
+          {(filterEmployee !== 'all' || filterPriority !== 'all' || filterPhase !== 'all' || filterStatus !== 'all') && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setFilterEmployee('all')
+                setFilterPriority('all')
+                setFilterPhase('all')
+                setFilterStatus('all')
+              }}
+            >
+              Filter zurücksetzen
+            </Button>
+          )}
+        </div>
+      </Card>
+
       {/* Employee Statistics View */}
-      {viewMode === 'stats' && (
-        <div className="space-y-4">
+      <div className="space-y-4">
           {employeeStats.map(stat => (
             <Card key={stat.employee.id} className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -358,9 +513,7 @@ export default function TeamRoadmapPage() {
               <div className="mt-4 border-t pt-4">
                 <h4 className="font-semibold mb-3 text-sm text-gray-700">Aufgaben:</h4>
                 <div className="space-y-2">
-                  {tasks
-                    .filter(t => t.assignedToId === stat.employee.id)
-                    .map(task => {
+                  {getFilteredAndSortedTasks(stat.employee.id).map(task => {
                       if (!task.phase || !task.phase.color) {
                         console.warn('Task without valid phase:', task.id, task.title)
                         return null
@@ -435,21 +588,7 @@ export default function TeamRoadmapPage() {
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Phase Timeline View - Dynamic Component (NO SSR) */}
-      {viewMode === 'timeline' && (
-        <TimelineView
-          phaseGroups={phaseGroups}
-          canEdit={permissions?.canEditTasks || false}
-          onEditTask={(task) => {
-            setTaskModalMode('edit')
-            setSelectedTask(task)
-            setTaskModalOpen(true)
-          }}
-          onOfferHelp={(taskId) => offerHelp(taskId)}
-        />
-      )}
+      </div>
 
       {tasks.length === 0 && (
         <Card className="p-12 text-center">

@@ -103,7 +103,41 @@ if (!hasAccess) {
 
 ---
 
-## 🔜 Phase 5: Automatisierung (Cron)
+## ✅ Phase 5: Automatisierung (COMPLETED)
+
+### 5.1 Cron-Job ✅
+- [x] `/api/cron/generate-commission-invoices` - Haupt-Cron-Endpoint
+- [x] Automatische Erkennung vom Vormonat (periodStart/periodEnd)
+- [x] Provisionen nach Service-Typ gruppieren (Reifen, Räder, Einlagerung, etc.)
+- [x] Rechnungsnummer-Generator Integration
+- [x] PDF-Generierung für jede Rechnung
+- [x] Buchhaltungseinträge automatisch erstellen (SKR04)
+- [x] Email-Versand mit PDF-Anhang
+- [x] SEPA-Zahlung initiieren (GoCardless)
+- [x] Fallback auf Banküberweisung bei fehlendem SEPA-Mandat
+- [x] Provisionen von PENDING → BILLED markieren
+- [x] Error-Handling pro Werkstatt (fehler-tolerant)
+
+### 5.2 Webhook & Manual Trigger ✅
+- [x] `/api/admin/invoices/generate-monthly` - Manueller Test-Trigger für Admins
+- [x] SEPA Webhook bereits vorhanden (`/api/webhooks/gocardless`)
+- [x] Payment-Status-Update Integration (confirmed, failed, cancelled)
+- [x] Automatische Zahlungsbuchung bei SEPA-Erfolg (1200 ↔ 1400)
+- [x] Fehler-Email bei SEPA-Fehler (Fallback Überweisung)
+
+### 5.3 Email-Template & Dokumentation ✅
+- [x] `migration_commission_invoice_email_template.sql` - DB-Template erstellt
+- [x] Handlebars-Template für dynamische Werte
+- [x] SEPA vs. Überweisung Conditional-Display
+- [x] Professionelles HTML-Design
+- [x] Cron-Setup-Dokumentation bereits vorhanden (CRON_SETUP.md)
+
+**Cron-Zeitplan:** 1. des Monats, 09:00 Uhr
+**Setup-Optionen:** PM2, System Crontab, GitHub Actions, Vercel Cron
+
+---
+
+## 🔜 Phase 6: Testing & Deployment
 - [ ] Tabelle mit Filtern
 - [ ] Suche nach Rechnungsnummer/Werkstatt
 - [ ] Status-Filter

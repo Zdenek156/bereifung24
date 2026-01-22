@@ -7,26 +7,37 @@ async function runMigration() {
   try {
     console.log('📋 Running priority enum migration...\n')
     
-    const sql = fs.readFileSync('migrate-priorities.sql', 'utf8')
+    const statements = [
+      'ALTER TYPE "RoadmapTaskPriority" RENAME TO "RoadmapTaskPriority_old"',
+      
+      "CREATE TYPE \"RoadmapTaskPriority\" AS ENUM ('P0', 'P1', 'P2', 'P3')",
+      
+      `ALTER TABLE "RoadmapTask" 
+       ALTER COLUMN priority TYPE "RoadmapTaskPriority" 
+       USING (
+         CASE priority::text 
+           WHEN 'P0_CRITICAL' THEN 'P0'::text
+           WHEN 'P1_HIGH' THEN 'P1'::text
+           WHEN 'P2_MEDIUM' THEN 'P2'::text
+           WHEN 'P3_LOW' THEN 'P3'::text
+           ELSE 'P2'::text
+         END
+       )::"RoadmapTaskPriority"`,
+      
+      'DROP TYPE "RoadmapTaskPriority_old"'
+    ]
     
-    // Split by semicolon and filter empty statements
-    const statements = sql
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s && !s.startsWith('--') && s !== 'BEGIN' && s !== 'COMMIT')
-    
-    console.log(`Found ${statements.length} SQL statements\n`)
+    console.log(`Executing ${statements.length} SQL statements\n`)
     
     for (let i = 0; i < statements.length; i++) {
       const statement = statements[i]
-      console.log(`Executing statement ${i + 1}/${statements.length}...`)
-      console.log(statement.substring(0, 80) + '...\n')
+      console.log(`${i + 1}. ${statement.substring(0, 60)}...`)
       
       try {
         await prisma.$executeRawUnsafe(statement)
-        console.log('✅ Success\n')
+        console.log('   ✅ Success\n')
       } catch (error) {
-        console.error(`❌ Error: ${error.message}\n`)
+        console.error(`   ❌ Error: ${error.message}\n`)
         throw error
       }
     }

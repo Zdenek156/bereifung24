@@ -83,26 +83,27 @@ if (!hasAccess) {
 
 ---
 
-## 🔜 Phase 4: Admin-Interface
+## ✅ Phase 4: Admin-Interface (COMPLETED)
 
-### 3.1 PDF-Engine Setup
-- [ ] puppeteer installieren
-- [ ] PDF-Template HTML/CSS erstellen
-- [ ] Service: `invoicePdfService.ts`
-- [ ] Test-PDF generieren können
+### 4.1 Frontend Pages ✅
+- [x] `/admin/invoices/page.tsx` - Rechnungsübersicht mit Filtern (Jahr, Monat, Status)
+- [x] `/admin/invoices/[id]/page.tsx` - Detailansicht mit PDF-Vorschau
+- [x] `/admin/invoices/settings/page.tsx` - Firmendaten & Logo-Upload
+- [x] Statistik-Cards (Gesamt, Gesamtumsatz, Bezahlt, Ausstehend)
+- [x] Status-Badges (Entwurf, Versendet, Bezahlt, Überfällig, Storniert)
+- [x] Responsive Design mit Tailwind CSS
 
-### 3.2 Template-Design
-- [ ] Logo-Upload-Funktion
-- [ ] Pflichtangaben nach §14 UStG
-- [ ] Responsive Layout
-- [ ] Print-optimiert
+### 4.2 Backend APIs ✅
+- [x] `/api/admin/invoices` - GET Liste mit Filtern (Jahr, Monat, Status, Workshop)
+- [x] `/api/admin/invoices/[id]` - GET einzelne Rechnung mit Details
+- [x] `/api/admin/invoices/settings` - GET/PUT Einstellungen
+- [x] `/api/admin/invoices/settings/upload-logo` - POST/DELETE Logo
+- [x] `/api/admin/invoices/[id]/generate-pdf` - POST PDF generieren
+- [x] CEO-Berechtigungen auf allen Endpoints
 
 ---
 
-## 🔜 Phase 4: Admin-Interface
-
-### 4.1 Übersichtsseite
-- [ ] Route: `/admin/invoices/page.tsx`
+## 🔜 Phase 5: Automatisierung (Cron)
 - [ ] Tabelle mit Filtern
 - [ ] Suche nach Rechnungsnummer/Werkstatt
 - [ ] Status-Filter

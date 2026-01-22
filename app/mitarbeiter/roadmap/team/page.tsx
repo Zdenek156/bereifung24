@@ -365,6 +365,7 @@ export default function TeamRoadmapPage() {
                 <div className="space-y-2">
                   {tasks
                     .filter(t => t.assignedToId === stat.employee.id)
+                    .filter(t => t.phase && t.phase.color) // CRITICAL: Filter out tasks without valid phase
                     .map(task => {
                       const StatusIcon = statusConfig[task.status].icon
                       const priorityInfo = priorityConfig[task.priority]

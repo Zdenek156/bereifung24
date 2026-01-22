@@ -110,18 +110,10 @@ export async function GET(request: NextRequest) {
     // Get total registered workshops count (all workshops, not just active)
     const totalWorkshops = await prisma.workshop.count()
 
-    // Get total commissions for current month only
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
+    // Get pending (ausstehende) commissions - same as in commissions overview
     const commissions = await prisma.commission.findMany({
       where: {
-        status: 'APPROVED',
-        createdAt: {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        },
+        status: 'PENDING',
       },
       select: {
         commissionAmount: true,
@@ -130,13 +122,10 @@ export async function GET(request: NextRequest) {
 
     const totalCommissions = commissions.reduce((sum, c) => sum + c.commissionAmount, 0)
 
-    // Get count of not-activated workshops (not approved by us)
+    // Get count of not-verified workshops (nicht freigeschaltete Werkstätten)
     const notActivatedWorkshops = await prisma.workshop.count({
       where: {
-        OR: [
-          { activatedAt: null },
-          { activatedBy: null },
-        ],
+        isVerified: false,
       },
     })
 

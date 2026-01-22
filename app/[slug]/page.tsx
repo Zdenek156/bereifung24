@@ -15,7 +15,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     include: {
       workshop: {
         include: {
-          user: true
+          user: true,
+          reviews: {
+            orderBy: { createdAt: 'desc' },
+            take: 6,
+            include: {
+              booking: {
+                include: {
+                  customer: {
+                    include: {
+                      user: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -59,7 +74,24 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     include: {
       workshop: {
         include: {
-          user: true
+          user: true,
+          reviews: {
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 6,
+            include: {
+              booking: {
+                include: {
+                  customer: {
+                    include: {
+                      user: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -202,6 +234,61 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             </div>
           </div>
         </section>
+
+        {/* Reviews Section */}
+        {landingPage.showReviews && landingPage.workshop.reviews && landingPage.workshop.reviews.length > 0 && (
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+                Was unsere Kunden sagen
+              </h2>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {landingPage.workshop.reviews.map((review) => (
+                  <div 
+                    key={review.id} 
+                    className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    {/* Star Rating */}
+                    <div className="flex items-center mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <span 
+                          key={i} 
+                          className={`text-2xl ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    
+                    {/* Review Text */}
+                    <p className="text-gray-700 mb-4 line-clamp-4">
+                      "{review.comment}"
+                    </p>
+                    
+                    {/* Customer Info */}
+                    <div className="flex items-center text-sm text-gray-500">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                        {review.booking?.customer?.user?.firstName?.charAt(0) || 'K'}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {review.booking?.customer?.user?.firstName || 'Kunde'} {review.booking?.customer?.user?.lastName?.charAt(0) || ''}.
+                        </div>
+                        <div className="text-xs">
+                          {new Date(review.createdAt).toLocaleDateString('de-DE', {
+                            year: 'numeric',
+                            month: 'long'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Contact Section */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">

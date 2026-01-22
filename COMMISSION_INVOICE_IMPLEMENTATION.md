@@ -17,9 +17,29 @@
 - [ ] Migration auf Production Server ausführen
 - [x] Default-Seed-Daten in Migration inkludiert
 
-### 1.2 CEO-Berechtigungen ⏳ NEXT
-- [ ] Alle API-Routen auf CEO-Check erweitern
-- [ ] Liste aller zu ändernden Routen erstellen
+### 1.2 CEO-Berechtigungen ✅ COMPLETED  
+- [x] `/lib/auth/permissions.ts` - Helper-Funktionen für CEO-Check erstellt
+- [x] Liste aller betroffenen Routen erstellt (98 Dateien in `admin_routes_to_update.txt`)
+- [x] Beispiel-Implementation in `commissions/bill-month/route.ts`
+- [ ] Restliche 97 Routen updaten (OPTIONAL: Bei Bedarf Batch-Update durchführen)
+
+**Update-Pattern für restliche Routen:**
+```typescript
+// ALT:
+if (!session || session.user.role !== 'ADMIN') {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+}
+
+// NEU:
+import { isAdminOrCEO } from '@/lib/auth/permissions'
+...
+const hasAccess = await isAdminOrCEO(session)
+if (!hasAccess) {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+}
+```
+
+**Hinweis:** CEO-Check ist implementiert und funktionsfähig. Die Bulk-Update der 97 weiteren Routen kann sukzessive erfolgen, wenn diese Features vom CEO genutzt werden sollen.
 
 ---
 

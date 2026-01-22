@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, priority, phaseId, month, dueDate, category } = body
+    const { title, description, priority, phaseId, month, dueDate, category, assignedToId } = body
+
+    // Use provided assignedToId or default to current user
+    const targetAssignedToId = assignedToId || currentEmployee.id
 
     const task = await prisma.roadmapTask.create({
       data: {
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
         month,
         dueDate: dueDate ? new Date(dueDate) : null,
         category,
-        assignedToId: currentEmployee.id, // Assign to self
+        assignedToId: targetAssignedToId,
         createdById: currentEmployee.id,
         status: 'NOT_STARTED'
       }

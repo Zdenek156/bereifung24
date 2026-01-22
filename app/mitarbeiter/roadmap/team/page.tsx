@@ -215,13 +215,8 @@ export default function TeamRoadmapPage() {
         return
       }
       
-      if (!task.phase) {
-        console.warn(`Task ${task.id || index} has no phase`)
-        return
-      }
-      
-      if (!task.phase.id || !task.phase.color || !task.phase.name) {
-        console.warn(`Task ${task.id || index} has incomplete phase data:`, task.phase)
+      if (!task.phase || !task.phase.id || !task.phase.color || !task.phase.name) {
+        console.warn(`Task ${task.id || index} has no or incomplete phase data:`, task.phase)
         return
       }
       

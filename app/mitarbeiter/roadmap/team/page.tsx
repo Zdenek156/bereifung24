@@ -588,7 +588,6 @@ export default function TeamRoadmapPage() {
             </Card>
           ))}
         </div>
-      </div>
 
       {tasks.length === 0 && (
         <Card className="p-12 text-center">

@@ -65,7 +65,25 @@ if (!hasAccess) {
 
 ---
 
-## 🔜 Phase 3: PDF-Generierung
+## ✅ Phase 3: PDF-Generierung (COMPLETED)
+
+### 3.1 PDF Service ✅
+- [x] `npm install puppeteer` - PDF-Engine installiert
+- [x] `lib/invoicing/invoicePdfService.ts` - PDF-Generierungs-Service erstellt
+- [x] HTML-Template mit professionellem Design (Firmenlogo, Tabellen, Footer)
+- [x] `generateInvoicePdf()` - Generiert PDF aus Invoice-Daten
+- [x] `deleteInvoicePdf()` - PDF-Datei löschen
+- [x] Speicherung in `/public/invoices/{year}/{month}/`
+
+### 3.2 Logo & Settings APIs ✅
+- [x] `/api/admin/invoices/settings` - GET/PUT für Firmendaten
+- [x] `/api/admin/invoices/settings/upload-logo` - POST/DELETE für Logo-Upload
+- [x] `/api/admin/invoices/[id]/generate-pdf` - PDF-Test-Endpoint
+- [x] Validierung: Max 2MB, PNG/JPG/SVG
+
+---
+
+## 🔜 Phase 4: Admin-Interface
 
 ### 3.1 PDF-Engine Setup
 - [ ] puppeteer installieren

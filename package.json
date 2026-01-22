@@ -43,6 +43,7 @@
     "nodemailer": "^7.0.12",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.17.2",
+    "puppeteer": "^24.36.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",

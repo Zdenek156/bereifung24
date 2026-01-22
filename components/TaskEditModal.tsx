@@ -8,6 +8,8 @@ interface Phase {
   id: string
   name: string
   order: number
+  startMonth: string
+  endMonth: string
 }
 
 interface Task {
@@ -89,6 +91,35 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
     }
   }
 
+  // Automatische Berechnung von Phase und Monat basierend auf Fälligkeitsdatum
+  const handleDueDateChange = (newDueDate: string) => {
+    if (!newDueDate) {
+      setFormData({ ...formData, dueDate: '', month: '', phaseId: formData.phaseId })
+      return
+    }
+
+    // Extrahiere Monat im Format YYYY-MM
+    const month = newDueDate.substring(0, 7)
+
+    // Finde passende Phase basierend auf dem Monat
+    let matchingPhase = phases.find(phase => {
+      if (!phase.startMonth || !phase.endMonth) return false
+      return month >= phase.startMonth && month <= phase.endMonth
+    })
+
+    // Falls keine Phase gefunden, nutze die erste Phase
+    if (!matchingPhase && phases.length > 0) {
+      matchingPhase = phases[0]
+    }
+
+    setFormData({
+      ...formData,
+      dueDate: newDueDate,
+      month: month,
+      phaseId: matchingPhase ? matchingPhase.id : formData.phaseId
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -127,12 +158,6 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
   }
 
   if (!isOpen) return null
-
-  // Generate month options (2026-01 to 2026-12)
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const month = String(i + 1).padStart(2, '0')
-    return `2026-${month}`
-  })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -194,54 +219,38 @@ export default function TaskEditModal({ isOpen, onClose, onSuccess, task, mode }
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Phase
-              </label>
-              <select
-                value={formData.phaseId}
-                onChange={(e) => setFormData({ ...formData, phaseId: e.target.value })}
-                className="w-full border rounded px-3 py-2"
-                required
-              >
-                {phases.map((phase) => (
-                  <option key={phase.id} value={phase.id}>
-                    {phase.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Monat
-              </label>
-              <select
-                value={formData.month}
-                onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Kein Monat</option>
-                {months.map((month) => (
-                  <option key={month} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Fälligkeitsdatum
+                Fälligkeitsdatum <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                onChange={(e) => handleDueDateChange(e.target.value)}
                 className="w-full border rounded px-3 py-2"
+                required
               />
             </div>
           </div>
+
+          {/* Automatisch berechnete Felder (readonly) */}
+          {formData.dueDate && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-sm font-medium text-blue-900 mb-2">
+                ℹ️ Automatisch berechnet:
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Monat:</span>
+                  <span className="ml-2 font-medium">{formData.month}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Phase:</span>
+                  <span className="ml-2 font-medium">
+                    {phases.find(p => p.id === formData.phaseId)?.name || 'Keine Phase'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2">

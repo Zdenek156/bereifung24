@@ -43,13 +43,25 @@ if (!hasAccess) {
 
 ---
 
-## 🔜 Phase 2: Buchhaltungsintegration
+## ✅ Phase 2: Buchhaltungsintegration (COMPLETED)
 
-### 2.1 Automatische Buchungssätze
-- [ ] Service: `invoiceAccountingService.ts` erstellen
-- [ ] Buchung bei Rechnungsstellung (SOLL 1400 / HABEN 8400 + 1776)
-- [ ] Buchung bei SEPA-Einzug (SOLL 1200 / HABEN 1400)
-- [ ] Buchung bei manueller Zahlung (SOLL 1200 / HABEN 1400)
+### 2.1 Automatische Buchungssätze ✅
+- [x] Service: `lib/invoicing/invoiceAccountingService.ts` erstellt
+- [x] `createInvoiceBooking()` - Buchung bei Rechnungsstellung (SOLL 1400 / HABEN 8400 + 1776)
+- [x] `createPaymentBooking()` - Buchung bei SEPA-Einzug (SOLL 1200 / HABEN 1400)
+- [x] `stornoInvoiceBooking()` - Storno-Buchung für Rechnungskorrektur
+- [x] `getInvoiceAccountingEntries()` - Alle Buchungen einer Rechnung abrufen
+
+### 2.2 Invoice Management Service ✅
+- [x] Service: `lib/invoicing/invoiceService.ts` erstellt
+- [x] `generateInvoiceNumber()` - Automatische Rechnungsnummern (B24-INV-2026-0001)
+- [x] `createInvoice()` - Rechnungserstellung
+- [x] `markInvoiceAsSent/Paid/Overdue()` - Status-Management
+- [x] `getWorkshopInvoices()` - Werkstatt-Rechnungen abrufen
+- [x] `getInvoicesForPeriod()` - Zeitraum-Filter
+- [x] `getOverdueInvoices()` - Überfällige Rechnungen
+- [x] `updateSepaStatus()` - GoCardless Webhook-Integration
+- [x] `getInvoiceStats()` - Statistiken und KPIs
 
 ---
 

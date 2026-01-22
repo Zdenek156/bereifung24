@@ -4472,10 +4472,10 @@ model RoadmapTaskHelpOffer {
 }
 
 enum RoadmapTaskPriority {
-  P0_CRITICAL // 🔴 Blockiert andere Tasks, sofort erledigen
-  P1_HIGH     // 🟡 Wichtig für Erfolg, zeitnah erledigen
-  P2_MEDIUM   // 🟢 Wichtig, aber flexibel
-  P3_LOW      // 🔵 Nice-to-have
+  P0 // 🔴 Critical - Blockiert andere Tasks, sofort erledigen
+  P1 // 🟡 High - Wichtig für Erfolg, zeitnah erledigen
+  P2 // 🟢 Medium - Wichtig, aber flexibel
+  P3 // 🔵 Low - Nice-to-have
 }
 
 enum RoadmapTaskStatus {

@@ -58,6 +58,11 @@ export async function POST(request: NextRequest) {
         }
       },
       include: {
+        user: {
+          select: {
+            email: true
+          }
+        },
         commissions: {
           where: {
             status: 'PENDING',
@@ -87,13 +92,13 @@ export async function POST(request: NextRequest) {
     // Process each workshop
     for (const workshop of workshops) {
       try {
-        console.log(`\n📝 Processing ${workshop.name}...`)
+        console.log(`\n📝 Processing ${workshop.companyName}...`)
 
         // Group commissions by service type
         const lineItems = groupCommissionsByServiceType(workshop.commissions)
 
         if (lineItems.length === 0) {
-          console.log(`⏭️  No valid commissions for ${workshop.name}`)
+          console.log(`⏭️  No valid commissions for ${workshop.companyName}`)
           continue
         }
 
@@ -126,7 +131,7 @@ export async function POST(request: NextRequest) {
         const accountingEntryId = await createInvoiceBooking({
           invoiceId: invoice.id,
           workshopId: workshop.id,
-          workshopName: workshop.name,
+          workshopName: workshop.companyName,
           invoiceNumber: invoice.invoiceNumber,
           periodStart,
           periodEnd,
@@ -138,7 +143,7 @@ export async function POST(request: NextRequest) {
 
         // Send email
         await sendInvoiceEmail(invoice.id, workshop, pdfUrl)
-        console.log(`📧 Email sent to ${workshop.email}`)
+        console.log(`📧 Email sent to ${workshop.user.email}`)
 
         // Initiate SEPA payment if mandate exists
         if (workshop.sepaMandateId && workshop.sepaMandateStatus === 'active') {
@@ -165,7 +170,7 @@ export async function POST(request: NextRequest) {
 
             console.log(`💳 SEPA payment initiated: ${payment.id}`)
           } catch (sepaError) {
-            console.warn(`⚠️  SEPA payment failed for ${workshop.name}:`, sepaError)
+            console.warn(`⚠️  SEPA payment failed for ${workshop.companyName}:`, sepaError)
             // Don't fail the whole process - invoice is still sent via email with bank transfer info
           }
         } else {
@@ -187,10 +192,10 @@ export async function POST(request: NextRequest) {
 
         results.success.push(workshop.id)
       } catch (error) {
-        console.error(`❌ Error processing ${workshop.name}:`, error)
+        console.error(`❌ Error processing ${workshop.companyName}:`, error)
         results.failed.push({
           workshopId: workshop.id,
-          workshopName: workshop.name,
+          workshopName: workshop.companyName,
           error: error instanceof Error ? error.message : 'Unknown error'
         })
       }
@@ -295,12 +300,17 @@ async function sendInvoiceEmail(invoiceId: string, workshop: any, pdfUrl: string
       where: { id: invoiceId },
       include: {
         workshop: {
-          select: { name: true, email: true }
+          select: { 
+            companyName: true,
+            user: {
+              select: { email: true }
+            }
+          }
         }
       }
     })
 
-    if (!invoice || !workshop.email) {
+    if (!invoice || !workshop.user?.email) {
       throw new Error('Invoice or workshop email not found')
     }
 
@@ -364,7 +374,7 @@ Ihr Bereifung24 Team
 
     await transporter.sendMail({
       from: `"${emailSettings.senderName}" <${emailSettings.senderEmail}>`,
-      to: workshop.email,
+      to: workshop.user.email,
       subject,
       text: plainBody,
       html: htmlBody,
@@ -376,7 +386,7 @@ Ihr Bereifung24 Team
       ]
     })
 
-    console.log(`✅ Email sent to ${workshop.email}`)
+    console.log(`✅ Email sent to ${workshop.user.email}`)
   } catch (error) {
     console.error('❌ Error sending invoice email:', error)
     throw error

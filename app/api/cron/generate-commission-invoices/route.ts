@@ -235,7 +235,7 @@ function groupCommissionsByServiceType(commissions: any[]) {
   for (const commission of commissions) {
     const serviceType = commission.booking?.offer?.packageType || 'UNKNOWN'
     const serviceName = commission.booking?.offer?.packageName || 'Sonstige Leistung'
-    const amount = parseFloat(commission.amount.toString())
+    const amount = parseFloat(commission.commissionAmount.toString())
 
     if (!groups.has(serviceType)) {
       groups.set(serviceType, {

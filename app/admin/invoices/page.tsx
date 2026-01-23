@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Download, Eye, Calendar, Filter, ChevronDown, PlayCircle } from 'lucide-react'
+import { FileText, Download, Eye, Calendar, Filter, ChevronDown } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import Link from 'next/link'
 import {
@@ -36,7 +36,6 @@ interface Invoice {
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState<number>(0) // 0 = all months
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
@@ -93,33 +92,6 @@ export default function InvoicesPage() {
     }
   }
 
-  const handleGenerateInvoices = async () => {
-    if (!confirm('Provisionsrechnungen für alle Werkstätten generieren?\n\nDies erstellt Rechnungen für alle PENDING Provisionen des letzten Monats, bucht sie in die Buchhaltung und löst ggf. SEPA-Zahlungen aus.')) {
-      return
-    }
-
-    setGenerating(true)
-    try {
-      const response = await fetch('/api/admin/invoices/generate', {
-        method: 'POST'
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        alert(`✅ Erfolgreich!\n\n${result.data?.summary || 'Rechnungen wurden generiert'}`)
-        fetchInvoices()
-      } else {
-        alert(`❌ Fehler: ${result.error}`)
-      }
-    } catch (error) {
-      console.error('Error generating invoices:', error)
-      alert('❌ Fehler beim Generieren der Rechnungen')
-    } finally {
-      setGenerating(false)
-    }
-  }
-
   const formatEUR = (amount: number) => {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
@@ -172,14 +144,6 @@ export default function InvoicesPage() {
           <h1 className="text-3xl font-bold">Provisionsrechnungen</h1>
         </div>
         <div className="flex gap-3">
-          <Button
-            onClick={handleGenerateInvoices}
-            disabled={generating}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <PlayCircle className="h-4 w-4 mr-2" />
-            {generating ? 'Generiere...' : 'Rechnungen generieren'}
-          </Button>
           <Link href="/admin/invoices/settings">
             <Button variant="outline">
               ⚙️ Einstellungen

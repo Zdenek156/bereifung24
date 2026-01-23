@@ -125,7 +125,7 @@ export default function AdminCommissionsPage() {
   }
 
   const handleManualBilling = async () => {
-    if (!confirm('Möchtest du alle ausstehenden Provisionen jetzt per SEPA abbuchen?\n\nDies erstellt GoCardless Payments für alle Werkstätten mit PENDING Commissions.')) {
+    if (!confirm('Provisionsrechnungen für alle Werkstätten generieren?\n\nDies erstellt:\n✅ Rechnungen für alle PENDING Provisionen\n✅ PDFs für jede Rechnung\n✅ Buchhaltungseinträge\n✅ Email-Versand an Werkstätten\n✅ SEPA-Abbuchungen (falls Mandat vorhanden)')) {
       return
     }
 
@@ -133,14 +133,8 @@ export default function AdminCommissionsPage() {
     setBillingResult(null)
 
     try {
-      const now = new Date()
-      const response = await fetch('/api/admin/commissions/bill-month', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          year: now.getFullYear(),
-          month: now.getMonth() + 1
-        })
+      const response = await fetch('/api/admin/invoices/generate', {
+        method: 'POST'
       })
 
       const result = await response.json()
@@ -149,35 +143,33 @@ export default function AdminCommissionsPage() {
         setBillingResult(result)
         
         // Build detailed message
-        let message = `📊 Abbuchung abgeschlossen!\n\n${result.summary.processed} Werkstätten abgerechnet\n${result.summary.skipped} übersprungen\n${result.summary.errors} Fehler`
-        
-        // Show error details if any
-        if (result.results && result.results.length > 0) {
-          const errors = result.results.filter((r: any) => !r.success)
-          if (errors.length > 0) {
+        const summary = result.data?.summary
+        if (summary) {
+          let message = `📊 Rechnungsgenerierung abgeschlossen!\n\n`
+          message += `✅ Erfolgreich: ${summary.successCount} Werkstätten\n`
+          message += `❌ Fehlgeschlagen: ${summary.failedCount} Werkstätten\n`
+          message += `📅 Zeitraum: ${new Date(summary.period.start).toLocaleDateString('de-DE')} - ${new Date(summary.period.end).toLocaleDateString('de-DE')}`
+          
+          // Show error details if any
+          if (summary.failedWorkshops && summary.failedWorkshops.length > 0) {
             message += '\n\n❌ Fehlerdetails:'
-            errors.forEach((err: any) => {
+            summary.failedWorkshops.forEach((err: any) => {
               message += `\n- ${err.workshopName}: ${err.error}`
             })
           }
           
-          const successes = result.results.filter((r: any) => r.success)
-          if (successes.length > 0) {
-            message += '\n\n✅ Erfolgreich:'
-            successes.forEach((s: any) => {
-              message += `\n- ${s.workshopName}: ${s.commission?.toFixed(2)} €`
-            })
-          }
+          alert(message)
+        } else {
+          alert('✅ Rechnungen erfolgreich generiert!')
         }
         
-        alert(message)
         fetchCommissions() // Refresh list
       } else {
         alert(`❌ Fehler: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error triggering billing:', error)
-      alert('❌ Fehler beim Auslösen der Abbuchung')
+      console.error('Error generating invoices:', error)
+      alert('❌ Fehler beim Generieren der Rechnungen')
     } finally {
       setBilling(false)
     }
@@ -202,11 +194,11 @@ export default function AdminCommissionsPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Wird abgerechnet...
+                    Rechnungen werden generiert...
                   </>
                 ) : (
                   <>
-                    💶 SEPA-Abbuchung jetzt ausführen ({pendingCommissions.length} Provisionen)
+                    📄 Rechnungen generieren & abrechnen ({pendingCommissions.length} Provisionen)
                   </>
                 )}
               </button>

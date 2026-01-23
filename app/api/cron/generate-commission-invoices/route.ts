@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         commissions: {
           some: {
             status: 'PENDING',
-            bookingDate: {
+            createdAt: {
               gte: periodStart,
               lte: periodEnd
             }
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         commissions: {
           where: {
             status: 'PENDING',
-            bookingDate: {
+            createdAt: {
               gte: periodStart,
               lte: periodEnd
             }

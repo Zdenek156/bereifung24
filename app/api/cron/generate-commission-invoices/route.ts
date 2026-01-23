@@ -69,12 +69,7 @@ export async function POST(request: NextRequest) {
           include: {
             booking: {
               include: {
-                offer: {
-                  select: {
-                    packageType: true,
-                    packageName: true
-                  }
-                }
+                offer: true
               }
             }
           }

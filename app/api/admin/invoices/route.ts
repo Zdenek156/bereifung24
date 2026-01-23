@@ -61,8 +61,12 @@ export async function GET(request: NextRequest) {
         workshop: {
           select: {
             id: true,
-            name: true,
-            email: true
+            companyName: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
           }
         }
       },

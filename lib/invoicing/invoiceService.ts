@@ -89,7 +89,7 @@ export async function createInvoice(
     // Verify workshop exists
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
-      select: { id: true, name: true }
+      select: { id: true, companyName: true }
     })
 
     if (!workshop) {

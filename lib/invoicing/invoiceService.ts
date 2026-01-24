@@ -255,7 +255,7 @@ export async function getInvoicesForPeriod(
       orderBy: { invoiceNumber: 'desc' },
       include: {
         workshop: {
-          select: { id: true, name: true, email: true }
+          select: { companyName: true, user: { select: { email: true } } }
         }
       }
     })
@@ -282,7 +282,7 @@ export async function getOverdueInvoices() {
       },
       include: {
         workshop: {
-          select: { id: true, name: true, email: true, phone: true }
+          select: { id: true, companyName: true, phone: true, user: { select: { email: true } } }
         }
       },
       orderBy: { dueDate: 'asc' }

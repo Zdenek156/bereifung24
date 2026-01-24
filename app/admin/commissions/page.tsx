@@ -184,16 +184,23 @@ export default function AdminCommissionsPage() {
         '/api/admin/invoices/test-sepa'
       ]
       
+      console.log(`🧪 Starting Test ${step}...`)
       const response = await fetch(endpoints[step - 1], { method: 'POST' })
       const result = await response.json()
       
+      console.log(`📊 Test ${step} Result:`, result)
+      
       if (result.success) {
-        alert(`✅ Test ${step} erfolgreich!\n\n${JSON.stringify(result.data, null, 2)}`)
+        console.log(`✅ Test ${step} SUCCESSFUL:`, result.data)
+        alert(`✅ Test ${step} erfolgreich! Details in der Console (F12)`)
       } else {
-        alert(`❌ Test ${step} fehlgeschlagen:\n${result.error}`)
+        console.error(`❌ Test ${step} FAILED:`, result.error)
+        console.error('Full error details:', result)
+        alert(`❌ Test ${step} fehlgeschlagen! Siehe Console (F12) für Details`)
       }
     } catch (error) {
-      alert(`❌ Fehler bei Test ${step}`)
+      console.error(`❌ Test ${step} ERROR:`, error)
+      alert(`❌ Fehler bei Test ${step}! Siehe Console (F12)`)
     }
   }
 

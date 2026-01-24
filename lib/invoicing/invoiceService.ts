@@ -98,7 +98,7 @@ export async function createInvoice(
 
     // Calculate totals
     const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0)
-    const vatAmount = lineItems.reduce((sum, item) => sum + (item.total * item.vatRate / 100), 0)
+    const vatAmount = subtotal * 0.19 // 19% MwSt
     const totalAmount = subtotal + vatAmount
 
     // Generate invoice number
@@ -112,7 +112,9 @@ export async function createInvoice(
     const invoice = await prisma.commissionInvoice.create({
       data: {
         invoiceNumber,
-        workshopId,
+        workshop: {
+          connect: { id: workshopId }
+        },
         periodStart,
         periodEnd,
         lineItems: lineItems as any, // Prisma Json type

@@ -175,9 +175,50 @@ export default function AdminCommissionsPage() {
     }
   }
 
+  const handleTest = async (step: number) => {
+    try {
+      const endpoints = [
+        '/api/admin/invoices/test-create',
+        '/api/admin/invoices/test-pdf',
+        '/api/admin/invoices/test-accounting',
+        '/api/admin/invoices/test-sepa'
+      ]
+      
+      const response = await fetch(endpoints[step - 1], { method: 'POST' })
+      const result = await response.json()
+      
+      if (result.success) {
+        alert(`✅ Test ${step} erfolgreich!\n\n${JSON.stringify(result.data, null, 2)}`)
+      } else {
+        alert(`❌ Test ${step} fehlgeschlagen:\n${result.error}`)
+      }
+    } catch (error) {
+      alert(`❌ Fehler bei Test ${step}`)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Test Buttons */}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="font-semibold mb-2 text-blue-900">🧪 Test-Modus (Schritt für Schritt)</h3>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => handleTest(1)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              1️⃣ Rechnung erstellen
+            </button>
+            <button onClick={() => handleTest(2)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              2️⃣ PDF per Email
+            </button>
+            <button onClick={() => handleTest(3)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              3️⃣ Buchhaltung
+            </button>
+            <button onClick={() => handleTest(4)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              4️⃣ SEPA
+            </button>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4 flex items-center justify-between">

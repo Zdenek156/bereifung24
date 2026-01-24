@@ -36,7 +36,11 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
         workshop: {
           select: {
             companyName: true,
-
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
             }
           }
         }

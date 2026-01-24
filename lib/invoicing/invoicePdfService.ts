@@ -35,14 +35,18 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
       include: {
         workshop: {
           select: {
-            name: true,
+            companyName: true,
             street: true,
             zip: true,
             city: true,
             country: true,
-            email: true,
-            phone: true,
-            taxId: true
+            taxId: true,
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
           }
         }
       }
@@ -354,7 +358,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
         ${settings.companyName} • ${settings.companyStreet || ''} • ${settings.companyZip || ''} ${settings.companyCity || ''}
       </div>
       <div class="recipient-address">
-        <strong>${invoice.workshop.name}</strong><br>
+        <strong>${invoice.workshop.companyName}</strong><br>
         ${invoice.workshop.street || ''}<br>
         ${invoice.workshop.zip || ''} ${invoice.workshop.city || ''}<br>
         ${invoice.workshop.country || ''}

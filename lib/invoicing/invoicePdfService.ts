@@ -502,7 +502,6 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <div class="payment-info">
       <h3>Zahlungsinformationen</h3>
       <p><strong>Zahlungsart:</strong> SEPA-Lastschrift</p>
-      <p><strong>Zahlungsziel:</strong> ${dueDate || '14 Tage'}</p>
       <p style="margin-top: 10px;"><strong>💳 Der Rechnungsbetrag wird automatisch per SEPA-Lastschrift von Ihrem hinterlegten Bankkonto abgebucht.</strong></p>
       ${settings.bankName ? `<p><strong>Bank:</strong> ${settings.bankName}</p>` : ''}
       ${settings.iban ? `<p><strong>IBAN:</strong> ${settings.iban}</p>` : ''}

@@ -59,26 +59,24 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       return { success: false, error: 'Email template not found or inactive' }
     }
 
-    // Get email settings - use company email settings
+    // Get email settings for invoice sending (system email without employee/user)
     const emailSettings = await prisma.emailSettings.findFirst({
       where: {
-        OR: [
-          { b24EmployeeId: { not: null } },
-          { userId: { not: null } }
+        AND: [
+          { b24EmployeeId: null },
+          { userId: null }
         ]
-      }
+      },
+      orderBy: { createdAt: 'desc' }
     })
 
     if (!emailSettings) {
-      return { success: false, error: 'Email settings not configured' }
+      return { success: false, error: 'Invoice email settings not found. Please create EmailSettings in /admin/email-settings without employee/user assignment.' }
     }
 
-    // Get invoice settings for sender email
-    const invoiceSettings = await prisma.invoiceSettings.findFirst()
-    
-    // Use invoice settings email or default to buchhaltung@bereifung24.de
-    const fromEmail = invoiceSettings?.invoiceEmailFrom || emailSettings.smtpUser || 'buchhaltung@bereifung24.de'
-    const fromName = invoiceSettings?.invoiceEmailFromName || 'Bereifung24 Buchhaltung'
+    // Use SMTP user as sender email
+    const fromEmail = emailSettings.smtpUser
+    const fromName = 'Bereifung24 Rechnungsversand'
 
     // Format data for email
     const lineItems = invoice.lineItems as any[]

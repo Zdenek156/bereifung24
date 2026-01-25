@@ -411,6 +411,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
         ${settings.companyStreet || ''}<br>
         ${settings.companyZip || ''} ${settings.companyCity || ''}<br>
         ${settings.companyCountry || 'Deutschland'}<br>
+        ${settings.taxId ? `USt-IdNr.: ${settings.taxId}<br>` : ''}
         <br>
         ${settings.phone ? `Tel: ${settings.phone}<br>` : ''}
         ${settings.email ? `E-Mail: ${settings.email}<br>` : ''}
@@ -443,11 +444,6 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       
       <strong>Zahlung:</strong>
       <span>Automatisch per SEPA-Lastschrift</span>
-      
-      ${settings.taxId ? `
-      <strong>USt-IdNr.:</strong>
-      <span>${settings.taxId}</span>
-      ` : ''}
     </div>
 
     <!-- Introduction -->

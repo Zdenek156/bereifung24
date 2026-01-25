@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       invoiceNumber: invoice.invoiceNumber,
       periodStart: invoice.periodStart,
       periodEnd: invoice.periodEnd,
-      subtotal: parseFloat(invoice.subtotalAmount.toString()),
-      vatAmount: parseFloat(invoice.vatAmount.toString()),
-      totalAmount: parseFloat(invoice.totalAmount.toString())
+      subtotal: invoice.subtotal,
+      vatAmount: invoice.vatAmount,
+      totalAmount: invoice.totalAmount
     })
 
     console.log(`✅ Accounting entry created: ${accountingEntryId}`)

@@ -413,15 +413,13 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
 
     <!-- Recipient -->
     <div class="recipient">
-      <div style="font-size: 8pt; color: #999; margin-bottom: 3px;">
-        ${settings.companyName} • ${settings.street || ''} • ${settings.zip || ''} ${settings.city || ''}
+      <div style="font-size: 7pt; color: #666; margin-bottom: 8px; line-height: 1.2;">
+        ${settings.companyName} • • ${settings.street || ''} • ${settings.zip || ''} ${settings.city || ''}
       </div>
       <div class="recipient-address">
-        <strong>${invoice.workshop.companyName}</strong><br>
-        ${invoice.workshop.user?.email ? `E-Mail: ${invoice.workshop.user.email}<br>` : ''}
-        ${invoice.workshop.user?.phone ? `Tel: ${invoice.workshop.user.phone}<br>` : ''}
+        <strong style="font-size: 11pt;">${invoice.workshop.companyName}</strong><br>
         ${invoice.workshop.user?.street ? `${invoice.workshop.user.street}<br>` : ''}
-        ${invoice.workshop.user?.zipCode && invoice.workshop.user?.city ? `${invoice.workshop.user.zipCode} ${invoice.workshop.user.city}` : ''}
+        ${invoice.workshop.user?.zipCode && invoice.workshop.user?.city ? `<strong>${invoice.workshop.user.zipCode} ${invoice.workshop.user.city}</strong>` : ''}
       </div>
     </div>
 
@@ -457,17 +455,19 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <table class="invoice-table">
       <thead>
         <tr>
-          <th style="width: 50px;">Pos.</th>
+          <th style="width: 40px;">Pos.</th>
+          <th style="width: 90px;">Datum</th>
           <th>Beschreibung</th>
-          <th class="text-center" style="width: 80px;">Menge</th>
-          <th class="text-right" style="width: 100px;">Einzelpreis</th>
-          <th class="text-right" style="width: 100px;">Gesamt</th>
+          <th class="text-center" style="width: 60px;">Menge</th>
+          <th class="text-right" style="width: 90px;">Einzelpreis</th>
+          <th class="text-right" style="width: 90px;">Gesamt</th>
         </tr>
       </thead>
       <tbody>
         ${lineItems.map((item, index) => `
         <tr>
           <td class="text-center">${index + 1}</td>
+          <td style="font-size: 9pt;">${item.date ? new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
           <td>${item.description || 'Provision für Auftrag'}</td>
           <td class="text-center">${item.quantity || 1}</td>
           <td class="text-right">${formatEUR(item.unitPrice || 0)}</td>

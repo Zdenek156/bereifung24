@@ -233,40 +233,26 @@ export async function POST(request: NextRequest) {
 
 /**
  * Group commissions by service type and create line items
+ * Each commission becomes a separate line item with its date
  */
 function groupCommissionsByServiceType(commissions: any[]) {
-  const groups = new Map<string, { count: number; total: number; description: string }>()
+  const lineItems = []
+  let position = 1
 
   for (const commission of commissions) {
     const serviceType = commission.booking?.offer?.packageType || 'UNKNOWN'
     const serviceName = commission.booking?.offer?.packageName || 'Sonstige Leistung'
     const amount = parseFloat(commission.commissionAmount.toString())
+    const date = commission.booking?.bookingDate || commission.createdAt
 
-    if (!groups.has(serviceType)) {
-      groups.set(serviceType, {
-        count: 0,
-        total: 0,
-        description: getServiceDescription(serviceType, serviceName)
-      })
-    }
-
-    const group = groups.get(serviceType)!
-    group.count++
-    group.total += amount
-  }
-
-  // Convert to line items
-  let position = 1
-  const lineItems = []
-
-  for (const [serviceType, group] of groups) {
     lineItems.push({
       position: position++,
-      description: group.description,
-      quantity: group.count,
-      unitPrice: group.total / group.count,
-      total: group.total,
-      vatRate: 19
+      description: getServiceDescription(serviceType, serviceName),
+      quantity: 1,
+      unitPrice: amount,
+      total: amount,
+      vatRate: 19,
+      date: date // Add date for display in invoice
     })
   }
 

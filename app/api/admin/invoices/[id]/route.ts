@@ -29,13 +29,12 @@ export async function GET(
           select: {
             id: true,
             companyName: true,
-            street: true,
-            zip: true,
-            city: true,
-            country: true,
             user: {
               select: {
-                email: true
+                email: true,
+                street: true,
+                zipCode: true,
+                city: true
               }
             }
           }

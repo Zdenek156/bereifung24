@@ -1,32 +1,57 @@
 #!/bin/bash
 # Deployment Script für Bereifung24
-# Zero-downtime deployment with PM2
+# With detailed timing information
 
 set -e
 
 echo "🚀 Starting deployment..."
+START_TIME=$(date +%s)
 cd /var/www/bereifung24
 
-echo "📥 Pulling latest changes..."
+echo "🛑 [1/5] Stopping old server..."
+STEP_START=$(date +%s)
+lsof -ti:3000 | xargs kill -9 2>/dev/null || echo "No process on port 3000"
+STEP_END=$(date +%s)
+echo "   ⏱️  Took $((STEP_END - STEP_START))s"
+
+echo "📥 [2/5] Pulling latest changes..."
+STEP_START=$(date +%s)
 git pull origin main
+STEP_END=$(date +%s)
+echo "   ⏱️  Took $((STEP_END - STEP_START))s"
 
-echo "📦 Installing dependencies (if needed)..."
-npm install --production
+echo "🧹 [3/5] Cleaning old build..."
+STEP_START=$(date +%s)
+rm -rf .next
+STEP_END=$(date +%s)
+echo "   ⏱️  Took $((STEP_END - STEP_START))s"
 
-echo "🏗️ Building application (this takes ~2 minutes)..."
+echo "🏗️ [4/5] Building application..."
+STEP_START=$(date +%s)
 npm run build
+STEP_END=$(date +%s)
+echo "   ⏱️  Took $((STEP_END - STEP_START))s"
 
-echo "⏳ Waiting for build to complete fully..."
+echo "🚀 [5/5] Starting server..."
+STEP_START=$(date +%s)
+nohup npm start > server.log 2>&1 &
 sleep 5
+STEP_END=$(date +%s)
+echo "   ⏱️  Took $((STEP_END - STEP_START))s"
 
-# Check if PM2 is managing the app
-if pm2 list | grep -q "bereifung24"; then
-    echo "🔄 Reloading app with PM2 (zero-downtime)..."
-    pm2 reload bereifung24
+# Check if server is running
+if lsof -ti:3000 > /dev/null; then
+    END_TIME=$(date +%s)
+    TOTAL_TIME=$((END_TIME - START_TIME))
+    echo ""
+    echo "✅ Server running on port 3000"
+    echo "🎉 Deployment completed!"
+    echo "⏱️  TOTAL TIME: ${TOTAL_TIME}s"
+    echo "✅ Deployment complete!"
 else
-    echo "🚀 Starting app with PM2 for the first time..."
-    pm2 start npm --name bereifung24 -- start
-    pm2 save
+    echo "❌ Server failed to start. Check server.log"
+    tail -20 server.log
+    exit 1
 fi
 
 echo "⏳ Waiting for server to stabilize (10 seconds)..."

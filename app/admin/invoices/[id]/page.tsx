@@ -12,12 +12,15 @@ interface Invoice {
   invoiceNumber: string
   workshop: {
     id: string
-    name: string
-    street?: string
-    zip?: string
-    city?: string
-    email?: string
-    phone?: string
+    companyName: string
+    taxId?: string
+    user?: {
+      email?: string
+      phone?: string
+      street?: string
+      zipCode?: string
+      city?: string
+    }
   }
   periodStart: string
   periodEnd: string
@@ -285,18 +288,18 @@ export default function InvoiceDetailPage() {
             <div className="space-y-3">
               <div>
                 <div className="text-sm text-gray-600">Name</div>
-                <div className="font-semibold">{invoice.workshop.name}</div>
+                <div className="font-semibold">{invoice.workshop.companyName}</div>
               </div>
-              {invoice.workshop.street && (
+              {invoice.workshop.user?.street && (
                 <div>
                   <div className="text-sm text-gray-600">Adresse</div>
                   <div className="text-sm">
-                    {invoice.workshop.street}<br />
-                    {invoice.workshop.zip} {invoice.workshop.city}
+                    {invoice.workshop.user.street}<br />
+                    {invoice.workshop.user.zipCode} {invoice.workshop.user.city}
                   </div>
                 </div>
               )}
-              {invoice.workshop.email && (
+              {invoice.workshop.user?.email && (
                 <div>
                   <div className="text-sm text-gray-600">E-Mail</div>
                   <div className="text-sm">{invoice.workshop.user?.email || '-'}</div>

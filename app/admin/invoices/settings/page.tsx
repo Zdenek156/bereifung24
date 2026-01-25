@@ -22,6 +22,8 @@ interface Settings {
   email?: string
   phone?: string
   website: string
+  invoiceEmailFrom?: string
+  invoiceEmailFromName?: string
   bankName?: string
   iban?: string
   bic?: string
@@ -256,6 +258,37 @@ export default function InvoiceSettingsPage() {
                 type="text"
                 value={settings.managingDirector || ''}
                 onChange={(e) => setSettings({ ...settings, managingDirector: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Email Settings for Invoice Sending */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold mb-4">📧 Email-Einstellungen für Rechnungsversand</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Diese Email-Adresse wird als Absender beim Versand von Rechnungen verwendet.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Absender Email-Adresse *</label>
+              <input
+                type="email"
+                value={settings.invoiceEmailFrom || ''}
+                onChange={(e) => setSettings({ ...settings, invoiceEmailFrom: e.target.value })}
+                placeholder="buchhaltung@bereifung24.de"
+                className="w-full border rounded px-3 py-2"
+              />
+              <p className="text-xs text-gray-500 mt-1">Diese Adresse muss in den <Link href="/admin/email-settings" className="text-blue-600 hover:underline">Email-Einstellungen</Link> konfiguriert sein</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Absender Name</label>
+              <input
+                type="text"
+                value={settings.invoiceEmailFromName || ''}
+                onChange={(e) => setSettings({ ...settings, invoiceEmailFromName: e.target.value })}
+                placeholder="Bereifung24 Buchhaltung"
                 className="w-full border rounded px-3 py-2"
               />
             </div>

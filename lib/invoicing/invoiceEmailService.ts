@@ -73,9 +73,12 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       return { success: false, error: 'Email settings not configured' }
     }
 
-    // Default company email
-    const fromEmail = 'buchhaltung@bereifung24.de'
-    const fromName = 'Bereifung24 Buchhaltung'
+    // Get invoice settings for sender email
+    const invoiceSettings = await prisma.invoiceSettings.findFirst()
+    
+    // Use invoice settings email or default to buchhaltung@bereifung24.de
+    const fromEmail = invoiceSettings?.invoiceEmailFrom || emailSettings.smtpUser || 'buchhaltung@bereifung24.de'
+    const fromName = invoiceSettings?.invoiceEmailFromName || 'Bereifung24 Buchhaltung'
 
     // Format data for email
     const lineItems = invoice.lineItems as any[]

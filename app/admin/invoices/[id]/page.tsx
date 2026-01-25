@@ -299,20 +299,15 @@ export default function InvoiceDetailPage() {
               {invoice.workshop.email && (
                 <div>
                   <div className="text-sm text-gray-600">E-Mail</div>
-                  <div className="text-sm">{invoice.workshop.email}</div>
+                  <div className="text-sm">{invoice.workshop.user?.email || '-'}</div>
                 </div>
               )}
-              {invoice.workshop.phone && (
+              {invoice.workshop.user?.phone && (
                 <div>
                   <div className="text-sm text-gray-600">Telefon</div>
-                  <div className="text-sm">{invoice.workshop.phone}</div>
+                  <div className="text-sm">{invoice.workshop.user.phone}</div>
                 </div>
               )}
-              <Link href={`/admin/workshops/${invoice.workshop.id}`}>
-                <Button variant="outline" size="sm" className="w-full mt-2">
-                  Werkstatt anzeigen
-                </Button>
-              </Link>
             </div>
           </Card>
 

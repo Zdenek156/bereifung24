@@ -106,6 +106,9 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
 
     await browser.close()
 
+    // Prepare line items for ZUGFeRD
+    const lineItems = invoice.lineItems as any[]
+
     // Generate ZUGFeRD XML
     const zugferdXml = generateZugferdXml({
       invoiceNumber: invoice.invoiceNumber,

@@ -29,6 +29,39 @@ interface PaymentBookingData {
 }
 
 /**
+ * Generate next entry number for accounting entry
+ * Format: BEL-YYYY-NNNNN (e.g. BEL-2026-00001)
+ */
+async function generateEntryNumber(): Promise<string> {
+  const year = new Date().getFullYear()
+  const prefix = `BEL-${year}-`
+  
+  // Find highest entry number for current year
+  const lastEntry = await prisma.accountingEntry.findFirst({
+    where: {
+      entryNumber: {
+        startsWith: prefix
+      }
+    },
+    orderBy: {
+      entryNumber: 'desc'
+    }
+  })
+  
+  let nextNumber = 1
+  if (lastEntry) {
+    // Extract number from BEL-2026-00123 -> 123
+    const match = lastEntry.entryNumber.match(/BEL-\d{4}-(\d+)/)
+    if (match) {
+      nextNumber = parseInt(match[1]) + 1
+    }
+  }
+  
+  // Format: BEL-2026-00001
+  return `${prefix}${nextNumber.toString().padStart(5, '0')}`
+}
+
+/**
  * Create accounting entry when invoice is generated
  * 
  * Buchungssatz:
@@ -54,12 +87,16 @@ export async function createInvoiceBooking(
       totalAmount
     } = data
 
+    // Generate entry number
+    const entryNumber = await generateEntryNumber()
+
     // Format period for description
     const periodStr = `${periodStart.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' })} - ${periodEnd.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' })}`
 
     // Create invoice booking entry
     const entry = await prisma.accountingEntry.create({
       data: {
+        entryNumber,
         bookingDate: new Date(),
         documentDate: periodEnd,
         
@@ -72,26 +109,19 @@ export async function createInvoiceBooking(
         // Amounts
         amount: new Decimal(totalAmount),
         netAmount: new Decimal(subtotal),
-        vatRate: new Decimal(19),
+        vatRate: 19,
         vatAmount: new Decimal(vatAmount),
         
         // Description
         description: `Provisionsrechnung ${invoiceNumber} - ${workshopName}`,
-        internalNote: `Zeitraum: ${periodStr}`,
-        
-        // Document reference
         documentNumber: invoiceNumber,
-        documentType: 'INVOICE',
         
         // Source tracking
-        sourceType: 'COMMISSION_INVOICE',
+        sourceType: 'COMMISSION',
         sourceId: invoiceId,
         
-        // Status
-        status: 'POSTED',
-        
         // Created by system (can be overridden)
-        createdBy: 'SYSTEM'
+        createdById: null
       }
     })
 
@@ -153,9 +183,13 @@ export async function createPaymentBooking(
     const methodStr = paymentMethod === 'SEPA' ? 'SEPA-Lastschrift' : 'Banküberweisung'
     const refStr = reference ? ` - Ref: ${reference}` : ''
 
+    // Generate entry number
+    const entryNumber = await generateEntryNumber()
+
     // Create payment booking entry
     const entry = await prisma.accountingEntry.create({
       data: {
+        entryNumber,
         bookingDate: paymentDate,
         documentDate: paymentDate,
         
@@ -168,26 +202,19 @@ export async function createPaymentBooking(
         // Amount (no VAT - already booked in invoice)
         amount: new Decimal(amount),
         netAmount: new Decimal(amount),
-        vatRate: new Decimal(0),
+        vatRate: 0,
         vatAmount: new Decimal(0),
         
         // Description
-        description: `Zahlungseingang ${methodStr} - ${workshopName}`,
-        internalNote: `Rechnung ${invoiceNumber}${refStr}`,
-        
-        // Document reference
+        description: `Zahlungseingang ${methodStr} - ${workshopName} - ${invoiceNumber}${refStr}`,
         documentNumber: invoiceNumber,
-        documentType: 'PAYMENT',
         
         // Source tracking
-        sourceType: 'COMMISSION_INVOICE',
+        sourceType: 'COMMISSION',
         sourceId: invoiceId,
         
-        // Status
-        status: 'POSTED',
-        
         // Created by system
-        createdBy: 'SYSTEM'
+        createdById: null
       }
     })
 

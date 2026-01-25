@@ -14,14 +14,15 @@ import PDFDocument from 'pdfkit'
 
 export interface InvoiceData extends CommissionInvoice {
   workshop: {
-    name: string
-    street?: string
-    zip?: string
-    city?: string
-    country?: string
-    email?: string
-    phone?: string
+    companyName: string
     taxId?: string
+    user?: {
+      email?: string
+      phone?: string
+      street?: string
+      zipCode?: string
+      city?: string
+    }
   }
 }
 
@@ -39,10 +40,14 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
         workshop: {
           select: {
             companyName: true,
+            taxId: true,
             user: {
               select: {
                 email: true,
-                phone: true
+                phone: true,
+                street: true,
+                zipCode: true,
+                city: true
               }
             }
           }
@@ -392,13 +397,13 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- Header -->
     <div class="header">
       <div>
-        ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="Logo" class="logo">` : `<h1 style="color: #007bff;">${settings.companyName}</h1>`}
+        ${settings.logoUrl ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">` : `<h1 style="color: #007bff;">${settings.companyName}</h1>`}
       </div>
       <div class="company-info">
         <strong>${settings.companyName}</strong>
-        ${settings.companyStreet || ''}<br>
-        ${settings.companyZip || ''} ${settings.companyCity || ''}<br>
-        ${settings.companyCountry || 'Deutschland'}<br>
+        ${settings.street || ''}<br>
+        ${settings.zip || ''} ${settings.city || ''}<br>
+        ${settings.country || 'Deutschland'}<br>
         <br>
         ${settings.phone ? `Tel: ${settings.phone}<br>` : ''}
         ${settings.email ? `E-Mail: ${settings.email}<br>` : ''}
@@ -409,13 +414,14 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- Recipient -->
     <div class="recipient">
       <div style="font-size: 8pt; color: #999; margin-bottom: 3px;">
-        ${settings.companyName} • ${settings.companyStreet || ''} • ${settings.companyZip || ''} ${settings.companyCity || ''}
+        ${settings.companyName} • ${settings.street || ''} • ${settings.zip || ''} ${settings.city || ''}
       </div>
       <div class="recipient-address">
         <strong>${invoice.workshop.companyName}</strong><br>
-        ${invoice.workshop.taxId ? `USt-IdNr: ${invoice.workshop.taxId}<br>` : ''}
-        ${invoice.workshop.user.email ? `E-Mail: ${invoice.workshop.user.email}<br>` : ''}
-        ${invoice.workshop.user.phone ? `Tel: ${invoice.workshop.user.phone}` : ''}
+        ${invoice.workshop.user?.email ? `E-Mail: ${invoice.workshop.user.email}<br>` : ''}
+        ${invoice.workshop.user?.phone ? `Tel: ${invoice.workshop.user.phone}<br>` : ''}
+        ${invoice.workshop.user?.street ? `${invoice.workshop.user.street}<br>` : ''}
+        ${invoice.workshop.user?.zipCode && invoice.workshop.user?.city ? `${invoice.workshop.user.zipCode} ${invoice.workshop.user.city}` : ''}
       </div>
     </div>
 
@@ -459,13 +465,13 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
         </tr>
       </thead>
       <tbody>
-        ${lineItems.map(item => `
+        ${lineItems.map((item, index) => `
         <tr>
-          <td class="text-center">${item.position}</td>
-          <td>${item.description}</td>
-          <td class="text-center">${item.quantity}</td>
-          <td class="text-right">${formatEUR(item.unitPrice)}</td>
-          <td class="text-right">${formatEUR(item.total)}</td>
+          <td class="text-center">${index + 1}</td>
+          <td>${item.description || 'Provision für Auftrag'}</td>
+          <td class="text-center">${item.quantity || 1}</td>
+          <td class="text-right">${formatEUR(item.unitPrice || 0)}</td>
+          <td class="text-right">${formatEUR(item.total || 0)}</td>
         </tr>
         `).join('')}
       </tbody>
@@ -490,18 +496,15 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- Payment Info -->
     <div class="payment-info">
       <h3>Zahlungsinformationen</h3>
-      ${invoice.sepaPaymentId ? `
-        <p><strong>SEPA-Lastschrift:</strong> Der Rechnungsbetrag wird in den nächsten Tagen per SEPA-Lastschrift von Ihrem hinterlegten Konto eingezogen.</p>
-        <p><strong>Mandatsreferenz:</strong> ${invoice.sepaPaymentId}</p>
-        <p><strong>Gläubiger-ID:</strong> ${settings.gocardlessCreditorId || 'wird nachgereicht'}</p>
-      ` : `
-        <p><strong>Zahlungsart:</strong> Banküberweisung</p>
-        <p><strong>Zahlungsziel:</strong> ${dueDate || 'sofort'}</p>
-        ${settings.bankName ? `<p><strong>Bank:</strong> ${settings.bankName}</p>` : ''}
-        ${settings.iban ? `<p><strong>IBAN:</strong> ${settings.iban}</p>` : ''}
-        ${settings.bic ? `<p><strong>BIC:</strong> ${settings.bic}</p>` : ''}
-        <p><strong>Verwendungszweck:</strong> ${invoice.invoiceNumber}</p>
-      `}
+      <p><strong>Zahlungsart:</strong> SEPA-Lastschrift</p>
+      <p><strong>Zahlungsziel:</strong> ${dueDate || '14 Tage'}</p>
+      <p style="margin-top: 10px;"><strong>💳 Der Rechnungsbetrag wird automatisch per SEPA-Lastschrift von Ihrem hinterlegten Bankkonto abgebucht.</strong></p>
+      ${settings.bankName ? `<p><strong>Bank:</strong> ${settings.bankName}</p>` : ''}
+      ${settings.iban ? `<p><strong>IBAN:</strong> ${settings.iban}</p>` : ''}
+      ${settings.bic ? `<p><strong>BIC:</strong> ${settings.bic}</p>` : ''}
+      <p><strong>Verwendungszweck:</strong> ${invoice.invoiceNumber}</p>
+      ${invoice.sepaPaymentId ? `<p style="margin-top: 10px; font-size: 9pt; color: #666;">Mandatsreferenz: ${invoice.sepaPaymentId}</p>` : ''}
+      ${settings.gocardlessCreditorId ? `<p style="font-size: 9pt; color: #666;">Gläubiger-ID: ${settings.gocardlessCreditorId}</p>` : ''}
     </div>
     
     <div class="e-invoice-note" style="margin-top: 30px; padding: 10px; background: #f0f8ff; border-left: 4px solid #2196F3; font-size: 9pt;">

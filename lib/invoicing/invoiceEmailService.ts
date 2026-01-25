@@ -59,23 +59,24 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       return { success: false, error: 'Email template not found or inactive' }
     }
 
-    // Get email settings for invoice sending (system email without employee/user)
+    // Get invoice settings for email credentials
+    const invoiceSettings = await prisma.invoiceSettings.findFirst()
+    
+    if (!invoiceSettings?.invoiceEmail || !invoiceSettings?.invoicePassword) {
+      return { success: false, error: 'Invoice email credentials not configured. Please set email and password in /admin/invoices/settings' }
+    }
+
+    // Get SMTP settings from any EmailSettings (for host, port, secure)
     const emailSettings = await prisma.emailSettings.findFirst({
-      where: {
-        AND: [
-          { b24EmployeeId: null },
-          { userId: null }
-        ]
-      },
       orderBy: { createdAt: 'desc' }
     })
 
     if (!emailSettings) {
-      return { success: false, error: 'Invoice email settings not found. Please create EmailSettings in /admin/email-settings without employee/user assignment.' }
+      return { success: false, error: 'SMTP settings not found. Please configure email settings in /admin/email-settings' }
     }
 
-    // Use SMTP user as sender email
-    const fromEmail = emailSettings.smtpUser
+    // Use invoice-specific credentials
+    const fromEmail = invoiceSettings.invoiceEmail
     const fromName = 'Bereifung24 Rechnungsversand'
 
     // Format data for email
@@ -127,14 +128,14 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       subject = subject.replace(new RegExp(`{{${key}}}`, 'g'), value)
     })
 
-    // Setup email transporter
+    // Setup email transporter with invoice credentials
     const transporter = nodemailer.createTransport({
       host: emailSettings.smtpHost,
       port: emailSettings.smtpPort,
       secure: emailSettings.smtpSecure,
       auth: {
-        user: emailSettings.smtpUser,
-        pass: emailSettings.smtpPassword
+        user: invoiceSettings.invoiceEmail,  // Use invoice email
+        pass: invoiceSettings.invoicePassword // Use invoice password
       }
     })
 

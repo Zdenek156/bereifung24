@@ -22,6 +22,8 @@ interface Settings {
   email?: string
   phone?: string
   website: string
+  invoiceEmail?: string
+  invoicePassword?: string
   bankName?: string
   iban?: string
   bic?: string
@@ -258,6 +260,48 @@ export default function InvoiceSettingsPage() {
                 onChange={(e) => setSettings({ ...settings, managingDirector: e.target.value })}
                 className="w-full border rounded px-3 py-2"
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* Email-Zugangsdaten für Rechnungsversand */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold mb-4">📧 Email-Zugangsdaten für Rechnungsversand</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Diese Zugangsdaten werden verwendet, um Rechnungen per Email zu versenden.
+            Die SMTP-Einstellungen (Server, Port) werden aus den allgemeinen Email-Einstellungen übernommen.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Email-Adresse für Rechnungsversand *
+              </label>
+              <input
+                type="email"
+                value={settings.invoiceEmail || ''}
+                onChange={(e) => setSettings({ ...settings, invoiceEmail: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                placeholder="buchhaltung@bereifung24.de"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Passwort *
+              </label>
+              <input
+                type="password"
+                value={settings.invoicePassword || ''}
+                onChange={(e) => setSettings({ ...settings, invoicePassword: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                placeholder="••••••••"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Das Passwort wird verschlüsselt gespeichert
+              </p>
             </div>
           </div>
         </Card>

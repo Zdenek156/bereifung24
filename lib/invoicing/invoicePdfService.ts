@@ -141,9 +141,9 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
         vatRate: 0.19, // Fixed 19% VAT
         vatAmount: Number(item?.total) * 0.19 / 1.19 || 0
       })),
-      netTotal: parseFloat(invoice.netAmount.toString()),
-      vatTotal: parseFloat(invoice.vatAmount.toString()),
-      grossTotal: parseFloat(invoice.totalAmount.toString())
+      netTotal: parseFloat(invoice.netAmount?.toString() || '0'),
+      vatTotal: parseFloat(invoice.vatAmount?.toString() || '0'),
+      grossTotal: parseFloat(invoice.totalAmount?.toString() || '0')
     })
 
     // Read the temporary PDF

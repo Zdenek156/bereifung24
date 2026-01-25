@@ -4525,6 +4525,7 @@ model CommissionInvoice {
   // Status
   status          String   @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
   sentAt          DateTime? // Wann Email versendet wurde
+  emailSent       Boolean  @default(false) // Email erfolgreich versendet
   paidAt          DateTime? // Wann bezahlt wurde
   dueDate         DateTime? // Zahlungsziel (bei SEPA-Fehler: +14 Tage)
   

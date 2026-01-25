@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateInvoicePdf } from '@/lib/invoicing/invoicePdfService'
+import { sendInvoiceEmail } from '@/lib/invoicing/invoiceEmailService'
 
 /**
  * TEST 2: Generate PDF for latest invoice
@@ -46,13 +47,25 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Send email with PDF attachment
+    console.log(`📧 Sending invoice email to ${invoice.workshop.user?.email}`)
+    const emailResult = await sendInvoiceEmail(invoice.id)
+    
+    if (emailResult.success) {
+      console.log(`✅ Email sent successfully`)
+    } else {
+      console.error(`⚠️ Email failed: ${emailResult.error}`)
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         invoiceId: invoice.id,
         invoiceNumber: invoice.invoiceNumber,
         pdfUrl,
-        workshop: invoice.workshop.companyName
+        workshop: invoice.workshop.companyName,
+        emailSent: emailResult.success,
+        emailError: emailResult.error
       }
     })
 

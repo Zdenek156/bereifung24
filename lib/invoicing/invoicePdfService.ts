@@ -183,9 +183,16 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
   
   // Format dates
   const invoiceDate = invoice.createdAt.toLocaleDateString('de-DE')
-  const periodStart = invoice.periodStart.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
-  const periodEnd = invoice.periodEnd.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
-  const dueDate = invoice.dueDate?.toLocaleDateString('de-DE')
+  
+  // Period: First day of month to last day of month
+  const periodStartDate = new Date(invoice.periodStart)
+  periodStartDate.setDate(1) // First day of month
+  const periodStart = periodStartDate.toLocaleDateString('de-DE')
+  
+  const periodEndDate = new Date(invoice.periodEnd)
+  const lastDay = new Date(periodEndDate.getFullYear(), periodEndDate.getMonth() + 1, 0).getDate()
+  periodEndDate.setDate(lastDay) // Last day of month
+  const periodEnd = periodEndDate.toLocaleDateString('de-DE')
 
   // Format amounts
   const formatEUR = (amount: number) => {
@@ -434,10 +441,8 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       <strong>Leistungszeitraum:</strong>
       <span>${periodStart} - ${periodEnd}</span>
       
-      ${dueDate ? `
-      <strong>Zahlbar bis:</strong>
-      <span>${dueDate}</span>
-      ` : ''}
+      <strong>Zahlung:</strong>
+      <span>Automatisch per SEPA-Lastschrift</span>
       
       ${settings.taxId ? `
       <strong>USt-IdNr.:</strong>

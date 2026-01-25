@@ -401,9 +401,9 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       </div>
       <div class="company-info">
         <strong>${settings.companyName}</strong>
-        ${settings.street || ''}<br>
-        ${settings.zip || ''} ${settings.city || ''}<br>
-        ${settings.country || 'Deutschland'}<br>
+        ${settings.companyStreet || ''}<br>
+        ${settings.companyZip || ''} ${settings.companyCity || ''}<br>
+        ${settings.companyCountry || 'Deutschland'}<br>
         <br>
         ${settings.phone ? `Tel: ${settings.phone}<br>` : ''}
         ${settings.email ? `E-Mail: ${settings.email}<br>` : ''}
@@ -414,7 +414,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- Recipient -->
     <div class="recipient">
       <div style="font-size: 7pt; color: #666; margin-bottom: 8px; line-height: 1.2;">
-        ${settings.companyName} • • ${settings.street || ''} • ${settings.zip || ''} ${settings.city || ''}
+        ${settings.companyName} • • ${settings.companyStreet || ''} • ${settings.companyZip || ''} ${settings.companyCity || ''}
       </div>
       <div class="recipient-address">
         <strong style="font-size: 11pt;">${invoice.workshop.companyName}</strong><br>

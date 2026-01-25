@@ -28,13 +28,16 @@ export async function GET(
         workshop: {
           select: {
             id: true,
-            name: true,
+            companyName: true,
             street: true,
             zip: true,
             city: true,
             country: true,
-            email: true,
-            phone: true
+            user: {
+              select: {
+                email: true
+              }
+            }
           }
         },
         accountingEntry: true

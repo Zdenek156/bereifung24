@@ -4583,6 +4583,10 @@ model InvoiceSettings {
   phone               String?
   website             String   @default("www.bereifung24.de")
   
+  // Email-Zugangsdaten für Rechnungsversand
+  invoiceEmail        String?  // Email-Adresse für Rechnungsversand (z.B. buchhaltung@bereifung24.de)
+  invoicePassword     String?  // Passwort für Rechnungsversand (verschlüsselt)
+  
   // Banking
   bankName            String?  // z.B. "Deutsche Bank"
   iban                String?  // z.B. "DE89370400440532013000"

@@ -59,14 +59,23 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       return { success: false, error: 'Email template not found or inactive' }
     }
 
-    // Get email settings
-    const emailSettings = await prisma.emailSettings.findUnique({
-      where: { id: 'default-settings' }
+    // Get email settings - use company email settings
+    const emailSettings = await prisma.emailSettings.findFirst({
+      where: {
+        OR: [
+          { b24EmployeeId: { not: null } },
+          { userId: { not: null } }
+        ]
+      }
     })
 
     if (!emailSettings) {
       return { success: false, error: 'Email settings not configured' }
     }
+
+    // Default company email
+    const fromEmail = 'buchhaltung@bereifung24.de'
+    const fromName = 'Bereifung24 Buchhaltung'
 
     // Format data for email
     const lineItems = invoice.lineItems as any[]
@@ -121,7 +130,7 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
     const transporter = nodemailer.createTransport({
       host: emailSettings.smtpHost,
       port: emailSettings.smtpPort,
-      secure: emailSettings.smtpPort === 465,
+      secure: emailSettings.smtpSecure,
       auth: {
         user: emailSettings.smtpUser,
         pass: emailSettings.smtpPassword
@@ -137,7 +146,7 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
 
     // Send email
     await transporter.sendMail({
-      from: `"${emailSettings.fromName}" <${emailSettings.fromEmail}>`,
+      from: `"${fromName}" <${fromEmail}>`,
       to: invoice.workshop.user.email,
       subject: subject,
       html: htmlContent,

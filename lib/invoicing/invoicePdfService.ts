@@ -133,13 +133,13 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
         email: invoice.workshop.user?.email,
         phone: invoice.workshop.user?.phone
       },
-      lineItems: lineItems.map(item => ({
-        name: item.description || 'Provision',
-        quantity: item.quantity || 1,
-        unitPrice: parseFloat(item.unitPrice?.toString() || '0'),
-        netAmount: parseFloat(item.netAmount?.toString() || '0'),
-        vatRate: parseFloat(item.taxRate?.toString() || '0.19'),
-        vatAmount: parseFloat(item.taxAmount?.toString() || '0')
+      lineItems: lineItems.map((item, index) => ({
+        name: item?.description || `Provision ${index + 1}`,
+        quantity: Number(item?.quantity) || 1,
+        unitPrice: Number(item?.unitPrice) || 0,
+        netAmount: Number(item?.total) || 0,
+        vatRate: 0.19, // Fixed 19% VAT
+        vatAmount: Number(item?.total) * 0.19 / 1.19 || 0
       })),
       netTotal: parseFloat(invoice.netAmount.toString()),
       vatTotal: parseFloat(invoice.vatAmount.toString()),

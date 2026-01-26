@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         lastName: true,
         email: true,
         isActive: true,
+        status: true,
         department: true,
         position: true,
         profileImage: true,

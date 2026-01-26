@@ -98,6 +98,26 @@ export default function BewerbungenPage() {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bewerbung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/admin/hr/applications/${id}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        fetchApplications()
+      } else {
+        alert('Fehler beim Löschen der Bewerbung')
+      }
+    } catch (error) {
+      console.error('Error deleting application:', error)
+      alert('Fehler beim Löschen der Bewerbung')
+    }
+  }
+
   const handleDownloadResume = (url: string, name: string) => {
     const a = document.createElement('a')
     a.href = url
@@ -283,6 +303,18 @@ export default function BewerbungenPage() {
                           Ablehnen
                         </Button>
                       </>
+                    )}
+                    
+                    {app.status === 'REJECTED' && (
+                      <Button
+                        onClick={() => handleDelete(app.id)}
+                        size="sm"
+                        variant="outline"
+                        className="border-red-400 text-red-700 hover:bg-red-50"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Löschen
+                      </Button>
                     )}
                   </div>
                 </div>

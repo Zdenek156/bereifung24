@@ -18,6 +18,7 @@ export default function BlogUploadPage() {
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<UploadResult | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [dragActive, setDragActive] = useState(false)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -28,6 +29,32 @@ export default function BlogUploadPage() {
       } else {
         alert('Bitte nur Excel-Dateien (.xlsx oder .xls) hochladen')
         e.target.value = ''
+      }
+    }
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        setSelectedFile(file)
+        setResult(null)
+      } else {
+        alert('Bitte nur Excel-Dateien (.xlsx oder .xls) hochladen')
       }
     }
   }
@@ -88,8 +115,18 @@ export default function BlogUploadPage() {
           </h2>
 
           <div className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center">
-              <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <div 
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragActive 
+                  ? 'border-cyan-500 bg-cyan-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <Upload className={`h-12 w-12 mx-auto mb-4 ${dragActive ? 'text-cyan-500' : 'text-gray-400'}`} />
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -105,6 +142,9 @@ export default function BlogUploadPage() {
                 Excel-Datei auswählen
               </label>
               <p className="text-sm text-gray-500 mt-2">
+                oder Datei hierher ziehen
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
                 Unterstützte Formate: .xlsx, .xls
               </p>
             </div>

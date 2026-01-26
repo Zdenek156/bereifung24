@@ -8,7 +8,7 @@ const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
-  '/werkstatt', '/mitarbeiter', '/karriere',
+  '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder'
 ]
 
@@ -223,6 +223,12 @@ export async function middleware(request: NextRequest) {
   // Check if this could be a landing page (not a static route)
   const isStaticRoute = STATIC_ROUTES.some(route => url.pathname.startsWith(route))
   const isRootPath = url.pathname === '/'
+  
+  // Skip landing page logic for /ratgeber routes (blog pages)
+  if (url.pathname.startsWith('/ratgeber')) {
+    console.log('[MIDDLEWARE] Blog route, passing through:', url.pathname)
+    return NextResponse.next()
+  }
   
   if (!isStaticRoute && !isRootPath && !url.pathname.startsWith('/lp/')) {
     // This could be a landing page slug, rewrite to /lp/[slug]

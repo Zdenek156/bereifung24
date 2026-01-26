@@ -168,7 +168,15 @@ export async function middleware(request: NextRequest) {
 
     // Check /admin/* routes (except /admin dashboard itself)
     if (url.pathname.startsWith('/admin/')) {
-      // Allow access - permission checking is done on the page level
+      // If user is B24_EMPLOYEE, redirect to /mitarbeiter/* instead
+      if (userRole === 'B24_EMPLOYEE') {
+        const mitarbeiterUrl = url.clone()
+        mitarbeiterUrl.pathname = url.pathname.replace('/admin', '/mitarbeiter')
+        console.log(`[MIDDLEWARE] Redirecting B24_EMPLOYEE from ${url.pathname} to ${mitarbeiterUrl.pathname}`)
+        return NextResponse.redirect(mitarbeiterUrl)
+      }
+      
+      // Allow access for ADMIN - permission checking is done on the page level
       console.log(`[MIDDLEWARE] Allowing authenticated access to ${url.pathname}`)
       return NextResponse.next()
     }

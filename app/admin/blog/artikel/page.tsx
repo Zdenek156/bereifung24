@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Plus, Search, FileText, Eye, Edit2, Trash2, Archive, ExternalLink, Copy } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
+import { useBuildPath } from '@/hooks/useBasePath'
 
 interface BlogPost {
   id: string
@@ -52,6 +53,7 @@ interface Category {
 
 export default function BlogArtikelPage() {
   const router = useRouter()
+  const buildPath = useBuildPath()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,7 +175,7 @@ export default function BlogArtikelPage() {
 
       if (response.ok) {
         const result = await response.json()
-        router.push(`/admin/blog/artikel/${result.data.id}/bearbeiten`)
+        router.push(buildPath(`blog/artikel/${result.data.id}/bearbeiten`))
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error}`)
@@ -237,7 +239,7 @@ export default function BlogArtikelPage() {
           </div>
         </div>
         <Button
-          onClick={() => router.push('/admin/blog/artikel/neu')}
+          onClick={() => router.push(buildPath('blog/artikel/neu'))}
           className="bg-cyan-600 hover:bg-cyan-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -342,7 +344,7 @@ export default function BlogArtikelPage() {
               : 'Erstellen Sie Ihren ersten Blog-Artikel'}
           </p>
           <Button
-            onClick={() => router.push('/admin/blog/artikel/neu')}
+            onClick={() => router.push(buildPath('blog/artikel/neu'))}
             variant="outline"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -423,7 +425,7 @@ export default function BlogArtikelPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                       <Button
-                        onClick={() => router.push(`/admin/blog/artikel/${post.id}/bearbeiten`)}
+                        onClick={() => router.push(buildPath(`blog/artikel/${post.id}/bearbeiten`))}
                         size="sm"
                         variant="outline"
                       >

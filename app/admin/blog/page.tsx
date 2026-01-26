@@ -6,6 +6,7 @@ import { FileText, Plus, Tag, FolderOpen, TrendingUp, Eye, Edit, Clock } from 'l
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import BackButton from '@/components/BackButton'
+import { useBuildPath } from '@/hooks/useBasePath'
 
 interface BlogStats {
   overview: {
@@ -51,6 +52,7 @@ interface BlogStats {
 
 export default function BlogDashboard() {
   const router = useRouter()
+  const buildPath = useBuildPath()
   const [stats, setStats] = useState<BlogStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -109,7 +111,7 @@ export default function BlogDashboard() {
           </div>
         </div>
         <Button
-          onClick={() => router.push('/admin/blog/artikel/neu')}
+          onClick={() => router.push(buildPath('blog/artikel/neu'))}
           className="bg-cyan-600 hover:bg-cyan-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -179,7 +181,7 @@ export default function BlogDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Button
-          onClick={() => router.push('/admin/blog/artikel')}
+          onClick={() => router.push(buildPath('blog/artikel'))}
           variant="outline"
           className="h-auto py-4 flex-col items-start"
         >
@@ -191,7 +193,7 @@ export default function BlogDashboard() {
         </Button>
 
         <Button
-          onClick={() => router.push('/admin/blog/kategorien')}
+          onClick={() => router.push(buildPath('blog/kategorien'))}
           variant="outline"
           className="h-auto py-4 flex-col items-start"
         >
@@ -203,7 +205,7 @@ export default function BlogDashboard() {
         </Button>
 
         <Button
-          onClick={() => router.push('/admin/blog/tags')}
+          onClick={() => router.push(buildPath('blog/tags'))}
           variant="outline"
           className="h-auto py-4 flex-col items-start"
         >
@@ -215,7 +217,7 @@ export default function BlogDashboard() {
         </Button>
 
         <Button
-          onClick={() => router.push('/admin/blog/analytics')}
+          onClick={() => router.push(buildPath('blog/analytics'))}
           variant="outline"
           className="h-auto py-4 flex-col items-start"
         >
@@ -239,7 +241,7 @@ export default function BlogDashboard() {
               stats.recentPosts.map((post) => (
                 <div
                   key={post.id}
-                  onClick={() => router.push(`/admin/blog/artikel/${post.id}/bearbeiten`)}
+                  onClick={() => router.push(buildPath(`blog/artikel/${post.id}/bearbeiten`))}
                   className="flex items-start justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
                 >
                   <div className="flex-1">
@@ -279,7 +281,7 @@ export default function BlogDashboard() {
                 <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>Noch keine Artikel vorhanden</p>
                 <Button
-                  onClick={() => router.push('/admin/blog/artikel/neu')}
+                  onClick={() => router.push(buildPath('blog/artikel/neu'))}
                   className="mt-4"
                   variant="outline"
                   size="sm"

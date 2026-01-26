@@ -9,6 +9,7 @@ import { Save, Eye, Send, Archive, Trash2 } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useBuildPath } from '@/hooks/useBasePath'
 
 interface Category {
   id: string
@@ -40,6 +41,7 @@ interface BlogPost {
 
 export default function EditArticlePage() {
   const router = useRouter()
+  const buildPath = useBuildPath()
   const params = useParams()
   const postId = params.id as string
 
@@ -109,7 +111,7 @@ export default function EditArticlePage() {
         setCanonicalUrl(postData.canonicalUrl || '')
       } else {
         alert('Artikel nicht gefunden')
-        router.push('/admin/blog/artikel')
+        router.push(buildPath('blog/artikel'))
       }
     } catch (error) {
       console.error('Error fetching post:', error)
@@ -199,7 +201,7 @@ export default function EditArticlePage() {
 
       if (response.ok) {
         alert('Artikel archiviert!')
-        router.push('/admin/blog/artikel')
+        router.push(buildPath('blog/artikel'))
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error}`)
@@ -220,7 +222,7 @@ export default function EditArticlePage() {
 
       if (response.ok) {
         alert('Artikel gelöscht!')
-        router.push('/admin/blog/artikel')
+        router.push(buildPath('blog/artikel'))
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error}`)

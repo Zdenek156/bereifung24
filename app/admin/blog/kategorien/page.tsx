@@ -6,6 +6,7 @@ import { Plus, FolderOpen, Edit, Trash } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import BackButton from '@/components/BackButton'
+import { useBuildPath } from '@/hooks/useBasePath'
 
 interface Category {
   id: string
@@ -21,6 +22,7 @@ interface Category {
 
 export default function BlogKategorienPage() {
   const router = useRouter()
+  const buildPath = useBuildPath()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 

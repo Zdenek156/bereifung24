@@ -238,13 +238,23 @@ export default function BlogArtikelPage() {
             <p className="text-gray-600 mt-1">{posts.length} Artikel gefunden</p>
           </div>
         </div>
-        <Button
-          onClick={() => router.push(buildPath('blog/artikel/neu'))}
-          className="bg-cyan-600 hover:bg-cyan-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Neuer Artikel
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => router.push(buildPath('blog/artikel/upload'))}
+            variant="outline"
+            className="border-cyan-600 text-cyan-600 hover:bg-cyan-50"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Excel importieren
+          </Button>
+          <Button
+            onClick={() => router.push(buildPath('blog/artikel/neu'))}
+            className="bg-cyan-600 hover:bg-cyan-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Neuer Artikel
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

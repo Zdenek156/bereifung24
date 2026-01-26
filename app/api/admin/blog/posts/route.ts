@@ -80,7 +80,9 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               name: true,
-              slug: true
+              slug: true,
+              usageCount: true,
+              createdAt: true
             }
           },
           _count: {

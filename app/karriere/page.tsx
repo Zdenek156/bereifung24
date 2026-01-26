@@ -48,7 +48,12 @@ export default function KarrierePage() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/public/jobs')
+      const response = await fetch('/api/public/jobs', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       if (response.ok) {
         const result = await response.json()
         setJobs(result.data)

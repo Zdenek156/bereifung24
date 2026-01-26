@@ -16,6 +16,7 @@ interface Employee {
   lastName: string
   email: string
   role: string
+  status?: 'DRAFT' | 'ACTIVE' | 'PROBATION' | 'TERMINATED'
   department?: string
   position?: string
   employmentType?: string
@@ -207,7 +208,14 @@ export default function HRMitarbeiterPage() {
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-lg">{employee.firstName} {employee.lastName}</h3>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    {employee.firstName} {employee.lastName}
+                    {employee.status === 'DRAFT' && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-normal">
+                        ⚠️ Entwurf - Bitte vervollständigen
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-sm text-gray-600">{employee.email}</p>
                 </div>
               </div>

@@ -20,7 +20,7 @@ export default function NeueStelleErstellenPage() {
     description: '',
     requirements: '',
     benefits: '',
-    isActive: true
+    isActive: true // Default: Sofort veröffentlichen
   })
 
   const handleSubmit = async (e: React.FormEvent) => {

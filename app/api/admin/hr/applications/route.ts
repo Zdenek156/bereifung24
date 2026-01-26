@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
       lastName: app.lastName,
       email: app.email,
       phone: app.phone,
-      coverLetter: app.coverLetter,
-      resumeUrl: app.resumePath,
+      coverLetter: app.coverLetterText || '',
+      resumeUrl: app.cvUrl,
       status: app.status,
       notes: app.notes,
       jobPosting: {

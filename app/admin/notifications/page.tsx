@@ -66,7 +66,7 @@ export default function AdminNotificationSettings() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('/api/admin/b24-employees')
+      const response = await fetch('/api/admin/hr/employees')
       if (response.ok) {
         const data = await response.json()
         setEmployees(data.employees || [])

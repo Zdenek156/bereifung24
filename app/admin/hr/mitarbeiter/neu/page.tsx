@@ -150,7 +150,7 @@ export default function NewEmployeePage() {
       }
 
       // Create employee
-      const response = await fetch('/api/admin/b24-employees', {
+      const response = await fetch('/api/admin/hr/employees', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -60,10 +60,10 @@ export default function EhemaligeMitarbeiterPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
+      const response = await fetch(`/api/admin/hr/employees/${employeeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: true })
+        body: JSON.stringify({ status: 'ACTIVE' })
       })
 
       if (response.ok) {

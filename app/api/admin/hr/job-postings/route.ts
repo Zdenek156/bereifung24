@@ -98,6 +98,17 @@ export async function POST(request: NextRequest) {
       ? data.benefits.split('\n').filter((b: string) => b.trim()).map((b: string) => b.trim())
       : []
 
+    // Parse salary range if provided
+    let salaryMin = null
+    let salaryMax = null
+    if (data.salaryRange && data.salaryRange.trim()) {
+      const parts = data.salaryRange.split('-')
+      if (parts.length === 2) {
+        salaryMin = parseFloat(parts[0].trim()) || null
+        salaryMax = parseFloat(parts[1].trim()) || null
+      }
+    }
+
     const jobPosting = await prisma.jobPosting.create({
       data: {
         title: data.title,
@@ -108,8 +119,8 @@ export async function POST(request: NextRequest) {
         benefits,
         workTimeModel: data.employmentType,
         weeklyHours: data.employmentType === 'FULL_TIME' ? 40 : null,
-        salaryMin: data.salaryRange ? parseFloat(data.salaryRange.split('-')[0]) : null,
-        salaryMax: data.salaryRange ? parseFloat(data.salaryRange.split('-')[1]) : null,
+        salaryMin,
+        salaryMax,
         isActive: data.isActive,
         isPublic: data.isActive,
         publishedAt: data.isActive ? new Date() : null,

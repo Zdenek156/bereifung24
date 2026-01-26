@@ -148,11 +148,11 @@ export async function POST(request: NextRequest) {
         // Initiate SEPA payment if mandate exists
         // Valid statuses: pending_submission (before first payment), submitted, active (after first payment)
         const validSepaStatuses = ['pending_submission', 'submitted', 'active']
-        if (workshop.sepaMandateId && validSepaStatuses.includes(workshop.sepaMandateStatus || '')) {
+        if (workshop.gocardlessMandateId && validSepaStatuses.includes(workshop.gocardlessMandateStatus || '')) {
           try {
-            console.log(`💳 Initiating SEPA payment (mandate status: ${workshop.sepaMandateStatus})...`)
+            console.log(`💳 Initiating SEPA payment (mandate status: ${workshop.gocardlessMandateStatus})...`)
             const payment = await createPayment({
-              mandateId: workshop.sepaMandateId,
+              mandateId: workshop.gocardlessMandateId,
               amount: formatAmountForGoCardless(totalAmount),
               currency: 'EUR',
               description: `Provision ${invoice.invoiceNumber}`,

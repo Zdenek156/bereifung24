@@ -29,26 +29,26 @@ export async function POST(request: NextRequest) {
     // Check if workshop has SEPA mandate
     // Valid statuses: pending_submission (before first payment), active (after first payment)
     const validStatuses = ['pending_submission', 'submitted', 'active']
-    if (!invoice.workshop.sepaMandateId) {
+    if (!invoice.workshop.gocardlessMandateId) {
       return NextResponse.json({
         success: false,
         error: `Workshop has no SEPA mandate set up.`
       }, { status: 400 })
     }
 
-    if (!validStatuses.includes(invoice.workshop.sepaMandateStatus || '')) {
+    if (!validStatuses.includes(invoice.workshop.gocardlessMandateStatus || '')) {
       return NextResponse.json({
         success: false,
-        error: `Workshop SEPA mandate is not ready for payments. Status: ${invoice.workshop.sepaMandateStatus || 'none'}`
+        error: `Workshop SEPA mandate is not ready for payments. Status: ${invoice.workshop.gocardlessMandateStatus || 'none'}`
       }, { status: 400 })
     }
 
-    console.log(`✅ SEPA mandate ready (${invoice.workshop.sepaMandateStatus})`)
+    console.log(`✅ SEPA mandate ready (${invoice.workshop.gocardlessMandateStatus})`)
     console.log(`💰 Creating payment for: ${invoice.totalAmount} EUR`)
 
     // Create SEPA payment
     const payment = await createPayment({
-      mandateId: invoice.workshop.sepaMandateId,
+      mandateId: invoice.workshop.gocardlessMandateId,
       amount: formatAmountForGoCardless(parseFloat(invoice.totalAmount.toString())),
       currency: 'EUR',
       description: `Provision ${invoice.invoiceNumber}`,

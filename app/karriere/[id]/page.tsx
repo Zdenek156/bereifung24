@@ -327,6 +327,19 @@ export default function JobDetailPage() {
                 <span>Ansprechpartner: {job.contactPerson}</span>
               </div>
             </div>
+
+            {/* Call to Action Button */}
+            <div className="border-t pt-6 mt-6">
+              <button
+                onClick={() => {
+                  document.getElementById('bewerben')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              >
+                <Send className="h-5 w-5" />
+                Jetzt online bewerben
+              </button>
+            </div>
           </Card>
 
           {/* Application Form */}

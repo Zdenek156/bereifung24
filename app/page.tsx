@@ -335,8 +335,6 @@ export default function HomePage() {
               <h4 className="text-lg font-bold mb-4">Karriere</h4>
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/karriere" className="hover:text-white transition-colors">Stellenangebote</Link></li>
-                <li><Link href="/karriere#bewerben" className="hover:text-white transition-colors">Jetzt bewerben</Link></li>
-                <li><Link href="/karriere" className="hover:text-white transition-colors">Warum Bereifung24?</Link></li>
               </ul>
             </div>
 

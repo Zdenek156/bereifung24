@@ -146,8 +146,11 @@ export async function POST(request: NextRequest) {
         console.log(`📧 Email sent to ${workshop.user.email}`)
 
         // Initiate SEPA payment if mandate exists
-        if (workshop.sepaMandateId && workshop.sepaMandateStatus === 'active') {
+        // Valid statuses: pending_submission (before first payment), submitted, active (after first payment)
+        const validSepaStatuses = ['pending_submission', 'submitted', 'active']
+        if (workshop.sepaMandateId && validSepaStatuses.includes(workshop.sepaMandateStatus || '')) {
           try {
+            console.log(`💳 Initiating SEPA payment (mandate status: ${workshop.sepaMandateStatus})...`)
             const payment = await createPayment({
               mandateId: workshop.sepaMandateId,
               amount: formatAmountForGoCardless(totalAmount),
@@ -168,13 +171,13 @@ export async function POST(request: NextRequest) {
               }
             })
 
-            console.log(`💳 SEPA payment initiated: ${payment.id}`)
+            console.log(`✅ SEPA payment initiated: ${payment.id} (status: ${payment.status})`)
           } catch (sepaError) {
             console.warn(`⚠️  SEPA payment failed for ${workshop.companyName}:`, sepaError)
             // Don't fail the whole process - invoice is still sent via email with bank transfer info
           }
         } else {
-          console.log(`💰 No SEPA mandate - using bank transfer`)
+          console.log(`💰 No active SEPA mandate (status: ${workshop.sepaMandateStatus || 'none'}) - using bank transfer`)
         }
 
         // Mark commissions as BILLED

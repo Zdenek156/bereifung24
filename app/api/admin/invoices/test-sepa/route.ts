@@ -27,13 +27,23 @@ export async function POST(request: NextRequest) {
     console.log(`💳 Checking SEPA mandate for: ${invoice.workshop.companyName}`)
 
     // Check if workshop has SEPA mandate
-    if (!invoice.workshop.sepaMandateId || invoice.workshop.sepaMandateStatus !== 'active') {
+    // Valid statuses: pending_submission (before first payment), active (after first payment)
+    const validStatuses = ['pending_submission', 'submitted', 'active']
+    if (!invoice.workshop.sepaMandateId) {
       return NextResponse.json({
         success: false,
-        error: `Workshop has no active SEPA mandate. Status: ${invoice.workshop.sepaMandateStatus || 'none'}`
+        error: `Workshop has no SEPA mandate set up.`
       }, { status: 400 })
     }
 
+    if (!validStatuses.includes(invoice.workshop.sepaMandateStatus || '')) {
+      return NextResponse.json({
+        success: false,
+        error: `Workshop SEPA mandate is not ready for payments. Status: ${invoice.workshop.sepaMandateStatus || 'none'}`
+      }, { status: 400 })
+    }
+
+    console.log(`✅ SEPA mandate ready (${invoice.workshop.sepaMandateStatus})`)
     console.log(`💰 Creating payment for: ${invoice.totalAmount} EUR`)
 
     // Create SEPA payment

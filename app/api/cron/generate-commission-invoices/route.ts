@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createInvoice, markInvoiceAsSent, generateInvoiceNumber } from '@/lib/invoicing/invoiceService'
 import { createInvoiceBooking } from '@/lib/invoicing/invoiceAccountingService'
 import { generateInvoicePdf } from '@/lib/invoicing/invoicePdfService'
+import { sendInvoiceEmail } from '@/lib/invoicing/invoiceEmailService'
 import { createPayment, formatAmountForGoCardless } from '@/lib/gocardless'
 
 /**
@@ -142,8 +143,8 @@ export async function POST(request: NextRequest) {
         console.log(`📊 Accounting entry created: ${accountingEntryId}`)
 
         // Send email
-        await sendInvoiceEmail(invoice.id, workshop, pdfUrl)
-        console.log(`📧 Email sent to ${workshop.user.email}`)
+        const emailResult = await sendInvoiceEmail(invoice.id)
+        console.log(`📧 Email sent to ${workshop.user.email}: ${emailResult.success ? 'success' : emailResult.error}`)
 
         // Initiate SEPA payment if mandate exists
         // Valid statuses: pending_submission (before first payment), submitted, active (after first payment)
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
             // Don't fail the whole process - invoice is still sent via email with bank transfer info
           }
         } else {
-          console.log(`💰 No active SEPA mandate (status: ${workshop.sepaMandateStatus || 'none'}) - using bank transfer`)
+          console.log(`💰 No active SEPA mandate (status: ${workshop.gocardlessMandateStatus || 'none'}) - using bank transfer`)
         }
 
         // Mark commissions as BILLED
@@ -278,108 +279,6 @@ function getServiceDescription(packageType: string, packageName: string): string
   }
 
   return descriptions[packageType] || packageName || 'Vermittlungsleistung'
-}
-
-/**
- * Send invoice email to workshop
- */
-async function sendInvoiceEmail(invoiceId: string, workshop: any, pdfUrl: string) {
-  try {
-    const invoice = await prisma.commissionInvoice.findUnique({
-      where: { id: invoiceId },
-      include: {
-        workshop: {
-          select: { 
-            companyName: true,
-            user: {
-              select: { email: true }
-            }
-          }
-        }
-      }
-    })
-
-    if (!invoice || !workshop.user?.email) {
-      throw new Error('Invoice or workshop email not found')
-    }
-
-    const emailSettings = await prisma.emailSettings.findFirst()
-    if (!emailSettings) {
-      throw new Error('Email settings not configured')
-    }
-
-    // Check for accountant email template or use default
-    const template = await prisma.emailTemplate.findFirst({
-      where: { slug: 'commission-invoice' }
-    })
-
-    const subject = template?.subject || `Provisionsabrechnung ${invoice.invoiceNumber}`
-    
-    const htmlBody = template?.htmlBody || `
-      <h2>Provisionsabrechnung ${invoice.invoiceNumber}</h2>
-      <p>Sehr geehrte Damen und Herren,</p>
-      <p>anbei erhalten Sie Ihre Provisionsabrechnung für den Zeitraum ${invoice.periodStart.toLocaleDateString('de-DE')} bis ${invoice.periodEnd.toLocaleDateString('de-DE')}.</p>
-      <p><strong>Rechnungsbetrag: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(invoice.totalAmount)}</strong></p>
-      ${invoice.sepaPaymentId 
-        ? '<p>Der Betrag wird in den nächsten Tagen per SEPA-Lastschrift eingezogen.</p>'
-        : `<p>Bitte überweisen Sie den Betrag bis zum ${invoice.dueDate?.toLocaleDateString('de-DE')} unter Angabe der Rechnungsnummer.</p>`
-      }
-      <p>Die Rechnung finden Sie im Anhang als PDF.</p>
-      <p>Mit freundlichen Grüßen<br>Ihr Bereifung24 Team</p>
-    `
-
-    const plainBody = template?.plainBody || `
-Provisionsabrechnung ${invoice.invoiceNumber}
-
-Sehr geehrte Damen und Herren,
-
-anbei erhalten Sie Ihre Provisionsabrechnung für den Zeitraum ${invoice.periodStart.toLocaleDateString('de-DE')} bis ${invoice.periodEnd.toLocaleDateString('de-DE')}.
-
-Rechnungsbetrag: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(invoice.totalAmount)}
-
-${invoice.sepaPaymentId 
-  ? 'Der Betrag wird in den nächsten Tagen per SEPA-Lastschrift eingezogen.'
-  : `Bitte überweisen Sie den Betrag bis zum ${invoice.dueDate?.toLocaleDateString('de-DE')} unter Angabe der Rechnungsnummer.`
-}
-
-Die Rechnung finden Sie im Anhang als PDF.
-
-Mit freundlichen Grüßen
-Ihr Bereifung24 Team
-    `
-
-    // Send email using existing email service
-    const nodemailer = require('nodemailer')
-    
-    const transporter = nodemailer.createTransport({
-      host: emailSettings.smtpHost,
-      port: emailSettings.smtpPort,
-      secure: emailSettings.smtpPort === 465,
-      auth: {
-        user: emailSettings.smtpUser,
-        pass: emailSettings.smtpPassword
-      }
-    })
-
-    await transporter.sendMail({
-      from: `"${emailSettings.senderName}" <${emailSettings.senderEmail}>`,
-      to: workshop.user.email,
-      subject,
-      text: plainBody,
-      html: htmlBody,
-      attachments: [
-        {
-          filename: `${invoice.invoiceNumber}.pdf`,
-          path: `${process.cwd()}/public${pdfUrl}`
-        }
-      ]
-    })
-
-    console.log(`✅ Email sent to ${workshop.user.email}`)
-  } catch (error) {
-    console.error('❌ Error sending invoice email:', error)
-    throw error
-  }
 }
 
 /**

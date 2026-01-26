@@ -968,8 +968,9 @@ model B24Employee {
   profileImage String? // URL to profile image
 
   // Status
-  isActive      Boolean @default(true)
-  emailVerified Boolean @default(false)
+  status        EmployeeStatus @default(DRAFT) // DRAFT (neu aus Bewerbung), ACTIVE, PROBATION, TERMINATED
+  isActive      Boolean        @default(true)
+  emailVerified Boolean        @default(false)
 
   // Password Setup
   setupToken       String?   @unique // Token for initial password setup
@@ -4087,6 +4088,13 @@ enum JobApplicationStatus {
   INVITED // Eingeladen
   REJECTED // Abgelehnt
   HIRED // Eingestellt
+}
+
+enum EmployeeStatus {
+  DRAFT // Entwurf (aus Bewerbung erstellt, muss von HR vervollständigt werden)
+  ACTIVE // Aktiv (vollständig eingerichtet)
+  PROBATION // Probezeit
+  TERMINATED // Beendet
 }
 
 // ============================================

@@ -156,11 +156,19 @@ export async function createPayment(data: {
   try {
     const client = await getGocardlessClient()
     
-    // Ensure all metadata values are strings
-    const safeMetadata: Record<string, string> = {}
+    // GoCardless allows maximum 3 metadata properties
+    // We'll use the most important ones
+    const limitedMetadata: Record<string, string> = {}
     if (data.metadata) {
-      for (const [key, value] of Object.entries(data.metadata)) {
-        safeMetadata[key] = String(value)
+      // Prioritize: invoiceId, invoiceNumber (skip workshopId and platform)
+      if (data.metadata.invoiceId) {
+        limitedMetadata.invoiceId = String(data.metadata.invoiceId)
+      }
+      if (data.metadata.invoiceNumber) {
+        limitedMetadata.invoiceNumber = String(data.metadata.invoiceNumber)
+      }
+      if (data.metadata.workshopId) {
+        limitedMetadata.workshopId = String(data.metadata.workshopId)
       }
     }
     
@@ -173,10 +181,7 @@ export async function createPayment(data: {
       links: {
         mandate: data.mandateId
       },
-      metadata: Object.keys(safeMetadata).length > 0 ? {
-        platform: 'bereifung24',
-        ...safeMetadata
-      } : { platform: 'bereifung24' }
+      metadata: limitedMetadata // Max 3 properties
     })
 
     return payment

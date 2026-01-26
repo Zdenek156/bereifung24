@@ -16,7 +16,7 @@ interface Application {
   phone: string | null
   coverLetter: string
   resumeUrl: string | null
-  status: 'NEW' | 'REVIEWING' | 'INTERVIEW' | 'REJECTED' | 'ACCEPTED'
+  status: 'NEW' | 'REVIEWED' | 'INVITED' | 'REJECTED' | 'HIRED'
   notes: string | null
   jobPosting: {
     id: string
@@ -63,17 +63,17 @@ export default function BewerbungenPage() {
   const getStatusBadge = (status: string) => {
     const styles = {
       NEW: 'bg-blue-100 text-blue-800 border-blue-300',
-      REVIEWING: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      INTERVIEW: 'bg-purple-100 text-purple-800 border-purple-300',
+      REVIEWED: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      INVITED: 'bg-purple-100 text-purple-800 border-purple-300',
       REJECTED: 'bg-red-100 text-red-800 border-red-300',
-      ACCEPTED: 'bg-green-100 text-green-800 border-green-300'
+      HIRED: 'bg-green-100 text-green-800 border-green-300'
     }
     const labels = {
       NEW: 'Neu',
-      REVIEWING: 'In Prüfung',
-      INTERVIEW: 'Vorstellungsgespräch',
+      REVIEWED: 'In Prüfung',
+      INVITED: 'Zum Gespräch',
       REJECTED: 'Abgelehnt',
-      ACCEPTED: 'Angenommen'
+      HIRED: 'Eingestellt'
     }
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[status as keyof typeof styles]}`}>
@@ -138,9 +138,9 @@ export default function BewerbungenPage() {
             >
               <option value="ALL">Alle Status</option>
               <option value="NEW">Neu</option>
-              <option value="REVIEWING">In Prüfung</option>
-              <option value="INTERVIEW">Vorstellungsgespräch</option>
-              <option value="ACCEPTED">Angenommen</option>
+              <option value="REVIEWED">In Prüfung</option>
+              <option value="INVITED">Zum Gespräch</option>
+              <option value="HIRED">Eingestellt</option>
               <option value="REJECTED">Abgelehnt</option>
             </select>
             <div className="ml-auto text-sm text-gray-600">
@@ -221,7 +221,7 @@ export default function BewerbungenPage() {
                     {app.status === 'NEW' && (
                       <>
                         <Button
-                          onClick={() => handleStatusChange(app.id, 'REVIEWING')}
+                          onClick={() => handleStatusChange(app.id, 'REVIEWED')}
                           size="sm"
                           className="bg-yellow-600 hover:bg-yellow-700"
                         >
@@ -231,9 +231,9 @@ export default function BewerbungenPage() {
                       </>
                     )}
                     
-                    {(app.status === 'NEW' || app.status === 'REVIEWING') && (
+                    {(app.status === 'NEW' || app.status === 'REVIEWED') && (
                       <Button
-                        onClick={() => handleStatusChange(app.id, 'INTERVIEW')}
+                        onClick={() => handleStatusChange(app.id, 'INVITED')}
                         size="sm"
                         className="bg-purple-600 hover:bg-purple-700"
                       >
@@ -242,12 +242,12 @@ export default function BewerbungenPage() {
                       </Button>
                     )}
                     
-                    {(app.status === 'REVIEWING' || app.status === 'INTERVIEW') && (
+                    {(app.status === 'REVIEWED' || app.status === 'INVITED') && (
                       <>
                         <Button
                           onClick={() => {
                             if (confirm('Bewerbung wirklich annehmen?')) {
-                              handleStatusChange(app.id, 'ACCEPTED')
+                              handleStatusChange(app.id, 'HIRED')
                             }
                           }}
                           size="sm"

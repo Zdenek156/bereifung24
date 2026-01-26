@@ -41,22 +41,9 @@ export async function GET(
             }
           }
         },
-        revisions: {
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-          include: {
-            author: {
-              select: {
-                firstName: true,
-                lastName: true
-              }
-            }
-          }
-        },
         _count: {
           select: {
-            blogViews: true,
-            revisions: true
+            blogViews: true
           }
         }
       }

@@ -54,8 +54,86 @@
 - [ ] Capital account management
 
 ### Phase 3: HR Module
-- [ ] Employee hierarchy management
-- [ ] Document approval workflows (using Lock/Approve pattern)
-- [ ] Leave request approvals with hierarchy
-- [ ] Expense approvals with multi-level authorization
-- [ ] Salary change approvals (HR → Management)
+- [x] Employee hierarchy management
+- [x] Document approval workflows (using Lock/Approve pattern)
+- [x] Leave request approvals with hierarchy
+- [x] Expense approvals with multi-level authorization
+- [x] Salary change approvals (HR → Management)
+- [x] Job postings on homepage with online application form
+- [ ] **Payroll System (Gehaltsabrechnung) - Phase 2**
+
+## HR Module - Payroll System (Phase 2)
+
+### ⚠️ Gehaltsabrechnung - Komplexität & Optionen
+
+**Status:** Prisma-Model vorhanden, Berechnungslogik fehlt
+
+**Anforderungen:**
+- Deutsche Gesetzeskonformität (2026)
+- GoBD-konforme PDF-Generierung
+- Revisionssichere Archivierung
+
+**Zu implementieren:**
+
+#### 1. Sozialversicherungsbeiträge 2026
+- **Krankenversicherung (KV):** 14,6% (je 7,3% AN/AG) + Zusatzbeitrag Ø 1,7%
+- **Pflegeversicherung (PV):** 3,4% (1,7% AN/AG) + 0,6% Kinderlosenzuschlag (ab 23 Jahre)
+- **Rentenversicherung (RV):** 18,6% (je 9,3% AN/AG)
+- **Arbeitslosenversicherung (ALV):** 2,6% (je 1,3% AN/AG)
+- **Beitragsbemessungsgrenze:** West 96.600€ / Ost 96.600€
+
+#### 2. Arbeitgeber-Umlagen
+- U1-Umlage (Krankheit): ~1,5%
+- U2-Umlage (Mutterschaft): ~0,3%
+- U3-Umlage (Insolvenz): ~0,1%
+- Berufsgenossenschaft: ~1% (branchenabhängig)
+
+#### 3. Lohnsteuer nach Bundesland
+- Steuerklassen I-VI mit verschiedenen Formeln
+- Grundfreibetrag: 12.096€ (2026)
+- Solidaritätszuschlag: 5,5% (ab Freigrenze)
+- Kirchensteuer: 8% (BY, BW) oder 9% (Rest-DE)
+
+#### 4. Sonderfälle
+- Minijob: 520€/Monat, pauschal versteuert (2%)
+- Gleitzone (Midijob): 520,01€ - 2.000€ (reduzierte SV)
+- Kurzarbeit, Elternzeit, Krankheit
+
+#### 5. Implementierungsoptionen
+
+**Option A: Komplette Eigenentwicklung**
+- ✅ Volle Kontrolle, keine Abhängigkeiten
+- ❌ Sehr aufwändig (8-12h)
+- ❌ Fehleranfällig bei Gesetzesänderungen
+- ❌ Haftungsrisiko
+
+**Option B: Externe Lohnsteuer-API + Eigene SV** ⭐ **EMPFOHLEN**
+- ✅ Lohnsteuer extern korrekt berechnet
+- ✅ SV-Berechnung selbst (einfacher)
+- ✅ Reduziertes Haftungsrisiko
+- ⚠️ Monatliche API-Kosten (~50-100€)
+- Anbieter: personio.de, lexoffice.de, steuerrechner.de
+
+**Option C: DATEV/Personio Integration**
+- ✅ Professionell und rechtssicher
+- ✅ Automatische Updates
+- ❌ Hohe Kosten (ab 200€/Monat)
+- ❌ Vendor Lock-in
+
+#### 6. Schrittweise Umsetzung (empfohlen)
+
+**Phase 2A: Basis-Gehaltsabrechnung (4-5h)**
+- Admin gibt SV-Beiträge und Steuern manuell ein
+- PDF-Generierung nach GoBD-Muster
+- Archivierung und Versionierung
+- ✅ Schnell ready, keine Fehlerrisiken
+
+**Phase 2B: Automatische SV-Berechnung (3-4h)**
+- Formeln für KV, PV, RV, ALV
+- Beitragsbemessungsgrenzen
+- Arbeitgeber-Umlagen
+
+**Phase 2C: Lohnsteuer-Integration (2-3h)**
+- API-Anbindung für Lohnsteuerberechnung
+- Soli und Kirchensteuer
+- Steuerklassen-Verwaltung

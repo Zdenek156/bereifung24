@@ -9,7 +9,8 @@ const STATIC_ROUTES = [
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
   '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber',
-  '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder'
+  '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder',
+  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml'
 ]
 
 // Map admin routes to application keys for permission checking
@@ -37,6 +38,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/influencer-management': 'influencers',
   '/admin/influencer-payments': 'influencers',
   '/admin/roadmap': 'roadmap',
+  '/admin/blog': 'blog',
 }
 
 // API routes to application mapping
@@ -52,6 +54,8 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/influencer': 'influencers',
   '/api/admin/roadmap': 'roadmap',
   '/api/mitarbeiter/roadmap': 'roadmap',
+  '/api/admin/blog': 'blog',
+  '/api/blog': 'public',
 }
 
 /**

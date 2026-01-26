@@ -4649,7 +4649,7 @@ model BlogPost {
   // Organization
   category        BlogCategory @relation(fields: [categoryId], references: [id])
   categoryId      String
-  tags            BlogTag[]
+  tags            BlogTag[]    @relation("BlogPostToTag")
   targetAudience  BlogAudience // CUSTOMER | WORKSHOP | BOTH
   
   // Publishing
@@ -4721,7 +4721,7 @@ model BlogTag {
   id         String     @id @default(cuid())
   slug       String     @unique
   name       String
-  posts      BlogPost[]
+  posts      BlogPost[] @relation("BlogPostToTag")
   usageCount Int        @default(0) // Für Popular Tags
   
   createdAt  DateTime   @default(now())

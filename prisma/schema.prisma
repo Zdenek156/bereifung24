@@ -1127,6 +1127,13 @@ model B24Employee {
   createdRoadmapTasks   RoadmapTask[] @relation("RoadmapTaskCreator")
   helpOffersRoadmapTasks RoadmapTaskHelpOffer[] @relation("RoadmapTaskHelper")
 
+  // ============================================
+  // BLOG SYSTEM - RELATIONS
+  // ============================================
+  authoredBlogPosts  BlogPost[]         @relation("AuthoredPosts")
+  reviewedBlogPosts  BlogPost[]         @relation("ReviewedPosts")
+  blogPostRevisions  BlogPostRevision[] @relation("PostRevisions")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -4617,4 +4624,165 @@ model InvoiceSettings {
   updatedAt           DateTime @updatedAt
   
   @@map("invoice_settings")
+}
+
+// ============================================
+// BLOG SYSTEM
+// ============================================
+
+model BlogPost {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  excerpt         String?  @db.Text
+  content         String   @db.Text
+  featuredImage   String?
+  imageAlt        String?
+  
+  // SEO Fields
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  keywords        String[]
+  canonicalUrl    String?
+  focusKeyword    String?
+  
+  // Organization
+  category        BlogCategory @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  tags            BlogTag[]
+  targetAudience  BlogAudience // CUSTOMER | WORKSHOP | BOTH
+  
+  // Publishing
+  status          BlogStatus   // DRAFT | REVIEW | PUBLISHED | ARCHIVED
+  author          B24Employee  @relation("AuthoredPosts", fields: [authorId], references: [id])
+  authorId        String
+  reviewer        B24Employee? @relation("ReviewedPosts", fields: [reviewerId], references: [id])
+  reviewerId      String?
+  reviewedAt      DateTime?
+  publishedAt     DateTime?
+  scheduledFor    DateTime?
+  archivedAt      DateTime?
+  
+  // Analytics
+  views           Int          @default(0)
+  readTime        Int?         // Minuten
+  seoScore        Int?         // 0-100
+  
+  // Related Content
+  relatedPosts    BlogPost[]   @relation("RelatedPosts")
+  relatedTo       BlogPost[]   @relation("RelatedPosts")
+  
+  // Relations
+  blogViews       BlogView[]
+  revisions       BlogPostRevision[]
+  
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([targetAudience])
+  @@index([authorId])
+  @@map("blog_posts")
+}
+
+model BlogCategory {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  name            String
+  description     String?    @db.Text
+  icon            String?    // Emoji oder Lucide Icon Name
+  color           String?    // Hex-Code für UI
+  parentId        String?    // Für Sub-Kategorien
+  
+  // SEO
+  seoTitle        String?
+  seoDescription  String?    @db.Text
+  
+  // Relations
+  posts           BlogPost[]
+  parent          BlogCategory?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children        BlogCategory[] @relation("SubCategories")
+  
+  // Ordering
+  sortOrder       Int        @default(0)
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  @@index([slug])
+  @@index([parentId])
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  posts      BlogPost[]
+  usageCount Int        @default(0) // Für Popular Tags
+  
+  createdAt  DateTime   @default(now())
+  
+  @@index([slug])
+  @@index([usageCount])
+  @@map("blog_tags")
+}
+
+model BlogView {
+  id          String   @id @default(cuid())
+  postId      String
+  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Analytics
+  ipAddress   String?
+  userAgent   String?
+  referer     String?
+  country     String?
+  city        String?
+  
+  viewedAt    DateTime @default(now())
+  
+  @@index([postId])
+  @@index([viewedAt])
+  @@map("blog_views")
+}
+
+model BlogPostRevision {
+  id         String   @id @default(cuid())
+  postId     String
+  post       BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Snapshot of post data
+  title      String
+  content    String   @db.Text
+  excerpt    String?  @db.Text
+  
+  // Who made this revision
+  authorId   String
+  author     B24Employee @relation("PostRevisions", fields: [authorId], references: [id])
+  
+  // Change note
+  changeNote String?  @db.Text
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([postId])
+  @@index([createdAt])
+  @@map("blog_post_revisions")
+}
+
+enum BlogStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogAudience {
+  CUSTOMER
+  WORKSHOP
+  BOTH
 }

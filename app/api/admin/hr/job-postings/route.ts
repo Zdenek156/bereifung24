@@ -109,6 +109,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Map employmentType to WorkTimeModel enum
+    const employmentTypeMap: Record<string, string> = {
+      'FULL_TIME': 'FULLTIME_40H',
+      'PART_TIME': 'PARTTIME_30H',
+      'MINI_JOB': 'MINIJOB_603',
+      'MIDI_JOB': 'PARTTIME_20H',
+      'INTERN': 'FULLTIME_40H',
+      'APPRENTICE': 'FULLTIME_40H',
+      'WORKING_STUDENT': 'PARTTIME_20H',
+      'FREELANCE': 'FULLTIME_40H',
+      'TEMPORARY': 'FULLTIME_40H'
+    }
+
+    const workTimeModel = employmentTypeMap[data.employmentType] || 'FULLTIME_40H'
+    const weeklyHours = data.employmentType === 'FULL_TIME' ? 40 
+      : data.employmentType === 'PART_TIME' ? 30
+      : data.employmentType === 'WORKING_STUDENT' ? 20
+      : data.employmentType === 'MIDI_JOB' ? 20
+      : null
+
     const jobPosting = await prisma.jobPosting.create({
       data: {
         title: data.title,
@@ -117,8 +137,8 @@ export async function POST(request: NextRequest) {
         description: data.description,
         requirements,
         benefits,
-        workTimeModel: data.employmentType,
-        weeklyHours: data.employmentType === 'FULL_TIME' ? 40 : null,
+        workTimeModel,
+        weeklyHours,
         salaryMin,
         salaryMax,
         isActive: data.isActive,

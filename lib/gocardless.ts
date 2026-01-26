@@ -155,6 +155,15 @@ export async function createPayment(data: {
 }) {
   try {
     const client = await getGocardlessClient()
+    
+    // Ensure all metadata values are strings
+    const safeMetadata: Record<string, string> = {}
+    if (data.metadata) {
+      for (const [key, value] of Object.entries(data.metadata)) {
+        safeMetadata[key] = String(value)
+      }
+    }
+    
     const payment = await client.payments.create({
       amount: Math.round(data.amount), // Must be integer (cents)
       currency: data.currency || 'EUR',
@@ -164,10 +173,10 @@ export async function createPayment(data: {
       links: {
         mandate: data.mandateId
       },
-      metadata: {
+      metadata: Object.keys(safeMetadata).length > 0 ? {
         platform: 'bereifung24',
-        ...data.metadata
-      }
+        ...safeMetadata
+      } : { platform: 'bereifung24' }
     })
 
     return payment

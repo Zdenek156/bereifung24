@@ -273,3 +273,96 @@ export async function PUT(
     )
   }
 }
+
+/**
+ * DELETE /api/admin/hr/employees/[id]
+ * Permanently delete a terminated employee
+ * Safety: Only allows deletion of employees with status TERMINATED
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const employeeId = params.id
+
+    // Get employee to check if they exist and their status
+    const employee = await prisma.b24Employee.findUnique({
+      where: { id: employeeId }
+    })
+
+    if (!employee) {
+      return NextResponse.json(
+        { success: false, error: 'Employee not found' },
+        { status: 404 }
+      )
+    }
+
+    // Safety check: Only allow deletion of TERMINATED employees
+    if (employee.status !== 'TERMINATED') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Only terminated employees can be permanently deleted. Please deactivate the employee first.' 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Check authorization - only ADMIN or Geschäftsführer can permanently delete
+    if (session.user.role === 'B24_EMPLOYEE') {
+      const currentEmployee = await prisma.b24Employee.findUnique({
+        where: { email: session.user.email || '' }
+      })
+
+      const hasAccess = await hasApplication(session.user.id, 'hr')
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Forbidden - No HR access' }, { status: 403 })
+      }
+
+      // Check if user is Geschäftsführer (hierarchyLevel 0)
+      const isGeschaeftsfuehrer = currentEmployee && (
+        currentEmployee.position?.toLowerCase().includes('geschäftsführer') ||
+        currentEmployee.position?.toLowerCase().includes('ceo') ||
+        (currentEmployee.hierarchyLevel !== null && currentEmployee.hierarchyLevel === 0)
+      )
+
+      if (!isGeschaeftsfuehrer) {
+        return NextResponse.json(
+          { error: 'Forbidden - Only Geschäftsführer can permanently delete employees' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Delete employee profile first (cascade will handle this, but being explicit)
+    await prisma.employeeProfile.deleteMany({
+      where: { employeeId: employeeId }
+    })
+
+    // Delete the employee
+    await prisma.b24Employee.delete({
+      where: { id: employeeId }
+    })
+
+    return NextResponse.json({ 
+      success: true,
+      message: `Employee ${employee.firstName} ${employee.lastName} permanently deleted`
+    })
+  } catch (error) {
+    console.error('Error deleting employee:', error)
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to delete employee',
+        details: error instanceof Error ? error.message : String(error)
+      },
+      { status: 500 }
+    )
+  }
+}

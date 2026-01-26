@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Users, Building2, Clock, Euro, FileText, RotateCcw } from 'lucide-react'
+import { Search, Users, Building2, Clock, Euro, FileText, RotateCcw, Trash2 } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -75,6 +75,29 @@ export default function EhemaligeMitarbeiterPage() {
     } catch (error) {
       console.error('Error reactivating employee:', error)
       alert('Fehler beim Aktivieren')
+    }
+  }
+
+  const handleDelete = async (employeeId: string, name: string) => {
+    if (!confirm(`Möchten Sie ${name} wirklich dauerhaft löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/hr/employees/${employeeId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        alert('Mitarbeiter wurde gelöscht!')
+        fetchEmployees()
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Fehler beim Löschen'}`)
+      }
+    } catch (error) {
+      console.error('Error deleting employee:', error)
+      alert('Fehler beim Löschen')
     }
   }
 
@@ -279,7 +302,7 @@ export default function EhemaligeMitarbeiterPage() {
                 className="flex-1"
               >
                 <FileText className="h-4 w-4 mr-2" />
-                Details ansehen
+                Details
               </Button>
               <Button
                 variant="default"
@@ -289,6 +312,14 @@ export default function EhemaligeMitarbeiterPage() {
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reaktivieren
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete(employee.id, `${employee.firstName} ${employee.lastName}`)}
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </Card>

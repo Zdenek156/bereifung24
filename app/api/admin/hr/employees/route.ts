@@ -31,8 +31,13 @@ export async function GET(request: NextRequest) {
           showInactive 
             ? { status: 'TERMINATED' } 
             : { status: { not: 'TERMINATED' } },
-          { email: { not: { contains: 'admin@bereifung24.de' } } },
-          { email: { not: { contains: 'system@' } } }
+          // Exclude admin and system accounts (case-insensitive)
+          { 
+            NOT: [
+              { email: { contains: 'admin@bereifung24.de', mode: 'insensitive' } },
+              { email: { contains: 'system@', mode: 'insensitive' } }
+            ]
+          }
         ]
       },
       select: {

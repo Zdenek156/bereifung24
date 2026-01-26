@@ -231,6 +231,20 @@ export default function BewerbungenPage() {
                       </>
                     )}
                     
+                    {app.status === 'REVIEWED' && (
+                      <>
+                        <Button
+                          onClick={() => handleStatusChange(app.id, 'NEW')}
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-400 text-gray-700"
+                        >
+                          <Clock className="h-4 w-4 mr-1" />
+                          Zurücksetzen
+                        </Button>
+                      </>
+                    )}
+                    
                     {(app.status === 'NEW' || app.status === 'REVIEWED') && (
                       <Button
                         onClick={() => handleStatusChange(app.id, 'INVITED')}

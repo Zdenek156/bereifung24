@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import {
   Calendar,
   Clock,
@@ -218,11 +216,10 @@ export default function ArticleDetail({ post, relatedPosts }: Props) {
                   </div>
 
                   {/* Content */}
-                  <div className="prose prose-lg max-w-none mt-8 mb-8">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {post.content}
-                    </ReactMarkdown>
-                  </div>
+                  <div 
+                    className="prose prose-lg max-w-none mt-8 mb-8"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
 
                   {/* Tags */}
                   {post.tags.length > 0 && (

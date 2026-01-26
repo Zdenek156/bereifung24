@@ -62,6 +62,7 @@ export default function JobDetailPage() {
   })
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -153,6 +154,35 @@ export default function JobDetailPage() {
       setCvFile(e.target.files[0])
       if (errors.cv) {
         setErrors(prev => ({ ...prev, cv: '' }))
+      }
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      
+      // Validate file type
+      if (['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
+        setCvFile(file)
+        if (errors.cv) {
+          setErrors(prev => ({ ...prev, cv: '' }))
+        }
+      } else {
+        setErrors(prev => ({ ...prev, cv: 'Nur PDF, DOC oder DOCX erlaubt' }))
       }
     }
   }
@@ -450,7 +480,18 @@ export default function JobDetailPage() {
                     <label className="block text-sm font-medium mb-2">
                       Lebenslauf (PDF, DOC, DOCX) <span className="text-red-500">*</span>
                     </label>
-                    <div className={`border-2 border-dashed rounded-lg p-6 text-center ${errors.cv ? 'border-red-500' : 'border-gray-300'}`}>
+                    <div 
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        isDragging 
+                          ? 'border-primary-500 bg-primary-50' 
+                          : errors.cv 
+                            ? 'border-red-500' 
+                            : 'border-gray-300 hover:border-primary-400'
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
                       <Upload className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                       <label className="cursor-pointer">
                         <span className="text-primary-600 hover:text-primary-700 font-medium">

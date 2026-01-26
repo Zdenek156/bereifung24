@@ -68,14 +68,7 @@ export async function GET(req: NextRequest) {
     // Get top viewed posts (last 30 days)
     const topPosts = await prisma.blogPost.findMany({
       where: {
-        status: 'PUBLISHED',
-        blogViews: {
-          some: {
-            viewedAt: {
-              gte: thirtyDaysAgo
-            }
-          }
-        }
+        status: 'PUBLISHED'
       },
       include: {
         category: {

@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Save, Eye, Send, ArrowLeft } from 'lucide-react'
 import BackButton from '@/components/BackButton'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { useBuildPath } from '@/hooks/useBasePath'
 
 interface Category {
@@ -226,17 +224,17 @@ export default function NewArticlePage() {
               <Card className="p-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Inhalt (Markdown) <span className="text-red-500">*</span>
+                    Inhalt (HTML) <span className="text-red-500">*</span>
                   </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    💡 Verwenden Sie HTML-Tags für Formatierung: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, etc.
+                  </p>
                   <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="# Überschrift 1&#10;&#10;## Überschrift 2&#10;&#10;**Fettgedruckter Text**&#10;&#10;- Listenpunkt 1&#10;- Listenpunkt 2&#10;&#10;[Link-Text](https://example.com)"
-                    className="w-full border rounded px-3 py-2 font-mono text-sm min-h-[400px]"
+                    placeholder="<h2>Überschrift</h2><p>Ihr Text hier...</p>"
+                    className="w-full border rounded px-3 py-2 font-mono text-sm min-h-[500px]"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Markdown wird unterstützt. Verwenden Sie # für Überschriften, ** für Fettdruck, * für Listen.
-                  </p>
                 </div>
               </Card>
 
@@ -370,11 +368,10 @@ export default function NewArticlePage() {
                 {excerpt && (
                   <p className="text-xl text-gray-600 mb-6">{excerpt}</p>
                 )}
-                <div className="border-t pt-6">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {content || '*Noch kein Inhalt vorhanden*'}
-                  </ReactMarkdown>
-                </div>
+                <div 
+                  className="border-t pt-6"
+                  dangerouslySetInnerHTML={{ __html: content || '<p><em>Noch kein Inhalt vorhanden</em></p>' }}
+                />
               </article>
             </Card>
           )}

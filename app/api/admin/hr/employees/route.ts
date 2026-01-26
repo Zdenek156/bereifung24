@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
     const employees = await prisma.b24Employee.findMany({
       where: {
         AND: [
-          { isActive: !showInactive }, // true for active, false for inactive
+          // Filter by status: TERMINATED = inactive, others = active
+          showInactive 
+            ? { status: 'TERMINATED' } 
+            : { status: { not: 'TERMINATED' } },
           { email: { not: { contains: 'admin@bereifung24.de' } } },
           { email: { not: { contains: 'system@' } } }
         ]

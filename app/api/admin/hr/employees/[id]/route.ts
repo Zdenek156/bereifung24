@@ -163,6 +163,9 @@ export async function PUT(
     if (body.position !== undefined) updateData.position = body.position
     if (body.department !== undefined) updateData.department = body.department
     
+    // Status update (for deactivation)
+    if (body.status !== undefined) updateData.status = body.status
+    
     // Hierarchy
     if (body.managerId !== undefined) updateData.managerId = body.managerId || null
     if (body.hierarchyLevel !== undefined) updateData.hierarchyLevel = body.hierarchyLevel ?? 3

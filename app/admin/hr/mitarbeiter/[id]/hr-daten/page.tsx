@@ -219,17 +219,18 @@ export default function HRDataEditPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/b24-employees/${employeeId}`, {
+      const response = await fetch(`/api/admin/hr/employees/${employeeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: false })
+        body: JSON.stringify({ status: 'TERMINATED' })
       })
 
       if (response.ok) {
         alert('Mitarbeiter wurde deaktiviert und in die ehemaligen Mitarbeiter verschoben.')
         router.push(getEmployeeUrl('/admin/hr/mitarbeiter', session?.user?.role))
       } else {
-        alert('Fehler beim Deaktivieren')
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Fehler beim Deaktivieren'}`)
       }
     } catch (error) {
       console.error('Error deactivating employee:', error)

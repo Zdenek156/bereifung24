@@ -20,7 +20,7 @@ export async function PATCH(
       )
     }
 
-    const validStatuses = ['NEW', 'REVIEWING', 'INTERVIEW', 'REJECTED', 'ACCEPTED']
+    const validStatuses = ['NEW', 'REVIEWED', 'INVITED', 'REJECTED', 'HIRED']
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status' },

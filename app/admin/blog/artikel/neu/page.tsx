@@ -9,6 +9,7 @@ import { Save, Eye, Send, ArrowLeft } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useBuildPath } from '@/hooks/useBasePath'
 
 interface Category {
   id: string
@@ -20,6 +21,7 @@ interface Category {
 
 export default function NewArticlePage() {
   const router = useRouter()
+  const buildPath = useBuildPath()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -112,7 +114,7 @@ export default function NewArticlePage() {
       if (response.ok) {
         const result = await response.json()
         alert(`Artikel erfolgreich ${status === 'DRAFT' ? 'als Entwurf gespeichert' : 'veröffentlicht'}!`)
-        router.push('/admin/blog/artikel')
+        router.push(buildPath('blog/artikel'))
       } else {
         const error = await response.json()
         alert(`Fehler: ${error.error}`)

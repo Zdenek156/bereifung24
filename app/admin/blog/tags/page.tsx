@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Tag as TagIcon, Edit, Trash } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import BackButton from '@/components/BackButton'
-
+import BackButton from '@/components/BackButton'import { useBuildPath } from '@/hooks/useBasePath'
 interface Tag {
   id: string
   name: string

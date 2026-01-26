@@ -4,11 +4,16 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
 import XLSX from 'xlsx'
 
+// Required for Route Handlers to work properly
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    // Allow both ADMIN and B24_EMPLOYEE
+    if (!session?.user || !['ADMIN', 'B24_EMPLOYEE'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

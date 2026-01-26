@@ -267,7 +267,7 @@ export default function HomePage() {
       {/* Footer - Professional */}
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -330,6 +330,16 @@ export default function HomePage() {
               </Link>
             </div>
 
+            {/* Karriere */}
+            <div>
+              <h4 className="text-lg font-bold mb-4">Karriere</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link href="/karriere" className="hover:text-white transition-colors">Stellenangebote</Link></li>
+                <li><Link href="/karriere#bewerben" className="hover:text-white transition-colors">Jetzt bewerben</Link></li>
+                <li><Link href="/karriere" className="hover:text-white transition-colors">Warum Bereifung24?</Link></li>
+              </ul>
+            </div>
+
             {/* Legal */}
             <div>
               <h4 className="text-lg font-bold mb-4">Rechtliches</h4>
@@ -345,7 +355,7 @@ export default function HomePage() {
           {/* Bottom Bar */}
           <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
-              <p>&copy; 2025 Bereifung24. Alle Rechte vorbehalten.</p>
+              <p>&copy; 2026 Bereifung24. Alle Rechte vorbehalten.</p>
               <p className="mt-4 md:mt-0">
                 Made with ❤️ in Deutschland
               </p>

@@ -106,30 +106,54 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
         <section 
-          className="relative py-20 px-4 sm:px-6 lg:px-8"
+          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
+            background: landingPage.heroImage 
+              ? 'transparent'
+              : `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
           }}
         >
-          <div className="max-w-7xl mx-auto">
+          {/* Hero Background Image */}
+          {landingPage.heroImage && (
+            <>
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url(${landingPage.heroImage})`,
+                  filter: 'brightness(0.4)'
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30" />
+            </>
+          )}
+          
+          <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center">
               {/* Workshop Logo */}
-              {landingPage.workshop.logoUrl && (
+              {landingPage.showLogo && landingPage.workshop.logoUrl && (
                 <div className="mb-8 flex justify-center">
                   <img 
                     src={landingPage.workshop.logoUrl} 
                     alt={`${landingPage.workshop.companyName} Logo`}
-                    className="h-24 w-auto object-contain"
+                    className="h-24 w-auto object-contain drop-shadow-lg"
                   />
                 </div>
               )}
               
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+              <h1 
+                className={`text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 ${
+                  landingPage.heroImage ? 'text-white drop-shadow-2xl' : 'text-gray-900'
+                }`}
+              >
                 {landingPage.heroHeadline || `Willkommen bei ${landingPage.workshop.companyName}`}
               </h1>
               
               {landingPage.heroSubline && (
-                <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                <p 
+                  className={`text-xl mb-8 max-w-3xl mx-auto ${
+                    landingPage.heroImage ? 'text-white/95 drop-shadow-lg' : 'text-gray-600'
+                  }`}
+                >
                   {landingPage.heroSubline}
                 </p>
               )}

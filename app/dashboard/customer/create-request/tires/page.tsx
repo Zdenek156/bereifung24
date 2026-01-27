@@ -697,6 +697,7 @@ export default function CreateRequestPage() {
                 <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
                   {!formData.width && TIRE_WIDTHS.map(w => (
                     <button
+                      type="button"
                       key={w}
                       onClick={() => handleChange({ target: { name: 'width', value: String(w) } } as any)}
                       className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
@@ -710,6 +711,7 @@ export default function CreateRequestPage() {
                   ))}
                   {formData.width && !formData.aspectRatio && ASPECT_RATIOS.map(ar => (
                     <button
+                      type="button"
                       key={ar}
                       onClick={() => handleChange({ target: { name: 'aspectRatio', value: String(ar) } } as any)}
                       className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
@@ -723,6 +725,7 @@ export default function CreateRequestPage() {
                   ))}
                   {formData.width && formData.aspectRatio && !formData.diameter && DIAMETERS.map(d => (
                     <button
+                      type="button"
                       key={d}
                       onClick={() => handleChange({ target: { name: 'diameter', value: String(d) } } as any)}
                       className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
@@ -736,6 +739,7 @@ export default function CreateRequestPage() {
                   ))}
                   {formData.width && formData.aspectRatio && formData.diameter && !formData.loadIndex && LOAD_INDICES.map(li => (
                     <button
+                      type="button"
                       key={li}
                       onClick={() => handleChange({ target: { name: 'loadIndex', value: String(li) } } as any)}
                       className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
@@ -750,6 +754,7 @@ export default function CreateRequestPage() {
                   ))}
                   {formData.width && formData.aspectRatio && formData.diameter && formData.loadIndex && !formData.speedRating && SPEED_RATINGS.map(sr => (
                     <button
+                      type="button"
                       key={sr}
                       onClick={() => handleChange({ target: { name: 'speedRating', value: sr } } as any)}
                       className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
@@ -767,6 +772,7 @@ export default function CreateRequestPage() {
                 {/* Zurück-Button */}
                 {(formData.width || formData.aspectRatio || formData.diameter || formData.loadIndex || formData.speedRating) && (
                   <button
+                    type="button"
                     onClick={() => {
                       if (formData.speedRating) {
                         handleChange({ target: { name: 'speedRating', value: '' } } as any)

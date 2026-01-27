@@ -4,6 +4,34 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { calculateDistance } from '@/lib/geocoding'
 
+// Helper function to detect service type from request
+// This matches the logic in app/dashboard/workshop/browse-requests/page.tsx
+function detectServiceType(request: {
+  additionalNotes?: string | null
+  width: number
+  aspectRatio: number
+  diameter: number
+}): string {
+  const notes = request.additionalNotes || ''
+  
+  // Check for specific service markers in additionalNotes
+  if (notes.includes('🏍️ MOTORRADREIFEN')) return 'MOTORCYCLE_TIRE'
+  if (notes.includes('🔧 REIFENREPARATUR')) return 'TIRE_REPAIR'
+  if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT_BOTH'
+  if (notes.includes('BREMSEN-SERVICE')) return 'BRAKE_SERVICE'
+  if (notes.includes('BATTERIE-SERVICE')) return 'BATTERY_SERVICE'
+  if (notes.includes('KLIMASERVICE')) return 'CLIMATE_SERVICE'
+  if (notes.includes('🔧 SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
+  
+  // Check for wheel change (width/aspectRatio/diameter all 0, but AFTER checking additionalNotes)
+  if (request.width === 0 && request.aspectRatio === 0 && request.diameter === 0) {
+    return 'WHEEL_CHANGE'
+  }
+  
+  // Default: Tire change
+  return 'TIRE_CHANGE'
+}
+
 // GET - Workshop holt verfügbare Anfragen in ihrer Nähe
 export async function GET() {
   try {
@@ -16,7 +44,7 @@ export async function GET() {
       )
     }
 
-    // Hole Workshop-Profil
+    // Hole Workshop-Profil mit konfigurierten Services
     const workshop = await prisma.workshop.findUnique({
       where: { userId: session.user.id },
       include: { 
@@ -25,6 +53,18 @@ export async function GET() {
             id: true,
             latitude: true,
             longitude: true
+          }
+        },
+        workshopServices: {
+          where: {
+            isActive: true
+          },
+          include: {
+            servicePackages: {
+              where: {
+                isActive: true
+              }
+            }
           }
         }
       }
@@ -36,6 +76,28 @@ export async function GET() {
         { status: 404 }
       )
     }
+
+    // Get list of configured service types that have at least one active package with price and duration
+    const configuredServiceTypes = workshop.workshopServices
+      .filter(service => {
+        // Service must be active and have at least one package with price and duration configured
+        return service.isActive && 
+               service.servicePackages.length > 0 &&
+               service.servicePackages.some(pkg => 
+                 pkg.isActive && 
+                 pkg.price > 0 && 
+                 pkg.durationMinutes > 0
+               )
+      })
+      .map(service => service.serviceType)
+
+    // If workshop has no configured services, return empty array
+    if (configuredServiceTypes.length === 0) {
+      console.log(`Workshop ${workshop.id} has no configured service packages - showing no requests`)
+      return NextResponse.json({ requests: [] })
+    }
+
+    console.log(`Workshop ${workshop.id} configured services:`, configuredServiceTypes)
 
     // Hole alle offenen Anfragen (nur die, deren needByDate noch nicht abgelaufen ist)
     const today = new Date()
@@ -195,7 +257,28 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json({ requests: filteredRequests })
+    // Filter by configured service types
+    // Only show requests for services the workshop has configured with active packages
+    const serviceFilteredRequests = filteredRequests.filter(request => {
+      const serviceType = detectServiceType({
+        additionalNotes: request.additionalNotes,
+        width: request.width,
+        aspectRatio: request.aspectRatio,
+        diameter: request.diameter
+      })
+      
+      const hasService = configuredServiceTypes.includes(serviceType)
+      
+      if (!hasService) {
+        console.log(`Filtering out request ${request.id} - serviceType ${serviceType} not configured`)
+      }
+      
+      return hasService
+    })
+
+    console.log(`Filtered ${filteredRequests.length} requests down to ${serviceFilteredRequests.length} based on configured services`)
+
+    return NextResponse.json({ requests: serviceFilteredRequests })
   } catch (error) {
     console.error('Tire requests fetch error:', error)
     return NextResponse.json(

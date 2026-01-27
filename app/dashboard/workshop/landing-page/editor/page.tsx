@@ -417,10 +417,7 @@ export default function LandingPageEditor() {
                   { key: 'showLogo', label: 'Werkstatt-Logo', desc: 'Ihr Logo im Header anzeigen' },
                   { key: 'showReviews', label: 'Kundenbewertungen', desc: 'Bewertungen von Google anzeigen' },
                   { key: 'showMap', label: 'Standort-Karte', desc: 'Google Maps Karte einbinden' },
-                  { key: 'showOpeningHours', label: 'Öffnungszeiten', desc: 'Ihre aktuellen Öffnungszeiten' },
-                  { key: 'showTeam', label: 'Team-Bereich', desc: 'Stellen Sie Ihr Team vor' },
-                  { key: 'showFaq', label: 'FAQ-Bereich', desc: 'Häufige Fragen & Antworten' },
-                  { key: 'showPartnerLogos', label: 'Partner-Logos', desc: 'Logos Ihrer Partner (z.B. Reifenmarken)' }
+                  { key: 'showOpeningHours', label: 'Öffnungszeiten', desc: 'Ihre aktuellen Öffnungszeiten' }
                 ].map(feature => (
                   <div key={feature.key} className="flex items-start p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
                     <input

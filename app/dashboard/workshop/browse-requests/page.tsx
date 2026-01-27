@@ -2055,7 +2055,7 @@ export default function BrowseRequestsPage() {
                           const isMixedTires = (selectedRequest.additionalNotes?.includes('Vorderachse:') || selectedRequest.additionalNotes?.includes('Vorderreifen:')) && 
                                                (selectedRequest.additionalNotes?.includes('Hinterachse:') || selectedRequest.additionalNotes?.includes('Hinterreifen:'))
                           
-                          // For non-mixed tires (4 identical tires), show dropdown with ALL_FOUR option
+                          // For non-mixed tires (4 identical tires), show dropdown with 2 or 4 tires (no front/rear distinction)
                           if (!isMixedTires) {
                             return (
                               <div className="mt-3">
@@ -2069,9 +2069,8 @@ export default function BrowseRequestsPage() {
                                   required
                                 >
                                   <option value="">-- Bitte auswählen --</option>
-                                  <option value="ALL_FOUR">🚗 Alle 4 Reifen</option>
-                                  <option value="FRONT_TWO">🚗 2 Vorderreifen</option>
-                                  <option value="REAR_TWO">🚗 2 Hinterreifen</option>
+                                  <option value="FRONT_TWO">🚗 2 Reifen</option>
+                                  <option value="ALL_FOUR">🚗 4 Reifen</option>
                                 </select>
                               </div>
                             )

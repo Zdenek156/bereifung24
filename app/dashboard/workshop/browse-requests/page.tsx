@@ -103,6 +103,7 @@ export default function BrowseRequestsPage() {
   const [requests, setRequests] = useState<TireRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'new' | 'quoted'>('all')
+  const [sortBy, setSortBy] = useState<'distance-asc' | 'distance-desc' | 'created-asc' | 'created-desc' | 'needed-asc' | 'needed-desc'>('distance-asc')
   const [selectedRequest, setSelectedRequest] = useState<TireRequest | null>(null)
   const [showOfferForm, setShowOfferForm] = useState(false)
   const [services, setServices] = useState<WorkshopService[]>([])
@@ -302,6 +303,24 @@ export default function BrowseRequestsPage() {
     if (filter === 'quoted') return req.offers.length > 0
     // "Alle" = alle Anfragen
     return true
+  }).sort((a, b) => {
+    // Sortierung nach ausgewähltem Kriterium
+    switch (sortBy) {
+      case 'distance-asc':
+        return a.distance - b.distance
+      case 'distance-desc':
+        return b.distance - a.distance
+      case 'created-asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'created-desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'needed-asc':
+        return new Date(a.needByDate).getTime() - new Date(b.needByDate).getTime()
+      case 'needed-desc':
+        return new Date(b.needByDate).getTime() - new Date(a.needByDate).getTime()
+      default:
+        return a.distance - b.distance
+    }
   })
 
   const handleCreateOffer = async (request: TireRequest) => {
@@ -1333,40 +1352,59 @@ export default function BrowseRequestsPage() {
 
         {/* Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-4">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filter === 'all'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Alle ({requests.length})
-            </button>
-            <button
-              onClick={() => setFilter('new')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filter === 'new'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Neu ({requests.filter(r => {
-                const hasBeenViewed = r.viewedByWorkshops && r.viewedByWorkshops.length > 0
-                return !hasBeenViewed && r.offers.length === 0
-              }).length})
-            </button>
-            <button
-              onClick={() => setFilter('quoted')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filter === 'quoted'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Mit Angeboten ({requests.filter(r => r.offers.length > 0).length})
-            </button>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'all'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Alle ({requests.length})
+              </button>
+              <button
+                onClick={() => setFilter('new')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'new'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Neu ({requests.filter(r => {
+                  const hasBeenViewed = r.viewedByWorkshops && r.viewedByWorkshops.length > 0
+                  return !hasBeenViewed && r.offers.length === 0
+                }).length})
+              </button>
+              <button
+                onClick={() => setFilter('quoted')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'quoted'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Mit Angeboten ({requests.filter(r => r.offers.length > 0).length})
+              </button>
+            </div>
+
+            {/* Sortierung */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Sortiert nach:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="distance-asc">Entfernung (nah → fern)</option>
+                <option value="distance-desc">Entfernung (fern → nah)</option>
+                <option value="created-asc">Erstellt am (alt → neu)</option>
+                <option value="created-desc">Erstellt am (neu → alt)</option>
+                <option value="needed-asc">Benötigt bis (bald → später)</option>
+                <option value="needed-desc">Benötigt bis (später → bald)</option>
+              </select>
+            </div>
           </div>
         </div>
 

@@ -143,7 +143,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               
               {landingPage.heroSubline && (
                 <p 
-                  className={`text-xl mb-8 max-w-3xl mx-auto ${
+                  className={`text-xl mb-8 max-w-3xl mx-auto text-center ${
                     landingPage.heroImage ? 'text-white/95 drop-shadow-lg' : 'text-gray-600'
                   }`}
                 >

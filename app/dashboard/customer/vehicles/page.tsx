@@ -669,12 +669,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Fahrzeug bearbeiten</h2>
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Fahrzeug bearbeiten</h2>
             <button
               type="button"
               onClick={onClose}
@@ -687,20 +687,20 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
           </div>
 
           {/* Body - Same as AddVehicleModal */}
-          <div className="px-6 py-6 space-y-6">
+          <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
             {/* Vehicle Information */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Fahrzeugdaten</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Fahrzeugtyp *
                   </label>
                   <select
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="CAR">🚗 Auto</option>
                     <option value="MOTORCYCLE">🏍️ Motorrad</option>
@@ -709,7 +709,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
                   <input
@@ -718,12 +718,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     value={formData.make}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Modell *
                   </label>
                   <input
@@ -732,12 +732,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     value={formData.model}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Baujahr *
                   </label>
                   <input
@@ -747,7 +747,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     max={new Date().getFullYear() + 1}
                     value={formData.year}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
@@ -1142,18 +1142,18 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end space-x-4">
+          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 rounded-lg text-gray-700 dark:text-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
             >
               Abbrechen
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Wird gespeichert...' : 'Änderungen speichern'}
             </button>
@@ -1445,12 +1445,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">Fahrzeug hinzufügen</h2>
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Fahrzeug hinzufügen</h2>
             <button
               type="button"
               onClick={onClose}
@@ -1463,20 +1463,20 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
           </div>
 
           {/* Body */}
-          <div className="px-6 py-6 space-y-6">
+          <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
             {/* Vehicle Information */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Fahrzeugdaten</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Fahrzeugtyp *
                   </label>
                   <select
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="CAR">🚗 Auto</option>
                     <option value="MOTORCYCLE">🏍️ Motorrad</option>
@@ -1485,7 +1485,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
                   <input
@@ -1494,12 +1494,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     value={formData.make}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Modell *
                   </label>
                   <input
@@ -1508,12 +1508,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     value={formData.model}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Baujahr *
                   </label>
                   <input
@@ -1523,12 +1523,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     max={new Date().getFullYear() + 1}
                     value={formData.year}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Kennzeichen (optional)
                   </label>
                   <input
@@ -1537,7 +1537,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     value={formData.licensePlate}
                     onChange={handleChange}
                     placeholder="z.B. B-XY 1234"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
@@ -1918,18 +1918,18 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end space-x-4">
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Abbrechen
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Wird gespeichert...' : 'Fahrzeug speichern'}
             </button>

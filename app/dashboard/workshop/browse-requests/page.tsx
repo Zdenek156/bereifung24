@@ -45,6 +45,9 @@ interface TireRequest {
   _count: {
     offers: number
   }
+  viewedByWorkshops?: Array<{
+    viewedAt: string
+  }>
 }
 
 interface TireOption {
@@ -290,12 +293,33 @@ export default function BrowseRequestsPage() {
   }
 
   const filteredRequests = requests.filter(req => {
-    if (filter === 'new') return req.status === 'PENDING' && req.offers.length === 0
+    // "Neu" = noch nicht gesehen UND keine Angebote
+    if (filter === 'new') {
+      const hasBeenViewed = req.viewedByWorkshops && req.viewedByWorkshops.length > 0
+      return !hasBeenViewed && req.offers.length === 0
+    }
+    // "Mit Angeboten" = mindestens ein Angebot vorhanden
     if (filter === 'quoted') return req.offers.length > 0
+    // "Alle" = alle Anfragen
     return true
   })
 
-  const handleCreateOffer = (request: TireRequest) => {
+  const handleCreateOffer = async (request: TireRequest) => {
+    // Mark request as viewed when clicking "Angebot erstellen"
+    try {
+      await fetch(`/api/workshop/tire-requests/${request.id}/mark-viewed`, {
+        method: 'POST'
+      })
+      // Update local state to reflect view status
+      setRequests(prev => prev.map(req => 
+        req.id === request.id 
+          ? { ...req, viewedByWorkshops: [{ viewedAt: new Date().toISOString() }] }
+          : req
+      ))
+    } catch (error) {
+      console.error('Error marking request as viewed:', error)
+    }
+
     setSelectedRequest(request)
     setShowOfferForm(true)
     

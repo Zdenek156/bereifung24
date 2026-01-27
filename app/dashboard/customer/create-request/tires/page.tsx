@@ -588,10 +588,10 @@ export default function CreateRequestPage() {
               </h4>
             )}
             
-            {/* Kompaktes Layout: Kleine Reifen-Card links, Auswahl direkt rechts daneben */}
-            <div className="flex gap-6 items-start">
-              {/* Kleine Reifen-Card links */}
-              <div className="flex-shrink-0 bg-white rounded-xl shadow-md p-2 border border-gray-200" style={{width: '300px'}}>
+            {/* Responsive Layout: Reifen oben, Auswahl darunter auf Mobile */}
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* Kleine Reifen-Card */}
+              <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-xl shadow-md p-2 sm:p-4 border border-gray-200">
                 {/* Progress Mini-Leiste */}
                 <div className="flex justify-between items-center mb-2 px-1">
                   {[
@@ -685,16 +685,16 @@ export default function CreateRequestPage() {
                 </svg>
               </div>
 
-              {/* Auswahlbuttons direkt rechts daneben */}
-              <div className="flex-1 space-y-3">
-                <h4 className="text-lg font-bold text-gray-800">
+              {/* Auswahlbuttons unter dem Reifen auf Mobile, rechts daneben auf Desktop */}
+              <div className="w-full flex-1 space-y-3 sm:space-y-4">
+                <h4 className="text-base sm:text-lg font-bold text-gray-800">
                   {!formData.width ? 'Breite wählen (mm):' :
                    !formData.aspectRatio ? 'Querschnitt wählen (%):' :
                    !formData.diameter ? 'Felgengröße wählen (Zoll):' :
                    !formData.loadIndex ? 'Tragfähigkeit wählen:' :
                    'Geschwindigkeitsindex wählen:'}
                 </h4>
-                <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
                   {!formData.width && TIRE_WIDTHS.map(w => (
                     <button
                       type="button"
@@ -814,10 +814,10 @@ export default function CreateRequestPage() {
                   Hinterreifen
                 </h4>
                 
-                {/* Interaktive Reifenvisualisierung für Hinterreifen */}
-                <div className="flex gap-6 items-start">
+                {/* Responsive Layout für Hinterreifen: Reifen oben, Auswahl darunter auf Mobile */}
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
                   {/* Reifen-Card */}
-                  <div style={{width: '300px'}} className="bg-white rounded-xl shadow-md p-2">
+                  <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-xl shadow-md p-2 sm:p-4">
                     {/* Progress Indicator für Hinterreifen */}
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center">
@@ -872,16 +872,16 @@ export default function CreateRequestPage() {
                     </svg>
                   </div>
 
-                  {/* Auswahlbuttons für Hinterreifen */}
-                  <div className="flex-1 space-y-3">
-                    <h4 className="text-lg font-bold text-gray-800">
+                  {/* Auswahlbuttons für Hinterreifen unter dem Reifen auf Mobile, rechts daneben auf Desktop */}
+                  <div className="w-full flex-1 space-y-3 sm:space-y-4">
+                    <h4 className="text-base sm:text-lg font-bold text-gray-800">
                       {!formData.rearWidth ? 'Breite wählen (mm):' :
                        !formData.rearAspectRatio ? 'Querschnitt wählen (%):' :
                        !formData.rearDiameter ? 'Felgengröße wählen (Zoll):' :
                        !formData.rearLoadIndex ? 'Tragfähigkeit wählen:' :
                        'Geschwindigkeitsindex wählen:'}
                     </h4>
-                    <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
                       {!formData.rearWidth && TIRE_WIDTHS.map(w => (
                         <button
                           type="button"

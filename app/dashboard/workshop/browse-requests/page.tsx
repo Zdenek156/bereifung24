@@ -1352,7 +1352,10 @@ export default function BrowseRequestsPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Neu ({requests.filter(r => r.status === 'PENDING' && r.offers.length === 0).length})
+              Neu ({requests.filter(r => {
+                const hasBeenViewed = r.viewedByWorkshops && r.viewedByWorkshops.length > 0
+                return !hasBeenViewed && r.offers.length === 0
+              }).length})
             </button>
             <button
               onClick={() => setFilter('quoted')}

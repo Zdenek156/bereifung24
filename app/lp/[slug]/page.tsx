@@ -113,10 +113,10 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
         <section 
-          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] bg-cover bg-center bg-no-repeat"
+          className="relative py-12 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[500px] sm:min-h-[600px] bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: landingPage.heroImage 
-              ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(https://www.bereifung24.de${landingPage.heroImage})`
+              ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(https://www.bereifung24.de${landingPage.heroImage})`
               : `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
           }}
         >
@@ -124,17 +124,17 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             <div className="text-center">
               {/* Workshop Logo */}
               {landingPage.showLogo && landingPage.workshop.logoUrl && (
-                <div className="mb-8 flex justify-center">
+                <div className="mb-6 sm:mb-8 flex justify-center">
                   <img 
                     src={landingPage.workshop.logoUrl} 
                     alt={`${landingPage.workshop.companyName} Logo`}
-                    className="h-24 w-auto object-contain drop-shadow-lg"
+                    className="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-lg"
                   />
                 </div>
               )}
               
               <h1 
-                className={`text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 ${
+                className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight ${
                   landingPage.heroImage ? 'text-white drop-shadow-2xl' : 'text-gray-900'
                 }`}
               >
@@ -143,7 +143,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               
               {landingPage.heroSubline && (
                 <p 
-                  className={`text-xl mb-8 max-w-3xl mx-auto text-center ${
+                  className={`text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-3xl mx-auto text-center leading-relaxed px-2 ${
                     landingPage.heroImage ? 'text-white/95 drop-shadow-lg' : 'text-gray-600'
                   }`}
                 >
@@ -151,10 +151,10 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                 </p>
               )}
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <Link
                   href="/dashboard/customer/create-request"
-                  className="inline-block px-8 py-4 text-white rounded-lg text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
+                  className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg text-base sm:text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
                 >
                   Jetzt Anfrage stellen
@@ -166,14 +166,14 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
         {/* About Section */}
         {landingPage.aboutTitle && landingPage.aboutText && (
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+          <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
                 {landingPage.aboutTitle}
               </h2>
-              <div className="prose prose-lg max-w-none text-gray-700 text-center">
+              <div className="prose prose-base sm:prose-lg max-w-none text-gray-700 text-center">
                 {landingPage.aboutText.split('\n').map((paragraph, idx) => (
-                  paragraph.trim() && <p key={idx} className="mb-4">{paragraph}</p>
+                  paragraph.trim() && <p key={idx} className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">{paragraph}</p>
                 ))}
               </div>
             </div>
@@ -181,12 +181,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         )}
 
         {/* Features Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
               Unsere Leistungen
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {[
                 { icon: '🚗', title: 'Reifenwechsel', desc: 'Professionelle Reifenmontage & Einlagerung' },
                 { icon: '🔧', title: 'Inspektionen', desc: 'Regelmäßige Wartung nach Herstellervorgaben' },
@@ -197,11 +197,11 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               ].map((service, idx) => (
                 <div 
                   key={idx}
-                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                  className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
                 >
-                  <div className="text-4xl mb-4">{service.icon}</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{service.title}</h3>
-                  <p className="text-gray-600">{service.desc}</p>
+                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{service.icon}</div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{service.title}</h3>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{service.desc}</p>
                 </div>
               ))}
             </div>
@@ -209,20 +209,20 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         </section>
 
         {/* Contact Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
               Kontakt & Anfahrt
             </h2>
             
-            <div className="grid md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
               {/* Contact Info */}
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Kontaktdaten</h3>
-                  <div className="space-y-3 text-gray-700">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Kontaktdaten</h3>
+                  <div className="space-y-3 text-sm sm:text-base text-gray-700">
                     <div className="flex items-start">
-                      <span className="text-2xl mr-3">🏢</span>
+                      <span className="text-xl sm:text-2xl mr-2 sm:mr-3 flex-shrink-0">🏢</span>
                       <div>
                         <div className="font-semibold">{landingPage.workshop.companyName}</div>
                         <div>{landingPage.workshop.user.street}</div>
@@ -232,12 +232,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                     
                     {landingPage.workshop.website && (
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">🌐</span>
+                        <span className="text-xl sm:text-2xl mr-2 sm:mr-3 flex-shrink-0">🌐</span>
                         <a 
                           href={landingPage.workshop.website} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="hover:underline"
+                          className="hover:underline break-all"
                         >
                           {landingPage.workshop.website}
                         </a>
@@ -248,17 +248,17 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
                 {landingPage.showOpeningHours && (
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Öffnungszeiten</h3>
-                    <div className="space-y-2 text-gray-700">
-                      <div className="flex justify-between">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Öffnungszeiten</h3>
+                    <div className="space-y-2 text-sm sm:text-base text-gray-700">
+                      <div className="flex justify-between gap-2">
                         <span>Montag - Freitag:</span>
                         <span className="font-semibold">08:00 - 18:00 Uhr</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between gap-2">
                         <span>Samstag:</span>
                         <span className="font-semibold">09:00 - 13:00 Uhr</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between gap-2">
                         <span>Sonntag:</span>
                         <span className="font-semibold">Geschlossen</span>
                       </div>
@@ -269,7 +269,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
               {/* Map */}
               {landingPage.showMap && (
-                <div className="h-96 bg-gray-200 rounded-lg overflow-hidden">
+                <div className="h-64 sm:h-80 md:h-96 bg-gray-200 rounded-lg overflow-hidden">
                   <iframe
                     width="100%"
                     height="100%"

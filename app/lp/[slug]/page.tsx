@@ -113,7 +113,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
         <section 
-          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
+          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px]"
           style={{
             background: landingPage.heroImage 
               ? 'transparent'
@@ -124,13 +124,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           {landingPage.heroImage && (
             <>
               <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
-                  backgroundImage: `url(${landingPage.heroImage})`,
-                  filter: 'brightness(0.7)'
+                  backgroundImage: `url(${landingPage.heroImage})`
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/20 z-0" />
+              <div className="absolute inset-0 bg-black/40" />
             </>
           )}
           

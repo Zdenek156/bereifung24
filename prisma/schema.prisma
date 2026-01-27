@@ -4812,36 +4812,36 @@ model EPRELTire {
   id            String   @id @default(cuid())
   
   // EPREL Original Data
-  eprelId       String?  @unique // Original EPREL product ID
-  supplierName  String   // Manufacturer
-  modelName     String   // Commercial tire model name
+  eprelId       String?  @unique @map("eprel_id") // Original EPREL product ID
+  supplierName  String   @map("supplier_name") // Manufacturer
+  modelName     String   @map("model_name") // Commercial tire model name
   
   // Tire Dimensions
-  tyreDimension String   // e.g., "205/55R16"
+  tyreDimension String   @map("tyre_dimension") // e.g., "205/55R16"
   width         Int      // e.g., 205
-  aspectRatio   Int      // e.g., 55
+  aspectRatio   Int      @map("aspect_ratio") // e.g., 55
   diameter      Int      // e.g., 16
-  loadIndex     String?  // e.g., "91"
-  speedRating   String?  // e.g., "V"
+  loadIndex     String?  @map("load_index") // e.g., "91"
+  speedRating   String?  @map("speed_rating") // e.g., "V"
   
   // Season/Class
-  tyreClass     String?  // summer, winter, all-season
-  has3PMSF      Boolean  @default(false) // Snowflake symbol
-  hasIceGrip    Boolean  @default(false) // Ice grip symbol
+  tyreClass     String?  @map("tyre_class") // summer, winter, all-season
+  has3PMSF      Boolean  @default(false) @map("has_3pmsf") // Snowflake symbol
+  hasIceGrip    Boolean  @default(false) @map("has_ice_grip") // Ice grip symbol
   
   // EU Tire Label Data
-  fuelEfficiencyClass            String?  // A-E (new) or A-G (old)
-  wetGripClass                   String?  // A-E (new) or A-G (old)
-  externalRollingNoiseLevel      Int?     // dB
-  externalRollingNoiseClass      String?  // A, B, C
+  fuelEfficiencyClass            String?  @map("fuel_efficiency_class") // A-E (new) or A-G (old)
+  wetGripClass                   String?  @map("wet_grip_class") // A-E (new) or A-G (old)
+  externalRollingNoiseLevel      Int?     @map("external_rolling_noise_level") // dB
+  externalRollingNoiseClass      String?  @map("external_rolling_noise_class") // A, B, C
   
   // Additional Data
-  additionalData Json?    // Store complete EPREL JSON for future reference
+  additionalData Json?    @map("additional_data") // Store complete EPREL JSON for future reference
   
   // Import Metadata
-  importedAt    DateTime @default(now())
-  lastUpdated   DateTime @updatedAt
-  dataVersion   String?  // Track EPREL data version
+  importedAt    DateTime @default(now()) @map("imported_at")
+  lastUpdated   DateTime @updatedAt @map("last_updated")
+  dataVersion   String?  @map("data_version") // Track EPREL data version
   
   @@index([width, aspectRatio, diameter])
   @@index([tyreDimension])
@@ -4854,15 +4854,15 @@ model EPRELImport {
   id            String   @id @default(cuid())
   
   status        String   // RUNNING, SUCCESS, FAILED
-  tiresImported Int      @default(0)
-  tiresUpdated  Int      @default(0)
-  tiresDeleted  Int      @default(0)
+  tiresImported Int      @default(0) @map("tires_imported")
+  tiresUpdated  Int      @default(0) @map("tires_updated")
+  tiresDeleted  Int      @default(0) @map("tires_deleted")
   
-  errorMessage  String?  @db.Text
-  dataVersion   String?  // EPREL data version/timestamp
+  errorMessage  String?  @db.Text @map("error_message")
+  dataVersion   String?  @map("data_version") // EPREL data version/timestamp
   
-  startedAt     DateTime @default(now())
-  completedAt   DateTime?
+  startedAt     DateTime @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
   
   @@index([startedAt])
   @@map("eprel_imports")

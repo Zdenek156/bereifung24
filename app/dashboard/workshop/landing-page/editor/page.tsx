@@ -56,6 +56,8 @@ export default function LandingPageEditor() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'seo' | 'hero' | 'about' | 'features' | 'design'>('seo')
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -156,6 +158,67 @@ export default function LandingPageEditor() {
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleHeroImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Bitte nur Bilddateien hochladen')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Bild zu groß (max. 5MB)')
+      return
+    }
+
+    setUploadingHeroImage(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const res = await fetch('/api/workshop/landing-page/upload-hero', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setLandingPage(prev => prev ? { ...prev, heroImage: data.imageUrl } : null)
+        alert('Bild erfolgreich hochgeladen!')
+        fetchLandingPage()
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Fehler beim Hochladen')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Fehler beim Hochladen des Bildes')
+    } finally {
+      setUploadingHeroImage(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleHeroImageUpload(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
   }
 
   if (status === 'loading' || loading) {
@@ -344,12 +407,76 @@ export default function LandingPageEditor() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Hero-Bild
                 </label>
-                <div className="mt-2 p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Bild-Upload folgt in Kürze</p>
-                </div>
+                
+                {landingPage?.heroImage ? (
+                  <div className="space-y-2">
+                    <div className="relative group">
+                      <img 
+                        src={landingPage.heroImage} 
+                        alt="Hero" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <label className="cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100">
+                          Bild ersetzen
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                handleHeroImageUpload(e.target.files[0])
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    className={`mt-2 p-6 border-2 border-dashed rounded-lg text-center transition-colors ${
+                      dragActive 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    {uploadingHeroImage ? (
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                        <p className="mt-4 text-sm text-gray-600">Bild wird hochgeladen...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className="mt-4">
+                          <label className="cursor-pointer">
+                            <span className="text-purple-600 hover:text-purple-500 font-medium">
+                              Bild hochladen
+                            </span>
+                            <span className="text-gray-600"> oder per Drag & Drop</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleHeroImageUpload(e.target.files[0])
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">PNG, JPG, WebP bis zu 5MB</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

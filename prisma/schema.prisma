@@ -4803,3 +4803,67 @@ enum BlogAudience {
   WORKSHOP
   BOTH
 }
+
+// ============================================
+// EPREL TIRE DATABASE (EU Tire Label Data)
+// ============================================
+
+model EPRELTire {
+  id            String   @id @default(cuid())
+  
+  // EPREL Original Data
+  eprelId       String?  @unique // Original EPREL product ID
+  supplierName  String   // Manufacturer
+  modelName     String   // Commercial tire model name
+  
+  // Tire Dimensions
+  tyreDimension String   // e.g., "205/55R16"
+  width         Int      // e.g., 205
+  aspectRatio   Int      // e.g., 55
+  diameter      Int      // e.g., 16
+  loadIndex     String?  // e.g., "91"
+  speedRating   String?  // e.g., "V"
+  
+  // Season/Class
+  tyreClass     String?  // summer, winter, all-season
+  has3PMSF      Boolean  @default(false) // Snowflake symbol
+  hasIceGrip    Boolean  @default(false) // Ice grip symbol
+  
+  // EU Tire Label Data
+  fuelEfficiencyClass            String?  // A-E (new) or A-G (old)
+  wetGripClass                   String?  // A-E (new) or A-G (old)
+  externalRollingNoiseLevel      Int?     // dB
+  externalRollingNoiseClass      String?  // A, B, C
+  
+  // Additional Data
+  additionalData Json?    // Store complete EPREL JSON for future reference
+  
+  // Import Metadata
+  importedAt    DateTime @default(now())
+  lastUpdated   DateTime @updatedAt
+  dataVersion   String?  // Track EPREL data version
+  
+  @@index([width, aspectRatio, diameter])
+  @@index([tyreDimension])
+  @@index([supplierName])
+  @@index([tyreClass])
+  @@map("eprel_tires")
+}
+
+model EPRELImport {
+  id            String   @id @default(cuid())
+  
+  status        String   // RUNNING, SUCCESS, FAILED
+  tiresImported Int      @default(0)
+  tiresUpdated  Int      @default(0)
+  tiresDeleted  Int      @default(0)
+  
+  errorMessage  String?  @db.Text
+  dataVersion   String?  // EPREL data version/timestamp
+  
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  
+  @@index([startedAt])
+  @@map("eprel_imports")
+}

@@ -1959,7 +1959,7 @@ export default function BrowseRequestsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Einkaufspreis (€) *
+                              Einkaufspreis (€) * - Preis pro Reifen
                             </label>
                             <input
                               type="number"
@@ -1979,7 +1979,7 @@ export default function BrowseRequestsPage() {
                           
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Verkaufspreis (€) *
+                              Verkaufspreis (€) * - Preis pro Reifen
                               {option.costPrice && option.pricePerTire && parseFloat(option.costPrice) > 0 && (
                                 <span className="ml-1 text-green-600 text-xs">
                                   (berechnet)

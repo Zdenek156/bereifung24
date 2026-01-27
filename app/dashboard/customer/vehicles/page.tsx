@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
+import InteractiveTireSelector from '@/components/InteractiveTireSelector'
 
 type Vehicle = {
   id: string
@@ -949,90 +950,38 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   </div>
 
                   {/* Front Tire (or single tire for cars) */}
-                  <div>
-                    {formData.summerDifferentSizes && (
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
-                    )}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                        <select name="summerWidth" value={formData.summerWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="">Wählen</option>
-                          {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                        <select name="summerAspectRatio" value={formData.summerAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="">Wählen</option>
-                          {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                        <select name="summerDiameter" value={formData.summerDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="">Wählen</option>
-                          {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                        <select name="summerLoadIndex" value={formData.summerLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="">Optional</option>
-                          {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                        <select name="summerSpeedRating" value={formData.summerSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="">Optional</option>
-                          {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+                  <InteractiveTireSelector
+                    tireData={{
+                      width: formData.summerWidth,
+                      aspectRatio: formData.summerAspectRatio,
+                      diameter: formData.summerDiameter,
+                      loadIndex: formData.summerLoadIndex,
+                      speedRating: formData.summerSpeedRating
+                    }}
+                    onChange={(field, value) => {
+                      handleChange({ target: { name: `summer${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                    }}
+                    label={formData.summerDifferentSizes ? "Vorderreifen" : undefined}
+                    pathIdPrefix="summerFront"
+                  />
 
                   {/* Rear Tire for mixed sizes */}
-                  {formData.summerDifferentSizes && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="summerRearWidth" value={formData.summerRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="summerRearAspectRatio" value={formData.summerRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="summerRearDiameter" value={formData.summerRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="summerRearLoadIndex" value={formData.summerRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="summerRearSpeedRating" value={formData.summerRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                  {formData.summerDifferentSizes && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter && (
+                    <div className="pt-6 mt-6">
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.summerRearWidth,
+                          aspectRatio: formData.summerRearAspectRatio,
+                          diameter: formData.summerRearDiameter,
+                          loadIndex: formData.summerRearLoadIndex,
+                          speedRating: formData.summerRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `summerRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="summerRear"
+                      />
                     </div>
                   )}
                 </div>
@@ -1076,88 +1025,38 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   </div>
 
                   <div>
-                    {formData.winterDifferentSizes && (
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
-                    )}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                    <select name="winterWidth" value={formData.winterWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                    <select name="winterAspectRatio" value={formData.winterAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                    <select name="winterDiameter" value={formData.winterDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                    <select name="winterLoadIndex" value={formData.winterLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                    <select name="winterSpeedRating" value={formData.winterSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                    </select>
-                  </div>
-                </div>
+                    <InteractiveTireSelector
+                      tireData={{
+                        width: formData.winterWidth,
+                        aspectRatio: formData.winterAspectRatio,
+                        diameter: formData.winterDiameter,
+                        loadIndex: formData.winterLoadIndex,
+                        speedRating: formData.winterSpeedRating
+                      }}
+                      onChange={(field, value) => {
+                        handleChange({ target: { name: `winter${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                      }}
+                      label={formData.winterDifferentSizes ? "Vorderreifen" : undefined}
+                      pathIdPrefix="winterFront"
+                    />
                   </div>
 
-                  {formData.winterDifferentSizes && (
+                  {formData.winterDifferentSizes && formData.winterWidth && formData.winterAspectRatio && formData.winterDiameter && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="winterRearWidth" value={formData.winterRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="winterRearAspectRatio" value={formData.winterRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="winterRearDiameter" value={formData.winterRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="winterRearLoadIndex" value={formData.winterRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="winterRearSpeedRating" value={formData.winterRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.winterRearWidth,
+                          aspectRatio: formData.winterRearAspectRatio,
+                          diameter: formData.winterRearDiameter,
+                          loadIndex: formData.winterRearLoadIndex,
+                          speedRating: formData.winterRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `winterRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="winterRear"
+                      />
                     </div>
                   )}
                 </div>
@@ -1202,88 +1101,38 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   </div>
 
                   <div>
-                    {formData.allSeasonDifferentSizes && (
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
-                    )}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                    <select name="allSeasonWidth" value={formData.allSeasonWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                    <select name="allSeasonAspectRatio" value={formData.allSeasonAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                    <select name="allSeasonDiameter" value={formData.allSeasonDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Wählen</option>
-                      {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                    <select name="allSeasonLoadIndex" value={formData.allSeasonLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                    <select name="allSeasonSpeedRating" value={formData.allSeasonSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                      <option value="">Optional</option>
-                      {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                    </select>
-                  </div>
-                </div>
+                    <InteractiveTireSelector
+                      tireData={{
+                        width: formData.allSeasonWidth,
+                        aspectRatio: formData.allSeasonAspectRatio,
+                        diameter: formData.allSeasonDiameter,
+                        loadIndex: formData.allSeasonLoadIndex,
+                        speedRating: formData.allSeasonSpeedRating
+                      }}
+                      onChange={(field, value) => {
+                        handleChange({ target: { name: `allSeason${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                      }}
+                      label={formData.allSeasonDifferentSizes ? "Vorderreifen" : undefined}
+                      pathIdPrefix="allSeasonFront"
+                    />
                   </div>
 
-                  {formData.allSeasonDifferentSizes && (
+                  {formData.allSeasonDifferentSizes && formData.allSeasonWidth && formData.allSeasonAspectRatio && formData.allSeasonDiameter && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="allSeasonRearWidth" value={formData.allSeasonRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="allSeasonRearAspectRatio" value={formData.allSeasonRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="allSeasonRearDiameter" value={formData.allSeasonRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="allSeasonRearLoadIndex" value={formData.allSeasonRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="allSeasonRearSpeedRating" value={formData.allSeasonRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.allSeasonRearWidth,
+                          aspectRatio: formData.allSeasonRearAspectRatio,
+                          diameter: formData.allSeasonRearDiameter,
+                          loadIndex: formData.allSeasonRearLoadIndex,
+                          speedRating: formData.allSeasonRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `allSeasonRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="allSeasonRear"
+                      />
                     </div>
                   )}
                 </div>
@@ -1876,87 +1725,39 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </label>
                   </div>
 
-                  {formData.summerDifferentSizes && (
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Vorderreifen</h4>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                      <select name="summerWidth" value={formData.summerWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                      <select name="summerAspectRatio" value={formData.summerAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                      <select name="summerDiameter" value={formData.summerDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                      <select name="summerLoadIndex" value={formData.summerLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                      <select name="summerSpeedRating" value={formData.summerSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                      </select>
-                    </div>
+                  <div>
+                    <InteractiveTireSelector
+                      tireData={{
+                        width: formData.summerWidth,
+                        aspectRatio: formData.summerAspectRatio,
+                        diameter: formData.summerDiameter,
+                        loadIndex: formData.summerLoadIndex,
+                        speedRating: formData.summerSpeedRating
+                      }}
+                      onChange={(field, value) => {
+                        handleChange({ target: { name: `summer${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                      }}
+                      label={formData.summerDifferentSizes ? "Vorderreifen" : undefined}
+                      pathIdPrefix="addSummerFront"
+                    />
                   </div>
 
-                  {formData.summerDifferentSizes && (
+                  {formData.summerDifferentSizes && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="summerRearWidth" value={formData.summerRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="summerRearAspectRatio" value={formData.summerRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="summerRearDiameter" value={formData.summerRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="summerRearLoadIndex" value={formData.summerRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="summerRearSpeedRating" value={formData.summerRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.summerRearWidth,
+                          aspectRatio: formData.summerRearAspectRatio,
+                          diameter: formData.summerRearDiameter,
+                          loadIndex: formData.summerRearLoadIndex,
+                          speedRating: formData.summerRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `summerRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="addSummerRear"
+                      />
                     </div>
                   )}
                 </div>
@@ -1999,87 +1800,39 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </label>
                   </div>
 
-                  {formData.winterDifferentSizes && (
-                    <h4 className="text-md font-medium text-gray-800">Vorderreifen</h4>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                      <select name="winterWidth" value={formData.winterWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                      <select name="winterAspectRatio" value={formData.winterAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                      <select name="winterDiameter" value={formData.winterDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                      <select name="winterLoadIndex" value={formData.winterLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                      <select name="winterSpeedRating" value={formData.winterSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                      </select>
-                    </div>
+                  <div>
+                    <InteractiveTireSelector
+                      tireData={{
+                        width: formData.winterWidth,
+                        aspectRatio: formData.winterAspectRatio,
+                        diameter: formData.winterDiameter,
+                        loadIndex: formData.winterLoadIndex,
+                        speedRating: formData.winterSpeedRating
+                      }}
+                      onChange={(field, value) => {
+                        handleChange({ target: { name: `winter${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                      }}
+                      label={formData.winterDifferentSizes ? "Vorderreifen" : undefined}
+                      pathIdPrefix="addWinterFront"
+                    />
                   </div>
 
-                  {formData.winterDifferentSizes && (
-                    <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-800">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="winterRearWidth" value={formData.winterRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="winterRearAspectRatio" value={formData.winterRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="winterRearDiameter" value={formData.winterRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="winterRearLoadIndex" value={formData.winterRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="winterRearSpeedRating" value={formData.winterRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                  {formData.winterDifferentSizes && formData.winterWidth && formData.winterAspectRatio && formData.winterDiameter && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.winterRearWidth,
+                          aspectRatio: formData.winterRearAspectRatio,
+                          diameter: formData.winterRearDiameter,
+                          loadIndex: formData.winterRearLoadIndex,
+                          speedRating: formData.winterRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `winterRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="addWinterRear"
+                      />
                     </div>
                   )}
                 </div>
@@ -2123,87 +1876,39 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </label>
                   </div>
 
-                  {formData.allSeasonDifferentSizes && (
-                    <h4 className="text-md font-medium text-gray-800">Vorderreifen</h4>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                      <select name="allSeasonWidth" value={formData.allSeasonWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                      <select name="allSeasonAspectRatio" value={formData.allSeasonAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                      <select name="allSeasonDiameter" value={formData.allSeasonDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Wählen</option>
-                        {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                      <select name="allSeasonLoadIndex" value={formData.allSeasonLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                      <select name="allSeasonSpeedRating" value={formData.allSeasonSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="">Optional</option>
-                        {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                      </select>
-                    </div>
+                  <div>
+                    <InteractiveTireSelector
+                      tireData={{
+                        width: formData.allSeasonWidth,
+                        aspectRatio: formData.allSeasonAspectRatio,
+                        diameter: formData.allSeasonDiameter,
+                        loadIndex: formData.allSeasonLoadIndex,
+                        speedRating: formData.allSeasonSpeedRating
+                      }}
+                      onChange={(field, value) => {
+                        handleChange({ target: { name: `allSeason${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                      }}
+                      label={formData.allSeasonDifferentSizes ? "Vorderreifen" : undefined}
+                      pathIdPrefix="addAllSeasonFront"
+                    />
                   </div>
 
-                  {formData.allSeasonDifferentSizes && (
-                    <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-800">Hinterreifen</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Breite (mm) *</label>
-                          <select name="allSeasonRearWidth" value={formData.allSeasonRearWidth} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {TIRE_WIDTHS.map(w => <option key={w} value={w}>{w}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Querschnitt (%) *</label>
-                          <select name="allSeasonRearAspectRatio" value={formData.allSeasonRearAspectRatio} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {ASPECT_RATIOS.map(ar => <option key={ar} value={ar}>{ar}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Zoll *</label>
-                          <select name="allSeasonRearDiameter" value={formData.allSeasonRearDiameter} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Wählen</option>
-                            {DIAMETERS.map(d => <option key={d} value={d}>{d}"</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Tragfähigkeit</label>
-                          <select name="allSeasonRearLoadIndex" value={formData.allSeasonRearLoadIndex} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {LOAD_INDICES.map(li => <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Geschwindigkeit</label>
-                          <select name="allSeasonRearSpeedRating" value={formData.allSeasonRearSpeedRating} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">Optional</option>
-                            {SPEED_RATINGS.map(sr => <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>)}
-                          </select>
-                        </div>
-                      </div>
+                  {formData.allSeasonDifferentSizes && formData.allSeasonWidth && formData.allSeasonAspectRatio && formData.allSeasonDiameter && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <InteractiveTireSelector
+                        tireData={{
+                          width: formData.allSeasonRearWidth,
+                          aspectRatio: formData.allSeasonRearAspectRatio,
+                          diameter: formData.allSeasonRearDiameter,
+                          loadIndex: formData.allSeasonRearLoadIndex,
+                          speedRating: formData.allSeasonRearSpeedRating
+                        }}
+                        onChange={(field, value) => {
+                          handleChange({ target: { name: `allSeasonRear${field.charAt(0).toUpperCase() + field.slice(1)}`, value } } as any)
+                        }}
+                        label="Hinterreifen"
+                        pathIdPrefix="addAllSeasonRear"
+                      />
                     </div>
                   )}
                 </div>

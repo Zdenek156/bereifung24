@@ -3,6 +3,10 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
+// Force dynamic rendering to always show latest data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface PageProps {
   params: {
     slug: string
@@ -319,13 +323,22 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
         {/* Footer */}
         <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto text-center">
-            <p className="text-gray-400">
-              © {new Date().getFullYear()} {landingPage.workshop.companyName}. Alle Rechte vorbehalten.
-            </p>
-            <p className="text-gray-500 text-sm mt-2">
-              Powered by <Link href="/" className="text-gray-300 hover:text-white">Bereifung24</Link>
-            </p>
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-6">
+              <p className="text-gray-400">
+                © {new Date().getFullYear()} {landingPage.workshop.companyName}. Alle Rechte vorbehalten.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                Powered by <Link href="/" className="text-gray-300 hover:text-white">Bereifung24</Link>
+              </p>
+            </div>
+            
+            {/* Disclaimer */}
+            <div className="border-t border-gray-800 pt-6">
+              <p className="text-gray-500 text-xs text-center max-w-4xl mx-auto">
+                <strong className="text-gray-400">Haftungsausschluss:</strong> Die auf dieser Landing Page dargestellten Inhalte, Angebote und Informationen werden von {landingPage.workshop.companyName} eigenverantwortlich bereitgestellt. Bereifung24 übernimmt keine Haftung für die Richtigkeit, Vollständigkeit oder Aktualität der bereitgestellten Informationen. Für alle Inhalte ist ausschließlich der jeweilige Werkstattbetreiber verantwortlich.
+              </p>
+            </div>
           </div>
         </footer>
       </div>

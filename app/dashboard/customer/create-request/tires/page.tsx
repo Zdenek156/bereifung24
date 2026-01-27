@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DatePicker from '@/components/DatePicker'
+import TireDimensionSelector from '@/components/TireDimensionSelector'
 
 const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
 const ASPECT_RATIOS = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
@@ -548,7 +549,7 @@ export default function CreateRequestPage() {
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
               <span className="bg-primary-100 text-primary-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">{vehicles.length > 0 ? '3' : '2'}</span>
-              Reifendimensionen
+              Reifendimensionen {selectedVehicle && !useManualEntry && '(automatisch übernommen)'}
             </h3>
             
             {/* Mischbereifung Checkbox - nur bei manueller Eingabe */}
@@ -577,95 +578,203 @@ export default function CreateRequestPage() {
               </h4>
             )}
             
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Breite (mm) *
-                </label>
-                <select
-                  name="width"
-                  required
-                  value={formData.width}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Wählen</option>
-                  {TIRE_WIDTHS.map(w => (
-                    <option key={w} value={w}>{w}</option>
+            {/* Kompaktes Layout: Kleine Reifen-Card links, Auswahl direkt rechts daneben */}
+            <div className="flex gap-6 items-start">
+              {/* Kleine Reifen-Card links */}
+              <div className="flex-shrink-0 bg-white rounded-xl shadow-md p-2 border border-gray-200" style={{width: '300px'}}>
+                {/* Progress Mini-Leiste */}
+                <div className="flex justify-between items-center mb-2 px-1">
+                  {[
+                    { step: 'width', label: '1', active: !formData.width },
+                    { step: 'height', label: '2', active: formData.width && !formData.aspectRatio },
+                    { step: 'diameter', label: '3', active: formData.aspectRatio && !formData.diameter },
+                    { step: 'load', label: '4', active: formData.diameter && !formData.loadIndex },
+                    { step: 'speed', label: '5', active: formData.loadIndex && !formData.speedRating }
+                  ].map((item, idx) => (
+                    <div key={item.step} className="flex items-center">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                        item.active ? 'bg-blue-500 text-white ring-2 ring-blue-200' :
+                        (idx === 0 && formData.width) || (idx === 1 && formData.aspectRatio) || (idx === 2 && formData.diameter) || (idx === 3 && formData.loadIndex) || (idx === 4 && formData.speedRating)
+                        ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
+                      }`}>
+                        {(idx === 0 && formData.width) || (idx === 1 && formData.aspectRatio) || (idx === 2 && formData.diameter) || (idx === 3 && formData.loadIndex) || (idx === 4 && formData.speedRating) ? '✓' : item.label}
+                      </div>
+                      {idx < 4 && <div className={`w-10 h-0.5 ${
+                        (idx === 0 && formData.width) || (idx === 1 && formData.aspectRatio) || (idx === 2 && formData.diameter) || (idx === 3 && formData.loadIndex)
+                        ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />}
+                    </div>
                   ))}
-                </select>
+                </div>
+                
+                {/* Reifen SVG - Original-Größe */}
+                <svg viewBox="0 0 400 400" className="w-full h-auto">
+                  {/* Outer tire rubber (smooth, no tread) */}
+                  <circle cx="200" cy="200" r="150" fill="#2d2d2d" stroke="#1a1a1a" strokeWidth="2" />
+                  
+                  {/* Inner sidewall */}
+                  <circle cx="200" cy="200" r="120" fill="#3d3d3d" opacity="0.8" />
+                  
+                  {/* Rim */}
+                  <circle cx="200" cy="200" r="80" fill="#c0c5cc" stroke="#9ca3af" strokeWidth="2" />
+                  
+                  {/* Rim spokes */}
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const angle = (i * 360) / 5
+                    const rad = (angle * Math.PI) / 180
+                    const x = 200 + Math.cos(rad) * 70
+                    const y = 200 + Math.sin(rad) * 70
+                    return <line key={`spoke-${i}`} x1="200" y1="200" x2={x} y2={y} stroke="#6b7280" strokeWidth="6" strokeLinecap="round" />
+                  })}
+                  
+                  {/* Center hub */}
+                  <circle cx="200" cy="200" r="25" fill="#4b5563" />
+                  <circle cx="200" cy="200" r="15" fill="#9ca3af" />
+                  
+                  {/* Text paths */}
+                  <defs>
+                    <path id="textPathTop" d="M 90 200 A 110 110 0 0 1 310 200" fill="none" />
+                    <path id="textPathBottom" d="M 90 200 A 110 110 0 0 0 310 200" fill="none" />
+                  </defs>
+                  
+                  {/* Top text - Tire size with hover */}
+                  <text fontSize="24" fontWeight="bold" fontFamily="Arial, sans-serif">
+                    <textPath href="#textPathTop" startOffset="50%" textAnchor="middle">
+                      <tspan fill="#ffffff" opacity="0.95" className="cursor-help hover:fill-blue-300 transition-colors">
+                        {formData.width || '???'}
+                        <title>Reifenbreite in Millimetern (z.B. 205, 225, 245)</title>
+                      </tspan>
+                      <tspan fill="#ffffff" opacity="0.95">/</tspan>
+                      <tspan fill="#ffffff" opacity="0.95" className="cursor-help hover:fill-green-300 transition-colors">
+                        {formData.aspectRatio || '??'}
+                        <title>Querschnittsverhältnis / Reifenhöhe in Prozent zur Breite (z.B. 55, 60, 65)</title>
+                      </tspan>
+                      <tspan fill="#ffffff" opacity="0.95"> R</tspan>
+                      <tspan fill="#ffffff" opacity="0.95" className="cursor-help hover:fill-amber-300 transition-colors">
+                        {formData.diameter || '??'}
+                        <title>Felgendurchmesser in Zoll (z.B. 16, 17, 18)</title>
+                      </tspan>
+                      <tspan fill="#ffffff" opacity="0.95"> </tspan>
+                      <tspan fill="#ffffff" opacity="0.95" className="cursor-help hover:fill-purple-300 transition-colors">
+                        {formData.loadIndex || '??'}
+                        <title>Tragfähigkeitsindex / Lastindex (z.B. 91 = 615 kg pro Reifen)</title>
+                      </tspan>
+                      <tspan fill="#ffffff" opacity="0.95" className="cursor-help hover:fill-pink-300 transition-colors">
+                        {formData.speedRating || '?'}
+                        <title>Geschwindigkeitsindex (T=190 km/h, H=210 km/h, V=240 km/h, W=270 km/h, Y=300 km/h)</title>
+                      </tspan>
+                    </textPath>
+                  </text>
+                  
+                  {/* Bottom brand */}
+                  <text fill="#ffffff" fontSize="16" fontWeight="bold" fontFamily="Arial, sans-serif" opacity="0.9" letterSpacing="1">
+                    <textPath href="#textPathBottom" startOffset="50%" textAnchor="middle">
+                      BEREIFUNG24.DE
+                    </textPath>
+                  </text>
+                </svg>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Querschnitt (%) *
-                </label>
-                <select
-                  name="aspectRatio"
-                  required
-                  value={formData.aspectRatio}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Wählen</option>
-                  {ASPECT_RATIOS.map(ar => (
-                    <option key={ar} value={ar}>{ar}</option>
+              {/* Auswahlbuttons direkt rechts daneben */}
+              <div className="flex-1 space-y-3">
+                <h4 className="text-lg font-bold text-gray-800">
+                  {!formData.width ? 'Breite wählen (mm):' :
+                   !formData.aspectRatio ? 'Querschnitt wählen (%):' :
+                   !formData.diameter ? 'Felgengröße wählen (Zoll):' :
+                   !formData.loadIndex ? 'Tragfähigkeit wählen:' :
+                   'Geschwindigkeitsindex wählen:'}
+                </h4>
+                <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
+                  {!formData.width && TIRE_WIDTHS.map(w => (
+                    <button
+                      key={w}
+                      onClick={() => handleChange({ target: { name: 'width', value: String(w) } } as any)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                        formData.width === String(w)
+                          ? 'bg-blue-500 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                      }`}
+                    >
+                      {w}
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Zoll *
-                </label>
-                <select
-                  name="diameter"
-                  required
-                  value={formData.diameter}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Wählen</option>
-                  {DIAMETERS.map(d => (
-                    <option key={d} value={d}>{d}"</option>
+                  {formData.width && !formData.aspectRatio && ASPECT_RATIOS.map(ar => (
+                    <button
+                      key={ar}
+                      onClick={() => handleChange({ target: { name: 'aspectRatio', value: String(ar) } } as any)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                        formData.aspectRatio === String(ar)
+                          ? 'bg-green-500 text-white border-green-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                      }`}
+                    >
+                      {ar}%
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tragfähigkeit *
-                </label>
-                <select
-                  name="loadIndex"
-                  required
-                  value={formData.loadIndex}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Wählen</option>
-                  {LOAD_INDICES.map(li => (
-                    <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>
+                  {formData.width && formData.aspectRatio && !formData.diameter && DIAMETERS.map(d => (
+                    <button
+                      key={d}
+                      onClick={() => handleChange({ target: { name: 'diameter', value: String(d) } } as any)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                        formData.diameter === String(d)
+                          ? 'bg-amber-500 text-white border-amber-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+                      }`}
+                    >
+                      {d}"
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Geschwindigkeit *
-                </label>
-                <select
-                  name="speedRating"
-                  required
-                  value={formData.speedRating}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Wählen</option>
-                  {SPEED_RATINGS.map(sr => (
-                    <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>
+                  {formData.width && formData.aspectRatio && formData.diameter && !formData.loadIndex && LOAD_INDICES.map(li => (
+                    <button
+                      key={li}
+                      onClick={() => handleChange({ target: { name: 'loadIndex', value: String(li) } } as any)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                        formData.loadIndex === String(li)
+                          ? 'bg-purple-500 text-white border-purple-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                      }`}
+                      title={`${LOAD_INDEX_MAP[li]} kg`}
+                    >
+                      {li}
+                    </button>
                   ))}
-                </select>
+                  {formData.width && formData.aspectRatio && formData.diameter && formData.loadIndex && !formData.speedRating && SPEED_RATINGS.map(sr => (
+                    <button
+                      key={sr}
+                      onClick={() => handleChange({ target: { name: 'speedRating', value: sr } } as any)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                        formData.speedRating === sr
+                          ? 'bg-pink-500 text-white border-pink-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-pink-400'
+                      }`}
+                      title={`${SPEED_RATING_MAP[sr]} km/h`}
+                    >
+                      {sr}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Zurück-Button */}
+                {(formData.width || formData.aspectRatio || formData.diameter || formData.loadIndex || formData.speedRating) && (
+                  <button
+                    onClick={() => {
+                      if (formData.speedRating) {
+                        handleChange({ target: { name: 'speedRating', value: '' } } as any)
+                      } else if (formData.loadIndex) {
+                        handleChange({ target: { name: 'loadIndex', value: '' } } as any)
+                      } else if (formData.diameter) {
+                        handleChange({ target: { name: 'diameter', value: '' } } as any)
+                      } else if (formData.aspectRatio) {
+                        handleChange({ target: { name: 'aspectRatio', value: '' } } as any)
+                      } else if (formData.width) {
+                        handleChange({ target: { name: 'width', value: '' } } as any)
+                      }
+                    }}
+                    className="mt-3 px-4 py-2 text-sm font-semibold bg-white text-gray-700 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors"
+                  >
+                    ← Zurück
+                  </button>
+                )}
               </div>
             </div>
 

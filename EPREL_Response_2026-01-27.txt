@@ -1,0 +1,42 @@
+Subject: RE: EPREL API - Still 403 Forbidden with Corrected Key
+
+Dear DG ENER Product Energy Efficiency Team,
+
+Thank you for pointing out the typo in the API key. We have corrected it as instructed:
+
+CORRECTED API KEY:
+cllIkTy1kZ4DRqCQlQzoC7FvNj3jh1Ys6UErv6nP (with TWO lowercase "l" at the beginning)
+
+However, we are still receiving 403 Forbidden errors when testing with the corrected key:
+
+TESTED COMMAND (exactly as you provided):
+curl -L -H "X-Api-Key: cllIkTy1kZ4DRqCQlQzoC7FvNj3jh1Ys6UErv6nP" https://eprel.ec.europa.eu/api/exportProducts/tyres
+
+RESULT:
+- Response: {"message":"Forbidden"}
+- HTTP Status: 403
+- File size: 23 bytes
+
+TESTED FROM:
+- Server IP: 167.235.24.110
+- Location: Hetzner Cloud, Germany
+- Time: 2026-01-27 11:23 UTC (just now)
+- Multiple retests with same result
+
+VERIFICATION:
+We confirmed the API key is sent correctly in the request header:
+[x-api-key: cllIkTy1kZ4DRqCQlQzoC7FvNj3jh1Ys6UErv6nP]
+
+QUESTIONS:
+1. Could you please verify that this API key is actually activated in your system?
+2. Is there a delay in activation after the correction?
+3. Are there any IP restrictions or whitelisting requirements despite your earlier confirmation?
+4. Could you test the API key from your side to confirm it works?
+
+We want to implement the EU Tyre Label data in our smart tire advisor to help customers make informed decisions. Your assistance in resolving this issue would be greatly appreciated.
+
+Thank you for your patience and support.
+
+Best regards,
+Bereifung24 Team
+https://bereifung24.de

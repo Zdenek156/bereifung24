@@ -4,17 +4,23 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sparkles, Car, Sliders, Calendar, ChevronRight, ChevronLeft, Award, Fuel, Volume2, Shield, TrendingUp, Check, AlertTriangle, Info } from 'lucide-react';
+import { Sparkles, Car, ChevronRight, ChevronLeft, Award, Fuel, Volume2, Shield, TrendingUp, Check, AlertTriangle, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+
+interface TireSize {
+  width: number;
+  aspectRatio: number;
+  diameter: number;
+}
 
 interface Vehicle {
   id: string;
   make: string;
   model: string;
   year: number;
-  summerTires?: { width: number; aspectRatio: number; diameter: number };
-  winterTires?: { width: number; aspectRatio: number; diameter: number };
-  allSeasonTires?: { width: number; aspectRatio: number; diameter: number };
+  summerTires?: TireSize;
+  winterTires?: TireSize;
+  allSeasonTires?: TireSize;
 }
 
 interface UserProfile {
@@ -36,6 +42,7 @@ interface UserProfile {
   season: 'summer' | 'winter' | 'all-season';
   needs3PMSF: boolean;
   needsIceGrip: boolean;
+  preferredBrands: string[];
 }
 
 interface ScoredTire {
@@ -63,11 +70,15 @@ interface ScoredTire {
   warnings: string[];
 }
 
+type TireType = 'summer' | 'winter' | 'all-season';
+
 export default function TireAdvisorWidget() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [availableTireTypes, setAvailableTireTypes] = useState<TireType[]>([]);
+  const [selectedTireType, setSelectedTireType] = useState<TireType | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [recommendations, setRecommendations] = useState<ScoredTire[]>([]);
@@ -91,7 +102,8 @@ export default function TireAdvisorWidget() {
     priorityValue: 15,
     season: 'summer',
     needs3PMSF: false,
-    needsIceGrip: false
+    needsIceGrip: false,
+    preferredBrands: []
   });
 
   useEffect(() => {
@@ -115,59 +127,99 @@ export default function TireAdvisorWidget() {
   const handleVehicleSelect = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     
-    // Reifengröße automatisch setzen
-    const tireSize = vehicle.summerTires || vehicle.winterTires || vehicle.allSeasonTires;
+    // Verfügbare Reifentypen ermitteln
+    const types: TireType[] = [];
+    if (vehicle.summerTires) types.push('summer');
+    if (vehicle.winterTires) types.push('winter');
+    if (vehicle.allSeasonTires) types.push('all-season');
+    
+    setAvailableTireTypes(types);
+    
+    // Wenn nur ein Typ verfügbar, automatisch wählen
+    if (types.length === 1) {
+      handleTireTypeSelect(vehicle, types[0]);
+    } else {
+      setStep(2);
+    }
+  };
+
+  const handleTireTypeSelect = (vehicle: Vehicle, tireType: TireType) => {
+    setSelectedTireType(tireType);
+    
+    // Reifengröße basierend auf Typ setzen
+    let tireSize: TireSize | undefined;
+    let season: 'summer' | 'winter' | 'all-season' = 'summer';
+    
+    if (tireType === 'summer' && vehicle.summerTires) {
+      tireSize = vehicle.summerTires;
+      season = 'summer';
+    } else if (tireType === 'winter' && vehicle.winterTires) {
+      tireSize = vehicle.winterTires;
+      season = 'winter';
+    } else if (tireType === 'all-season' && vehicle.allSeasonTires) {
+      tireSize = vehicle.allSeasonTires;
+      season = 'all-season';
+    }
+    
     if (tireSize) {
       setProfile(prev => ({
         ...prev,
-        width: tireSize.width,
-        aspectRatio: tireSize.aspectRatio,
-        diameter: tireSize.diameter
+        width: tireSize!.width,
+        aspectRatio: tireSize!.aspectRatio,
+        diameter: tireSize!.diameter,
+        season: season
       }));
+      setStep(3); // Direkt zu Nutzungsprofil
     }
-    
-    setStep(2);
   };
 
-  const adjustUsageSliders = (type: 'usageCity' | 'usageLandroad' | 'usageHighway', value: number) => {
-    const others = ['usageCity', 'usageLandroad', 'usageHighway'].filter(k => k !== type);
-    const remaining = 100 - value;
-    const distribution = remaining / 2;
+  const calculateScoreFromPercentages = () => {
+    // Berechne Punkte basierend auf den Prozenten (müssen nicht auf 100 summieren)
+    const total = profile.prioritySafety + profile.priorityFuelSaving + 
+                  profile.priorityQuietness + profile.priorityDurability + profile.priorityValue;
     
-    setProfile(prev => ({
-      ...prev,
-      [type]: value,
-      [others[0]]: distribution,
-      [others[1]]: distribution
-    }));
-  };
-
-  const adjustPriorities = (key: keyof UserProfile, value: number) => {
-    const priorityKeys = ['prioritySafety', 'priorityFuelSaving', 'priorityQuietness', 'priorityDurability', 'priorityValue'];
-    const otherKeys = priorityKeys.filter(k => k !== key);
-    const remaining = 100 - value;
-    const distribution = remaining / otherKeys.length;
+    if (total === 0) return;
     
-    const updated = { ...profile, [key]: value };
-    otherKeys.forEach(k => {
-      updated[k as keyof UserProfile] = Math.round(distribution) as any;
-    });
-    
-    setProfile(updated);
+    // Normalisiere auf 100 Punkte für die API
+    const factor = 100 / total;
+    return {
+      prioritySafety: Math.round(profile.prioritySafety * factor),
+      priorityFuelSaving: Math.round(profile.priorityFuelSaving * factor),
+      priorityQuietness: Math.round(profile.priorityQuietness * factor),
+      priorityDurability: Math.round(profile.priorityDurability * factor),
+      priorityValue: Math.round(profile.priorityValue * factor)
+    };
   };
 
   const handleSubmit = async () => {
     setProcessing(true);
     try {
+      const normalizedPriorities = calculateScoreFromPercentages();
+      
+      const requestProfile = {
+        ...profile,
+        ...normalizedPriorities
+      };
+      
       const response = await fetch('/api/smart-tire-advisor/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile)
+        body: JSON.stringify(requestProfile)
       });
       
       if (response.ok) {
         const data = await response.json();
         setRecommendations(data.recommendations || []);
+        
+        // Setze bevorzugte Hersteller auf Top-Empfehlung
+        if (data.recommendations && data.recommendations.length > 0) {
+          const topBrand = data.recommendations[0].tire.supplierName;
+          setProfile(prev => ({
+            ...prev,
+            preferredBrands: [topBrand]
+          }));
+        }
+        
         setShowResults(true);
       } else {
         alert('Fehler bei der Empfehlung');
@@ -209,6 +261,18 @@ export default function TireAdvisorWidget() {
     if (noiseClass === 'A') return '🔇';
     if (noiseClass === 'B') return '🔉';
     return '🔊';
+  };
+
+  const getTireTypeName = (type: TireType) => {
+    if (type === 'summer') return 'Sommerreifen';
+    if (type === 'winter') return 'Winterreifen';
+    return 'Ganzjahresreifen';
+  };
+
+  const getTireTypeIcon = (type: TireType) => {
+    if (type === 'summer') return '☀️';
+    if (type === 'winter') return '❄️';
+    return '🌦️';
   };
 
   if (loading) {
@@ -261,6 +325,11 @@ export default function TireAdvisorWidget() {
                     >
                       <div className="font-semibold">{vehicle.make} {vehicle.model}</div>
                       <div className="text-sm text-gray-600">Baujahr: {vehicle.year}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {vehicle.summerTires && '☀️ Sommer'}
+                        {vehicle.winterTires && ' ❄️ Winter'}
+                        {vehicle.allSeasonTires && ' 🌦️ Ganzjahr'}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -268,17 +337,68 @@ export default function TireAdvisorWidget() {
             </div>
           )}
 
-          {/* Schritt 2: Nutzungsprofil */}
-          {step === 2 && (
+          {/* Schritt 2: Reifentyp-Auswahl */}
+          {step === 2 && selectedVehicle && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Welche Reifen benötigen Sie?</h3>
+                <span className="text-sm text-gray-600">Schritt 2/5</span>
+              </div>
+              
+              <div className="p-3 bg-blue-50 rounded-lg mb-3">
+                <div className="text-sm">
+                  <strong>{selectedVehicle.make} {selectedVehicle.model}</strong> ({selectedVehicle.year})
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {availableTireTypes.map(type => {
+                  const size = type === 'summer' ? selectedVehicle.summerTires :
+                              type === 'winter' ? selectedVehicle.winterTires :
+                              selectedVehicle.allSeasonTires;
+                  
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => handleTireTypeSelect(selectedVehicle, type)}
+                      className="p-4 bg-white rounded-lg hover:bg-blue-50 transition-colors text-left border-2 border-transparent hover:border-blue-300"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-3xl">{getTireTypeIcon(type)}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold">{getTireTypeName(type)}</div>
+                          <div className="text-sm text-gray-600">
+                            {size?.width}/{size?.aspectRatio} R{size?.diameter}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Schritt 3: Nutzungsprofil */}
+          {step === 3 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Nutzungsprofil</h3>
-                <span className="text-sm text-gray-600">Schritt 2/4</span>
+                <span className="text-sm text-gray-600">Schritt 3/5</span>
+              </div>
+              
+              <div className="p-3 bg-blue-50 rounded-lg mb-3">
+                <div className="text-sm">
+                  <strong>{selectedVehicle?.make} {selectedVehicle?.model}</strong> • {getTireTypeIcon(selectedTireType!)} {getTireTypeName(selectedTireType!)}
+                  <div className="text-xs text-gray-600 mt-1">
+                    Größe: {profile.width}/{profile.aspectRatio} R{profile.diameter}
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Hauptnutzung (Gesamt: 100%)</label>
+                  <label className="block text-sm font-medium mb-2">Hauptnutzung (in %)</label>
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between mb-1">
@@ -290,7 +410,7 @@ export default function TireAdvisorWidget() {
                         min="0"
                         max="100"
                         value={profile.usageCity}
-                        onChange={(e) => adjustUsageSliders('usageCity', parseInt(e.target.value))}
+                        onChange={(e) => setProfile({ ...profile, usageCity: parseInt(e.target.value) })}
                         className="w-full"
                       />
                     </div>
@@ -304,7 +424,7 @@ export default function TireAdvisorWidget() {
                         min="0"
                         max="100"
                         value={profile.usageLandroad}
-                        onChange={(e) => adjustUsageSliders('usageLandroad', parseInt(e.target.value))}
+                        onChange={(e) => setProfile({ ...profile, usageLandroad: parseInt(e.target.value) })}
                         className="w-full"
                       />
                     </div>
@@ -318,9 +438,12 @@ export default function TireAdvisorWidget() {
                         min="0"
                         max="100"
                         value={profile.usageHighway}
-                        onChange={(e) => adjustUsageSliders('usageHighway', parseInt(e.target.value))}
+                        onChange={(e) => setProfile({ ...profile, usageHighway: parseInt(e.target.value) })}
                         className="w-full"
                       />
+                    </div>
+                    <div className="p-2 bg-gray-50 rounded text-xs text-gray-600">
+                      Gesamt: {profile.usageCity + profile.usageLandroad + profile.usageHighway}%
                     </div>
                   </div>
                 </div>
@@ -363,12 +486,19 @@ export default function TireAdvisorWidget() {
             </div>
           )}
 
-          {/* Schritt 3: Prioritäten */}
-          {step === 3 && (
+          {/* Schritt 4: Prioritäten */}
+          {step === 4 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Ihre Prioritäten</h3>
-                <span className="text-sm text-gray-600">Schritt 3/4</span>
+                <span className="text-sm text-gray-600">Schritt 4/5</span>
+              </div>
+              
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
+                <div className="text-sm text-blue-900">
+                  <Info className="inline h-4 w-4 mr-1" />
+                  Stellen Sie jeden Regler individuell ein. Die Punkte werden automatisch basierend auf Ihren Prioritäten berechnet.
+                </div>
               </div>
               
               <div className="space-y-3">
@@ -378,14 +508,14 @@ export default function TireAdvisorWidget() {
                       <Shield className="h-4 w-4 text-red-600" />
                       Sicherheit
                     </span>
-                    <span className="text-sm font-bold text-red-600">{profile.prioritySafety}</span>
+                    <span className="text-sm font-bold text-red-600">{profile.prioritySafety}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={profile.prioritySafety}
-                    onChange={(e) => adjustPriorities('prioritySafety', parseInt(e.target.value))}
+                    onChange={(e) => setProfile({ ...profile, prioritySafety: parseInt(e.target.value) })}
                     className="w-full"
                   />
                 </div>
@@ -396,14 +526,14 @@ export default function TireAdvisorWidget() {
                       <Fuel className="h-4 w-4 text-green-600" />
                       Kraftstoffersparnis
                     </span>
-                    <span className="text-sm font-bold text-green-600">{profile.priorityFuelSaving}</span>
+                    <span className="text-sm font-bold text-green-600">{profile.priorityFuelSaving}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={profile.priorityFuelSaving}
-                    onChange={(e) => adjustPriorities('priorityFuelSaving', parseInt(e.target.value))}
+                    onChange={(e) => setProfile({ ...profile, priorityFuelSaving: parseInt(e.target.value) })}
                     className="w-full"
                   />
                 </div>
@@ -414,14 +544,14 @@ export default function TireAdvisorWidget() {
                       <Volume2 className="h-4 w-4 text-blue-600" />
                       Leise Fahrt
                     </span>
-                    <span className="text-sm font-bold text-blue-600">{profile.priorityQuietness}</span>
+                    <span className="text-sm font-bold text-blue-600">{profile.priorityQuietness}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={profile.priorityQuietness}
-                    onChange={(e) => adjustPriorities('priorityQuietness', parseInt(e.target.value))}
+                    onChange={(e) => setProfile({ ...profile, priorityQuietness: parseInt(e.target.value) })}
                     className="w-full"
                   />
                 </div>
@@ -432,14 +562,14 @@ export default function TireAdvisorWidget() {
                       <TrendingUp className="h-4 w-4 text-orange-600" />
                       Langlebigkeit
                     </span>
-                    <span className="text-sm font-bold text-orange-600">{profile.priorityDurability}</span>
+                    <span className="text-sm font-bold text-orange-600">{profile.priorityDurability}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={profile.priorityDurability}
-                    onChange={(e) => adjustPriorities('priorityDurability', parseInt(e.target.value))}
+                    onChange={(e) => setProfile({ ...profile, priorityDurability: parseInt(e.target.value) })}
                     className="w-full"
                   />
                 </div>
@@ -450,70 +580,44 @@ export default function TireAdvisorWidget() {
                       <Award className="h-4 w-4 text-purple-600" />
                       Preis-Leistung
                     </span>
-                    <span className="text-sm font-bold text-purple-600">{profile.priorityValue}</span>
+                    <span className="text-sm font-bold text-purple-600">{profile.priorityValue}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={profile.priorityValue}
-                    onChange={(e) => adjustPriorities('priorityValue', parseInt(e.target.value))}
+                    onChange={(e) => setProfile({ ...profile, priorityValue: parseInt(e.target.value) })}
                     className="w-full"
                   />
                 </div>
 
-                <div className="p-3 bg-white rounded-lg">
+                <div className="p-3 bg-white rounded-lg border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Gesamt-Punkte:</span>
-                    <span className={`text-lg font-bold ${
-                      Math.abs(profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
-                              profile.priorityDurability + profile.priorityValue - 100) < 1
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}>
+                    <span className="text-sm font-medium">Gesamt-Prozent:</span>
+                    <span className="text-lg font-bold text-blue-600">
                       {profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
-                       profile.priorityDurability + profile.priorityValue}
+                       profile.priorityDurability + profile.priorityValue}%
                     </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Die Werte werden automatisch auf 100 Punkte normalisiert
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Schritt 4: Saison */}
-          {step === 4 && (
+          {/* Schritt 5: Extras */}
+          {step === 5 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Saison & Extras</h3>
-                <span className="text-sm text-gray-600">Schritt 4/4</span>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Welche Reifen suchen Sie?</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'summer', label: 'Sommer', icon: '☀️' },
-                    { value: 'winter', label: 'Winter', icon: '❄️' },
-                    { value: 'all-season', label: 'Ganzjahr', icon: '🌦️' }
-                  ].map(season => (
-                    <button
-                      key={season.value}
-                      onClick={() => setProfile({ ...profile, season: season.value as any })}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        profile.season === season.value
-                          ? 'border-orange-600 bg-orange-50'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="text-2xl mb-1">{season.icon}</div>
-                      <div className="text-xs font-medium">{season.label}</div>
-                    </button>
-                  ))}
-                </div>
+                <h3 className="font-semibold">Zusätzliche Anforderungen</h3>
+                <span className="text-sm text-gray-600">Schritt 5/5</span>
               </div>
 
               {(profile.season === 'winter' || profile.season === 'all-season') && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-white rounded-lg border">
                   <input
                     type="checkbox"
                     id="3pmsf"
@@ -526,7 +630,7 @@ export default function TireAdvisorWidget() {
               )}
 
               {profile.season === 'winter' && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-white rounded-lg border">
                   <input
                     type="checkbox"
                     id="icegrip"
@@ -534,9 +638,22 @@ export default function TireAdvisorWidget() {
                     onChange={(e) => setProfile({ ...profile, needsIceGrip: e.target.checked })}
                     className="w-4 h-4"
                   />
-                  <label htmlFor="icegrip" className="text-sm">🧊 Ice Grip Symbol</label>
+                  <label htmlFor="icegrip" className="text-sm">🧊 Ice Grip Symbol (für extreme Kälte)</label>
                 </div>
               )}
+
+              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Sparkles className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-green-900">
+                    <p className="font-semibold mb-1">Bereit für Ihre persönlichen Empfehlungen!</p>
+                    <p>
+                      Basierend auf Ihrem {selectedVehicle?.make} {selectedVehicle?.model} und Ihren Prioritäten 
+                      analysieren wir jetzt über 125.000 Reifen für Sie.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -553,7 +670,7 @@ export default function TireAdvisorWidget() {
               </Button>
             )}
             
-            {step < 4 ? (
+            {step < 5 ? (
               <Button
                 onClick={() => setStep(step + 1)}
                 className="ml-auto bg-blue-600 hover:bg-blue-700"
@@ -594,6 +711,11 @@ export default function TireAdvisorWidget() {
               <Sparkles className="h-6 w-6 text-blue-600" />
               Ihre Top 5 Reifenempfehlungen
             </DialogTitle>
+            {profile.preferredBrands.length > 0 && (
+              <p className="text-sm text-gray-600 mt-1">
+                Bevorzugter Hersteller: <strong>{profile.preferredBrands[0]}</strong>
+              </p>
+            )}
           </DialogHeader>
           
           <div className="space-y-4 mt-4">

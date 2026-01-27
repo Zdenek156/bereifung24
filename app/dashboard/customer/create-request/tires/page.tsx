@@ -127,26 +127,36 @@ export default function CreateRequestPage() {
   useEffect(() => {
     const vehicleId = searchParams.get('vehicleId')
     const season = searchParams.get('season')
-    const tireDesignation = searchParams.get('tireDesignation')
+    const manufacturer = searchParams.get('manufacturer')
+    const model = searchParams.get('model')
 
     if (vehicleId) {
       // Warte bis Fahrzeuge geladen sind
       if (vehicles.length > 0) {
-        // Wähle Fahrzeug aus (triggert handleVehicleSelect)
-        setSelectedVehicle(vehicleId)
-        
-        // Setze Season und preferredBrands
+        // Setze Season zuerst (wichtig für handleVehicleSelect)
         const updates: any = {}
         
         if (season) {
-          updates.season = season
+          // Konvertiere Widget-Season zu API-Format
+          if (season === 'summer') {
+            updates.season = 'SUMMER'
+          } else if (season === 'winter') {
+            updates.season = 'WINTER'
+          } else if (season === 'all-season') {
+            updates.season = 'ALL_SEASON'
+          }
         }
         
-        if (tireDesignation) {
-          updates.preferredBrands = tireDesignation
+        if (manufacturer && model) {
+          updates.preferredBrands = `${manufacturer} ${model}`
+        } else if (manufacturer) {
+          updates.preferredBrands = manufacturer
         }
         
         setFormData(prev => ({ ...prev, ...updates }))
+        
+        // Wähle Fahrzeug aus NACH Season-Update
+        setTimeout(() => setSelectedVehicle(vehicleId), 0)
       }
     }
   }, [searchParams, vehicles])

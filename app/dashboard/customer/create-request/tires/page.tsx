@@ -565,6 +565,16 @@ export default function CreateRequestPage() {
                 <label htmlFor="mixedTires" className="ml-2 text-sm font-medium text-gray-700">
                   Mischbereifung (unterschiedliche Größen vorne und hinten)
                 </label>
+                <button
+                  type="button"
+                  onClick={() => alert('Mischbereifung bedeutet, dass vorne und hinten unterschiedliche Reifengrößen montiert sind. Dies ist bei einigen Sportwagen und leistungsstarken Fahrzeugen der Fall, wo die Hinterreifen breiter sind als die Vorderreifen.')}
+                  className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
+                  title="Mehr Informationen"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             )}
             <p className="text-sm text-gray-600 mb-4">
@@ -708,7 +718,7 @@ export default function CreateRequestPage() {
                           : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
                       }`}
                     >
-                      {ar}%
+                      {ar}
                     </button>
                   ))}
                   {formData.width && formData.aspectRatio && !formData.diameter && DIAMETERS.map(d => (
@@ -987,6 +997,16 @@ export default function CreateRequestPage() {
                 <label htmlFor="isRunflat" className="ml-3 text-sm font-medium text-gray-700">
                   Runflat-Reifen (selbsttragende Reifen)
                 </label>
+                <button
+                  type="button"
+                  onClick={() => alert('Runflat-Reifen (RSC = Run-flat System Component) sind speziell verstärkte Reifen mit selbsttragenden Seitenwänden. Bei einem Druckverlust können Sie mit bis zu 80 km/h noch etwa 80 km weiterfahren, um sicher eine Werkstatt zu erreichen. Runflat-Reifen sind in der Regel teurer als normale Reifen.')}
+                  className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
+                  title="Mehr Informationen"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
 
               <div className="flex items-center">
@@ -1001,6 +1021,16 @@ export default function CreateRequestPage() {
                 <label htmlFor="tireDisposal" className="ml-3 text-sm font-medium text-gray-700">
                   Altreifenentsorgung gewünscht
                 </label>
+                <button
+                  type="button"
+                  onClick={() => alert('Die fachgerechte Altreifenentsorgung ist gesetzlich vorgeschrieben. Ihre alten Reifen werden umweltgerecht recycelt oder verwertet. Die Entsorgungsgebühr beträgt in der Regel 2-5€ pro Reifen.')}
+                  className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
+                  title="Mehr Informationen"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
 
               {/* Tire Position Selection (nur bei unterschiedlichen Größen) */}

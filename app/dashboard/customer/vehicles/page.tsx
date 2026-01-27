@@ -752,7 +752,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Kennzeichen (optional)
                   </label>
                   <input
@@ -761,12 +761,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     value={formData.licensePlate}
                     onChange={handleChange}
                     placeholder="z.B. B-XY 1234"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Fahrzeug-Identifizierungsnummer (VIN) (optional)
                   </label>
                   <input
@@ -776,12 +776,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     onChange={handleChange}
                     placeholder="z.B. WDB1234567890"
                     maxLength={17}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Nächster TÜV-Termin (optional)
                   </label>
                   <input
@@ -789,7 +789,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     name="nextInspectionDate"
                     value={formData.nextInspectionDate}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                   <p className="mt-1 text-xs text-gray-500">Monat und Jahr des nächsten TÜV-Termins</p>
                 </div>
@@ -804,9 +804,9 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                           name="inspectionReminder"
                           checked={formData.inspectionReminder}
                           onChange={handleChange}
-                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                          className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                         />
-                        <label htmlFor="inspectionReminderEdit" className="ml-3 text-sm font-medium text-gray-700">
+                        <label htmlFor="inspectionReminderEdit" className="ml-2 sm:ml-3 text-xs sm:text-sm font-medium text-gray-700">
                           Erinnerung vor TÜV-Termin erhalten
                         </label>
                       </div>
@@ -814,14 +814,14 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
                     {formData.inspectionReminder && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                           Tage vor TÜV-Termin
                         </label>
                         <select
                           name="inspectionReminderDays"
                           value={formData.inspectionReminderDays}
                           onChange={handleChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           <option value="7">7 Tage vorher</option>
                           <option value="14">14 Tage vorher</option>
@@ -836,25 +836,25 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             </div>
 
             {/* Fuel and Consumption (for CO₂ tracking) */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <span className="text-2xl mr-2">⛽</span>
+            <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                <span className="text-xl sm:text-2xl mr-2">⛽</span>
                 Kraftstoff & Verbrauch
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Kraftstoffart *
                   </label>
                   <select
                     name="fuelType"
                     value={formData.fuelType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="UNKNOWN">Unbekannt</option>
                     <option value="PETROL">Benzin</option>
@@ -872,7 +872,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   formData.fuelType === 'LPG' || formData.fuelType === 'CNG' || 
                   formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Kraftstoffverbrauch (L/100km)
                     </label>
                     <input
@@ -884,7 +884,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       value={formData.fuelConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 6.5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
                   </div>
@@ -892,7 +892,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
                 {(formData.fuelType === 'ELECTRIC' || formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Stromverbrauch (kWh/100km)
                     </label>
                     <input
@@ -904,7 +904,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       value={formData.electricConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 18.5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
                   </div>
@@ -913,8 +913,8 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             </div>
 
             {/* Summer Tires */}
-            <div className="border-t dark:border-gray-700 pt-6">
-              <div className="flex items-center mb-4">
+            <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
+              <div className="flex items-center mb-3 sm:mb-4">
                 {formData.vehicleType !== 'MOTORCYCLE' && (
                   <input
                     type="checkbox"
@@ -922,11 +922,11 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     name="hasSummerTires"
                     checked={formData.hasSummerTires}
                     onChange={handleChange}
-                    className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                 )}
-                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-3' : ''} text-lg font-semibold text-gray-900 flex items-center`}>
-                  <span className="text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-2 sm:ml-3' : ''} text-base sm:text-lg font-semibold text-gray-900 flex items-center`}>
+                  <span className="text-xl sm:text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
                   {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
               </div>
@@ -990,25 +990,25 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
             {/* Winter Tires (not used for motorcycles) */}
             {formData.vehicleType !== 'MOTORCYCLE' && (
-            <div className="border-t pt-6">
-              <div className="flex items-center mb-4">
+            <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
+              <div className="flex items-center mb-3 sm:mb-4">
                 <input
                   type="checkbox"
                   id="hasWinterTires"
                   name="hasWinterTires"
                   checked={formData.hasWinterTires}
                   onChange={handleChange}
-                  className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasWinterTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="text-2xl mr-2">❄️</span>
+                <label htmlFor="hasWinterTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <span className="text-xl sm:text-2xl mr-2">❄️</span>
                   Winterreifen
                 </label>
               </div>
 
               {formData.hasWinterTires && (
-                <div className="ml-8 space-y-4">
-                  <div className="flex items-center mb-4">
+                <div className="ml-4 sm:ml-8 space-y-3 sm:space-y-4">
+                  <div className="flex items-center mb-3 sm:mb-4">
                     <input
                       type="checkbox"
                       id="winterDifferentSizes"
@@ -1017,8 +1017,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="winterDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                      {formData.vehicleType === 'MOTORCYCLE' 
+                    <label htmlFor="winterDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700">{formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
                     </label>
@@ -1066,25 +1065,25 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
             {/* All Season Tires (not used for motorcycles) */}
             {formData.vehicleType !== 'MOTORCYCLE' && (
-            <div className="border-t pt-6">
-              <div className="flex items-center mb-4">
+            <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
+              <div className="flex items-center mb-3 sm:mb-4">
                 <input
                   type="checkbox"
                   id="hasAllSeasonTires"
                   name="hasAllSeasonTires"
                   checked={formData.hasAllSeasonTires}
                   onChange={handleChange}
-                  className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasAllSeasonTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="text-2xl mr-2">🌤️</span>
+                <label htmlFor="hasAllSeasonTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <span className="text-xl sm:text-2xl mr-2">🌤️</span>
                   Ganzjahresreifen
                 </label>
               </div>
 
               {formData.hasAllSeasonTires && (
-                <div className="ml-8 space-y-4">
-                  <div className="flex items-center mb-4">
+                <div className="ml-4 sm:ml-8 space-y-3 sm:space-y-4">
+                  <div className="flex items-center mb-3 sm:mb-4">
                     <input
                       type="checkbox"
                       id="allSeasonDifferentSizes"
@@ -1093,8 +1092,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
-                      {formData.vehicleType === 'MOTORCYCLE' 
+                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700">{formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
                     </label>

@@ -25,6 +25,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: '/mitarbeiter/eprel',
+        destination: '/admin/eprel',
+      },
+      {
         source: '/mitarbeiter/:path*',
         destination: '/admin/:path*',
       },

@@ -170,10 +170,18 @@ export async function GET() {
           select: {
             offers: true
           }
+        },
+        viewedByWorkshops: {
+          where: {
+            workshopId: workshop.id
+          },
+          select: {
+            viewedAt: true
+          }
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc' // Sortierung: Neueste zuerst
       }
     })
 

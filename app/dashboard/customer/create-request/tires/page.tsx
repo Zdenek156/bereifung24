@@ -808,100 +808,176 @@ export default function CreateRequestPage() {
             )}
 
             {/* Hinterreifen Dimensionen - nur bei Mischbereifung */}
-            {mixedTires && (
+            {mixedTires && formData.width && formData.aspectRatio && formData.diameter && formData.loadIndex && formData.speedRating && (
               <>
-                <h4 className="text-lg font-semibold text-gray-900 mt-6 mb-4">
+                <h4 className="text-lg font-semibold text-gray-900 mt-8 mb-4">
                   Hinterreifen
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Breite (mm) *
-                    </label>
-                    <select
-                      name="rearWidth"
-                      required={mixedTires}
-                      value={formData.rearWidth}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Wählen</option>
-                      {TIRE_WIDTHS.map(w => (
-                        <option key={w} value={w}>{w}</option>
-                      ))}
-                    </select>
+                
+                {/* Interaktive Reifenvisualisierung für Hinterreifen */}
+                <div className="flex gap-6 items-start">
+                  {/* Reifen-Card */}
+                  <div style={{width: '300px'}} className="bg-white rounded-xl shadow-md p-2">
+                    {/* Progress Indicator für Hinterreifen */}
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center">
+                        <div className={`flex items-center justify-center w-5 h-5 rounded-full font-bold text-xs ${formData.rearWidth ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {formData.rearWidth ? '✓' : '1'}
+                        </div>
+                        <div className={`w-10 h-0.5 ${formData.rearAspectRatio ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <div className={`flex items-center justify-center w-5 h-5 rounded-full font-bold text-xs ${formData.rearAspectRatio ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {formData.rearAspectRatio ? '✓' : '2'}
+                        </div>
+                        <div className={`w-10 h-0.5 ${formData.rearDiameter ? 'bg-amber-500' : 'bg-gray-300'}`}></div>
+                        <div className={`flex items-center justify-center w-5 h-5 rounded-full font-bold text-xs ${formData.rearDiameter ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {formData.rearDiameter ? '✓' : '3'}
+                        </div>
+                        <div className={`w-10 h-0.5 ${formData.rearLoadIndex ? 'bg-purple-500' : 'bg-gray-300'}`}></div>
+                        <div className={`flex items-center justify-center w-5 h-5 rounded-full font-bold text-xs ${formData.rearLoadIndex ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {formData.rearLoadIndex ? '✓' : '4'}
+                        </div>
+                        <div className={`w-10 h-0.5 ${formData.rearSpeedRating ? 'bg-pink-500' : 'bg-gray-300'}`}></div>
+                        <div className={`flex items-center justify-center w-5 h-5 rounded-full font-bold text-xs ${formData.rearSpeedRating ? 'bg-pink-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                          {formData.rearSpeedRating ? '✓' : '5'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SVG Reifen für Hinterreifen */}
+                    <svg viewBox="0 0 400 400" className="w-full h-auto">
+                      <defs>
+                        <path id="rearTextPathTop" d="M 200,80 A 120,120 0 0,1 320,200" />
+                        <path id="rearTextPathBottom" d="M 80,200 A 120,120 0 0,0 200,320" />
+                      </defs>
+                      
+                      {/* Reifenringe */}
+                      <circle cx="200" cy="200" r="150" fill="#2d2d2d" />
+                      <circle cx="200" cy="200" r="120" fill="#3d3d3d" />
+                      <circle cx="200" cy="200" r="80" fill="#c0c5cc" />
+                      
+                      {/* Dimensionen auf Reifen */}
+                      <text fill="#ffffff" fontSize="24" fontWeight="bold" fontFamily="Arial, sans-serif">
+                        <textPath href="#rearTextPathTop" startOffset="50%" textAnchor="middle">
+                          <title>{formData.rearWidth || '???'}/{formData.rearAspectRatio || '??'} R{formData.rearDiameter || '??'} {formData.rearLoadIndex || '??'}{formData.rearSpeedRating || '?'}</title>
+                          {formData.rearWidth || '???'}/{formData.rearAspectRatio || '??'} R{formData.rearDiameter || '??'} {formData.rearLoadIndex || '??'}{formData.rearSpeedRating || '?'}
+                        </textPath>
+                      </text>
+                      
+                      {/* Marke unten */}
+                      <text fill="#ffffff" fontSize="16" fontWeight="bold" fontFamily="Arial, sans-serif" opacity="0.9" letterSpacing="1">
+                        <textPath href="#rearTextPathBottom" startOffset="50%" textAnchor="middle">
+                          BEREIFUNG24.DE
+                        </textPath>
+                      </text>
+                    </svg>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Querschnitt (%) *
-                    </label>
-                    <select
-                      name="rearAspectRatio"
-                      required={mixedTires}
-                      value={formData.rearAspectRatio}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Wählen</option>
-                      {ASPECT_RATIOS.map(ar => (
-                        <option key={ar} value={ar}>{ar}</option>
+                  {/* Auswahlbuttons für Hinterreifen */}
+                  <div className="flex-1 space-y-3">
+                    <h4 className="text-lg font-bold text-gray-800">
+                      {!formData.rearWidth ? 'Breite wählen (mm):' :
+                       !formData.rearAspectRatio ? 'Querschnitt wählen (%):' :
+                       !formData.rearDiameter ? 'Felgengröße wählen (Zoll):' :
+                       !formData.rearLoadIndex ? 'Tragfähigkeit wählen:' :
+                       'Geschwindigkeitsindex wählen:'}
+                    </h4>
+                    <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-2">
+                      {!formData.rearWidth && TIRE_WIDTHS.map(w => (
+                        <button
+                          type="button"
+                          key={w}
+                          onClick={() => handleChange({ target: { name: 'rearWidth', value: String(w) } } as any)}
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                            formData.rearWidth === String(w)
+                              ? 'bg-blue-500 text-white border-blue-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                          }`}
+                        >
+                          {w}
+                        </button>
                       ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Zoll *
-                    </label>
-                    <select
-                      name="rearDiameter"
-                      required={mixedTires}
-                      value={formData.rearDiameter}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Wählen</option>
-                      {DIAMETERS.map(d => (
-                        <option key={d} value={d}>{d}"</option>
+                      {formData.rearWidth && !formData.rearAspectRatio && ASPECT_RATIOS.map(ar => (
+                        <button
+                          type="button"
+                          key={ar}
+                          onClick={() => handleChange({ target: { name: 'rearAspectRatio', value: String(ar) } } as any)}
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                            formData.rearAspectRatio === String(ar)
+                              ? 'bg-green-500 text-white border-green-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                          }`}
+                        >
+                          {ar}
+                        </button>
                       ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tragfähigkeit *
-                    </label>
-                    <select
-                      name="rearLoadIndex"
-                      required={mixedTires}
-                      value={formData.rearLoadIndex}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Wählen</option>
-                      {LOAD_INDICES.map(li => (
-                        <option key={li} value={li}>{li} ({LOAD_INDEX_MAP[li]} kg)</option>
+                      {formData.rearWidth && formData.rearAspectRatio && !formData.rearDiameter && DIAMETERS.map(d => (
+                        <button
+                          type="button"
+                          key={d}
+                          onClick={() => handleChange({ target: { name: 'rearDiameter', value: String(d) } } as any)}
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                            formData.rearDiameter === String(d)
+                              ? 'bg-amber-500 text-white border-amber-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+                          }`}
+                        >
+                          {d}"
+                        </button>
                       ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Geschwindigkeit *
-                    </label>
-                    <select
-                      name="rearSpeedRating"
-                      required={mixedTires}
-                      value={formData.rearSpeedRating}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Wählen</option>
-                      {SPEED_RATINGS.map(sr => (
-                        <option key={sr} value={sr}>{sr} ({SPEED_RATING_MAP[sr]} km/h)</option>
+                      {formData.rearWidth && formData.rearAspectRatio && formData.rearDiameter && !formData.rearLoadIndex && LOAD_INDICES.map(li => (
+                        <button
+                          type="button"
+                          key={li}
+                          onClick={() => handleChange({ target: { name: 'rearLoadIndex', value: String(li) } } as any)}
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                            formData.rearLoadIndex === String(li)
+                              ? 'bg-purple-500 text-white border-purple-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                          }`}
+                          title={`${LOAD_INDEX_MAP[li]} kg`}
+                        >
+                          {li}
+                        </button>
                       ))}
-                    </select>
+                      {formData.rearWidth && formData.rearAspectRatio && formData.rearDiameter && formData.rearLoadIndex && !formData.rearSpeedRating && SPEED_RATINGS.map(sr => (
+                        <button
+                          type="button"
+                          key={sr}
+                          onClick={() => handleChange({ target: { name: 'rearSpeedRating', value: sr } } as any)}
+                          className={`px-3 py-2 text-sm font-semibold rounded-lg border-2 transition-all hover:scale-105 ${
+                            formData.rearSpeedRating === sr
+                              ? 'bg-pink-500 text-white border-pink-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-pink-400'
+                          }`}
+                          title={`${SPEED_RATING_MAP[sr]} km/h`}
+                        >
+                          {sr}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {/* Zurück-Button für Hinterreifen */}
+                    {(formData.rearWidth || formData.rearAspectRatio || formData.rearDiameter || formData.rearLoadIndex || formData.rearSpeedRating) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (formData.rearSpeedRating) {
+                            handleChange({ target: { name: 'rearSpeedRating', value: '' } } as any)
+                          } else if (formData.rearLoadIndex) {
+                            handleChange({ target: { name: 'rearLoadIndex', value: '' } } as any)
+                          } else if (formData.rearDiameter) {
+                            handleChange({ target: { name: 'rearDiameter', value: '' } } as any)
+                          } else if (formData.rearAspectRatio) {
+                            handleChange({ target: { name: 'rearAspectRatio', value: '' } } as any)
+                          } else if (formData.rearWidth) {
+                            handleChange({ target: { name: 'rearWidth', value: '' } } as any)
+                          }
+                        }}
+                        className="mt-3 px-4 py-2 text-sm font-semibold bg-white text-gray-700 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors"
+                      >
+                        ← Zurück
+                      </button>
+                    )}
                   </div>
                 </div>
 

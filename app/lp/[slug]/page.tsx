@@ -116,7 +116,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: landingPage.heroImage 
-              ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${landingPage.heroImage})`
+              ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(https://www.bereifung24.de${landingPage.heroImage})`
               : `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
           }}
         >

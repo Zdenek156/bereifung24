@@ -113,26 +113,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
         <section 
-          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px]"
+          className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] bg-cover bg-center bg-no-repeat"
           style={{
-            background: landingPage.heroImage 
-              ? 'transparent'
+            backgroundImage: landingPage.heroImage 
+              ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${landingPage.heroImage})`
               : `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
           }}
         >
-          {/* Hero Background Image */}
-          {landingPage.heroImage && (
-            <>
-              <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{
-                  backgroundImage: `url(${landingPage.heroImage})`
-                }}
-              />
-              <div className="absolute inset-0 bg-black/40" />
-            </>
-          )}
-          
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center">
               {/* Workshop Logo */}

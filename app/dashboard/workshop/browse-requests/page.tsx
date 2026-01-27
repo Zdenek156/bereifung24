@@ -2057,6 +2057,9 @@ export default function BrowseRequestsPage() {
                           
                           // For non-mixed tires (4 identical tires), show dropdown with 2 or 4 tires (no front/rear distinction)
                           if (!isMixedTires) {
+                            // Filter options based on requested quantity
+                            const requestedQuantity = selectedRequest.quantity
+                            
                             return (
                               <div className="mt-3">
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -2069,8 +2072,15 @@ export default function BrowseRequestsPage() {
                                   required
                                 >
                                   <option value="">-- Bitte auswählen --</option>
-                                  <option value="FRONT_TWO">🚗 2 Reifen</option>
-                                  <option value="ALL_FOUR">🚗 4 Reifen</option>
+                                  {requestedQuantity === 2 && (
+                                    <option value="FRONT_TWO">🚗 2 Reifen</option>
+                                  )}
+                                  {requestedQuantity === 4 && (
+                                    <>
+                                      <option value="FRONT_TWO">🚗 2 Reifen</option>
+                                      <option value="ALL_FOUR">🚗 4 Reifen</option>
+                                    </>
+                                  )}
                                 </select>
                               </div>
                             )

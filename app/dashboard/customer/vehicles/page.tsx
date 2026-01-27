@@ -691,7 +691,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             {/* Vehicle Information */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Fahrzeugtyp *
@@ -845,7 +845,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Kraftstoffart *

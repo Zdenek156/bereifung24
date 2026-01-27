@@ -184,9 +184,9 @@ export default function LandingPageEditor() {
 
       if (res.ok) {
         const data = await res.json()
+        // Update landing page state with new image
         setLandingPage(prev => prev ? { ...prev, heroImage: data.imageUrl } : null)
         alert('Bild erfolgreich hochgeladen!')
-        fetchLandingPage()
       } else {
         const error = await res.json()
         alert(error.error || 'Fehler beim Hochladen')

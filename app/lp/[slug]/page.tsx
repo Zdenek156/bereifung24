@@ -64,6 +64,9 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
   })
 
   console.log('Found landing page:', landingPage ? `Yes (active: ${landingPage.isActive})` : 'No')
+  console.log('Hero Image:', landingPage?.heroImage || 'Not set')
+  console.log('Show Logo:', landingPage?.showLogo)
+  console.log('Workshop Logo:', landingPage?.workshop?.logoUrl || 'Not set')
 
   if (!landingPage || !landingPage.isActive) {
     console.log('Landing page not found or not active, showing 404')
@@ -121,13 +124,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           {landingPage.heroImage && (
             <>
               <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
                 style={{
                   backgroundImage: `url(${landingPage.heroImage})`,
-                  filter: 'brightness(0.4)'
+                  filter: 'brightness(0.7)'
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/20 z-0" />
             </>
           )}
           

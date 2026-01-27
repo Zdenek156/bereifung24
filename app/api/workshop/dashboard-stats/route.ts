@@ -213,7 +213,7 @@ export async function GET() {
       ? Math.round((acceptedOffersCount / allOffersCount) * 100) 
       : 0
 
-    // Formatiere Aktivitäten
+    // Formatiere Aktivitäten mit Datum für Sortierung
     const recentActivities = []
     
     if (recentActivitiesData[0]) {
@@ -227,7 +227,8 @@ export async function GET() {
         id: req.id,
         type: 'request',
         message: `Neue Anfrage für ${serviceName}${sizeInfo}`,
-        time: formatTimeAgo(req.createdAt)
+        time: formatTimeAgo(req.createdAt),
+        date: req.createdAt
       })
     }
 
@@ -238,7 +239,8 @@ export async function GET() {
         id: offer.id,
         type: 'offer_accepted',
         message: `Ihr Angebot wurde angenommen - ${vehicle?.make || 'Fahrzeug'} ${vehicle?.model || ''}`,
-        time: formatTimeAgo(offer.updatedAt)
+        time: formatTimeAgo(offer.updatedAt),
+        date: offer.updatedAt
       })
     }
 
@@ -248,7 +250,8 @@ export async function GET() {
         id: booking.id,
         type: 'appointment',
         message: `Termin am ${formatDate(booking.appointmentDate)}`,
-        time: formatTimeAgo(booking.appointmentDate)
+        time: formatTimeAgo(booking.appointmentDate),
+        date: booking.appointmentDate
       })
     }
 
@@ -261,9 +264,13 @@ export async function GET() {
         id: review.id,
         type: 'review',
         message: `Neue ${review.rating}-Sterne Bewertung von ${customerName}`,
-        time: formatTimeAgo(review.createdAt)
+        time: formatTimeAgo(review.createdAt),
+        date: review.createdAt
       })
     }
+
+    // Sortiere Aktivitäten nach Datum (neueste zuerst)
+    recentActivities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     const stats = {
       newRequests: newRequestsCount,

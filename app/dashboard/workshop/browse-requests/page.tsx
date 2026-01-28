@@ -2060,10 +2060,13 @@ export default function BrowseRequestsPage() {
                             // Filter options based on requested quantity
                             const requestedQuantity = selectedRequest.quantity
                             
+                            // Debug: Log the actual quantity value and its type
+                            console.log('🔍 DEBUG - Requested Quantity:', requestedQuantity, 'Type:', typeof requestedQuantity)
+                            
                             return (
                               <div className="mt-3">
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Angebot für *
+                                  Angebot für * (Angefragt: {requestedQuantity} Reifen)
                                 </label>
                                 <select
                                   value={option.carTireType || ''}

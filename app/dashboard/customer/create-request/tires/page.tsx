@@ -298,6 +298,7 @@ export default function CreateRequestPage() {
     // Validation
     if (!formData.width || !formData.aspectRatio || !formData.diameter) {
       setError('Bitte alle Reifendimensionen angeben')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
     
@@ -305,22 +306,26 @@ export default function CreateRequestPage() {
     if (mixedTires) {
       if (!formData.rearWidth || !formData.rearAspectRatio || !formData.rearDiameter) {
         setError('Bitte alle Hinterreifen-Dimensionen angeben')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       if (!formData.rearLoadIndex || !formData.rearSpeedRating) {
         setError('Bitte Tragfähigkeit und Geschwindigkeitsindex für Hinterreifen angeben')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
     }
 
     if (!userZipCode) {
       setError('Bitte PLZ in Ihren Einstellungen hinterlegen')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
     // Validierung: Datum muss ausgewählt sein
     if (!formData.needByDate) {
       setError('Bitte wählen Sie ein Datum aus, bis wann Sie die Reifen benötigen')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
@@ -330,6 +335,7 @@ export default function CreateRequestPage() {
     
     if (needByDate < minDate) {
       setError('Das Benötigt-bis Datum muss mindestens 7 Tage in der Zukunft liegen')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 

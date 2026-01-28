@@ -318,6 +318,12 @@ export default function CreateRequestPage() {
       return
     }
 
+    // Validierung: Datum muss ausgewählt sein
+    if (!formData.needByDate) {
+      setError('Bitte wählen Sie ein Datum aus, bis wann Sie die Reifen benötigen')
+      return
+    }
+
     const needByDate = new Date(formData.needByDate)
     const minDate = new Date()
     minDate.setDate(minDate.getDate() + 7)

@@ -302,7 +302,7 @@ export default function BlogOverview({ featuredPost, posts, categories, popularT
                 Vergleichen Sie jetzt Angebote von Werkstätten in Ihrer Nähe!
               </p>
               <Button
-                onClick={() => (window.location.href = '/booking')}
+                onClick={() => (window.location.href = '/dashboard/customer/select-service')}
                 className="w-full bg-white text-cyan-600 hover:bg-gray-100"
               >
                 Jetzt Angebote einholen

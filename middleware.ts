@@ -40,6 +40,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/roadmap': 'roadmap',
   '/admin/blog': 'blog',
   '/admin/eprel': 'eprel',
+  '/admin/gdpr': 'gdpr',
 }
 
 // API routes to application mapping
@@ -58,6 +59,7 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/blog': 'blog',
   '/api/blog': 'public',
   '/api/admin/eprel': 'eprel',
+  '/api/admin/gdpr': 'gdpr',
 }
 
 /**

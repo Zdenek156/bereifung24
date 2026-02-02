@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
       data: {
         customerId: session.user.customerId!,
         vehicleId: validatedData.vehicleId || null,
+        serviceType: 'ALIGNMENT_BOTH',
         season: 'SUMMER', // Dummy value
         width: 0, // Dummy - indicates service request
         aspectRatio: 0,

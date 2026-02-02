@@ -477,71 +477,153 @@ export default function WorkshopAppointments() {
                     </p>
                   </div>
                   <div className="text-right">
-                    {apt.offer ? (
-                      <>
-                        <p className="text-2xl font-bold text-primary-600">
-                          {apt.offer.price.toFixed(2)} €
-                        </p>
-                        <p className={`text-sm ${
-                          apt.paymentStatus === 'PAID' ? 'text-green-600' : 'text-orange-600'
-                        }`}>
-                          {apt.paymentStatus === 'PAID' ? 'Bezahlt' : 'Ausstehend'}
-                        </p>
-                      </>
-                    ) : (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        Manueller Termin
-                      </span>
-                    )}
+                    {(() => {
+                      // Check if manual entry with price in customerNotes
+                      let isManualEntry = false
+                      let manualPrice = null
+                      try {
+                        if (apt.customerNotes) {
+                          const customerData = JSON.parse(apt.customerNotes)
+                          if (customerData.manualEntry) {
+                            isManualEntry = true
+                            manualPrice = customerData.price || null
+                          }
+                        }
+                      } catch {}
+
+                      // Manueller Termin - zeige Preis und Badge
+                      if (isManualEntry) {
+                        return (
+                          <>
+                            {manualPrice ? (
+                              <p className="text-2xl font-bold text-primary-600">
+                                {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(manualPrice)}
+                              </p>
+                            ) : null}
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 mt-1">
+                              Manueller Termin
+                            </span>
+                          </>
+                        )
+                      }
+
+                      // Normaler Termin mit Offer
+                      if (apt.offer) {
+                        return (
+                          <>
+                            <p className="text-2xl font-bold text-primary-600">
+                              {apt.offer.price.toFixed(2)} €
+                            </p>
+                            <p className={`text-sm ${
+                              apt.paymentStatus === 'PAID' ? 'text-green-600' : 'text-orange-600'
+                            }`}>
+                              {apt.paymentStatus === 'PAID' ? 'Bezahlt' : 'Ausstehend'}
+                            </p>
+                          </>
+                        )
+                      }
+
+                      return null
+                    })()}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kunde</h4>
-                    {apt.customer ? (
-                      <>
-                        <p className="text-sm text-gray-900 dark:text-white font-medium">
-                          {apt.customer.user.firstName} {apt.customer.user.lastName}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{apt.customer.user.email}</p>
-                        {apt.customer.user.phone && (
-                          <p className="text-sm text-gray-600">{apt.customer.user.phone}</p>
-                        )}
-                        {apt.customer.user.street && (
-                          <p className="text-sm text-gray-600">
-                            {apt.customer.user.street}<br/>
-                            {apt.customer.user.zipCode} {apt.customer.user.city}
-                          </p>
-                        )}
-                      </>
-                    ) : apt.notes ? (
-                      (() => {
+                    {(() => {
+                      // Prüfe zuerst customerNotes (für manuelle Termine)
+                      if (apt.customerNotes) {
+                        try {
+                          const customerData = JSON.parse(apt.customerNotes)
+                          if (customerData.manualEntry) {
+                            // Für manuell erstellte Termine mit WorkshopCustomer
+                            if (customerData.workshopCustomerId) {
+                              // TODO: Laden der WorkshopCustomer-Daten (wenn nötig)
+                              // Erstmal die gespeicherten Daten verwenden
+                              return (
+                                <>
+                                  {customerData.customerName && (
+                                    <p className="text-sm text-gray-900 dark:text-white font-medium">{customerData.customerName}</p>
+                                  )}
+                                  {customerData.customerEmail && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{customerData.customerEmail}</p>
+                                  )}
+                                  {customerData.customerPhone && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{customerData.customerPhone}</p>
+                                  )}
+                                </>
+                              )
+                            }
+                            // Für manuelle Termine ohne WorkshopCustomer (Einmal-Kunde)
+                            return (
+                              <>
+                                {customerData.customerName && (
+                                  <p className="text-sm text-gray-900 dark:text-white font-medium">{customerData.customerName}</p>
+                                )}
+                                {customerData.customerEmail && (
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{customerData.customerEmail}</p>
+                                )}
+                                {customerData.customerPhone && (
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{customerData.customerPhone}</p>
+                                )}
+                                {!customerData.customerName && !customerData.customerEmail && !customerData.customerPhone && (
+                                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">Keine Kundeninformationen</p>
+                                )}
+                              </>
+                            )
+                          }
+                        } catch {}
+                      }
+                      
+                      // Normale Termine mit Customer-Objekt
+                      if (apt.customer) {
+                        return (
+                          <>
+                            <p className="text-sm text-gray-900 dark:text-white font-medium">
+                              {apt.customer.user.firstName} {apt.customer.user.lastName}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{apt.customer.user.email}</p>
+                            {apt.customer.user.phone && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{apt.customer.user.phone}</p>
+                            )}
+                            {apt.customer.user.street && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {apt.customer.user.street}<br/>
+                                {apt.customer.user.zipCode} {apt.customer.user.city}
+                              </p>
+                            )}
+                          </>
+                        )
+                      }
+                      
+                      // Alte Struktur (apt.notes)
+                      if (apt.notes) {
                         try {
                           const notesData = JSON.parse(apt.notes)
                           return (
                             <>
                               {notesData.customerName && (
-                                <p className="text-sm text-gray-900 font-medium">{notesData.customerName}</p>
+                                <p className="text-sm text-gray-900 dark:text-white font-medium">{notesData.customerName}</p>
                               )}
                               {notesData.customerEmail && (
-                                <p className="text-sm text-gray-600">{notesData.customerEmail}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{notesData.customerEmail}</p>
                               )}
                               {notesData.customerPhone && (
-                                <p className="text-sm text-gray-600">{notesData.customerPhone}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{notesData.customerPhone}</p>
                               )}
                               {!notesData.customerName && !notesData.customerEmail && !notesData.customerPhone && (
-                                <p className="text-sm text-gray-500 italic">Keine Kundeninformationen</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 italic">Keine Kundeninformationen</p>
                               )}
                             </>
                           )
                         } catch {
-                          return <p className="text-sm text-gray-500 italic">Keine Kundeninformationen</p>
+                          return <p className="text-sm text-gray-500 dark:text-gray-400 italic">Keine Kundeninformationen</p>
                         }
-                      })()
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">Keine Kundeninformationen</p>
-                    )}
+                      }
+                      
+                      return <p className="text-sm text-gray-500 dark:text-gray-400 italic">Keine Kundeninformationen</p>
+                    })()}
                   </div>
 
                   <div>
@@ -630,36 +712,33 @@ export default function WorkshopAppointments() {
                   try {
                     const customerData = JSON.parse(apt.customerNotes)
                     
-                    // Wenn es ein manueller Termin ist, zeige die Details schön formatiert
+                    // Für manuelle Einträge: Keine extra Box mehr, da alle Infos oben sind
+                    // Nur interne Notizen anzeigen falls vorhanden
                     if (customerData.manualEntry) {
-                      return (
-                        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm font-medium text-blue-900 mb-2">Termin-Details:</p>
-                          <div className="space-y-1 text-sm text-blue-800">
-                            {customerData.serviceDescription && (
-                              <p><span className="font-medium">Service:</span> {customerData.serviceDescription}</p>
-                            )}
-                            {customerData.vehicleInfo && (
-                              <p><span className="font-medium">Fahrzeug:</span> {customerData.vehicleInfo}</p>
-                            )}
+                      if (customerData.internalNotes) {
+                        return (
+                          <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Interne Notizen:</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300">{customerData.internalNotes}</p>
                           </div>
-                        </div>
-                      )
+                        )
+                      }
+                      return null
                     }
                     
                     // Normale Kundennotiz
                     return (
-                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 mb-1">Kundennotiz:</p>
-                        <p className="text-sm text-blue-800">{apt.customerNotes}</p>
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Kundennotiz:</p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">{apt.customerNotes}</p>
                       </div>
                     )
                   } catch {
                     // Falls JSON.parse fehlschlägt, zeige als Text
                     return (
-                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 mb-1">Kundennotiz:</p>
-                        <p className="text-sm text-blue-800">{apt.customerNotes}</p>
+                      <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Kundennotiz:</p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">{apt.customerNotes}</p>
                       </div>
                     )
                   }

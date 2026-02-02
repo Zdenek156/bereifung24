@@ -116,10 +116,15 @@ export async function GET(req: NextRequest) {
       
       return {
         id: booking.id,
+        tireRequestId: booking.tireRequestId, // CRITICAL: Needed to check if booking exists for request
         appointmentDate: booking.appointmentDate.toISOString(),
         appointmentTime: berlinTime,
         estimatedDuration: booking.estimatedDuration,
         status: booking.status,
+        // Payment information
+        paymentStatus: booking.paymentStatus,
+        paymentMethod: booking.paymentMethod,
+        paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
       workshop: {
         companyName: booking.workshop.companyName,
         street: booking.workshop.user.street || '',
@@ -250,9 +255,20 @@ export async function POST(req: NextRequest) {
     // Check if booking already exists for this offer
     const existingBooking = await prisma.booking.findFirst({
       where: {
-        tireRequestId: offer.tireRequestId
+        tireRequestId: offer.tireRequestId,
+        status: {
+          not: 'CANCELLED' // Allow rebooking only if previous was cancelled
+        }
       }
     })
+
+    // If any non-cancelled booking exists, prevent duplicate bookings
+    if (existingBooking && existingBooking.status !== 'PENDING') {
+      return NextResponse.json(
+        { error: 'Für diese Anfrage existiert bereits eine Buchung. Bitte stornieren Sie diese zuerst, um einen neuen Termin zu buchen.' },
+        { status: 400 }
+      )
+    }
 
     // If a PENDING booking exists, update it instead of creating a new one
     if (existingBooking && existingBooking.status === 'PENDING') {
@@ -315,7 +331,7 @@ export async function POST(req: NextRequest) {
       )
       
       if (existingBooking.googleEventId && workshopHasCalendar) {
-        // Update existing event in workshop calendar
+        // Try to update existing event in workshop calendar
         try {
           const appointmentStart = new Date(appointmentDate)
           const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
@@ -336,9 +352,13 @@ export async function POST(req: NextRequest) {
           )
           console.log('✅ Google Calendar event updated in workshop calendar')
         } catch (error) {
-          console.error('Failed to update calendar event:', error)
+          console.error('⚠️ Failed to update calendar event (may have been deleted), creating new one:', error)
+          // Event doesn't exist anymore - clear the ID and create a new one
+          existingBooking.googleEventId = null
         }
-      } else if (!existingBooking.googleEventId) {
+      }
+      
+      if (!existingBooking.googleEventId) {
         // No calendar event exists yet - create one
         console.log('📅 No calendar event exists for this booking, creating one...')
         console.log('Workshop has calendar:', workshopHasCalendar)
@@ -347,8 +367,29 @@ export async function POST(req: NextRequest) {
         const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
         
         if (workshopHasCalendar) {
-          // Create event in workshop calendar
+          // Create event in workshop calendar (same pattern as employee calendar)
           try {
+            // Refresh token if needed (CRITICAL - same as employee calendar!)
+            let workshopAccessToken = offer.workshop.googleAccessToken
+            if (!workshopAccessToken || (offer.workshop.googleTokenExpiry && new Date() > offer.workshop.googleTokenExpiry)) {
+              console.log('🔄 Refreshing workshop calendar token...')
+              const newTokens = await refreshAccessToken(offer.workshop.googleRefreshToken!)
+              workshopAccessToken = newTokens.access_token || workshopAccessToken
+              
+              await prisma.workshop.update({
+                where: { id: workshopId },
+                data: {
+                  googleAccessToken: workshopAccessToken,
+                  googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
+                }
+              })
+              console.log('✅ Workshop calendar token refreshed')
+            }
+            
+            if (!workshopAccessToken) {
+              throw new Error('No valid access token for workshop calendar')
+            }
+            
             // Determine service type for better event title
             const serviceType = offer.tireRequest.additionalNotes?.toUpperCase().includes('BREMSEN-SERVICE') ? 'BRAKE_SERVICE' : 'TIRE_SERVICE'
             
@@ -401,7 +442,7 @@ export async function POST(req: NextRequest) {
             const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${calculatedPrice.toFixed(2)} €`
             
             const calendarEvent = await createCalendarEvent(
-              offer.workshop.googleAccessToken!,
+              workshopAccessToken,
               offer.workshop.googleRefreshToken!,
               offer.workshop.googleCalendarId!,
               {
@@ -419,9 +460,13 @@ export async function POST(req: NextRequest) {
             })
             console.log('✅ Calendar event created in workshop calendar')
           } catch (error) {
-            console.error('Failed to create workshop calendar event:', error)
+            console.error('❌ Failed to create workshop calendar event:', error)
+            // Fall through to try employee calendar
           }
-        } else {
+        }
+        
+        // If workshop calendar failed or not available, try employee calendar
+        if (!existingBooking.googleEventId) {
           // Workshop has no calendar - try employee calendar
           console.log('⚠️ Workshop has no calendar, trying employee calendar...')
           try {
@@ -558,14 +603,6 @@ export async function POST(req: NextRequest) {
       
       return NextResponse.json(updatedBooking, { status: 200 })
     }
-    
-    // If CONFIRMED or COMPLETED booking exists, don't allow overwriting
-    if (existingBooking) {
-      return NextResponse.json(
-        { error: 'Für diese Anfrage existiert bereits eine bestätigte Buchung' },
-        { status: 400 }
-      )
-    }
 
     // Calculate duration (default 60 minutes)
     let estimatedDuration = 60
@@ -637,6 +674,16 @@ export async function POST(req: NextRequest) {
     console.log('🔒 Checking slot availability before booking...')
     
     const appointmentDateObj = new Date(appointmentDate)
+    
+    // Validate that the date is valid
+    if (isNaN(appointmentDateObj.getTime())) {
+      console.error('ERROR: Invalid appointment date:', appointmentDate)
+      return NextResponse.json(
+        { error: 'Ungültiges Termindatum' },
+        { status: 400 }
+      )
+    }
+    
     const requestedTime = appointmentDateObj.toTimeString().substring(0, 5) // e.g., "14:00"
     const dateOnly = appointmentDateObj.toISOString().split('T')[0] // YYYY-MM-DD
     

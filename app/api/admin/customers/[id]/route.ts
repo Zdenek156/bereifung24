@@ -39,11 +39,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const authError = await requireAdminOrEmployee()
+    if (authError) return authError
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions)
 
     // Hole den Customer mit User ID
     const customer = await prisma.customer.findUnique({

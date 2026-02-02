@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { geocodeAddress } from '@/lib/geocoding'
 
 // GET /api/workshop/profile - Get workshop profile
 export async function GET() {
@@ -59,6 +60,7 @@ export async function GET() {
       
       // Payment Methods
       paymentMethods: user.workshop.paymentMethods,
+      paypalEmail: user.workshop.paypalEmail,
       
       // Notifications
       emailNotifyRequests: user.workshop.emailNotifyRequests,
@@ -124,6 +126,9 @@ export async function PATCH(request: Request) {
       
       // Payment Methods
       paymentMethods,
+      paypalEmail,
+      stripeAccountId,
+      stripeEnabled,
       
       // Notifications
       emailNotifyRequests,
@@ -133,6 +138,21 @@ export async function PATCH(request: Request) {
       emailNotifyReminders,
       emailNotifyCommissions,
     } = body
+
+    // Geocode address if it changed
+    let latitude: number | null = null
+    let longitude: number | null = null
+    
+    if (street && zipCode && city) {
+      const geocodeResult = await geocodeAddress(street, zipCode, city)
+      if (geocodeResult) {
+        latitude = geocodeResult.latitude
+        longitude = geocodeResult.longitude
+        console.log(`✅ Geocoded workshop address: ${street}, ${zipCode} ${city} → ${latitude}, ${longitude}`)
+      } else {
+        console.warn(`⚠️ Failed to geocode workshop address: ${street}, ${zipCode} ${city}`)
+      }
+    }
 
     // Update user data
     const updatedUser = await prisma.user.update({
@@ -144,6 +164,7 @@ export async function PATCH(request: Request) {
         street,
         zipCode,
         city,
+        ...(latitude !== null && longitude !== null ? { latitude, longitude } : {}),
       },
     })
 
@@ -160,6 +181,9 @@ export async function PATCH(request: Request) {
         iban,
         accountHolder,
         paymentMethods,
+        paypalEmail,
+        stripeAccountId,
+        stripeEnabled,
         emailNotifyRequests,
         emailNotifyOfferAccepted,
         emailNotifyBookings,

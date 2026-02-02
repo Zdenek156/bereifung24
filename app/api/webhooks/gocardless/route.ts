@@ -189,11 +189,25 @@ async function handlePaymentEvent(action: string, paymentId: string) {
   if (result.count > 0) {
     console.log(`✅ Updated payment ${paymentId} to status: ${newStatus}`)
 
-    // If payment confirmed, create monthly consolidated accounting entry
+    // If payment confirmed, create monthly consolidated accounting entry (ONLY ONCE!)
     if (newStatus === 'confirmed' || newStatus === 'paid_out') {
       console.log(`💰 Payment ${paymentId} collected successfully`)
       
       try {
+        // Check if we already created a booking for this payment (idempotency check)
+        const existingBooking = await prisma.accountingEntry.findFirst({
+          where: {
+            description: {
+              contains: `GoCardless Payment ${paymentId}`
+            }
+          }
+        })
+
+        if (existingBooking) {
+          console.log(`⏭️ Booking already exists for payment ${paymentId}, skipping duplicate`)
+          return
+        }
+
         // Get all commissions for this payment to calculate total and get workshop info
         const commissions = await prisma.commission.findMany({
           where: { gocardlessPaymentId: paymentId },

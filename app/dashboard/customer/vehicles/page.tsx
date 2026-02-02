@@ -688,7 +688,6 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
           {/* Body - Same as AddVehicleModal */}
           <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-            {/* Vehicle Information */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
               <div className="space-y-3 sm:space-y-4">
@@ -712,14 +711,57 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="make"
                     value={formData.make}
                     onChange={handleChange}
-                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
                     className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  >
+                    <option value="">Hersteller wählen...</option>
+                    <option value="Alfa Romeo">Alfa Romeo</option>
+                    <option value="Audi">Audi</option>
+                    <option value="BMW">BMW</option>
+                    <option value="Chevrolet">Chevrolet</option>
+                    <option value="Chrysler">Chrysler</option>
+                    <option value="Citroen">Citroen</option>
+                    <option value="Dacia">Dacia</option>
+                    <option value="Fiat">Fiat</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Hyundai">Hyundai</option>
+                    <option value="Jaguar">Jaguar</option>
+                    <option value="Jeep">Jeep</option>
+                    <option value="Kia">Kia</option>
+                    <option value="Land Rover">Land Rover</option>
+                    <option value="Lexus">Lexus</option>
+                    <option value="Mazda">Mazda</option>
+                    <option value="Mercedes-Benz">Mercedes-Benz</option>
+                    <option value="Mini">Mini</option>
+                    <option value="Mitsubishi">Mitsubishi</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Opel">Opel</option>
+                    <option value="Peugeot">Peugeot</option>
+                    <option value="Porsche">Porsche</option>
+                    <option value="Renault">Renault</option>
+                    <option value="Seat">Seat</option>
+                    <option value="Skoda">Skoda</option>
+                    <option value="Smart">Smart</option>
+                    <option value="Subaru">Subaru</option>
+                    <option value="Suzuki">Suzuki</option>
+                    <option value="Tesla">Tesla</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="Volvo">Volvo</option>
+                    <option value="Yamaha">Yamaha</option>
+                    <option value="Kawasaki">Kawasaki</option>
+                    <option value="Ducati">Ducati</option>
+                    <option value="Harley-Davidson">Harley-Davidson</option>
+                    <option value="KTM">KTM</option>
+                    <option value="Triumph">Triumph</option>
+                    <option value="Humbaur">Humbaur</option>
+                    <option value="Böckmann">Böckmann</option>
+                    <option value="Sonstige">Sonstige</option>
+                  </select>
                 </div>
 
                 <div>
@@ -767,7 +809,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Fahrzeug-Identifizierungsnummer (VIN) (optional)
+                    VIN (optional)
                   </label>
                   <input
                     type="text"
@@ -1462,7 +1504,6 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
           {/* Body */}
           <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-            {/* Vehicle Information */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -1486,14 +1527,57 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="make"
                     value={formData.make}
                     onChange={handleChange}
-                    placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Yamaha' : formData.vehicleType === 'TRAILER' ? 'z.B. Humbaur' : 'z.B. Volkswagen'}
                     className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  >
+                    <option value="">Hersteller wählen...</option>
+                    <option value="Alfa Romeo">Alfa Romeo</option>
+                    <option value="Audi">Audi</option>
+                    <option value="BMW">BMW</option>
+                    <option value="Chevrolet">Chevrolet</option>
+                    <option value="Chrysler">Chrysler</option>
+                    <option value="Citroen">Citroen</option>
+                    <option value="Dacia">Dacia</option>
+                    <option value="Fiat">Fiat</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Hyundai">Hyundai</option>
+                    <option value="Jaguar">Jaguar</option>
+                    <option value="Jeep">Jeep</option>
+                    <option value="Kia">Kia</option>
+                    <option value="Land Rover">Land Rover</option>
+                    <option value="Lexus">Lexus</option>
+                    <option value="Mazda">Mazda</option>
+                    <option value="Mercedes-Benz">Mercedes-Benz</option>
+                    <option value="Mini">Mini</option>
+                    <option value="Mitsubishi">Mitsubishi</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Opel">Opel</option>
+                    <option value="Peugeot">Peugeot</option>
+                    <option value="Porsche">Porsche</option>
+                    <option value="Renault">Renault</option>
+                    <option value="Seat">Seat</option>
+                    <option value="Skoda">Skoda</option>
+                    <option value="Smart">Smart</option>
+                    <option value="Subaru">Subaru</option>
+                    <option value="Suzuki">Suzuki</option>
+                    <option value="Tesla">Tesla</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="Volvo">Volvo</option>
+                    <option value="Yamaha">Yamaha</option>
+                    <option value="Kawasaki">Kawasaki</option>
+                    <option value="Ducati">Ducati</option>
+                    <option value="Harley-Davidson">Harley-Davidson</option>
+                    <option value="KTM">KTM</option>
+                    <option value="Triumph">Triumph</option>
+                    <option value="Humbaur">Humbaur</option>
+                    <option value="Böckmann">Böckmann</option>
+                    <option value="Sonstige">Sonstige</option>
+                  </select>
                 </div>
 
                 <div>
@@ -1541,7 +1625,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fahrzeug-Identifizierungsnummer (VIN) (optional)
+                    VIN (optional)
                   </label>
                   <input
                     type="text"

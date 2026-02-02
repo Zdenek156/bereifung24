@@ -81,9 +81,9 @@ export default function CustomerRegisterPage() {
           firstName: formData.firstName,
           lastName: formData.lastName,
           phone: formData.phone || undefined,
-          street: formData.street || undefined,
-          zipCode: formData.zipCode || undefined,
-          city: formData.city || undefined,
+          street: formData.street,
+          zipCode: formData.zipCode,
+          city: formData.city,
         }),
       })
 
@@ -244,18 +244,29 @@ export default function CustomerRegisterPage() {
             </div>
           </div>
 
-          {/* Address (Optional) */}
+          {/* Address (Required) */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Adresse (optional)</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-900">Adresse *</h3>
+              <div className="relative group">
+                <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold cursor-help">
+                  i
+                </div>
+                <div className="absolute left-0 top-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  <p>Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.</p>
+                </div>
+              </div>
+            </div>
             
             <div>
               <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
-                Straße & Hausnummer
+                Straße & Hausnummer *
               </label>
               <input
                 type="text"
                 id="street"
                 name="street"
+                required
                 value={formData.street}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -265,12 +276,13 @@ export default function CustomerRegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
-                  PLZ
+                  PLZ *
                 </label>
                 <input
                   type="text"
                   id="zipCode"
                   name="zipCode"
+                  required
                   value={formData.zipCode}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -279,12 +291,13 @@ export default function CustomerRegisterPage() {
 
               <div className="md:col-span-2">
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                  Stadt
+                  Stadt *
                 </label>
                 <input
                   type="text"
                   id="city"
                   name="city"
+                  required
                   value={formData.city}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"

@@ -114,6 +114,14 @@ export async function POST(
       )
     }
 
+    // VALIDATION: Wenn das Angebot tireOptions hat, MUSS eine Auswahl getroffen werden
+    if (offer.tireOptions && offer.tireOptions.length > 0 && (!selectedTireOptionIds || selectedTireOptionIds.length === 0)) {
+      return NextResponse.json(
+        { error: 'Bitte wählen Sie mindestens eine Reifenoption aus' },
+        { status: 400 }
+      )
+    }
+
     // Helper function to calculate quantity based on tire type
     const getQuantityForTireOption = (tireOption: any): number => {
       if (tireOption.carTireType) {
@@ -184,7 +192,10 @@ export async function POST(
           selectedOptionsForBooking.push(option.id)
         })
         
-        // Get workshop service to calculate dynamic installation fee
+        // Use installation fee from original offer (already calculated during offer creation)
+        // Only recalculate if workshop service has valid prices configured (> 0)
+        let installationFee = offer?.installationFee || 0
+        
         const workshopService = await tx.workshopService.findFirst({
           where: {
             workshopId: offer.workshopId,
@@ -193,30 +204,33 @@ export async function POST(
           }
         })
         
-        // Calculate installation fee based on quantity
-        let installationFee = offer?.installationFee || 0
-        if (workshopService) {
-          if (totalQuantity === 2) {
-            // 2 Reifen: "2 Reifen wechseln" Paket
-            installationFee = workshopService.basePrice
-          } else if (totalQuantity === 4) {
-            // 4 Reifen: "4 Reifen wechseln" Paket
-            installationFee = workshopService.basePrice4 || workshopService.basePrice
-          } else {
-            // Fallback für andere Mengen
-            installationFee = workshopService.basePrice
+        if (workshopService && (workshopService.basePrice > 0 || workshopService.basePrice4 > 0)) {
+          // Workshop has configured prices - recalculate based on quantity
+          let newInstallationFee = 0
+          
+          if (totalQuantity === 2 && workshopService.basePrice > 0) {
+            newInstallationFee = workshopService.basePrice
+          } else if (totalQuantity === 4 && workshopService.basePrice4 && workshopService.basePrice4 > 0) {
+            newInstallationFee = workshopService.basePrice4
+          } else if (workshopService.basePrice > 0) {
+            newInstallationFee = workshopService.basePrice
           }
           
           // Add disposal fee if requested
           const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
           if (hasDisposal && workshopService.disposalFee) {
-            installationFee += workshopService.disposalFee * totalQuantity
+            newInstallationFee += workshopService.disposalFee * totalQuantity
           }
           
           // Add runflat surcharge if requested
           const hasRunflat = offer?.tireRequest.isRunflat
           if (hasRunflat && workshopService.runFlatSurcharge) {
-            installationFee += workshopService.runFlatSurcharge * totalQuantity
+            newInstallationFee += workshopService.runFlatSurcharge * totalQuantity
+          }
+          
+          // Only override original installationFee if recalculated value is > 0
+          if (newInstallationFee > 0) {
+            installationFee = newInstallationFee
           }
         }
         
@@ -241,7 +255,10 @@ export async function POST(
         const pricePerTire = (offer?.price - (offer?.installationFee || 0)) / (offer?.tireRequest.quantity || 4)
         finalPrice = pricePerTire * totalQuantity
         
-        // Get workshop service to calculate dynamic installation fee
+        // Use installation fee from original offer (already calculated during offer creation)
+        // Only recalculate if workshop service has valid prices configured (> 0)
+        let installationFee = offer?.installationFee || 0
+        
         const workshopService = await tx.workshopService.findFirst({
           where: {
             workshopId: offer.workshopId,
@@ -250,30 +267,33 @@ export async function POST(
           }
         })
         
-        // Calculate installation fee based on quantity
-        let installationFee = offer?.installationFee || 0
-        if (workshopService) {
-          if (totalQuantity === 2) {
-            // 2 Reifen: "2 Reifen wechseln" Paket
-            installationFee = workshopService.basePrice
-          } else if (totalQuantity === 4) {
-            // 4 Reifen: "4 Reifen wechseln" Paket
-            installationFee = workshopService.basePrice4 || workshopService.basePrice
-          } else {
-            // Fallback für andere Mengen
-            installationFee = workshopService.basePrice
+        if (workshopService && (workshopService.basePrice > 0 || workshopService.basePrice4 > 0)) {
+          // Workshop has configured prices - recalculate based on quantity
+          let newInstallationFee = 0
+          
+          if (totalQuantity === 2 && workshopService.basePrice > 0) {
+            newInstallationFee = workshopService.basePrice
+          } else if (totalQuantity === 4 && workshopService.basePrice4 && workshopService.basePrice4 > 0) {
+            newInstallationFee = workshopService.basePrice4
+          } else if (workshopService.basePrice > 0) {
+            newInstallationFee = workshopService.basePrice
           }
           
           // Add disposal fee if requested
           const hasDisposal = offer?.tireRequest.additionalNotes?.includes('Altreifenentsorgung gewünscht')
           if (hasDisposal && workshopService.disposalFee) {
-            installationFee += workshopService.disposalFee * totalQuantity
+            newInstallationFee += workshopService.disposalFee * totalQuantity
           }
           
           // Add runflat surcharge if requested
           const hasRunflat = offer?.tireRequest.isRunflat
           if (hasRunflat && workshopService.runFlatSurcharge) {
-            installationFee += workshopService.runFlatSurcharge * totalQuantity
+            newInstallationFee += workshopService.runFlatSurcharge * totalQuantity
+          }
+          
+          // Only override original installationFee if recalculated value is > 0
+          if (newInstallationFee > 0) {
+            installationFee = newInstallationFee
           }
         }
         
@@ -302,16 +322,30 @@ export async function POST(
         }
       }
 
+      // Update tireBrand and tireModel based on first selected option
+      let updateData: any = {
+        status: 'ACCEPTED',
+        acceptedAt: new Date(),
+        customerWantsStorage: wantsStorage,
+        price: finalPrice,
+        selectedTireOptionIds: selectedOptionsForBooking
+      }
+      
+      // If tire options were selected, update tireBrand/tireModel to match the selection
+      if (selectedOptionsForBooking.length > 0 && offer.tireOptions && offer.tireOptions.length > 0) {
+        const firstSelectedOption = offer.tireOptions.find((opt: any) => 
+          selectedOptionsForBooking.includes(opt.id)
+        )
+        if (firstSelectedOption) {
+          updateData.tireBrand = firstSelectedOption.brand
+          updateData.tireModel = firstSelectedOption.model
+        }
+      }
+      
       // Aktualisiere das angenommene Angebot
       const acceptedOffer = await tx.offer.update({
         where: { id: params.id },
-        data: {
-          status: 'ACCEPTED',
-          acceptedAt: new Date(),
-          customerWantsStorage: wantsStorage,
-          price: finalPrice,
-          selectedTireOptionIds: selectedOptionsForBooking
-        },
+        data: updateData,
         include: {
           tireOptions: true
         }
@@ -497,10 +531,10 @@ export async function POST(
         const emailTemplate = offerAcceptedEmailTemplate({
           workshopName: offer.workshop.companyName,
           customerName: `${offer.tireRequest.customer.user.firstName} ${offer.tireRequest.customer.user.lastName}`,
-          tireBrand: offer.tireBrand,
-          tireModel: offer.tireModel,
+          tireBrand: result.tireBrand, // Verwende aktualisierte Werte aus result
+          tireModel: result.tireModel, // Verwende aktualisierte Werte aus result
           tireSpecs: tireSpecs,
-          price: offer.price,
+          price: result.price, // Verwende den finalen Preis aus result
           customerPhone: offer.tireRequest.customer.user.phone || undefined,
           customerEmail: offer.tireRequest.customer.user.email,
           customerStreet: offer.tireRequest.customer.user.street || undefined,

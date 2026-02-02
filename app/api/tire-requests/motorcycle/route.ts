@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
       data: {
         customerId: session.user.customerId!,
         vehicleId: null,
+        serviceType: 'MOTORCYCLE_TIRE',
         season: validatedData.season,
         // Store primary tire dimensions
         width: primaryTire.width,

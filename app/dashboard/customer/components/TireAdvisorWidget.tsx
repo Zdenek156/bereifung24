@@ -38,7 +38,6 @@ interface UserProfile {
   priorityFuelSaving: number;
   priorityQuietness: number;
   priorityDurability: number;
-  priorityValue: number;
   season: 'summer' | 'winter' | 'all-season';
   needs3PMSF: boolean;
   needsIceGrip: boolean;
@@ -98,8 +97,7 @@ export default function TireAdvisorWidget() {
     prioritySafety: 30,
     priorityFuelSaving: 20,
     priorityQuietness: 15,
-    priorityDurability: 20,
-    priorityValue: 15,
+    priorityDurability: 35,
     season: 'summer',
     needs3PMSF: false,
     needsIceGrip: false,
@@ -176,7 +174,7 @@ export default function TireAdvisorWidget() {
   const calculateScoreFromPercentages = () => {
     // Berechne Punkte basierend auf den Prozenten (müssen nicht auf 100 summieren)
     const total = profile.prioritySafety + profile.priorityFuelSaving + 
-                  profile.priorityQuietness + profile.priorityDurability + profile.priorityValue;
+                  profile.priorityQuietness + profile.priorityDurability;
     
     if (total === 0) return;
     
@@ -186,8 +184,7 @@ export default function TireAdvisorWidget() {
       prioritySafety: Math.round(profile.prioritySafety * factor),
       priorityFuelSaving: Math.round(profile.priorityFuelSaving * factor),
       priorityQuietness: Math.round(profile.priorityQuietness * factor),
-      priorityDurability: Math.round(profile.priorityDurability * factor),
-      priorityValue: Math.round(profile.priorityValue * factor)
+      priorityDurability: Math.round(profile.priorityDurability * factor)
     };
   };
 
@@ -573,35 +570,22 @@ export default function TireAdvisorWidget() {
                     className="w-full"
                   />
                 </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm flex items-center gap-1">
-                      <Award className="h-4 w-4 text-purple-600" />
-                      Preis-Leistung
-                    </span>
-                    <span className="text-sm font-bold text-purple-600">{profile.priorityValue}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={profile.priorityValue}
-                    onChange={(e) => setProfile({ ...profile, priorityValue: parseInt(e.target.value) })}
-                    className="w-full"
-                  />
-                </div>
 
-                <div className="p-3 bg-white rounded-lg border">
-                  <div className="flex justify-between items-center">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-medium">Gesamt-Prozent:</span>
-                    <span className="text-lg font-bold text-blue-600">
+                    <span className={`text-lg font-bold ${
+                      Math.abs(profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
+                               profile.priorityDurability - 100) < 1
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}>
                       {profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
-                       profile.priorityDurability + profile.priorityValue}%
+                       profile.priorityDurability}%
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Die Werte werden automatisch auf 100 Punkte normalisiert
+                  <div className="text-xs text-blue-600 mt-1">
+                    💡 Langlebigkeit umfasst Markenqualität und km/Jahr
                   </div>
                 </div>
               </div>

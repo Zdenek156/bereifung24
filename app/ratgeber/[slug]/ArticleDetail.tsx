@@ -344,7 +344,7 @@ export default function ArticleDetail({ post, relatedPosts }: Props) {
                   Vergleichen Sie jetzt kostenlos Angebote von Werkstätten in Ihrer Nähe!
                 </p>
                 <Button
-                  onClick={() => (window.location.href = '/booking')}
+                  onClick={() => (window.location.href = '/dashboard/customer/select-service')}
                   className="w-full bg-white text-cyan-600 hover:bg-gray-100"
                 >
                   Jetzt Angebote einholen

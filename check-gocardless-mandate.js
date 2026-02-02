@@ -1,117 +1,64 @@
 const { PrismaClient } = require('@prisma/client');
 const gocardless = require('gocardless-nodejs');
 const constants = require('gocardless-nodejs/constants');
-
 const prisma = new PrismaClient();
 
-async function checkMandateStatus() {
+async function checkGoCardlessStatus() {
   try {
-    console.log('🔍 Checking GoCardless Mandate Status...\n');
-    
-    // Get ALL workshops with mandates
-    const workshops = await prisma.workshop.findMany({
+    const workshop = await prisma.workshop.findFirst({
       where: { 
-        gocardlessMandateId: { not: null }
-      },
-      select: {
-        id: true,
-        companyName: true,
-        gocardlessMandateId: true,
-        gocardlessMandateStatus: true,
-        gocardlessCustomerId: true,
-        gocardlessMandateRef: true,
-        gocardlessMandateCreatedAt: true,
-        user: {
-          select: {
-            email: true
-          }
-        }
-      },
-      orderBy: {
-        gocardlessMandateCreatedAt: 'desc'
+        companyName: { contains: 'Müller', mode: 'insensitive' }
       }
     });
-
-    if (workshops.length === 0) {
-      console.log('❌ No workshops with GoCardless mandates found');
-      return;
-    }
-
-    console.log(`Found ${workshops.length} workshop(s) with mandates:\n`);
     
-    workshops.forEach((w, i) => {
-      console.log(`${i + 1}. ${w.companyName}`);
-      console.log(`   Email: ${w.user.email}`);
-      console.log(`   Mandate ID: ${w.gocardlessMandateId}`);
-      console.log(`   Status: ${w.gocardlessMandateStatus}`);
-      console.log(`   Reference: ${w.gocardlessMandateRef}`);
-      console.log(`   Created: ${w.gocardlessMandateCreatedAt}`);
-      console.log('');
-    });
-
-    const workshop = workshops[0]; // Check first one
-
-    console.log('📊 Local Workshop Status:');
-    console.log('   Mandate ID:', workshop.gocardlessMandateId);
-    console.log('   Local Status:', workshop.gocardlessMandateStatus);
-    console.log('');
-
-    // Get API settings
-    const settings = await prisma.adminApiSetting.findMany({
-      where: {
-        key: {
-          in: ['GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ENVIRONMENT']
-        }
-      }
-    });
-
-    const accessToken = settings.find(s => s.key === 'GOCARDLESS_ACCESS_TOKEN')?.value;
-    const environment = settings.find(s => s.key === 'GOCARDLESS_ENVIRONMENT')?.value;
-
-    if (!accessToken) {
-      console.log('❌ No access token found');
+    if (!workshop || !workshop.gocardlessMandateId) {
+      console.log('❌ Keine Müller Werkstatt mit Mandat gefunden');
       return;
     }
-
-    console.log('🔗 Connecting to GoCardless...');
-    console.log('   Environment:', environment);
-    console.log('');
-
-    // Initialize GoCardless client
-    const env = environment === 'live' ? constants.Environments.Live : constants.Environments.Sandbox;
-    const client = gocardless(accessToken, env);
-
-    // Get mandate status from GoCardless
-    console.log('📡 Fetching mandate from GoCardless API...');
+    
+    console.log('=== Müller Reifenservice ===');
+    console.log('Datenbank Status:', workshop.gocardlessMandateStatus);
+    console.log('Mandate ID:', workshop.gocardlessMandateId);
+    
+    // GoCardless API Client
+    const client = gocardless(
+      process.env.GOCARDLESS_ACCESS_TOKEN,
+      constants.Environments.Live
+    );
+    
+    console.log('\n=== GoCardless API Status ===');
     const mandate = await client.mandates.find(workshop.gocardlessMandateId);
-
-    console.log('\n✅ GoCardless Mandate Status:');
-    console.log('   ID:', mandate.id);
-    console.log('   Status:', mandate.status);
-    console.log('   Reference:', mandate.reference);
-    console.log('   Created:', mandate.created_at);
-    console.log('');
-
-    // Compare
-    if (mandate.status === workshop.gocardlessMandateStatus) {
-      console.log('✅ Status matches! Local and GoCardless are in sync.');
+    console.log('GoCardless Status:', mandate.status);
+    console.log('Erstellt am:', mandate.created_at);
+    console.log('Nächste mögliche Abbuchung:', mandate.next_possible_charge_date);
+    
+    // Status-Vergleich
+    if (mandate.status === 'active' && workshop.gocardlessMandateStatus !== 'active') {
+      console.log('\n⚠️ INKONSISTENZ: GoCardless ist "active", aber DB zeigt:', workshop.gocardlessMandateStatus);
+      console.log('Korrigiere Status...');
+      
+      await prisma.workshop.update({
+        where: { id: workshop.id },
+        data: { gocardlessMandateStatus: 'active' }
+      });
+      
+      console.log('✅ Status wurde auf "active" aktualisiert');
+    } else if (mandate.status === workshop.gocardlessMandateStatus) {
+      console.log('\n✅ Status ist synchron: ' + mandate.status);
     } else {
-      console.log('⚠️  STATUS MISMATCH!');
-      console.log('   Local status:', workshop.gocardlessMandateStatus);
-      console.log('   GoCardless status:', mandate.status);
-      console.log('');
-      console.log('💡 This means the webhook did not update the local status.');
-      console.log('   Either the webhook was not received, or the signature verification failed.');
+      console.log('\n⚠️ Status-Unterschied:');
+      console.log('  GoCardless:', mandate.status);
+      console.log('  Datenbank:', workshop.gocardlessMandateStatus);
     }
-
+    
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    if (error.response?.body) {
-      console.error('   API Response:', error.response.body);
+    console.error('❌ Fehler:', error.message);
+    if (error.response) {
+      console.error('API Response:', error.response.body || error.response);
     }
   } finally {
     await prisma.$disconnect();
   }
 }
 
-checkMandateStatus();
+checkGoCardlessStatus();

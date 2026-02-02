@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       data: {
         customerId: session.user.customerId!,
         vehicleId: validatedData.vehicleId || null,
+        serviceType: 'BRAKE_SERVICE',
         season: 'SUMMER', // Dummy value
         width: 0,
         aspectRatio: 0,

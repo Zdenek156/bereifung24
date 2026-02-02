@@ -360,7 +360,7 @@ export default function WorkshopOffers() {
                       </p>
                     ) : (
                       <p className="text-sm text-gray-500 italic">
-                        Preis wird nach Auswahl<br />durch Kunden festgelegt
+                        Preis wird nach Auswahl<br />der Reifen durch den<br />Kunden festgelegt
                       </p>
                     )}
                   </div>
@@ -372,54 +372,41 @@ export default function WorkshopOffers() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Kunde</h4>
-                    <p className="text-sm text-gray-900">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kunde</h4>
+                    <p className="text-sm text-gray-900 dark:text-white font-medium">
                       {offer.tireRequest.customer.user.firstName} {offer.tireRequest.customer.user.lastName}
                     </p>
-                    {(offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (
-                      <p className="text-sm text-gray-600">
-                        {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
-                      </p>
-                    )}
                     {/* Vollständige Kontaktdaten nur bei angenommenen Angeboten */}
                     {offer.status === 'ACCEPTED' && (
                       <>
                         {offer.tireRequest.customer.user.street && (
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {offer.tireRequest.customer.user.street}
                           </p>
                         )}
-                        <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.email}</p>
+                        {(offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{offer.tireRequest.customer.user.email}</p>
                         {offer.tireRequest.customer.user.phone && (
-                          <p className="text-sm text-gray-600">{offer.tireRequest.customer.user.phone}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{offer.tireRequest.customer.user.phone}</p>
                         )}
                       </>
                     )}
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Details</h4>
-                    <p className="text-sm text-gray-600">
-                      Erstellt: {new Date(offer.createdAt).toLocaleDateString('de-DE')}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Gültig bis: {new Date(offer.validUntil).toLocaleDateString('de-DE')}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Benötigt bis: {new Date(offer.tireRequest.needByDate).toLocaleDateString('de-DE')}
-                    </p>
-                    {offer.acceptedAt && (
-                      <p className="text-sm text-green-600 font-medium">
-                        Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
+                    {offer.status !== 'ACCEPTED' && (offer.tireRequest.customer.user.zipCode || offer.tireRequest.customer.user.city) && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {offer.tireRequest.customer.user.zipCode} {offer.tireRequest.customer.user.city}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Hinweis</h4>
-                    {offer.tireOptions && offer.tireOptions.length > 0 && (
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reifen</h4>
+                    {offer.tireOptions && offer.tireOptions.length > 0 ? (
                       <div>
                         {offer.status === 'ACCEPTED' ? (
                           // Bei angenommenen Angeboten: nur die vom Kunden ausgewählten
@@ -427,7 +414,7 @@ export default function WorkshopOffers() {
                             offer.tireOptions
                               .filter(option => offer.selectedTireOptionIds.includes(option.id))
                               .map((option, index) => (
-                                <p key={index} className="text-sm text-gray-600">
+                                <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
                                   {option.brand} {option.model}
                                 </p>
                               ))
@@ -435,13 +422,74 @@ export default function WorkshopOffers() {
                         ) : (
                           // Bei offenen Angeboten: alle angebotenen Optionen
                           offer.tireOptions.map((option, index) => (
-                            <p key={index} className="text-sm text-gray-600">
-                              {option.carTireType === 'FRONT' ? 'Vorne' : option.carTireType === 'REAR' ? 'Hinten' : ''} {option.brand} {option.model}
+                            <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
+                              {option.carTireType === 'FRONT_TWO' ? 'Vorne: ' : option.carTireType === 'REAR_TWO' ? 'Hinten: ' : ''}{option.brand} {option.model}
                             </p>
                           ))
                         )}
                       </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-500 italic">Keine Reifenangabe</p>
                     )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Details</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Erstellt: {new Date(offer.createdAt).toLocaleDateString('de-DE')}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Gültig bis: {new Date(offer.validUntil).toLocaleDateString('de-DE')}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Benötigt bis: {new Date(offer.tireRequest.needByDate).toLocaleDateString('de-DE')}
+                    </p>
+                    {offer.acceptedAt && (
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                        Angenommen: {new Date(offer.acceptedAt).toLocaleDateString('de-DE')}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hinweis</h4>
+                    {(() => {
+                      const notes = offer.tireRequest.additionalNotes || ''
+                      
+                      // Filtere strukturierte Daten und Service-Marker aus
+                      let cleanNotes = notes
+                        .replace(/Vorder(?:achse|reifen):\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                        .replace(/Hinter(?:achse|reifen):\s*\d+\/\d+\s*R\d+(?:\s+\d+)?(?:\s+[A-Z]+)?\n?/g, '')
+                        .replace(/Altreifenentsorgung gewünscht\n?/g, '')
+                        .replace(/Wuchten gewünscht\n?/g, '')
+                        .replace(/Einlagerung gewünscht\n?/g, '')
+                        .replace(/🏍️ MOTORRADREIFEN\n?/g, '')
+                        .replace(/🔧 REIFENREPARATUR\n?/g, '')
+                        .replace(/🔧 SONSTIGE REIFENSERVICES\n?/g, '')
+                        .replace(/⚙️ ACHSVERMESSUNG\n?/g, '')
+                        .replace(/📐 ACHSVERMESSUNG\n?/g, '')
+                        .replace(/🛠️ SONSTIGE DIENSTLEISTUNG\n?/g, '')
+                        .replace(/🔴 BREMSENWECHSEL\n?/g, '')
+                        .replace(/BREMSEN-SERVICE\n?/g, '')
+                        .replace(/🔋 BATTERIEWECHSEL\n?/g, '')
+                        .replace(/BATTERIE-SERVICE\n?/g, '')
+                        .replace(/❄️ KLIMASERVICE\n?/g, '')
+                        .replace(/🌡️ KLIMASERVICE\n?/g, '')
+                        .replace(/KLIMASERVICE:\s*/g, '')
+                        .replace(/RÄDER UMSTECKEN\n?/g, '')
+                        .replace(/Vorderachse:\s*[^\n]*\n?/g, '')
+                        .replace(/Hinterachse:\s*[^\n]*\n?/g, '')
+                        .replace(/Keine Arbeiten\n?/g, '')
+                        .trim()
+                      
+                      return cleanNotes ? (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                          {cleanNotes}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-500 italic">Kein Hinweis</p>
+                      )
+                    })()}
                   </div>
                 </div>
 

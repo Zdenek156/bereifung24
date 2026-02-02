@@ -26,7 +26,6 @@ interface UserProfile {
   priorityFuelSaving: number
   priorityQuietness: number
   priorityDurability: number
-  priorityValue: number
   
   // Stufe 4
   season: 'summer' | 'winter' | 'all-season'
@@ -54,12 +53,11 @@ export default function SmartTireAdvisor() {
     drivingStyle: 'normal',
     isElectric: false,
     
-    // Stufe 3 - Balanced defaults
+    // Stufe 3 - Balanced defaults (4 Prioritäten, Summe = 100)
     prioritySafety: 30,
     priorityFuelSaving: 20,
     priorityQuietness: 15,
-    priorityDurability: 20,
-    priorityValue: 15,
+    priorityDurability: 35,
     
     // Stufe 4 - Defaults
     season: 'summer',
@@ -83,7 +81,7 @@ export default function SmartTireAdvisor() {
   
   // Auto-Adjust für Prioritäten (Stufe 3)
   const adjustPriorities = (key: keyof UserProfile, value: number) => {
-    const priorityKeys = ['prioritySafety', 'priorityFuelSaving', 'priorityQuietness', 'priorityDurability', 'priorityValue']
+    const priorityKeys = ['prioritySafety', 'priorityFuelSaving', 'priorityQuietness', 'priorityDurability']
     const otherKeys = priorityKeys.filter(k => k !== key) as Array<keyof UserProfile>
     const remaining = 100 - value
     const distribution = remaining / otherKeys.length
@@ -455,40 +453,23 @@ export default function SmartTireAdvisor() {
                 <p className="text-xs text-gray-600 mt-1">Hohe Laufleistung & Haltbarkeit</p>
               </div>
               
-              {/* Preis-Leistung */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-purple-600" />
-                    <span className="font-medium">Preis-Leistung</span>
-                  </div>
-                  <span className="text-lg font-bold text-purple-600">{profile.priorityValue}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={profile.priorityValue}
-                  onChange={(e) => adjustPriorities('priorityValue', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-600 mt-1">Gutes Verhältnis von Qualität zu Kosten</p>
-              </div>
-              
               {/* Summe Anzeige */}
-              <div className="p-4 bg-gray-100 rounded-lg">
-                <div className="flex justify-between items-center">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">Gesamt-Punkte:</span>
                   <span className={`text-xl font-bold ${
                     Math.abs(profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
-                            profile.priorityDurability + profile.priorityValue - 100) < 1
+                            profile.priorityDurability - 100) < 1
                       ? 'text-green-600'
                       : 'text-red-600'
                   }`}>
                     {profile.prioritySafety + profile.priorityFuelSaving + profile.priorityQuietness + 
-                     profile.priorityDurability + profile.priorityValue}
+                     profile.priorityDurability}
                   </span>
                 </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  💡 Langlebigkeit umfasst Markenqualität und Eignung für Ihre jährliche Kilometerleistung
+                </p>
               </div>
             </div>
           </Card>

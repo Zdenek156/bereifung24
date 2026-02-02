@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     const whereClause: any = {
       width: width,
       aspectRatio: aspectRatio,
-      diameter: diameter
+      diameter: diameter,
+      isActive: true // Only search active tires
     }
 
     // Filter by season if specified

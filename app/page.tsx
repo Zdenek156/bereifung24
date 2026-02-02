@@ -280,13 +280,13 @@ export default function HomePage() {
                 Deutschlands erste digitale Plattform für Reifenservice. Transparent, fair und einfach.
               </p>
               <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                <Link href="/app-download" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Mobile App">
                   <span className="text-xl">📱</span>
-                </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                </Link>
+                <Link href="/karriere" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Karriere">
                   <span className="text-xl">💼</span>
-                </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                </Link>
+                <a href="mailto:info@bereifung24.de" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Kontakt">
                   <span className="text-xl">📧</span>
                 </a>
               </div>
@@ -298,7 +298,7 @@ export default function HomePage() {
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/register/customer" className="hover:text-white transition-colors">Kostenlos registrieren</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Anmelden</Link></li>
-                <li><Link href="#services" className="hover:text-white transition-colors">Alle Services</Link></li>
+                <li><Link href="/dashboard/customer/select-service" className="hover:text-white transition-colors">Alle Services</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</Link></li>
                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>

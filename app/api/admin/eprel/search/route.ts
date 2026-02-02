@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
     
     // Build where clause
-    const where: any = {}
+    const where: any = {
+      isActive: true // Only show active tires (not marked for deletion)
+    }
     
     if (supplierName) {
       where.supplierName = { contains: supplierName, mode: 'insensitive' }

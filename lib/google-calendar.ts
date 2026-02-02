@@ -250,42 +250,19 @@ export function generateAvailableSlots(
   const [fromHour, fromMinute] = workingHours.from.split(':').map(Number)
   const [toHour, toMinute] = workingHours.to.split(':').map(Number)
   
-  // CRITICAL FIX: Extract timezone from busy slots and use it
-  // Create start and end datetime in UTC
-  // Google Calendar returns times with timezone offset like "2025-12-05T10:00:00+01:00"
-  // new Date() automatically converts these to UTC when parsing
-  // So we need to create our slots in UTC as well, matching the local time
+  // SIMPLIFIED APPROACH: Work in local time (Europe/Berlin)
+  // Create date objects in local timezone - Date constructor uses local time
   const year = date.getFullYear()
   const month = date.getMonth()
   const day = date.getDate()
   
-  // CRITICAL FIX: Working hours are in LOCAL timezone
-  // Google Calendar: "10:00+01:00" = 10:00 Vienna time = 09:00 UTC
-  // Working hours "10:00" = 10:00 Vienna time = 09:00 UTC
-  // 
-  // The problem: Date.UTC() creates times in UTC, not local time!
-  // Date.UTC(2025, 11, 5, 10, 0) = "2025-12-05T10:00:00Z" (10:00 UTC)
-  // But we need "2025-12-05T10:00:00+01:00" (10:00 local = 09:00 UTC)
-  //
-  // Solution: Extract timezone offset and adjust working hours
-  let timezoneOffset = 0 // in minutes
-  if (busySlots.length > 0 && busySlots[0].start) {
-    const match = busySlots[0].start.match(/([+-]\d{2}):(\d{2})$/)
-    if (match) {
-      const hours = parseInt(match[1])
-      const minutes = parseInt(match[2])
-      timezoneOffset = hours * 60 + (hours < 0 ? -minutes : minutes)
-    }
-  }
+  // Create start/end times in local timezone
+  const startTime = new Date(year, month, day, fromHour, fromMinute, 0, 0)
+  const endTime = new Date(year, month, day, toHour, toMinute, 0, 0)
   
-  // Create times in UTC
-  const startTime = new Date(Date.UTC(year, month, day, fromHour, fromMinute, 0, 0))
-  const endTime = new Date(Date.UTC(year, month, day, toHour, toMinute, 0, 0))
-  
-  // Convert to local timezone by subtracting offset
-  // Example: 10:00 UTC - 60min = 09:00 UTC (which represents 10:00+01:00)
-  startTime.setMinutes(startTime.getMinutes() - timezoneOffset)
-  endTime.setMinutes(endTime.getMinutes() - timezoneOffset)
+  console.log(`⏰ Working hours: ${fromHour}:${fromMinute} - ${toHour}:${toMinute}`)
+  console.log(`⏰ Start time (local): ${startTime.toISOString()}`)
+  console.log(`⏰ End time (local): ${endTime.toISOString()}`)
   
   // Parse break times if present
   let breakStart: Date | null = null
@@ -295,11 +272,8 @@ export function generateAvailableSlots(
     const [breakFromHour, breakFromMinute] = workingHours.breakFrom.split(':').map(Number)
     const [breakToHour, breakToMinute] = workingHours.breakTo.split(':').map(Number)
     
-    breakStart = new Date(Date.UTC(year, month, day, breakFromHour, breakFromMinute, 0, 0))
-    breakEnd = new Date(Date.UTC(year, month, day, breakToHour, breakToMinute, 0, 0))
-    // Apply same timezone adjustment
-    breakStart.setMinutes(breakStart.getMinutes() - timezoneOffset)
-    breakEnd.setMinutes(breakEnd.getMinutes() - timezoneOffset)
+    breakStart = new Date(year, month, day, breakFromHour, breakFromMinute, 0, 0)
+    breakEnd = new Date(year, month, day, breakToHour, breakToMinute, 0, 0)
   }
   
   // Generate slots
@@ -310,10 +284,18 @@ export function generateAvailableSlots(
     slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration)
     
     // Check if slot is free (not overlapping with busy times)
-    // Two intervals overlap if: slotStart < busyEnd AND slotEnd > busyStart
+    // CRITICAL: Google Calendar returns ISO strings with timezone (e.g., "2026-02-19T14:00:00+01:00")
+    // new Date() correctly parses these to the absolute timestamp
+    // We create local times above, which also get converted to timestamps
+    // The comparison should work if we use timestamps directly
     const isFree = !busySlots.some(busy => {
       const busyStart = new Date(busy.start)
       const busyEnd = new Date(busy.end)
+      
+      // DEBUG: Show the actual ISO strings and parsed dates
+      console.log(`  🔍 Busy slot from API: ${busy.start} -> Parsed: ${busyStart.toISOString()}`)
+      console.log(`  🔍 Current slot: ${currentTime.toISOString()} - ${slotEnd.toISOString()}`)
+      console.log(`  🔍 Comparing slot ${currentTime.toLocaleString('de-DE', {timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit'})} - ${slotEnd.toLocaleString('de-DE', {timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit'})} with busy ${busyStart.toLocaleString('de-DE', {timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit'})} - ${busyEnd.toLocaleString('de-DE', {timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit'})}`)
       
       // Convert to timestamps for reliable comparison
       const slotStartMs = currentTime.getTime()
@@ -323,6 +305,10 @@ export function generateAvailableSlots(
       
       // Overlap occurs if slot starts before busy ends AND slot ends after busy starts
       const overlaps = slotStartMs < busyEndMs && slotEndMs > busyStartMs
+      
+      if (overlaps) {
+        console.log(`    ❌ OVERLAP detected!`)
+      }
       
       return overlaps
     })
@@ -335,21 +321,21 @@ export function generateAvailableSlots(
     )
     
     if (isFree && !isInBreak && slotEnd <= endTime) {
-      // Convert back to local time for display
-      // currentTime is in UTC adjusted for timezone
-      // Add the offset back to show local time to user
-      const localTime = new Date(currentTime)
-      localTime.setMinutes(localTime.getMinutes() + timezoneOffset)
-      
-      const hours = localTime.getHours().toString().padStart(2, '0')
-      const minutes = localTime.getMinutes().toString().padStart(2, '0')
+      const hours = currentTime.getHours().toString().padStart(2, '0')
+      const minutes = currentTime.getMinutes().toString().padStart(2, '0')
       availableSlots.push(`${hours}:${minutes}`)
+      console.log(`    ✅ Slot available: ${hours}:${minutes}`)
+    } else {
+      const hours = currentTime.getHours().toString().padStart(2, '0')
+      const minutes = currentTime.getMinutes().toString().padStart(2, '0')
+      console.log(`    ⏭️  Slot blocked: ${hours}:${minutes} (busy: ${!isFree}, break: ${isInBreak})`)
     }
     
     // Move to next slot using the increment (not the full duration)
     currentTime.setMinutes(currentTime.getMinutes() + slotIncrement)
   }
   
+  console.log(`✅ Generated ${availableSlots.length} available slots`)
   return availableSlots
 }
 

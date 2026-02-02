@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // PATCH /api/workshop/services/[id]/packages/[packageId] - Update a package
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string; packageId: string } }
+  { params }: { params: Promise<{ id: string; packageId: string }> }
 ) {
   try {
+    const { id, packageId } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || session.user.role !== 'WORKSHOP') {
@@ -34,7 +35,7 @@ export async function PATCH(
 
     // Verify service belongs to this workshop
     const service = await prisma.workshopService.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!service || service.workshopId !== user.workshop.id) {
@@ -46,10 +47,10 @@ export async function PATCH(
 
     // Verify package belongs to this service
     const packageExists = await prisma.servicePackage.findUnique({
-      where: { id: params.packageId }
+      where: { id: packageId }
     })
 
-    if (!packageExists || packageExists.workshopServiceId !== params.id) {
+    if (!packageExists || packageExists.workshopServiceId !== id) {
       return NextResponse.json(
         { error: 'Paket nicht gefunden' },
         { status: 404 }
@@ -60,7 +61,7 @@ export async function PATCH(
     const { price, durationMinutes, isActive, name, description } = body
 
     const updatedPackage = await prisma.servicePackage.update({
-      where: { id: params.packageId },
+      where: { id: packageId },
       data: {
         price: price !== undefined ? parseFloat(price) : undefined,
         durationMinutes: durationMinutes !== undefined ? parseInt(durationMinutes) : undefined,
@@ -83,9 +84,10 @@ export async function PATCH(
 // DELETE /api/workshop/services/[id]/packages/[packageId] - Delete a package
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; packageId: string } }
+  { params }: { params: Promise<{ id: string; packageId: string }> }
 ) {
   try {
+    const { id, packageId } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || session.user.role !== 'WORKSHOP') {
@@ -111,7 +113,7 @@ export async function DELETE(
 
     // Verify service belongs to this workshop
     const service = await prisma.workshopService.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!service || service.workshopId !== user.workshop.id) {
@@ -123,10 +125,10 @@ export async function DELETE(
 
     // Verify package belongs to this service
     const packageExists = await prisma.servicePackage.findUnique({
-      where: { id: params.packageId }
+      where: { id: packageId }
     })
 
-    if (!packageExists || packageExists.workshopServiceId !== params.id) {
+    if (!packageExists || packageExists.workshopServiceId !== id) {
       return NextResponse.json(
         { error: 'Paket nicht gefunden' },
         { status: 404 }
@@ -134,7 +136,7 @@ export async function DELETE(
     }
 
     await prisma.servicePackage.delete({
-      where: { id: params.packageId }
+      where: { id: packageId }
     })
 
     return NextResponse.json({ success: true })

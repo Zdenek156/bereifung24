@@ -2,8 +2,33 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { calculateDistance } from '@/lib/geocoding'
 
 export const dynamic = 'force-dynamic'
+
+// Helper function to detect service type from request
+function detectServiceType(request: {
+  additionalNotes?: string | null
+  width: number
+  aspectRatio: number
+  diameter: number
+}): string {
+  const notes = request.additionalNotes || ''
+  
+  if (notes.includes('🏍️ MOTORRADREIFEN')) return 'MOTORCYCLE_TIRE'
+  if (notes.includes('🔧 REIFENREPARATUR')) return 'TIRE_REPAIR'
+  if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT_BOTH'
+  if (notes.includes('BREMSEN-SERVICE')) return 'BRAKE_SERVICE'
+  if (notes.includes('BATTERIE-SERVICE')) return 'BATTERY_SERVICE'
+  if (notes.includes('KLIMASERVICE')) return 'CLIMATE_SERVICE'
+  if (notes.includes('🔧 SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
+  
+  if (request.width === 0 && request.aspectRatio === 0 && request.diameter === 0) {
+    return 'WHEEL_CHANGE'
+  }
+  
+  return 'TIRE_CHANGE'
+}
 
 export async function GET() {
   console.log('🔵 Dashboard Stats API aufgerufen')
@@ -193,20 +218,113 @@ export async function GET() {
       ])
     ])
 
-    // Berechne "Neue Anfragen" = Angebote wo der Workshop noch nicht gesendet hat
-    // Das ist die gleiche Logik wie auf der Browse-Requests Seite
-    const allRequestsAvailable = await prisma.tireRequest.count({
-      where: {
-        status: {
-          in: ['PENDING', 'OPEN', 'QUOTED']
+    // Berechne "Neue Anfragen" mit der gleichen Logik wie /api/workshop/tire-requests
+    // Hole Workshop mit Services und Koordinaten
+    const workshopWithServices = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+      include: {
+        user: {
+          select: {
+            latitude: true,
+            longitude: true
+          }
         },
-        needByDate: {
-          gte: new Date()
+        workshopServices: {
+          where: { isActive: true },
+          include: {
+            servicePackages: {
+              where: { isActive: true }
+            }
+          }
         }
       }
     })
 
-    const newRequestsCount = Math.max(0, allRequestsAvailable - allOffersCount)
+    let newRequestsCount = 0
+
+    if (workshopWithServices && workshopWithServices.user.latitude && workshopWithServices.user.longitude) {
+      // Hole konfigurierte Service-Typen
+      const configuredServiceTypes = workshopWithServices.workshopServices
+        .filter(service => {
+          if (!service.isActive) return false
+          
+          if (service.serviceType === 'WHEEL_CHANGE') {
+            return service.basePrice && service.basePrice > 0 && 
+                   service.durationMinutes && service.durationMinutes > 0
+          }
+          
+          return service.servicePackages.length > 0 &&
+                 service.servicePackages.some(pkg => 
+                   pkg.isActive && 
+                   pkg.price > 0 && 
+                   pkg.durationMinutes > 0
+                 )
+        })
+        .map(service => service.serviceType)
+
+      if (configuredServiceTypes.length > 0) {
+        // Hole alle offenen Anfragen mit Koordinaten
+        const tomorrow = new Date()
+        tomorrow.setHours(0, 0, 0, 0)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        
+        const allRequests = await prisma.tireRequest.findMany({
+          where: {
+            status: {
+              in: ['PENDING', 'OPEN', 'QUOTED']
+            },
+            needByDate: {
+              gte: tomorrow
+            },
+            // Nur Anfragen MIT Koordinaten
+            latitude: { not: null },
+            longitude: { not: null }
+          },
+          select: {
+            id: true,
+            latitude: true,
+            longitude: true,
+            radiusKm: true,
+            additionalNotes: true,
+            width: true,
+            aspectRatio: true,
+            diameter: true,
+            offers: {
+              where: { workshopId: workshopId },
+              select: { id: true }
+            }
+          }
+        })
+
+        // Filter nach Umkreis und Service-Typ
+        const filteredRequests = allRequests.filter(request => {
+          // Skip wenn bereits Angebot erstellt
+          if (request.offers.length > 0) return false
+
+          // Prüfe Distanz
+          const distance = calculateDistance(
+            workshopWithServices.user.latitude!,
+            workshopWithServices.user.longitude!,
+            request.latitude!,
+            request.longitude!
+          )
+
+          if (distance > request.radiusKm) return false
+
+          // Prüfe Service-Typ
+          const serviceType = detectServiceType({
+            additionalNotes: request.additionalNotes,
+            width: request.width,
+            aspectRatio: request.aspectRatio,
+            diameter: request.diameter
+          })
+
+          return configuredServiceTypes.includes(serviceType)
+        })
+
+        newRequestsCount = filteredRequests.length
+      }
+    }
 
     // Berechne Konversionsrate
     const conversionRate = allOffersCount > 0 

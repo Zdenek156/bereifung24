@@ -19,12 +19,15 @@ export async function POST(request: Request) {
       time,
       serviceId = null, // Service ID wenn ausgewählt
       customDuration = null, // Manuelle Dauer wenn "Manuelle Eingabe" gewählt
+      customerId = null, // Customer ID wenn von Kundendetails erstellt
+      vehicleId = null, // Vehicle ID wenn Fahrzeug ausgewählt
       customerName,
       customerPhone,
       customerEmail,
       serviceDescription,
       vehicleInfo,
-      notes
+      notes,
+      price = null
     } = body
 
     if (!date || !time) {
@@ -36,17 +39,84 @@ export async function POST(request: Request) {
 
     // Lade Service-Daten wenn serviceId vorhanden
     let selectedService = null
+    let selectedPackage = null
     let duration = 60 // Standard
     let serviceName = 'Manuell erstellter Termin'
     
     if (serviceId) {
-      selectedService = await prisma.servicePackage.findUnique({
-        where: { id: serviceId }
+      // serviceId Format: "workshopServiceId-packageId" oder nur "packageId" (legacy)
+      const parts = serviceId.split('-')
+      const packageId = parts.length === 2 ? parts[1] : serviceId
+      
+      selectedPackage = await prisma.servicePackage.findUnique({
+        where: { id: packageId },
+        include: {
+          workshopService: true
+        }
       })
       
-      if (selectedService) {
-        duration = selectedService.durationMinutes
-        serviceName = selectedService.name
+      if (selectedPackage) {
+        duration = selectedPackage.durationMinutes
+        
+        // Bestimme Service-Namen basierend auf serviceType und packageType
+        const serviceTypeNames: Record<string, string> = {
+          'TIRE_CHANGE': 'Reifenwechsel',
+          'WHEEL_CHANGE': 'Räder umstecken',
+          'TIRE_REPAIR': 'Reifenreparatur',
+          'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+          'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+          'CLIMATE_SERVICE': 'Klimaservice',
+          'BRAKE_SERVICE': 'Bremsen-Service',
+          'BATTERY_SERVICE': 'Batterie-Service',
+          'OTHER_SERVICES': 'Sonstige Reifendienste'
+        }
+        
+        const packageTypeNames: Record<string, string> = {
+          // TIRE_CHANGE
+          'two_tires': '2 Reifen wechseln',
+          'four_tires': '4 Reifen wechseln',
+          // TIRE_REPAIR
+          'foreign_object': 'Reifenpanne / Loch (Fremdkörper)',
+          'valve_damage': 'Ventilschaden',
+          // MOTORCYCLE_TIRE
+          'front': 'Vorderrad',
+          'rear': 'Hinterrad',
+          'both': 'Beide Räder',
+          'front_disposal': 'Vorderrad + Entsorgung',
+          'rear_disposal': 'Hinterrad + Entsorgung',
+          'both_disposal': 'Beide + Entsorgung',
+          // ALIGNMENT_BOTH
+          'measurement_front': 'Vermessung Vorderachse',
+          'measurement_rear': 'Vermessung Hinterachse',
+          'measurement_both': 'Vermessung beide Achsen',
+          'adjustment_front': 'Einstellung Vorderachse',
+          'adjustment_rear': 'Einstellung Hinterachse',
+          'adjustment_both': 'Einstellung beide Achsen',
+          'full_service': 'Komplett-Service',
+          // CLIMATE_SERVICE
+          'check': 'Klimacheck/Inspektion',
+          'basic': 'Basic Service',
+          'comfort': 'Comfort Service',
+          'premium': 'Premium Service',
+          // BRAKE_SERVICE
+          'front_pads': 'Vorderachse - Bremsbeläge',
+          'front_pads_discs': 'Vorderachse - Beläge + Scheiben',
+          'rear_pads': 'Hinterachse - Bremsbeläge',
+          'rear_pads_discs': 'Hinterachse - Beläge + Scheiben',
+          'rear_pads_discs_handbrake': 'Hinterachse - Beläge + Scheiben + Handbremse',
+          // BATTERY_SERVICE
+          'replacement': 'Batterie-Wechsel',
+          // OTHER_SERVICES
+          'rdks': 'RDKS-Service',
+          'valve': 'Ventil-Wechsel',
+          'storage': 'Reifen-Einlagerung',
+          'tpms': 'TPMS-Programmierung'
+        }
+        
+        const serviceTypeName = serviceTypeNames[selectedPackage.workshopService.serviceType] || selectedPackage.workshopService.serviceType
+        const packageTypeName = packageTypeNames[selectedPackage.packageType] || selectedPackage.packageType
+        
+        serviceName = `${serviceTypeName} (${packageTypeName})`
       }
     } else if (customDuration) {
       duration = customDuration
@@ -117,13 +187,62 @@ export async function POST(request: Request) {
     // Wähle ersten verfügbaren Mitarbeiter
     const employee = availableEmployees[0]
 
+    // Handle customer - use existing WorkshopCustomer if provided
+    let workshopCustomer = null
+    let selectedVehicle = null
+    
+    if (customerId) {
+      // Load existing workshop customer
+      workshopCustomer = await prisma.workshopCustomer.findFirst({
+        where: {
+          id: customerId,
+          workshopId: workshop.id
+        }
+      })
+      
+      if (!workshopCustomer) {
+        return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
+      }
+      
+      // Load vehicle if provided
+      if (vehicleId) {
+        selectedVehicle = await prisma.workshopVehicle.findFirst({
+          where: {
+            id: vehicleId,
+            customerId: workshopCustomer.id
+          }
+        })
+      }
+    }
+
     // Erstelle Terminbeschreibung für Google Calendar
-    let calendarDescription = 'Manuell erstellter Termin\n\n'
-    if (customerName) calendarDescription += `Kunde: ${customerName}\n`
-    if (customerPhone) calendarDescription += `Telefon: ${customerPhone}\n`
-    if (customerEmail) calendarDescription += `E-Mail: ${customerEmail}\n`
+    let calendarDescription = 'Werkstatt-Termin\n\n'
+    
+    if (workshopCustomer) {
+      const custName = workshopCustomer.customerType === 'BUSINESS' && workshopCustomer.companyName
+        ? workshopCustomer.companyName
+        : `${workshopCustomer.firstName || ''} ${workshopCustomer.lastName || ''}`.trim()
+      calendarDescription += `Kunde: ${custName}\n`
+      if (workshopCustomer.email) calendarDescription += `E-Mail: ${workshopCustomer.email}\n`
+      if (workshopCustomer.phone || workshopCustomer.mobile) {
+        calendarDescription += `Telefon: ${workshopCustomer.phone || workshopCustomer.mobile}\n`
+      }
+    } else if (customerName) {
+      calendarDescription += `Kunde: ${customerName}\n`
+      if (customerPhone) calendarDescription += `Telefon: ${customerPhone}\n`
+      if (customerEmail) calendarDescription += `E-Mail: ${customerEmail}\n`
+    }
+    
+    if (selectedVehicle) {
+      calendarDescription += `\nFahrzeug: ${selectedVehicle.manufacturer} ${selectedVehicle.model}`
+      if (selectedVehicle.licensePlate) calendarDescription += ` (${selectedVehicle.licensePlate})`
+      if (selectedVehicle.modelYear) calendarDescription += ` - ${selectedVehicle.modelYear}`
+      calendarDescription += '\n'
+    } else if (vehicleInfo) {
+      calendarDescription += `Fahrzeug: ${vehicleInfo}\n`
+    }
+    
     if (serviceDescription) calendarDescription += `\nService: ${serviceDescription}\n`
-    if (vehicleInfo) calendarDescription += `Fahrzeug: ${vehicleInfo}\n`
     if (notes) calendarDescription += `\nNotizen: ${notes}\n`
 
     // Google Calendar Event erstellen (wenn Mitarbeiter Calendar hat)
@@ -150,7 +269,11 @@ export async function POST(request: Request) {
         const event = await calendar.events.insert({
           calendarId: employee.googleCalendarId,
           requestBody: {
-            summary: customerName || 'Werkstatt-Termin',
+            summary: workshopCustomer 
+              ? (workshopCustomer.customerType === 'BUSINESS' && workshopCustomer.companyName
+                  ? workshopCustomer.companyName
+                  : `${workshopCustomer.firstName || ''} ${workshopCustomer.lastName || ''}`.trim())
+              : (customerName || 'Werkstatt-Termin'),
             description: calendarDescription,
             start: {
               dateTime: appointmentDateTime.toISOString(),
@@ -286,12 +409,24 @@ export async function POST(request: Request) {
         // Speichere zusätzliche Infos in customerNotes
         customerNotes: JSON.stringify({
           manualEntry: true,
-          customerName,
-          customerPhone,
-          customerEmail,
+          workshopCustomerId: workshopCustomer?.id || null,
+          vehicleId: selectedVehicle?.id || null,
+          // Speichere immer die Kundendaten für Anzeige
+          customerName: workshopCustomer 
+            ? (workshopCustomer.customerType === 'BUSINESS' && workshopCustomer.companyName
+                ? workshopCustomer.companyName
+                : `${workshopCustomer.firstName || ''} ${workshopCustomer.lastName || ''}`.trim())
+            : customerName,
+          customerPhone: workshopCustomer 
+            ? (workshopCustomer.phone || workshopCustomer.mobile || null)
+            : customerPhone,
+          customerEmail: workshopCustomer 
+            ? workshopCustomer.email
+            : customerEmail,
           serviceDescription,
-          vehicleInfo,
-          internalNotes: notes
+          vehicleInfo: selectedVehicle ? null : vehicleInfo,
+          internalNotes: notes,
+          price: price ? parseFloat(price) : null
         })
       },
       include: {

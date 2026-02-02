@@ -86,6 +86,13 @@ function getDescriptionForKey(key: string): string {
     'GOOGLE_OAUTH_CLIENT_SECRET': 'Google OAuth Client Secret',
     'WEATHERAPI_KEY': 'WeatherAPI.com API Key für Wetter-basierte Reifenwechsel-Erinnerungen (1M Calls/Monat kostenlos)',
     'EPREL_API_KEY': 'EPREL API Key für EU Reifenlabel-Daten (European Product Database for Energy Labelling)',
+    'API_NINJAS_KEY': 'API Ninjas Key für VIN Lookup und Fahrzeugsuche (50k Calls/Monat kostenlos - https://api-ninjas.com)',
+    'PAYPAL_CLIENT_ID': 'PayPal REST API Client ID (aus PayPal Developer Dashboard > Apps & Credentials)',
+    'PAYPAL_CLIENT_SECRET': 'PayPal REST API Client Secret (aus PayPal Developer Dashboard > Apps & Credentials)',
+    'PAYPAL_WEBHOOK_ID': 'PayPal Webhook ID (nach Webhook-Erstellung im Dashboard - Format: WH-xxxxxxxxxxxxx)',
+    'PAYPAL_API_URL': 'PayPal API URL (Sandbox: https://api-m.sandbox.paypal.com | Live: https://api-m.paypal.com)',
+    'STRIPE_SECRET_KEY': 'Stripe Secret Key (aus Stripe Dashboard > Developers > API keys - Format: sk_test_xxx oder sk_live_xxx)',
+    'STRIPE_PUBLISHABLE_KEY': 'Stripe Publishable Key (aus Stripe Dashboard > Developers > API keys - Format: pk_test_xxx oder pk_live_xxx)',
   }
   return descriptions[key] || ''
 }

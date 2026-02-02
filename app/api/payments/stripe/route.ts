@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     // Create Checkout Session with customer address
     const stripe = await getStripeInstance()
     const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'paypal', 'klarna', 'giropay', 'sofort', 'eps', 'sepa_debit'],
+      payment_method_types: ['card'],
       line_items: [
         {
           price_data: {

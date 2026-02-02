@@ -97,27 +97,20 @@ export default function StripeButton({ amount, bookingId, onSuccess, onError }: 
           <span className="flex flex-col items-center justify-center gap-3">
             <span className="text-base font-semibold">Jetzt bezahlen ({totalAmount.toFixed(2)} €)</span>
             <div className="flex items-center gap-2 flex-wrap justify-center">
-              {/* Verwende Text-Badges statt eigene Logos */}
+              {/* Kreditkarte badge with icon */}
               <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
                 <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                 </svg>
                 Kreditkarte
               </div>
+              {/* Apple Pay badge */}
               <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
-                PayPal
+                Apple Pay
               </div>
+              {/* Google Pay badge */}
               <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
-                Klarna
-              </div>
-              <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
-                giropay
-              </div>
-              <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
-                SOFORT
-              </div>
-              <div className="flex items-center gap-1 bg-white/90 px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-700 shadow-sm">
-                SEPA
+                Google Pay
               </div>
             </div>
           </span>
@@ -125,7 +118,7 @@ export default function StripeButton({ amount, bookingId, onSuccess, onError }: 
       </Button>
 
       <p className="text-xs text-gray-600 text-center">
-        Sichere Zahlung über Stripe. Die Werkstatt erhält {amount.toFixed(2)} €. Google Pay & Apple Pay automatisch verfügbar auf unterstützten Geräten.
+        Sichere Zahlung über Stripe. Die Werkstatt erhält {amount.toFixed(2)} €.
       </p>
     </div>
   )

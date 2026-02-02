@@ -414,8 +414,8 @@ export default function BrowseRequestsPage() {
         let installation = service.basePrice || 0
         let duration = service.durationMinutes || 60
         
-        const needsBalancing = request.additionalNotes?.includes('Wuchten')
-        const needsStorage = request.additionalNotes?.includes('Einlagerung')
+        const needsBalancing = request.additionalNotes?.includes('✓ Wuchten')
+        const needsStorage = request.additionalNotes?.includes('✓ Einlagerung')
         
         console.log('Wheel change detected - Customer preferences:', { needsBalancing, needsStorage })
         console.log('Service pricing:', { 
@@ -929,7 +929,7 @@ export default function BrowseRequestsPage() {
       installationFee: calculatedInstallation || '0.00', // Verwende berechneten Wert
       validDays: 7,
       durationMinutes: calculatedDuration,
-      balancingPrice: (isWheelChange && !request.additionalNotes?.includes('Wuchten') && service?.balancingPrice) 
+      balancingPrice: (isWheelChange && !request.additionalNotes?.includes('✓ Wuchten') && service?.balancingPrice) 
         ? service.balancingPrice.toFixed(2) 
         : '',
       storagePrice: '',
@@ -2234,8 +2234,8 @@ export default function BrowseRequestsPage() {
                     let basePrice = 0
                     let balancingIncluded = 0
                     let storageIncluded = 0
-                    const customerWantsBalancing = selectedRequest.additionalNotes?.includes('Wuchten')
-                    const customerWantsStorage = selectedRequest.additionalNotes?.includes('Einlagerung')
+                    const customerWantsBalancing = selectedRequest.additionalNotes?.includes('✓ Wuchten')
+                    const customerWantsStorage = selectedRequest.additionalNotes?.includes('✓ Einlagerung')
                     
                     // Service-spezifische Preisberechnung
                     if (detectedServiceType === 'WHEEL_CHANGE') {

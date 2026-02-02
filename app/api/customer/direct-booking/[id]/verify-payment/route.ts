@@ -4,10 +4,6 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
-})
-
 /**
  * POST /api/customer/direct-booking/[id]/verify-payment
  * Verify payment and update DirectBooking status
@@ -72,6 +68,11 @@ export async function POST(
 
     // Verify Stripe payment
     if (directBooking.paymentMethod === 'STRIPE') {
+      // Initialize Stripe here (lazy loading)
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2024-11-20.acacia'
+      })
+      
       const stripeSession = await stripe.checkout.sessions.retrieve(sessionId)
 
       if (stripeSession.payment_status === 'paid') {

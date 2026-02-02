@@ -4,10 +4,6 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
-})
-
 /**
  * POST /api/customer/direct-booking/create-payment
  * Create payment session for direct booking
@@ -135,6 +131,11 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe Checkout Session
     if (paymentMethod === 'STRIPE') {
+      // Initialize Stripe here (lazy loading)
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2024-11-20.acacia'
+      })
+      
       const serviceDescription = [
         `Räderwechsel (${vehicle.manufacturer} ${vehicle.model})`,
         hasBalancing ? 'mit Wuchten' : '',

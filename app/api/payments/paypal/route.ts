@@ -20,7 +20,11 @@ export async function POST(request: NextRequest) {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
-        customer: true,
+        customer: {
+          include: {
+            user: true
+          }
+        },
         workshop: {
           include: {
             user: true
@@ -43,49 +47,82 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Already paid' }, { status: 400 })
     }
 
-    // Get PayPal access token
-    const accessToken = await getPayPalAccessToken()
+    // Get PayPal access token and API URL
+    const { accessToken, apiUrl } = await getPayPalConfig()
 
-    // Create PayPal order
+    // Get PayPal merchant email (optional, for marketplace scenarios)
+    const paypalMerchantEmail = await prisma.adminApiSetting.findUnique({
+      where: { key: 'PAYPAL_MERCHANT_EMAIL' }
+    })
+
+    // Create PayPal order with customer address and reference
+    // Get customer data from User object
+    const user = booking.customer?.user
+    const firstName = user?.firstName || booking.tireRequest?.firstName || ''
+    const lastName = user?.lastName || booking.tireRequest?.lastName || ''
+    const street = user?.street || booking.tireRequest?.street || ''
+    const city = user?.city || booking.tireRequest?.city || ''
+    const postalCode = user?.postalCode || user?.zipCode || booking.tireRequest?.postalCode || booking.tireRequest?.zipCode || ''
+
+    const orderData: any = {
+      intent: 'CAPTURE',
+      purchase_units: [
+        {
+          reference_id: booking.id,
+          custom_id: booking.id, // Used by webhook to identify booking
+          description: `Bereifung24 - ${booking.workshop.companyName}`,
+          invoice_id: `B24-${booking.id.substring(0, 8).toUpperCase()}`, // Verwendungszweck
+          amount: {
+            currency_code: 'EUR',
+            value: amount.toFixed(2)
+          },
+          // Only include shipping if customer has address data
+          ...(street && city && {
+            shipping: {
+              name: {
+                full_name: `${firstName} ${lastName}`.trim() || 'Customer'
+              },
+              address: {
+                address_line_1: street,
+                admin_area_2: city,
+                postal_code: postalCode,
+                country_code: 'DE'
+              }
+            }
+          })
+        }
+      ],
+      application_context: {
+        brand_name: 'Bereifung24',
+        locale: 'de-DE',
+        landing_page: 'NO_PREFERENCE',
+        user_action: 'PAY_NOW',
+        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/appointments?payment=success`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${booking.tireRequestId}/book?offerId=${booking.offerId}&payment=cancelled`
+      }
+    }
+
+    // Add payee email if configured (for marketplace split payments)
+    if (paypalMerchantEmail?.value) {
+      orderData.purchase_units[0].payee = {
+        email_address: paypalMerchantEmail.value
+      }
+    }
+
     const paypalResponse = await fetch(
-      `${process.env.PAYPAL_API_URL}/v2/checkout/orders`,
+      `${apiUrl}/v2/checkout/orders`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify({
-          intent: 'CAPTURE',
-          purchase_units: [
-            {
-              reference_id: booking.id,
-              custom_id: booking.id, // Used by webhook to identify booking
-              description: `Bereifung24 - ${booking.workshop.companyName}`,
-              amount: {
-                currency_code: 'EUR',
-                value: amount.toFixed(2)
-              },
-              payee: {
-                email_address: booking.workshop.paypalEmail
-              }
-            }
-          ],
-          application_context: {
-            brand_name: 'Bereifung24',
-            locale: 'de-DE',
-            landing_page: 'NO_PREFERENCE',
-            user_action: 'PAY_NOW',
-            return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/appointments?payment=success`,
-            cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${booking.tireRequestId}/book?offerId=${booking.offerId}&payment=cancelled`
-          }
-        })
+        body: JSON.stringify(orderData)
       }
     )
 
     if (!paypalResponse.ok) {
       const error = await paypalResponse.json()
-      console.error('PayPal order creation failed:', error)
       return NextResponse.json({ 
         error: 'PayPal order creation failed',
         details: error
@@ -134,12 +171,12 @@ export async function PUT(request: NextRequest) {
 
     const { orderID } = await request.json()
 
-    // Get PayPal access token
-    const accessToken = await getPayPalAccessToken()
+    // Get PayPal access token and API URL
+    const { accessToken, apiUrl } = await getPayPalConfig()
 
     // Capture the order
     const captureResponse = await fetch(
-      `${process.env.PAYPAL_API_URL}/v2/checkout/orders/${orderID}/capture`,
+      `${apiUrl}/v2/checkout/orders/${orderID}/capture`,
       {
         method: 'POST',
         headers: {
@@ -203,15 +240,24 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * Get PayPal Access Token
+ * Get PayPal Configuration and Access Token
  */
-async function getPayPalAccessToken(): Promise<string> {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET
-  const apiUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com'
+async function getPayPalConfig(): Promise<{ accessToken: string; apiUrl: string }> {
+  // Load PayPal credentials from database
+  const settings = await prisma.adminApiSetting.findMany({
+    where: {
+      key: {
+        in: ['PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET', 'PAYPAL_API_URL']
+      }
+    }
+  })
+
+  const clientId = settings.find(s => s.key === 'PAYPAL_CLIENT_ID')?.value
+  const clientSecret = settings.find(s => s.key === 'PAYPAL_CLIENT_SECRET')?.value
+  const apiUrl = settings.find(s => s.key === 'PAYPAL_API_URL')?.value || 'https://api-m.sandbox.paypal.com'
 
   if (!clientId || !clientSecret) {
-    throw new Error('PayPal credentials not configured')
+    throw new Error('PayPal credentials not configured in admin settings')
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
@@ -226,9 +272,14 @@ async function getPayPalAccessToken(): Promise<string> {
   })
 
   if (!response.ok) {
+    const error = await response.text()
+    console.error('Failed to get PayPal access token:', error)
     throw new Error('Failed to get PayPal access token')
   }
 
   const data = await response.json()
-  return data.access_token
+  return {
+    accessToken: data.access_token,
+    apiUrl
+  }
 }

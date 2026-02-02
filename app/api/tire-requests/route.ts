@@ -439,16 +439,32 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
+    console.log('🔍 [GET tire-requests] Session:', {
+      exists: !!session,
+      role: session?.user?.role,
+      customerId: session?.user?.customerId,
+      userId: session?.user?.id
+    })
+
     if (!session || session.user.role !== 'CUSTOMER') {
+      console.error('❌ [GET tire-requests] Unauthorized:', { session: !!session, role: session?.user?.role })
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
+    if (!session.user.customerId) {
+      console.error('❌ [GET tire-requests] No customerId in session:', session.user)
+      return NextResponse.json(
+        { error: 'Customer ID not found in session' },
+        { status: 400 }
+      )
+    }
+
     const tireRequests = await prisma.tireRequest.findMany({
       where: {
-        customerId: session.user.customerId!,
+        customerId: session.user.customerId,
       },
       include: {
         vehicle: {
@@ -470,9 +486,10 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    console.log(`✅ [GET tire-requests] Found ${tireRequests.length} requests for customer ${session.user.customerId}`)
     return NextResponse.json({ requests: tireRequests })
   } catch (error) {
-    console.error('Error fetching tire requests:', error)
+    console.error('❌ [GET tire-requests] Error fetching tire requests:', error)
     return NextResponse.json(
       { error: 'Ein Fehler ist aufgetreten' },
       { status: 500 }

@@ -114,33 +114,22 @@ export default function RequestDetailPage() {
   // Check if customer already has a booking for this request
   const checkExistingBooking = async () => {
     try {
-      console.log('🔍 Checking for existing booking for requestId:', requestId)
       const response = await fetch('/api/bookings')
       if (response.ok) {
-        const bookings = await response.json() // API returns array directly, not { bookings: [] }
-        console.log('📋 All bookings from API:', bookings)
-        console.log('📋 Number of bookings:', bookings?.length || 0)
+        const bookings = await response.json()
         
         // Only block booking if there's an active (non-cancelled) booking
         const booking = bookings?.find((b: any) => {
-          console.log(`  Checking booking ${b.id}: tireRequestId=${b.tireRequestId}, status=${b.status}`)
           return b.tireRequestId === requestId && b.status !== 'CANCELLED'
         })
-        console.log('🎯 Found matching booking:', booking)
         
         if (booking) {
           setExistingBooking(booking)
-          console.log('✅ Existing booking set, button should be hidden')
-        } else {
-          console.log('❌ No matching booking found, button should be visible')
         }
-      } else {
-        console.error('API response not OK:', response.status)
       }
     } catch (error) {
       console.error('Error checking existing booking:', error)
     } finally {
-      console.log('🏁 Final states - checkingBooking: false, existingBooking:', !!existingBooking)
       setCheckingBooking(false)
     }
   }
@@ -153,10 +142,21 @@ export default function RequestDetailPage() {
       return
     }
 
+    // Defensive check: Don't fetch if requestId is undefined
+    if (!requestId || requestId === 'undefined') {
+      return
+    }
+
     fetchRequestDetail()
   }, [session, status, router, requestId])
 
   const fetchRequestDetail = async () => {
+    // Defensive check: Don't make API call if requestId is invalid
+    if (!requestId || requestId === 'undefined') {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     // DON'T reset existingBooking here - only set checking state
     // setCheckingBooking(true) // REMOVED - causes re-render and clears booking
@@ -173,8 +173,13 @@ export default function RequestDetailPage() {
         // Check for existing booking AFTER request is loaded
         await checkExistingBooking()
       } else {
-        alert('Anfrage nicht gefunden')
-        router.push('/dashboard/customer/requests')
+        // If it's a 400 error (invalid ID), redirect silently
+        if (response.status === 400) {
+          router.push('/dashboard/customer/requests')
+        } else {
+          alert('Anfrage nicht gefunden')
+          router.push('/dashboard/customer/requests')
+        }
       }
     } catch (error) {
       console.error('Error fetching request:', error)
@@ -1492,6 +1497,7 @@ export default function RequestDetailPage() {
                         <PaymentSelector
                           amount={acceptedOffer.price}
                           bookingId={existingBooking.id}
+                          requestId={params.id}
                           workshopPaypalEmail={acceptedOffer.workshop?.paypalEmail}
                           workshopStripeEnabled={acceptedOffer.workshop?.stripeEnabled}
                           workshopPaymentMethods={acceptedOffer.workshop?.paymentMethods}

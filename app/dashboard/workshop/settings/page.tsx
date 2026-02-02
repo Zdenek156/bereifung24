@@ -119,6 +119,9 @@ export default function WorkshopSettings() {
     creditCard: false,
     bankTransfer: false,
     bankTransferIban: '',
+    bankAccountHolder: '',
+    bankBIC: '',
+    bankName: '',
     paypal: false,
     paypalEmail: '',
     stripe: false,
@@ -1166,19 +1169,57 @@ export default function WorkshopSettings() {
                   </div>
                 </div>
                 {paymentMethods.bankTransfer && (
-                  <div className="ml-7 mt-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      IBAN für Überweisungen
-                    </label>
-                    <input
-                      type="text"
-                      value={paymentMethods.bankTransferIban}
-                      onChange={(e) => setPaymentMethods({ ...paymentMethods, bankTransferIban: e.target.value.toUpperCase() })}
-                      placeholder="DE89 3704 0044 0532 0130 00"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Diese IBAN wird dem Kunden für Überweisungen angezeigt
+                  <div className="ml-7 mt-2 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Kontoinhaber
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentMethods.bankAccountHolder || ''}
+                        onChange={(e) => setPaymentMethods({ ...paymentMethods, bankAccountHolder: e.target.value })}
+                        placeholder="Mustermann GmbH"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        IBAN für Überweisungen
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentMethods.bankTransferIban || ''}
+                        onChange={(e) => setPaymentMethods({ ...paymentMethods, bankTransferIban: e.target.value.toUpperCase() })}
+                        placeholder="DE89 3704 0044 0532 0130 00"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        BIC (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentMethods.bankBIC || ''}
+                        onChange={(e) => setPaymentMethods({ ...paymentMethods, bankBIC: e.target.value.toUpperCase() })}
+                        placeholder="COBADEFFXXX"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Bankname (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentMethods.bankName || ''}
+                        onChange={(e) => setPaymentMethods({ ...paymentMethods, bankName: e.target.value })}
+                        placeholder="Commerzbank"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Diese Bankverbindung wird dem Kunden für Überweisungen angezeigt
                     </p>
                   </div>
                 )}

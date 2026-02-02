@@ -8,6 +8,7 @@ import { CreditCard, Smartphone, Banknote, Building2 } from 'lucide-react'
 interface PaymentSelectorProps {
   amount: number
   bookingId: string
+  requestId?: string
   workshopPaypalEmail?: string | null
   workshopStripeEnabled?: boolean
   workshopPaymentMethods?: string | null
@@ -20,6 +21,7 @@ type PaymentMethod = 'paypal' | 'stripe' | 'cash' | 'ecCard' | 'creditCard' | 'b
 export default function PaymentSelector({
   amount,
   bookingId,
+  requestId,
   workshopPaypalEmail,
   workshopStripeEnabled,
   workshopPaymentMethods,
@@ -45,6 +47,7 @@ export default function PaymentSelector({
   if (paymentMethods.paypal && workshopPaypalEmail) {
     availableOptions.push('paypal')
   }
+  
   if (paymentMethods.stripe && workshopStripeEnabled) {
     availableOptions.push('stripe')
   }
@@ -63,13 +66,23 @@ export default function PaymentSelector({
     availableOptions.push('bankTransfer')
   }
 
-  // If no payment methods are available, don't show the selector
+  // If no payment methods are configured, show default message with helpful instructions
   if (availableOptions.length === 0) {
     return (
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-sm text-gray-600 text-center">
-          Diese Werkstatt hat noch keine Zahlungsmethoden konfiguriert.
-        </p>
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex items-start gap-3">
+          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-sm font-semibold text-blue-900 mb-1">
+              Zahlung vor Ort
+            </p>
+            <p className="text-sm text-blue-800">
+              Diese Werkstatt akzeptiert Zahlung vor Ort. Sie können direkt bei Abholung bezahlen.
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -311,6 +324,16 @@ export default function PaymentSelector({
 
   const details = getMethodDetails()
 
+  // Calculate PayPal fees: 2.5% + 0.35€
+  const calculatePayPalTotal = (baseAmount: number) => {
+    const feePercentage = 0.025 // 2.5%
+    const fixedFee = 0.35
+    const total = baseAmount + (baseAmount * feePercentage) + fixedFee
+    return total
+  }
+
+  const paypalTotal = selectedMethod === 'paypal' ? calculatePayPalTotal(amount) : amount
+
   return (
     <div className="mt-6">
       {/* Online payment methods (PayPal, Stripe) */}
@@ -328,19 +351,50 @@ export default function PaymentSelector({
 
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6">
             <div className="bg-white rounded-lg p-4 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-base font-semibold text-gray-700">Zu zahlender Betrag:</span>
-                <span className="text-2xl font-bold text-blue-900">{amount.toFixed(2)} €</span>
-              </div>
+              {selectedMethod === 'paypal' ? (
+                <>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">Ursprungsbetrag:</span>
+                    <span className="text-lg text-gray-700">{amount.toFixed(2)} €</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+                    <span>PayPal Gebühren (2,5% + 0,35€):</span>
+                    <span>{(paypalTotal - amount).toFixed(2)} €</span>
+                  </div>
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-base font-semibold text-gray-700">Zu zahlender Betrag:</span>
+                      <span className="text-2xl font-bold text-blue-900">{paypalTotal.toFixed(2)} €</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 text-right">
+                    Kleinunternehmer gemäß § 19 UStG (ohne MwSt.)
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span className="text-base font-semibold text-gray-700">Zu zahlender Betrag:</span>
+                  <span className="text-2xl font-bold text-blue-900">{amount.toFixed(2)} €</span>
+                </div>
+              )}
             </div>
 
             {selectedMethod === 'paypal' ? (
-              <PayPalButton
-                amount={amount}
-                bookingId={bookingId}
-                onSuccess={onSuccess}
-                onError={onError}
-              />
+              <div>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Hinweis:</strong> Die PayPal-Gebühren (2,5% + 0,35€) sind bereits im Gesamtbetrag enthalten.
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4">
+                  <PayPalButton
+                    amount={paypalTotal}
+                    bookingId={bookingId}
+                    onSuccess={onSuccess}
+                    onError={onError}
+                  />
+                </div>
+              </div>
             ) : (
               <StripeButton
                 amount={amount}
@@ -369,6 +423,56 @@ export default function PaymentSelector({
               <p className={`text-${details.color}-800 mb-3`}>
                 {details.description}
               </p>
+              
+              {/* Bank Transfer Details */}
+              {selectedMethod === 'bankTransfer' && workshopPaymentMethods && (
+                <div className="bg-white rounded-lg p-4 mb-4 border-2 border-gray-200">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Bankverbindung der Werkstatt
+                  </h4>
+                  {paymentMethods.bankAccountHolder || paymentMethods.bankIBAN || paymentMethods.bankTransferIban ? (
+                    <div className="space-y-2 text-sm">
+                      {paymentMethods.bankAccountHolder && (
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-600">Kontoinhaber:</span>
+                          <span className="font-semibold text-gray-900">{paymentMethods.bankAccountHolder}</span>
+                        </div>
+                      )}
+                      {(paymentMethods.bankIBAN || paymentMethods.bankTransferIban) && (
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-600">IBAN:</span>
+                          <span className="font-mono font-semibold text-gray-900">{paymentMethods.bankIBAN || paymentMethods.bankTransferIban}</span>
+                        </div>
+                      )}
+                      {paymentMethods.bankBIC && (
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-600">BIC:</span>
+                          <span className="font-mono font-semibold text-gray-900">{paymentMethods.bankBIC}</span>
+                        </div>
+                      )}
+                      {paymentMethods.bankName && (
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-600">Bank:</span>
+                          <span className="font-semibold text-gray-900">{paymentMethods.bankName}</span>
+                        </div>
+                      )}
+                      {requestId && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Verwendungszweck:</span>
+                          <span className="font-mono font-semibold text-gray-900">{requestId}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-orange-600">
+                      Die Werkstatt hat noch keine Bankverbindung hinterlegt. 
+                      Sie erhalten die Bankdaten direkt von der Werkstatt.
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <div className="bg-white rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-semibold text-gray-700">Zu zahlender Betrag:</span>

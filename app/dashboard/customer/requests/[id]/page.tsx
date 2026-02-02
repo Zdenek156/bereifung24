@@ -1803,7 +1803,9 @@ export default function RequestDetailPage() {
                                     <>
                                       {(() => {
                                         // Calculate base installation fee and balancing separately
-                                        const hasBalancing = offer.balancingPrice && offer.balancingPrice > 0
+                                        // Only show balancing if customer requested it AND workshop offered it
+                                        const customerWantsBalancing = request.additionalNotes?.includes('✓ Wuchten')
+                                        const hasBalancing = customerWantsBalancing && offer.balancingPrice && offer.balancingPrice > 0
                                         const balancingTotal = hasBalancing ? offer.balancingPrice * 4 : 0
                                         const baseInstallation = hasBalancing 
                                           ? offer.installationFee - balancingTotal 
@@ -1821,12 +1823,16 @@ export default function RequestDetailPage() {
                                                 <span className="font-semibold">{balancingTotal.toFixed(2)} €</span>
                                               </div>
                                             )}
-                                            {offer.storagePrice && offer.storagePrice > 0 && (
-                                              <div className="flex justify-between text-gray-700">
-                                                <span>Einlagerung (Saison)</span>
-                                                <span className="font-semibold">{offer.storagePrice.toFixed(2)} €</span>
-                                              </div>
-                                            )}
+                                            {(() => {
+                                              const customerWantsStorage = request.additionalNotes?.includes('✓ Einlagerung')
+                                              const hasStorage = customerWantsStorage && offer.storagePrice && offer.storagePrice > 0
+                                              return hasStorage && (
+                                                <div className="flex justify-between text-gray-700">
+                                                  <span>Einlagerung (Saison)</span>
+                                                  <span className="font-semibold">{offer.storagePrice.toFixed(2)} €</span>
+                                                </div>
+                                              )
+                                            })()}
                                           </>
                                         )
                                       })()}

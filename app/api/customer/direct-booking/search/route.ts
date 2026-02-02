@@ -70,14 +70,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find workshops with WHEEL_CHANGE service in radius
+    // Find workshops with WHEEL_CHANGE service in radius that allow direct booking
     const workshops = await prisma.workshop.findMany({
       where: {
         active: true,
         workshopServices: {
           some: {
             serviceType: 'WHEEL_CHANGE',
-            isActive: true
+            isActive: true,
+            allowsDirectBooking: true
           }
         }
       },
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
         workshopServices: {
           where: {
             serviceType: 'WHEEL_CHANGE',
-            isActive: true
+            isActive: true,
+            allowsDirectBooking: true
           }
         },
         bookings: {

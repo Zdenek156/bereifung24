@@ -937,6 +937,7 @@ model WorkshopService {
   wheelSizeSurcharge       Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
   balancingPrice           Float? @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
   storagePrice             Float? @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+  allowsDirectBooking      Boolean @default(false) @map("allows_direct_booking") // Werkstatt erlaubt Direktbuchungen für diesen Service
   refrigerantPricePer100ml Float? // Preis pro 100ml Kältemittel (nur bei CLIMATE_SERVICE)
 
   // Duration

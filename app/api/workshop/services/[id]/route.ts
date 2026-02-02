@@ -58,6 +58,7 @@ export async function PATCH(
       durationMinutes4,
       balancingMinutes,
       storageAvailable,
+      allowsDirectBooking,
       refrigerantPrice,
       description,
       internalNotes,
@@ -103,6 +104,7 @@ export async function PATCH(
         durationMinutes4: durationMinutes4 !== undefined ? (durationMinutes4 ? parseInt(durationMinutes4) : null) : undefined,
         balancingMinutes: balancingMinutes !== undefined ? (balancingMinutes ? parseInt(balancingMinutes) : null) : undefined,
         storageAvailable: storageAvailable !== undefined ? storageAvailable : undefined,
+        allowsDirectBooking: allowsDirectBooking !== undefined ? allowsDirectBooking : undefined,
         description: description !== undefined ? description : undefined,
         internalNotes: internalNotes !== undefined ? internalNotes : undefined,
         isActive: isActive !== undefined ? isActive : undefined

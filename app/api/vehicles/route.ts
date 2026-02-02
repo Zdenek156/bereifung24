@@ -47,18 +47,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
-    // Get customer
-    const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!customer) {
-      return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
-    }
-
-    // Get all vehicles with tire data
+    // Get all vehicles with tire data (use userId directly)
     const vehicles = await prisma.vehicle.findMany({
-      where: { customerId: customer.id },
+      where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' }
     })
 

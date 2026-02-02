@@ -142,6 +142,9 @@ model User {
   // Customer Reminders
   createdReminders CustomerReminder[] @relation("ReminderCreatedBy")
 
+  // Direct Bookings
+  directBookings DirectBooking[] @relation("DirectBookingCustomer")
+
   @@map("users")
 }
 
@@ -305,6 +308,9 @@ model Workshop {
 
   // Track viewed tire requests
   viewedRequests TireRequestView[]
+
+  // Direct Bookings
+  directBookings DirectBooking[] @relation("DirectBookingWorkshop")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -509,6 +515,9 @@ model Vehicle {
   tireHistory  TireHistory[]
   tireRequests TireRequest[]
 
+  // Direct Bookings
+  directBookings DirectBooking[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -700,6 +709,9 @@ model Booking {
   workshopVehicleId  String?                @map("workshop_vehicle_id")
   workshopVehicle    WorkshopVehicle?       @relation("WorkshopVehicleBookings", fields: [workshopVehicleId], references: [id], onDelete: SetNull)
   serviceRecord      WorkshopServiceRecord? @relation("ServiceRecordBooking")
+
+  // Direct Booking
+  directBooking DirectBooking?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -5398,4 +5410,66 @@ model CustomerReminder {
   @@index([dueDate])
   @@index([completed])
   @@map("customer_reminders")
+}
+
+// ============================================
+// DIRECT BOOKING SYSTEM
+// ============================================
+
+model DirectBooking {
+  id         String   @id @default(cuid())
+  customerId String   @map("customer_id")
+  customer   User     @relation("DirectBookingCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation("DirectBookingWorkshop", fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  // Service Details
+  serviceType       String // WHEEL_CHANGE, TIRE_CHANGE, etc.
+  vehicleId         String      @map("vehicle_id")
+  vehicle           Vehicle     @relation(fields: [vehicleId], references: [id])
+  
+  // Options (for wheel change)
+  hasBalancing      Boolean     @default(false) @map("has_balancing")
+  hasStorage        Boolean     @default(false) @map("has_storage")
+  
+  // Pricing
+  basePrice         Decimal     @db.Decimal(10, 2) @map("base_price")
+  balancingPrice    Decimal?    @db.Decimal(10, 2) @map("balancing_price")
+  storagePrice      Decimal?    @db.Decimal(10, 2) @map("storage_price")
+  totalPrice        Decimal     @db.Decimal(10, 2) @map("total_price")
+  durationMinutes   Int         @map("duration_minutes")
+  
+  // Payment
+  paymentMethod     DirectBookingPaymentMethod @map("payment_method")
+  paymentStatus     DirectBookingPaymentStatus @default(PENDING) @map("payment_status")
+  stripeSessionId   String?     @map("stripe_session_id")
+  stripePaymentId   String?     @map("stripe_payment_id")
+  paypalOrderId     String?     @map("paypal_order_id")
+  paidAt            DateTime?   @map("paid_at")
+  
+  // Booking
+  bookingId         String?     @unique @map("booking_id")
+  booking           Booking?    @relation(fields: [bookingId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+  
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@map("direct_bookings")
+}
+
+enum DirectBookingPaymentMethod {
+  STRIPE
+  PAYPAL
+}
+
+enum DirectBookingPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

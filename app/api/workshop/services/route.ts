@@ -119,6 +119,7 @@ export async function GET(request: Request) {
       balancingMinutes: service.balancingMinutes,
       storagePrice: service.storagePrice,
       storageAvailable: service.storageAvailable,
+      allowsDirectBooking: service.allowsDirectBooking,
       refrigerantPricePer100ml: service.refrigerantPricePer100ml,
       runFlatSurcharge: service.runFlatSurcharge,
       disposalFee: service.disposalFee,

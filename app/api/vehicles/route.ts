@@ -47,11 +47,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
-    // Get all vehicles with tire data (use userId directly)
-    const vehicles = await prisma.vehicle.findMany({
+    // Get customer first, then their vehicles
+    const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' }
+      include: {
+        vehicles: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
     })
+
+    if (!customer) {
+      return NextResponse.json({ vehicles: [] })
+    }
+
+    const vehicles = customer.vehicles
 
     // Transform data to include tire specs grouped by season
     const transformedVehicles = vehicles.map((vehicle: any) => {

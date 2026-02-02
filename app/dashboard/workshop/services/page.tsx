@@ -29,6 +29,7 @@ interface Service {
   durationMinutes4: number | null
   balancingMinutes: number | null
   storageAvailable: boolean | null
+  allowsDirectBooking: boolean | null
   description: string | null
   internalNotes: string | null
   isActive: boolean
@@ -185,7 +186,8 @@ export default function WorkshopServicesPage() {
       setPackages({
         base: { price: '', duration: '60', active: true },
         balancing: { price: '', duration: '5', active: false },
-        storage: { price: '', duration: '0', active: false }
+        storage: { price: '', duration: '0', active: false },
+        directBooking: { active: false }
       })
     } else {
       // Initialize packages if service type supports them
@@ -252,6 +254,7 @@ export default function WorkshopServicesPage() {
         requestBody.balancingMinutes = packages.balancing?.active && packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
         requestBody.storagePrice = packages.storage?.active && packages.storage?.price ? parseFloat(packages.storage.price) : null
         requestBody.storageAvailable = packages.storage?.active && !!packages.storage?.price
+        requestBody.allowsDirectBooking = packages.directBooking?.active || false
         requestBody.packages = undefined // No packages for WHEEL_CHANGE
       }
 
@@ -340,6 +343,9 @@ export default function WorkshopServicesPage() {
           price: service.storagePrice?.toString() || '', 
           duration: '0', 
           active: !!service.storagePrice 
+        },
+        directBooking: {
+          active: service.allowsDirectBooking || false
         }
       })
     }
@@ -741,6 +747,29 @@ export default function WorkshopServicesPage() {
                         <p className="text-xs text-gray-500 mt-1">Pro Saison (keine Extra-Dauer)</p>
                       </div>
                     )}
+                  </div>
+
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={packages.directBooking?.active !== false}
+                        onChange={(e) => handlePackageChange('directBooking', 'active', e.target.checked)}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          ⚡ Direktbuchung erlauben (Fast-Track)
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          Kunden können direkt online buchen und bezahlen, ohne Angebot anzufordern.
+                          Sie erscheinen in der <strong>Schnellbuchungs-Suche</strong> und erhalten sofortige Zahlungen.
+                        </p>
+                        <p className="text-xs text-purple-600 mt-1">
+                          💡 Empfohlen: Erhöht Ihre Conversion-Rate und spart Zeit bei der Angebotserstellung!
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">

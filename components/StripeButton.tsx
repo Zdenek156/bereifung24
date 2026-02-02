@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { loadStripe, Stripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { Button } from '@/components/ui/button'
 
 interface StripeButtonProps {
   amount: number
@@ -12,155 +11,79 @@ interface StripeButtonProps {
 }
 
 export default function StripeButton({ amount, bookingId, onSuccess, onError }: StripeButtonProps) {
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Load Stripe publishable key from database
-    fetch('/api/config/stripe')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.publishableKey) {
-          setStripePromise(loadStripe(data.publishableKey))
-        } else {
-          setError('Stripe ist nicht konfiguriert')
-        }
-      })
-      .catch((err) => {
-        console.error('Error loading Stripe config:', err)
-        setError('Stripe konnte nicht geladen werden')
-        onError(err)
-      })
-  }, [])
+  // Calculate total with Stripe fee
+  const stripeFeePercent = 0.015 // 1.5%
+  const stripeFeeFixed = 0.25 // €0.25
+  const stripeFee = (amount * stripeFeePercent) + stripeFeeFixed
+  const totalAmount = amount + stripeFee
 
-  useEffect(() => {
-    if (!stripePromise) return
-
-    // Create PaymentIntent on mount
-    fetch('/api/payments/stripe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        bookingId,
-        amount,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.clientSecret) {
-          setClientSecret(data.clientSecret)
-        } else {
-          setError(data.error || 'Fehler beim Initialisieren der Zahlung')
-        }
-      })
-      .catch((err) => {
-        console.error('Error creating payment intent:', err)
-        setError('Fehler beim Initialisieren der Zahlung')
-        onError(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [bookingId, amount, stripePromise])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Zahlung wird vorbereitet...</span>
-      </div>
-    )
-  }
-
-  if (error || !clientSecret || !stripePromise) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-        <p className="text-red-800 font-medium">Zahlung konnte nicht initialisiert werden</p>
-        <p className="text-sm text-red-600 mt-1">{error || 'Bitte versuchen Sie es später erneut.'}</p>
-      </div>
-    )
-  }
-
-  return (
-    <Elements 
-      stripe={stripePromise} 
-      options={{
-        clientSecret,
-        appearance: {
-          theme: 'stripe',
-          variables: {
-            colorPrimary: '#2563eb',
-          },
-        },
-        locale: 'de',
-      }}
-    >
-      <CheckoutForm 
-        amount={amount}
-        bookingId={bookingId}
-        onSuccess={onSuccess}
-        onError={onError}
-      />
-    </Elements>
-  )
-}
-
-function CheckoutForm({ amount, bookingId, onSuccess, onError }: StripeButtonProps) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!stripe || !elements) {
-      return
-    }
-
+  const handlePayment = async () => {
     setLoading(true)
-    setErrorMessage(null)
+    setError(null)
 
     try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/dashboard/customer/appointments?payment=success`,
+      const response = await fetch('/api/payments/stripe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          bookingId,
+          amount,
+        }),
       })
 
-      if (error) {
-        setErrorMessage(error.message || 'Ein Fehler ist aufgetreten')
-        onError(error)
+      const data = await response.json()
+
+      if (response.ok && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url
       } else {
-        onSuccess()
+        setError(data.error || 'Fehler beim Erstellen der Zahlung')
+        onError(new Error(data.error))
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Ein Fehler ist aufgetreten')
+      console.error('Stripe payment error:', err)
+      setError('Fehler beim Initialisieren der Zahlung')
       onError(err)
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
-      
-      {errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-sm text-red-800">{errorMessage}</p>
-        </div>
-      )}
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+        <p className="text-red-800 font-medium">Zahlung konnte nicht initialisiert werden</p>
+        <p className="text-sm text-red-600 mt-1">{error}</p>
+      </div>
+    )
+  }
 
-      <button
-        type="submit"
-        disabled={!stripe || loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-700">Servicebetrag:</span>
+          <span className="font-mono">{amount.toFixed(2)} €</span>
+        </div>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-700">Stripe-Gebühr (1,5% + 0,25 €):</span>
+          <span className="font-mono text-sm text-gray-600">+ {stripeFee.toFixed(2)} €</span>
+        </div>
+        <div className="flex justify-between items-center pt-2 border-t border-blue-300">
+          <span className="font-semibold text-gray-900">Gesamt:</span>
+          <span className="font-bold text-lg">{totalAmount.toFixed(2)} €</span>
+        </div>
+      </div>
+
+      <Button
+        onClick={handlePayment}
+        disabled={loading}
+        className="w-full bg-[#635bff] hover:bg-[#4f46e5] text-white font-semibold py-6 text-lg"
       >
         {loading ? (
           <span className="flex items-center justify-center">
@@ -168,16 +91,21 @@ function CheckoutForm({ amount, bookingId, onSuccess, onError }: StripeButtonPro
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Zahlung wird verarbeitet...
+            Weiterleitung zu Stripe...
           </span>
         ) : (
-          `Jetzt ${amount.toFixed(2)} € bezahlen`
+          <span className="flex items-center justify-center">
+            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+            </svg>
+            Mit Kreditkarte bezahlen ({totalAmount.toFixed(2)} €)
+          </span>
         )}
-      </button>
+      </Button>
 
       <p className="text-xs text-gray-600 text-center">
-        Sichere Zahlung mit Kreditkarte, SEPA-Lastschrift oder anderen Zahlungsmethoden über Stripe.
+        Sichere Zahlung über Stripe Checkout. Die Werkstatt erhält {amount.toFixed(2)} €.
       </p>
-    </form>
+    </div>
   )
 }

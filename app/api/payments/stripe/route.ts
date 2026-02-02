@@ -40,23 +40,37 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify booking belongs to user
+    // Verify booking belongs to user (check via customer relation)
     const booking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
-        customerId: session.user.id,
+        tireRequest: {
+          is: {
+            customer: {
+              is: {
+                userId: session.user.id
+              }
+            }
+          }
+        }
       },
       include: {
+        customer: {
+          include: {
+            user: true
+          }
+        },
         workshop: {
           select: {
             companyName: true,
           },
         },
+        tireRequest: true
       },
     })
 
     if (!booking) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Booking not found or unauthorized' }, { status: 404 })
     }
 
     // Check if already paid
@@ -67,38 +81,76 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create PaymentIntent
+    // Calculate Stripe fee and add to amount
+    // Stripe EU: 1.5% + €0.25
+    const stripeFeePercent = 0.015 // 1.5%
+    const stripeFeeFixed = 0.25 // €0.25
+    const stripeFee = (amount * stripeFeePercent) + stripeFeeFixed
+    const totalAmount = amount + stripeFee
+
+    // Get customer data for billing details
+    const user = booking.customer?.user
+    const firstName = user?.firstName || booking.tireRequest?.firstName || ''
+    const lastName = user?.lastName || booking.tireRequest?.lastName || ''
+    const street = user?.street || booking.tireRequest?.street || ''
+    const city = user?.city || booking.tireRequest?.city || ''
+    const postalCode = user?.postalCode || user?.zipCode || booking.tireRequest?.postalCode || booking.tireRequest?.zipCode || ''
+    const email = user?.email || ''
+
+    // Create Checkout Session with customer address
     const stripe = await getStripeInstance()
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'eur',
-      automatic_payment_methods: {
-        enabled: true,
-      },
+    const checkoutSession = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'paypal', 'klarna', 'giropay', 'sofort', 'eps', 'sepa_debit'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `Terminbuchung bei ${booking.workshop.companyName}`,
+              description: `Booking ID: B24-${bookingId.substring(0, 8).toUpperCase()}`,
+            },
+            unit_amount: Math.round(totalAmount * 100), // Convert to cents, includes Stripe fee
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/appointments?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${booking.tireRequestId}/book?offerId=${booking.offerId}&payment=cancelled`,
+      customer_email: email,
+      ...(street && city && {
+        billing_address_collection: 'required',
+        shipping_address_collection: {
+          allowed_countries: ['DE'],
+        },
+      }),
       metadata: {
         bookingId,
         customerId: session.user.id,
         workshopName: booking.workshop.companyName,
+        invoiceId: `B24-${bookingId.substring(0, 8).toUpperCase()}`,
+        originalAmount: amount.toFixed(2),
+        stripeFee: stripeFee.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
       },
-      description: `Terminbuchung bei ${booking.workshop.companyName}`,
     })
 
     // Create Payment record
     await prisma.payment.create({
       data: {
         bookingId,
-        amount: amount,
+        amount: totalAmount, // Store total amount including fee
         currency: 'EUR',
         method: 'CARD',
         status: 'PENDING',
-        stripePaymentId: paymentIntent.id,
-        transactionId: paymentIntent.id,
+        stripePaymentId: checkoutSession.id,
+        transactionId: checkoutSession.id,
       },
     })
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
+      sessionId: checkoutSession.id,
+      url: checkoutSession.url,
     })
   } catch (error: any) {
     console.error('Stripe PaymentIntent creation error:', error)
@@ -111,26 +163,26 @@ export async function POST(req: NextRequest) {
 
 /**
  * PUT /api/payments/stripe
- * Confirm payment success (called by webhook or frontend)
+ * Confirm payment success (called by webhook or frontend after Checkout Session)
  */
 export async function PUT(req: NextRequest) {
   try {
-    const { paymentIntentId } = await req.json()
+    const { sessionId } = await req.json()
 
-    if (!paymentIntentId) {
+    if (!sessionId) {
       return NextResponse.json(
-        { error: 'Missing paymentIntentId' },
+        { error: 'Missing sessionId' },
         { status: 400 }
       )
     }
 
-    // Retrieve PaymentIntent from Stripe
+    // Retrieve Checkout Session from Stripe
     const stripe = await getStripeInstance()
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+    const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId)
 
-    if (paymentIntent.status !== 'succeeded') {
+    if (checkoutSession.payment_status !== 'paid') {
       return NextResponse.json(
-        { error: 'Payment not successful', status: paymentIntent.status },
+        { error: 'Payment not successful', status: checkoutSession.payment_status },
         { status: 400 }
       )
     }
@@ -138,7 +190,7 @@ export async function PUT(req: NextRequest) {
     // Find payment record
     const payment = await prisma.payment.findFirst({
       where: {
-        stripePaymentId: paymentIntentId,
+        stripePaymentId: sessionId,
       },
     })
 

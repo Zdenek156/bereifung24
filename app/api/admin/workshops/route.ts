@@ -33,14 +33,10 @@ export async function GET(req: NextRequest) {
           }
         },
         offers: true,
-        bookings: {
-          where: {
-            status: {
-              in: ['CONFIRMED', 'COMPLETED']
-            }
-          },
-          include: {
-            offer: true
+        commissions: {
+          select: {
+            orderTotal: true,
+            status: true
           }
         }
       }
@@ -48,7 +44,10 @@ export async function GET(req: NextRequest) {
 
     // Calculate revenue, offers count and distance for each workshop
     const workshopsWithData = workshops.map(workshop => {
-      const revenue = workshop.bookings.reduce((sum, booking) => sum + booking.offer.price, 0)
+      // Revenue from all commissions (PENDING, BILLED, COLLECTED)
+      const revenue = workshop.commissions.reduce((sum, commission) => {
+        return sum + (Number(commission.orderTotal) || 0)
+      }, 0)
       const offersCount = workshop.offers.length
 
       // Entfernung berechnen

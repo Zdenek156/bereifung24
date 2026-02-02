@@ -38,6 +38,7 @@ interface TireRequest {
     id: string
     status: string
     createdAt: string
+    workshopId?: string
     tireOptions?: Array<{
       carTireType?: string | null
     }>
@@ -891,13 +892,34 @@ export default function BrowseRequestsPage() {
       calculatedDuration = totalDuration.toString()
     }
     } else {
-      // Standard: Ein leeres Reifenangebot
+      // Standard: Ein leeres Reifenangebot für Autoreifen
+      // Bestimme Standard-Auswahl basierend auf Anfrage-Menge und Mischbereifung
+      let defaultCarTireType: 'ALL_FOUR' | 'FRONT_TWO' | undefined = undefined
+      
+      if (!isMotorcycle) {
+        // Prüfe ob Mischbereifung vorliegt (verschiedene Größen vorne/hinten)
+        const isMixedTires = request.rearWidth && request.rearWidth > 0 && 
+                             (request.rearWidth !== request.width || 
+                              request.rearAspectRatio !== request.aspectRatio || 
+                              request.rearDiameter !== request.diameter)
+        
+        if (!isMixedTires) {
+          // Keine Mischbereifung: Setze Vorauswahl basierend auf Anzahl
+          if (request.quantity === 4) {
+            defaultCarTireType = 'ALL_FOUR' // 4 Reifen vorausgewählt
+          } else if (request.quantity === 2) {
+            defaultCarTireType = 'FRONT_TWO' // 2 Reifen vorausgewählt
+          }
+        }
+        // Bei Mischbereifung: undefined = keine Vorauswahl
+      }
+      
       initialTireOptions = [{ 
         brandModel: '', 
         costPrice: '', 
         pricePerTire: '',
         motorcycleTireType: defaultTireType,
-        carTireType: !isMotorcycle ? undefined : undefined // Keine Vorauswahl!
+        carTireType: defaultCarTireType
       }]
     }
     
@@ -1408,6 +1430,51 @@ export default function BrowseRequestsPage() {
           </div>
         </div>
 
+        {/* Hinweis: Keine aktiven Services */}
+        {services.length === 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-6 mb-6 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  Noch keine Services aktiviert
+                </h3>
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                  <p>
+                    Um Kundenanfragen in Ihrem Umkreis zu sehen, müssen Sie zuerst mindestens einen Service aktivieren und konfigurieren.
+                  </p>
+                  <p className="font-medium">So aktivieren Sie Services:</p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Gehen Sie zu <span className="font-semibold">"Service Verwaltung"</span> im Menü</li>
+                    <li>Wählen Sie einen Service aus (z.B. Reifenmontage, Räder umstecken, etc.)</li>
+                    <li>Geben Sie Ihre Preise und Bearbeitungszeiten ein</li>
+                    <li>Aktivieren Sie den Service</li>
+                  </ol>
+                  <p className="mt-3">
+                    Sobald mindestens ein Service aktiv ist, werden Ihnen automatisch passende Kundenanfragen in Ihrem konfigurierten Umkreis (Standard: 25 km) angezeigt.
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/dashboard/workshop/services"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Services jetzt aktivieren
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Requests List */}
         {filteredRequests.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
@@ -1425,6 +1492,8 @@ export default function BrowseRequestsPage() {
           <div className="space-y-4">
             {filteredRequests.map(request => {
               const hasOwnOffer = request.offers.length > 0
+              const myOffer = request.offers.find(offer => offer.workshopId)
+              const isDeclined = myOffer?.status === 'DECLINED'
               const daysUntilNeeded = Math.ceil(
                 (new Date(request.needByDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
               )
@@ -1651,7 +1720,11 @@ export default function BrowseRequestsPage() {
                         )}
                       </div>
 
-                      {hasOwnOffer ? (
+                      {isDeclined ? (
+                        <span className="px-4 py-2 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 rounded-lg font-medium text-sm">
+                          ⚠️ Kunde hat anderes Angebot gewählt
+                        </span>
+                      ) : hasOwnOffer ? (
                         <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium text-sm">
                           ✓ Angebot erstellt
                         </span>

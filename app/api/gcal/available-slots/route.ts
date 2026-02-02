@@ -106,7 +106,19 @@ export async function GET(request: NextRequest) {
       if (workshop.openingHours) {
         const hours = JSON.parse(workshop.openingHours)
         const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-        workingHours = hours[dayOfWeek]
+        const dayHours = hours[dayOfWeek]
+        
+        // Convert from DB format {from, to, closed} to expected format {from, to, working}
+        if (dayHours) {
+          workingHours = {
+            working: !dayHours.closed, // NOT closed = working
+            from: dayHours.from || dayHours.start || '09:00', // Support both formats with fallback
+            to: dayHours.to || dayHours.end || '18:00', // Support both formats with fallback
+            closed: dayHours.closed
+          }
+          
+          console.log('Working hours for', dayOfWeek, ':', workingHours)
+        }
       }
     } else {
       // Fallback to employee calendars if workshop calendar is not connected

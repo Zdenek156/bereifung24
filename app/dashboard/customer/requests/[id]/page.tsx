@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import PayPalButton from '@/components/PayPalButton'
+import PaymentSelector from '@/components/PaymentSelector'
+import dynamic from 'next/dynamic'
 
 interface TireOption {
   id: string
@@ -48,12 +51,16 @@ interface Offer {
     companyName: string
     logoUrl: string | null
     taxMode?: string
+    calendarMode?: string
+    paypalEmail?: string | null
+    stripeEnabled?: boolean
     street: string
     zipCode: string
     city: string
     phone: string
     averageRating?: number
     reviewCount?: number
+    employees?: Array<{ id: string; name: string }>
   }
 }
 
@@ -74,6 +81,9 @@ interface TireRequest {
   zipCode: string
   radiusKm: number
   createdAt: string
+  customer?: {
+    isCompany: boolean
+  }
   vehicle?: {
     id: string
     make: string
@@ -91,6 +101,49 @@ export default function RequestDetailPage() {
   
   const [request, setRequest] = useState<TireRequest | null>(null)
   const [loading, setLoading] = useState(true)
+  const [existingBooking, setExistingBooking] = useState<any>(null)
+  const [checkingBooking, setCheckingBooking] = useState(true)
+
+  // Helper function to check if workshop has Google Calendar (either direct or via employees)
+  const hasGoogleCalendar = (offer: Offer | null | undefined) => {
+    if (!offer) return false
+    return offer.workshop.calendarMode === 'GOOGLE_CALENDAR' || 
+           (offer.workshop.employees && offer.workshop.employees.length > 0)
+  }
+
+  // Check if customer already has a booking for this request
+  const checkExistingBooking = async () => {
+    try {
+      console.log('🔍 Checking for existing booking for requestId:', requestId)
+      const response = await fetch('/api/bookings')
+      if (response.ok) {
+        const bookings = await response.json() // API returns array directly, not { bookings: [] }
+        console.log('📋 All bookings from API:', bookings)
+        console.log('📋 Number of bookings:', bookings?.length || 0)
+        
+        // Only block booking if there's an active (non-cancelled) booking
+        const booking = bookings?.find((b: any) => {
+          console.log(`  Checking booking ${b.id}: tireRequestId=${b.tireRequestId}, status=${b.status}`)
+          return b.tireRequestId === requestId && b.status !== 'CANCELLED'
+        })
+        console.log('🎯 Found matching booking:', booking)
+        
+        if (booking) {
+          setExistingBooking(booking)
+          console.log('✅ Existing booking set, button should be hidden')
+        } else {
+          console.log('❌ No matching booking found, button should be visible')
+        }
+      } else {
+        console.error('API response not OK:', response.status)
+      }
+    } catch (error) {
+      console.error('Error checking existing booking:', error)
+    } finally {
+      console.log('🏁 Final states - checkingBooking: false, existingBooking:', !!existingBooking)
+      setCheckingBooking(false)
+    }
+  }
 
   useEffect(() => {
     if (status === 'loading') return
@@ -104,21 +157,21 @@ export default function RequestDetailPage() {
   }, [session, status, router, requestId])
 
   const fetchRequestDetail = async () => {
+    setLoading(true)
+    // DON'T reset existingBooking here - only set checking state
+    // setCheckingBooking(true) // REMOVED - causes re-render and clears booking
     try {
       const response = await fetch(`/api/tire-requests/${requestId}`)
       const data = await response.json()
       
       if (response.ok) {
-        console.log('Request data loaded:', {
-          id: data.request.id,
-          additionalNotes: data.request.additionalNotes,
-          isBrakeService: data.request.additionalNotes?.includes('BREMSEN-SERVICE')
-        })
         // Fetch workshop ratings for all offers
         await fetchWorkshopRatings(data.request.offers)
         setRequest(data.request)
         // Load workshop services for all offers - pass the request to determine service type
         await fetchWorkshopServices(data.request.offers, data.request)
+        // Check for existing booking AFTER request is loaded
+        await checkExistingBooking()
       } else {
         alert('Anfrage nicht gefunden')
         router.push('/dashboard/customer/requests')
@@ -203,20 +256,8 @@ export default function RequestDetailPage() {
       try {
         // Determine service type from request notes - use requestData parameter
         const isBrakeService = requestData.additionalNotes?.includes('BREMSEN-SERVICE')
-        const serviceType = isBrakeService ? 'BRAKE_SERVICE' : 'TIRE_CHANGE'
-        
-        console.log(`Fetching services for workshop ${offer.workshopId}:`, {
-          additionalNotes: requestData.additionalNotes,
-          isBrakeService,
-          serviceType
-        })
-        
-        console.log('Fetching service:', { 
-          workshopId: offer.workshopId, 
-          additionalNotes: requestData.additionalNotes,
-          isBrakeService, 
-          serviceType 
-        })
+        const isWheelChange = requestData.additionalNotes?.includes('RÄDER UMSTECKEN') || requestData.additionalNotes?.includes('RÄDER-WECHSEL')
+        const serviceType = isBrakeService ? 'BRAKE_SERVICE' : isWheelChange ? 'WHEEL_CHANGE' : 'TIRE_CHANGE'
         
         const response = await fetch(`/api/workshop/${offer.workshopId}/services/${serviceType}`)
         if (response.ok) {
@@ -235,16 +276,12 @@ export default function RequestDetailPage() {
           } else {
             services[offer.workshopId] = data
           }
-          console.log(`Workshop ${offer.workshopId} service loaded:`, data)
-        } else {
-          console.warn(`Workshop ${offer.workshopId} service not found (${response.status})`)
         }
       } catch (error) {
         console.error(`Error fetching services for workshop ${offer.workshopId}:`, error)
       }
     }
     
-    console.log('All workshop services loaded:', services)
     setWorkshopServices(services)
   }
 
@@ -744,7 +781,18 @@ export default function RequestDetailPage() {
     return (validUntil > now && offer.status === 'PENDING') || offer.status === 'ACCEPTED'
   })
 
-  const sortedOffers = [...validOffers].sort((a, b) => a.price - b.price)
+  // Calculate best offer price: Montage + cheapest tire per workshop
+  const getBestOfferPrice = (offer: Offer) => {
+    // If offer has tire options, find the cheapest tire + montage
+    if (offer.tireOptions && offer.tireOptions.length > 0) {
+      const cheapestTire = Math.min(...offer.tireOptions.map(opt => opt.pricePerTire))
+      return offer.installationFee + cheapestTire
+    }
+    // Otherwise use the total price
+    return offer.price
+  }
+
+  const sortedOffers = [...validOffers].sort((a, b) => getBestOfferPrice(a) - getBestOfferPrice(b))
 
   return (
     <>
@@ -806,7 +854,7 @@ export default function RequestDetailPage() {
                                     {offer.workshop.taxMode === 'NET' 
                                       ? 'zzgl. MwSt.' 
                                       : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
-                                      ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                                      ? 'Kleinunternehmer gemäß § 19 UStG (ohne MwSt.)' 
                                       : 'inkl. MwSt.'}
                                   </div>
                                 </div>
@@ -836,16 +884,49 @@ export default function RequestDetailPage() {
                         {(() => {
                           const offer = request.offers.find(o => o.id === selectedOfferId)!
                           const isWheelChange = request.additionalNotes?.includes('RÄDER UMSTECKEN')
+                          
+                          // Berechne Gesamtpreis für WHEEL_CHANGE
+                          let totalPrice = offer.installationFee || offer.price
+                          let balancingTotal = 0
+                          let storageTotal = 0
+                          let duration = offer.durationMinutes || 60
+                          
+                          if (isWheelChange) {
+                            // Wuchten: balancingPrice * 4
+                            if (offer.balancingPrice && offer.balancingPrice > 0) {
+                              balancingTotal = offer.balancingPrice * 4
+                              totalPrice += balancingTotal
+                            }
+                            
+                            // Einlagerung: storagePrice (einmalig)
+                            if (offer.storagePrice && offer.storagePrice > 0 && wantsStorage) {
+                              storageTotal = offer.storagePrice
+                              totalPrice += storageTotal
+                            }
+                          }
+                          
                           return (
                             <>
                               <div className="flex justify-between text-gray-700 bg-white p-2 rounded">
                                 <span>• {isWheelChange ? 'Räder umstecken (4 Räder)' : 'Montage'}</span>
-                                <span className="font-semibold">{offer.installationFee?.toFixed(2) || offer.price.toFixed(2)} €</span>
+                                <span className="font-semibold">{(offer.installationFee || offer.price).toFixed(2)} €</span>
                               </div>
-                              {offer.durationMinutes && (
+                              {isWheelChange && balancingTotal > 0 && (
+                                <div className="flex justify-between text-gray-700 bg-white p-2 rounded">
+                                  <span>• Wuchten (4x {offer.balancingPrice!.toFixed(2)} €)</span>
+                                  <span className="font-semibold">{balancingTotal.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {isWheelChange && storageTotal > 0 && wantsStorage && (
+                                <div className="flex justify-between text-gray-700 bg-white p-2 rounded">
+                                  <span>• Einlagerung (Saison)</span>
+                                  <span className="font-semibold">{storageTotal.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {duration && (
                                 <div className="flex justify-between text-xs text-gray-600 pt-1">
                                   <span>⏱️ Dauer</span>
-                                  <span>{offer.durationMinutes} Minuten</span>
+                                  <span>{duration} Minuten</span>
                                 </div>
                               )}
                               <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-400">
@@ -855,12 +936,12 @@ export default function RequestDetailPage() {
                                     {offer.workshop.taxMode === 'NET' 
                                       ? 'zzgl. MwSt.' 
                                       : offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
-                                      ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
+                                      ? 'Kleinunternehmer gemäß § 19 UStG (ohne MwSt.)' 
                                       : 'inkl. MwSt.'}
                                   </div>
                                 </div>
                                 <span>
-                                  {offer.price.toFixed(2)} €
+                                  {totalPrice.toFixed(2)} €
                                 </span>
                               </div>
                             </>
@@ -1341,84 +1422,255 @@ export default function RequestDetailPage() {
                       )}
                       {/* Only show "Montagekosten" if NOT brake service (brake service shows montage per axle above) */}
                       {getServiceType() !== 'BRAKES' && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">{getServiceType() === 'WHEEL_CHANGE' ? 'Räder umstecken (4 Räder)' : 'Montagekosten'}</span>
-                          <span className="font-semibold">{getServiceType() === 'WHEEL_CHANGE' ? acceptedOffer.price.toFixed(2) : acceptedOffer.installationFee.toFixed(2)} €</span>
-                        </div>
+                        <>
+                          {getServiceType() === 'WHEEL_CHANGE' ? (
+                            <>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-700">Räder umstecken (4 Räder)</span>
+                                <span className="font-semibold">{acceptedOffer.installationFee.toFixed(2)} €</span>
+                              </div>
+                              {acceptedOffer.balancingPrice && acceptedOffer.balancingPrice > 0 && (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-700">Wuchten (4x {acceptedOffer.balancingPrice.toFixed(2)} €)</span>
+                                  <span className="font-semibold">{(acceptedOffer.balancingPrice * 4).toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {acceptedOffer.storagePrice && acceptedOffer.storagePrice > 0 && acceptedOffer.customerWantsStorage && (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-700">Einlagerung (Saison)</span>
+                                  <span className="font-semibold">{acceptedOffer.storagePrice.toFixed(2)} €</span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {/* Split installation fee into Montage + Entsorgung + RunFlat */}
+                              {acceptedOffer.disposalFee && acceptedOffer.disposalFee > 0 ? (
+                                <>
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-700">Montage</span>
+                                    <span className="font-semibold">{(acceptedOffer.installationFee - acceptedOffer.disposalFee).toFixed(2)} €</span>
+                                  </div>
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-700">Altreifenentsorgung</span>
+                                    <span className="font-semibold">{acceptedOffer.disposalFee.toFixed(2)} €</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-700">Montagekosten</span>
+                                  <span className="font-semibold">{acceptedOffer.installationFee.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {/* RunFlat Surcharge if applicable */}
+                              {acceptedOffer.runFlatSurcharge && acceptedOffer.runFlatSurcharge > 0 && (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-700">RunFlat-Aufpreis</span>
+                                  <span className="font-semibold">{acceptedOffer.runFlatSurcharge.toFixed(2)} €</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </>
                       )}
                       <div className="pt-2 border-t border-gray-300 flex justify-between">
                         <span className="text-lg font-bold text-gray-900">Gesamtpreis</span>
                         <span className="text-2xl font-bold text-primary-600">
-                          {(() => {
-                            // Calculate actual total for accepted offer
-                            if (getServiceType() === 'BRAKES' && acceptedOffer.tireOptions && acceptedOffer.tireOptions.length > 0) {
-                              const selectedOptions = acceptedOffer.tireOptions.filter(option => 
-                                !acceptedOffer.selectedTireOptionIds || 
-                                acceptedOffer.selectedTireOptionIds.length === 0 || 
-                                acceptedOffer.selectedTireOptionIds.includes(option.id)
-                              )
-                              let totalParts = 0
-                              let totalMontage = 0
-                              selectedOptions.forEach(option => {
-                                totalParts += option.pricePerTire
-                                totalMontage += (option as any).montagePrice || 0
-                              })
-                              return (totalParts + totalMontage).toFixed(2)
-                            }
-                            return acceptedOffer.price.toFixed(2)
-                          })()}
-                          {' '}€
+                          {acceptedOffer.price.toFixed(2)} €
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 text-right mt-1">
-                        {acceptedOffer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                        {acceptedOffer.workshop?.taxMode === 'KLEINUNTERNEHMER' 
+                          ? 'Kleinunternehmer gemäß § 19 UStG (ohne MwSt.)' 
+                          : (acceptedOffer.workshop?.taxMode === 'NET' || request?.customer?.isCompany)
+                          ? 'zzgl. MwSt.' 
+                          : 'inkl. MwSt.'}
                       </div>
+
+                      {/* Payment Section - PayPal & Stripe */}
+                      {existingBooking && existingBooking.paymentStatus !== 'PAID' && (
+                        <PaymentSelector
+                          amount={acceptedOffer.price}
+                          bookingId={existingBooking.id}
+                          workshopPaypalEmail={acceptedOffer.workshop?.paypalEmail}
+                          workshopStripeEnabled={acceptedOffer.workshop?.stripeEnabled}
+                          workshopPaymentMethods={acceptedOffer.workshop?.paymentMethods}
+                          onSuccess={() => {
+                            router.push('/dashboard/customer/appointments?payment=success')
+                          }}
+                          onError={(error) => {
+                            console.error('Payment error:', error)
+                            alert('Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.')
+                          }}
+                        />
+                      )}
+
+                      {/* Payment Status - Already Paid */}
+                      {existingBooking && existingBooking.paymentStatus === 'PAID' && (
+                        <div className="mt-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0">
+                              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-green-900 text-lg">Bereits bezahlt</h3>
+                              <p className="text-sm text-green-700 mt-1">
+                                Sie haben diesen Termin bereits bezahlt.
+                                {existingBooking.paidAt && (
+                                  <> Bezahlt am {new Date(existingBooking.paidAt).toLocaleDateString('de-DE', { 
+                                    day: '2-digit', 
+                                    month: '2-digit', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })} Uhr</>
+                                )}
+                              </p>
+                              {existingBooking.paymentMethod && (
+                                <p className="text-sm text-green-700 mt-1">
+                                  Zahlungsart: {existingBooking.paymentMethod === 'PAYPAL' ? 'PayPal' : 
+                                               existingBooking.paymentMethod === 'CREDIT_CARD' ? 'Kreditkarte' : 
+                                               existingBooking.paymentMethod}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Appointment Info */}
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">Termin</h3>
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-                      <div className="flex items-start">
-                        <svg className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-blue-900 mb-2">
-                            Terminvereinbarung erforderlich
-                          </p>
-                          <p className="text-sm text-blue-800 mb-3">
-                            Bitte vereinbaren Sie telefonisch einen Termin mit der Werkstatt.
-                          </p>
-                          <div className="bg-white rounded-lg p-4 border border-blue-200">
-                            <p className="text-sm text-gray-700 mb-2">
-                              <strong>Telefonnummer:</strong> {acceptedOffer.workshop.phone}
+                    {checkingBooking ? (
+                      <div className="flex justify-center items-center py-8">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">Prüfe Buchungen...</p>
+                        </div>
+                      </div>
+                    ) : existingBooking ? (
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                        <div className="flex items-start">
+                          <svg className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                              Sie haben bereits einen Termin gebucht
                             </p>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <strong>Ihr Buchungscode:</strong>
-                            </p>
-                            <div className="bg-gray-900 text-white px-4 py-3 rounded-lg font-mono text-2xl text-center tracking-wider">
-                              {request.id.slice(-4).toUpperCase()}
+                            {existingBooking.appointmentDate && (
+                              <div className="bg-white rounded-lg p-4 border border-blue-200 mb-3">
+                                <p className="text-sm text-gray-700 mb-1">
+                                  <strong>Ihr Termin:</strong>
+                                </p>
+                                <p className="text-lg font-bold text-primary-600">
+                                  {new Date(existingBooking.appointmentDate).toLocaleDateString('de-DE', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                              <p className="text-sm text-yellow-900 mb-2">
+                                <strong>💡 Termin verschieben oder stornieren?</strong>
+                              </p>
+                              <p className="text-sm text-yellow-800">
+                                Bitte kontaktieren Sie die Werkstatt direkt:
+                              </p>
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm text-gray-800">
+                                  📞 <strong>{acceptedOffer.workshop.phone}</strong>
+                                </p>
+                                {acceptedOffer.workshop.street && (
+                                  <p className="text-sm text-gray-700">
+                                    📍 {acceptedOffer.workshop.street}, {acceptedOffer.workshop.zipCode} {acceptedOffer.workshop.city}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-600 mt-2 text-center">
-                              Bitte geben Sie diesen Code bei der Terminvereinbarung an
+                          </div>
+                        </div>
+                      </div>
+                    ) : !hasGoogleCalendar(acceptedOffer) ? (
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                        <div className="flex items-start">
+                          <svg className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                              Terminvereinbarung erforderlich
+                            </p>
+                            <p className="text-sm text-blue-800 mb-3">
+                              Bitte vereinbaren Sie telefonisch einen Termin mit der Werkstatt.
+                            </p>
+                            <div className="bg-white rounded-lg p-4 border border-blue-200">
+                              <p className="text-sm text-gray-700 mb-2">
+                                <strong>Telefonnummer:</strong> {acceptedOffer.workshop.phone}
+                              </p>
+                              <p className="text-sm text-gray-700 mb-2">
+                                <strong>Ihr Buchungscode:</strong>
+                              </p>
+                              <div className="bg-gray-900 text-white px-4 py-3 rounded-lg font-mono text-2xl text-center tracking-wider">
+                                {request.id.slice(-4).toUpperCase()}
+                              </div>
+                              <p className="text-xs text-gray-600 mt-2 text-center">
+                                Bitte geben Sie diesen Code bei der Terminvereinbarung an
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                        <div className="flex items-start">
+                          <svg className="w-6 h-6 text-green-600 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-green-900 mb-2">
+                              Online-Terminbuchung verfügbar
+                            </p>
+                            <p className="text-sm text-green-800 mb-3">
+                              Sie können Ihren Termin bequem online buchen.
                             </p>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href={`/dashboard/customer/requests/${requestId}/book?offerId=${acceptedOffer.id}`}
-                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center"
-                  >
-                    Termin online buchen
-                  </Link>
+                  {/* Debug info - remove later */}
+                  {console.log('🎨 Render states:', { checkingBooking, existingBooking: !!existingBooking, showButton: !checkingBooking && !existingBooking })}
+                  
+                  {!checkingBooking && !existingBooking && (
+                    <Link
+                      href={`/dashboard/customer/requests/${requestId}/book?offerId=${acceptedOffer.id}`}
+                      className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-center"
+                    >
+                      Termin online buchen
+                    </Link>
+                  )}
+                  {existingBooking && (
+                    <Link
+                      href="/dashboard/customer/appointments"
+                      className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                    >
+                      Meine Termine ansehen
+                    </Link>
+                  )}
                   <Link
                     href="/dashboard/customer/requests"
                     className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
@@ -1459,6 +1711,9 @@ export default function RequestDetailPage() {
                         <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
                           🏆 Bestes Angebot
                         </span>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Berechnet nach günstigstem Reifen + Montage
+                        </p>
                       </div>
                     )}
 
@@ -1493,13 +1748,17 @@ export default function RequestDetailPage() {
                           return (
                             <>
                               <div className="text-3xl font-bold text-primary-600">
-                                {calculation.installationFee.toFixed(2)} €
+                                {calculation.totalPrice.toFixed(2)} €
                               </div>
                               <p className="text-xs text-gray-500 mt-1">
-                                Montage{hasDisposal && ' + Entsorgung'}
+                                Gesamtpreis
                               </p>
                               <p className="text-xs text-gray-500">
-                                {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? 'gemäß §19 UStG (ohne MwSt.)' : 'inkl. MwSt.'}
+                                {offer.workshop?.taxMode === 'NET' 
+                                  ? 'zzgl. MwSt.' 
+                                  : offer.workshop?.taxMode === 'KLEINUNTERNEHMER' 
+                                  ? 'Kleinunternehmer gemäß § 19 UStG (ohne MwSt.)' 
+                                  : 'inkl. MwSt.'}
                               </p>
                             </>
                           )
@@ -1534,30 +1793,69 @@ export default function RequestDetailPage() {
                               <div className={`bg-primary-50 rounded-lg p-4 ${!isWheelChange && !isServiceRequest ? 'mt-4 pt-4 border-t-2 border-gray-300' : ''}`}>
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Preisübersicht:</h4>
                                 <div className="space-y-2 text-sm">
-                                  {!isWheelChange && !isServiceRequest && (
-                                    <div className="flex justify-between text-gray-700">
-                                      <span>Reifen ({calculation.totalQuantity} Stück)</span>
-                                      <span className="font-semibold">{calculation.tiresTotal.toFixed(2)} €</span>
-                                    </div>
-                                  )}
-                                  {!isServiceRequest && (
-                                    <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
-                                      <span>
-                                        {isWheelChange ? 'Räder umstecken (4 Räder)' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
-                                        {!isWheelChange && hasDisposal && ' + Entsorgung'}
-                                      </span>
-                                      <span className="font-semibold">{isWheelChange ? calculation.totalPrice.toFixed(2) : calculation.installationFee.toFixed(2)} €</span>
-                                    </div>
-                                  )}
+                                  {isWheelChange ? (
+                                    <>
+                                      {(() => {
+                                        // Calculate base installation fee and balancing separately
+                                        const hasBalancing = offer.balancingPrice && offer.balancingPrice > 0
+                                        const balancingTotal = hasBalancing ? offer.balancingPrice * 4 : 0
+                                        const baseInstallation = hasBalancing 
+                                          ? offer.installationFee - balancingTotal 
+                                          : offer.installationFee
+                                        
+                                        return (
+                                          <>
+                                            <div className="flex justify-between text-gray-700">
+                                              <span>Räder umstecken (4 Räder)</span>
+                                              <span className="font-semibold">{baseInstallation.toFixed(2)} €</span>
+                                            </div>
+                                            {hasBalancing && (
+                                              <div className="flex justify-between text-gray-700">
+                                                <span>Wuchten (4x {offer.balancingPrice.toFixed(2)} €)</span>
+                                                <span className="font-semibold">{balancingTotal.toFixed(2)} €</span>
+                                              </div>
+                                            )}
+                                            {offer.storagePrice && offer.storagePrice > 0 && (
+                                              <div className="flex justify-between text-gray-700">
+                                                <span>Einlagerung (Saison)</span>
+                                                <span className="font-semibold">{offer.storagePrice.toFixed(2)} €</span>
+                                              </div>
+                                            )}
+                                          </>
+                                        )
+                                      })()}
+                                    </>
+                                  ) : !isServiceRequest ? (
+                                    <>
+                                      <div className="flex justify-between text-gray-700">
+                                        <span>Reifen ({calculation.totalQuantity} Stück)</span>
+                                        <span className="font-semibold">{calculation.tiresTotal.toFixed(2)} €</span>
+                                      </div>
+                                      <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
+                                        <span>
+                                          Montagekosten ({calculation.totalQuantity} Reifen)
+                                          {hasDisposal && ' + Entsorgung'}
+                                        </span>
+                                        <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
+                                      </div>
+                                    </>
+                                  ) : null}
                                   <div className="flex justify-between text-xs text-gray-600">
                                     <span>⏱️ Dauer</span>
                                     <span>{calculation.duration} Minuten</span>
                                   </div>
-                                  {!isWheelChange && (
-                                    <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
-                                      <span>Gesamtpreis</span>
-                                      <span>{calculation.totalPrice.toFixed(2)} €</span>
-                                    </div>
+                                  <div className="flex justify-between text-lg font-bold text-primary-600 pt-2 border-t-2 border-primary-300">
+                                    <span>Gesamtpreis</span>
+                                    <span>{calculation.totalPrice.toFixed(2)} €</span>
+                                  </div>
+                                  {offer.workshop?.taxMode === 'KLEINUNTERNEHMER' ? (
+                                    <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-300">
+                                      Gemäß §19 UStG wird keine Umsatzsteuer ausgewiesen.
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-300">
+                                      Alle Preise inkl. MwSt.
+                                    </p>
                                   )}
                                 </div>
                               </div>
@@ -1645,8 +1943,8 @@ export default function RequestDetailPage() {
                             const isServiceRequest = serviceType !== 'TIRE_CHANGE' && serviceType !== 'MOTORCYCLE'
                             const isBrakeService = serviceType === 'BRAKES'
                             return (
-                            <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-primary-50 rounded-lg p-4">
-                              <h4 className="text-sm font-semibold text-gray-900 mb-3">Ihre Auswahl:</h4>
+                            <div className="mt-4 pt-4 border-t-2 border-gray-300 bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-3">Preisübersicht:</h4>
                               <div className="space-y-2 text-sm">
                                 {isBrakeService ? (
                                   <>
@@ -1687,39 +1985,87 @@ export default function RequestDetailPage() {
                                       return (
                                         <div key={option.id} className="flex justify-between text-gray-700">
                                           <span>• {option.brand}{isServiceRequest ? '' : ` ${option.model}`}{isServiceRequest ? '' : ` (${qty} Stück)`}</span>
-                                          <span className="font-semibold">{optionTotal} €</span>
+                                          <span className="font-semibold">{optionTotal.toFixed(2)} €</span>
                                         </div>
                                       )
                                     })}
-                                    {/* Show montage line for non-brake services */}
-                                    <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-300">
-                                      <span>
-                                        {isServiceRequest ? 'Montage' : `Montagekosten (${calculation.totalQuantity} Reifen)`}
-                                        {!isServiceRequest && hasDisposal && ' + Entsorgung'}
-                                      </span>
-                                      <span className="font-semibold">{calculation.installationFee} €</span>
-                                    </div>
+                                    
+                                    {/* Detailed price breakdown for montage, balancing, storage */}
+                                    {!isServiceRequest && (
+                                      <div className="space-y-1 pt-2 border-t border-gray-300">
+                                        {/* Montage */}
+                                        {calculation.installationFee > 0 && (
+                                          <div className="flex justify-between text-gray-700">
+                                            <span>Montage ({calculation.totalQuantity} Reifen)</span>
+                                            <span className="font-semibold">{calculation.installationFee.toFixed(2)} €</span>
+                                          </div>
+                                        )}
+                                        
+                                        {/* Wuchten - check if balancingPrice exists in selected offers */}
+                                        {(() => {
+                                          const selectedOffer = displayOptions.find(opt => selectedTireOptionIds.includes(opt.id))
+                                          const offerWithBalancing = selectedOffer && (selectedOffer as any).balancingPrice
+                                          const balancingPrice = offerWithBalancing ? (selectedOffer as any).balancingPrice : 0
+                                          
+                                          if (balancingPrice > 0) {
+                                            return (
+                                              <div className="flex justify-between text-gray-700">
+                                                <span>Wuchten ({calculation.totalQuantity}x {balancingPrice.toFixed(2)} €)</span>
+                                                <span className="font-semibold">{(balancingPrice * calculation.totalQuantity).toFixed(2)} €</span>
+                                              </div>
+                                            )
+                                          }
+                                          return null
+                                        })()}
+                                        
+                                        {/* Einlagerung - check if storage is wanted and available */}
+                                        {(() => {
+                                          const selectedOffer = displayOptions.find(opt => selectedTireOptionIds.includes(opt.id))
+                                          const storagePrice = selectedOffer && (selectedOffer as any).storagePrice ? (selectedOffer as any).storagePrice : 0
+                                          const storageAvailable = selectedOffer && (selectedOffer as any).storageAvailable
+                                          const customerWantsStorage = selectedOffer && (selectedOffer as any).customerWantsStorage
+                                          
+                                          if (storagePrice > 0 && storageAvailable && customerWantsStorage) {
+                                            return (
+                                              <div className="flex justify-between text-gray-700">
+                                                <span>Einlagerung (Saison)</span>
+                                                <span className="font-semibold">{storagePrice.toFixed(2)} €</span>
+                                              </div>
+                                            )
+                                          }
+                                          return null
+                                        })()}
+                                        
+                                        {/* Altreifenentsorgung */}
+                                        {hasDisposal && (
+                                          <div className="flex justify-between text-gray-700">
+                                            <span>Altreifenentsorgung</span>
+                                            <span className="text-xs text-gray-500">inkl.</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                   </>
                                 )}
                                 <div className="flex justify-between text-xs text-gray-600 pt-2 border-t border-gray-300">
                                   <span>⏱️ Dauer</span>
                                   <span>{calculation.duration || 0} Minuten</span>
                                 </div>
-                                <div className="pt-2 border-t-2 border-primary-300">
-                                  <div className="flex justify-between text-lg font-bold text-primary-600">
+                                <div className="pt-2 border-t-2 border-blue-300">
+                                  <div className="flex justify-between text-lg font-bold text-blue-900">
                                     <span>Gesamtpreis</span>
                                     <div className="text-right">
-                                      <div>{calculation.totalPrice} €</div>
-                                      <div className="text-xs text-gray-500 font-normal">inkl. MwSt.</div>
+                                      <div>{calculation.totalPrice.toFixed(2)} €</div>
+                                      <div className="text-xs text-gray-600 font-normal mt-1">
+                                        {offer.workshop.taxMode === 'KLEINUNTERNEHMER' 
+                                          ? 'gemäß § 19 UStG (ohne MwSt.)' 
+                                          : (offer.workshop.taxMode === 'NET' || request?.customer?.isCompany)
+                                          ? 'zzgl. MwSt.' 
+                                          : 'inkl. MwSt.'}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                                {!isServiceRequest && (
-                                  <p className="text-xs text-gray-600 mt-2">
-                                    ✓ Gesamt: {calculation.totalQuantity} Reifen
-                                    {hasDisposal && ' ✓ inkl. Altreifenentsorgung'}
-                                  </p>
-                                )}
                               </div>
                             </div>
                             )

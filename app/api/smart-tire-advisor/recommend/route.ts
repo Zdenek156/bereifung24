@@ -21,7 +21,6 @@ interface UserProfile {
   priorityFuelSaving: number // Rollwiderstand
   priorityQuietness: number // Geräusch
   priorityDurability: number // Langlebigkeit
-  priorityValue: number // Preis-Leistung
   
   // Stufe 4: Saison & Extras
   season: 'summer' | 'winter' | 'all-season'
@@ -76,14 +75,20 @@ function calculateTireScore(tire: any, profile: UserProfile): ScoredTire {
     drivingStyleMatch: 0
   }
   
-  // 1. EU-Label Bewertung (max 40 Punkte)
+  // 1. EU-Label Bewertung (max 50 Punkte, stark gewichtet nach Nutzer-Prioritäten)
   const fuelPoints = labelToPoints(tire.fuelEfficiencyClass)
   const wetPoints = labelToPoints(tire.wetGripClass)
   const noisePoints = noiseToPoints(tire.externalRollingNoiseLevel)
   
-  const fuelScore = fuelPoints * (profile.priorityFuelSaving / 100) * 0.4
-  const wetScore = wetPoints * (profile.prioritySafety / 100) * 0.4
-  const noiseScore = noisePoints * (profile.priorityQuietness / 100) * 0.2
+  // Verstärke die Prioritäten: Wenn User 100% Fuel will, sollte das dominieren
+  // Verwende quadratische Gewichtung für stärkeren Effekt
+  const fuelWeight = Math.pow(profile.priorityFuelSaving / 100, 0.7) // Wurzel für sanftere Kurve
+  const wetWeight = Math.pow(profile.prioritySafety / 100, 0.7)
+  const noiseWeight = Math.pow(profile.priorityQuietness / 100, 0.7)
+  
+  const fuelScore = fuelPoints * fuelWeight * 5 // Max 50 Punkte wenn 100% Priority
+  const wetScore = wetPoints * wetWeight * 5
+  const noiseScore = noisePoints * noiseWeight * 5
   
   breakdown.euLabel = Math.round(fuelScore + wetScore + noiseScore)
   score += breakdown.euLabel
@@ -131,28 +136,40 @@ function calculateTireScore(tire: any, profile: UserProfile): ScoredTire {
   breakdown.seasonMatch = seasonScore
   score += seasonScore
   
-  // 3. Marken-Reputation (max 15 Punkte)
+  // 3. Marken-Reputation & Langlebigkeit (max 25 Punkte)
   const brandUpper = tire.supplierName.toUpperCase()
-  let brandScore = 0
+  let baseBrandScore = 0
   if (PREMIUM_BRANDS.includes(brandUpper)) {
-    brandScore = 15
+    baseBrandScore = 15
     reasons.push(`Premium-Marke ${tire.supplierName}`)
   } else if (MID_RANGE_BRANDS.includes(brandUpper)) {
-    brandScore = 10
+    baseBrandScore = 10
     reasons.push(`Bewährte Marke ${tire.supplierName}`)
   } else {
-    brandScore = 5
+    baseBrandScore = 5
   }
   
-  // Bei hoher Kilometerleistung Premium bevorzugen
-  if (profile.kmPerYear > 20000 && profile.priorityDurability > 30) {
+  // Langlebigkeits-Bonus basierend auf Marke und Kilometerleistung
+  let durabilityBonus = 0
+  if (profile.kmPerYear > 20000) {
     if (PREMIUM_BRANDS.includes(brandUpper)) {
-      brandScore += 5
-      reasons.push('Empfohlen für Vielfahrer')
-    } else {
-      warnings.push('Bei hoher Laufleistung könnten Premium-Reifen länger halten')
+      durabilityBonus = 10
+      reasons.push('Premium-Qualität für Vielfahrer (>20.000 km/Jahr)')
+    } else if (MID_RANGE_BRANDS.includes(brandUpper)) {
+      durabilityBonus = 5
+      warnings.push('Premium-Reifen könnten bei hoher Laufleistung länger halten')
+    }
+  } else if (profile.kmPerYear > 15000) {
+    if (PREMIUM_BRANDS.includes(brandUpper)) {
+      durabilityBonus = 5
     }
   }
+  
+  // Gewichtung mit Langlebigkeits-Priorität
+  const brandScore = Math.round(
+    baseBrandScore * (1 - profile.priorityDurability / 100 * 0.3) + 
+    durabilityBonus * (profile.priorityDurability / 100)
+  )
   
   breakdown.brandReputation = brandScore
   score += brandScore
@@ -232,20 +249,14 @@ export async function POST(request: NextRequest) {
     
     // Prioritäten müssen Summe 100 ergeben
     const prioritySum = profile.prioritySafety + profile.priorityFuelSaving + 
-                       profile.priorityQuietness + profile.priorityDurability + 
-                       profile.priorityValue
+                       profile.priorityQuietness + profile.priorityDurability
+    
     if (Math.abs(prioritySum - 100) > 1) {
       return NextResponse.json(
-        { success: false, error: 'Prioritäten müssen Summe 100 ergeben' },
+        { success: false, error: `Prioritäten müssen Summe 100 ergeben (aktuell: ${prioritySum})` },
         { status: 400 }
       )
     }
-    
-    console.log('[SMART ADVISOR] Searching for tires:', {
-      dimension: `${profile.width}/${profile.aspectRatio}R${profile.diameter}`,
-      season: profile.season,
-      kmPerYear: profile.kmPerYear
-    })
     
     // Reifen aus EPREL DB holen
     const tires = await prisma.ePRELTire.findMany({
@@ -253,8 +264,8 @@ export async function POST(request: NextRequest) {
         width: profile.width,
         aspectRatio: profile.aspectRatio,
         diameter: profile.diameter,
-        // Optional: Saison-Filter
-        ...(profile.season === 'winter' && profile.needs3PMSF ? { has3PMSF: true } : {}),
+        // Saison-Filter: Bei Winter nur 3PMSF-Reifen
+        ...(profile.season === 'winter' ? { has3PMSF: true } : {}),
         ...(profile.needsIceGrip ? { hasIceGrip: true } : {})
       },
       select: {
@@ -286,18 +297,12 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
     
-    console.log(`[SMART ADVISOR] Found ${tires.length} tires, calculating scores...`)
-    
     // Scoring für alle Reifen
     const scoredTires = tires.map(tire => calculateTireScore(tire, profile))
     
     // Nach Score sortieren und Top 10 nehmen
     scoredTires.sort((a, b) => b.score - a.score)
     const topRecommendations = scoredTires.slice(0, 10)
-    
-    console.log('[SMART ADVISOR] Top 3 scores:', 
-      topRecommendations.slice(0, 3).map(t => `${t.tire.supplierName} ${t.tire.modelName}: ${t.score}`)
-    )
     
     return NextResponse.json({
       success: true,
@@ -310,8 +315,7 @@ export async function POST(request: NextRequest) {
           safety: profile.prioritySafety,
           fuelSaving: profile.priorityFuelSaving,
           quietness: profile.priorityQuietness,
-          durability: profile.priorityDurability,
-          value: profile.priorityValue
+          durability: profile.priorityDurability
         }).sort(([,a], [,b]) => b - a)[0][0]
       }
     })

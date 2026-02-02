@@ -65,15 +65,43 @@ export async function GET(request: Request) {
       return NextResponse.json({ slots: [] })
     }
 
-    // Generiere Zeitslots (z.B. alle 30 Minuten von 8:00 bis 18:00)
+    // Hole Arbeitszeiten des ersten verfügbaren Mitarbeiters (der mit Google Calendar verbunden ist)
+    const employee = availableEmployees.find(emp => emp.googleCalendarId && emp.googleRefreshToken) || availableEmployees[0]
+    
+    const workingHours = typeof employee.workingHours === 'string' 
+      ? JSON.parse(employee.workingHours) 
+      : employee.workingHours
+    
+    const dayWorkingHours = workingHours[dayOfWeek]
+    
+    if (!dayWorkingHours || !dayWorkingHours.working) {
+      return NextResponse.json({ slots: [] })
+    }
+
+    // Parse Arbeitszeiten (z.B. "08:00" bis "17:00")
+    const [startHour, startMinute] = dayWorkingHours.from.split(':').map(Number)
+    const [endHour, endMinute] = dayWorkingHours.to.split(':').map(Number)
+    
+    // Generiere Zeitslots basierend auf den tatsächlichen Arbeitszeiten (alle 30 Minuten)
     const slots = []
-    for (let hour = 8; hour < 18; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        slots.push({
-          time: timeString,
-          available: true // Vereinfacht - hier könntest du Google Calendar prüfen
-        })
+    let currentHour = startHour
+    let currentMinute = startMinute
+    
+    while (
+      currentHour < endHour || 
+      (currentHour === endHour && currentMinute < endMinute)
+    ) {
+      const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+      slots.push({
+        time: timeString,
+        available: true
+      })
+      
+      // Nächster Slot (+30 Minuten)
+      currentMinute += 30
+      if (currentMinute >= 60) {
+        currentMinute = 0
+        currentHour++
       }
     }
 

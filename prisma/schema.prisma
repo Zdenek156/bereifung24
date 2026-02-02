@@ -136,6 +136,12 @@ model User {
   accountingAuditLogs      AccountingAuditLog[] @relation("AccountingAuditor")
   bookingTemplates         BookingTemplate[]    @relation("BookingTemplateCreator")
 
+  // Tire Request Notes
+  tireRequestNotes TireRequestNote[]
+
+  // Customer Reminders
+  createdReminders CustomerReminder[] @relation("ReminderCreatedBy")
+
   @@map("users")
 }
 
@@ -232,6 +238,10 @@ model Workshop {
   // PayPal
   paypalEmail String?
 
+  // Stripe
+  stripeAccountId String?  @map("stripe_account_id") // Stripe Connected Account ID (für Direct Charges)
+  stripeEnabled   Boolean  @default(false) @map("stripe_enabled") // Ob Stripe-Zahlungen akzeptiert werden
+
   // GoCardless Integration
   gocardlessCustomerId       String?   @unique // GoCardless Customer ID
   gocardlessMandateId        String?   @unique // GoCardless Mandate ID
@@ -264,12 +274,21 @@ model Workshop {
   assignedEmployeeId String?      @map("assigned_employee_id")
   assignedEmployee   B24Employee? @relation("WorkshopAssignment", fields: [assignedEmployeeId], references: [id])
 
+  // Location & Service Area
+  latitude      Float? // Workshop latitude for geolocation
+  longitude     Float? // Workshop longitude for geolocation
+  serviceRadius Int?   @default(25) @map("service_radius") // Service radius in kilometers
+
+  // Status
+  status   String?  @default("PENDING") // PENDING, ACTIVE, SUSPENDED, BLOCKED
+  approved Boolean? @default(false) // Admin approval status
+
   // Relations
   offers               Offer[]
   bookings             Booking[]
   reviews              Review[]
   commissions          Commission[]
-  commissionInvoices   CommissionInvoice[] @relation("WorkshopInvoices")
+  commissionInvoices   CommissionInvoice[]   @relation("WorkshopInvoices")
   employees            Employee[]
   workshopVacations    WorkshopVacation[]
   workshopServices     WorkshopService[]
@@ -277,6 +296,9 @@ model Workshop {
   landingPage          WorkshopLandingPage?
   affiliateConversions AffiliateConversion[]
   crmData              WorkshopCRM?
+
+  // Customer Management (CRM)
+  crmCustomers WorkshopCustomer[]
 
   // Sales CRM - Converted from Prospect
   prospectSource ProspectWorkshop? @relation("ConvertedFromProspect")
@@ -349,8 +371,9 @@ model Employee {
   workingHours String? // JSON: {"monday": {"from": "08:00", "to": "17:00", "working": true}, ...}
 
   // Relations
-  bookings          Booking[]
-  employeeVacations EmployeeVacation[]
+  bookings           Booking[]
+  employeeVacations  EmployeeVacation[]
+  manualAppointments WorkshopManualAppointment[] @relation("ManualAppointmentEmployee")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -368,6 +391,9 @@ model TireRequest {
   customer   Customer @relation(fields: [customerId], references: [id])
   vehicleId  String?
   vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  // Service Type
+  serviceType String @default("TIRE_CHANGE") @map("service_type") // TIRE_CHANGE, WHEEL_CHANGE, TIRE_REPAIR, MOTORCYCLE_TIRE, ALIGNMENT_BOTH, CLIMATE_SERVICE, BRAKE_SERVICE, BATTERY_SERVICE, OTHER_SERVICES
 
   // Tire Specifications
   season      String // SUMMER, WINTER, ALL_SEASON
@@ -410,6 +436,7 @@ model TireRequest {
   booking              Booking?
   affiliateConversions AffiliateConversion[] // Tracking von Affiliate-Conversions
   viewedByWorkshops    TireRequestView[] // Track which workshops have viewed this request
+  adminNotes           TireRequestNote[]     @relation("tireRequestNotes") // Admin internal notes
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -428,6 +455,21 @@ model TireRequestView {
 
   @@unique([tireRequestId, workshopId])
   @@map("tire_request_views")
+}
+
+// Admin notes for tire requests (internal documentation)
+model TireRequestNote {
+  id            String      @id @default(cuid())
+  tireRequestId String      @map("tire_request_id")
+  tireRequest   TireRequest @relation("tireRequestNotes", fields: [tireRequestId], references: [id], onDelete: Cascade)
+  userId        String      @map("user_id")
+  user          User        @relation(fields: [userId], references: [id])
+  note          String      @db.Text
+  isImportant   Boolean     @default(false) @map("is_important") // Flag important notes
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("tire_request_notes")
 }
 
 // ============================================
@@ -534,7 +576,7 @@ model TireHistory {
 model Offer {
   id            String      @id @default(cuid())
   tireRequestId String
-  tireRequest   TireRequest @relation(fields: [tireRequestId], references: [id])
+  tireRequest   TireRequest @relation(fields: [tireRequestId], references: [id], onDelete: Cascade)
   workshopId    String
   workshop      Workshop    @relation(fields: [workshopId], references: [id])
 
@@ -550,6 +592,8 @@ model Offer {
   price              Float // Total price (for compatibility)
   pricePerTire       Float?
   installationFee    Float?
+  disposalFee        Float?   @map("disposalfee") // Altreifenentsorgung (separat von installationFee)
+  runFlatSurcharge   Float?   @map("runflatsurcharge") // RunFlat-Aufpreis (separat von installationFee)
   durationMinutes    Int? // Geschätzte Dauer für den Service
   balancingPrice     Float?   @map("balancingprice") // Wuchten-Preis für Wheel Change
   storagePrice       Float?   @map("storageprice") // Einlagerung-Preis für Wheel Change
@@ -646,6 +690,16 @@ model Booking {
   review      Review?
   tireRating  TireRating?
   commission  Commission?
+
+  // Payment Transactions (optional detailed tracking)
+  payments Payment[]
+
+  // Customer Management (CRM)
+  workshopCustomerId String?                @map("workshop_customer_id")
+  workshopCustomer   WorkshopCustomer?      @relation("WorkshopCustomerBookings", fields: [workshopCustomerId], references: [id], onDelete: SetNull)
+  workshopVehicleId  String?                @map("workshop_vehicle_id")
+  workshopVehicle    WorkshopVehicle?       @relation("WorkshopVehicleBookings", fields: [workshopVehicleId], references: [id], onDelete: SetNull)
+  serviceRecord      WorkshopServiceRecord? @relation("ServiceRecordBooking")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -767,6 +821,52 @@ model Commission {
   @@index([billingMonth, billingYear])
   @@index([gocardlessPaymentId])
   @@map("commissions")
+}
+
+// ============================================
+// CUSTOMER PAYMENT TRACKING
+// ============================================
+// Detaillierte Verfolgung von Zahlungstransaktionen
+// Kunde zahlt IMMER direkt an Werkstatt (TSA-konform)
+// Dieses Model dient nur zur Nachverfolgung und Automatisierung
+
+model Payment {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  // Beträge
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("EUR")
+
+  // Zahlungsmethode & Status
+  method String // PAYPAL, CARD, SEPA, CASH, KLARNA, BANK_TRANSFER
+  status String @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED, CANCELLED
+
+  // Provider-spezifische IDs (für Webhooks & Tracking)
+  transactionId   String? @unique // Allgemeine Transaction ID
+  paypalOrderId   String? @unique // PayPal Order ID
+  paypalCaptureId String? // PayPal Capture ID
+  stripePaymentId String? @unique // Stripe Payment Intent ID
+  klarnaOrderId   String? @unique // Klarna Order ID
+
+  // Metadata (für Debugging & Sicherheit)
+  ipAddress String?
+  userAgent String?
+  metadata  Json? // Zusätzliche Daten (z.B. Risikoanalyse, etc.)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  confirmedAt DateTime? // Wann wurde Zahlung bestätigt
+  failedAt    DateTime? // Wann ist Zahlung fehlgeschlagen
+  refundedAt  DateTime? // Wann wurde zurückerstattet
+  cancelledAt DateTime? // Wann wurde storniert
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([method])
+  @@index([transactionId])
+  @@map("payments")
 }
 
 // ============================================
@@ -998,7 +1098,7 @@ model B24Employee {
 
   // Relations
   applications      B24EmployeeApplication[] // New: Application-based access
-  assignedWorkshops Workshop[]                @relation("WorkshopAssignment")
+  assignedWorkshops Workshop[]               @relation("WorkshopAssignment")
   activityLogs      B24EmployeeActivityLog[]
 
   // Sales CRM Relations
@@ -1139,17 +1239,17 @@ model B24Employee {
   // ============================================
   // ROADMAP MANAGEMENT - RELATIONS
   // ============================================
-  assignedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskAssignee")
-  completedRoadmapTasks RoadmapTask[] @relation("RoadmapTaskCompleter")
-  createdRoadmapTasks   RoadmapTask[] @relation("RoadmapTaskCreator")
+  assignedRoadmapTasks   RoadmapTask[]          @relation("RoadmapTaskAssignee")
+  completedRoadmapTasks  RoadmapTask[]          @relation("RoadmapTaskCompleter")
+  createdRoadmapTasks    RoadmapTask[]          @relation("RoadmapTaskCreator")
   helpOffersRoadmapTasks RoadmapTaskHelpOffer[] @relation("RoadmapTaskHelper")
 
   // ============================================
   // BLOG SYSTEM - RELATIONS
   // ============================================
-  authoredBlogPosts  BlogPost[]         @relation("AuthoredPosts")
-  reviewedBlogPosts  BlogPost[]         @relation("ReviewedPosts")
-  blogPostRevisions  BlogPostRevision[] @relation("PostRevisions")
+  authoredBlogPosts BlogPost[]         @relation("AuthoredPosts")
+  reviewedBlogPosts BlogPost[]         @relation("ReviewedPosts")
+  blogPostRevisions BlogPostRevision[] @relation("PostRevisions")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1164,16 +1264,16 @@ model B24Employee {
 // If they have access, they have FULL access (no granular read/write/delete)
 
 model Application {
-  id          String   @id @default(cuid())
-  key         String   @unique // e.g., "customers", "workshops", "hr", "buchhaltung"
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g., "customers", "workshops", "hr", "buchhaltung"
   name        String // Display name, e.g., "Kundenverwaltung", "Werkstattverwaltung"
   description String? // Optional description
-  icon        String   @default("Layout") // Lucide icon name
+  icon        String  @default("Layout") // Lucide icon name
   adminRoute  String // Route in admin, e.g., "/admin/customers"
-  color       String   @default("blue") // Tailwind color for UI
-  sortOrder   Int      @default(0) // Display order in menus
-  isActive    Boolean  @default(true) // Can be disabled without deleting
-  category    String   @default("GENERAL") // GENERAL, ACCOUNTING, HR, SALES, SUPPORT
+  color       String  @default("blue") // Tailwind color for UI
+  sortOrder   Int     @default(0) // Display order in menus
+  isActive    Boolean @default(true) // Can be disabled without deleting
+  category    String  @default("GENERAL") // GENERAL, ACCOUNTING, HR, SALES, SUPPORT
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3509,7 +3609,7 @@ model AccountingEntry {
 
   // Audit-Log
   auditLogs AccountingAuditLog[]
-  
+
   // Invoice Relation (für Provisionsrechnungen)
   commissionInvoice CommissionInvoice? @relation("InvoiceAccountingEntry")
 
@@ -3541,7 +3641,7 @@ model AccountingAuditLog {
 
   action  String // CREATED, UPDATED, LOCKED, STORNO
   userId  String?
-  user    User?    @relation("AccountingAuditor", fields: [userId], references: [id])
+  user    User?   @relation("AccountingAuditor", fields: [userId], references: [id])
   changes String? @db.Text // JSON mit Änderungen (alt → neu)
 
   timestamp DateTime @default(now())
@@ -4345,8 +4445,8 @@ model JobApplication {
   jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   // Bewerber
-  firstName String @map("first_name")
-  lastName  String @map("last_name")
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
   email     String
   phone     String?
 
@@ -4423,14 +4523,14 @@ model ApprovalStep {
 // ============================================
 
 model RoadmapPhase {
-  id          String   @id @default(cuid())
-  name        String   // "Phase 1: Pre-Gründung"
-  description String?  @db.Text
-  startMonth  String   // "2026-01"
-  endMonth    String   // "2026-02"
-  order       Int      // 1, 2, 3 für Sortierung
-  color       String   @default("#3B82F6") // Phasen-Farbe
-  isActive    Boolean  @default(true)
+  id          String  @id @default(cuid())
+  name        String // "Phase 1: Pre-Gründung"
+  description String? @db.Text
+  startMonth  String // "2026-01"
+  endMonth    String // "2026-02"
+  order       Int // 1, 2, 3 für Sortierung
+  color       String  @default("#3B82F6") // Phasen-Farbe
+  isActive    Boolean @default(true)
 
   tasks RoadmapTask[]
 
@@ -4441,9 +4541,9 @@ model RoadmapPhase {
 }
 
 model RoadmapTask {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   title       String
-  description String?  @db.Text
+  description String?             @db.Text
   priority    RoadmapTaskPriority // P0, P1, P2, P3
   status      RoadmapTaskStatus   @default(NOT_STARTED)
 
@@ -4454,12 +4554,12 @@ model RoadmapTask {
   phase        RoadmapPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
 
   // Timing
-  month    String    // "2026-01"
-  dueDate  DateTime?
+  month     String // "2026-01"
+  dueDate   DateTime?
   startDate DateTime?
 
   // Organisation
-  category String?  // "Finance", "Marketing", "Product", "Operations"
+  category String? // "Finance", "Marketing", "Product", "Operations"
   tags     String[] // ["Förderung", "Launch", "Critical"]
   order    Int      @default(0) // Manuelle Sortierung innerhalb Monat
 
@@ -4491,16 +4591,16 @@ model RoadmapTask {
 
 // Mitarbeiter können Hilfe bei Tasks anbieten
 model RoadmapTaskHelpOffer {
-  id       String   @id @default(cuid())
+  id       String      @id @default(cuid())
   taskId   String
   task     RoadmapTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
   helperId String
   helper   B24Employee @relation("RoadmapTaskHelper", fields: [helperId], references: [id], onDelete: Cascade)
   message  String?     @db.Text // Optional: "Ich kann bei der API-Integration helfen"
-  
-  status    String   @default("OFFERED") // OFFERED, ACCEPTED, DECLINED
+
+  status     String    @default("OFFERED") // OFFERED, ACCEPTED, DECLINED
   acceptedAt DateTime?
-  
+
   createdAt DateTime @default(now())
 
   @@unique([taskId, helperId]) // Ein Mitarbeiter kann nur einmal Hilfe anbieten
@@ -4515,10 +4615,10 @@ enum RoadmapTaskPriority {
 }
 
 enum RoadmapTaskStatus {
-  NOT_STARTED  // Noch nicht begonnen
-  IN_PROGRESS  // Aktuell in Bearbeitung
-  COMPLETED    // Abgeschlossen
-  BLOCKED      // Blockiert (mit Grund in blockedReason)
+  NOT_STARTED // Noch nicht begonnen
+  IN_PROGRESS // Aktuell in Bearbeitung
+  COMPLETED // Abgeschlossen
+  BLOCKED // Blockiert (mit Grund in blockedReason)
 }
 
 // ============================================================================
@@ -4527,17 +4627,17 @@ enum RoadmapTaskStatus {
 
 // Provisionsrechnungen für Werkstätten
 model CommissionInvoice {
-  id              String   @id @default(cuid())
-  invoiceNumber   String   @unique // B24-INV-2026-0001
-  
+  id            String @id @default(cuid())
+  invoiceNumber String @unique // B24-INV-2026-0001
+
   // Werkstatt
-  workshopId      String
-  workshop        Workshop @relation("WorkshopInvoices", fields: [workshopId], references: [id], onDelete: Cascade)
-  
+  workshopId String
+  workshop   Workshop @relation("WorkshopInvoices", fields: [workshopId], references: [id], onDelete: Cascade)
+
   // Rechnungszeitraum (Vormonat)
-  periodStart     DateTime // 01.01.2026
-  periodEnd       DateTime // 31.01.2026
-  
+  periodStart DateTime // 01.01.2026
+  periodEnd   DateTime // 31.01.2026
+
   // Positionen (JSON Array)
   // [{
   //   position: 1,
@@ -4547,38 +4647,38 @@ model CommissionInvoice {
   //   total: 300.00,
   //   vatRate: 19
   // }, ...]
-  lineItems       Json
-  
+  lineItems Json
+
   // Beträge
-  subtotal        Float    // Netto-Summe
-  vatAmount       Float    // MwSt-Betrag (19%)
-  totalAmount     Float    // Brutto-Summe
-  
+  subtotal    Float // Netto-Summe
+  vatAmount   Float // MwSt-Betrag (19%)
+  totalAmount Float // Brutto-Summe
+
   // Status
-  status          String   @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
-  sentAt          DateTime? // Wann Email versendet wurde
-  emailSent       Boolean  @default(false) // Email erfolgreich versendet
-  paidAt          DateTime? // Wann bezahlt wurde
-  dueDate         DateTime? // Zahlungsziel (bei SEPA-Fehler: +14 Tage)
-  
+  status    String    @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  sentAt    DateTime? // Wann Email versendet wurde
+  emailSent Boolean   @default(false) // Email erfolgreich versendet
+  paidAt    DateTime? // Wann bezahlt wurde
+  dueDate   DateTime? // Zahlungsziel (bei SEPA-Fehler: +14 Tage)
+
   // PDF
-  pdfUrl          String?  // Pfad zum generierten PDF
-  
+  pdfUrl String? // Pfad zum generierten PDF
+
   // Referenzen
-  commissionIds   String[] // IDs der einbezogenen Commission-Einträge
-  sepaPaymentId   String?  // GoCardless Payment ID
-  sepaStatus      String?  // pending_submission, submitted, confirmed, paid_out, cancelled, failed
-  
+  commissionIds String[] // IDs der einbezogenen Commission-Einträge
+  sepaPaymentId String? // GoCardless Payment ID
+  sepaStatus    String? // pending_submission, submitted, confirmed, paid_out, cancelled, failed
+
   // Buchhaltung
-  accountingEntryId String? @unique // Verknüpfung zu AccountingEntry (Buchungssatz)
+  accountingEntryId String?          @unique // Verknüpfung zu AccountingEntry (Buchungssatz)
   accountingEntry   AccountingEntry? @relation("InvoiceAccountingEntry", fields: [accountingEntryId], references: [id])
-  
+
   // Metadaten
-  createdAt       DateTime @default(now())
-  createdBy       String?  // B24Employee ID
-  updatedAt       DateTime @updatedAt
-  notes           String?  @db.Text // Interne Notizen
-  
+  createdAt DateTime @default(now())
+  createdBy String? // B24Employee ID
+  updatedAt DateTime @updatedAt
+  notes     String?  @db.Text // Interne Notizen
+
   @@index([workshopId])
   @@index([status])
   @@index([periodStart, periodEnd])
@@ -4588,58 +4688,58 @@ model CommissionInvoice {
 
 // Einstellungen für Rechnungsgenerierung
 model InvoiceSettings {
-  id                  String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Rechnungsnummer
-  currentNumber       Int      @default(1) // Fortlaufende Nummer
-  prefix              String   @default("B24-INV") // Präfix für Rechnungsnummer
-  
+  currentNumber Int    @default(1) // Fortlaufende Nummer
+  prefix        String @default("B24-INV") // Präfix für Rechnungsnummer
+
   // Bereifung24 GmbH Firmendaten
-  companyName         String   @default("Bereifung24 GmbH")
-  companyStreet       String?  // z.B. "Musterstraße 123"
-  companyZip          String?  // z.B. "10115"
-  companyCity         String?  // z.B. "Berlin"
-  companyCountry      String   @default("Deutschland")
-  
+  companyName    String  @default("Bereifung24 GmbH")
+  companyStreet  String? // z.B. "Musterstraße 123"
+  companyZip     String? // z.B. "10115"
+  companyCity    String? // z.B. "Berlin"
+  companyCountry String  @default("Deutschland")
+
   // Steuerdaten
-  taxId               String?  // USt-IdNr. (z.B. DE123456789)
-  taxNumber           String?  // Steuernummer
-  
+  taxId     String? // USt-IdNr. (z.B. DE123456789)
+  taxNumber String? // Steuernummer
+
   // Handelsregister
-  registerCourt       String?  // z.B. "Amtsgericht Berlin"
-  registerNumber      String?  // z.B. "HRB 12345"
-  managingDirector    String?  // Geschäftsführer
-  
+  registerCourt    String? // z.B. "Amtsgericht Berlin"
+  registerNumber   String? // z.B. "HRB 12345"
+  managingDirector String? // Geschäftsführer
+
   // Kontakt
-  email               String?  // buchhaltung@bereifung24.de
-  phone               String?
-  website             String   @default("www.bereifung24.de")
-  
+  email   String? // buchhaltung@bereifung24.de
+  phone   String?
+  website String  @default("www.bereifung24.de")
+
   // Email-Zugangsdaten für Rechnungsversand
-  invoiceEmail        String?  // Email-Adresse für Rechnungsversand (z.B. buchhaltung@bereifung24.de)
-  invoicePassword     String?  // Passwort für Rechnungsversand (verschlüsselt)
-  
+  invoiceEmail    String? // Email-Adresse für Rechnungsversand (z.B. buchhaltung@bereifung24.de)
+  invoicePassword String? // Passwort für Rechnungsversand (verschlüsselt)
+
   // Banking
-  bankName            String?  // z.B. "Deutsche Bank"
-  iban                String?  // z.B. "DE89370400440532013000"
-  bic                 String?  // z.B. "COBADEFFXXX"
-  
+  bankName String? // z.B. "Deutsche Bank"
+  iban     String? // z.B. "DE89370400440532013000"
+  bic      String? // z.B. "COBADEFFXXX"
+
   // GoCardless
   gocardlessCreditorId String? // Gläubiger-ID für SEPA
-  
+
   // Logo
-  logoUrl             String?  // Pfad zum hochgeladenen Logo
-  
+  logoUrl String? // Pfad zum hochgeladenen Logo
+
   // Template (Optional: Custom HTML)
-  templateHtml        String?  @db.Text
-  
+  templateHtml String? @db.Text
+
   // Footer-Text
-  footerText          String?  @db.Text // Kleingedrucktes
-  
+  footerText String? @db.Text // Kleingedrucktes
+
   // Metadaten
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("invoice_settings")
 }
 
@@ -4648,55 +4748,55 @@ model InvoiceSettings {
 // ============================================
 
 model BlogPost {
-  id              String   @id @default(cuid())
-  slug            String   @unique
-  title           String
-  excerpt         String?  @db.Text
-  content         String   @db.Text
-  featuredImage   String?
-  imageAlt        String?
-  
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  title         String
+  excerpt       String? @db.Text
+  content       String  @db.Text
+  featuredImage String?
+  imageAlt      String?
+
   // SEO Fields
   metaTitle       String?
   metaDescription String?  @db.Text
   keywords        String[]
   canonicalUrl    String?
   focusKeyword    String?
-  
+
   // Organization
-  category        BlogCategory @relation(fields: [categoryId], references: [id])
-  categoryId      String
-  tags            BlogTag[]    @relation("BlogPostToTag")
-  targetAudience  BlogAudience // CUSTOMER | WORKSHOP | BOTH
-  
+  category       BlogCategory @relation(fields: [categoryId], references: [id])
+  categoryId     String
+  tags           BlogTag[]    @relation("BlogPostToTag")
+  targetAudience BlogAudience // CUSTOMER | WORKSHOP | BOTH
+
   // Publishing
-  status          BlogStatus   // DRAFT | REVIEW | PUBLISHED | ARCHIVED
-  author          B24Employee  @relation("AuthoredPosts", fields: [authorId], references: [id])
-  authorId        String
-  reviewer        B24Employee? @relation("ReviewedPosts", fields: [reviewerId], references: [id])
-  reviewerId      String?
-  reviewedAt      DateTime?
-  publishedAt     DateTime?
-  scheduledFor    DateTime?
-  archivedAt      DateTime?
-  
+  status       BlogStatus // DRAFT | REVIEW | PUBLISHED | ARCHIVED
+  author       B24Employee  @relation("AuthoredPosts", fields: [authorId], references: [id])
+  authorId     String
+  reviewer     B24Employee? @relation("ReviewedPosts", fields: [reviewerId], references: [id])
+  reviewerId   String?
+  reviewedAt   DateTime?
+  publishedAt  DateTime?
+  scheduledFor DateTime?
+  archivedAt   DateTime?
+
   // Analytics
-  views           Int          @default(0)
-  readTime        Int?         // Minuten
-  seoScore        Int?         // 0-100
-  
+  views    Int  @default(0)
+  readTime Int? // Minuten
+  seoScore Int? // 0-100
+
   // Related Content
-  relatedPosts    BlogPost[]   @relation("RelatedPosts")
-  relatedTo       BlogPost[]   @relation("RelatedPosts")
-  
+  relatedPosts BlogPost[] @relation("RelatedPosts")
+  relatedTo    BlogPost[] @relation("RelatedPosts")
+
   // Relations
-  blogViews       BlogView[]
-  revisions       BlogPostRevision[]
-  
+  blogViews BlogView[]
+  revisions BlogPostRevision[]
+
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([slug])
   @@index([status, publishedAt])
   @@index([categoryId])
@@ -4706,29 +4806,29 @@ model BlogPost {
 }
 
 model BlogCategory {
-  id              String     @id @default(cuid())
-  slug            String     @unique
-  name            String
-  description     String?    @db.Text
-  icon            String?    // Emoji oder Lucide Icon Name
-  color           String?    // Hex-Code für UI
-  parentId        String?    // Für Sub-Kategorien
-  
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String? @db.Text
+  icon        String? // Emoji oder Lucide Icon Name
+  color       String? // Hex-Code für UI
+  parentId    String? // Für Sub-Kategorien
+
   // SEO
-  seoTitle        String?
-  seoDescription  String?    @db.Text
-  
+  seoTitle       String?
+  seoDescription String? @db.Text
+
   // Relations
-  posts           BlogPost[]
-  parent          BlogCategory?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children        BlogCategory[] @relation("SubCategories")
-  
+  posts    BlogPost[]
+  parent   BlogCategory?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children BlogCategory[] @relation("SubCategories")
+
   // Ordering
-  sortOrder       Int        @default(0)
-  
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([slug])
   @@index([parentId])
   @@map("blog_categories")
@@ -4740,52 +4840,52 @@ model BlogTag {
   name       String
   posts      BlogPost[] @relation("BlogPostToTag")
   usageCount Int        @default(0) // Für Popular Tags
-  
-  createdAt  DateTime   @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@index([slug])
   @@index([usageCount])
   @@map("blog_tags")
 }
 
 model BlogView {
-  id          String   @id @default(cuid())
-  postId      String
-  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id     String   @id @default(cuid())
+  postId String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Analytics
-  ipAddress   String?
-  userAgent   String?
-  referer     String?
-  country     String?
-  city        String?
-  
-  viewedAt    DateTime @default(now())
-  
+  ipAddress String?
+  userAgent String?
+  referer   String?
+  country   String?
+  city      String?
+
+  viewedAt DateTime @default(now())
+
   @@index([postId])
   @@index([viewedAt])
   @@map("blog_views")
 }
 
 model BlogPostRevision {
-  id         String   @id @default(cuid())
-  postId     String
-  post       BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id     String   @id @default(cuid())
+  postId String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Snapshot of post data
-  title      String
-  content    String   @db.Text
-  excerpt    String?  @db.Text
-  
+  title   String
+  content String  @db.Text
+  excerpt String? @db.Text
+
   // Who made this revision
-  authorId   String
-  author     B24Employee @relation("PostRevisions", fields: [authorId], references: [id])
-  
+  authorId String
+  author   B24Employee @relation("PostRevisions", fields: [authorId], references: [id])
+
   // Change note
-  changeNote String?  @db.Text
-  
-  createdAt  DateTime @default(now())
-  
+  changeNote String? @db.Text
+
+  createdAt DateTime @default(now())
+
   @@index([postId])
   @@index([createdAt])
   @@map("blog_post_revisions")
@@ -4809,61 +4909,493 @@ enum BlogAudience {
 // ============================================
 
 model EPRELTire {
-  id            String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // EPREL Original Data
-  eprelId       String?  @unique @map("eprel_id") // Original EPREL product ID
-  supplierName  String   @map("supplier_name") // Manufacturer
-  modelName     String   @map("model_name") // Commercial tire model name
-  
+  eprelId      String? @unique @map("eprel_id") // Original EPREL product ID
+  supplierName String  @map("supplier_name") // Manufacturer
+  modelName    String  @map("model_name") // Commercial tire model name
+
   // Tire Dimensions
-  tyreDimension String   @map("tyre_dimension") // e.g., "205/55R16"
-  width         Int      // e.g., 205
-  aspectRatio   Int      @map("aspect_ratio") // e.g., 55
-  diameter      Int      // e.g., 16
-  loadIndex     String?  @map("load_index") // e.g., "91"
-  speedRating   String?  @map("speed_rating") // e.g., "V"
-  
+  tyreDimension String  @map("tyre_dimension") // e.g., "205/55R16"
+  width         Int // e.g., 205
+  aspectRatio   Int     @map("aspect_ratio") // e.g., 55
+  diameter      Int // e.g., 16
+  loadIndex     String? @map("load_index") // e.g., "91"
+  speedRating   String? @map("speed_rating") // e.g., "V"
+
   // Season/Class
-  tyreClass     String?  @map("tyre_class") // summer, winter, all-season
-  has3PMSF      Boolean  @default(false) @map("has_3pmsf") // Snowflake symbol
-  hasIceGrip    Boolean  @default(false) @map("has_ice_grip") // Ice grip symbol
-  
+  tyreClass  String? @map("tyre_class") // summer, winter, all-season
+  has3PMSF   Boolean @default(false) @map("has_3pmsf") // Snowflake symbol
+  hasIceGrip Boolean @default(false) @map("has_ice_grip") // Ice grip symbol
+
   // EU Tire Label Data
-  fuelEfficiencyClass            String?  @map("fuel_efficiency_class") // A-E (new) or A-G (old)
-  wetGripClass                   String?  @map("wet_grip_class") // A-E (new) or A-G (old)
-  externalRollingNoiseLevel      Int?     @map("external_rolling_noise_level") // dB
-  externalRollingNoiseClass      String?  @map("external_rolling_noise_class") // A, B, C
-  
+  fuelEfficiencyClass       String? @map("fuel_efficiency_class") // A-E (new) or A-G (old)
+  wetGripClass              String? @map("wet_grip_class") // A-E (new) or A-G (old)
+  externalRollingNoiseLevel Int?    @map("external_rolling_noise_level") // dB
+  externalRollingNoiseClass String? @map("external_rolling_noise_class") // A, B, C
+
   // Additional Data
-  additionalData Json?    @map("additional_data") // Store complete EPREL JSON for future reference
-  
+  additionalData Json? @map("additional_data") // Store complete EPREL JSON for future reference
+
   // Import Metadata
-  importedAt    DateTime @default(now()) @map("imported_at")
-  lastUpdated   DateTime @updatedAt @map("last_updated")
-  dataVersion   String?  @map("data_version") // Track EPREL data version
-  
+  isActive    Boolean  @default(true) @map("is_active") // false = marked for deletion (not in latest EPREL import)
+  importedAt  DateTime @default(now()) @map("imported_at")
+  lastUpdated DateTime @updatedAt @map("last_updated")
+  dataVersion String?  @map("data_version") // Track EPREL data version
+
   @@index([width, aspectRatio, diameter])
   @@index([tyreDimension])
   @@index([supplierName])
   @@index([tyreClass])
+  @@index([isActive])
   @@map("eprel_tires")
 }
 
 model EPRELImport {
-  id            String   @id @default(cuid())
-  
-  status        String   // RUNNING, SUCCESS, FAILED
-  tiresImported Int      @default(0) @map("tires_imported")
-  tiresUpdated  Int      @default(0) @map("tires_updated")
-  tiresDeleted  Int      @default(0) @map("tires_deleted")
-  
-  errorMessage  String?  @db.Text @map("error_message")
-  dataVersion   String?  @map("data_version") // EPREL data version/timestamp
-  
-  startedAt     DateTime @default(now()) @map("started_at")
-  completedAt   DateTime? @map("completed_at")
-  
+  id String @id @default(cuid())
+
+  status        String // RUNNING, SUCCESS, FAILED
+  tiresImported Int    @default(0) @map("tires_imported")
+  tiresUpdated  Int    @default(0) @map("tires_updated")
+  tiresDeleted  Int    @default(0) @map("tires_deleted")
+
+  errorMessage String? @map("error_message") @db.Text
+  dataVersion  String? @map("data_version") // EPREL data version/timestamp
+
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
   @@index([startedAt])
   @@map("eprel_imports")
+}
+
+// ============================================
+// WORKSHOP CUSTOMER MANAGEMENT (CRM)
+// ============================================
+
+model WorkshopCustomer {
+  id         String   @id @default(cuid())
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Basic Info
+  customerType String  @default("PRIVATE") @map("customer_type") // PRIVATE, BUSINESS
+  salutation   String? // Herr, Frau, Divers
+  firstName    String  @map("first_name")
+  lastName     String  @map("last_name")
+  companyName  String? @map("company_name") // For business customers
+
+  // Contact
+  email   String?
+  phone   String?
+  mobile  String?
+  fax     String?
+  website String?
+
+  // Address
+  street  String?
+  zipCode String? @map("zip_code")
+  city    String?
+  country String? @default("Deutschland")
+
+  // Customer Segmentation
+  tags       String? // JSON: ["Stammkunde", "Premium", "Flotte"]
+  segment    String? // VIP, Regular, New
+  importance String? @default("NORMAL") // LOW, NORMAL, HIGH, VIP
+
+  // Customer Statistics (automatically calculated)
+  totalBookings    Int       @default(0) @map("total_bookings")
+  totalRevenue     Decimal   @default(0) @map("total_revenue") @db.Decimal(10, 2)
+  lastBookingDate  DateTime? @map("last_booking_date")
+  firstBookingDate DateTime? @map("first_booking_date")
+  averageRating    Float?    @map("average_rating") // Average of all booking ratings
+
+  // Data Source (how was this customer created)
+  source            String  @default("MANUAL") // MANUAL, BEREIFUNG24_BOOKING, BEREIFUNG24_MANUAL_APPOINTMENT
+  bereifung24UserId String? @map("bereifung24_user_id") // Reference to original Bereifung24 customer
+
+  // Communication Preferences
+  emailNotifications   Boolean   @default(true) @map("email_notifications")
+  smsNotifications     Boolean   @default(false) @map("sms_notifications")
+  marketingConsent     Boolean   @default(false) @map("marketing_consent")
+  marketingConsentDate DateTime? @map("marketing_consent_date")
+
+  // Notes
+  notes String? @db.Text // Internal notes about customer
+
+  // DSGVO
+  dataProcessingConsent     Boolean   @default(true) @map("data_processing_consent")
+  dataProcessingConsentDate DateTime  @default(now()) @map("data_processing_consent_date")
+  deletionRequested         Boolean   @default(false) @map("deletion_requested")
+  deletionRequestedAt       DateTime? @map("deletion_requested_at")
+
+  // Relations
+  vehicles           WorkshopVehicle[]
+  serviceRecords     WorkshopServiceRecord[]
+  communications     WorkshopCommunication[]
+  documents          WorkshopDocument[]
+  reminders          WorkshopReminder[]
+  bookings           Booking[]                   @relation("WorkshopCustomerBookings")
+  manualAppointments WorkshopManualAppointment[] @relation("WorkshopCustomerAppointments")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, email])
+  @@index([workshopId])
+  @@index([email])
+  @@index([phone])
+  @@index([lastName])
+  @@index([source])
+  @@index([bereifung24UserId])
+  @@map("workshop_customers")
+}
+
+model WorkshopVehicle {
+  id         String           @id @default(cuid())
+  customerId String           @map("customer_id")
+  customer   WorkshopCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Vehicle Identification
+  vin          String? @unique // Vehicle Identification Number
+  licensePlate String? @map("license_plate")
+
+  // Basic Info
+  manufacturer String? // e.g., "Volkswagen"
+  model        String? // e.g., "Golf"
+  modelYear    Int?    @map("model_year") // e.g., 2020
+  color        String?
+
+  // Technical Details
+  engineType   String? @map("engine_type") // Petrol, Diesel, Electric, Hybrid
+  displacement Int? // ccm
+  power        Int? // kW
+  fuelType     String? @map("fuel_type") // Benzin, Diesel, Elektro, Hybrid
+  transmission String? // Manual, Automatic
+
+  // Tire Info
+  frontTireSize String? @map("front_tire_size") // e.g., "205/55R16"
+  rearTireSize  String? @map("rear_tire_size") // e.g., "225/45R17"
+  wheelSize     String? @map("wheel_size") // e.g., "16 Zoll"
+
+  // Mileage Tracking
+  currentMileage    Int?      @map("current_mileage") // km
+  lastMileageUpdate DateTime? @map("last_mileage_update")
+
+  // Registration & Inspection
+  firstRegistration DateTime? @map("first_registration")
+  nextInspection    DateTime? @map("next_inspection") // TÜV/HU
+  nextEmissionTest  DateTime? @map("next_emission_test") // AU
+
+  // Status
+  isActive Boolean   @default(true) @map("is_active") // Customer still owns this vehicle
+  soldDate DateTime? @map("sold_date")
+
+  // Notes
+  notes String? @db.Text
+
+  // Data Source
+  source String @default("MANUAL") // MANUAL, VIN_DECODER, BEREIFUNG24_BOOKING
+
+  // Relations
+  serviceRecords WorkshopServiceRecord[]
+  reminders      WorkshopReminder[]
+  bookings       Booking[]               @relation("WorkshopVehicleBookings")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([vin])
+  @@index([licensePlate])
+  @@index([nextInspection])
+  @@map("workshop_vehicles")
+}
+
+model WorkshopServiceRecord {
+  id         String           @id @default(cuid())
+  customerId String           @map("customer_id")
+  customer   WorkshopCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vehicleId  String?          @map("vehicle_id")
+  vehicle    WorkshopVehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  workshopId String           @map("workshop_id")
+
+  // Service Info
+  serviceType        String // TIRE_CHANGE, TIRE_REPAIR, INSPECTION, BRAKE_SERVICE, OIL_CHANGE, CUSTOM
+  serviceDescription String   @map("service_description") // Detailed description
+  serviceDate        DateTime @map("service_date")
+
+  // Mileage at service
+  mileage Int?
+
+  // Pricing
+  laborCost Decimal @default(0) @map("labor_cost") @db.Decimal(10, 2)
+  partsCost Decimal @default(0) @map("parts_cost") @db.Decimal(10, 2)
+  totalCost Decimal @default(0) @map("total_cost") @db.Decimal(10, 2)
+
+  // Payment
+  paymentStatus String    @default("UNPAID") @map("payment_status") // UNPAID, PAID, PARTIAL
+  paymentMethod String?   @map("payment_method") // CASH, CARD, BANK_TRANSFER
+  paidAmount    Decimal   @default(0) @map("paid_amount") @db.Decimal(10, 2)
+  paidAt        DateTime? @map("paid_at")
+
+  // Next Service Reminder
+  nextServiceDue  DateTime? @map("next_service_due")
+  nextServiceType String?   @map("next_service_type")
+
+  // Relations
+  bookingId String?  @unique @map("booking_id") // Link to Bereifung24 booking if applicable
+  booking   Booking? @relation("ServiceRecordBooking", fields: [bookingId], references: [id], onDelete: SetNull)
+
+  // Documents
+  invoiceNumber String? @unique @map("invoice_number")
+  invoiceUrl    String? @map("invoice_url")
+
+  // Internal
+  mechanicName    String? @map("mechanic_name")
+  workOrderNumber String? @map("work_order_number")
+  notes           String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([workshopId])
+  @@index([serviceDate])
+  @@index([bookingId])
+  @@map("workshop_service_records")
+}
+
+model WorkshopCommunication {
+  id         String           @id @default(cuid())
+  customerId String           @map("customer_id")
+  customer   WorkshopCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  workshopId String           @map("workshop_id")
+
+  // Communication Type
+  type      String // EMAIL, PHONE, SMS, NOTE, MEETING
+  direction String? // INBOUND, OUTBOUND
+
+  // Content
+  subject String?
+  content String  @db.Text
+
+  // Email specific
+  emailFrom     String?   @map("email_from")
+  emailTo       String?   @map("email_to")
+  emailOpened   Boolean   @default(false) @map("email_opened")
+  emailOpenedAt DateTime? @map("email_opened_at")
+
+  // Phone specific
+  phoneNumber String? @map("phone_number")
+  duration    Int? // seconds
+
+  // Status
+  status String? @default("COMPLETED") // SCHEDULED, COMPLETED, CANCELLED
+
+  // Related
+  relatedTo String? @map("related_to") // BOOKING, SERVICE, REMINDER, GENERAL
+  relatedId String? @map("related_id")
+
+  createdBy  String?  @map("created_by") // Employee or system
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([type])
+  @@index([occurredAt])
+  @@map("workshop_communications")
+}
+
+model WorkshopDocument {
+  id         String           @id @default(cuid())
+  customerId String           @map("customer_id")
+  customer   WorkshopCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  workshopId String           @map("workshop_id")
+
+  // Document Info
+  type        String // INVOICE, ESTIMATE, INSPECTION_REPORT, PHOTO, CONTRACT, OTHER
+  title       String
+  description String? @db.Text
+
+  // File
+  fileUrl  String @map("file_url")
+  fileName String @map("file_name")
+  fileSize Int    @map("file_size") // bytes
+  mimeType String @map("mime_type")
+
+  // Relations
+  relatedTo String? @map("related_to") // BOOKING, SERVICE, VEHICLE
+  relatedId String? @map("related_id")
+
+  // Access
+  isPublic Boolean @default(false) @map("is_public") // Customer can see this document
+
+  uploadedBy String?  @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([type])
+  @@map("workshop_documents")
+}
+
+model WorkshopReminder {
+  id         String           @id @default(cuid())
+  customerId String           @map("customer_id")
+  customer   WorkshopCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vehicleId  String?          @map("vehicle_id")
+  vehicle    WorkshopVehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  workshopId String           @map("workshop_id")
+
+  // Reminder Info
+  type        String // TUV_INSPECTION, TIRE_CHANGE, OIL_CHANGE, GENERAL_SERVICE, CUSTOM
+  title       String
+  description String? @db.Text
+
+  // Timing
+  reminderDate DateTime  @map("reminder_date") // When to send the reminder
+  dueDate      DateTime? @map("due_date") // When the service is actually due
+
+  // Status
+  status      String    @default("PENDING") // PENDING, SENT, COMPLETED, CANCELLED
+  sentAt      DateTime? @map("sent_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Notification Method
+  sendEmail Boolean @default(true) @map("send_email")
+  sendSms   Boolean @default(false) @map("send_sms")
+
+  // Recurrence
+  isRecurring        Boolean   @default(false) @map("is_recurring")
+  recurrenceInterval Int?      @map("recurrence_interval") // months
+  nextReminderDate   DateTime? @map("next_reminder_date")
+
+  // Auto-generated
+  autoGenerated Boolean @default(false) @map("auto_generated")
+
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([workshopId])
+  @@index([reminderDate])
+  @@index([status])
+  @@map("workshop_reminders")
+}
+
+model WorkshopManualAppointment {
+  id         String            @id @default(cuid())
+  workshopId String            @map("workshop_id")
+  customerId String?           @map("customer_id")
+  customer   WorkshopCustomer? @relation("WorkshopCustomerAppointments", fields: [customerId], references: [id], onDelete: SetNull)
+  vehicleId  String?           @map("vehicle_id")
+
+  // Customer Info (if not in CRM yet)
+  customerName  String? @map("customer_name")
+  customerEmail String? @map("customer_email")
+  customerPhone String? @map("customer_phone")
+
+  // Vehicle Info (if not in CRM yet)
+  vehicleMake  String? @map("vehicle_make")
+  vehicleModel String? @map("vehicle_model")
+  licensePlate String? @map("license_plate")
+
+  // Appointment Details
+  appointmentDate   DateTime @map("appointment_date")
+  appointmentTime   String   @map("appointment_time")
+  estimatedDuration Int      @default(60) @map("estimated_duration") // minutes
+
+  // Service Details
+  serviceType        String?  @map("service_type")
+  serviceDescription String?  @map("service_description") @db.Text
+  estimatedPrice     Decimal? @map("estimated_price") @db.Decimal(10, 2)
+
+  // Status
+  status             String    @default("SCHEDULED") // SCHEDULED, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+  confirmedAt        DateTime? @map("confirmed_at")
+  completedAt        DateTime? @map("completed_at")
+  cancelledAt        DateTime? @map("cancelled_at")
+  cancellationReason String?   @map("cancellation_reason") @db.Text
+
+  // Employee Assignment
+  employeeId    String?   @map("employee_id")
+  employee      Employee? @relation("ManualAppointmentEmployee", fields: [employeeId], references: [id], onDelete: SetNull)
+  googleEventId String?   @map("google_event_id") // Google Calendar Event ID
+
+  // Notes
+  customerNotes String? @map("customer_notes") @db.Text
+  workshopNotes String? @map("workshop_notes") @db.Text
+
+  // Created By
+  createdBy String? @map("created_by") // Workshop user who created this
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([workshopId])
+  @@index([customerId])
+  @@index([appointmentDate])
+  @@index([status])
+  @@map("workshop_manual_appointments")
+}
+
+// ============================================
+// CUSTOMER DOCUMENTS
+// ============================================
+
+model CustomerDocument {
+  id         String   @id @default(cuid())
+  customerId String   @map("customer_id")
+  
+  // File Info
+  name     String // Original filename
+  filename String // Stored filename (with timestamp)
+  type     String // MIME type
+  size     Int // File size in bytes
+  url      String // Public URL path
+  
+  // Metadata
+  uploadedBy String @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+  
+  @@index([customerId])
+  @@map("customer_documents")
+}
+
+// ============================================
+// CUSTOMER REMINDERS
+// ============================================
+
+model CustomerReminder {
+  id         String   @id @default(cuid())
+  customerId String   @map("customer_id")
+  workshopId String   @map("workshop_id")
+  
+  // Reminder Details
+  title     String
+  dueDate   DateTime @map("due_date")
+  notes     String?  @db.Text
+  completed Boolean  @default(false)
+  
+  // Metadata
+  createdBy     String   @map("created_by")
+  createdByUser User     @relation("ReminderCreatedBy", fields: [createdBy], references: [id])
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+  
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([dueDate])
+  @@index([completed])
+  @@map("customer_reminders")
 }

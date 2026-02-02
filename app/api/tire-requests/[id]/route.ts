@@ -23,6 +23,11 @@ export async function GET(
         customerId: session.user.customerId!,
       },
       include: {
+        customer: {
+          select: {
+            isCompany: true,
+          },
+        },
         offers: {
           include: {
             workshop: {
@@ -58,6 +63,11 @@ export async function GET(
         workshop: {
           companyName: offer.workshop.companyName,
           logoUrl: offer.workshop.logoUrl,
+          taxMode: offer.workshop.taxMode,
+          calendarMode: offer.workshop.calendarMode,
+          paypalEmail: offer.workshop.paypalEmail,
+          stripeEnabled: offer.workshop.stripeEnabled,
+          paymentMethods: offer.workshop.paymentMethods,
           street: offer.workshop.user.street,
           zipCode: offer.workshop.user.zipCode,
           city: offer.workshop.user.city,

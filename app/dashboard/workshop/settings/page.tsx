@@ -121,6 +121,8 @@ export default function WorkshopSettings() {
     bankTransferIban: '',
     paypal: false,
     paypalEmail: '',
+    stripe: false,
+    stripeAccountId: '',
   })
 
   const [openingHoursData, setOpeningHoursData] = useState({
@@ -258,6 +260,8 @@ export default function WorkshopSettings() {
               bankTransferIban: parsed.bankTransferIban || '',
               paypal: parsed.paypal ?? false,
               paypalEmail: parsed.paypalEmail || '',
+              stripe: parsed.stripe ?? false,
+              stripeAccountId: parsed.stripeAccountId || '',
             })
           } catch (e) {
             console.log('Could not parse payment methods:', e)
@@ -474,6 +478,9 @@ export default function WorkshopSettings() {
           ...formData,
           openingHours: openingHoursJson,
           paymentMethods: paymentMethodsJson,
+          paypalEmail: paymentMethods.paypalEmail, // Extract paypalEmail to top level
+          stripeAccountId: paymentMethods.stripeAccountId, // Extract stripeAccountId to top level
+          stripeEnabled: paymentMethods.stripe, // Extract stripe enabled flag
           oldIban: profile?.iban, // For SEPA mandate date update
         }),
       })
@@ -685,14 +692,33 @@ export default function WorkshopSettings() {
           </div>
         )}
 
-        {/* Tabs */}
+        {/* Tabs - Desktop: Horizontal Navigation, Mobile: Dropdown Select */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 transition-colors">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex -mb-px">
+          {/* Mobile Dropdown */}
+          <div className="lg:hidden p-4 border-b border-gray-200 dark:border-gray-700">
+            <label htmlFor="tab-select" className="sr-only">Tab auswählen</label>
+            <select
+              id="tab-select"
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
+            >
+              <option value="contact">Kontakt & Unternehmen</option>
+              <option value="hours">Öffnungszeiten</option>
+              <option value="payment">Zahlungsmöglichkeiten</option>
+              <option value="sepa">Bankverbindung & SEPA</option>
+              <option value="notifications">Benachrichtigungen</option>
+              <option value="terminplanung">Terminplanung</option>
+            </select>
+          </div>
+
+          {/* Desktop Tabs */}
+          <div className="hidden lg:block border-b border-gray-200 dark:border-gray-700">
+            <nav className="flex -mb-px overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab('contact')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'contact'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -703,7 +729,7 @@ export default function WorkshopSettings() {
               <button
                 type="button"
                 onClick={() => setActiveTab('hours')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'hours'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -714,7 +740,7 @@ export default function WorkshopSettings() {
               <button
                 type="button"
                 onClick={() => setActiveTab('payment')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'payment'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -725,7 +751,7 @@ export default function WorkshopSettings() {
               <button
                 type="button"
                 onClick={() => setActiveTab('sepa')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'sepa'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -736,7 +762,7 @@ export default function WorkshopSettings() {
               <button
                 type="button"
                 onClick={() => setActiveTab('notifications')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'notifications'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -747,7 +773,7 @@ export default function WorkshopSettings() {
               <button
                 type="button"
                 onClick={() => setActiveTab('terminplanung')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'terminplanung'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
@@ -1064,7 +1090,7 @@ export default function WorkshopSettings() {
                           }}
                           className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                          {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00'].map(time => (
+                          {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'].map(time => (
                             <option key={time} value={time}>{time}</option>
                           ))}
                         </select>
@@ -1079,7 +1105,7 @@ export default function WorkshopSettings() {
                           }}
                           className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                          {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map(time => (
+                          {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'].map(time => (
                             <option key={time} value={time}>{time}</option>
                           ))}
                         </select>
@@ -1230,6 +1256,85 @@ export default function WorkshopSettings() {
                   </div>
                 )}
               </div>
+
+              {/* Stripe Payment Option */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.stripe}
+                    onChange={(e) => setPaymentMethods({ ...paymentMethods, stripe: e.target.checked })}
+                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
+                      💳 Stripe (Kreditkarte, SEPA & mehr)
+                    </label>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Kreditkarte, SEPA-Lastschrift, Sofort, Giropay und mehr
+                    </p>
+                  </div>
+                </div>
+                {paymentMethods.stripe && (
+                  <div className="ml-7 mt-3 space-y-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="text-sm text-blue-900 dark:text-blue-300 font-medium mb-2">
+                        ℹ️ Stripe Account einrichten
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
+                        Sie benötigen ein Stripe-Konto, um Zahlungen zu empfangen. Falls Sie noch keins haben:
+                      </p>
+                      <div className="space-y-2 text-xs text-blue-800 dark:text-blue-300">
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">1.</span>
+                          <span>Registrieren Sie sich bei <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Stripe</a></span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">2.</span>
+                          <span>Tragen Sie Ihre Firmendaten ein</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">3.</span>
+                          <span>Kopieren Sie Ihre Account-ID (acct_xxx) aus dem Dashboard</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">4.</span>
+                          <span>Geben Sie die Account-ID unten ein</span>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <a
+                          href="https://dashboard.stripe.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                        >
+                          Zum Stripe Dashboard
+                          <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Stripe Account ID <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentMethods.stripeAccountId || ''}
+                        onChange={(e) => setPaymentMethods({ ...paymentMethods, stripeAccountId: e.target.value })}
+                        placeholder="acct_xxxxxxxxxxxxx"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 font-mono"
+                        required={paymentMethods.stripe}
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Ihre Stripe Account-ID finden Sie im <a href="https://dashboard.stripe.com/settings/account" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Stripe Dashboard → Einstellungen</a>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             </div>
           )}
@@ -1296,7 +1401,7 @@ export default function WorkshopSettings() {
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             <span>
-                              Ihr Mandat wird derzeit von GoCardless geprüft. Die Aktivierung dauert in der Regel <strong>3-5 Werktage</strong>. 
+                              Ihr Mandat wurde erfolgreich eingerichtet und wird bei der <strong>ersten Provisionsabbuchung automatisch aktiviert</strong>. 
                               Sie werden per E-Mail benachrichtigt, sobald das Mandat aktiv ist.
                             </span>
                           </p>
@@ -1346,6 +1451,41 @@ export default function WorkshopSettings() {
                     )}
                   </div>
 
+                  {/* Mandat ersetzen/ändern Button */}
+                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                          Bankverbindung geändert?
+                        </h3>
+                        <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                          Wenn Sie Ihre IBAN geändert haben oder ein neues Bankkonto verwenden möchten, 
+                          müssen Sie ein neues SEPA-Mandat einrichten. Das alte Mandat wird automatisch ersetzt.
+                        </p>
+                        <button
+                          onClick={createMandate}
+                          disabled={creating}
+                          className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                        >
+                          {creating ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              Wird erstellt...
+                            </span>
+                          ) : (
+                            'Neues Mandat einrichten (ersetzt das aktuelle)'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Info Box */}
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-2">Wichtige Informationen</h3>
@@ -1354,25 +1494,25 @@ export default function WorkshopSettings() {
                         <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
-                        <span>Die Provisionen werden automatisch am 1. jedes Monats berechnet</span>
+                        <span>Die Provisionsrechnung wird am <strong>1. des Monats</strong> erstellt und per E-Mail zugestellt</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
-                        <span>Der Lastschrifteinzug erfolgt 3 Werktage nach Rechnungsstellung</span>
+                        <span>Die Abbuchung erfolgt <strong>3-5 Werktage nach Rechnungsstellung</strong> automatisch per SEPA-Lastschrift</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
-                        <span>Sie können das Mandat jederzeit widerrufen</span>
+                        <span>Sie können SEPA-Lastschriften bis zu <strong>8 Wochen nach Abbuchung bei Ihrer Bank widerrufen</strong></span>
                       </li>
                       <li className="flex items-start gap-2">
                         <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
-                        <span>Sie erhalten vor jeder Abbuchung eine Rechnung per E-Mail</span>
+                        <span>Bei Bankwechsel richten Sie einfach ein neues Mandat ein - das alte wird automatisch ersetzt</span>
                       </li>
                     </ul>
                   </div>
@@ -1479,30 +1619,30 @@ export default function WorkshopSettings() {
 
           {/* Tab: Benachrichtigungen */}
           {activeTab === 'notifications' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">E-Mail-Benachrichtigungen</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-700 transition-colors">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 break-words">E-Mail-Benachrichtigungen</h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 break-words">
                 Verwalten Sie hier, für welche Ereignisse Sie E-Mail-Benachrichtigungen erhalten möchten.
               </p>
               
               <div className="space-y-6">
                 {/* Neue Anfragen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyRequests}
                       onChange={(e) => setFormData({ ...formData, emailNotifyRequests: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">📬</span>
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="text-xl sm:text-2xl flex-shrink-0">📬</span>
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Neue Anfragen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Benachrichtigung erhalten, wenn ein Kunde eine neue Reifenanfrage in Ihrem Umkreis erstellt
                       </span>
                     </div>
@@ -1510,21 +1650,21 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Angebot angenommen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyOfferAccepted}
                       onChange={(e) => setFormData({ ...formData, emailNotifyOfferAccepted: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Angebot angenommen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Benachrichtigung erhalten, wenn ein Kunde eines Ihrer Angebote annimmt
                       </span>
                     </div>
@@ -1532,21 +1672,21 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Neue Terminbuchungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyBookings}
                       onChange={(e) => setFormData({ ...formData, emailNotifyBookings: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Neue Terminbuchungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Benachrichtigung erhalten, wenn ein Kunde einen Termin bei Ihnen bucht
                       </span>
                     </div>
@@ -1554,21 +1694,21 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Neue Bewertungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyReviews}
                       onChange={(e) => setFormData({ ...formData, emailNotifyReviews: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Neue Bewertungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Benachrichtigung erhalten, wenn ein Kunde eine Bewertung für Ihre Werkstatt abgibt
                       </span>
                     </div>
@@ -1576,22 +1716,22 @@ export default function WorkshopSettings() {
                 </div>
 
                 {/* Terminerinnerungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyReminders}
                       onChange={(e) => setFormData({ ...formData, emailNotifyReminders: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">⏰</span>
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="text-xl sm:text-2xl flex-shrink-0">⏰</span>
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Terminerinnerungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Erinnerung am Tag vor dem Termin erhalten (24 Stunden im Voraus)
                       </span>
                     </div>
@@ -1600,20 +1740,20 @@ export default function WorkshopSettings() {
 
                 {/* Provisionsabrechnungen */}
                 <div className="pb-2">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.emailNotifyCommissions}
                       onChange={(e) => setFormData({ ...formData, emailNotifyCommissions: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="block text-base font-semibold text-gray-900 dark:text-white">
+                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
                           Monatliche Provisionsabrechnungen
                         </span>
                       </div>
-                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                         Monatliche Übersicht über fällige Provisionen und Abrechnungsdetails erhalten
                       </span>
                     </div>
@@ -1621,15 +1761,15 @@ export default function WorkshopSettings() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                  <div className="flex">
-                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3 sm:p-4">
+                  <div className="flex gap-2 sm:gap-3">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div>
-                      <p className="text-sm text-blue-900 dark:text-blue-300 font-medium">Hinweis zu E-Mail-Benachrichtigungen</p>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-blue-900 dark:text-blue-300 font-medium break-words">Hinweis zu E-Mail-Benachrichtigungen</p>
+                      <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mt-1 break-words">
                         Wichtige System-E-Mails (z.B. Passwort-Reset, Sicherheitsmeldungen) werden unabhängig von diesen Einstellungen immer versendet.
                       </p>
                     </div>

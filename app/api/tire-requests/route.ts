@@ -324,6 +324,12 @@ export async function POST(request: NextRequest) {
 
         await Promise.all(emailPromises)
         console.log(`✅ Sent notifications to ${workshopsInRange.length} workshops`)
+        
+        // Update tire request with number of workshops notified
+        await prisma.tireRequest.update({
+          where: { id: tireRequest.id },
+          data: { workshopsNotified: workshopsInRange.length }
+        })
       } catch (notificationError) {
         console.error('Error sending workshop notifications:', notificationError)
         // Don't fail the request creation if notifications fail

@@ -53,10 +53,12 @@ export async function GET(request: Request) {
       console.log('Mandate ID:', workshop.gocardlessMandateId)
       console.log('GoCardless Status:', mandate.status)
       console.log('Local Status:', workshop.gocardlessMandateStatus)
+      console.log('Created At:', mandate.created_at)
       console.log('================================')
 
       // Update local status if changed
       if (mandate.status !== workshop.gocardlessMandateStatus) {
+        console.log(`🔄 Updating mandate status from ${workshop.gocardlessMandateStatus} to ${mandate.status}`)
         await prisma.workshop.update({
           where: { id: workshop.id },
           data: {
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
       } else {
         mandateStatus = mandate.status
       }
-    } catch (gcError) {
+    } catch (gcError: any) {
       console.warn('⚠️ Could not fetch status from GoCardless, using local status:', gcError.message)
       // Use local database status as fallback
       mandate = {

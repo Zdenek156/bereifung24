@@ -459,15 +459,40 @@ export default function AdminCommissionsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            setSelectedCommission(commission)
-                            setShowUpdateModal(true)
-                          }}
-                          className="text-primary-600 hover:text-primary-900"
-                        >
-                          Bearbeiten
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedCommission(commission)
+                              setShowUpdateModal(true)
+                            }}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Bearbeiten
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm(`Provision wirklich löschen?\n\nWerkstatt: ${commission.workshop.companyName}\nBetrag: ${commission.commissionAmount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}\n\nDieser Vorgang kann nicht rückgängig gemacht werden!`)) {
+                                try {
+                                  const response = await fetch(`/api/admin/commissions/${commission.id}`, {
+                                    method: 'DELETE'
+                                  })
+                                  if (response.ok) {
+                                    await fetchCommissions()
+                                  } else {
+                                    const error = await response.json()
+                                    alert(`Fehler beim Löschen: ${error.error || 'Unbekannter Fehler'}`)
+                                  }
+                                } catch (error) {
+                                  alert('Fehler beim Löschen der Provision')
+                                  console.error(error)
+                                }
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Löschen
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

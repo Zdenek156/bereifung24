@@ -3,6 +3,67 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Helper functions to get readable names
+function getServiceTypeName(serviceType: string): string {
+  const names: Record<string, string> = {
+    'TIRE_CHANGE': 'Reifenwechsel',
+    'WHEEL_CHANGE': 'Räder umstecken',
+    'TIRE_REPAIR': 'Reifenreparatur',
+    'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+    'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+    'CLIMATE_SERVICE': 'Klimaservice',
+    'BRAKE_SERVICE': 'Bremsen-Service',
+    'BATTERY_SERVICE': 'Batterie-Service',
+    'OTHER_SERVICES': 'Sonstige Reifendienste'
+  }
+  return names[serviceType] || serviceType
+}
+
+function getPackageTypeName(packageType: string): string {
+  const names: Record<string, string> = {
+    // TIRE_CHANGE
+    'two_tires': '2 Reifen wechseln',
+    'four_tires': '4 Reifen wechseln',
+    // TIRE_REPAIR
+    'foreign_object': 'Reifenpanne / Loch (Fremdkörper)',
+    'valve_damage': 'Ventilschaden',
+    // MOTORCYCLE_TIRE
+    'front': 'Vorderrad',
+    'rear': 'Hinterrad',
+    'both': 'Beide Räder',
+    'front_disposal': 'Vorderrad + Entsorgung',
+    'rear_disposal': 'Hinterrad + Entsorgung',
+    'both_disposal': 'Beide + Entsorgung',
+    // ALIGNMENT_BOTH
+    'measurement_front': 'Vermessung Vorderachse',
+    'measurement_rear': 'Vermessung Hinterachse',
+    'measurement_both': 'Vermessung beide Achsen',
+    'adjustment_front': 'Einstellung Vorderachse',
+    'adjustment_rear': 'Einstellung Hinterachse',
+    'adjustment_both': 'Einstellung beide Achsen',
+    'full_service': 'Komplett-Service',
+    // CLIMATE_SERVICE
+    'check': 'Klimacheck/Inspektion',
+    'basic': 'Basic Service',
+    'comfort': 'Comfort Service',
+    'premium': 'Premium Service',
+    // BRAKE_SERVICE
+    'front_pads': 'Vorderachse - Bremsbeläge',
+    'front_pads_discs': 'Vorderachse - Beläge + Scheiben',
+    'rear_pads': 'Hinterachse - Bremsbeläge',
+    'rear_pads_discs': 'Hinterachse - Beläge + Scheiben',
+    'rear_pads_discs_handbrake': 'Hinterachse - Beläge + Scheiben + Handbremse',
+    // BATTERY_SERVICE
+    'replacement': 'Batterie-Wechsel',
+    // OTHER_SERVICES
+    'rdks': 'RDKS-Service',
+    'valve': 'Ventil-Wechsel',
+    'storage': 'Reifen-Einlagerung',
+    'tpms': 'TPMS-Programmierung'
+  }
+  return names[packageType] || packageType
+}
+
 // GET /api/workshop/services - Get all services for a workshop
 export async function GET(request: Request) {
   try {
@@ -44,7 +105,35 @@ export async function GET(request: Request) {
       )
     }
 
-    return NextResponse.json({ services: user.workshop.workshopServices })
+    // Transform workshopServices to the format expected by the UI
+    // The UI expects: { id, serviceType, isActive, servicePackages: [...] }
+    const services = user.workshop.workshopServices.map(service => ({
+      id: service.id,
+      serviceType: service.serviceType,
+      isActive: service.isActive,
+      basePrice: service.basePrice,
+      basePrice4: service.basePrice4,
+      durationMinutes: service.durationMinutes,
+      durationMinutes4: service.durationMinutes4,
+      balancingPrice: service.balancingPrice,
+      balancingMinutes: service.balancingMinutes,
+      storagePrice: service.storagePrice,
+      storageAvailable: service.storageAvailable,
+      refrigerantPricePer100ml: service.refrigerantPricePer100ml,
+      runFlatSurcharge: service.runFlatSurcharge,
+      disposalFee: service.disposalFee,
+      servicePackages: service.servicePackages.map(pkg => ({
+        id: pkg.id,
+        packageType: pkg.packageType,
+        name: pkg.name,
+        description: pkg.description,
+        price: pkg.price,
+        durationMinutes: pkg.durationMinutes,
+        isActive: pkg.isActive
+      }))
+    }))
+
+    return NextResponse.json({ services })
   } catch (error) {
     console.error('Services fetch error:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')

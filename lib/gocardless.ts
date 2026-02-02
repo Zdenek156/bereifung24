@@ -7,16 +7,24 @@ import { getApiSetting } from './api-settings'
 
 // Lazy initialization to avoid startup errors if env vars are missing
 let _gocardlessClient: any = null
+let _cachedToken: string | null = null
 
 export async function getGocardlessClient() {
+  // Try to get from database first, fallback to environment variable
+  const accessToken = await getApiSetting('GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ACCESS_TOKEN')
+  
+  if (!accessToken) {
+    throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured in database or environment')
+  }
+  
+  // Reset client if token has changed
+  if (_gocardlessClient && _cachedToken !== accessToken) {
+    console.log('🔄 GoCardless token changed, resetting client...')
+    _gocardlessClient = null
+    _cachedToken = null
+  }
+  
   if (!_gocardlessClient) {
-    // Try to get from database first, fallback to environment variable
-    const accessToken = await getApiSetting('GOCARDLESS_ACCESS_TOKEN', 'GOCARDLESS_ACCESS_TOKEN')
-    
-    if (!accessToken) {
-      throw new Error('GOCARDLESS_ACCESS_TOKEN is not configured in database or environment')
-    }
-    
     // Get environment setting (sandbox or live)
     const envSetting = await getApiSetting('GOCARDLESS_ENVIRONMENT', 'GOCARDLESS_ENVIRONMENT')
     const environment = envSetting === 'live' 
@@ -27,8 +35,19 @@ export async function getGocardlessClient() {
       accessToken,
       environment
     )
+    _cachedToken = accessToken
+    console.log('✅ GoCardless client initialized with token:', accessToken.substring(0, 10) + '...')
   }
   return _gocardlessClient
+}
+
+/**
+ * Reset the cached GoCardless client (useful after token update)
+ */
+export function resetGocardlessClient() {
+  _gocardlessClient = null
+  _cachedToken = null
+  console.log('🔄 GoCardless client cache cleared')
 }
 
 /**
@@ -262,6 +281,10 @@ export async function createRedirectFlow(data: {
     givenName?: string
     familyName?: string
     companyName?: string
+    addressLine1?: string
+    city?: string
+    postalCode?: string
+    countryCode?: string
   }
 }) {
   try {
@@ -280,8 +303,14 @@ export async function createRedirectFlow(data: {
         email: data.prefillCustomer.email,
         given_name: data.prefillCustomer.givenName,
         family_name: data.prefillCustomer.familyName,
-        company_name: data.prefillCustomer.companyName
+        company_name: data.prefillCustomer.companyName,
+        address_line1: data.prefillCustomer.addressLine1,
+        city: data.prefillCustomer.city,
+        postal_code: data.prefillCustomer.postalCode,
+        country_code: data.prefillCustomer.countryCode
       }
+      
+      console.log('🔍 GoCardless prefilled_customer object:', JSON.stringify(createData.prefilled_customer, null, 2))
     }
 
     const client = await getGocardlessClient()

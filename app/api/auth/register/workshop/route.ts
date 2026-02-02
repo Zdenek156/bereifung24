@@ -123,6 +123,11 @@ export async function POST(request: Request) {
             description: validatedData.description,
             sepaMandateRef: sepaMandateRef,
             isVerified: false, // Admin muss verifizieren
+            latitude: latitude,
+            longitude: longitude,
+            serviceRadius: 25, // Default 25km service radius
+            status: 'PENDING', // Wartet auf Admin-Freischaltung
+            approved: false,
           }
         }
       },

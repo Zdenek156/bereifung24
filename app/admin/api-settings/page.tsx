@@ -241,7 +241,89 @@ export default function AdminApiSettings() {
             <li>• <strong>GOCARDLESS_ENVIRONMENT</strong> - "sandbox" oder "live"</li>
             <li>• <strong>GOOGLE_OAUTH_CLIENT_ID</strong> - Google OAuth Client ID für Calendar Integration</li>
             <li>• <strong>GOOGLE_OAUTH_CLIENT_SECRET</strong> - Google OAuth Client Secret</li>
+            <li>• <strong>API_NINJAS_KEY</strong> - API Ninjas für VIN Lookup und Fahrzeugsuche (Free: 50k/Monat)</li>
+            <li>• <strong>STRIPE_SECRET_KEY</strong> - Stripe Secret Key (sk_test_xxx oder sk_live_xxx)</li>
+            <li>• <strong>STRIPE_PUBLISHABLE_KEY</strong> - Stripe Publishable Key (pk_test_xxx oder pk_live_xxx)</li>
           </ul>
+          <p className="text-xs text-blue-600 mt-3">
+            💡 <strong>API Ninjas Key:</strong> Kostenlos registrieren auf <a href="https://api-ninjas.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">api-ninjas.com/register</a>
+          </p>
+        </div>
+
+        {/* PayPal Info Box */}
+        <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 01-.794.679H7.72a.483.483 0 01-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.75-2.203 8.796-6.502z"/>
+              <path d="M2.379 0h9.606a3.4 3.4 0 013.4 3.4v.01c0 2.416-1.672 4.534-4.035 5.15L10.12 9.61 9.72 12H8.333L6.975 21H5.591l1.357-8.387-1.229.002a3.4 3.4 0 01-3.393-3.165L2.31 9.28 2 7.417v-.002L2.379 0z"/>
+            </svg>
+            PayPal Integration
+          </h3>
+          <ul className="text-xs text-purple-700 space-y-1.5">
+            <li>• <strong>PAYPAL_CLIENT_ID</strong> - Client ID aus PayPal Developer Dashboard → Apps & Credentials</li>
+            <li>• <strong>PAYPAL_CLIENT_SECRET</strong> - Secret aus PayPal Developer Dashboard (auf "Show" klicken)</li>
+            <li>• <strong>PAYPAL_WEBHOOK_ID</strong> - Webhook ID (Format: WH-xxxxxxxxxxxxx) nach Erstellung</li>
+            <li>• <strong>PAYPAL_API_URL</strong> - API URL:
+              <ul className="ml-4 mt-1">
+                <li>→ Sandbox: <code className="bg-purple-100 px-1 rounded">https://api-m.sandbox.paypal.com</code></li>
+                <li>→ Live: <code className="bg-purple-100 px-1 rounded">https://api-m.paypal.com</code></li>
+              </ul>
+            </li>
+          </ul>
+          <div className="mt-3 pt-3 border-t border-purple-200">
+            <p className="text-xs text-purple-600">
+              📝 <strong>Setup-Anleitung:</strong>
+            </p>
+            <ol className="text-xs text-purple-700 space-y-1 mt-1 ml-4 list-decimal">
+              <li>Gehe zu <a href="https://developer.paypal.com/dashboard/" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-900">PayPal Developer Dashboard</a></li>
+              <li>Apps & Credentials → Sandbox/Live auswählen</li>
+              <li>App erstellen oder vorhandene auswählen</li>
+              <li>Client ID & Secret kopieren (Secret: auf "Show" klicken)</li>
+              <li>Webhook hinzufügen: <code className="bg-purple-100 px-1 rounded">https://bereifung24.de/api/webhooks/paypal</code></li>
+              <li>Events auswählen: PAYMENT.CAPTURE.COMPLETED, DENIED, REFUNDED</li>
+              <li>Webhook ID kopieren (WH-xxxxxxxxxxxxx)</li>
+              <li>Alle Werte hier eintragen und speichern</li>
+            </ol>
+          </div>
+        </div>
+
+        {/* Stripe Info Box */}
+        <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-indigo-900 mb-2 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+            </svg>
+            Stripe Integration
+          </h3>
+          <ul className="text-xs text-indigo-700 space-y-1.5">
+            <li>• <strong>STRIPE_SECRET_KEY</strong> - Secret Key aus Stripe Dashboard → Developers → API keys</li>
+            <li>• <strong>STRIPE_PUBLISHABLE_KEY</strong> - Publishable Key (wird auch im Frontend benötigt)</li>
+            <li>• <strong>Wichtig:</strong> Test vs. Live Keys:
+              <ul className="ml-4 mt-1">
+                <li>→ Test: <code className="bg-indigo-100 px-1 rounded">sk_test_xxx</code> und <code className="bg-indigo-100 px-1 rounded">pk_test_xxx</code></li>
+                <li>→ Live: <code className="bg-indigo-100 px-1 rounded">sk_live_xxx</code> und <code className="bg-indigo-100 px-1 rounded">pk_live_xxx</code></li>
+              </ul>
+            </li>
+          </ul>
+          <div className="mt-3 pt-3 border-t border-indigo-200">
+            <p className="text-xs text-indigo-600">
+              📝 <strong>Setup-Anleitung:</strong>
+            </p>
+            <ol className="text-xs text-indigo-700 space-y-1 mt-1 ml-4 list-decimal">
+              <li>Gehe zu <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900">Stripe Dashboard > API keys</a></li>
+              <li>Für Test-Modus: "Test mode" aktivieren (Toggle oben rechts)</li>
+              <li>Secret key kopieren (sk_test_xxx oder sk_live_xxx)</li>
+              <li>Publishable key kopieren (pk_test_xxx oder pk_live_xxx)</li>
+              <li>Beide Keys hier eintragen und speichern</li>
+              <li>Webhook einrichten: <code className="bg-indigo-100 px-1 rounded">https://bereifung24.de/api/webhooks/stripe</code></li>
+              <li>Events: payment_intent.succeeded, payment_intent.payment_failed</li>
+            </ol>
+          </div>
+          <div className="mt-3 pt-3 border-t border-indigo-200">
+            <p className="text-xs text-indigo-600">
+              💡 <strong>Zahlungsmethoden:</strong> Stripe unterstützt Kreditkarte, SEPA-Lastschrift, Sofort, Giropay und viele mehr
+            </p>
+          </div>
         </div>
       </main>
     </div>

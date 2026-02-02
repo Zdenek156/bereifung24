@@ -109,6 +109,10 @@ export async function GET(req: NextRequest) {
 
 /**
  * Background function to import EPREL data
+ * Optimized approach to prevent duplicates and remove obsolete tires:
+ * 1. Mark all existing tires as outdated (isActive = false)
+ * 2. Import new tires (creating new or reactivating existing)
+ * 3. Delete tires that are still marked as inactive (removed from EPREL)
  */
 async function importEPRELData(importId: string) {
   const startTime = Date.now()
@@ -123,8 +127,15 @@ async function importEPRELData(importId: string) {
       throw new Error('EPREL API Key nicht konfiguriert')
     }
 
+    // STEP 1: Mark all existing tires as inactive before importing
+    console.log('[EPREL Import] Step 1: Marking all existing tires as inactive...')
+    const markedCount = await prisma.ePRELTire.updateMany({
+      data: { isActive: false }
+    })
+    console.log(`[EPREL Import] Marked ${markedCount.count} tires as inactive`)
+
     // Download ZIP file from EPREL API
-    console.log('[EPREL Import] Downloading ZIP file from EPREL API...')
+    console.log('[EPREL Import] Step 2: Downloading ZIP file from EPREL API...')
     const response = await fetch('https://eprel.ec.europa.eu/api/exportProducts/tyres', {
       headers: {
         'X-Api-Key': apiKey,
@@ -141,7 +152,7 @@ async function importEPRELData(importId: string) {
     console.log(`[EPREL Import] Downloaded ${(buffer.byteLength / 1024 / 1024).toFixed(2)} MB`)
 
     // Extract ZIP file
-    console.log('[EPREL Import] Extracting ZIP file...')
+    console.log('[EPREL Import] Step 3: Extracting ZIP file...')
     const zip = new AdmZip(Buffer.from(buffer))
     const zipEntries = zip.getEntries()
 
@@ -206,11 +217,13 @@ async function importEPRELData(importId: string) {
                 externalRollingNoiseLevel: tire.externalRollingNoiseLevel ? parseInt(tire.externalRollingNoiseLevel) : null,
                 externalRollingNoiseClass: tire.externalRollingNoiseClass || tire.noiseClass || null,
                 additionalData: tire,
-                dataVersion: new Date().toISOString()
+                dataVersion: new Date().toISOString(),
+                isActive: true // Mark as active (re-activate if existed)
               }
 
-              // Upsert tire (insert or update if exists)
+              // Upsert tire based on eprelId (or dimension+supplier as fallback)
               if (tire.id || tire.productId) {
+                // Has EPREL ID - use it for upsert
                 const existing = await prisma.ePRELTire.findUnique({
                   where: { eprelId: tire.id || tire.productId }
                 })
@@ -228,11 +241,29 @@ async function importEPRELData(importId: string) {
                   importedCount++
                 }
               } else {
-                // No unique ID, just insert
-                await prisma.ePRELTire.create({
-                  data: tireData
+                // No EPREL ID - try to find by dimension + supplier to avoid duplicates
+                const existing = await prisma.ePRELTire.findFirst({
+                  where: {
+                    tyreDimension: `${width}/${aspectRatio}R${diameter}`,
+                    supplierName: tire.supplierName || tire.manufacturer,
+                    modelName: tire.modelName || tire.commercialName || tire.model
+                  }
                 })
-                importedCount++
+
+                if (existing) {
+                  // Update existing tire
+                  await prisma.ePRELTire.update({
+                    where: { id: existing.id },
+                    data: tireData
+                  })
+                  updatedCount++
+                } else {
+                  // Create new tire
+                  await prisma.ePRELTire.create({
+                    data: tireData
+                  })
+                  importedCount++
+                }
               }
 
             } catch (tireError) {
@@ -255,6 +286,14 @@ async function importEPRELData(importId: string) {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2)
 
+    // STEP 4: Delete tires that are still inactive (removed from EPREL)
+    console.log('[EPREL Import] Step 4: Deleting obsolete tires...')
+    const deletedResult = await prisma.ePRELTire.deleteMany({
+      where: { isActive: false }
+    })
+    const deletedCount = deletedResult.count
+    console.log(`[EPREL Import] Deleted ${deletedCount} obsolete tires`)
+
     // Update import record with success
     await prisma.ePRELImport.update({
       where: { id: importId },
@@ -262,16 +301,23 @@ async function importEPRELData(importId: string) {
         status: 'SUCCESS',
         tiresImported: importedCount,
         tiresUpdated: updatedCount,
+        tiresDeleted: deletedCount,
         completedAt: new Date(),
         dataVersion: new Date().toISOString()
       }
     })
 
     console.log(`[EPREL Import] ✅ Import completed successfully in ${duration}s`)
-    console.log(`[EPREL Import] Imported: ${importedCount}, Updated: ${updatedCount}, Total: ${totalTires}`)
+    console.log(`[EPREL Import] Imported: ${importedCount}, Updated: ${updatedCount}, Deleted: ${deletedCount}, Total processed: ${totalTires}`)
 
   } catch (error) {
     console.error('[EPREL Import] ❌ Import failed:', error)
+
+    // Rollback: Reactivate all tires if import failed
+    console.log('[EPREL Import] Rollback: Reactivating all tires...')
+    await prisma.ePRELTire.updateMany({
+      data: { isActive: true }
+    })
 
     // Update import record with error
     await prisma.ePRELImport.update({

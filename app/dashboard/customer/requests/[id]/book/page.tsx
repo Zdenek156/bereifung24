@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import DatePicker from '@/components/DatePicker'
+import PayPalButton from '@/components/PayPalButton'
 
 interface Employee {
   id: string
@@ -103,6 +104,16 @@ export default function BookAppointmentPage() {
   const [existingBooking, setExistingBooking] = useState<any>(null)
   const [checkingBooking, setCheckingBooking] = useState(true)
 
+  // Helper function to check if workshop has Google Calendar
+  const hasGoogleCalendar = () => {
+    if (!offer) return false
+    // Check if workshop has calendar mode set (workshop or employee calendars)
+    return offer.workshop.calendarMode === 'GOOGLE_CALENDAR' || 
+           offer.workshop.calendarMode === 'workshop' ||
+           offer.workshop.calendarMode === 'employee' ||
+           (offer.workshop.employees && offer.workshop.employees.length > 0)
+  }
+
   useEffect(() => {
     if (status === 'loading') return
 
@@ -131,14 +142,17 @@ export default function BookAppointmentPage() {
       const response = await fetch('/api/bookings')
       if (response.ok) {
         const data = await response.json()
-        const booking = data.bookings?.find((b: any) => b.tireRequestId === requestId)
+        // Only block booking if there's an active (non-cancelled) booking
+        const booking = data.bookings?.find((b: any) => 
+          b.tireRequestId === requestId && b.status !== 'CANCELLED'
+        )
         if (booking) {
           setExistingBooking(booking)
           setShowManualBooking(true)
         }
       }
     } catch (error) {
-      console.error('Error checking existing booking:', error)
+      // Silent error handling
     } finally {
       setCheckingBooking(false)
     }
@@ -158,9 +172,12 @@ export default function BookAppointmentPage() {
         setOffer(offerData.offer)
         setRequest(requestData.request)
         
-        // Setze erste TireOption als Default
-        if (offerData.offer.tireOptions && offerData.offer.tireOptions.length > 0) {
-          setSelectedTireOption(offerData.offer.tireOptions[0])
+        // Set selected tire option if available (for display purposes only)
+        if (offerData.offer.selectedTireOptionIds && offerData.offer.selectedTireOptionIds.length > 0 && offerData.offer.tireOptions && offerData.offer.tireOptions.length > 0) {
+          const selectedOption = offerData.offer.tireOptions.find((opt: TireOption) => offerData.offer.selectedTireOptionIds!.includes(opt.id))
+          if (selectedOption) {
+            setSelectedTireOption(selectedOption)
+          }
         }
         
         // Check if booking already exists
@@ -170,7 +187,6 @@ export default function BookAppointmentPage() {
         router.push(`/dashboard/customer/requests/${requestId}`)
       }
     } catch (error) {
-      console.error('Error fetching details:', error)
       alert('Fehler beim Laden der Details')
     } finally {
       setLoading(false)
@@ -447,44 +463,12 @@ export default function BookAppointmentPage() {
     return null
   }
 
-  // Calculate actual total price based on selected tire options
-  const calculateActualPrice = (): number => {
-    const serviceType = getServiceType()
-    const isBrakeService = serviceType === 'BRAKE_SERVICE'
-    
-    // If no tire options or none selected, use original offer price
-    if (!offer.tireOptions || offer.tireOptions.length === 0 || !offer.selectedTireOptionIds || offer.selectedTireOptionIds.length === 0) {
-      return offer.price
-    }
-    
-    const selectedOptions = offer.tireOptions.filter(opt => 
-      offer.selectedTireOptionIds!.includes(opt.id)
-    )
-    
-    if (isBrakeService) {
-      // For brake service: sum parts + montage costs
-      let totalParts = 0
-      let totalMontage = 0
-      
-      selectedOptions.forEach(option => {
-        totalParts += option.pricePerTire
-        totalMontage += (option as any).montagePrice || 0
-      })
-      
-      return parseFloat((totalParts + totalMontage).toFixed(2))
-    }
-    
-    // For other services with options
-    let total = 0
-    selectedOptions.forEach(option => {
-      total += option.pricePerTire
-    })
-    
-    return parseFloat(total.toFixed(2))
-  }
-
-  const actualPrice = calculateActualPrice()
+  // Price is already calculated and stored in offer.price when the offer was accepted
+  // No need to recalculate - just use the stored value directly
+  const actualPrice = offer.price
   const tireSpecs = `${request.width}/${request.aspectRatio} R${request.diameter}`
+  
+  console.log('📍 Booking page - Using stored offer price:', actualPrice)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -571,14 +555,63 @@ export default function BookAppointmentPage() {
                     <p className="text-sm text-gray-600">Menge</p>
                     <p className="font-semibold">{request.quantity} Reifen</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Marke</p>
-                    <p className="font-semibold">{offer.tireBrand}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Modell</p>
-                    <p className="font-semibold">{offer.tireModel}</p>
-                  </div>
+                  {(() => {
+                    // Wenn Reifen-Optionen vorhanden sind, MUSS mindestens eine ausgewählt sein
+                    if (offer.selectedTireOptionIds && offer.selectedTireOptionIds.length > 0 && offer.tireOptions && offer.tireOptions.length > 0) {
+                      // Filter selected options - SAME LOGIC AS DETAILS PAGE
+                      const selectedOptions = offer.tireOptions.filter(option => 
+                        offer.selectedTireOptionIds!.includes(option.id)
+                      )
+                      
+                      if (selectedOptions.length > 0) {
+                        return (
+                          <div className="col-span-2">
+                            <p className="text-sm text-gray-600 mb-2">Reifen</p>
+                            <div className="space-y-3">
+                              {selectedOptions.map((option) => {
+                                const quantity = option.carTireType === 'ALL_FOUR' ? 4 
+                                               : option.carTireType === 'FRONT_TWO' ? 2 
+                                               : option.carTireType === 'REAR_TWO' ? 2 
+                                               : request.quantity || 2
+                                
+                                return (
+                                  <div key={option.id} className="bg-gray-50 rounded-lg p-3">
+                                    <p className="font-semibold text-gray-900 mb-2">
+                                      {option.brand} {option.model}
+                                    </p>
+                                    <div className="text-sm">
+                                      <div>
+                                        <p className="text-gray-600">Preis pro Reifen</p>
+                                        <p className="font-semibold">{option.pricePerTire.toFixed(2)} €</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      }
+                    }
+                    
+                    // Fallback nur für alte Angebote OHNE tireOptions (Legacy-Support)
+                    if (!offer.tireOptions || offer.tireOptions.length === 0) {
+                      return (
+                        <div className="col-span-2">
+                          <p className="text-sm text-gray-600">Reifen</p>
+                          <p className="font-semibold">{offer.tireBrand} {offer.tireModel}</p>
+                        </div>
+                      )
+                    }
+                    
+                    // FEHLER: Angebot hat Optionen, aber keine wurde ausgewählt (sollte nie passieren)
+                    return (
+                      <div className="col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                        <p className="text-sm text-red-600">Fehler: Keine Reifenauswahl getroffen</p>
+                        <p className="text-xs text-red-500">Bitte kontaktieren Sie den Support</p>
+                      </div>
+                    )
+                  })()}
                   <div className="col-span-2">
                     <p className="text-sm text-gray-600">Preis (inkl. Montage)</p>
                     <p className="text-3xl font-bold text-primary-600">{actualPrice.toFixed(2)} €</p>
@@ -589,6 +622,41 @@ export default function BookAppointmentPage() {
                         ? 'gemäß Kleinunternehmerregelung §19 UStG (ohne MwSt.)' 
                         : 'inkl. MwSt.'}
                     </p>
+                    
+                    {/* PayPal Smart Button - Offizielle Integration */}
+                    {offer.workshop.paypalEmail && !existingBooking && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg">
+                        <div className="flex items-center mb-3">
+                          {/* Official PayPal Logo */}
+                          <img 
+                            src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" 
+                            alt="PayPal Logo" 
+                            className="h-10 mr-3"
+                          />
+                          <div>
+                            <h3 className="font-bold text-blue-900 text-lg">PayPal-Zahlung verfügbar</h3>
+                            <p className="text-sm text-blue-700">Bezahlen Sie sicher mit PayPal. Nach der Buchung können Sie hier direkt bezahlen.</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 bg-white rounded-lg p-3 mb-3">
+                          <div className="flex justify-between text-base font-bold">
+                            <span>Gesamtbetrag:</span>
+                            <span className="text-blue-900">{actualPrice.toFixed(2)} €</span>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 text-center">
+                          <p className="text-sm text-blue-900 font-medium">
+                            ℹ️ Bitte wählen Sie zuerst einen Termin aus. Nach der Buchung wird hier der PayPal-Button erscheinen.
+                          </p>
+                        </div>
+                        
+                        <p className="text-xs text-gray-600 mt-3 text-center">
+                          Sichere Zahlung über PayPal. Nach erfolgreicher Zahlung erhalten Sie eine Bestätigung per E-Mail.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -631,13 +699,20 @@ export default function BookAppointmentPage() {
                     
                     {offer.workshop.paypalEmail && (
                       <div className="pt-3 border-t border-blue-200">
-                        <p className="font-medium text-gray-900 mb-2">PayPal:</p>
-                        <div className="bg-white rounded p-3">
-                          <p className="text-gray-700">{offer.workshop.paypalEmail}</p>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-2">
-                          Die genaue Rechnungsnummer erhalten Sie von der Werkstatt.
+                        <p className="font-medium text-gray-900 mb-2 flex items-center">
+                          <img 
+                            src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" 
+                            alt="PayPal" 
+                            className="h-5 mr-2"
+                          />
+                          PayPal-Zahlung
                         </p>
+                        <div className="bg-white rounded p-3">
+                          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                            <p className="font-medium mb-1 text-blue-900">💡 Hinweis zu PayPal-Gebühren:</p>
+                            <p>PayPal erhebt 2,49% + 0,35€ Gebühren. Der Gesamtbetrag mit Gebühren wird oben im Preisbereich angezeigt. Klicken Sie dort auf den blauen Button, um direkt zur Zahlung zu gelangen.</p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -649,18 +724,25 @@ export default function BookAppointmentPage() {
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Termin auswählen</h2>
               
-              {existingBooking ? (
+              {checkingBooking ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Prüfe bestehende Buchungen...</p>
+                  </div>
+                </div>
+              ) : existingBooking ? (
                 <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-6">
                   <div className="flex items-start mb-4">
                     <svg className="w-6 h-6 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div>
+                    <div className="w-full">
                       <h3 className="text-lg font-bold text-gray-900 mb-2">
                         Sie haben bereits einen Termin gebucht
                       </h3>
                       <p className="text-gray-700 mb-4">
-                        Für diese Anfrage wurde bereits ein Termin vereinbart. Für Änderungen oder Stornierungen rufen Sie bitte die Werkstatt direkt an.
+                        Für diese Anfrage wurde bereits ein Termin vereinbart.
                       </p>
                       {existingBooking.appointmentDate && (
                         <div className="bg-white rounded-lg p-4 mb-4">
@@ -675,6 +757,37 @@ export default function BookAppointmentPage() {
                               minute: '2-digit'
                             })}
                           </p>
+                          
+                          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <strong>Termin verschieben?</strong>
+                            </p>
+                            <p className="text-sm text-gray-700 mt-2">
+                              Bitte kontaktieren Sie die Werkstatt direkt, wenn Sie Ihren Termin verschieben oder stornieren möchten. Die Werkstatt wird Ihren aktuellen Termin stornieren, danach können Sie hier einen neuen Termin buchen.
+                            </p>
+                            <div className="mt-3 pt-3 border-t border-blue-200">
+                              <p className="text-sm font-semibold text-gray-800">{offerDetails?.workshop.name}</p>
+                              {offerDetails?.workshop.phone && (
+                                <p className="text-sm text-gray-700 mt-1">
+                                  <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  </svg>
+                                  Tel: {offerDetails.workshop.phone}
+                                </p>
+                              )}
+                              {offerDetails?.workshop.email && (
+                                <p className="text-sm text-gray-700 mt-1">
+                                  <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                  </svg>
+                                  Email: {offerDetails.workshop.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -734,7 +847,7 @@ export default function BookAppointmentPage() {
                     Zurück zu meinen Anfragen
                   </button>
                 </div>
-              ) : calendarUnavailable ? (
+              ) : (!hasGoogleCalendar() || calendarUnavailable) ? (
                 <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
                   <div className="flex items-start mb-4">
                     <svg className="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -883,18 +996,20 @@ export default function BookAppointmentPage() {
             </div>
 
             {/* Nachricht an Werkstatt */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Nachricht an die Werkstatt (optional)
-              </h2>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Haben Sie besondere Wünsche oder Anmerkungen?"
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-              />
-            </div>
+            {!checkingBooking && !existingBooking && !calendarUnavailable && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  Nachricht an die Werkstatt (optional)
+                </h2>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Haben Sie besondere Wünsche oder Anmerkungen?"
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                />
+              </div>
+            )}
 
             {/* Buchungs-Button */}
             {!calendarUnavailable && !existingBooking && (

@@ -59,6 +59,13 @@ export async function POST(request: Request) {
     const customerId = completedFlow.links.customer
     const bankAccountId = completedFlow.links.customer_bank_account
 
+    // Log old mandate (DO NOT cancel - keep it active for existing payments)
+    const oldMandateId = workshop.gocardlessMandateId
+    if (oldMandateId) {
+      console.log(`ℹ️ Workshop had old mandate ${oldMandateId}, keeping it active for existing payments`)
+      console.log(`ℹ️ New mandate ${mandateId} will be used for future invoices`)
+    }
+    
     // Update workshop with GoCardless details and clear temporary session data
     await prisma.workshop.update({
       where: { id: workshop.id },
@@ -74,10 +81,13 @@ export async function POST(request: Request) {
       }
     })
 
-    console.log(`✅ SEPA Mandate created for workshop ${workshop.companyName}:`, {
-      mandateId,
+    console.log(`✅ SEPA Mandate ${oldMandateId ? 'updated' : 'created'} for workshop ${workshop.companyName}:`, {
+      oldMandateId: oldMandateId || 'none',
+      oldMandateKeptActive: !!oldMandateId, // Keep old mandate for existing payments
+      newMandateId: mandateId,
       customerId,
-      status: 'pending_submission'
+      status: 'pending_submission',
+      note: 'Old mandate kept active for existing payments, new mandate used for future invoices'
     })
 
     return NextResponse.json({

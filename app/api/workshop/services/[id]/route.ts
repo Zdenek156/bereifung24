@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // PATCH /api/workshop/services/[id] - Update a service
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || session.user.role !== 'WORKSHOP') {
@@ -34,7 +35,7 @@ export async function PATCH(
 
     // Verify service belongs to this workshop
     const service = await prisma.workshopService.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!service || service.workshopId !== user.workshop.id) {
@@ -68,14 +69,14 @@ export async function PATCH(
     if (packages !== undefined) {
       // Delete existing packages
       await prisma.servicePackage.deleteMany({
-        where: { workshopServiceId: params.id }
+        where: { workshopServiceId: id }
       })
 
       // Create new packages if any
       if (packages && packages.length > 0) {
         await prisma.servicePackage.createMany({
           data: packages.map((pkg: any) => ({
-            workshopServiceId: params.id,
+            workshopServiceId: id,
             packageType: pkg.packageType,
             name: pkg.name,
             description: pkg.description || null,
@@ -88,7 +89,7 @@ export async function PATCH(
     }
 
     const updatedService = await prisma.workshopService.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         basePrice: basePrice !== undefined ? parseFloat(basePrice) : undefined,
         basePrice4: basePrice4 !== undefined ? (basePrice4 ? parseFloat(basePrice4) : null) : undefined,
@@ -124,9 +125,10 @@ export async function PATCH(
 // DELETE /api/workshop/services/[id] - Delete a service
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || session.user.role !== 'WORKSHOP') {
@@ -152,7 +154,7 @@ export async function DELETE(
 
     // Verify service belongs to this workshop
     const service = await prisma.workshopService.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!service || service.workshopId !== user.workshop.id) {
@@ -163,7 +165,7 @@ export async function DELETE(
     }
 
     await prisma.workshopService.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ success: true })

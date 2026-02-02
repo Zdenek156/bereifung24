@@ -49,7 +49,7 @@ const serviceTypeLabels: { [key: string]: string } = {
 
 const availableServiceTypes = [
   { value: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '', hasPackages: true },
-  { value: 'WHEEL_CHANGE', label: 'Räder umstecken', icon: '', hasPackages: true },
+  { value: 'WHEEL_CHANGE', label: 'Räder umstecken', icon: '', hasPackages: false },
   { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '', hasPackages: true },
   { value: 'MOTORCYCLE_TIRE', label: 'Motorrad-Reifenwechsel', icon: '', hasPackages: true },
   { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '', hasPackages: true },
@@ -66,7 +66,10 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'two_tires', name: '2 Reifen wechseln', description: 'Wechsel von 2 Reifen (z.B. Vorderachse oder Hinterachse)' },
     { type: 'four_tires', name: '4 Reifen wechseln', description: 'Kompletter Reifenwechsel aller 4 Reifen' }
   ],
-  // WHEEL_CHANGE uses simple pricing: basePrice + optional balancingPrice + optional storagePrice
+  WHEEL_CHANGE: [
+    { type: 'basic', name: 'Räder umstecken (Basis)', description: 'Einfaches Umstecken der Räder' },
+    { type: 'with_balancing', name: 'Räder umstecken + Wuchten', description: 'Räder umstecken inklusive Wuchten aller 4 Räder' }
+  ],
   TIRE_REPAIR: [
     { type: 'foreign_object', name: 'Reifenpanne / Loch (Fremdkörper)', description: 'Reparatur nach Fremdkörper (Nagel, Schraube, etc.)' },
     { type: 'valve_damage', name: 'Ventilschaden', description: 'Reparatur bei defektem Ventil' }
@@ -181,8 +184,8 @@ export default function WorkshopServicesPage() {
     if (serviceType === 'WHEEL_CHANGE') {
       setPackages({
         base: { price: '', duration: '60', active: true },
-        balancing: { price: '', duration: '5', active: true },
-        storage: { price: '', duration: '0', active: true }
+        balancing: { price: '', duration: '5', active: false },
+        storage: { price: '', duration: '0', active: false }
       })
     } else {
       // Initialize packages if service type supports them
@@ -237,12 +240,18 @@ export default function WorkshopServicesPage() {
 
       // WHEEL_CHANGE: Simple pricing with base + optional balancing + optional storage
       if (selectedServiceType === 'WHEEL_CHANGE') {
+        // Only save if base service is active
+        if (!packages.base?.active) {
+          alert('Bitte aktivieren Sie den Basis-Service!')
+          return
+        }
+        
         requestBody.basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
         requestBody.durationMinutes = packages.base?.duration ? parseInt(packages.base.duration) : 60
-        requestBody.balancingPrice = packages.balancing?.price ? parseFloat(packages.balancing.price) : null
-        requestBody.balancingMinutes = packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
-        requestBody.storagePrice = packages.storage?.price ? parseFloat(packages.storage.price) : null
-        requestBody.storageAvailable = !!packages.storage?.price
+        requestBody.balancingPrice = packages.balancing?.active && packages.balancing?.price ? parseFloat(packages.balancing.price) : null
+        requestBody.balancingMinutes = packages.balancing?.active && packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
+        requestBody.storagePrice = packages.storage?.active && packages.storage?.price ? parseFloat(packages.storage.price) : null
+        requestBody.storageAvailable = packages.storage?.active && !!packages.storage?.price
         requestBody.packages = undefined // No packages for WHEEL_CHANGE
       }
 
@@ -325,12 +334,12 @@ export default function WorkshopServicesPage() {
         balancing: { 
           price: service.balancingPrice?.toString() || '', 
           duration: service.balancingMinutes?.toString() || '5', 
-          active: true 
+          active: !!service.balancingPrice 
         },
         storage: { 
           price: service.storagePrice?.toString() || '', 
           duration: '0', 
-          active: true 
+          active: !!service.storagePrice 
         }
       })
     }
@@ -591,111 +600,147 @@ export default function WorkshopServicesPage() {
                 </>
               )}
 
-              {/* Wheel Change Simple Configuration */}
+              {/* Wheel Change Simple Configuration with Checkboxes */}
               {selectedServiceType === 'WHEEL_CHANGE' && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      🎡 Räderwechsel Basis-Service
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Geben Sie Preis und Dauer für das reine Umstecken der 4 Komplettäder an.
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 max-w-md">
+                    <div className="flex items-center gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={packages.base?.active !== false}
+                        onChange={(e) => handlePackageChange('base', 'active', e.target.checked)}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Basis-Preis (€) *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={packages.base?.price || ''}
-                          onChange={(e) => handlePackageChange('base', 'price', e.target.value)}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 55.00"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Dauer (Min.) *
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={packages.base?.duration || ''}
-                          onChange={(e) => handlePackageChange('base', 'duration', e.target.value)}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 60"
-                        />
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          🎡 Räderwechsel Basis-Service
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          Geben Sie Preis und Dauer für das reine Umstecken der 4 Kompletträder an.
+                        </p>
                       </div>
                     </div>
+                    {packages.base?.active && (
+                      <div className="grid grid-cols-2 gap-4 max-w-md">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Basis-Preis (€) *
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={packages.base?.price || ''}
+                            onChange={(e) => handlePackageChange('base', 'price', e.target.value)}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            placeholder="z.B. 55.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Dauer (Min.) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={packages.base?.duration || ''}
+                            onChange={(e) => handlePackageChange('base', 'duration', e.target.value)}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            placeholder="z.B. 60"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      ⚖️ Wuchten (optional)
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Preis und zusätzliche Dauer pro Rad. Wird automatisch mit 4 multipliziert wenn Kunde Wuchten wählt.
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 max-w-md">
+                    <div className="flex items-center gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={packages.balancing?.active !== false}
+                        onChange={(e) => handlePackageChange('balancing', 'active', e.target.checked)}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
                       <div>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          ⚖️ Wuchten (optional)
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          Preis und zusätzliche Dauer pro Rad. Wird automatisch mit 4 multipliziert wenn Kunde Wuchten wählt.
+                        </p>
+                      </div>
+                    </div>
+                    {packages.balancing?.active && (
+                      <div className="grid grid-cols-2 gap-4 max-w-md">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Preis pro Rad (€)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={packages.balancing?.price || ''}
+                            onChange={(e) => handlePackageChange('balancing', 'price', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            placeholder="z.B. 10.00"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Zeit pro Rad (Min.)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={packages.balancing?.duration || ''}
+                            onChange={(e) => handlePackageChange('balancing', 'duration', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            placeholder="z.B. 5"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={packages.storage?.active !== false}
+                        onChange={(e) => handlePackageChange('storage', 'active', e.target.checked)}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          📦 Einlagerung (optional)
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          Preis für die Einlagerung der abmontierten Räder bis zur nächsten Saison.
+                        </p>
+                      </div>
+                    </div>
+                    {packages.storage?.active && (
+                      <div className="max-w-xs">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Preis pro Rad (€)
+                          Einlagerungs-Preis (€)
                         </label>
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={packages.balancing?.price || ''}
-                          onChange={(e) => handlePackageChange('balancing', 'price', e.target.value)}
+                          value={packages.storage?.price || ''}
+                          onChange={(e) => handlePackageChange('storage', 'price', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 10.00"
+                          placeholder="z.B. 50.00"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                        <p className="text-xs text-gray-500 mt-1">Pro Saison (keine Extra-Dauer)</p>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Zeit pro Rad (Min.)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={packages.balancing?.duration || ''}
-                          onChange={(e) => handlePackageChange('balancing', 'duration', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 5"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Einlagerung (optional)
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Preis für die Einlagerung der abmontierten Räder bis zur nächsten Saison.
-                    </p>
-                    <div className="max-w-xs">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Einlagerungs-Preis (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={packages.storage?.price || ''}
-                        onChange={(e) => handlePackageChange('storage', 'price', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 50.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Pro Saison (keine Extra-Dauer)</p>
-                    </div>
+                    )}
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -703,15 +748,19 @@ export default function WorkshopServicesPage() {
                       <strong>Beispiel-Berechnung:</strong><br/>
                       Kunde wählt Wuchten + Einlagerung:<br/>
                       • Basis: {packages.base?.price || '0'} € + {packages.base?.duration || '0'} Min<br/>
-                      • Wuchten: 4 × {packages.balancing?.price || '0'} € = {(parseFloat(packages.balancing?.price || '0') * 4).toFixed(2)} € + 4 × {packages.balancing?.duration || '0'} Min = {parseInt(packages.balancing?.duration || '0') * 4} Min<br/>
-                      • Einlagerung: {packages.storage?.price || '0'} €<br/>
+                      {packages.balancing?.active && (
+                        <>• Wuchten: 4 × {packages.balancing?.price || '0'} € = {(parseFloat(packages.balancing?.price || '0') * 4).toFixed(2)} € + 4 × {packages.balancing?.duration || '0'} Min = {parseInt(packages.balancing?.duration || '0') * 4} Min<br/></>
+                      )}
+                      {packages.storage?.active && (
+                        <>• Einlagerung: {packages.storage?.price || '0'} €<br/></>
+                      )}
                       <strong>Gesamt: {(
                         parseFloat(packages.base?.price || '0') +
-                        parseFloat(packages.balancing?.price || '0') * 4 +
-                        parseFloat(packages.storage?.price || '0')
+                        (packages.balancing?.active ? parseFloat(packages.balancing?.price || '0') * 4 : 0) +
+                        (packages.storage?.active ? parseFloat(packages.storage?.price || '0') : 0)
                       ).toFixed(2)} € / {
                         parseInt(packages.base?.duration || '0') +
-                        parseInt(packages.balancing?.duration || '0') * 4
+                        (packages.balancing?.active ? parseInt(packages.balancing?.duration || '0') * 4 : 0)
                       } Min</strong>
                     </p>
                   </div>
@@ -719,7 +768,7 @@ export default function WorkshopServicesPage() {
               )}
 
               {/* Package Configuration */}
-              {hasPackages && selectedServiceType && selectedServiceType !== 'WHEEL_CHANGE' && packageConfig.length > 0 && (
+              {hasPackages && selectedServiceType && packageConfig.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Servicepakete konfigurieren
@@ -906,8 +955,74 @@ export default function WorkshopServicesPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <p>Preis: {service.basePrice.toFixed(2)} € | Dauer: {service.durationMinutes} Min.</p>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Einzelservice
+                          </p>
+                          <button
+                            onClick={() => toggleServiceExpand(service.id)}
+                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                          >
+                            {expandedServices.has(service.id) ? '▼ Details ausblenden' : '▶ Details anzeigen'}
+                          </button>
+                        </div>
+                        {expandedServices.has(service.id) && (
+                          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Basispreis:</span>
+                                <span className="text-sm">{service.basePrice.toFixed(2)} €</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Dauer:</span>
+                                <span className="text-sm">{service.durationMinutes} Min.</span>
+                              </div>
+                              {service.basePrice4 && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                  <span className="text-sm font-medium">Preis (4 Räder):</span>
+                                  <span className="text-sm">{service.basePrice4.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {service.durationMinutes4 && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Dauer (4 Räder):</span>
+                                  <span className="text-sm">{service.durationMinutes4} Min.</span>
+                                </div>
+                              )}
+                              {service.balancingPrice && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                  <span className="text-sm font-medium">Wuchten:</span>
+                                  <span className="text-sm">{service.balancingPrice.toFixed(2)} € ({service.balancingMinutes} Min.)</span>
+                                </div>
+                              )}
+                              {service.storagePrice && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Einlagerung:</span>
+                                  <span className="text-sm">{service.storagePrice.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {service.refrigerantPricePer100ml && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                  <span className="text-sm font-medium">Kältemittel:</span>
+                                  <span className="text-sm">{service.refrigerantPricePer100ml.toFixed(2)} € / 100ml</span>
+                                </div>
+                              )}
+                              {service.runFlatSurcharge && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">RunFlat-Aufpreis:</span>
+                                  <span className="text-sm">{service.runFlatSurcharge.toFixed(2)} €</span>
+                                </div>
+                              )}
+                              {service.disposalFee && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Entsorgungsgebühr:</span>
+                                  <span className="text-sm">{service.disposalFee.toFixed(2)} €</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

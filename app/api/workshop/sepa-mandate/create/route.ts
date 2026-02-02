@@ -42,12 +42,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Workshop not found' }, { status: 404 })
     }
 
-    // Check if already has active mandate
-    if (workshop.gocardlessMandateId && workshop.gocardlessMandateStatus === 'active') {
-      return NextResponse.json(
-        { error: 'Workshop already has an active SEPA mandate' },
-        { status: 400 }
-      )
+    // If there's an existing mandate (any status), we'll replace it
+    // Note: Old mandate will be automatically cancelled by GoCardless when new one becomes active
+    const hasExistingMandate = !!workshop.gocardlessMandateId
+    
+    if (hasExistingMandate) {
+      console.log(`🔄 Replacing existing mandate for ${workshop.companyName}:`, {
+        oldMandateId: workshop.gocardlessMandateId,
+        oldStatus: workshop.gocardlessMandateStatus
+      })
     }
 
     // Generate session token
@@ -56,25 +59,39 @@ export async function POST(request: Request) {
     // Create redirect flow
     const successRedirectUrl = `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings/sepa-mandate/complete`
     
+    const prefillData = {
+      email: workshop.user.email,
+      givenName: workshop.user.firstName,
+      familyName: workshop.user.lastName,
+      companyName: workshop.companyName,
+      addressLine1: workshop.user.street || undefined,
+      city: workshop.user.city || undefined,
+      postalCode: workshop.user.zipCode || undefined,
+      countryCode: 'DE'
+    }
+    
+    console.log('🔍 Prefill Data being sent to GoCardless:', JSON.stringify(prefillData, null, 2))
+    
     const redirectFlow = await createRedirectFlow({
       sessionToken,
       successRedirectUrl,
       description: `SEPA-Lastschriftmandat für ${workshop.companyName} - Bereifung24 Provisionsabzug`,
-      prefillCustomer: {
-        email: workshop.user.email,
-        givenName: workshop.user.firstName,
-        familyName: workshop.user.lastName,
-        companyName: workshop.companyName
-      }
+      prefillCustomer: prefillData
     })
 
     // Store session token and redirect flow ID in database
+    // If replacing an old mandate, keep old mandate info until new one is confirmed
     await prisma.workshop.update({
       where: { id: workshop.id },
       data: {
         gocardlessSessionToken: sessionToken,
         gocardlessRedirectFlowId: redirectFlow.id
       }
+    })
+
+    console.log(`✅ SEPA mandate redirect flow created for ${workshop.companyName}`, {
+      redirectFlowId: redirectFlow.id,
+      replacingExisting: hasExistingMandate
     })
 
     return NextResponse.json({

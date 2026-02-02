@@ -29,6 +29,8 @@ const offerSchema = z.object({
   tireOptions: z.array(tireOptionSchema).optional(), // Optional für Service-Anfragen
   description: z.string().optional(),
   installationFee: z.number().min(0, 'Montagegebühr muss mindestens 0 sein'),
+  disposalFee: z.number().min(0, 'Entsorgungsgebühr muss mindestens 0 sein').default(0),
+  runFlatSurcharge: z.number().min(0, 'RunFlat-Aufpreis muss mindestens 0 sein').default(0),
   validDays: z.number().int().min(1).max(30).default(7),
   durationMinutes: z.number().int().positive().optional(),
   balancingPrice: z.number().min(0).optional(), // Wuchten-Preis für Wheel Change
@@ -116,6 +118,9 @@ export async function POST(
       where: {
         tireRequestId: params.id,
         workshopId: workshop.id
+      },
+      select: {
+        id: true
       }
     })
 
@@ -186,6 +191,8 @@ export async function POST(
         pricePerTire: hasValidTireOptions ? validatedData.tireOptions![0].pricePerTire : 0,
         price: totalPrice,
         installationFee: validatedData.installationFee,
+        disposalFee: validatedData.disposalFee,
+        runFlatSurcharge: validatedData.runFlatSurcharge,
         durationMinutes: validatedData.durationMinutes,
         balancingPrice: validatedData.balancingPrice,
         storagePrice: validatedData.storagePrice,
@@ -275,18 +282,21 @@ export async function POST(
         }
       }
       
-      // Prüfe ob es eine Service-Anfrage ist (Bremsen, Batterie, etc.)
+      // Prüfe ob es eine Service-Anfrage ist (Bremsen, Batterie, Räder-Wechsel, etc.)
       const isBrakeService = tireRequest.additionalNotes?.includes('BREMSEN-SERVICE')
       const isBatteryService = tireRequest.additionalNotes?.includes('BATTERIE-SERVICE')
+      const isWheelChangeService = tireRequest.additionalNotes?.includes('RÄDER-WECHSEL') || 
+                                  tireRequest.additionalNotes?.includes('RÄDER UMSTECKEN')
       const isOtherService = tireRequest.additionalNotes?.includes('🔧 SONSTIGE REIFENSERVICES')
-      const isAnyServiceRequest = isBrakeService || isBatteryService || isOtherService
+      const isAnyServiceRequest = isBrakeService || isBatteryService || isWheelChangeService || isOtherService
       
       let emailTemplate
       
       if (isAnyServiceRequest) {
-        // Service-Anfrage (Bremsen, Batterie, Sonstige)
+        // Service-Anfrage (Bremsen, Batterie, Räder-Wechsel, Sonstige)
         let serviceType = 'Service'
         let serviceDescription = ''
+        let servicePrice = validatedData.installationFee
         
         if (isBrakeService) {
           serviceType = 'Bremsen-Service'
@@ -307,6 +317,24 @@ export async function POST(
         } else if (isBatteryService) {
           serviceType = 'Batterie-Service'
           serviceDescription = 'Batteriewechsel inkl. Überprüfung'
+        } else if (isWheelChangeService) {
+          serviceType = 'Räder-Wechsel'
+          // Berechne Preis: Basis + optionales Wuchten + optionale Einlagerung
+          const parts: string[] = [`Räder umstecken (4 Stück): ${validatedData.installationFee.toFixed(2)} €`]
+          servicePrice = validatedData.installationFee
+          
+          if (validatedData.balancingPrice && validatedData.balancingPrice > 0) {
+            const balancingTotal = validatedData.balancingPrice * 4
+            parts.push(`Wuchten (4x ${validatedData.balancingPrice.toFixed(2)} €): ${balancingTotal.toFixed(2)} €`)
+            servicePrice += balancingTotal
+          }
+          
+          if (validatedData.storagePrice && validatedData.storagePrice > 0) {
+            parts.push(`Einlagerung (Saison): ${validatedData.storagePrice.toFixed(2)} €`)
+            servicePrice += validatedData.storagePrice
+          }
+          
+          serviceDescription = parts.join(' • ')
         } else if (isOtherService) {
           serviceType = 'Sonstige Services'
           // Extrahiere Servicebeschreibung aus additionalNotes
@@ -322,7 +350,7 @@ export async function POST(
           workshopName: offer.workshop.companyName,
           serviceType,
           serviceDescription,
-          price: validatedData.installationFee,
+          price: servicePrice,
           durationMinutes: validatedData.durationMinutes || 60,
           requestId: offer.tireRequestId
         })

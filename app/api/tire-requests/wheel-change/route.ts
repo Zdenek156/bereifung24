@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       data: {
         customerId: session.user.customerId!,
         vehicleId: validatedData.vehicleId || null,
+        serviceType: 'WHEEL_CHANGE',
         season: 'SUMMER', // Dummy value - wheel change is season-independent
         width: 0, // Dummy value
         aspectRatio: 0, // Dummy value

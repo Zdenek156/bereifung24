@@ -80,9 +80,16 @@ export async function GET() {
     // Get list of configured service types that have at least one active package with price and duration
     const configuredServiceTypes = workshop.workshopServices
       .filter(service => {
-        // Service must be active and have at least one package with price and duration configured
-        return service.isActive && 
-               service.servicePackages.length > 0 &&
+        if (!service.isActive) return false
+        
+        // WHEEL_CHANGE: Check field-based configuration (basePrice/durationMinutes)
+        if (service.serviceType === 'WHEEL_CHANGE') {
+          return service.basePrice && service.basePrice > 0 && 
+                 service.durationMinutes && service.durationMinutes > 0
+        }
+        
+        // Other services: Check package-based configuration
+        return service.servicePackages.length > 0 &&
                service.servicePackages.some(pkg => 
                  pkg.isActive && 
                  pkg.price > 0 && 
@@ -100,16 +107,17 @@ export async function GET() {
     console.log(`Workshop ${workshop.id} configured services:`, configuredServiceTypes)
 
     // Hole alle offenen Anfragen (nur die, deren needByDate noch nicht abgelaufen ist)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Setze auf Mitternacht für korrekten Vergleich
+    const tomorrow = new Date()
+    tomorrow.setHours(0, 0, 0, 0) // Setze auf Mitternacht
+    tomorrow.setDate(tomorrow.getDate() + 1) // Morgen (so dass "heute" NICHT mehr angezeigt wird)
     
     const allRequests = await prisma.tireRequest.findMany({
       where: {
         status: {
-          in: ['PENDING', 'OPEN', 'QUOTED'] // Anfragen die noch offen sind oder bereits Angebote haben
+          in: ['PENDING', 'OPEN', 'QUOTED'] // Nur offene Anfragen - ACCEPTED Anfragen werden ausgeblendet
         },
         needByDate: {
-          gte: today // Nur Anfragen zeigen, deren Datum noch nicht abgelaufen ist
+          gte: tomorrow // Nur Anfragen zeigen, deren Datum mindestens MORGEN ist (nicht mehr heute/0 Tage)
         }
       },
       select: {
@@ -159,6 +167,7 @@ export async function GET() {
             id: true,
             status: true,
             createdAt: true,
+            workshopId: true,
             tireOptions: {
               select: {
                 carTireType: true
@@ -191,10 +200,10 @@ export async function GET() {
     if (workshop.user.latitude !== null && workshop.user.longitude !== null) {
       filteredRequests = allRequests
         .filter(request => {
-          // Wenn Anfrage keine Koordinaten hat, zeige sie trotzdem an (PLZ/Stadt-Matching)
+          // Wenn Anfrage keine Koordinaten hat, NICHT anzeigen (kann keine Distanz berechnen)
           if (request.latitude === null || request.longitude === null) {
-            console.warn(`Request ${request.id} has no coordinates - showing anyway`)
-            return true // Zeige Anfragen ohne Koordinaten an
+            console.warn(`Request ${request.id} has no coordinates - FILTERING OUT`)
+            return false // Anfragen ohne Koordinaten ausfiltern
           }
 
           // Berechne Distanz
@@ -240,29 +249,9 @@ export async function GET() {
         })
         .sort((a, b) => a.distance - b.distance)
     } else {
-      // Wenn Workshop keine Koordinaten hat, zeige alle Anfragen
-      console.warn(`Workshop ${workshop.id} has no coordinates - showing all requests`)
-      
-      // Format vehicle info auch für Anfragen ohne Koordinaten-Filter
-      filteredRequests = allRequests.map(request => {
-        const requestWithVehicle = request as typeof request & { 
-          vehicle: { make: string; model: string; year: number } | null 
-        }
-        
-        const vehicleInfo = requestWithVehicle.vehicle 
-          ? `${requestWithVehicle.vehicle.make} ${requestWithVehicle.vehicle.model} (${requestWithVehicle.vehicle.year})`
-          : undefined
-        
-        // Remove vehicle object and add formatted string
-        const { vehicle, ...requestWithoutVehicle } = requestWithVehicle
-        
-        return {
-          ...requestWithoutVehicle,
-          vehicle: null,
-          vehicleInfo,
-          distance: 0 // Keine Distanz wenn Workshop keine Koordinaten hat
-        }
-      })
+      // Workshop hat keine Koordinaten - zeige KEINE Anfragen (Bug Fix)
+      console.error(`❌ Workshop ${workshop.id} has no coordinates - cannot show requests without location data`)
+      filteredRequests = []
     }
 
     // Filter by configured service types

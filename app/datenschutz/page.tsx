@@ -105,10 +105,10 @@ export default function DatenschutzPage() {
                 <p>Jahnstraße 2</p>
                 <p>71706 Markgröningen</p>
                 <p className="mt-2">
-                  Telefon: <a href="tel:017645676614" className="text-primary-600 hover:underline">0176-45676614</a>
+                  Telefon: <a href="tel:+4971479679990" className="text-primary-600 hover:underline">+49 7147 9679990</a>
                 </p>
                 <p>
-                  E-Mail: <a href="mailto:info@bereifung24.de" className="text-primary-600 hover:underline">info@bereifung24.de</a>
+                  E-Mail: <a href="mailto:datenschutz@bereifung24.de" className="text-primary-600 hover:underline">datenschutz@bereifung24.de</a>
                 </p>
               </div>
               <p>

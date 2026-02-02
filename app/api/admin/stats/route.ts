@@ -32,19 +32,23 @@ export async function GET(req: NextRequest) {
       where: { status: 'ACCEPTED' }
     })
 
-    // Get monthly revenue (accepted offers in current month)
-    const monthlyOffers = await prisma.offer.findMany({
+    // Get monthly revenue and commission from PENDING commissions
+    // These are commissions that are created but not yet billed/collected
+    const monthlyCommissions = await prisma.commission.findMany({
       where: {
-        status: 'ACCEPTED',
-        updatedAt: {
-          gte: monthStart,
-          lte: monthEnd
-        }
+        billingYear: now.getFullYear(),
+        billingMonth: now.getMonth() + 1, // Month is 0-indexed
+        status: 'PENDING' // Only pending commissions (not yet billed or collected)
       }
     })
 
-    const monthlyRevenue = monthlyOffers.reduce((sum, offer) => sum + offer.price, 0)
-    const monthlyCommission = monthlyRevenue * 0.049 // 4,9% commission
+    const monthlyRevenue = monthlyCommissions.reduce((sum, comm) => {
+      return sum + Number(comm.orderTotal)
+    }, 0)
+
+    const monthlyCommission = monthlyCommissions.reduce((sum, comm) => {
+      return sum + Number(comm.commissionAmount)
+    }, 0)
 
     const result = {
       totalCustomers,

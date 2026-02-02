@@ -111,6 +111,26 @@ export async function POST(
       }
     })
 
+    // Reset TireRequest status so customer can rebook (but keep Offer as ACCEPTED)
+    if (!isManualEntry && booking.tireRequest) {
+      try {
+        // Set TireRequest back to QUOTED (customer can choose new date/time)
+        await prisma.tireRequest.update({
+          where: { id: booking.tireRequestId },
+          data: {
+            status: 'QUOTED'
+          }
+        })
+
+        console.log('✅ Reset TireRequest status to QUOTED for rebooking')
+        // NOTE: We keep the Offer status as ACCEPTED so customer can directly rebook
+        // without having to accept the offer again
+      } catch (resetError) {
+        console.error('❌ Error resetting request status:', resetError)
+        // Continue anyway - cancellation should succeed even if status reset fails
+      }
+    }
+
     // Sende Email an Kunden bei Kunden-Terminen
     if (!isManualEntry && booking.customer && booking.customer.user.email) {
       try {
@@ -163,16 +183,27 @@ export async function POST(
                   ${reason ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` : ''}
                 </div>
 
+                <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+                  <p style="margin: 0; font-weight: bold; color: #1e40af;">✓ Sie können jetzt einen neuen Termin buchen</p>
+                  <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">
+                    Ihr Termin wurde erfolgreich storniert. Sie können jetzt in Ihrem Dashboard einen neuen Wunschtermin auswählen.
+                  </p>
+                  <a href="https://bereifung24.de/dashboard/customer/requests" 
+                     style="display: inline-block; margin-top: 12px; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                    Zum Dashboard
+                  </a>
+                </div>
+
                 ${reasonType === 'reschedule_needed' ? `
-                  <p>Bitte kontaktieren Sie die Werkstatt, um einen neuen Termin zu vereinbaren.</p>
+                  <p>Falls Sie Fragen haben, können Sie sich gerne direkt an die Werkstatt wenden.</p>
                 ` : `
                   <p>Bei Fragen können Sie sich gerne an die Werkstatt wenden.</p>
                 `}
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                  <p><strong>${booking.workshop.name}</strong></p>
-                  ${booking.workshop.phone ? `<p>Tel: ${booking.workshop.phone}</p>` : ''}
-                  ${booking.workshop.email ? `<p>Email: ${booking.workshop.email}</p>` : ''}
+                  <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${booking.workshop.name}</p>
+                  ${booking.workshop.phone ? `<p style="margin: 5px 0;">📞 Tel: ${booking.workshop.phone}</p>` : ''}
+                  ${booking.workshop.email ? `<p style="margin: 5px 0;">📧 Email: ${booking.workshop.email}</p>` : ''}
                 </div>
 
                 <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">

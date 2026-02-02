@@ -56,7 +56,16 @@ export default function RequestsPage() {
       const data = await response.json()
       
       if (response.ok) {
-        setRequests(data.requests)
+        // Filter out requests without valid IDs
+        const validRequests = data.requests.filter((req: TireRequest) => {
+          if (!req.id) {
+            console.error('❌ Found request without ID:', req)
+            return false
+          }
+          return true
+        })
+        console.log(`✅ Loaded ${validRequests.length} valid requests (filtered ${data.requests.length - validRequests.length} invalid)`)
+        setRequests(validRequests)
       }
     } catch (error) {
       console.error('Error fetching requests:', error)
@@ -303,12 +312,18 @@ export default function RequestsPage() {
 
                   <div className="flex flex-col items-end gap-3">
                     {getStatusBadge(request.status)}
-                    <Link
-                      href={`/dashboard/customer/requests/${request.id}`}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
-                    >
-                      Details →
-                    </Link>
+                    {request.id ? (
+                      <Link
+                        href={`/dashboard/customer/requests/${request.id}`}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                      >
+                        Details →
+                      </Link>
+                    ) : (
+                      <div className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg text-sm font-medium cursor-not-allowed">
+                        Keine ID
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

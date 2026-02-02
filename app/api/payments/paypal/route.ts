@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    if (booking.customer.userId !== session.user.id) {
+    // Check if booking belongs to user (via customer or tireRequest)
+    const belongsToUser = booking.customer.userId === session.user.id || 
+                         booking.tireRequest?.userId === session.user.id
+    
+    if (!belongsToUser) {
       return NextResponse.json({ error: 'Not your booking' }, { status: 403 })
     }
 

@@ -231,12 +231,15 @@ export async function GET(request: Request) {
         
         // Blockiere Slots die mit Google Calendar Events überschneiden
         busySlots.forEach((busy: any) => {
-          const busyStart = new Date(busy.start)
-          const busyEnd = new Date(busy.end)
+          // Parse with timezone offset (e.g., "2026-02-19T08:00:00+01:00")
+          // Extract time from ISO string: "2026-02-19T08:00:00+01:00" -> "08:00"
+          const startMatch = busy.start.match(/T(\d{2}):(\d{2})/)
+          const endMatch = busy.end.match(/T(\d{2}):(\d{2})/)
           
-          // Format: HH:mm
-          const busyStartTime = `${busyStart.getHours().toString().padStart(2, '0')}:${busyStart.getMinutes().toString().padStart(2, '0')}`
-          const busyEndTime = `${busyEnd.getHours().toString().padStart(2, '0')}:${busyEnd.getMinutes().toString().padStart(2, '0')}`
+          if (!startMatch || !endMatch) return
+          
+          const busyStartTime = `${startMatch[1]}:${startMatch[2]}`
+          const busyEndTime = `${endMatch[1]}:${endMatch[2]}`
           
           console.log(`[SLOTS API]   - Busy from ${busyStartTime} to ${busyEndTime}`)
           

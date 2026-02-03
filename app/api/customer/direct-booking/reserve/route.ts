@@ -37,12 +37,15 @@ export async function POST(request: NextRequest) {
       serviceType,
       date,
       time,
+      basePrice,
+      balancingPrice,
+      storagePrice,
       hasBalancing,
       hasStorage,
       totalPrice
     } = body
 
-    if (!workshopId || !vehicleId || !serviceType || !date || !time || !totalPrice) {
+    if (!workshopId || !vehicleId || !serviceType || !date || !time || totalPrice === undefined) {
       return NextResponse.json(
         { error: 'Fehlende Parameter' },
         { status: 400 }
@@ -103,6 +106,9 @@ export async function POST(request: NextRequest) {
         serviceType,
         date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
         time,
+        basePrice: basePrice || 0,
+        balancingPrice: balancingPrice || 0,
+        storagePrice: storagePrice || 0,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,
         totalPrice,

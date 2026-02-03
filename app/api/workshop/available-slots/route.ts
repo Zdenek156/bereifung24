@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getBusySlots } from '@/lib/google-calendar'
 
 // Mark route as dynamic (no static generation)
 export const dynamic = 'force-dynamic'
@@ -161,7 +162,7 @@ export async function GET(request: Request) {
 
     console.log(`[SLOTS API] Generated ${slots.length} total slots`)
 
-    // Prüfe bestehende Termine für dieses Datum
+    // 1. Prüfe bestehende Termine in der Datenbank
     const startDate = new Date(date + 'T00:00:00')
     const endDate = new Date(date + 'T23:59:59')
     console.log(`[SLOTS API] Checking bookings from ${startDate.toISOString()} to ${endDate.toISOString()}`)
@@ -179,7 +180,7 @@ export async function GET(request: Request) {
       }
     })
 
-    console.log(`[SLOTS API] Existing appointments: ${existingAppointments.length}`)
+    console.log(`[SLOTS API] Existing DB appointments: ${existingAppointments.length}`)
     existingAppointments.forEach(apt => {
       console.log(`[SLOTS API]   - Booking ${apt.id}: ${apt.appointmentTime} (Status: ${apt.status})`)
     })
@@ -190,8 +191,70 @@ export async function GET(request: Request) {
       const slot = slots.find(s => s.time === time)
       if (slot) {
         slot.available = false
+        console.log(`[SLOTS API]   - Blocked ${time} (DB booking)`)
       }
     })
+    
+    // 2. Prüfe Google Calendar Events (falls Kalender verbunden)
+    let googleCalendarId: string | null = null
+    let googleAccessToken: string | null = null
+    let googleRefreshToken: string | null = null
+    
+    // Workshop-Kalender oder Mitarbeiter-Kalender?
+    if (workshop.calendarMode === 'workshop' && workshop.googleCalendarId) {
+      googleCalendarId = workshop.googleCalendarId
+      googleAccessToken = workshop.googleAccessToken
+      googleRefreshToken = workshop.googleRefreshToken
+      console.log(`[SLOTS API] Using WORKSHOP Google Calendar: ${googleCalendarId}`)
+    } else if (workshop.employees.length > 0) {
+      // Nutze den ersten Mitarbeiter mit Google Calendar
+      const employeeWithCalendar = workshop.employees.find(e => e.googleCalendarId && e.googleAccessToken)
+      if (employeeWithCalendar) {
+        googleCalendarId = employeeWithCalendar.googleCalendarId
+        googleAccessToken = employeeWithCalendar.googleAccessToken
+        googleRefreshToken = employeeWithCalendar.googleRefreshToken
+        console.log(`[SLOTS API] Using EMPLOYEE Google Calendar: ${googleCalendarId} (${employeeWithCalendar.name || employeeWithCalendar.email})`)
+      }
+    }
+    
+    if (googleCalendarId && googleAccessToken && googleRefreshToken) {
+      try {
+        const busySlots = await getBusySlots(
+          googleAccessToken,
+          googleRefreshToken,
+          googleCalendarId,
+          startDate.toISOString(),
+          endDate.toISOString()
+        )
+        
+        console.log(`[SLOTS API] Google Calendar busy slots: ${busySlots.length}`)
+        
+        // Blockiere Slots die mit Google Calendar Events überschneiden
+        busySlots.forEach((busy: any) => {
+          const busyStart = new Date(busy.start)
+          const busyEnd = new Date(busy.end)
+          
+          // Format: HH:mm
+          const busyStartTime = `${busyStart.getHours().toString().padStart(2, '0')}:${busyStart.getMinutes().toString().padStart(2, '0')}`
+          const busyEndTime = `${busyEnd.getHours().toString().padStart(2, '0')}:${busyEnd.getMinutes().toString().padStart(2, '0')}`
+          
+          console.log(`[SLOTS API]   - Busy from ${busyStartTime} to ${busyEndTime}`)
+          
+          // Blockiere alle Slots die in diesem Zeitraum liegen
+          slots.forEach(slot => {
+            if (slot.time >= busyStartTime && slot.time < busyEndTime) {
+              slot.available = false
+              console.log(`[SLOTS API]   - Blocked ${slot.time} (Google Calendar)`)
+            }
+          })
+        })
+      } catch (error) {
+        console.error('[SLOTS API] Error fetching Google Calendar events:', error)
+        // Weiter machen ohne Google Calendar Daten
+      }
+    } else {
+      console.log('[SLOTS API] No Google Calendar connected')
+    }
 
     const availableCount = slots.filter(s => s.available).length
     console.log(`[SLOTS API] Available slots: ${availableCount}/${slots.length}`)

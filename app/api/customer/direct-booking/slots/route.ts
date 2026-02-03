@@ -143,22 +143,34 @@ export async function POST(request: NextRequest) {
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date
-    // For @db.Date fields (PostgreSQL DATE type), convert to YYYY-MM-DD format
-    // Handle both ISO timestamp strings and date-only strings
+    // WORKAROUND: @db.Date fields in Prisma don't support direct equality checks
+    // We need to fetch all bookings for this workshop and filter by date in code
     const dateForQuery = new Date(date)
     const dateOnly = dateForQuery.toISOString().split('T')[0] // Extract YYYY-MM-DD
     
-    console.log('Input date:', date, '→ Querying with:', dateOnly)
+    console.log('Input date:', date, '→ Looking for bookings on:', dateOnly)
     
-    const existingBookings = await prisma.directBooking.findMany({
+    // Fetch ALL bookings for this workshop (we'll filter by date in code)
+    const allBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD string
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        status: true
       }
     })
     
-    console.log('Found existing bookings:', existingBookings.length)
+    // Filter bookings for the requested date (Prisma @db.Date returns Date objects)
+    const existingBookings = allBookings.filter(booking => {
+      const bookingDateStr = booking.date.toISOString().split('T')[0]
+      return bookingDateStr === dateOnly
+    })
+    
+    console.log('Total workshop bookings:', allBookings.length, '| Bookings on', dateOnly + ':', existingBookings.length)
 
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {

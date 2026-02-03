@@ -162,12 +162,16 @@ export async function GET(request: Request) {
     console.log(`[SLOTS API] Generated ${slots.length} total slots`)
 
     // Prüfe bestehende Termine für dieses Datum
+    const startDate = new Date(date + 'T00:00:00')
+    const endDate = new Date(date + 'T23:59:59')
+    console.log(`[SLOTS API] Checking bookings from ${startDate.toISOString()} to ${endDate.toISOString()}`)
+    
     const existingAppointments = await prisma.booking.findMany({
       where: {
         workshopId: workshop.id,
         appointmentDate: {
-          gte: new Date(date + 'T00:00:00'),
-          lt: new Date(date + 'T23:59:59')
+          gte: startDate,
+          lt: endDate
         },
         status: {
           notIn: ['CANCELLED', 'COMPLETED']
@@ -176,6 +180,9 @@ export async function GET(request: Request) {
     })
 
     console.log(`[SLOTS API] Existing appointments: ${existingAppointments.length}`)
+    existingAppointments.forEach(apt => {
+      console.log(`[SLOTS API]   - Booking ${apt.id}: ${apt.appointmentTime} (Status: ${apt.status})`)
+    })
 
     // Markiere bereits gebuchte Slots als nicht verfügbar
     existingAppointments.forEach(apt => {

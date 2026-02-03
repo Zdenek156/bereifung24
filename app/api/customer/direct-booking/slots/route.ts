@@ -143,16 +143,16 @@ export async function POST(request: NextRequest) {
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date
-    // For @db.Date fields (PostgreSQL DATE type), we use exact date match
-    // The date field is stored as date-only (no time component)
-    const bookingDate = new Date(date)
+    // For @db.Date fields (PostgreSQL DATE type), use ISO date string format (YYYY-MM-DD)
+    // This is the correct way to query DATE columns in PostgreSQL via Prisma
+    const dateString = date // Already in YYYY-MM-DD format from request
     
-    console.log('Checking existing bookings for date:', bookingDate)
+    console.log('Checking existing bookings for date:', dateString)
     
     const existingBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: bookingDate,
+        date: dateString, // Pass date string directly, not Date object
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
       }
     })

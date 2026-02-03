@@ -143,14 +143,13 @@ export async function POST(request: NextRequest) {
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date
-    // Note: Parse date as UTC to avoid timezone issues
-    const bookingDate = new Date(date + 'T00:00:00.000Z')
-    console.log('Checking existing bookings for date:', bookingDate)
+    // For @db.Date fields in Prisma, we need to use the date string directly
+    console.log('Checking existing bookings for date:', date)
     
     const existingBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: bookingDate,
+        date: new Date(date), // Prisma handles @db.Date conversion
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
       }
     })

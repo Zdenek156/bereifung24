@@ -74,7 +74,17 @@ export async function POST(request: NextRequest) {
           }
         }
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        latitude: true,
+        longitude: true,
+        phoneNumber: true,
+        email: true,
+        openingHours: true,
         workshopServices: {
           where: {
             serviceType: serviceType,

@@ -17,8 +17,8 @@ export async function GET(
       where: { id: workshopId },
       select: {
         id: true,
-        name: true,
-        address: true,
+        companyName: true,
+        street: true,
         postalCode: true,
         city: true,
         phone: true,
@@ -34,7 +34,8 @@ export async function GET(
           },
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             googleCalendarId: true,
             googleRefreshToken: true
           }

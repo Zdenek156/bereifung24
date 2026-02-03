@@ -163,12 +163,6 @@ export default function DirectBookingPage() {
         return
       }
 
-      console.log('🔍 Sending search request:', {
-        serviceType: selectedService,
-        location,
-        radiusKm
-      })
-
       const response = await fetch('/api/customer/direct-booking/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,9 +176,7 @@ export default function DirectBookingPage() {
         })
       })
 
-      console.log('📡 Response status:', response.status)
       const result = await response.json()
-      console.log('📦 Response data:', result)
 
       if (response.ok && result.success) {
         setWorkshops(result.workshops || [])
@@ -424,8 +416,18 @@ export default function DirectBookingPage() {
                     <Card key={workshop.id} className="p-6 hover:shadow-lg transition-shadow">
                       <div className="flex gap-6">
                         {/* Workshop Logo */}
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <ServiceIcon className="h-10 w-10 text-blue-600" />
+                        <div className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-gray-200">
+                          {workshop.logoUrl ? (
+                            <img
+                              src={workshop.logoUrl}
+                              alt={workshop.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                              <ServiceIcon className="h-10 w-10 text-blue-600" />
+                            </div>
+                          )}
                         </div>
 
                         {/* Workshop Info */}
@@ -483,7 +485,11 @@ export default function DirectBookingPage() {
                                 </div>
                               )}
                               <div className="text-2xl font-bold text-blue-600 mt-2">
-                                {formatEUR(workshop.totalPrice)}
+                                {formatEUR(
+                                  workshop.basePrice + 
+                                  (selectedService === 'WHEEL_CHANGE' && hasBalancing ? workshop.totalBalancingPrice : 0) +
+                                  (selectedService === 'WHEEL_CHANGE' && hasStorage ? workshop.storagePriceTotal : 0)
+                                )}
                               </div>
                             </div>
 

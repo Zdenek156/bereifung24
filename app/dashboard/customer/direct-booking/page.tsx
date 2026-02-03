@@ -260,28 +260,41 @@ export default function DirectBookingPage() {
                     Standort
                   </label>
                   <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="PLZ oder Ort eingeben"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      disabled={useGeolocation}
-                      className="flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    />
+                    {!useGeolocation && (
+                      <Input
+                        type="text"
+                        placeholder="PLZ oder Ort eingeben"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        className="flex-1"
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                      />
+                    )}
+                    {useGeolocation && customerLocation && (
+                      <div className="flex-1 px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+                        <Navigation className="h-4 w-4" />
+                        <span className="font-medium">Aktueller Standort wird verwendet</span>
+                      </div>
+                    )}
                     <Button
-                      variant="outline"
-                      onClick={requestGeolocation}
-                      disabled={useGeolocation}
+                      variant={useGeolocation ? "destructive" : "outline"}
+                      onClick={() => {
+                        if (useGeolocation) {
+                          setUseGeolocation(false)
+                          setCustomerLocation(null)
+                        } else {
+                          requestGeolocation()
+                        }
+                      }}
                       className="whitespace-nowrap"
                     >
                       <Navigation className="h-4 w-4 mr-2" />
-                      {useGeolocation ? 'Aktiviert' : 'Aktueller Standort'}
+                      {useGeolocation ? 'Deaktivieren' : 'Aktueller Standort'}
                     </Button>
                   </div>
-                  {useGeolocation && customerLocation && (
-                    <p className="text-xs text-green-600 mt-1">
-                      ✓ Standort ermittelt
+                  {error && error.includes('Standort') && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {error}
                     </p>
                   )}
                 </div>

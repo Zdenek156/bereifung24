@@ -62,17 +62,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slot is still available
-    // For @db.Date fields (PostgreSQL DATE type), convert to YYYY-MM-DD format
+    // WORKAROUND: @db.Date fields don't support direct equality in Prisma
     const dateObj = new Date(date)
-    const dateOnly = dateObj.toISOString().split('T')[0] // Extract YYYY-MM-DD
+    const dateOnly = dateObj.toISOString().split('T')[0]
     
-    const existingReservation = await prisma.directBooking.findFirst({
+    // Fetch all bookings for this workshop and filter in code
+    const allBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD string
-        time,
         status: { in: ['RESERVED', 'CONFIRMED'] }
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        status: true
       }
+    })
+    
+    // Filter for matching date and time
+    const existingReservation = allBookings.find(booking => {
+      const bookingDateStr = booking.date.toISOString().split('T')[0]
+      return bookingDateStr === dateOnly && booking.time === time
     })
 
     if (existingReservation) {

@@ -1,27 +1,26 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 // Verfügbare Zeitslots für ein bestimmtes Datum abrufen
+// PUBLIC API - Wird für Direct Booking verwendet (kein Login erforderlich)
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'WORKSHOP') {
-      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const date = searchParams.get('date')
+    const workshopId = searchParams.get('workshopId')
+    const serviceType = searchParams.get('serviceType')
     
     if (!date) {
       return NextResponse.json({ error: 'Datum erforderlich' }, { status: 400 })
     }
 
-    // Hole Workshop-Daten
+    if (!workshopId) {
+      return NextResponse.json({ error: 'Werkstatt-ID erforderlich' }, { status: 400 })
+    }
+
+    // Hole Workshop-Daten anhand der übergebenen workshopId
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id },
+      where: { id: workshopId },
       include: {
         employees: {
           include: {

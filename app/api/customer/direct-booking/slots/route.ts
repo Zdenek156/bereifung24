@@ -67,8 +67,10 @@ export async function POST(request: NextRequest) {
 
     // Parse opening hours (simplified - assumes JSON format)
     let openingHours = null
+    console.log('Workshop opening hours raw:', workshop.openingHours)
     try {
       openingHours = workshop.openingHours ? JSON.parse(workshop.openingHours) : null
+      console.log('Parsed opening hours:', openingHours)
     } catch (error) {
       console.error('Failed to parse opening hours:', error)
       return NextResponse.json({
@@ -81,12 +83,14 @@ export async function POST(request: NextRequest) {
     // Get day of week (monday, tuesday, etc.)
     const dateObj = new Date(date)
     const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+    console.log('Day of week:', dayOfWeek, 'Date:', date)
     
     if (!openingHours || !openingHours[dayOfWeek]) {
+      console.log('No opening hours for', dayOfWeek, '- Available days:', openingHours ? Object.keys(openingHours) : 'none')
       return NextResponse.json({
         success: true,
         slots: [],
-        message: 'Werkstatt ist an diesem Tag geschlossen'
+        message: `Werkstatt ist an diesem Tag (${dayOfWeek}) geschlossen`
       })
     }
 

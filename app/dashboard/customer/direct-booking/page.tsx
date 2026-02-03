@@ -272,10 +272,21 @@ export default function DirectBookingPage() {
       
       if (response.ok) {
         const data = await response.json()
-        setAvailableSlots(data.slots.map((slot: any) => slot.time))
+        console.log('Slots API Response:', data)
+        console.log('Workshop:', selectedWorkshop.name, 'Date:', selectedDate)
+        if (data.slots && data.slots.length > 0) {
+          setAvailableSlots(data.slots.map((slot: any) => slot.time))
+        } else {
+          console.warn('No slots returned:', data.message || 'No slots available')
+          setAvailableSlots([])
+        }
+      } else {
+        console.error('Slots API error:', response.status, await response.text())
+        setAvailableSlots([])
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
+      setAvailableSlots([])
     } finally {
       setLoadingSlots(false)
     }
@@ -720,55 +731,37 @@ export default function DirectBookingPage() {
           currency: 'EUR'
         }}>
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <Card className="max-w-4xl w-full my-8 overflow-hidden">
-              {/* Workshop Header - Prominent Display */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {selectedWorkshop.logoUrl ? (
-                        <img
-                          src={selectedWorkshop.logoUrl}
-                          alt={selectedWorkshop.name}
-                          className="w-12 h-12 rounded-lg bg-white object-contain p-1"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
-                          <Wrench className="h-6 w-6" />
-                        </div>
-                      )}
-                      <div>
-                        <h2 className="text-2xl font-bold">{selectedWorkshop.name}</h2>
-                        <p className="text-blue-100 text-sm mt-0.5">
-                          {selectedWorkshop.address}, {selectedWorkshop.postalCode} {selectedWorkshop.city}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 mt-3 text-sm">
+            <Card className="max-w-4xl w-full my-8">
+              <div className="p-6">
+                {/* Header with Close Button */}
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedWorkshop.name}</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {selectedWorkshop.address}, {selectedWorkshop.postalCode} {selectedWorkshop.city}
+                    </p>
+                    <div className="flex items-center gap-3 mt-2 text-sm">
                       {selectedWorkshop.rating > 0 && (
-                        <span className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded">
-                          <Star className="h-4 w-4 text-yellow-300 fill-yellow-300" />
+                        <span className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                           <span className="font-semibold">{selectedWorkshop.rating?.toFixed(1)}</span>
-                          <span className="text-blue-200">({selectedWorkshop.reviewCount || 0})</span>
+                          <span className="text-gray-500">({selectedWorkshop.reviewCount || 0})</span>
                         </span>
                       )}
-                      <span className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded">
+                      <span className="flex items-center gap-1 text-gray-600">
                         <MapPin className="h-4 w-4" />
-                        {selectedWorkshop.distance?.toFixed(1)} km entfernt
+                        {selectedWorkshop.distance?.toFixed(1)} km
                       </span>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     onClick={resetModal}
-                    className="text-white hover:bg-white/20 -mt-2 -mr-2"
+                    className="-mt-2 -mr-2"
                   >
                     ✕
                   </Button>
                 </div>
-              </div>
-
-              <div className="p-6 pt-0">
 
                 {/* Progress Steps */}
                 <div className="flex items-center mb-8 px-4">

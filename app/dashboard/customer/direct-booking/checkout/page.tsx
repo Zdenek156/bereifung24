@@ -85,7 +85,7 @@ export default function DirectBookingCheckoutPage() {
   // Step 3: Date & Time Selection
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
-  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [availableSlots, setAvailableSlots] = useState<{time: string, available: boolean}[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   
   // Step 4: Additional Services
@@ -648,13 +648,13 @@ export default function DirectBookingCheckoutPage() {
                         <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
                           {availableSlots.map((slot) => (
                             <Button
-                              key={slot}
-                              onClick={() => handleTimeSelect(slot)}
+                              key={slot.time}
+                              onClick={() => handleTimeSelect(slot.time)}
                               variant="outline"
                               className="h-10 text-sm font-semibold"
                             >
                               <Clock className="h-3 w-3 mr-1" />
-                              {slot}
+                              {slot.time}
                             </Button>
                           ))}
                         </div>

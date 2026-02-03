@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     })
 
     if (!customer) {
-      return NextResponse.json({ vehicles: [] })
+      return NextResponse.json({ success: true, vehicles: [] })
     }
 
     const vehicles = customer.vehicles
@@ -43,11 +43,11 @@ export async function GET(req: NextRequest) {
       createdAt: vehicle.createdAt ? vehicle.createdAt.toISOString() : new Date().toISOString(),
     }))
 
-    return NextResponse.json({ vehicles: transformedVehicles })
+    return NextResponse.json({ success: true, vehicles: transformedVehicles })
   } catch (error) {
     console.error('Error fetching customer vehicles:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch vehicles' },
+      { success: false, error: 'Failed to fetch vehicles' },
       { status: 500 }
     )
   }

@@ -640,7 +640,7 @@ export default function DirectBookingPage() {
                                 {workshop.name}
                               </h3>
                               <p className="text-sm text-gray-600">
-                                {workshop.address} · {workshop.postalCode} {workshop.city}
+                                {workshop.address} {workshop.postalCode} {workshop.city}
                               </p>
                             </div>
                             

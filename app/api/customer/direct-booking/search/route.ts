@@ -5,13 +5,13 @@ import { prisma } from '@/lib/prisma'
 
 /**
  * POST /api/customer/direct-booking/search
- * Search workshops for direct booking (WHEEL_CHANGE)
+ * Search workshops for direct booking services
  * 
  * Body:
  * {
- *   vehicleId: string,
- *   hasBalancing: boolean,
- *   hasStorage: boolean,
+ *   serviceType: string (WHEEL_CHANGE, TIRE_REPAIR, etc.),
+ *   hasBalancing?: boolean (only for WHEEL_CHANGE),
+ *   hasStorage?: boolean (only for WHEEL_CHANGE),
  *   radiusKm: number,
  *   customerLat: number,
  *   customerLon: number
@@ -19,6 +19,7 @@ import { prisma } from '@/lib/prisma'
  * 
  * Returns:
  * {
+ *   success: true,
  *   workshops: Array<{
  *     id, name, address, distance,
  *     rating, reviewCount,
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const {
-      vehicleId,
+      serviceType = 'WHEEL_CHANGE',
       hasBalancing,
       hasStorage,
       radiusKm,
@@ -50,40 +51,25 @@ export async function POST(request: NextRequest) {
       customerLon
     } = body
 
-    // Validate input
-    if (!vehicleId || customerLat === undefined || customerLon === undefined) {
+    // Validate location parameters only (vehicle not needed for search)
+    if (customerLat === undefined || customerLon === undefined) {
       return NextResponse.json(
-        { error: 'Fehlende Parameter: vehicleId, customerLat, customerLon erforderlich' },
+        { error: 'Fehlende Parameter: customerLat, customerLon erforderlich' },
         { status: 400 }
       )
     }
 
-    // Get vehicle to verify ownership
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId },
-      include: {
-        customer: {
-          include: {
-            user: true
-          }
-        }
-      }
-    })
+    // Vehicle selection happens later in booking flow
 
-    if (!vehicle || vehicle.customer.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Fahrzeug nicht gefunden oder keine Berechtigung' },
-        { status: 404 }
-      )
-    }
+    // Vehicle selection happens later in booking flow
 
-    // Find workshops with WHEEL_CHANGE service in radius that allow direct booking
+    // Find workshops with selected service in radius that allow direct booking
     const workshops = await prisma.workshop.findMany({
       where: {
         active: true,
         workshopServices: {
           some: {
-            serviceType: 'WHEEL_CHANGE',
+            serviceType: serviceType,
             isActive: true,
             allowsDirectBooking: true
           }
@@ -92,7 +78,7 @@ export async function POST(request: NextRequest) {
       include: {
         workshopServices: {
           where: {
-            serviceType: 'WHEEL_CHANGE',
+            serviceType: serviceType,
             isActive: true,
             allowsDirectBooking: true
           }

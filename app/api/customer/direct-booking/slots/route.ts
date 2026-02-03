@@ -143,13 +143,19 @@ export async function POST(request: NextRequest) {
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date
+    // Note: Parse date as UTC to avoid timezone issues
+    const bookingDate = new Date(date + 'T00:00:00.000Z')
+    console.log('Checking existing bookings for date:', bookingDate)
+    
     const existingBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: new Date(date),
+        date: bookingDate,
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
       }
     })
+    
+    console.log('Found existing bookings:', existingBookings.length)
 
     // Filter out booked slots
     const availableSlots = slots.filter(slot => {

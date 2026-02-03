@@ -60,10 +60,17 @@ export async function POST(request: NextRequest) {
 
     // Get vehicle to verify ownership
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId }
+      where: { id: vehicleId },
+      include: {
+        customer: {
+          include: {
+            user: true
+          }
+        }
+      }
     })
 
-    if (!vehicle || vehicle.userId !== session.user.id) {
+    if (!vehicle || vehicle.customer.userId !== session.user.id) {
       return NextResponse.json(
         { error: 'Fahrzeug nicht gefunden oder keine Berechtigung' },
         { status: 404 }

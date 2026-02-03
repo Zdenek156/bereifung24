@@ -219,12 +219,17 @@ export async function POST(request: NextRequest) {
         // Extract start times from events and mark slots as booked
         events.forEach(event => {
           if (event.start?.dateTime) {
+            // Convert UTC to Europe/Berlin timezone
             const eventStart = new Date(event.start.dateTime)
             const eventEnd = new Date(event.end?.dateTime || eventStart)
             
+            // Convert to German timezone (UTC+1 or UTC+2 depending on DST)
+            const berlinStart = new Date(eventStart.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+            const berlinEnd = new Date(eventEnd.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+            
             // Block all slots that overlap with this event
-            const startTime = `${eventStart.getHours().toString().padStart(2, '0')}:${eventStart.getMinutes().toString().padStart(2, '0')}`
-            const endTime = `${eventEnd.getHours().toString().padStart(2, '0')}:${eventEnd.getMinutes().toString().padStart(2, '0')}`
+            const startTime = `${berlinStart.getHours().toString().padStart(2, '0')}:${berlinStart.getMinutes().toString().padStart(2, '0')}`
+            const endTime = `${berlinEnd.getHours().toString().padStart(2, '0')}:${berlinEnd.getMinutes().toString().padStart(2, '0')}`
             
             // Add start time slot
             if (!googleCalendarBookedSlots.includes(startTime)) {
@@ -232,8 +237,8 @@ export async function POST(request: NextRequest) {
             }
             
             // Also block slots during the event duration
-            let currentMinutes = eventStart.getHours() * 60 + eventStart.getMinutes()
-            const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+            let currentMinutes = berlinStart.getHours() * 60 + berlinStart.getMinutes()
+            const endMinutes = berlinEnd.getHours() * 60 + berlinEnd.getMinutes()
             
             while (currentMinutes < endMinutes) {
               const slotHour = Math.floor(currentMinutes / 60)
@@ -289,12 +294,17 @@ export async function POST(request: NextRequest) {
           // Extract start times from events and mark slots as booked
           events.forEach(event => {
             if (event.start?.dateTime) {
+              // Convert UTC to Europe/Berlin timezone
               const eventStart = new Date(event.start.dateTime)
               const eventEnd = new Date(event.end?.dateTime || eventStart)
               
+              // Convert to German timezone (UTC+1 or UTC+2 depending on DST)
+              const berlinStart = new Date(eventStart.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+              const berlinEnd = new Date(eventEnd.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+              
               // Block all slots that overlap with this event
-              const startTime = `${eventStart.getHours().toString().padStart(2, '0')}:${eventStart.getMinutes().toString().padStart(2, '0')}`
-              const endTime = `${eventEnd.getHours().toString().padStart(2, '0')}:${eventEnd.getMinutes().toString().padStart(2, '0')}`
+              const startTime = `${berlinStart.getHours().toString().padStart(2, '0')}:${berlinStart.getMinutes().toString().padStart(2, '0')}`
+              const endTime = `${berlinEnd.getHours().toString().padStart(2, '0')}:${berlinEnd.getMinutes().toString().padStart(2, '0')}`
               
               // Add start time slot
               if (!googleCalendarBookedSlots.includes(startTime)) {
@@ -302,8 +312,8 @@ export async function POST(request: NextRequest) {
               }
               
               // Also block slots during the event duration
-              let currentMinutes = eventStart.getHours() * 60 + eventStart.getMinutes()
-              const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+              let currentMinutes = berlinStart.getHours() * 60 + berlinStart.getMinutes()
+              const endMinutes = berlinEnd.getHours() * 60 + berlinEnd.getMinutes()
               
               while (currentMinutes < endMinutes) {
                 const slotHour = Math.floor(currentMinutes / 60)

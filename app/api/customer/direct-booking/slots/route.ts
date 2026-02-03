@@ -65,11 +65,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Parse opening hours (simplified - assumes JSON format)
+    // Parse opening hours (handle double-escaped JSON)
     let openingHours = null
     console.log('Workshop opening hours raw:', workshop.openingHours)
     try {
-      openingHours = workshop.openingHours ? JSON.parse(workshop.openingHours) : null
+      if (workshop.openingHours) {
+        // Try to parse - might be double-escaped
+        let parsed = JSON.parse(workshop.openingHours)
+        // If it's a string after first parse, parse again (double-escaped)
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed)
+        }
+        openingHours = parsed
+      }
       console.log('Parsed opening hours:', openingHours)
     } catch (error) {
       console.error('Failed to parse opening hours:', error)

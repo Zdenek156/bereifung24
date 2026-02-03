@@ -708,7 +708,7 @@ export default function DirectBookingPage() {
                             {/* Booking Button */}
                             <Button
                               onClick={() => {
-                                router.push(`/dashboard/customer/direct-booking/${workshop.id}?service=${selectedService}`)
+                                router.push(`/dashboard/customer/direct-booking/checkout?workshopId=${workshop.id}&service=${selectedService}`)
                               }}
                               size="lg"
                             >

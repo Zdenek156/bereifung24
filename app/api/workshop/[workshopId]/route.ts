@@ -18,15 +18,22 @@ export async function GET(
       select: {
         id: true,
         companyName: true,
-        street: true,
-        postalCode: true,
-        city: true,
-        phone: true,
-        email: true,
-        averageRating: true,
-        reviewCount: true,
         openingHours: true,
         googleCalendarId: true,
+        user: {
+          select: {
+            street: true,
+            zipCode: true,
+            city: true,
+            phone: true,
+            email: true
+          }
+        },
+        reviews: {
+          select: {
+            rating: true
+          }
+        },
         employees: {
           where: {
             status: 'ACTIVE',
@@ -50,7 +57,28 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(workshop)
+    // Calculate average rating
+    const averageRating = workshop.reviews.length > 0
+      ? workshop.reviews.reduce((sum, r) => sum + r.rating, 0) / workshop.reviews.length
+      : 0
+
+    // Flatten user data and add calculated fields
+    const response = {
+      id: workshop.id,
+      companyName: workshop.companyName,
+      street: workshop.user?.street || '',
+      postalCode: workshop.user?.zipCode || '',
+      city: workshop.user?.city || '',
+      phone: workshop.user?.phone || '',
+      email: workshop.user?.email || '',
+      averageRating,
+      reviewCount: workshop.reviews.length,
+      openingHours: workshop.openingHours,
+      googleCalendarId: workshop.googleCalendarId,
+      employees: workshop.employees
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('Error fetching workshop:', error)
     return NextResponse.json(

@@ -121,14 +121,13 @@ function CheckoutContent() {
     }
   }
 
-  const fetchAvailableSlots = async (date: Date) => {
+  const fetchAvailableSlots = async (dateString: string) => {
     if (!workshopId || !service) return
     
     setLoadingSlots(true)
     try {
-      const dateStr = date.toISOString().split('T')[0]
       const response = await fetch(
-        `/api/workshop/available-slots?workshopId=${workshopId}&date=${dateStr}&serviceType=${service}`
+        `/api/workshop/available-slots?workshopId=${workshopId}&date=${dateString}&serviceType=${service}`
       )
       
       if (response.ok) {
@@ -146,9 +145,8 @@ function CheckoutContent() {
     setSelectedDate(dateString)
     setSelectedTime('')
     if (dateString) {
-      // Convert string to Date for API call
-      const date = new Date(dateString + 'T00:00:00')
-      fetchAvailableSlots(date)
+      // Use dateString directly (already in YYYY-MM-DD format)
+      fetchAvailableSlots(dateString)
     }
   }
 

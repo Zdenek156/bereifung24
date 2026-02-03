@@ -96,8 +96,15 @@ export default function DirectBookingWheelChangePage() {
   }
 
   const handleSearchWorkshops = async () => {
-    if (!selectedVehicle || !customerLocation) {
+    console.log('🔍 Searching workshops...', { selectedVehicle, customerLocation })
+    
+    if (!selectedVehicle) {
       setError('Bitte wählen Sie ein Fahrzeug aus')
+      return
+    }
+    
+    if (!customerLocation) {
+      setError('Standort konnte nicht ermittelt werden. Bitte erlauben Sie den Standortzugriff.')
       return
     }
 

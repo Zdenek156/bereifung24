@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slot is still available
-    // For @db.Date fields (PostgreSQL DATE type), use ISO date string (YYYY-MM-DD)
-    // Extract date-only part if timestamp was sent
-    const dateOnly = date.split('T')[0] // "2026-02-12T00:00:00.000Z" -> "2026-02-12"
+    // For @db.Date fields (PostgreSQL DATE type), convert to YYYY-MM-DD format
+    const dateObj = new Date(date)
+    const dateOnly = dateObj.toISOString().split('T')[0] // Extract YYYY-MM-DD
     
     const existingReservation = await prisma.directBooking.findFirst({
       where: {
         workshopId,
-        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
+        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD string
         time,
         status: { in: ['RESERVED', 'CONFIRMED'] }
       }

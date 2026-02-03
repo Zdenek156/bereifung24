@@ -45,17 +45,24 @@ export default function DirectBookingWheelChangePage() {
 
   const loadVehicles = async () => {
     try {
+      console.log('🚗 Loading vehicles...')
       const response = await fetch('/api/customer/vehicles')
+      console.log('📡 Response status:', response.status)
       const result = await response.json()
+      console.log('📦 Result:', result)
       
-      if (result.success) {
-        setVehicles(result.vehicles || [])
+      if (result.success && result.vehicles) {
+        console.log('✅ Setting vehicles:', result.vehicles.length)
+        setVehicles(result.vehicles)
         if (result.vehicles.length > 0) {
           setSelectedVehicle(result.vehicles[0].id)
+          console.log('🎯 Selected vehicle:', result.vehicles[0].id)
         }
+      } else {
+        console.error('❌ No success or no vehicles in response')
       }
     } catch (err) {
-      console.error('Error loading vehicles:', err)
+      console.error('💥 Error loading vehicles:', err)
     }
   }
 

@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     console.log(`[SLOTS API] Day of week: ${dayOfWeek}`)
     
-    let dayWorkingHours: { from: string; to: string; working: boolean } | null = null
+    let dayWorkingHours: { from: string; to: string; working?: boolean; closed?: boolean } | null = null
     
     // OPTION 1: Werkstatt-Kalender (calendarMode = "workshop")
     if (workshop.calendarMode === 'workshop' && workshop.openingHours) {
@@ -58,16 +58,24 @@ export async function GET(request: Request) {
           ? JSON.parse(workshop.openingHours) 
           : workshop.openingHours
         
-        // openingHours Format: { monday: { from: '08:00', to: '17:00', working: true }, ... }
-        dayWorkingHours = openingHours[dayOfWeek]
-        console.log(`[SLOTS API] Workshop opening hours for ${dayOfWeek}:`, dayWorkingHours)
+        // openingHours Format: { monday: { from: '08:00', to: '18:00', closed: false }, ... }
+        const hours = openingHours[dayOfWeek]
+        console.log(`[SLOTS API] Workshop opening hours for ${dayOfWeek}:`, hours)
+        
+        // Check if open (either working: true OR closed: false)
+        if (hours && ((hours.working === true) || (hours.closed === false))) {
+          dayWorkingHours = hours
+          console.log('[SLOTS API] Workshop is OPEN on this day')
+        } else {
+          console.log('[SLOTS API] Workshop is CLOSED on this day')
+        }
       } catch (e) {
         console.error('[SLOTS API] Failed to parse workshop openingHours:', e)
       }
     }
     
     // OPTION 2: Mitarbeiter-Kalender (calendarMode = "employees" ODER kein Workshop-Kalender)
-    if (!dayWorkingHours || !dayWorkingHours.working) {
+    if (!dayWorkingHours) {
       console.log('[SLOTS API] Using EMPLOYEE calendar mode (fallback or configured)')
       
       // Sammle alle verfügbaren Mitarbeiter für diesen Tag
@@ -113,8 +121,14 @@ export async function GET(request: Request) {
       console.log(`[SLOTS API] Employee working hours for ${dayOfWeek}:`, dayWorkingHours)
     }
     
-    if (!dayWorkingHours || !dayWorkingHours.working) {
-      console.log('[SLOTS API] Not working on this day (neither workshop nor employees)')
+    // Check if we have valid working hours (either working: true OR closed: false)
+    const isOpen = dayWorkingHours && (
+      (dayWorkingHours.working === true) || 
+      (dayWorkingHours.closed === false)
+    )
+    
+    if (!isOpen) {
+      console.log('[SLOTS API] Not working/open on this day')
       return NextResponse.json({ slots: [] })
     }
 

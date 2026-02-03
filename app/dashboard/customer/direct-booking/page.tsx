@@ -163,11 +163,16 @@ export default function DirectBookingPage() {
         return
       }
 
+      console.log('🔍 Sending search request:', {
+        serviceType: selectedService,
+        location,
+        radiusKm
+      })
+
       const response = await fetch('/api/customer/direct-booking/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          vehicleId: 'temp',
           serviceType: selectedService,
           hasBalancing: selectedService === 'WHEEL_CHANGE' ? hasBalancing : false,
           hasStorage: selectedService === 'WHEEL_CHANGE' ? hasStorage : false,
@@ -177,7 +182,9 @@ export default function DirectBookingPage() {
         })
       })
 
+      console.log('📡 Response status:', response.status)
       const result = await response.json()
+      console.log('📦 Response data:', result)
 
       if (response.ok && result.success) {
         setWorkshops(result.workshops || [])

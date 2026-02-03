@@ -20,19 +20,25 @@ import path from 'path'
  */
 export async function POST(request: NextRequest) {
   try {
+    console.log('[BOOK API] Starting booking finalization')
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
+      console.log('[BOOK API] ❌ Not authenticated')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
 
+    console.log('[BOOK API] ✅ User authenticated:', session.user.id)
     const body = await request.json()
     const { reservationId, paymentMethod, paymentId } = body
+    
+    console.log('[BOOK API] Request body:', { reservationId, paymentMethod, paymentId })
 
     if (!reservationId || !paymentMethod || !paymentId) {
+      console.log('[BOOK API] ❌ Missing parameters')
       return NextResponse.json(
         { error: 'Fehlende Parameter' },
         { status: 400 }

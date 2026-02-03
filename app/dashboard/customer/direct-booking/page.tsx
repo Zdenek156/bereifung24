@@ -645,17 +645,23 @@ export default function DirectBookingPage() {
                             </div>
                             
                             {/* Rating */}
-                            {workshop.rating > 0 && (
-                              <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="font-semibold text-sm">
-                                  {workshop.rating.toFixed(1)}
-                                </span>
+                            <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              {workshop.rating > 0 ? (
+                                <>
+                                  <span className="font-semibold text-sm">
+                                    {workshop.rating.toFixed(1)}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    ({workshop.reviewCount})
+                                  </span>
+                                </>
+                              ) : (
                                 <span className="text-xs text-gray-500">
-                                  ({workshop.reviewCount})
+                                  Noch keine Bewertungen
                                 </span>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
 
                           {/* Details Row */}

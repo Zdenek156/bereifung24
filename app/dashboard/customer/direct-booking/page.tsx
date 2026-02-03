@@ -306,9 +306,10 @@ export default function DirectBookingPage() {
   const handleReserveSlot = async () => {
     if (!selectedVehicle || !selectedDate || !selectedTime) return
 
-    const totalPrice = selectedWorkshop.basePrice + 
-      (selectedService === 'WHEEL_CHANGE' && hasBalancing ? selectedWorkshop.totalBalancingPrice : 0) +
-      (selectedService === 'WHEEL_CHANGE' && hasStorage ? selectedWorkshop.storagePriceTotal : 0)
+    const basePrice = selectedWorkshop.basePrice || 0
+    const balancingPrice = selectedService === 'WHEEL_CHANGE' && hasBalancing ? (selectedWorkshop.totalBalancingPrice || 0) : 0
+    const storagePrice = selectedService === 'WHEEL_CHANGE' && hasStorage ? (selectedWorkshop.storagePriceTotal || 0) : 0
+    const totalPrice = basePrice + balancingPrice + storagePrice
 
     try {
       const response = await fetch('/api/customer/direct-booking/reserve', {
@@ -320,6 +321,9 @@ export default function DirectBookingPage() {
           serviceType: selectedService,
           date: selectedDate,
           time: selectedTime,
+          basePrice,
+          balancingPrice,
+          storagePrice,
           hasBalancing,
           hasStorage,
           totalPrice
@@ -751,7 +755,9 @@ export default function DirectBookingPage() {
           currency: 'EUR'
         }}>
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <Card className="max-w-4xl w-full my-8">
+            <Card className={`w-full my-8 transition-all duration-300 ${
+              bookingStep === 2 && !selectedTime ? 'max-w-2xl' : 'max-w-4xl'
+            }`}>
               <div className="p-6">
                 {/* Header with Close Button */}
                 <div className="flex items-start justify-between mb-4 border-b pb-4">
@@ -922,8 +928,8 @@ export default function DirectBookingPage() {
                       Wählen Sie zuerst ein Datum aus dem Kalender und anschließend eine verfügbare Uhrzeit.
                     </p>
                     
-                    {/* Date Picker */}
-                    <div className="mb-6">
+                    {/* Date Picker - Kompakt */}
+                    <div className="mb-6 max-w-md mx-auto">
                       <DatePicker
                         selectedDate={selectedDate}
                         onChange={setSelectedDate}

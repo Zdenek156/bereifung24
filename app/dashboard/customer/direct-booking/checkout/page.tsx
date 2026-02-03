@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import DatePicker from '@/components/DatePicker'
@@ -64,9 +64,8 @@ type ServiceType = keyof typeof SERVICE_TYPES
 export default function DirectBookingCheckoutPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const params = useParams()
   const searchParams = useSearchParams()
-  const workshopId = params?.workshopId as string
+  const workshopId = searchParams?.get('workshopId') || ''
   
   // Workshop Info
   const [workshop, setWorkshop] = useState<any>(null)

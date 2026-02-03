@@ -17,7 +17,6 @@ import {
   Clock,
   Euro
 } from 'lucide-react'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 
 type ServiceType = 'WHEEL_CHANGE' | 'TIRE_REPAIR' | 'WHEEL_ALIGNMENT' | 'AC_SERVICE'
 
@@ -442,15 +441,18 @@ function CheckoutContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
-                      {/* Calendar */}
+                      {/* Simple Date Picker */}
                       <div>
                         <h3 className="font-semibold mb-3">Datum wählen</h3>
-                        <CalendarComponent
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={handleDateSelect}
-                          disabled={(date) => date < new Date()}
-                          className="border rounded-lg p-3"
+                        <input
+                          type="date"
+                          value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+                          onChange={(e) => {
+                            const date = e.target.value ? new Date(e.target.value + 'T00:00:00') : undefined
+                            handleDateSelect(date)
+                          }}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                         />
                       </div>
 

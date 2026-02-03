@@ -385,9 +385,10 @@ export default function DirectBookingCheckoutPage() {
     )
   }
 
-  const totalPrice = (workshop.basePrice || 0) + 
-    (hasBalancing ? (workshop.totalBalancingPrice || 0) : 0) +
-    (hasStorage ? (workshop.storagePriceTotal || 0) : 0)
+  // Calculate total price (only after workshop is loaded)
+  const totalPrice = (workshop?.basePrice || 0) + 
+    (hasBalancing ? (workshop?.totalBalancingPrice || 0) : 0) +
+    (hasStorage ? (workshop?.storagePriceTotal || 0) : 0)
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -5440,9 +5440,16 @@ model DirectBooking {
   totalPrice        Decimal     @db.Decimal(10, 2) @map("total_price")
   durationMinutes   Int         @map("duration_minutes")
   
+  // Booking Slot
+  date              DateTime    @db.Date
+  time              String      @db.VarChar(5)
+  status            String      @default("RESERVED") // RESERVED, CONFIRMED, COMPLETED, CANCELLED
+  reservedUntil     DateTime?   @map("reserved_until")
+  
   // Payment
-  paymentMethod     DirectBookingPaymentMethod @map("payment_method")
+  paymentMethod     DirectBookingPaymentMethod? @map("payment_method")
   paymentStatus     DirectBookingPaymentStatus @default(PENDING) @map("payment_status")
+  paymentId         String?     @map("payment_id")
   stripeSessionId   String?     @map("stripe_session_id")
   stripePaymentId   String?     @map("stripe_payment_id")
   paypalOrderId     String?     @map("paypal_order_id")
@@ -5459,6 +5466,8 @@ model DirectBooking {
   @@index([customerId])
   @@index([workshopId])
   @@index([paymentStatus])
+  @@index([workshopId, date, time])
+  @@index([status])
   @@index([createdAt])
   @@map("direct_bookings")
 }

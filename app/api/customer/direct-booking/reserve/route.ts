@@ -62,10 +62,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slot is still available
+    // Use date range query for @db.Date fields
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+    
     const existingReservation = await prisma.directBooking.findFirst({
       where: {
         workshopId,
-        date: new Date(date),
+        date: {
+          gte: startOfDay,
+          lte: endOfDay
+        },
         time,
         status: { in: ['RESERVED', 'CONFIRMED'] }
       }

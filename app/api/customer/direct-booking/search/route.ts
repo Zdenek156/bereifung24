@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         },
         bookings: {
           where: {
-            review: { not: null }
+            review: { isNot: null }
           },
           select: {
             tireRating: true,

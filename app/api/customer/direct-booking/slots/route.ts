@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
     // Get existing bookings for this date
     // For @db.Date fields (PostgreSQL DATE type), convert to YYYY-MM-DD format
     // Handle both ISO timestamp strings and date-only strings
-    const dateObj = new Date(date)
-    const dateOnly = dateObj.toISOString().split('T')[0] // Extract YYYY-MM-DD
+    const dateForQuery = new Date(date)
+    const dateOnly = dateForQuery.toISOString().split('T')[0] // Extract YYYY-MM-DD
     
     console.log('Input date:', date, '→ Querying with:', dateOnly)
     

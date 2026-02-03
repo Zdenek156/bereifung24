@@ -257,7 +257,18 @@ export default function DirectBookingPage() {
   }
 
   const fetchAvailableSlots = async () => {
+    if (!selectedWorkshop || !selectedWorkshop.id) {
+      console.error('fetchAvailableSlots called but selectedWorkshop is invalid:', selectedWorkshop)
+      return
+    }
+    
     setLoadingSlots(true)
+    console.log('Fetching slots for workshop:', {
+      id: selectedWorkshop.id,
+      name: selectedWorkshop.name,
+      openingHours: selectedWorkshop.openingHours
+    })
+    
     try {
       const response = await fetch('/api/customer/direct-booking/slots', {
         method: 'POST',
@@ -734,24 +745,28 @@ export default function DirectBookingPage() {
             <Card className="max-w-4xl w-full my-8">
               <div className="p-6">
                 {/* Header with Close Button */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 border-b pb-4">
                   <div>
-                    <h2 className="text-2xl font-bold">{selectedWorkshop.name}</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {selectedWorkshop.address}, {selectedWorkshop.postalCode} {selectedWorkshop.city}
-                    </p>
+                    <h2 className="text-2xl font-bold">{selectedWorkshop?.name || 'Werkstatt'}</h2>
+                    {selectedWorkshop?.address && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedWorkshop.address}, {selectedWorkshop.postalCode} {selectedWorkshop.city}
+                      </p>
+                    )}
                     <div className="flex items-center gap-3 mt-2 text-sm">
-                      {selectedWorkshop.rating > 0 && (
+                      {selectedWorkshop?.rating && selectedWorkshop.rating > 0 && (
                         <span className="flex items-center gap-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span className="font-semibold">{selectedWorkshop.rating?.toFixed(1)}</span>
+                          <span className="font-semibold">{selectedWorkshop.rating.toFixed(1)}</span>
                           <span className="text-gray-500">({selectedWorkshop.reviewCount || 0})</span>
                         </span>
                       )}
-                      <span className="flex items-center gap-1 text-gray-600">
-                        <MapPin className="h-4 w-4" />
-                        {selectedWorkshop.distance?.toFixed(1)} km
-                      </span>
+                      {selectedWorkshop?.distance && (
+                        <span className="flex items-center gap-1 text-gray-600">
+                          <MapPin className="h-4 w-4" />
+                          {selectedWorkshop.distance.toFixed(1)} km
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Button

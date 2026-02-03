@@ -67,10 +67,10 @@ export async function POST(request: NextRequest) {
     const dateOnly = dateObj.toISOString().split('T')[0]
     
     // Fetch all bookings for this workshop and filter in code
+    // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
     const allBookings = await prisma.directBooking.findMany({
       where: {
-        workshopId,
-        status: { in: ['RESERVED', 'CONFIRMED'] }
+        workshopId
       },
       select: {
         id: true,
@@ -80,10 +80,11 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    // Filter for matching date and time
+    // Filter for matching date, time AND active status
     const existingReservation = allBookings.find(booking => {
       const bookingDateStr = booking.date.toISOString().split('T')[0]
-      return bookingDateStr === dateOnly && booking.time === time
+      const isActiveStatus = ['RESERVED', 'CONFIRMED'].includes(booking.status)
+      return bookingDateStr === dateOnly && booking.time === time && isActiveStatus
     })
 
     if (existingReservation) {

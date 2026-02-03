@@ -750,14 +750,18 @@ export default function DirectBookingPage() {
                 {/* Header with Close Button */}
                 <div className="flex items-start justify-between mb-4 border-b pb-4">
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-2">{selectedWorkshop?.name || 'Werkstatt'}</h2>
+                    <h2 className="text-2xl font-bold mb-2">
+                      {selectedWorkshop?.name || `Werkstatt ${selectedWorkshop?.id?.substring(0, 8) || ''}`}
+                    </h2>
                     <div className="flex items-center gap-4">
-                      {selectedWorkshop?.rating && selectedWorkshop.rating > 0 && (
+                      {selectedWorkshop?.rating && selectedWorkshop.rating > 0 ? (
                         <span className="flex items-center gap-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                           <span className="font-semibold">{selectedWorkshop.rating.toFixed(1)}</span>
                           <span className="text-gray-500">({selectedWorkshop.reviewCount || 0} Bewertungen)</span>
                         </span>
+                      ) : (
+                        <span className="text-sm text-gray-500">Noch keine Bewertungen</span>
                       )}
                       {selectedWorkshop?.distance && (
                         <span className="flex items-center gap-1 text-gray-600">

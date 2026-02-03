@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
         return {
           id: workshop.id,
-          name: workshop.name,
+          name: workshop.companyName,
           address: workshop.address,
           city: workshop.city,
           postalCode: workshop.postalCode,

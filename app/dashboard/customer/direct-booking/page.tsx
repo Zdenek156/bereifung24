@@ -928,8 +928,8 @@ export default function DirectBookingPage() {
                       Wählen Sie zuerst ein Datum aus dem Kalender und anschließend eine verfügbare Uhrzeit.
                     </p>
                     
-                    {/* Date Picker - Kompakt */}
-                    <div className="mb-6 max-w-md mx-auto">
+                    {/* Date Picker - Sehr Kompakt */}
+                    <div className="mb-6 max-w-sm mx-auto">
                       <DatePicker
                         selectedDate={selectedDate}
                         onChange={setSelectedDate}
@@ -961,15 +961,15 @@ export default function DirectBookingPage() {
                           </Card>
                         ) : (
                           <div>
-                            <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
                               {availableSlots.map((slot) => (
                                 <Button
                                   key={slot}
                                   variant={selectedTime === slot ? 'default' : 'outline'}
                                   onClick={() => setSelectedTime(slot)}
-                                  className="h-14 text-base font-semibold"
+                                  className="h-10 text-sm font-semibold"
                                 >
-                                  <Clock className="h-4 w-4 mr-1" />
+                                  <Clock className="h-3 w-3 mr-1" />
                                   {slot}
                                 </Button>
                               ))}

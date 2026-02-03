@@ -708,8 +708,7 @@ export default function DirectBookingPage() {
                             {/* Booking Button */}
                             <Button
                               onClick={() => {
-                                console.log('🔍 Workshop clicked:', workshop)
-                                setSelectedWorkshop(workshop)
+                                router.push(`/dashboard/customer/direct-booking/${workshop.id}?service=${selectedService}`)
                               }}
                               size="lg"
                             >

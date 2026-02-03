@@ -173,7 +173,7 @@ export default function DirectBookingCheckoutPage() {
       const response = await fetch('/api/customer/vehicles')
       if (response.ok) {
         const data = await response.json()
-        setVehicles(data)
+        setVehicles(data.vehicles || [])
       }
     } catch (error) {
       console.error('Error loading vehicles:', error)

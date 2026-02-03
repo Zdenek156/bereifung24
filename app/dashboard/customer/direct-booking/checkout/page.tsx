@@ -182,36 +182,90 @@ function CheckoutContent() {
     
     setProcessingPayment(true)
     try {
-      // Create booking
-      const bookingData = {
-        workshopId,
-        serviceType: service,
-        vehicleId: selectedVehicle.id,
-        date: selectedDate,
-        time: selectedTime,
-        hasBalancing,
-        hasStorage,
-        totalPrice: calculateTotal(),
-        paymentMethod
-      }
-      
-      const response = await fetch('/api/customer/direct-booking/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData)
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        // Redirect to success page or booking details
-        router.push(`/dashboard/customer/appointments`)
+      const totalPrice = calculateTotal()
+
+      if (paymentMethod === 'PAYPAL') {
+        // Create PayPal order
+        const orderResponse = await fetch('/api/customer/direct-booking/create-paypal-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: totalPrice,
+            description: `${SERVICE_LABELS[service]} - ${workshop.name}`
+          })
+        })
+
+        if (!orderResponse.ok) {
+          alert('PayPal-Bestellung konnte nicht erstellt werden.')
+          setProcessingPayment(false)
+          return
+        }
+
+        const { orderId } = await orderResponse.json()
+
+        // Open PayPal window
+        const paypalWindow = window.open(
+          `https://www.${process.env.NEXT_PUBLIC_PAYPAL_MODE === 'live' ? '' : 'sandbox.'}paypal.com/checkoutnow?token=${orderId}`,
+          'PayPal',
+          'width=500,height=600'
+        )
+
+        // Poll for window close
+        const pollTimer = setInterval(async () => {
+          if (paypalWindow && paypalWindow.closed) {
+            clearInterval(pollTimer)
+
+            // Capture payment
+            const captureResponse = await fetch('/api/customer/direct-booking/capture-paypal-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId })
+            })
+
+            if (!captureResponse.ok) {
+              alert('Zahlung konnte nicht erfasst werden.')
+              setProcessingPayment(false)
+              return
+            }
+
+            const { captureId } = await captureResponse.json()
+
+            // Create booking
+            const bookingData = {
+              workshopId,
+              serviceType: service,
+              vehicleId: selectedVehicle.id,
+              date: selectedDate,
+              time: selectedTime,
+              hasBalancing,
+              hasStorage,
+              totalPrice,
+              paymentMethod: 'PAYPAL',
+              paymentId: captureId
+            }
+
+            const response = await fetch('/api/customer/direct-booking/book', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bookingData)
+            })
+
+            if (response.ok) {
+              router.push(`/dashboard/customer/appointments`)
+            } else {
+              alert('Buchung fehlgeschlagen.')
+            }
+            setProcessingPayment(false)
+          }
+        }, 1000)
       } else {
-        alert('Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.')
+        // Stripe payment (to be implemented)
+        alert('Stripe-Zahlung wird noch nicht unterstützt.')
+        setProcessingPayment(false)
       }
     } catch (error) {
       console.error('Booking error:', error)
       alert('Ein Fehler ist aufgetreten.')
-    } finally {
       setProcessingPayment(false)
     }
   }

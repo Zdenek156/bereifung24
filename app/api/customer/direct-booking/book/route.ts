@@ -36,12 +36,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('[BOOK API] Request body:', body)
 
-    // Check if this is a direct booking (without reservation)
+    // Check if this is a direct booking (with PayPal payment)
     if (body.workshopId && body.serviceType && body.vehicleId) {
-      // DIRECT BOOKING FLOW (without pre-reservation)
-      console.log('[BOOK API] Direct booking flow')
+      // DIRECT BOOKING FLOW with PayPal payment
+      console.log('[BOOK API] Direct booking flow with payment')
       
-      const { workshopId, serviceType, vehicleId, date, time, hasBalancing, hasStorage, totalPrice, paymentMethod } = body
+      const { workshopId, serviceType, vehicleId, date, time, hasBalancing, hasStorage, totalPrice, paymentMethod, paymentId } = body
       
       if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined) {
         console.log('[BOOK API] ❌ Missing required booking parameters')
@@ -51,7 +51,15 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Create booking directly (payment on-site)
+      if (!paymentId || !paymentMethod) {
+        console.log('[BOOK API] ❌ Missing payment information')
+        return NextResponse.json(
+          { error: 'Fehlende Zahlungsinformationen' },
+          { status: 400 }
+        )
+      }
+
+      // Create booking after successful payment
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,
@@ -64,8 +72,10 @@ export async function POST(request: NextRequest) {
           hasStorage: hasStorage || false,
           totalPrice: new Decimal(totalPrice),
           status: 'CONFIRMED',
-          paymentStatus: 'PENDING', // Will pay on-site
-          paymentMethod: paymentMethod || 'CASH'
+          paymentStatus: 'PAID',
+          paymentMethod: paymentMethod,
+          paymentId: paymentId,
+          paidAt: new Date()
         },
         include: {
           workshop: true,

@@ -37,7 +37,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Werkstatt nicht gefunden' }, { status: 404 })
     }
 
-    console.log(`[SLOTS API] Workshop: ${workshop.name} (${workshop.id})`)
+    console.log(`[SLOTS API] Workshop: ${workshop.companyName} (${workshop.id})`)
+    console.log(`[SLOTS API] Calendar Mode: ${workshop.calendarMode || 'employees'}`)
     console.log(`[SLOTS API] Date: ${date}`)
     console.log(`[SLOTS API] Service: ${serviceType}`)
     console.log(`[SLOTS API] Total employees: ${workshop.employees.length}`)
@@ -46,51 +47,74 @@ export async function GET(request: Request) {
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     console.log(`[SLOTS API] Day of week: ${dayOfWeek}`)
     
-    // Sammle alle verfügbaren Mitarbeiter für diesen Tag
-    const availableEmployees = workshop.employees.filter(emp => {
-      // Prüfe ob Urlaub
-      const isOnVacation = emp.employeeVacations.some(v => {
-        const start = new Date(v.startDate)
-        const end = new Date(v.endDate)
-        const checkDate = new Date(date)
-        return checkDate >= start && checkDate <= end
-      })
-      
-      if (isOnVacation) return false
-      
-      // Prüfe Arbeitszeiten (workingHours ist ein JSON-String mit Objekt)
-      if (!emp.workingHours) return false
-      const workingHours = typeof emp.workingHours === 'string' 
-        ? JSON.parse(emp.workingHours) 
-        : emp.workingHours
-      
-      // workingHours ist ein Objekt wie { monday: { from: '08:00', to: '17:00', working: true }, ... }
-      const workingHour = workingHours[dayOfWeek]
-      return workingHour && workingHour.working
-    })
-
-    console.log(`[SLOTS API] Available employees: ${availableEmployees.length}`)
+    let dayWorkingHours: { from: string; to: string; working: boolean } | null = null
     
-    if (availableEmployees.length === 0) {
-      console.log('[SLOTS API] No employees available for this day')
-      return NextResponse.json({ slots: [] })
+    // OPTION 1: Werkstatt-Kalender (calendarMode = "workshop")
+    if (workshop.calendarMode === 'workshop' && workshop.openingHours) {
+      console.log('[SLOTS API] Using WORKSHOP calendar mode')
+      
+      try {
+        const openingHours = typeof workshop.openingHours === 'string' 
+          ? JSON.parse(workshop.openingHours) 
+          : workshop.openingHours
+        
+        // openingHours Format: { monday: { from: '08:00', to: '17:00', working: true }, ... }
+        dayWorkingHours = openingHours[dayOfWeek]
+        console.log(`[SLOTS API] Workshop opening hours for ${dayOfWeek}:`, dayWorkingHours)
+      } catch (e) {
+        console.error('[SLOTS API] Failed to parse workshop openingHours:', e)
+      }
     }
+    
+    // OPTION 2: Mitarbeiter-Kalender (calendarMode = "employees" ODER kein Workshop-Kalender)
+    if (!dayWorkingHours || !dayWorkingHours.working) {
+      console.log('[SLOTS API] Using EMPLOYEE calendar mode (fallback or configured)')
+      
+      // Sammle alle verfügbaren Mitarbeiter für diesen Tag
+      const availableEmployees = workshop.employees.filter(emp => {
+        // Prüfe ob Urlaub
+        const isOnVacation = emp.employeeVacations.some(v => {
+          const start = new Date(v.startDate)
+          const end = new Date(v.endDate)
+          const checkDate = new Date(date)
+          return checkDate >= start && checkDate <= end
+        })
+        
+        if (isOnVacation) return false
+        
+        // Prüfe Arbeitszeiten (workingHours ist ein JSON-String mit Objekt)
+        if (!emp.workingHours) return false
+        const workingHours = typeof emp.workingHours === 'string' 
+          ? JSON.parse(emp.workingHours) 
+          : emp.workingHours
+        
+        // workingHours ist ein Objekt wie { monday: { from: '08:00', to: '17:00', working: true }, ... }
+        const workingHour = workingHours[dayOfWeek]
+        return workingHour && workingHour.working
+      })
 
-    // Hole Arbeitszeiten des ersten verfügbaren Mitarbeiters (der mit Google Calendar verbunden ist)
-    const employee = availableEmployees.find(emp => emp.googleCalendarId && emp.googleRefreshToken) || availableEmployees[0]
-    
-    console.log(`[SLOTS API] Selected employee: ${employee.name || employee.email}`)
-    
-    const workingHours = typeof employee.workingHours === 'string' 
-      ? JSON.parse(employee.workingHours) 
-      : employee.workingHours
-    
-    const dayWorkingHours = workingHours[dayOfWeek]
-    
-    console.log(`[SLOTS API] Working hours for ${dayOfWeek}:`, dayWorkingHours)
+      console.log(`[SLOTS API] Available employees: ${availableEmployees.length}`)
+      
+      if (availableEmployees.length === 0) {
+        console.log('[SLOTS API] No employees available for this day')
+        return NextResponse.json({ slots: [] })
+      }
+
+      // Hole Arbeitszeiten des ersten verfügbaren Mitarbeiters (der mit Google Calendar verbunden ist)
+      const employee = availableEmployees.find(emp => emp.googleCalendarId && emp.googleRefreshToken) || availableEmployees[0]
+      
+      console.log(`[SLOTS API] Selected employee: ${employee.name || employee.email}`)
+      
+      const workingHours = typeof employee.workingHours === 'string' 
+        ? JSON.parse(employee.workingHours) 
+        : employee.workingHours
+      
+      dayWorkingHours = workingHours[dayOfWeek]
+      console.log(`[SLOTS API] Employee working hours for ${dayOfWeek}:`, dayWorkingHours)
+    }
     
     if (!dayWorkingHours || !dayWorkingHours.working) {
-      console.log('[SLOTS API] Employee not working on this day')
+      console.log('[SLOTS API] Not working on this day (neither workshop nor employees)')
       return NextResponse.json({ slots: [] })
     }
 

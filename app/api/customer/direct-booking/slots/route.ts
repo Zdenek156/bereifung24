@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { google } from 'googleapis'
 
 /**
  * POST /api/customer/direct-booking/slots
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get workshop with opening hours
+    // Get workshop with opening hours and employees
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
       include: {
@@ -44,6 +45,14 @@ export async function POST(request: NextRequest) {
           where: {
             startDate: { lte: new Date(date) },
             endDate: { gte: new Date(date) }
+          }
+        },
+        employees: {
+          where: {
+            OR: [
+              { googleCalendarId: { not: null } },
+              { googleRefreshToken: { not: null } }
+            ]
           }
         }
       }
@@ -173,13 +182,165 @@ export async function POST(request: NextRequest) {
     
     console.log('Total workshop bookings:', allBookings.length, '| Bookings on', dateOnly + ':', existingBookings.length)
 
-    // Filter out booked slots
+    // Fetch Google Calendar events to block slots
+    const googleCalendarBookedSlots: string[] = []
+    
+    // Check workshop-level Google Calendar
+    if (workshop.googleCalendarId && workshop.googleRefreshToken) {
+      try {
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.NEXTAUTH_URL + '/api/gcal/callback'
+        )
+
+        oauth2Client.setCredentials({
+          refresh_token: workshop.googleRefreshToken,
+          access_token: workshop.googleAccessToken,
+        })
+
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+        
+        // Get events for the selected date
+        const startOfDay = new Date(date + 'T00:00:00')
+        const endOfDay = new Date(date + 'T23:59:59')
+        
+        const response = await calendar.events.list({
+          calendarId: workshop.googleCalendarId,
+          timeMin: startOfDay.toISOString(),
+          timeMax: endOfDay.toISOString(),
+          singleEvents: true,
+          orderBy: 'startTime',
+        })
+
+        const events = response.data.items || []
+        console.log('Workshop Google Calendar events:', events.length)
+        
+        // Extract start times from events and mark slots as booked
+        events.forEach(event => {
+          if (event.start?.dateTime) {
+            const eventStart = new Date(event.start.dateTime)
+            const eventEnd = new Date(event.end?.dateTime || eventStart)
+            
+            // Block all slots that overlap with this event
+            const startTime = `${eventStart.getHours().toString().padStart(2, '0')}:${eventStart.getMinutes().toString().padStart(2, '0')}`
+            const endTime = `${eventEnd.getHours().toString().padStart(2, '0')}:${eventEnd.getMinutes().toString().padStart(2, '0')}`
+            
+            // Add start time slot
+            if (!googleCalendarBookedSlots.includes(startTime)) {
+              googleCalendarBookedSlots.push(startTime)
+            }
+            
+            // Also block slots during the event duration
+            let currentMinutes = eventStart.getHours() * 60 + eventStart.getMinutes()
+            const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+            
+            while (currentMinutes < endMinutes) {
+              const slotHour = Math.floor(currentMinutes / 60)
+              const slotMin = currentMinutes % 60
+              const slotTime = `${slotHour.toString().padStart(2, '0')}:${slotMin.toString().padStart(2, '0')}`
+              
+              if (!googleCalendarBookedSlots.includes(slotTime)) {
+                googleCalendarBookedSlots.push(slotTime)
+              }
+              
+              currentMinutes += duration // Increment by service duration
+            }
+          }
+        })
+      } catch (calError) {
+        console.error('Error fetching workshop Google Calendar events:', calError)
+        // Continue without Google Calendar events if error occurs
+      }
+    }
+    
+    // Check employee-level Google Calendars
+    for (const employee of workshop.employees) {
+      if (employee.googleCalendarId && employee.googleRefreshToken) {
+        try {
+          const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.NEXTAUTH_URL + '/api/gcal/callback'
+          )
+
+          oauth2Client.setCredentials({
+            refresh_token: employee.googleRefreshToken,
+            access_token: employee.googleAccessToken,
+          })
+
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          
+          // Get events for the selected date
+          const startOfDay = new Date(date + 'T00:00:00')
+          const endOfDay = new Date(date + 'T23:59:59')
+          
+          const response = await calendar.events.list({
+            calendarId: employee.googleCalendarId,
+            timeMin: startOfDay.toISOString(),
+            timeMax: endOfDay.toISOString(),
+            singleEvents: true,
+            orderBy: 'startTime',
+          })
+
+          const events = response.data.items || []
+          console.log(`Employee ${employee.name} Google Calendar events:`, events.length)
+          
+          // Extract start times from events and mark slots as booked
+          events.forEach(event => {
+            if (event.start?.dateTime) {
+              const eventStart = new Date(event.start.dateTime)
+              const eventEnd = new Date(event.end?.dateTime || eventStart)
+              
+              // Block all slots that overlap with this event
+              const startTime = `${eventStart.getHours().toString().padStart(2, '0')}:${eventStart.getMinutes().toString().padStart(2, '0')}`
+              const endTime = `${eventEnd.getHours().toString().padStart(2, '0')}:${eventEnd.getMinutes().toString().padStart(2, '0')}`
+              
+              // Add start time slot
+              if (!googleCalendarBookedSlots.includes(startTime)) {
+                googleCalendarBookedSlots.push(startTime)
+              }
+              
+              // Also block slots during the event duration
+              let currentMinutes = eventStart.getHours() * 60 + eventStart.getMinutes()
+              const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+              
+              while (currentMinutes < endMinutes) {
+                const slotHour = Math.floor(currentMinutes / 60)
+                const slotMin = currentMinutes % 60
+                const slotTime = `${slotHour.toString().padStart(2, '0')}:${slotMin.toString().padStart(2, '0')}`
+                
+                if (!googleCalendarBookedSlots.includes(slotTime)) {
+                  googleCalendarBookedSlots.push(slotTime)
+                }
+                
+                currentMinutes += duration // Increment by service duration
+              }
+            }
+          })
+        } catch (calError) {
+          console.error(`Error fetching employee ${employee.name} Google Calendar events:`, calError)
+          // Continue without this employee's Google Calendar events if error occurs
+        }
+      }
+    }
+    
+    console.log('Google Calendar booked slots:', googleCalendarBookedSlots)
+
+    // Filter out booked slots (both from database AND Google Calendar)
     const availableSlots = slots.filter(slot => {
       const slotTime = slot.time
-      return !existingBookings.some(booking => {
+      
+      // Check database bookings
+      const isBookedInDB = existingBookings.some(booking => {
         const bookingTime = booking.time
         return bookingTime === slotTime
       })
+      
+      // Check Google Calendar bookings
+      const isBookedInGoogleCalendar = googleCalendarBookedSlots.includes(slotTime)
+      
+      return !isBookedInDB && !isBookedInGoogleCalendar
     })
 
     return NextResponse.json({

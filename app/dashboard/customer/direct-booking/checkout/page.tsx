@@ -443,50 +443,48 @@ function CheckoutContent() {
                       <p className="text-gray-600">Wann möchten Sie vorbeikommen?</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
-                      {/* Calendar Date Picker */}
-                      <div>
-                        <h3 className="font-semibold mb-3">Datum wählen</h3>
-                        <DatePicker
-                          selectedDate={selectedDate}
-                          onChange={handleDateSelect}
-                          minDate={new Date().toISOString().split('T')[0]}
-                          required
-                        />
-                      </div>
+                    {/* Calendar Date Picker - Full Width */}
+                    <div>
+                      <h3 className="font-semibold mb-3">Datum wählen</h3>
+                      <DatePicker
+                        selectedDate={selectedDate}
+                        onChange={handleDateSelect}
+                        minDate={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
 
-                      {/* Time Slots */}
-                      <div>
-                        <h3 className="font-semibold mb-3">Uhrzeit wählen</h3>
-                        {!selectedDate ? (
-                          <div className="text-center py-12 bg-gray-50 rounded-lg">
-                            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                            <p className="text-gray-600">Bitte wählen Sie zuerst ein Datum</p>
-                          </div>
-                        ) : loadingSlots ? (
-                          <div className="text-center py-12">
-                            <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-                            <p className="text-gray-600">Lade verfügbare Zeiten...</p>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-                            {availableSlots.filter(slot => slot.available).map((slot) => (
-                              <button
-                                key={slot.time}
-                                onClick={() => setSelectedTime(slot.time)}
-                                className={`
-                                  p-3 border-2 rounded-lg font-medium transition-all
-                                  ${selectedTime === slot.time
-                                    ? 'border-blue-600 bg-blue-50 text-blue-600'
-                                    : 'border-gray-200 hover:border-blue-300'}
-                                `}
-                              >
-                                {slot.time}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    {/* Time Slots - Below Calendar */}
+                    <div>
+                      <h3 className="font-semibold mb-3">Uhrzeit wählen</h3>
+                      {!selectedDate ? (
+                        <div className="text-center py-12 bg-gray-50 rounded-lg">
+                          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-600">Bitte wählen Sie zuerst ein Datum</p>
+                        </div>
+                      ) : loadingSlots ? (
+                        <div className="text-center py-12">
+                          <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+                          <p className="text-gray-600">Lade verfügbare Zeiten...</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-4 gap-2 max-h-96 overflow-y-auto">
+                          {availableSlots.filter(slot => slot.available).map((slot) => (
+                            <button
+                              key={slot.time}
+                              onClick={() => setSelectedTime(slot.time)}
+                              className={`
+                                p-3 border-2 rounded-lg font-medium transition-all
+                                ${selectedTime === slot.time
+                                  ? 'border-blue-600 bg-blue-50 text-blue-600'
+                                  : 'border-gray-200 hover:border-blue-300'}
+                              `}
+                            >
+                              {slot.time}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

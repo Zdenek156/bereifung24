@@ -404,10 +404,10 @@ export default function DirectBookingCheckoutPage() {
                 Zurück zur Suche
               </Button>
               <div className="border-l pl-4">
-                <h1 className="text-xl font-bold">{workshop.name}</h1>
+                <h1 className="text-xl font-bold">{workshop.companyName}</h1>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="h-4 w-4" />
-                  <span>{workshop.address}, {workshop.postalCode} {workshop.city}</span>
+                  <span>{workshop.street}, {workshop.postalCode} {workshop.city}</span>
                   {workshop.averageRating > 0 && (
                     <>
                       <span className="text-gray-400">•</span>
@@ -877,7 +877,7 @@ export default function DirectBookingCheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Werkstatt:</span>
-                    <span className="font-semibold">{workshop.name}</span>
+                    <span className="font-semibold">{workshop.companyName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Service:</span>

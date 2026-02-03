@@ -107,17 +107,41 @@ export default function DirectBookingCheckoutPage() {
     const fetchWorkshop = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/workshop/${workshopId}/services/${searchParams?.get('service') || 'WHEEL_CHANGE'}`)
-        if (response.ok) {
-          const data = await response.json()
-          setWorkshop(data)
-          
-          // Pre-select service from URL
-          const serviceParam = searchParams?.get('service') as ServiceType
-          if (serviceParam && SERVICE_TYPES[serviceParam]) {
-            setSelectedService(serviceParam)
-            setCurrentStep(2) // Move to vehicle selection
-          }
+        
+        // Fetch workshop details
+        const workshopResponse = await fetch(`/api/workshop/${workshopId}`)
+        if (!workshopResponse.ok) {
+          console.error('Failed to load workshop')
+          return
+        }
+        const workshopData = await workshopResponse.json()
+        
+        // Fetch service pricing
+        const serviceType = searchParams?.get('service') || 'WHEEL_CHANGE'
+        const servicePricingResponse = await fetch(`/api/workshop/${workshopId}/services/${serviceType}`)
+        if (!servicePricingResponse.ok) {
+          console.error('Failed to load service pricing')
+          return
+        }
+        const servicePricingData = await servicePricingResponse.json()
+        
+        // Combine workshop data with service pricing
+        setWorkshop({
+          ...workshopData,
+          basePrice: servicePricingData.basePrice || 0,
+          basePrice4: servicePricingData.basePrice4 || 0,
+          disposalFee: servicePricingData.disposalFee || 0,
+          runFlatSurcharge: servicePricingData.runFlatSurcharge || 0,
+          durationMinutes: servicePricingData.durationMinutes || 60,
+          totalBalancingPrice: 0, // Will be calculated based on selection
+          storagePriceTotal: 0, // Will be calculated based on selection
+        })
+        
+        // Pre-select service from URL
+        const serviceParam = searchParams?.get('service') as ServiceType
+        if (serviceParam && SERVICE_TYPES[serviceParam]) {
+          setSelectedService(serviceParam)
+          setCurrentStep(2) // Move to vehicle selection
         }
       } catch (error) {
         console.error('Error loading workshop:', error)

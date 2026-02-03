@@ -150,11 +150,11 @@ export async function POST(request: NextRequest) {
     
     console.log('Input date:', date, '→ Looking for bookings on:', dateOnly)
     
-    // Fetch ALL bookings for this workshop (we'll filter by date in code)
+    // Fetch ALL bookings for this workshop (we'll filter by date AND status in code)
+    // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
     const allBookings = await prisma.directBooking.findMany({
       where: {
-        workshopId,
-        status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
+        workshopId
       },
       select: {
         id: true,
@@ -164,10 +164,11 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    // Filter bookings for the requested date (Prisma @db.Date returns Date objects)
+    // Filter bookings for the requested date AND active status
     const existingBookings = allBookings.filter(booking => {
       const bookingDateStr = booking.date.toISOString().split('T')[0]
-      return bookingDateStr === dateOnly
+      const isActiveStatus = ['RESERVED', 'CONFIRMED', 'COMPLETED'].includes(booking.status)
+      return bookingDateStr === dateOnly && isActiveStatus
     })
     
     console.log('Total workshop bookings:', allBookings.length, '| Bookings on', dateOnly + ':', existingBookings.length)

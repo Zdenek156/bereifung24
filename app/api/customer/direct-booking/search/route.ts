@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
     // Find workshops with selected service in radius that allow direct booking
     const workshops = await prisma.workshop.findMany({
       where: {
-        active: true,
         workshopServices: {
           some: {
             serviceType: serviceType,

@@ -143,21 +143,16 @@ export async function POST(request: NextRequest) {
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date
-    // For @db.Date fields, we need to use a date range query
-    const startOfDay = new Date(date)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(date)
-    endOfDay.setHours(23, 59, 59, 999)
+    // For @db.Date fields (PostgreSQL DATE type), we use exact date match
+    // The date field is stored as date-only (no time component)
+    const bookingDate = new Date(date)
     
-    console.log('Checking existing bookings for date range:', { startOfDay, endOfDay })
+    console.log('Checking existing bookings for date:', bookingDate)
     
     const existingBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: {
-          gte: startOfDay,
-          lte: endOfDay
-        },
+        date: bookingDate,
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
       }
     })

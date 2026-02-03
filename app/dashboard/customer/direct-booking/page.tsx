@@ -697,7 +697,10 @@ export default function DirectBookingPage() {
 
                             {/* Booking Button */}
                             <Button
-                              onClick={() => setSelectedWorkshop(workshop)}
+                              onClick={() => {
+                                console.log('🔍 Workshop clicked:', workshop)
+                                setSelectedWorkshop(workshop)
+                              }}
                               size="lg"
                             >
                               Jetzt buchen
@@ -746,19 +749,14 @@ export default function DirectBookingPage() {
               <div className="p-6">
                 {/* Header with Close Button */}
                 <div className="flex items-start justify-between mb-4 border-b pb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold">{selectedWorkshop?.name || 'Werkstatt'}</h2>
-                    {selectedWorkshop?.address && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        {selectedWorkshop.address}, {selectedWorkshop.postalCode} {selectedWorkshop.city}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-2 text-sm">
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-2">{selectedWorkshop?.name || 'Werkstatt'}</h2>
+                    <div className="flex items-center gap-4">
                       {selectedWorkshop?.rating && selectedWorkshop.rating > 0 && (
                         <span className="flex items-center gap-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                           <span className="font-semibold">{selectedWorkshop.rating.toFixed(1)}</span>
-                          <span className="text-gray-500">({selectedWorkshop.reviewCount || 0})</span>
+                          <span className="text-gray-500">({selectedWorkshop.reviewCount || 0} Bewertungen)</span>
                         </span>
                       )}
                       {selectedWorkshop?.distance && (

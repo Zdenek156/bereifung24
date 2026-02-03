@@ -720,9 +720,9 @@ export default function DirectBookingPage() {
           currency: 'EUR'
         }}>
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <Card className="max-w-4xl w-full my-8">
+            <Card className="max-w-4xl w-full my-8 overflow-hidden">
               {/* Workshop Header - Prominent Display */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 -m-6 mb-6 rounded-t-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">

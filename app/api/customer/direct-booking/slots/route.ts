@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'lowercase' })
+    // Get day of week (monday, tuesday, etc.)
+    const dateObj = new Date(date)
+    const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     
     if (!openingHours || !openingHours[dayOfWeek]) {
       return NextResponse.json({

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Mark route as dynamic (no static generation)
+export const dynamic = 'force-dynamic'
+
 // Verfügbare Zeitslots für ein bestimmtes Datum abrufen
 // PUBLIC API - Wird für Direct Booking verwendet (kein Login erforderlich)
 export async function GET(request: Request) {

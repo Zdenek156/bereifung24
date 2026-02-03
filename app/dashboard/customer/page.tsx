@@ -86,8 +86,8 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
         {/* NEW: Direct Booking - Prominent */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-700 dark:from-green-500 dark:to-emerald-600 rounded-lg shadow-xl p-6">
-          <div className="flex flex-col h-full gap-4">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col h-full justify-between">
+            <div className="flex items-start gap-4 mb-4">
               <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -97,14 +97,14 @@ export default function CustomerDashboard() {
                 <div className="inline-block bg-yellow-400 text-green-900 text-xs font-bold px-2 py-1 rounded mb-2">
                   🚀 NEU & SCHNELL
                 </div>
-                <h2 className="text-xl font-bold mb-1">Räder wechseln - Sofort buchen</h2>
+                <h2 className="text-xl font-bold mb-1">Service direkt buchen</h2>
                 <p className="text-green-100 text-sm">
                   Werkstatt finden, bezahlen, Termin wählen - in 3 Minuten fertig!
                 </p>
               </div>
             </div>
             <button
-              onClick={() => router.push('/dashboard/customer/direct-booking/wheel-change')}
+              onClick={() => router.push('/dashboard/customer/direct-booking')}
               className="w-full px-6 py-3 bg-white text-green-700 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
             >
               <span className="text-2xl">🔄</span>
@@ -118,8 +118,8 @@ export default function CustomerDashboard() {
 
         {/* Traditional Request Flow */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg shadow-xl p-6">
-          <div className="flex flex-col h-full gap-4">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col h-full justify-between">
+            <div className="flex items-start gap-4 mb-4">
               <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

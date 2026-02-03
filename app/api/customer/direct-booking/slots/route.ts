@@ -144,15 +144,15 @@ export async function POST(request: NextRequest) {
 
     // Get existing bookings for this date
     // For @db.Date fields (PostgreSQL DATE type), use ISO date string format (YYYY-MM-DD)
-    // This is the correct way to query DATE columns in PostgreSQL via Prisma
-    const dateString = date // Already in YYYY-MM-DD format from request
+    // Extract date-only part if timestamp was sent
+    const dateOnly = date.split('T')[0] // "2026-02-12T00:00:00.000Z" -> "2026-02-12"
     
-    console.log('Checking existing bookings for date:', dateString)
+    console.log('Checking existing bookings for date:', dateOnly)
     
     const existingBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: dateString, // Pass date string directly, not Date object
+        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
         status: { in: ['RESERVED', 'CONFIRMED', 'COMPLETED'] }
       }
     })

@@ -63,12 +63,13 @@ export async function POST(request: NextRequest) {
 
     // Check if slot is still available
     // For @db.Date fields (PostgreSQL DATE type), use ISO date string (YYYY-MM-DD)
-    const dateString = date // Already in YYYY-MM-DD format
+    // Extract date-only part if timestamp was sent
+    const dateOnly = date.split('T')[0] // "2026-02-12T00:00:00.000Z" -> "2026-02-12"
     
     const existingReservation = await prisma.directBooking.findFirst({
       where: {
         workshopId,
-        date: dateString, // Pass date string directly, not Date object
+        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
         time,
         status: { in: ['RESERVED', 'CONFIRMED'] }
       }
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
         workshopId,
         vehicleId,
         serviceType,
-        date: dateString, // Use date string for @db.Date field
+        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
         time,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,

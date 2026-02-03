@@ -34,8 +34,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Werkstatt nicht gefunden' }, { status: 404 })
     }
 
+    console.log(`[SLOTS API] Workshop: ${workshop.name} (${workshop.id})`)
+    console.log(`[SLOTS API] Date: ${date}`)
+    console.log(`[SLOTS API] Service: ${serviceType}`)
+    console.log(`[SLOTS API] Total employees: ${workshop.employees.length}`)
+
     // Bestimme Wochentag
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+    console.log(`[SLOTS API] Day of week: ${dayOfWeek}`)
     
     // Sammle alle verfügbaren Mitarbeiter für diesen Tag
     const availableEmployees = workshop.employees.filter(emp => {
@@ -60,12 +66,17 @@ export async function GET(request: Request) {
       return workingHour && workingHour.working
     })
 
+    console.log(`[SLOTS API] Available employees: ${availableEmployees.length}`)
+    
     if (availableEmployees.length === 0) {
+      console.log('[SLOTS API] No employees available for this day')
       return NextResponse.json({ slots: [] })
     }
 
     // Hole Arbeitszeiten des ersten verfügbaren Mitarbeiters (der mit Google Calendar verbunden ist)
     const employee = availableEmployees.find(emp => emp.googleCalendarId && emp.googleRefreshToken) || availableEmployees[0]
+    
+    console.log(`[SLOTS API] Selected employee: ${employee.name || employee.email}`)
     
     const workingHours = typeof employee.workingHours === 'string' 
       ? JSON.parse(employee.workingHours) 
@@ -73,7 +84,10 @@ export async function GET(request: Request) {
     
     const dayWorkingHours = workingHours[dayOfWeek]
     
+    console.log(`[SLOTS API] Working hours for ${dayOfWeek}:`, dayWorkingHours)
+    
     if (!dayWorkingHours || !dayWorkingHours.working) {
+      console.log('[SLOTS API] Employee not working on this day')
       return NextResponse.json({ slots: [] })
     }
 
@@ -104,6 +118,8 @@ export async function GET(request: Request) {
       }
     }
 
+    console.log(`[SLOTS API] Generated ${slots.length} total slots`)
+
     // Prüfe bestehende Termine für dieses Datum
     const existingAppointments = await prisma.booking.findMany({
       where: {
@@ -118,6 +134,8 @@ export async function GET(request: Request) {
       }
     })
 
+    console.log(`[SLOTS API] Existing appointments: ${existingAppointments.length}`)
+
     // Markiere bereits gebuchte Slots als nicht verfügbar
     existingAppointments.forEach(apt => {
       const time = apt.appointmentTime
@@ -126,6 +144,9 @@ export async function GET(request: Request) {
         slot.available = false
       }
     })
+
+    const availableCount = slots.filter(s => s.available).length
+    console.log(`[SLOTS API] Available slots: ${availableCount}/${slots.length}`)
 
     return NextResponse.json({ slots })
     

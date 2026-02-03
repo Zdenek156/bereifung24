@@ -805,8 +805,8 @@ export default function DirectBookingPage() {
                   })}
                 </div>
 
-              {/* Step Content */}
-              <div className="border-t pt-6">
+                {/* Step Content */}
+                <div className="border-t pt-6">
                 {/* Step 1: Vehicle Selection */}
                 {bookingStep === 1 && (
                   <div>
@@ -1172,8 +1172,9 @@ export default function DirectBookingPage() {
                   </div>
                 )}
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
+        </div>
         </PayPalScriptProvider>
       )}
     </div>

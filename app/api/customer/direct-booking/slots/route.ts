@@ -103,7 +103,32 @@ export async function POST(request: NextRequest) {
     }
 
     const dayHours = openingHours[dayOfWeek]
-    if (!dayHours || typeof dayHours !== 'string' || !dayHours.includes('-')) {
+    console.log('Day hours for', dayOfWeek, ':', dayHours)
+    
+    // Check if day is closed
+    if (!dayHours || (typeof dayHours === 'object' && dayHours.closed === true)) {
+      console.log('Workshop closed on', dayOfWeek)
+      return NextResponse.json({
+        success: true,
+        slots: [],
+        message: 'Werkstatt ist an diesem Tag geschlossen'
+      })
+    }
+
+    // Parse opening hours - support both formats:
+    // 1. String format: "08:00-18:00"
+    // 2. Object format: {from: "08:00", to: "18:00", closed: false}
+    let openTime: string
+    let closeTime: string
+    
+    if (typeof dayHours === 'string' && dayHours.includes('-')) {
+      // Old format: "08:00-18:00"
+      [openTime, closeTime] = dayHours.split('-')
+    } else if (typeof dayHours === 'object' && dayHours.from && dayHours.to) {
+      // New format: {from: "08:00", to: "18:00"}
+      openTime = dayHours.from
+      closeTime = dayHours.to
+    } else {
       console.error('Invalid opening hours format for', dayOfWeek, ':', dayHours)
       return NextResponse.json({
         success: true,
@@ -112,8 +137,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    console.log('Open time:', openTime, 'Close time:', closeTime)
+    
     // Generate time slots based on opening hours
-    const [openTime, closeTime] = dayHours.split('-')
     const slots = generateTimeSlots(openTime, closeTime, duration)
 
     // Get existing bookings for this date

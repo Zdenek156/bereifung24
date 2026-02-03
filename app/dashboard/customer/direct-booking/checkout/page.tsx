@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import DatePicker from '@/components/DatePicker'
 import {
   Car,
   Calendar,
@@ -48,7 +49,7 @@ function CheckoutContent() {
   const [hasStorage, setHasStorage] = useState(false)
   
   // Step 2: Date & Time Selection
-  const [selectedDate, setSelectedDate] = useState<Date>()
+  const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedTime, setSelectedTime] = useState('')
   const [availableSlots, setAvailableSlots] = useState<{time: string, available: boolean}[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
@@ -141,10 +142,12 @@ function CheckoutContent() {
     }
   }
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date)
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString)
     setSelectedTime('')
-    if (date) {
+    if (dateString) {
+      // Convert string to Date for API call
+      const date = new Date(dateString + 'T00:00:00')
       fetchAvailableSlots(date)
     }
   }
@@ -186,7 +189,7 @@ function CheckoutContent() {
         workshopId,
         serviceType: service,
         vehicleId: selectedVehicle.id,
-        date: selectedDate.toISOString().split('T')[0],
+        date: selectedDate,
         time: selectedTime,
         hasBalancing,
         hasStorage,
@@ -389,7 +392,7 @@ function CheckoutContent() {
                     )}
 
                     {/* Additional Services */}
-                    {selectedVehicle && (
+                    {selectedVehicle && (servicePricing?.balancingPrice || servicePricing?.storagePrice) && (
                       <div className="space-y-3 pt-6 border-t">
                         <h3 className="font-semibold">Zusatzleistungen</h3>
                         
@@ -441,18 +444,14 @@ function CheckoutContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
-                      {/* Simple Date Picker */}
+                      {/* Calendar Date Picker */}
                       <div>
                         <h3 className="font-semibold mb-3">Datum wählen</h3>
-                        <input
-                          type="date"
-                          value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-                          onChange={(e) => {
-                            const date = e.target.value ? new Date(e.target.value + 'T00:00:00') : undefined
-                            handleDateSelect(date)
-                          }}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        <DatePicker
+                          selectedDate={selectedDate}
+                          onChange={handleDateSelect}
+                          minDate={new Date().toISOString().split('T')[0]}
+                          required
                         />
                       </div>
 
@@ -607,7 +606,7 @@ function CheckoutContent() {
                     <div className="pb-4 border-b">
                       <div className="text-sm text-gray-600 mb-1">Termin</div>
                       <div className="font-semibold">
-                        {selectedDate.toLocaleDateString('de-DE', {
+                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString('de-DE', {
                           weekday: 'long',
                           day: '2-digit',
                           month: 'long',

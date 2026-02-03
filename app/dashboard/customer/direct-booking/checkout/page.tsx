@@ -128,7 +128,7 @@ function CheckoutContent() {
     try {
       const dateStr = date.toISOString().split('T')[0]
       const response = await fetch(
-        `/api/customer/direct-booking/slots?workshopId=${workshopId}&date=${dateStr}&serviceType=${service}`
+        `/api/workshop/available-slots?workshopId=${workshopId}&date=${dateStr}&serviceType=${service}`
       )
       
       if (response.ok) {

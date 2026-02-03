@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate distance and filter by radius
     const workshopsWithDistance = workshops
+      .filter(workshop => workshop.workshopServices.length > 0) // Filter out workshops without services
       .map(workshop => {
         const service = workshop.workshopServices[0]
         

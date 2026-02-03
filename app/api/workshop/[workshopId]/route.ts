@@ -36,13 +36,11 @@ export async function GET(
         },
         employees: {
           where: {
-            status: 'ACTIVE',
             googleCalendarId: { not: null }
           },
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             googleCalendarId: true,
             googleRefreshToken: true
           }

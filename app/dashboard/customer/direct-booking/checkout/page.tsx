@@ -177,6 +177,19 @@ function CheckoutContent() {
     }
   }
 
+  // Initialize PayPal SDK v6 when component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.paypalSdkLoaded) {
+      const script = document.createElement('script')
+      script.src = 'https://www.paypal.com/web-sdk/v6/core'
+      script.async = true
+      script.onload = () => {
+        window.paypalSdkLoaded = true
+      }
+      document.head.appendChild(script)
+    }
+  }, [])
+
   const handlePayment = async () => {
     if (!workshopId || !service || !selectedVehicle || !selectedDate || !selectedTime) return
     
@@ -185,60 +198,61 @@ function CheckoutContent() {
       const totalPrice = calculateTotal()
 
       if (paymentMethod === 'PAYPAL') {
-        // Create PayPal order mit allen Kundendaten
-        const orderResponse = await fetch('/api/customer/direct-booking/create-paypal-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: totalPrice,
-            description: `${SERVICE_LABELS[service]} - ${workshop.name}`,
-            customerName: session?.user?.name || '',
-            customerEmail: session?.user?.email || '',
-            workshopName: workshop.name,
-            date: new Date(selectedDate).toLocaleDateString('de-DE', { 
-              day: '2-digit', 
-              month: '2-digit', 
-              year: 'numeric' 
-            }),
-            time: selectedTime,
-            street: (session?.user as any)?.street || '',
-            city: (session?.user as any)?.city || '',
-            zipCode: (session?.user as any)?.zipCode || '',
-            country: 'DE'
-          })
+        // SDK v6: Initialize PayPal with client token
+        const tokenResponse = await fetch('/api/customer/direct-booking/paypal-client-token')
+        if (!tokenResponse.ok) {
+          alert('PayPal-Initialisierung fehlgeschlagen.')
+          setProcessingPayment(false)
+          return
+        }
+
+        const { clientToken } = await tokenResponse.json()
+
+        // Create SDK instance
+        const sdkInstance = await (window as any).paypal.createInstance({
+          clientToken,
+          components: ['paypal-payments'],
+          pageType: 'checkout'
         })
 
-        if (!orderResponse.ok) {
-          alert('PayPal-Bestellung konnte nicht erstellt werden.')
-          setProcessingPayment(false)
-          return
+        // Create order function for SDK v6
+        const createOrder = async () => {
+          const orderResponse = await fetch('/api/customer/direct-booking/create-paypal-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: totalPrice,
+              description: `${SERVICE_LABELS[service]} - ${workshop.name}`,
+              customerName: session?.user?.name || '',
+              customerEmail: session?.user?.email || '',
+              workshopName: workshop.name,
+              date: new Date(selectedDate).toLocaleDateString('de-DE', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            }),
+              time: selectedTime,
+              street: (session?.user as any)?.street || '',
+              city: (session?.user as any)?.city || '',
+              zipCode: (session?.user as any)?.zipCode || '',
+              country: 'DE'
+            })
+          })
+          
+          const data = await orderResponse.json()
+          return { orderId: data.id }
         }
 
-        const { orderId, approvalUrl } = await orderResponse.json()
-
-        if (!approvalUrl) {
-          alert('PayPal-Approval-Link fehlt.')
-          setProcessingPayment(false)
-          return
-        }
-
-        // Open PayPal window with correct approval URL
-        const paypalWindow = window.open(
-          approvalUrl,
-          'PayPal',
-          'width=500,height=600'
-        )
-
-        // Poll for window close
-        const pollTimer = setInterval(async () => {
-          if (paypalWindow && paypalWindow.closed) {
-            clearInterval(pollTimer)
-
+        // Create payment session with SDK v6
+        const paymentSession = sdkInstance.createPayPalOneTimePaymentSession({
+          async onApprove(data: any) {
+            console.log('Payment approved:', data)
+            
             // Capture payment
             const captureResponse = await fetch('/api/customer/direct-booking/capture-paypal-order', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId })
+              body: JSON.stringify({ orderId: data.orderId })
             })
 
             if (!captureResponse.ok) {
@@ -275,8 +289,29 @@ function CheckoutContent() {
               alert('Buchung fehlgeschlagen.')
             }
             setProcessingPayment(false)
+          },
+          onCancel(data: any) {
+            console.log('Payment cancelled:', data)
+            setProcessingPayment(false)
+          },
+          onError(error: any) {
+            console.error('Payment error:', error)
+            alert('Zahlung fehlgeschlagen.')
+            setProcessingPayment(false)
           }
-        }, 1000)
+        })
+
+        // Start payment with auto presentation mode
+        try {
+          await paymentSession.start(
+            { presentationMode: 'auto' },
+            createOrder()
+          )
+        } catch (error) {
+          console.error('Payment start error:', error)
+          alert('Zahlung konnte nicht gestartet werden.')
+          setProcessingPayment(false)
+        }
       } else {
         // Stripe payment (to be implemented)
         alert('Stripe-Zahlung wird noch nicht unterstützt.')

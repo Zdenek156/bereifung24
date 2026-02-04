@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
+      customer_email: session.user.email || undefined,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,
       metadata: {

@@ -13,20 +13,50 @@ export default function DirectBookingSuccessPage() {
   const [error, setError] = useState<string | null>(null)
   const [directBooking, setDirectBooking] = useState<any>(null)
 
-  const sessionId = searchParams?.get('session_id')
-  const directBookingId = searchParams?.get('direct_booking_id')
+  const sessionId = searchParams?.get('session_id') // For Stripe
+  const directBookingId = searchParams?.get('direct_booking_id') // For PayPal
 
   useEffect(() => {
-    if (!sessionId || !directBookingId) {
+    if (sessionId) {
+      // Stripe payment verification
+      verifyStripePayment()
+    } else if (directBookingId) {
+      // PayPal payment verification (existing)
+      verifyPayPalPayment()
+    } else {
       setError('Fehlende Parameter')
       setLoading(false)
-      return
     }
-
-    verifyPayment()
   }, [sessionId, directBookingId])
 
-  const verifyPayment = async () => {
+  const verifyStripePayment = async () => {
+    try {
+      const response = await fetch('/api/customer/direct-booking/verify-stripe-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        // Fetch the created booking
+        const bookingResponse = await fetch(`/api/customer/direct-booking/${result.bookingId}`)
+        if (bookingResponse.ok) {
+          const bookingData = await bookingResponse.json()
+          setDirectBooking(bookingData)
+        }
+      } else {
+        setError(result.error || 'Zahlung konnte nicht verifiziert werden')
+      }
+    } catch (err) {
+      setError('Fehler bei der Verifizierung')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyPayPalPayment = async () => {
     try {
       const response = await fetch(`/api/customer/direct-booking/${directBookingId}/verify-payment`, {
         method: 'POST',

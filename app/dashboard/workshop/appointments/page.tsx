@@ -60,6 +60,7 @@ export default function WorkshopAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('upcoming')
+  const [sortBy, setSortBy] = useState<'date-asc' | 'date-desc' | 'price-asc' | 'price-desc'>('date-asc')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
@@ -198,6 +199,34 @@ export default function WorkshopAppointments() {
       return aptDate === selectedDate
     }
     return true
+  })
+
+  // Sortier-Funktion
+  const sortedFilteredAppointments = [...filteredAppointments].sort((a, b) => {
+    switch (sortBy) {
+      case 'date-asc': {
+        const dateA = new Date(`${a.appointmentDate} ${a.appointmentTime}`)
+        const dateB = new Date(`${b.appointmentDate} ${b.appointmentTime}`)
+        return dateA.getTime() - dateB.getTime()
+      }
+      case 'date-desc': {
+        const dateA = new Date(`${a.appointmentDate} ${a.appointmentTime}`)
+        const dateB = new Date(`${b.appointmentDate} ${b.appointmentTime}`)
+        return dateB.getTime() - dateA.getTime()
+      }
+      case 'price-asc': {
+        const priceA = a.totalPrice || a.offer?.price || 0
+        const priceB = b.totalPrice || b.offer?.price || 0
+        return priceA - priceB
+      }
+      case 'price-desc': {
+        const priceA = a.totalPrice || a.offer?.price || 0
+        const priceB = b.totalPrice || b.offer?.price || 0
+        return priceB - priceA
+      }
+      default:
+        return 0
+    }
   })
 
   const stats = {
@@ -413,52 +442,72 @@ export default function WorkshopAppointments() {
 
         {/* Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilter('upcoming')}
-              className={`px-4 py-2 rounded-lg ${
-                filter === 'upcoming'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              Anstehend
-            </button>
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg ${
-                filter === 'all'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              Alle
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className={`px-4 py-2 rounded-lg ${
-                filter === 'completed'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Abgeschlossen
-            </button>
-            <button
-              onClick={() => setFilter('cancelled')}
-              className={`px-4 py-2 rounded-lg ${
-                filter === 'cancelled'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Storniert
-            </button>
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFilter('upcoming')}
+                className={`px-4 py-2 rounded-lg ${
+                  filter === 'upcoming'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Anstehend
+              </button>
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-2 rounded-lg ${
+                  filter === 'all'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Alle
+              </button>
+              <button
+                onClick={() => setFilter('completed')}
+                className={`px-4 py-2 rounded-lg ${
+                  filter === 'completed'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Abgeschlossen
+              </button>
+              <button
+                onClick={() => setFilter('cancelled')}
+                className={`px-4 py-2 rounded-lg ${
+                  filter === 'cancelled'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Storniert
+              </button>
+            </div>
+
+            {/* Sortier-Dropdown */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="sortBy" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                Sortiert nach:
+              </label>
+              <select
+                id="sortBy"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="date-asc">Nächster Termin (aufsteigend)</option>
+                <option value="date-desc">Nächster Termin (absteigend)</option>
+                <option value="price-asc">Preis (aufsteigend)</option>
+                <option value="price-desc">Preis (absteigend)</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Appointments List */}
-        {filteredAppointments.length === 0 ? (
+        {sortedFilteredAppointments.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -470,7 +519,7 @@ export default function WorkshopAppointments() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredAppointments.map((apt) => (
+            {sortedFilteredAppointments.map((apt) => (
               <div key={apt.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">

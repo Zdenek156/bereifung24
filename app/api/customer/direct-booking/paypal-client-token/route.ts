@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
       apiUrl
     })
 
-    // Generate access token first
+    // Generate client token (JWT format) for SDK v6
+    // SDK v6 requires response_type=client_token to get JWT format (not Braintree token)
     const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
     const tokenResponse = await fetch(`${apiUrl}/v1/oauth2/token`, {
       method: 'POST',
@@ -45,47 +46,33 @@ export async function GET(request: NextRequest) {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: 'grant_type=client_credentials'
+      body: new URLSearchParams({
+        'grant_type': 'client_credentials',
+        'response_type': 'client_token',
+        'domains[]': 'bereifung24.de'
+      }).toString()
     })
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text()
       console.error('[PAYPAL CLIENT TOKEN] Token generation failed:', error)
       return NextResponse.json(
-        { error: 'Failed to generate access token' },
-        { status: 500 }
-      )
-    }
-
-    const { access_token } = await tokenResponse.json()
-    console.log('[PAYPAL CLIENT TOKEN] Access token generated')
-
-    // Generate client token using access token
-    const clientTokenResponse = await fetch(`${apiUrl}/v1/identity/generate-token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': 'application/json',
-        'Accept-Language': 'en_US'
-      },
-      body: JSON.stringify({})
-    })
-
-    if (!clientTokenResponse.ok) {
-      const error = await clientTokenResponse.text()
-      console.error('[PAYPAL CLIENT TOKEN] Client token generation failed:', error)
-      return NextResponse.json(
         { error: 'Failed to generate client token' },
         { status: 500 }
       )
     }
 
-    const { client_token } = await clientTokenResponse.json()
-    console.log('[PAYPAL CLIENT TOKEN] ✅ Client token generated successfully')
+    const { access_token } = await tokenResponse.json()
+    console.log('[PAYPAL CLIENT TOKEN] ✅ Client token (JWT) generated successfully')
+    console.log('[PAYPAL CLIENT TOKEN] Token format check:', {
+      startsWithEyJ: access_token?.startsWith('eyJ'),
+      tokenPrefix: access_token?.substring(0, 20) + '...',
+      isJWT: access_token?.split('.').length === 3
+    })
 
     return NextResponse.json({ 
       success: true,
-      clientToken: client_token 
+      clientToken: access_token  // This is now a JWT token for SDK v6
     })
 
   } catch (error) {

@@ -24,7 +24,7 @@ interface Booking {
   createdAt: string
   workshop: {
     id: string
-    name: string
+    companyName: string
     address: string
     city: string
     postalCode: string
@@ -181,7 +181,7 @@ export default function BookingDetailsPage() {
           Werkstatt
         </h2>
         <div className="space-y-2">
-          <div className="font-semibold text-lg">{booking.workshop.name}</div>
+          <div className="font-semibold text-lg">{booking.workshop.companyName}</div>
           <div className="text-gray-600">{booking.workshop.address}</div>
           <div className="text-gray-600">{booking.workshop.postalCode} {booking.workshop.city}</div>
           <div className="mt-4 space-y-1">

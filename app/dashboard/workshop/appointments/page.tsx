@@ -203,25 +203,29 @@ export default function WorkshopAppointments() {
 
   // Sortier-Funktion
   const sortedFilteredAppointments = [...filteredAppointments].sort((a, b) => {
-    console.log('Sortierung aktiv, sortBy:', sortBy)
     switch (sortBy) {
       case 'date-asc': {
-        // Kombiniere Datum und Zeit zu einem validen ISO-String
+        // Extrahiere nur den Datums-Teil (YYYY-MM-DD) ohne Zeit
+        const datePartA = a.appointmentDate.split('T')[0]
+        const datePartB = b.appointmentDate.split('T')[0]
         // Stelle sicher, dass Zeit im HH:MM Format ist
         const timeA = a.appointmentTime.includes(':') ? a.appointmentTime : `${a.appointmentTime}:00`
         const timeB = b.appointmentTime.includes(':') ? b.appointmentTime : `${b.appointmentTime}:00`
-        const dateTimeA = `${a.appointmentDate}T${timeA}:00`
-        const dateTimeB = `${b.appointmentDate}T${timeB}:00`
+        // Kombiniere zu validem ISO-String
+        const dateTimeA = `${datePartA}T${timeA}:00`
+        const dateTimeB = `${datePartB}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
-        console.log('date-asc:', a.appointmentDate, timeA, '→', dateA.getTime(), 'vs', b.appointmentDate, timeB, '→', dateB.getTime(), '=', dateA.getTime() - dateB.getTime())
         return dateA.getTime() - dateB.getTime()
       }
       case 'date-desc': {
+        // Extrahiere nur den Datums-Teil (YYYY-MM-DD) ohne Zeit
+        const datePartA = a.appointmentDate.split('T')[0]
+        const datePartB = b.appointmentDate.split('T')[0]
         const timeA = a.appointmentTime.includes(':') ? a.appointmentTime : `${a.appointmentTime}:00`
         const timeB = b.appointmentTime.includes(':') ? b.appointmentTime : `${b.appointmentTime}:00`
-        const dateTimeA = `${a.appointmentDate}T${timeA}:00`
-        const dateTimeB = `${b.appointmentDate}T${timeB}:00`
+        const dateTimeA = `${datePartA}T${timeA}:00`
+        const dateTimeB = `${datePartB}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
         return dateB.getTime() - dateA.getTime()

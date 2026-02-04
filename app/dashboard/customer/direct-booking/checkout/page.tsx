@@ -486,10 +486,36 @@ function CheckoutContent() {
           alert('Zahlung konnte nicht gestartet werden.')
           setProcessingPayment(false)
         }
-      } else {
-        // Stripe payment (to be implemented)
-        alert('Stripe-Zahlung wird noch nicht unterstützt.')
-        setProcessingPayment(false)
+      } else if (paymentMethod === 'STRIPE') {
+        // Stripe Checkout
+        const response = await fetch('/api/customer/direct-booking/create-stripe-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workshopId,
+            serviceType: service,
+            vehicleId: selectedVehicle.id,
+            date: selectedDate,
+            time: selectedTime,
+            hasBalancing,
+            hasStorage,
+            totalPrice,
+            workshopName: workshop.companyName,
+            serviceName: SERVICE_LABELS[service],
+            vehicleInfo: `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})`
+          })
+        })
+
+        if (!response.ok) {
+          alert('Stripe-Checkout konnte nicht erstellt werden.')
+          setProcessingPayment(false)
+          return
+        }
+
+        const { url } = await response.json()
+        
+        // Redirect to Stripe Checkout
+        window.location.href = url
       }
     } catch (error) {
       console.error('Booking error:', error)

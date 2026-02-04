@@ -8,11 +8,16 @@ async function generatePayPalAccessToken() {
   const clientSecret = await getApiSetting('PAYPAL_CLIENT_SECRET', 'PAYPAL_CLIENT_SECRET')
   const mode = await getApiSetting('PAYPAL_MODE', 'PAYPAL_MODE') || 'sandbox'
 
+  console.log('[PAYPAL] Loaded credentials:', {
+    hasClientId: !!clientId,
+    clientIdLength: clientId?.length || 0,
+    hasClientSecret: !!clientSecret,
+    clientSecretLength: clientSecret?.length || 0,
+    mode
+  })
+
   if (!clientId || !clientSecret) {
-    console.error('[PAYPAL] Missing credentials:', {
-      hasClientId: !!clientId,
-      hasClientSecret: !!clientSecret
-    })
+    console.error('[PAYPAL] Missing credentials!')
     throw new Error('PayPal credentials not configured')
   }
 
@@ -22,7 +27,7 @@ async function generatePayPalAccessToken() {
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 
-  console.log('[PAYPAL] Generating access token...', { mode })
+  console.log('[PAYPAL] Generating access token...', { mode, apiUrl: PAYPAL_API_URL })
 
   const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
     method: 'POST',

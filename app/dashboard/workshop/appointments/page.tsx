@@ -206,15 +206,27 @@ export default function WorkshopAppointments() {
     switch (sortBy) {
       case 'date-asc': {
         // Kombiniere Datum und Zeit zu einem validen ISO-String
-        const dateTimeA = `${a.appointmentDate}T${a.appointmentTime}:00`
-        const dateTimeB = `${b.appointmentDate}T${b.appointmentTime}:00`
+        // Stelle sicher, dass Zeit im HH:MM Format ist
+        const timeA = a.appointmentTime.includes(':') ? a.appointmentTime : `${a.appointmentTime}:00`
+        const timeB = b.appointmentTime.includes(':') ? b.appointmentTime : `${b.appointmentTime}:00`
+        const dateTimeA = `${a.appointmentDate}T${timeA}:00`
+        const dateTimeB = `${b.appointmentDate}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
+        
+        console.log('Sort date-asc:', {
+          a: { date: a.appointmentDate, time: a.appointmentTime, dateTime: dateTimeA, timestamp: dateA.getTime() },
+          b: { date: b.appointmentDate, time: b.appointmentTime, dateTime: dateTimeB, timestamp: dateB.getTime() },
+          result: dateA.getTime() - dateB.getTime()
+        })
+        
         return dateA.getTime() - dateB.getTime()
       }
       case 'date-desc': {
-        const dateTimeA = `${a.appointmentDate}T${a.appointmentTime}:00`
-        const dateTimeB = `${b.appointmentDate}T${b.appointmentTime}:00`
+        const timeA = a.appointmentTime.includes(':') ? a.appointmentTime : `${a.appointmentTime}:00`
+        const timeB = b.appointmentTime.includes(':') ? b.appointmentTime : `${b.appointmentTime}:00`
+        const dateTimeA = `${a.appointmentDate}T${timeA}:00`
+        const dateTimeB = `${b.appointmentDate}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
         return dateB.getTime() - dateA.getTime()

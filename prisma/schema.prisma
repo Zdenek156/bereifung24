@@ -5425,7 +5425,7 @@ model DirectBooking {
   workshop   Workshop @relation("DirectBookingWorkshop", fields: [workshopId], references: [id], onDelete: Cascade)
   
   // Service Details
-  serviceType       String // WHEEL_CHANGE, TIRE_CHANGE, etc.
+  serviceType       String @map("service_type") // WHEEL_CHANGE, TIRE_CHANGE, etc.
   vehicleId         String      @map("vehicle_id")
   vehicle           Vehicle     @relation(fields: [vehicleId], references: [id])
   

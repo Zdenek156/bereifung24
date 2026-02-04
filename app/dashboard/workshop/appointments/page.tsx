@@ -203,6 +203,7 @@ export default function WorkshopAppointments() {
 
   // Sortier-Funktion
   const sortedFilteredAppointments = [...filteredAppointments].sort((a, b) => {
+    console.log('Sortierung aktiv, sortBy:', sortBy)
     switch (sortBy) {
       case 'date-asc': {
         // Kombiniere Datum und Zeit zu einem validen ISO-String
@@ -213,6 +214,7 @@ export default function WorkshopAppointments() {
         const dateTimeB = `${b.appointmentDate}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
+        console.log('date-asc:', a.appointmentDate, timeA, '→', dateA.getTime(), 'vs', b.appointmentDate, timeB, '→', dateB.getTime(), '=', dateA.getTime() - dateB.getTime())
         return dateA.getTime() - dateB.getTime()
       }
       case 'date-desc': {

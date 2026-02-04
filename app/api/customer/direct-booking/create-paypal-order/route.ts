@@ -50,10 +50,14 @@ async function generatePayPalAccessToken() {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('[PAYPAL CREATE ORDER] API called')
+  
   try {
     const session = await getServerSession(authOptions)
+    console.log('[PAYPAL CREATE ORDER] Session:', { hasSession: !!session, userId: session?.user?.id })
     
     if (!session?.user?.id) {
+      console.log('[PAYPAL CREATE ORDER] Unauthorized - no session')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
@@ -62,14 +66,17 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { amount, description } = body
+    console.log('[PAYPAL CREATE ORDER] Request body:', { amount, hasDescription: !!description })
 
     if (!amount) {
+      console.log('[PAYPAL CREATE ORDER] Missing amount')
       return NextResponse.json(
         { error: 'Fehlende Parameter' },
         { status: 400 }
       )
     }
 
+    console.log('[PAYPAL CREATE ORDER] Generating access token...')
     const accessToken = await generatePayPalAccessToken()
     const mode = await getApiSetting('PAYPAL_MODE', 'PAYPAL_MODE') || 'sandbox'
     const PAYPAL_API_URL = mode === 'live' 
@@ -118,9 +125,13 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error creating PayPal order:', error)
+    console.error('[PAYPAL CREATE ORDER] ❌ ERROR:', error)
+    console.error('[PAYPAL CREATE ORDER] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json(
-      { error: 'Fehler bei der PayPal-Zahlung' },
+      { error: error instanceof Error ? error.message : 'Fehler bei der PayPal-Zahlung' },
       { status: 500 }
     )
   }

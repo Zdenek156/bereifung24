@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { amount, description, customerName, customerEmail, workshopName, date, time } = body
+    const { amount, description, customerName, customerEmail, workshopName, date, time, street, city, zipCode, country } = body
     console.log('[PAYPAL CREATE ORDER] Request body:', { 
       amount, 
       hasDescription: !!description,
@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
       customerEmail,
       workshopName,
       date,
-      time
+      time,
+      street,
+      city,
+      zipCode,
+      country
     })
 
     if (!amount) {
@@ -122,7 +126,13 @@ export async function POST(request: NextRequest) {
           given_name: customerName.split(' ')[0] || customerName,
           surname: customerName.split(' ').slice(1).join(' ') || ''
         },
-        email_address: customerEmail
+        email_address: customerEmail,
+        address: {
+          address_line_1: street || '',
+          admin_area_2: city || '',
+          postal_code: zipCode || '',
+          country_code: country || 'DE'
+        }
       }
     }
 

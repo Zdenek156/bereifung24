@@ -1,40 +1,41 @@
-﻿{
-  "files.watcherExclude": {
-    "**/node_modules/**": true,
-    "**/.next/**": true,
-    "**/dist/**": true,
-    "**/build/**": true,
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/Bereifung24 App/**": true,
-    "**/*.log": true,
-    "**/*.db": true,
-    "**/*.tar.gz": true,
-    "**/check-*.js": true,
-    "**/test-*.js": true,
-    "**/fix-*.js": true,
-    "**/deploy-*.js": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.next": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/Bereifung24 App": true,
-    "**/*.log": true,
-    "**/*.db": true,
-    "**/check-*.js": true,
-    "**/test-*.js": true,
-    "**/fix-*.js": true
-  },
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "**/*.tsbuildinfo": true
-  },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  }
+{
+    "files.watcherExclude":  {
+                                 "**/node_modules/**":  true,
+                                 "**/.next/**":  true,
+                                 "**/dist/**":  true,
+                                 "**/build/**":  true,
+                                 "**/.git/objects/**":  true,
+                                 "**/.git/subtree-cache/**":  true,
+                                 "**/Bereifung24 App/**":  true,
+                                 "**/*.log":  true,
+                                 "**/*.db":  true,
+                                 "**/*.tar.gz":  true,
+                                 "**/check-*.js":  true,
+                                 "**/test-*.js":  true,
+                                 "**/fix-*.js":  true,
+                                 "**/deploy-*.js":  true
+                             },
+    "search.exclude":  {
+                           "**/node_modules":  true,
+                           "**/.next":  true,
+                           "**/dist":  true,
+                           "**/build":  true,
+                           "**/Bereifung24 App":  true,
+                           "**/*.log":  true,
+                           "**/*.db":  true,
+                           "**/check-*.js":  true,
+                           "**/test-*.js":  true,
+                           "**/fix-*.js":  true
+                       },
+    "files.exclude":  {
+                          "**/.git":  true,
+                          "**/.DS_Store":  true,
+                          "**/Thumbs.db":  true,
+                          "**/*.tsbuildinfo":  true
+                      },
+    "typescript.tsdk":  "node_modules/typescript/lib",
+    "editor.codeActionsOnSave":  {
+                                     "source.fixAll.eslint":  "explicit"
+                                 },
+    "typescript.tsserver.maxTsServerMemory":  8192
 }

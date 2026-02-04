@@ -205,13 +205,18 @@ export default function WorkshopAppointments() {
   const sortedFilteredAppointments = [...filteredAppointments].sort((a, b) => {
     switch (sortBy) {
       case 'date-asc': {
-        const dateA = new Date(`${a.appointmentDate} ${a.appointmentTime}`)
-        const dateB = new Date(`${b.appointmentDate} ${b.appointmentTime}`)
+        // Kombiniere Datum und Zeit zu einem validen ISO-String
+        const dateTimeA = `${a.appointmentDate}T${a.appointmentTime}:00`
+        const dateTimeB = `${b.appointmentDate}T${b.appointmentTime}:00`
+        const dateA = new Date(dateTimeA)
+        const dateB = new Date(dateTimeB)
         return dateA.getTime() - dateB.getTime()
       }
       case 'date-desc': {
-        const dateA = new Date(`${a.appointmentDate} ${a.appointmentTime}`)
-        const dateB = new Date(`${b.appointmentDate} ${b.appointmentTime}`)
+        const dateTimeA = `${a.appointmentDate}T${a.appointmentTime}:00`
+        const dateTimeB = `${b.appointmentDate}T${b.appointmentTime}:00`
+        const dateA = new Date(dateTimeA)
+        const dateB = new Date(dateTimeB)
         return dateB.getTime() - dateA.getTime()
       }
       case 'price-asc': {

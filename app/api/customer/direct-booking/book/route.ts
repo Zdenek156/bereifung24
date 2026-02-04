@@ -105,7 +105,56 @@ export async function POST(request: NextRequest) {
 
       console.log('[BOOK API] ✅ Booking created:', booking.id)
 
-      // Send confirmation email
+      // Create Google Calendar event
+      try {
+        const calendarUrl = booking.workshop.googleCalendarUrl
+        const calendarId = calendarUrl?.match(/calendar\/embed\?src=([^&]+)/)?.[1]
+        
+        if (calendarId) {
+          const { google } = require('googleapis')
+          const auth = new google.auth.GoogleAuth({
+            credentials: {
+              client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+              private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n')
+            },
+            scopes: ['https://www.googleapis.com/auth/calendar']
+          })
+          
+          const calendar = google.calendar({ version: 'v3', auth })
+          
+          const startDateTime = new Date(booking.date)
+          startDateTime.setHours(parseInt(booking.time.split(':')[0]), parseInt(booking.time.split(':')[1]))
+          
+          const endDateTime = new Date(startDateTime)
+          endDateTime.setMinutes(endDateTime.getMinutes() + booking.durationMinutes)
+          
+          const serviceTypes: any = {
+            WHEEL_CHANGE: 'Räderwechsel',
+            TIRE_REPAIR: 'Reifenreparatur',
+            WHEEL_ALIGNMENT: 'Achsvermessung',
+            AC_SERVICE: 'Klimaanlagen-Service',
+            OTHER: 'Sonstige Reifendienste'
+          }
+          
+          await calendar.events.insert({
+            calendarId: decodeURIComponent(calendarId),
+            requestBody: {
+              summary: `${serviceTypes[booking.serviceType] || booking.serviceType} - ${booking.vehicle.brand} ${booking.vehicle.model}`,
+              description: `Kunde: ${booking.customer.name}\nKennzeichen: ${booking.vehicle.licensePlate}\nTelefon: ${booking.customer.phone || 'Nicht angegeben'}\nEmail: ${booking.customer.email}\n\nBuchungsnummer: DB-${booking.id.slice(-8).toUpperCase()}`,
+              start: { dateTime: startDateTime.toISOString(), timeZone: 'Europe/Berlin' },
+              end: { dateTime: endDateTime.toISOString(), timeZone: 'Europe/Berlin' },
+              attendees: [{ email: booking.customer.email }],
+              reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 24 * 60 }] }
+            }
+          })
+          
+          console.log('[BOOK API] ✅ Google Calendar event created')
+        }
+      } catch (calendarError) {
+        console.error('[BOOK API] Error creating calendar event:', calendarError)
+      }
+
+      // Send confirmation email to customer
       try {
         const templatePath = path.join(process.cwd(), 'email-templates', 'direct-booking-confirmation.js')
         const template = require(templatePath)
@@ -155,6 +204,58 @@ export async function POST(request: NextRequest) {
         console.log(`✅ Confirmation email sent to ${booking.customer.email}`)
       } catch (emailError) {
         console.error('[BOOK API] Error sending confirmation email:', emailError)
+      }
+
+      // Send notification email to workshop
+      try {
+        const workshopTemplateContent = await prisma.emailTemplate.findFirst({
+          where: { key: 'direct_booking_workshop_notification' }
+        })
+        
+        if (workshopTemplateContent) {
+          const compiledWorkshopTemplate = Handlebars.compile(workshopTemplateContent.htmlContent)
+          
+          const serviceTypes: any = {
+            WHEEL_CHANGE: 'Räderwechsel',
+            TIRE_REPAIR: 'Reifenreparatur',
+            WHEEL_ALIGNMENT: 'Achsvermessung',
+            AC_SERVICE: 'Klimaanlagen-Service',
+            OTHER: 'Sonstige Reifendienste'
+          }
+          
+          const workshopEmailHtml = compiledWorkshopTemplate({
+            workshopName: booking.workshop.name,
+            customerName: booking.customer.name || 'Kunde',
+            customerEmail: booking.customer.email,
+            customerPhone: booking.customer.phone || 'Nicht angegeben',
+            bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
+            serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
+            appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            appointmentTime: booking.time,
+            vehicleBrand: booking.vehicle.brand,
+            vehicleModel: booking.vehicle.model,
+            licensePlate: booking.vehicle.licensePlate,
+            totalPrice: booking.totalPrice.toString(),
+            hasBalancing: booking.hasBalancing,
+            hasStorage: booking.hasStorage,
+            dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings`
+          })
+          
+          await sendEmail({
+            to: booking.workshop.email,
+            subject: `Neue Direktbuchung - ${serviceTypes[booking.serviceType] || booking.serviceType}`,
+            html: workshopEmailHtml
+          })
+          
+          console.log(`✅ Workshop notification sent to ${booking.workshop.email}`)
+        }
+      } catch (workshopEmailError) {
+        console.error('[BOOK API] Error sending workshop notification:', workshopEmailError)
       }
 
       return NextResponse.json({

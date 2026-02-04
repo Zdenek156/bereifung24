@@ -305,7 +305,9 @@ function CheckoutContent() {
               })
               
               if (response.ok) {
-                router.push(`/dashboard/customer/appointments`)
+                const { booking } = await response.json()
+                // Redirect to booking details page
+                router.push(`/dashboard/customer/bookings/${booking.id}`)
               } else {
                 alert('Buchung fehlgeschlagen.')
               }

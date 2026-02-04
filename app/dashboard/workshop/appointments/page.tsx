@@ -15,6 +15,19 @@ interface Appointment {
   completedAt: string | null
   customerNotes: string | null
   workshopNotes: string | null
+  isDirectBooking?: boolean
+  paymentMethod?: string
+  totalPrice?: number
+  basePrice?: number
+  balancingPrice?: number | null
+  storagePrice?: number | null
+  serviceType?: string
+  vehicle?: {
+    make: string
+    model: string
+    year: number
+    licensePlate: string | null
+  }
   customer: {
     user: {
       firstName: string
@@ -32,12 +45,12 @@ interface Appointment {
     aspectRatio: number
     diameter: number
     quantity: number
-  }
+  } | null
   offer: {
     tireBrand: string
     tireModel: string
     price: number
-  }
+  } | null
   review: any | null
 }
 
@@ -491,6 +504,20 @@ export default function WorkshopAppointments() {
                         }
                       } catch {}
 
+                      // DirectBooking (PayPal) - zeige Preis und Badge
+                      if (apt.isDirectBooking && apt.totalPrice) {
+                        return (
+                          <>
+                            <p className="text-2xl font-bold text-primary-600">
+                              {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(apt.totalPrice)}
+                            </p>
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 mt-1">
+                              ✓ Bezahlt (PayPal)
+                            </span>
+                          </>
+                        )
+                      }
+
                       // Manueller Termin - zeige Preis und Badge
                       if (isManualEntry) {
                         return (
@@ -627,7 +654,42 @@ export default function WorkshopAppointments() {
                   </div>
 
                   <div>
-                    {apt.tireRequest && apt.offer ? (
+                    {/* DirectBooking (PayPal) */}
+                    {apt.isDirectBooking ? (
+                      <>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
+                        <p className="text-sm text-gray-900 font-medium">
+                          {apt.serviceType === 'TIRE_CHANGE' ? 'Reifenwechsel' : 
+                           apt.serviceType === 'BALANCING' ? 'Auswuchten' : 
+                           apt.serviceType === 'STORAGE' ? 'Einlagerung' : 
+                           apt.serviceType}
+                        </p>
+                        {apt.vehicle && (
+                          <>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">Fahrzeug</h4>
+                            <p className="text-sm text-gray-900">
+                              {apt.vehicle.make} {apt.vehicle.model} ({apt.vehicle.year})
+                            </p>
+                            {apt.vehicle.licensePlate && (
+                              <p className="text-sm text-gray-600">
+                                Kennzeichen: {apt.vehicle.licensePlate}
+                              </p>
+                            )}
+                          </>
+                        )}
+                        {apt.totalPrice && (
+                          <>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">Preis</h4>
+                            <p className="text-sm text-gray-900 font-semibold">
+                              {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(apt.totalPrice)}
+                            </p>
+                            <p className="text-xs text-green-600 font-medium mt-1">
+                              ✓ Bereits bezahlt (PayPal)
+                            </p>
+                          </>
+                        )}
+                      </>
+                    ) : apt.tireRequest && apt.offer ? (
                       (() => {
                         // Prüfe ob es ein manueller Termin ist (customerNotes als JSON)
                         let isManualEntry = false

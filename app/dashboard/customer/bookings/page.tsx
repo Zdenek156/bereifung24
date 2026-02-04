@@ -35,7 +35,7 @@ interface DirectBooking {
   }
   vehicle: {
     id: string
-    brand: string
+    make: string
     model: string
     licensePlate: string
     year: number

@@ -32,25 +32,25 @@ export async function GET(
             address: true,
             city: true,
             postalCode: true,
-            phoneNumber: true,
-            email: true,
-            openingHours: true
+            phone: true,
+            email: true
           }
         },
         vehicle: {
           select: {
             id: true,
-            manufacturer: true,
+            brand: true,
             model: true,
-            licensePlate: true
+            licensePlate: true,
+            year: true
           }
         },
         customer: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true
+            name: true,
+            email: true,
+            phone: true
           }
         }
       }
@@ -71,10 +71,16 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      directBooking
-    })
+    // Convert Decimal fields to numbers for JSON serialization
+    const bookingData = {
+      ...directBooking,
+      basePrice: Number(directBooking.basePrice),
+      balancingPrice: directBooking.balancingPrice ? Number(directBooking.balancingPrice) : null,
+      storagePrice: directBooking.storagePrice ? Number(directBooking.storagePrice) : null,
+      totalPrice: Number(directBooking.totalPrice)
+    }
+
+    return NextResponse.json(bookingData)
 
   } catch (error) {
     console.error('Error getting direct booking:', error)

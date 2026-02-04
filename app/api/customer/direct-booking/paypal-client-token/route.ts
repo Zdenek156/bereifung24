@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getApiSetting } from '@/lib/api-settings'
+import { prisma } from '@/lib/prisma'
 
 /**
  * Generate PayPal Client Token for SDK v6
@@ -9,10 +9,18 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[PAYPAL CLIENT TOKEN] Generating client token...')
 
-    // Get PayPal credentials from database
-    const clientId = await getApiSetting('PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_ID')
-    const clientSecret = await getApiSetting('PAYPAL_CLIENT_SECRET', 'PAYPAL_CLIENT_SECRET')
-    const apiUrl = await getApiSetting('PAYPAL_API_URL', 'https://api-m.paypal.com')
+    // Get PayPal credentials DIRECTLY from database (bypass cache)
+    const settings = await prisma.adminApiSetting.findMany({
+      where: {
+        key: {
+          in: ['PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET', 'PAYPAL_API_URL']
+        }
+      }
+    })
+    
+    const clientId = settings.find(s => s.key === 'PAYPAL_CLIENT_ID')?.value
+    const clientSecret = settings.find(s => s.key === 'PAYPAL_CLIENT_SECRET')?.value
+    const apiUrl = settings.find(s => s.key === 'PAYPAL_API_URL')?.value || 'https://api-m.paypal.com'
 
     if (!clientId || !clientSecret) {
       console.error('[PAYPAL CLIENT TOKEN] Missing credentials')

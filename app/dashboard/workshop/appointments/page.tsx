@@ -213,13 +213,6 @@ export default function WorkshopAppointments() {
         const dateTimeB = `${b.appointmentDate}T${timeB}:00`
         const dateA = new Date(dateTimeA)
         const dateB = new Date(dateTimeB)
-        
-        console.log('Sort date-asc:', {
-          a: { date: a.appointmentDate, time: a.appointmentTime, dateTime: dateTimeA, timestamp: dateA.getTime() },
-          b: { date: b.appointmentDate, time: b.appointmentTime, dateTime: dateTimeB, timestamp: dateB.getTime() },
-          result: dateA.getTime() - dateB.getTime()
-        })
-        
         return dateA.getTime() - dateB.getTime()
       }
       case 'date-desc': {

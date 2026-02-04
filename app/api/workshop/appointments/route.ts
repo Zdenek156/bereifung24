@@ -51,7 +51,7 @@ export async function GET() {
         offer: true,
         review: true,
       },
-      orderBy: { appointmentDate: 'desc' },
+      // Keine Sortierung - wird clientseitig gemacht
     })
 
     // Get all direct bookings (PayPal)
@@ -79,7 +79,7 @@ export async function GET() {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      // Keine Sortierung - wird clientseitig gemacht
     })
 
     // Transform direct bookings to match appointment structure
@@ -117,12 +117,8 @@ export async function GET() {
       review: null,
     }))
 
-    // Merge and sort all appointments
-    const allAppointments = [...bookings, ...transformedDirectBookings].sort((a, b) => {
-      const dateA = new Date(a.appointmentDate)
-      const dateB = new Date(b.appointmentDate)
-      return dateB.getTime() - dateA.getTime()
-    })
+    // Merge all appointments (keine Sortierung - wird clientseitig gemacht)
+    const allAppointments = [...bookings, ...transformedDirectBookings]
 
     return NextResponse.json(allAppointments)
   } catch (error) {

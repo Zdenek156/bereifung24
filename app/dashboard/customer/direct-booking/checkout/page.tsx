@@ -214,11 +214,17 @@ function CheckoutContent() {
           return
         }
 
-        const { orderId } = await orderResponse.json()
+        const { orderId, approvalUrl } = await orderResponse.json()
 
-        // Open PayPal window
+        if (!approvalUrl) {
+          alert('PayPal-Approval-Link fehlt.')
+          setProcessingPayment(false)
+          return
+        }
+
+        // Open PayPal window with correct approval URL
         const paypalWindow = window.open(
-          `https://www.${process.env.NEXT_PUBLIC_PAYPAL_MODE === 'live' ? '' : 'sandbox.'}paypal.com/checkoutnow?token=${orderId}`,
+          approvalUrl,
           'PayPal',
           'width=500,height=600'
         )

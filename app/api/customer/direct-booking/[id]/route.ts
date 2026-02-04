@@ -52,7 +52,8 @@ export async function GET(
         customer: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true
           }

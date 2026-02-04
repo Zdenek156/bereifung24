@@ -24,7 +24,7 @@ interface DirectBooking {
   createdAt: string
   workshop: {
     id: string
-    name: string
+    companyName: string
     address: string
     city: string
     postalCode: string
@@ -295,7 +295,7 @@ export default function BookingsPage() {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Werkstatt</p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {booking.workshop.name}
+                          {booking.workshop.companyName}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
                           {booking.workshop.city}

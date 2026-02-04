@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         workshop: {
           select: {
             id: true,
-            name: true,
+            companyName: true,
             address: true,
             city: true,
             postalCode: true,

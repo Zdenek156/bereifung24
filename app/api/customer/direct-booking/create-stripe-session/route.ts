@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { workshopId, date, time, serviceType, vehicle, totalPrice, basePrice, balancingPrice, storagePrice } = await request.json()
+    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo } = await request.json()
 
     // Get Stripe keys from database
     const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: serviceLabels[serviceType] || serviceType,
-              description: `${vehicle.make} ${vehicle.model} (${vehicle.year})`,
+              name: serviceName || serviceLabels[serviceType] || serviceType,
+              description: vehicleInfo || 'Fahrzeug',
             },
             unit_amount: Math.round(totalPrice * 100), // Convert to cents
           },
@@ -60,11 +60,13 @@ export async function POST(request: NextRequest) {
         date,
         time,
         serviceType,
-        vehicleId: vehicle.id,
-        basePrice: basePrice.toString(),
+        vehicleId,
+        basePrice: basePrice?.toString() || '0',
         balancingPrice: balancingPrice?.toString() || '0',
         storagePrice: storagePrice?.toString() || '0',
         totalPrice: totalPrice.toString(),
+        hasBalancing: hasBalancing?.toString() || 'false',
+        hasStorage: hasStorage?.toString() || 'false',
       },
     })
 

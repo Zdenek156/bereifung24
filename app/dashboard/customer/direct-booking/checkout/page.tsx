@@ -280,7 +280,7 @@ function CheckoutContent() {
               
               const { captureId } = await captureResponse.json()
               
-              // Create booking
+              // Create booking with all required pricing fields
               const bookingData = {
                 workshopId,
                 serviceType: service,
@@ -289,7 +289,11 @@ function CheckoutContent() {
                 time: selectedTime,
                 hasBalancing,
                 hasStorage,
+                basePrice: servicePricing?.basePrice || 0,
+                balancingPrice: hasBalancing ? (servicePricing?.balancingPrice || 0) : null,
+                storagePrice: hasStorage ? (servicePricing?.storagePrice || 0) : null,
                 totalPrice,
+                durationMinutes: servicePricing?.durationMinutes || 60,
                 paymentMethod: 'PAYPAL',
                 paymentId: captureId
               }

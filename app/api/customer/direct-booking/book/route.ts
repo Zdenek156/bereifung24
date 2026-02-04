@@ -41,9 +41,24 @@ export async function POST(request: NextRequest) {
       // DIRECT BOOKING FLOW with PayPal payment
       console.log('[BOOK API] Direct booking flow with payment')
       
-      const { workshopId, serviceType, vehicleId, date, time, hasBalancing, hasStorage, totalPrice, paymentMethod, paymentId } = body
+      const { 
+        workshopId, 
+        serviceType, 
+        vehicleId, 
+        date, 
+        time, 
+        hasBalancing, 
+        hasStorage, 
+        basePrice,
+        balancingPrice,
+        storagePrice,
+        totalPrice, 
+        durationMinutes,
+        paymentMethod, 
+        paymentId 
+      } = body
       
-      if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined) {
+      if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined || basePrice === undefined) {
         console.log('[BOOK API] ❌ Missing required booking parameters')
         return NextResponse.json(
           { error: 'Fehlende Buchungsparameter' },
@@ -70,7 +85,11 @@ export async function POST(request: NextRequest) {
           time,
           hasBalancing: hasBalancing || false,
           hasStorage: hasStorage || false,
+          basePrice: new Decimal(basePrice),
+          balancingPrice: balancingPrice ? new Decimal(balancingPrice) : null,
+          storagePrice: storagePrice ? new Decimal(storagePrice) : null,
           totalPrice: new Decimal(totalPrice),
+          durationMinutes: durationMinutes || 60,
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
           paymentMethod: paymentMethod,

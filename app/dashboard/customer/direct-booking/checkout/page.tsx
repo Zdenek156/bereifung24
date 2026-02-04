@@ -185,10 +185,161 @@ function CheckoutContent() {
       script.async = true
       script.onload = () => {
         window.paypalSdkLoaded = true
+        window.dispatchEvent(new Event('paypal-sdk-loaded'))
       }
       document.head.appendChild(script)
     }
   }, [])
+
+  // Render PayPal Button when on Step 3
+  useEffect(() => {
+    if (currentStep !== 3 || !workshopId || !service || !selectedVehicle || !selectedDate || !selectedTime) {
+      return
+    }
+
+    const renderPayPalButton = async () => {
+      if (!window.paypalSdkLoaded) {
+        // Wait for SDK to load
+        window.addEventListener('paypal-sdk-loaded', renderPayPalButton, { once: true })
+        return
+      }
+
+      const container = document.getElementById('paypal-button-container')
+      if (!container || container.children.length > 0) return // Already rendered
+
+      try {
+        // Get client token
+        const tokenResponse = await fetch('/api/customer/direct-booking/paypal-client-token')
+        if (!tokenResponse.ok) {
+          console.error('Failed to get PayPal client token')
+          return
+        }
+
+        const { clientToken } = await tokenResponse.json()
+        if (!clientToken) {
+          console.error('No client token received')
+          return
+        }
+
+        // Create SDK instance
+        const sdkInstance = await (window as any).paypal.createInstance({
+          clientToken,
+          components: ['paypal-payments'],
+          pageType: 'checkout'
+        })
+
+        const totalPrice = calculateTotal()
+
+        // Create order function
+        const createOrder = async () => {
+          const orderResponse = await fetch('/api/customer/direct-booking/create-paypal-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: totalPrice,
+              description: `${SERVICE_LABELS[service]} - ${workshop.name}`,
+              customerName: session?.user?.name || '',
+              customerEmail: session?.user?.email || '',
+              workshopName: workshop.name,
+              date: new Date(selectedDate).toLocaleDateString('de-DE', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+              }),
+              time: selectedTime,
+              street: (session?.user as any)?.street || '',
+              city: (session?.user as any)?.city || '',
+              zipCode: (session?.user as any)?.zipCode || '',
+              country: 'DE'
+            })
+          })
+          
+          const data = await orderResponse.json()
+          return { orderId: data.id }
+        }
+
+        // Create payment session
+        const paymentSession = sdkInstance.createPayPalOneTimePaymentSession({
+          async onApprove(data: any) {
+            setProcessingPayment(true)
+            console.log('Payment approved:', data)
+            
+            try {
+              // Capture payment
+              const captureResponse = await fetch('/api/customer/direct-booking/capture-paypal-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: data.orderId })
+              })
+              
+              if (!captureResponse.ok) {
+                alert('Zahlung konnte nicht erfasst werden.')
+                setProcessingPayment(false)
+                return
+              }
+              
+              const { captureId } = await captureResponse.json()
+              
+              // Create booking
+              const bookingData = {
+                workshopId,
+                serviceType: service,
+                vehicleId: selectedVehicle.id,
+                date: selectedDate,
+                time: selectedTime,
+                hasBalancing,
+                hasStorage,
+                totalPrice,
+                paymentMethod: 'PAYPAL',
+                paymentId: captureId
+              }
+              
+              const response = await fetch('/api/customer/direct-booking/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+              })
+              
+              if (response.ok) {
+                router.push(`/dashboard/customer/appointments`)
+              } else {
+                alert('Buchung fehlgeschlagen.')
+              }
+            } catch (error) {
+              console.error('Booking error:', error)
+              alert('Ein Fehler ist aufgetreten.')
+            } finally {
+              setProcessingPayment(false)
+            }
+          },
+          
+          onCancel(data: any) {
+            console.log('Payment cancelled:', data)
+          },
+          
+          onError(error: any) {
+            console.error('Payment error:', error)
+            alert('Zahlung fehlgeschlagen.')
+          }
+        })
+
+        // Start payment session and render button
+        await paymentSession.start(
+          { 
+            presentationMode: 'auto',
+            container: '#paypal-button-container'
+          },
+          createOrder()
+        )
+
+        console.log('PayPal button rendered successfully')
+      } catch (error) {
+        console.error('Error rendering PayPal button:', error)
+      }
+    }
+
+    renderPayPalButton()
+  }, [currentStep, workshopId, service, selectedVehicle, selectedDate, selectedTime, session, workshop, hasBalancing, hasStorage, router])
 
   const handlePayment = async () => {
     if (!workshopId || !service || !selectedVehicle || !selectedDate || !selectedTime) return
@@ -598,69 +749,40 @@ function CheckoutContent() {
                 {currentStep === 3 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold mb-2">Zahlungsmethode wählen</h2>
-                      <p className="text-gray-600">Wie möchten Sie bezahlen?</p>
+                      <h2 className="text-2xl font-bold mb-2">Jetzt bezahlen</h2>
+                      <p className="text-gray-600">Wählen Sie Ihre Zahlungsmethode</p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Stripe Button */}
                       <button
-                        onClick={() => setPaymentMethod('STRIPE')}
-                        className={`
-                          w-full p-6 border-2 rounded-xl text-left transition-all hover:shadow-lg
-                          ${paymentMethod === 'STRIPE'
-                            ? 'border-blue-600 bg-blue-50 shadow-md'
-                            : 'border-gray-200 hover:border-blue-300'}
-                        `}
+                        onClick={() => {
+                          setPaymentMethod('STRIPE')
+                          handlePayment()
+                        }}
+                        disabled={processingPayment}
+                        className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white py-4 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-3"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className={`
-                            w-12 h-12 rounded-full flex items-center justify-center
-                            ${paymentMethod === 'STRIPE' ? 'bg-blue-600' : 'bg-gray-200'}
-                          `}>
-                            <CreditCard className={`h-6 w-6 ${paymentMethod === 'STRIPE' ? 'text-white' : 'text-gray-500'}`} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-semibold text-lg">Kreditkarte</div>
-                            <div className="text-sm text-gray-600">Zahlung mit Visa, Mastercard, etc.</div>
-                          </div>
-                          {paymentMethod === 'STRIPE' && (
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                              <Check className="h-5 w-5 text-white" />
-                            </div>
-                          )}
-                        </div>
+                        <CreditCard className="h-5 w-5" />
+                        <span>{processingPayment && paymentMethod === 'STRIPE' ? 'Wird verarbeitet...' : 'Mit Kreditkarte bezahlen'}</span>
                       </button>
 
-                      <button
-                        onClick={() => setPaymentMethod('PAYPAL')}
-                        className={`
-                          w-full p-6 border-2 rounded-xl text-left transition-all hover:shadow-lg
-                          ${paymentMethod === 'PAYPAL'
-                            ? 'border-blue-600 bg-blue-50 shadow-md'
-                            : 'border-gray-200 hover:border-blue-300'}
-                        `}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`
-                            w-12 h-12 rounded-full flex items-center justify-center
-                            ${paymentMethod === 'PAYPAL' ? 'bg-blue-600' : 'bg-gray-200'}
-                          `}>
-                            <svg className={`h-6 w-6 ${paymentMethod === 'PAYPAL' ? 'text-white' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 3.993-.028.15a.805.805 0 01-.794.679H7.72a.483.483 0 01-.477-.558L9.22 7.004a.98.98 0 01.968-.828h4.62c1.553 0 2.602.207 3.23.654.326.232.58.512.77.85.1.183.182.38.26.598z"/>
-                              <path d="M16.207 3.515C16.556 3.794 16.834 4.128 17.061 4.53c.334.594.54 1.317.62 2.173.028.3.028.603.007.914a6.96 6.96 0 01-.108 1.142 8.026 8.026 0 01-.557 1.817c-.732 1.695-2.063 2.854-3.97 3.457a9.844 9.844 0 01-3.093.452h-.008c-.557 0-1.085-.077-1.588-.24l-.045 2.068a.483.483 0 01-.477.558H4.796L3.5 21.965a.805.805 0 00.794.679h3.346a.805.805 0 00.794-.679l.028-.15.63-3.993.04-.22a.805.805 0 01.794-.68h.5c3.238 0 5.774-1.314 6.514-5.12.256-1.313.192-2.447-.3-3.327-.174-.31-.392-.58-.65-.816z"/>
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-semibold text-lg">PayPal</div>
-                            <div className="text-sm text-gray-600">Schnell und sicher mit PayPal</div>
-                          </div>
-                          {paymentMethod === 'PAYPAL' && (
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                              <Check className="h-5 w-5 text-white" />
-                            </div>
-                          )}
+                      {/* PayPal Button Container */}
+                      <div id="paypal-button-container" className="relative">
+                        {/* SDK v6 PayPal Button will be rendered here */}
+                      </div>
+
+                      <div className="text-center text-sm text-gray-500">
+                        oder
+                      </div>
+
+                      {/* Alternative: Show loading state */}
+                      {!window.paypalSdkLoaded && (
+                        <div className="w-full bg-gray-100 py-4 rounded-xl flex items-center justify-center">
+                          <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
+                          <span className="text-gray-600">PayPal lädt...</span>
                         </div>
-                      </button>
+                      )}
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
@@ -779,33 +901,14 @@ function CheckoutContent() {
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <Button
-                        onClick={handleBack}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-2" />
-                        Zurück
-                      </Button>
-                      <Button
-                        onClick={handlePayment}
-                        disabled={!canProceed() || processingPayment}
-                        className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
-                      >
-                        {processingPayment ? (
-                          <>
-                            <div className="animate-spin h-5 w-5 border-3 border-white border-t-transparent rounded-full mr-2"></div>
-                            Wird bearbeitet...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-5 w-5 mr-2" />
-                            Jetzt verbindlich buchen
-                          </>
-                        )}
-                      </Button>
-                    </>
+                    <Button
+                      onClick={handleBack}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      Zurück
+                    </Button>
                   )}
                 </div>
 

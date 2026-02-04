@@ -32,11 +32,15 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             companyName: true,
-            address: true,
-            city: true,
-            postalCode: true,
-            phone: true,
-            email: true
+            user: {
+              select: {
+                email: true,
+                phone: true,
+                street: true,
+                city: true,
+                zipCode: true
+              }
+            }
           }
         },
         vehicle: {

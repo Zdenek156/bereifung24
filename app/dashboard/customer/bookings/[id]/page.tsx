@@ -25,11 +25,13 @@ interface Booking {
   workshop: {
     id: string
     companyName: string
-    address: string
-    city: string
-    postalCode: string
-    phone: string
-    email: string
+    user: {
+      email: string
+      phone: string | null
+      street: string | null
+      city: string | null
+      zipCode: string | null
+    }
   }
   vehicle: {
     id: string
@@ -182,19 +184,19 @@ export default function BookingDetailsPage() {
         </h2>
         <div className="space-y-2">
           <div className="font-semibold text-lg">{booking.workshop.companyName}</div>
-          <div className="text-gray-600">{booking.workshop.address}</div>
-          <div className="text-gray-600">{booking.workshop.postalCode} {booking.workshop.city}</div>
+          <div className="text-gray-600">{booking.workshop.user.street || 'Keine Adresse'}</div>
+          <div className="text-gray-600">{booking.workshop.user.zipCode} {booking.workshop.user.city}</div>
           <div className="mt-4 space-y-1">
             <div className="text-sm">
               <span className="text-gray-600">Telefon:</span>{' '}
-              <a href={`tel:${booking.workshop.phone}`} className="text-blue-600 hover:underline">
-                {booking.workshop.phone}
+              <a href={`tel:${booking.workshop.user.phone}`} className="text-blue-600 hover:underline">
+                {booking.workshop.user.phone || 'Keine Telefonnummer'}
               </a>
             </div>
             <div className="text-sm">
               <span className="text-gray-600">E-Mail:</span>{' '}
-              <a href={`mailto:${booking.workshop.email}`} className="text-blue-600 hover:underline">
-                {booking.workshop.email}
+              <a href={`mailto:${booking.workshop.user.email}`} className="text-blue-600 hover:underline">
+                {booking.workshop.user.email}
               </a>
             </div>
           </div>

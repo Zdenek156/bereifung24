@@ -25,11 +25,13 @@ interface DirectBooking {
   workshop: {
     id: string
     companyName: string
-    address: string
-    city: string
-    postalCode: string
-    phone: string
-    email: string
+    user: {
+      email: string
+      phone: string | null
+      street: string | null
+      city: string | null
+      zipCode: string | null
+    }
   }
   vehicle: {
     id: string

@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
+import { getApiSetting } from '@/lib/api-settings'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
 import { google } from 'googleapis'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
-})
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +14,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { sessionId } = await request.json()
+
+    // Get Stripe key from database
+    const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
+    if (!stripeSecretKey) {
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2024-12-18.acacia'
+    })
 
     // Retrieve checkout session from Stripe
     const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId)

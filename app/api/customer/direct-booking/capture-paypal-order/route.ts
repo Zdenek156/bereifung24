@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-
-const PAYPAL_API_URL = process.env.PAYPAL_MODE === 'live' 
-  ? 'https://api-m.paypal.com' 
-  : 'https://api-m.sandbox.paypal.com'
+import { getApiSetting } from '@/lib/api-settings'
 
 async function generatePayPalAccessToken() {
-  const auth = Buffer.from(
-    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-  ).toString('base64')
+  const clientId = await getApiSetting('PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_ID')
+  const clientSecret = await getApiSetting('PAYPAL_CLIENT_SECRET', 'PAYPAL_CLIENT_SECRET')
+  const mode = await getApiSetting('PAYPAL_MODE', 'PAYPAL_MODE') || 'sandbox'
+
+  if (!clientId || !clientSecret) {
+    console.error('[PAYPAL] Missing credentials:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret
+    })
+    throw new Error('PayPal credentials not configured')
+  }
+
+  const PAYPAL_API_URL = mode === 'live' 
+    ? 'https://api-m.paypal.com' 
+    : 'https://api-m.sandbox.paypal.com'
+
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+  console.log('[PAYPAL] Generating access token...', { mode })
 
   const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
     method: 'POST',
@@ -21,6 +34,13 @@ async function generatePayPalAccessToken() {
   })
 
   const data = await response.json()
+  
+  if (!response.ok || !data.access_token) {
+    console.error('[PAYPAL] Token generation failed:', data)
+    throw new Error(`PayPal authentication failed: ${data.error_description || data.error}`)
+  }
+
+  console.log('[PAYPAL] Access token generated successfully')
   return data.access_token
 }
 
@@ -46,6 +66,10 @@ export async function POST(request: NextRequest) {
     }
 
     const accessToken = await generatePayPalAccessToken()
+    const mode = await getApiSetting('PAYPAL_MODE', 'PAYPAL_MODE') || 'sandbox'
+    const PAYPAL_API_URL = mode === 'live' 
+      ? 'https://api-m.paypal.com' 
+      : 'https://api-m.sandbox.paypal.com'
 
     const capture = await fetch(
       `${PAYPAL_API_URL}/v2/checkout/orders/${orderId}/capture`,

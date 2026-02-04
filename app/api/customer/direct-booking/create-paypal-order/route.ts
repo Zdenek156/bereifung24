@@ -65,8 +65,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { amount, description } = body
-    console.log('[PAYPAL CREATE ORDER] Request body:', { amount, hasDescription: !!description })
+    const { amount, description, customerName, customerEmail, workshopName, date, time } = body
+    console.log('[PAYPAL CREATE ORDER] Request body:', { 
+      amount, 
+      hasDescription: !!description,
+      customerName,
+      customerEmail,
+      workshopName,
+      date,
+      time
+    })
 
     if (!amount) {
       console.log('[PAYPAL CREATE ORDER] Missing amount')
@@ -84,29 +92,49 @@ export async function POST(request: NextRequest) {
       : 'https://api-m.sandbox.paypal.com'
     const NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
+    // Verwendungszweck zusammenstellen
+    const paymentDescription = description || `Reifendienst-Termin bei ${workshopName || 'Werkstatt'} am ${date} um ${time}`
+
+    const orderPayload: any = {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: {
+          currency_code: 'EUR',
+          value: amount.toFixed(2)
+        },
+        description: paymentDescription,
+        custom_id: `booking_${session.user.id}_${Date.now()}`, // Eindeutige Referenz
+        invoice_id: `INV-${Date.now()}` // Rechnungsnummer
+      }],
+      application_context: {
+        brand_name: 'Bereifung24',
+        landing_page: 'NO_PREFERENCE',
+        user_action: 'PAY_NOW',
+        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
+      }
+    }
+
+    // Kundendaten hinzufügen (falls vorhanden)
+    if (customerName && customerEmail) {
+      orderPayload.payer = {
+        name: {
+          given_name: customerName.split(' ')[0] || customerName,
+          surname: customerName.split(' ').slice(1).join(' ') || ''
+        },
+        email_address: customerEmail
+      }
+    }
+
+    console.log('[PAYPAL CREATE ORDER] Creating order with payload:', JSON.stringify(orderPayload, null, 2))
+
     const order = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`
       },
-      body: JSON.stringify({
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: {
-            currency_code: 'EUR',
-            value: amount.toFixed(2)
-          },
-          description: description || 'Reifendienst-Buchung'
-        }],
-        application_context: {
-          brand_name: 'Bereifung24',
-          landing_page: 'NO_PREFERENCE',
-          user_action: 'PAY_NOW',
-          return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
-          cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
-        }
-      })
+      body: JSON.stringify(orderPayload)
     })
 
     const orderData = await order.json()

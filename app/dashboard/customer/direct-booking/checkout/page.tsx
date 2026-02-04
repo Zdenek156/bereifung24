@@ -185,13 +185,22 @@ function CheckoutContent() {
       const totalPrice = calculateTotal()
 
       if (paymentMethod === 'PAYPAL') {
-        // Create PayPal order
+        // Create PayPal order mit allen Kundendaten
         const orderResponse = await fetch('/api/customer/direct-booking/create-paypal-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: totalPrice,
-            description: `${SERVICE_LABELS[service]} - ${workshop.name}`
+            description: `${SERVICE_LABELS[service]} - ${workshop.name}`,
+            customerName: session?.user?.name || '',
+            customerEmail: session?.user?.email || '',
+            workshopName: workshop.name,
+            date: new Date(selectedDate).toLocaleDateString('de-DE', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric' 
+            }),
+            time: selectedTime
           })
         })
 

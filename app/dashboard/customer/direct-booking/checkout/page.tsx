@@ -200,7 +200,11 @@ function CheckoutContent() {
               month: '2-digit', 
               year: 'numeric' 
             }),
-            time: selectedTime
+            time: selectedTime,
+            street: (session?.user as any)?.street || '',
+            city: (session?.user as any)?.city || '',
+            zipCode: (session?.user as any)?.zipCode || '',
+            country: 'DE'
           })
         })
 

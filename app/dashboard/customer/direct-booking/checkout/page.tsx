@@ -262,7 +262,7 @@ function CheckoutContent() {
         const paymentSession = sdkInstance.createPayPalOneTimePaymentSession({
           async onApprove(data: any) {
             setProcessingPayment(true)
-            console.log('Payment approved:', data)
+            console.log('✅ PayPal Zahlung genehmigt:', data)
             
             try {
               // Capture payment
@@ -314,25 +314,42 @@ function CheckoutContent() {
           },
           
           onCancel(data: any) {
-            console.log('Payment cancelled:', data)
+            console.log('❌ PayPal Zahlung abgebrochen:', data)
+            setProcessingPayment(false)
+            // User bleibt auf der Seite und kann erneut versuchen
           },
           
           onError(error: any) {
-            console.error('Payment error:', error)
-            alert('Zahlung fehlgeschlagen.')
+            console.error('❌ PayPal Zahlungsfehler:', error)
+            setProcessingPayment(false)
+            alert('Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.')
           }
         })
 
-        // Start payment session and render button
-        await paymentSession.start(
-          { 
-            presentationMode: 'auto',
-            container: '#paypal-button-container'
-          },
-          createOrder()
-        )
-
-        console.log('PayPal button rendered successfully')
+        // Create PayPal button element
+        const paypalButton = document.createElement('paypal-button')
+        paypalButton.setAttribute('type', 'pay')
+        paypalButton.style.width = '100%'
+        
+        // Add click handler to button
+        paypalButton.addEventListener('click', async () => {
+          try {
+            setProcessingPayment(true)
+            console.log('🔵 PayPal Button geklickt - Starte Zahlung...')
+            await paymentSession.start(
+              { presentationMode: 'auto' },
+              createOrder()
+            )
+          } catch (error) {
+            console.error('❌ Fehler beim Starten der PayPal Zahlung:', error)
+            setProcessingPayment(false)
+            alert('PayPal konnte nicht gestartet werden.')
+          }
+        })
+        
+        // Append button to container
+        container.appendChild(paypalButton)
+        console.log('✅ PayPal Button gerendert und bereit')
       } catch (error) {
         console.error('Error rendering PayPal button:', error)
       }

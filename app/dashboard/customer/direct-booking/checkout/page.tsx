@@ -488,7 +488,7 @@ function CheckoutContent() {
         }
       } else if (paymentMethod === 'STRIPE') {
         // Stripe Checkout
-        const response = await fetch('/api/customer/direct-booking/create-stripe-checkout', {
+        const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -810,10 +810,35 @@ function CheckoutContent() {
                           handlePayment()
                         }}
                         disabled={processingPayment}
-                        className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white py-4 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-3"
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:bg-gray-400 text-white py-5 rounded-xl font-semibold transition-all hover:shadow-lg"
                       >
-                        <CreditCard className="h-5 w-5" />
-                        <span>{processingPayment && paymentMethod === 'STRIPE' ? 'Wird verarbeitet...' : 'Mit Kreditkarte bezahlen'}</span>
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5" />
+                            <span>{processingPayment && paymentMethod === 'STRIPE' ? 'Wird verarbeitet...' : 'Mit Kreditkarte bezahlen'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs opacity-90">
+                            <span>Oder:</span>
+                            <div className="flex items-center gap-1.5">
+                              {/* Apple Pay Icon */}
+                              <div className="bg-white/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                                </svg>
+                                <span className="text-[10px] font-medium">Pay</span>
+                              </div>
+                              {/* Google Pay Icon */}
+                              <div className="bg-white/20 px-2 py-0.5 rounded flex items-center gap-1">
+                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/>
+                                </svg>
+                                <span className="text-[10px] font-medium">Pay</span>
+                              </div>
+                              {/* More payment methods */}
+                              <span className="text-[10px]">& mehr</span>
+                            </div>
+                          </div>
+                        </div>
                       </button>
 
                       {/* PayPal Button Container */}

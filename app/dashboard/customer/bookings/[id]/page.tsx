@@ -35,7 +35,7 @@ interface Booking {
   }
   vehicle: {
     id: string
-    brand: string
+    make: string
     model: string
     licensePlate: string
     year: number
@@ -211,7 +211,7 @@ export default function BookingDetailsPage() {
         </h2>
         <div className="space-y-2">
           <div className="font-semibold text-lg">
-            {booking.vehicle.brand} {booking.vehicle.model}
+            {booking.vehicle.make} {booking.vehicle.model}
           </div>
           <div className="text-gray-600">Kennzeichen: {booking.vehicle.licensePlate}</div>
           <div className="text-gray-600">Baujahr: {booking.vehicle.year}</div>

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         vehicle: {
           select: {
             id: true,
-            brand: true,
+            make: true,
             model: true,
             licensePlate: true,
             year: true

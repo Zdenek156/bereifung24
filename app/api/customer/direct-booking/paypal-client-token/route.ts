@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
 
     console.log('[PAYPAL CLIENT TOKEN] Credentials loaded:', {
       hasClientId: !!clientId,
+      clientIdPrefix: clientId?.substring(0, 10) + '...',
+      clientSecretPrefix: clientSecret?.substring(0, 10) + '...',
       apiUrl
     })
 

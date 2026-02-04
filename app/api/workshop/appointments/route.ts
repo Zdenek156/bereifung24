@@ -28,8 +28,8 @@ export async function GET() {
       )
     }
 
-    // Get all bookings with related data
-    const appointments = await prisma.booking.findMany({
+    // Get all regular bookings with related data
+    const bookings = await prisma.booking.findMany({
       where: { workshopId: user.workshop.id },
       include: {
         customer: {
@@ -54,7 +54,77 @@ export async function GET() {
       orderBy: { appointmentDate: 'desc' },
     })
 
-    return NextResponse.json(appointments)
+    // Get all direct bookings (PayPal)
+    const directBookings = await prisma.directBooking.findMany({
+      where: { workshopId: user.workshop.id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            street: true,
+            zipCode: true,
+            city: true,
+          },
+        },
+        vehicle: {
+          select: {
+            make: true,
+            model: true,
+            year: true,
+            licensePlate: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    // Transform direct bookings to match appointment structure
+    const transformedDirectBookings = directBookings.map(db => ({
+      id: db.id,
+      appointmentDate: db.date,
+      appointmentTime: db.time,
+      estimatedDuration: 60, // Default duration
+      status: db.status,
+      paymentStatus: db.paymentStatus,
+      completedAt: null,
+      customerNotes: null,
+      workshopNotes: null,
+      isDirectBooking: true, // Flag to identify direct bookings
+      paymentMethod: 'PAYPAL',
+      totalPrice: Number(db.totalPrice),
+      basePrice: Number(db.basePrice),
+      balancingPrice: db.balancingPrice ? Number(db.balancingPrice) : null,
+      storagePrice: db.storagePrice ? Number(db.storagePrice) : null,
+      customer: {
+        user: {
+          firstName: db.customer.firstName,
+          lastName: db.customer.lastName,
+          email: db.customer.email,
+          phone: db.customer.phone,
+          street: db.customer.street,
+          zipCode: db.customer.zipCode,
+          city: db.customer.city,
+        },
+      },
+      vehicle: db.vehicle,
+      serviceType: db.serviceType,
+      tireRequest: null,
+      offer: null,
+      review: null,
+    }))
+
+    // Merge and sort all appointments
+    const allAppointments = [...bookings, ...transformedDirectBookings].sort((a, b) => {
+      const dateA = new Date(a.appointmentDate)
+      const dateB = new Date(b.appointmentDate)
+      return dateB.getTime() - dateA.getTime()
+    })
+
+    return NextResponse.json(allAppointments)
   } catch (error) {
     console.error('Appointments fetch error:', error)
     return NextResponse.json(

@@ -32,14 +32,8 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Nicht authentifiziert' },
-        { status: 401 }
-      )
-    }
+    // No authentication required for public search
+    // const session = await getServerSession(authOptions)
 
     const body = await request.json()
     const {

@@ -6,10 +6,18 @@ import { useRouter } from 'next/navigation'
 import { Search, MapPin, Navigation, Star, Check, TrendingUp } from 'lucide-react'
 
 const SERVICES = [
-  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', color: 'from-blue-500 to-blue-600' },
-  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', color: 'from-green-500 to-green-600' },
-  { id: 'WHEEL_ALIGNMENT', label: 'Radausrichtung', icon: '⚖️', color: 'from-purple-500 to-purple-600' },
-  { id: 'TIRE_STORAGE', label: 'Reifeneinlagerung', icon: '📦', color: 'from-orange-500 to-orange-600' },
+  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
+  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
+  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: '📐', description: 'Spur und Sturz einstellen' },
+  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: '❄️', description: 'Wartung und Desinfektion' },
+]
+
+const RADIUS_OPTIONS = [
+  { value: 5, label: '5 km' },
+  { value: 10, label: '10 km' },
+  { value: 25, label: '25 km' },
+  { value: 50, label: '50 km' },
+  { value: 100, label: '100 km' },
 ]
 
 const STATS = [
@@ -23,7 +31,12 @@ export default function NewHomePage() {
   const router = useRouter()
   const [selectedService, setSelectedService] = useState('WHEEL_CHANGE')
   const [postalCode, setPostalCode] = useState('')
+  const [radiusKm, setRadiusKm] = useState(25)
   const [useGeolocation, setUseGeolocation] = useState(false)
+  
+  // Service-specific options (Räderwechsel)
+  const [hasBalancing, setHasBalancing] = useState(false)
+  const [hasStorage, setHasStorage] = useState(false)
 
   const handleSearch = () => {
     if (!postalCode && !useGeolocation) {
@@ -31,13 +44,16 @@ export default function NewHomePage() {
       return
     }
     
-    // Redirect to search with parameters
+    // Redirect to direct booking with parameters
     const params = new URLSearchParams({
       service: selectedService,
+      radiusKm: radiusKm.toString(),
       ...(postalCode && { postalCode }),
-      ...(useGeolocation && { useGeo: 'true' })
+      ...(useGeolocation && { useGeo: 'true' }),
+      ...(selectedService === 'WHEEL_CHANGE' && hasBalancing && { balancing: 'true' }),
+      ...(selectedService === 'WHEEL_CHANGE' && hasStorage && { storage: 'true' }),
     })
-    router.push(`/suche?${params.toString()}`)
+    router.push(`/dashboard/customer/direct-booking?${params.toString()}`)
   }
 
   const requestGeolocation = () => {
@@ -110,7 +126,7 @@ export default function NewHomePage() {
                 <div className="flex-1">
                   <select
                     value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value as any)}
+                    onChange={(e) => setSelectedService(e.target.value)}
                     className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
                   >
                     {SERVICES.map((service) => (
@@ -143,7 +159,22 @@ export default function NewHomePage() {
                   )}
                 </div>
 
-                {/* Geolocation Toggle */}
+                {/* Radius Dropdown */}
+                <div className="w-full md:w-32">
+                  <select
+                    value={radiusKm}
+                    onChange={(e) => setRadiusKm(Number(e.target.value))}
+                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                  >
+                    {RADIUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Geolocation Button */}
                 <button
                   onClick={() => {
                     if (useGeolocation) {
@@ -152,10 +183,11 @@ export default function NewHomePage() {
                       requestGeolocation()
                     }
                   }}
-                  className="w-full md:w-16 h-16 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors flex items-center justify-center"
-                  title={useGeolocation ? 'Standort deaktivieren' : 'Mein Standort'}
+                  className="w-full md:w-auto h-16 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  title={useGeolocation ? 'Standort deaktivieren' : 'Aktuellen Standort nutzen'}
                 >
-                  <Navigation className="w-6 h-6" />
+                  <Navigation className="w-5 h-5" />
+                  <span className="hidden lg:inline">{useGeolocation ? 'Deaktivieren' : 'Standort nutzen'}</span>
                 </button>
 
                 {/* Search Button */}
@@ -167,6 +199,32 @@ export default function NewHomePage() {
                   <span className="hidden md:inline">Suchen</span>
                 </button>
               </div>
+
+              {/* Service-Specific Options - Below Search */}
+              {selectedService === 'WHEEL_CHANGE' && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={hasBalancing}
+                        onChange={(e) => setHasBalancing(e.target.checked)}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">🎯 Auswuchten inkl.</span>
+                    </label>
+                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={hasStorage}
+                        onChange={(e) => setHasStorage(e.target.checked)}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">📦 Einlagerung gewünscht</span>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

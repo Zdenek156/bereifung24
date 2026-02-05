@@ -91,8 +91,7 @@ export async function POST(request: NextRequest) {
             phone: true,
             street: true,
             city: true,
-            zipCode: true,
-            isCompany: true // Für B2B-Prüfung
+            zipCode: true
           }
         }
       }
@@ -138,12 +137,9 @@ export async function POST(request: NextRequest) {
           ? reviews.reduce((sum, b) => sum + (b.tireRating || 0), 0) / reviews.length
           : 0
 
-        // MwSt-Logik: 
-        // - KLEINUNTERNEHMER (§19 UStG): Preis ohne MwSt, kein Hinweis
-        // - STANDARD + Kunde ist Unternehmen: Preis ohne MwSt + "zzgl. MwSt."
-        // - STANDARD + Kunde ist Privatperson: Preis inkl. MwSt
-        const isSmallBusiness = workshop.taxMode === 'KLEINUNTERNEHMER'
-        const showVatNote = !isSmallBusiness && workshop.user?.isCompany === true
+        // MwSt-Logik: Für öffentliche Suche immer Preise inkl. MwSt anzeigen
+        // "zzgl. MwSt." nur bei eingeloggten B2B-Kunden (später implementieren)
+        const showVatNote = false
 
         return {
           id: workshop.id,

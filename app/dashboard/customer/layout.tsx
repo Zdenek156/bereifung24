@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import CustomerSidebar from '@/components/CustomerSidebar'
+import CustomerNavbar from '@/components/CustomerNavbar'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function CustomerLayout({
@@ -39,10 +39,11 @@ export default function CustomerLayout({
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        <CustomerSidebar />
+        {/* Top Navbar with Profile Dropdown */}
+        <CustomerNavbar />
         
-        {/* Main Content - with left margin for sidebar */}
-        <div className="lg:ml-64">
+        {/* Main Content - Full Width */}
+        <div>
           {children}
         </div>
       </div>

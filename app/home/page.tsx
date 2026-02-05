@@ -290,7 +290,17 @@ export default function NewHomePage() {
   }
 
   const handleBooking = (workshop: any) => {
-    router.push(`/login?returnUrl=/dashboard/customer/direct-booking/${workshop.id}/select-slot`)
+    // Navigate to workshop detail page with all workshop data as URL params
+    const params = new URLSearchParams({
+      name: workshop.name,
+      city: workshop.city || '',
+      distance: workshop.distance.toString(),
+      rating: workshop.rating.toString(),
+      reviewCount: workshop.reviewCount.toString(),
+      totalPrice: workshop.totalPrice.toString(),
+      duration: workshop.estimatedDuration?.toString() || '60',
+    })
+    router.push(`/home/workshop/${workshop.id}?${params.toString()}`)
   }
 
   return (

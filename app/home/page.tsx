@@ -647,62 +647,7 @@ export default function NewHomePage() {
                                   {workshop.distance.toFixed(1)} km entfernt
                                 </div>
                               </div>
-                              
-                              {/* Öffnungszeiten - Mittlerer Bereich */}
-                              {(() => {
-                                try {
-                                  if (workshop.openingHours && typeof workshop.openingHours === 'string' && workshop.openingHours.startsWith('{')) {
-                                    const hours = JSON.parse(workshop.openingHours)
-                                    
-                                    const dayMap: Record<string, string> = {
-                                      'monday': 'Mo',
-                                      'tuesday': 'Di',
-                                      'wednesday': 'Mi',
-                                      'thursday': 'Do',
-                                      'friday': 'Fr',
-                                      'saturday': 'Sa',
-                                      'sunday': 'So'
-                                    }
-                                    
-                                    const todayGerman = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
-                                    const todayEnglishMap: Record<string, string> = {
-                                      'montag': 'monday',
-                                      'dienstag': 'tuesday',
-                                      'mittwoch': 'wednesday',
-                                      'donnerstag': 'thursday',
-                                      'freitag': 'friday',
-                                      'samstag': 'saturday',
-                                      'sonntag': 'sunday'
-                                    }
-                                    const todayEnglish = todayEnglishMap[todayGerman] || 'monday'
-                                    
-                                    return (
-                                      <div className="bg-gray-50 rounded-lg p-2 mb-3 max-w-md mx-auto">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <Clock className="w-4 h-4 text-gray-600" />
-                                          <span className="text-sm font-semibold text-gray-700">Öffnungszeiten</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-x-0 gap-y-0.5 text-sm">
-                                          {Object.entries(hours).map(([day, data]: [string, any]) => (
-                                            <div 
-                                              key={day}
-                                              className={`flex gap-0.5 ${day === todayEnglish ? 'font-bold text-primary-600' : 'text-gray-600'}`}
-                                            >
-                                              <span>{dayMap[day] || day}:</span>
-                                              <span>
-                                                {data.closed ? 'Geschlossen' : `${data.from} - ${data.to}`}
-                                              </span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )
-                                  }
-                                } catch (e) {
-                                  console.error('Error parsing opening hours:', e)
-                                }
-                                return null
-                              })()}
+
                               
                               {/* Badges */}
                               <div className="flex flex-wrap gap-2 mb-4">
@@ -723,12 +668,16 @@ export default function NewHomePage() {
                                 )}
                               </div>
 
-                              <div className="flex items-end justify-between">
-                                <div>
+                              <div className="flex flex-col items-center">
+                                <div className="mb-3 text-center">
                                   <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
                                   <p className="text-3xl font-bold text-primary-600">
                                     {formatEUR(workshop.totalPrice)}
                                   </p>
+                                  {/* MwSt-Hinweis */}
+                                  {workshop.showVatNote && (
+                                    <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
+                                  )}
                                   {workshop.estimatedDuration && (
                                     <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
                                   )}

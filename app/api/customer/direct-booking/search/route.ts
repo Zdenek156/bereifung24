@@ -74,7 +74,12 @@ export async function POST(request: NextRequest) {
           }
         }
       },
-      include: {
+      select: {
+        id: true,
+        companyName: true,
+        latitude: true,
+        longitude: true,
+        openingHours: true,
         workshopServices: {
           where: {
             serviceType: serviceType,
@@ -89,6 +94,15 @@ export async function POST(request: NextRequest) {
           select: {
             tireRating: true,
             review: true
+          }
+        },
+        user: {
+          select: {
+            email: true,
+            phoneNumber: true,
+            address: true,
+            city: true,
+            postalCode: true
           }
         }
       }
@@ -137,9 +151,9 @@ export async function POST(request: NextRequest) {
         return {
           id: workshop.id,
           name: workshop.companyName,
-          address: workshop.address,
-          city: workshop.city,
-          postalCode: workshop.postalCode,
+          address: workshop.user?.address || null,
+          city: workshop.user?.city || null,
+          postalCode: workshop.user?.postalCode || null,
           distance: Math.round(distance * 10) / 10, // Round to 1 decimal
           
           // Pricing
@@ -160,8 +174,8 @@ export async function POST(request: NextRequest) {
           openingHours: workshop.openingHours || null,
           
           // Contact
-          phone: workshop.phoneNumber,
-          email: workshop.email
+          phone: workshop.user?.phoneNumber || null,
+          email: workshop.user?.email || null
         }
       })
       .filter(w => radiusKm === undefined || w.distance <= radiusKm)

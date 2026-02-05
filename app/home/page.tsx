@@ -1,9 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, MapPin, Navigation, Star, Check, TrendingUp } from 'lucide-react'
+import { 
+  Search, 
+  MapPin, 
+  Navigation, 
+  Star, 
+  Check, 
+  TrendingUp, 
+  Loader2,
+  SlidersHorizontal,
+  ChevronDown,
+  Clock,
+  ChevronUp
+} from 'lucide-react'
 
 const SERVICES = [
   { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
@@ -34,44 +46,251 @@ export default function NewHomePage() {
   const [radiusKm, setRadiusKm] = useState(25)
   const [useGeolocation, setUseGeolocation] = useState(false)
   
-  // Service-specific options (Räderwechsel)
+  // Search state
+  const [workshops, setWorkshops] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
+  
+  // Service-specific filters (in sidebar)
   const [hasBalancing, setHasBalancing] = useState(false)
   const [hasStorage, setHasStorage] = useState(false)
+  
+  // Favorites
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('workshop_favorites')
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
+  
+  // Filter state
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500])
+  const [minRating, setMinRating] = useState(0)
+  const [maxDistance, setMaxDistance] = useState(100)
+  const [showOnlyHighRated, setShowOnlyHighRated] = useState(false)
+  const [showOnlyNearby, setShowOnlyNearby] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
+  const [sortBy, setSortBy] = useState<'distance' | 'price' | 'rating'>('distance')
 
-  const handleSearch = () => {
+  // Geocode postal code
+  const geocodePostalCode = async (input: string) => {
+    try {
+      // Check if input is a postal code (5 digits) or city name
+      const isPostalCode = /^\d{5}$/.test(input)
+      
+      let url = ''
+      if (isPostalCode) {
+        url = `https://nominatim.openstreetmap.org/search?format=json&country=Germany&postalcode=${input}`
+      } else {
+        // Search by city name
+        url = `https://nominatim.openstreetmap.org/search?format=json&country=Germany&city=${encodeURIComponent(input)}`
+      }
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (data && data.length > 0) {
+        // Sort results by importance (OSM importance score)
+        // This helps prioritize larger cities when there are multiple matches
+        const sorted = data.sort((a: any, b: any) => {
+          const importanceA = parseFloat(a.importance || '0')
+          const importanceB = parseFloat(b.importance || '0')
+          return importanceB - importanceA
+        })
+        
+        return {
+          lat: parseFloat(sorted[0].lat),
+          lon: parseFloat(sorted[0].lon)
+        }
+      }
+      return null
+    } catch (err) {
+      console.error('Geocoding error:', err)
+      return null
+    }
+  }
+
+  // Geolocation handling
+  const requestGeolocation = () => {
+    if (!useGeolocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          }
+          setCustomerLocation(loc)
+          setUseGeolocation(true)
+          setPostalCode('') // Clear PLZ when using geolocation
+        },
+        (error) => {
+          alert('Standortzugriff verweigert. Bitte geben Sie eine PLZ ein.')
+        }
+      )
+    } else {
+      // Deaktivieren: Location zurücksetzen, damit PLZ-Suche wieder funktioniert
+      setUseGeolocation(false)
+      setCustomerLocation(null)
+      setHasSearched(false) // Reset search state
+    }
+  }
+
+  // Toggle favorite
+  const toggleFavorite = (workshopId: string) => {
+    setFavorites(prev => {
+      const newFavorites = prev.includes(workshopId)
+        ? prev.filter(id => id !== workshopId)
+        : [...prev, workshopId]
+      
+      // Save to localStorage
+      localStorage.setItem('workshop_favorites', JSON.stringify(newFavorites))
+      
+      // TODO: If user is logged in, also save to database
+      // await fetch('/api/customer/favorites', { method: 'POST', body: JSON.stringify({ workshopId }) })
+      
+      return newFavorites
+    })
+  }
+
+  // Search workshops
+  const searchWorkshops = async (location: { lat: number; lon: number }) => {
+    try {
+      const response = await fetch('/api/customer/direct-booking/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: selectedService,
+          hasBalancing,
+          hasStorage,
+          radiusKm,
+          customerLat: location.lat,
+          customerLon: location.lon
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        setWorkshops(result.workshops || [])
+        setError(null) // Clear any previous errors
+      } else {
+        setWorkshops([]) // Clear workshops when no results found
+        setError(result.error || 'Keine Werkstätten gefunden')
+      }
+    } catch (err) {
+      setWorkshops([]) // Clear workshops on error
+      setError('Fehler bei der Suche')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle search
+  // Handle search
+  const handleSearch = async () => {
     if (!postalCode && !useGeolocation) {
-      alert('Bitte PLZ eingeben oder Standort aktivieren')
+      alert('Bitte PLZ oder Ort eingeben oder Standort aktivieren')
       return
     }
     
-    // Redirect to public search page (no login required)
-    const params = new URLSearchParams({
-      service: selectedService,
-      radiusKm: radiusKm.toString(),
-      ...(postalCode && { postalCode }),
-      ...(useGeolocation && { useGeo: 'true' }),
-      ...(selectedService === 'WHEEL_CHANGE' && hasBalancing && { balancing: 'true' }),
-      ...(selectedService === 'WHEEL_CHANGE' && hasStorage && { storage: 'true' }),
-    })
-    router.push(`/suche?${params.toString()}`)
+    setLoading(true)
+    setError(null)
+    setHasSearched(true)
+
+    try {
+      let location = customerLocation
+
+      // Get location
+      if (useGeolocation && !location) {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const loc = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+              }
+              setCustomerLocation(loc)
+              await searchWorkshops(loc)
+            },
+            () => {
+              setError('Standortzugriff verweigert. Bitte geben Sie eine PLZ ein.')
+              setLoading(false)
+            }
+          )
+          return
+        }
+      } else if (postalCode && !location) {
+        location = await geocodePostalCode(postalCode)
+        if (!location) {
+          setError('PLZ oder Ort konnte nicht gefunden werden. Bitte überprüfen Sie Ihre Eingabe.')
+          setLoading(false)
+          return
+        }
+        setCustomerLocation(location)
+      }
+
+      if (location) {
+        await searchWorkshops(location)
+      } else {
+        setError('Bitte geben Sie eine PLZ ein oder aktivieren Sie den Standortzugriff.')
+        setLoading(false)
+      }
+    } catch (err) {
+      setError('Fehler bei der Suche')
+      setLoading(false)
+    }
   }
 
-  const requestGeolocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation wird von Ihrem Browser nicht unterstützt')
-      return
+  // Re-search when service-specific filters change
+  useEffect(() => {
+    if (hasSearched && customerLocation) {
+      const debounce = setTimeout(() => {
+        searchWorkshops(customerLocation)
+      }, 300)
+      return () => clearTimeout(debounce)
     }
+  }, [hasBalancing, hasStorage])
 
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        setUseGeolocation(true)
-        setPostalCode('')
-      },
-      (error) => {
-        console.error('Geolocation error:', error)
-        alert('Standortzugriff verweigert. Bitte PLZ eingeben.')
-      }
-    )
+  // Apply filters
+  const filteredWorkshops = workshops.filter((w) => {
+    if (w.totalPrice < priceRange[0] || w.totalPrice > priceRange[1]) return false
+    if (w.rating && w.rating < minRating) return false
+    if (w.distance > maxDistance) return false
+    if (showOnlyHighRated && w.rating < 4) return false
+    if (showOnlyNearby && w.distance > 10) return false
+    return true
+  })
+
+  // Sort workshops
+  const sortedWorkshops = [...filteredWorkshops].sort((a, b) => {
+    switch (sortBy) {
+      case 'price':
+        return a.totalPrice - b.totalPrice
+      case 'rating':
+        return (b.rating || 0) - (a.rating || 0)
+      case 'distance':
+      default:
+        return a.distance - b.distance
+    }
+  })
+
+  // Get max price for slider
+  const maxPrice = workshops.length > 0 
+    ? Math.max(...workshops.map(w => w.totalPrice)) 
+    : 500
+
+  const formatEUR = (amount: number) => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(amount)
+  }
+
+  const handleBooking = (workshop: any) => {
+    router.push(`/login?returnUrl=/dashboard/customer/direct-booking/${workshop.id}/select-slot`)
   }
 
   return (
@@ -174,20 +393,28 @@ export default function NewHomePage() {
                   </select>
                 </div>
 
-                {/* Geolocation Button */}
+                {/* Geolocation Button - Only Icon */}
                 <button
                   onClick={() => {
                     if (useGeolocation) {
                       setUseGeolocation(false)
+                      setCustomerLocation(null)
+                      setHasSearched(false)
                     } else {
                       requestGeolocation()
                     }
                   }}
-                  className="w-full md:w-auto h-16 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-                  title={useGeolocation ? 'Standort deaktivieren' : 'Aktuellen Standort nutzen'}
+                  className={`w-16 h-16 rounded-xl font-semibold transition-all flex items-center justify-center ${
+                    useGeolocation
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                  title={useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
                 >
-                  <Navigation className="w-5 h-5" />
-                  <span className="hidden lg:inline">{useGeolocation ? 'Deaktivieren' : 'Standort nutzen'}</span>
+                  <Navigation className="w-6 h-6" />
+                  <span className="sr-only">
+                    {useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
+                  </span>
                 </button>
 
                 {/* Search Button */}
@@ -199,39 +426,354 @@ export default function NewHomePage() {
                   <span className="hidden md:inline">Suchen</span>
                 </button>
               </div>
-
-              {/* Service-Specific Options - Below Search */}
-              {selectedService === 'WHEEL_CHANGE' && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-3">
-                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={hasBalancing}
-                        onChange={(e) => setHasBalancing(e.target.checked)}
-                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">🎯 Auswuchten inkl.</span>
-                    </label>
-                    <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={hasStorage}
-                        onChange={(e) => setHasStorage(e.target.checked)}
-                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">📦 Einlagerung gewünscht</span>
-                    </label>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-gray-50 border-b border-gray-200">
+      {/* Search Results Section */}
+      {hasSearched && (
+        <section className="py-8 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Left Sidebar - Filters */}
+              {workshops.length > 0 && (
+                <aside className="lg:w-80 flex-shrink-0">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-24">
+                    {/* Filter Header */}
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-bold text-lg flex items-center gap-2">
+                        <SlidersHorizontal className="w-5 h-5" />
+                        Filtern nach:
+                      </h3>
+                      <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+                      >
+                        {showFilters ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
+                    </div>
+
+                    {/* Filters */}
+                    <div className={`${showFilters ? 'block' : 'hidden lg:block'}`}>
+                      {/* Price Range */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3">Ihr Budget</h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>{formatEUR(priceRange[0])}</span>
+                            <span>{formatEUR(priceRange[1])}</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max={maxPrice}
+                            value={priceRange[1]}
+                            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500">
+                            {filteredWorkshops.length} von {workshops.length} Werkstätten
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Popular Filters */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3">Beliebte Filter</h4>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={showOnlyHighRated}
+                              onChange={(e) => setShowOnlyHighRated(e.target.checked)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                            <span className="text-sm">Sehr gut: 8+ ({workshops.filter(w => w.rating >= 4).length})</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={showOnlyNearby}
+                              onChange={(e) => setShowOnlyNearby(e.target.checked)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                            <span className="text-sm">Weniger als 10 km ({workshops.filter(w => w.distance <= 10).length})</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Service-Specific Options (for WHEEL_CHANGE only) */}
+                      {selectedService === 'WHEEL_CHANGE' && (
+                        <div className="p-4 border-b border-gray-200">
+                          <h4 className="font-semibold mb-3">Service-Optionen</h4>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={hasBalancing}
+                                onChange={(e) => setHasBalancing(e.target.checked)}
+                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                              />
+                              <span className="text-sm">Zusätzlich Auswuchten</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={hasStorage}
+                                onChange={(e) => setHasStorage(e.target.checked)}
+                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                              />
+                              <span className="text-sm">Räder einlagern</span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Rating Filter */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3">Bewertung</h4>
+                        <div className="space-y-2">
+                          {[5, 4, 3, 2, 1].map((rating) => (
+                            <button
+                              key={rating}
+                              onClick={() => setMinRating(minRating === rating ? 0 : rating)}
+                              className={`w-full flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                                minRating === rating ? 'bg-primary-50 text-primary-600' : 'hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: rating }).map((_, i) => (
+                                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                ))}
+                              </div>
+                              <span className="text-sm">& höher</span>
+                              {minRating === rating && <Check className="w-4 h-4 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Distance Filter - REMOVED (already in top radius selector) */}
+                    </div>
+                  </div>
+                </aside>
+              )}
+
+              {/* Main Content - Workshop Results */}
+              <main className="flex-1">
+                {/* Loading State */}
+                {loading && (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Suche Werkstätten...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {error && !loading && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <p className="text-red-800">{error}</p>
+                  </div>
+                )}
+
+                {/* No Results */}
+                {!loading && !error && workshops.length === 0 && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                    <div className="text-6xl mb-4">🔍</div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      Keine Werkstätten gefunden
+                    </h3>
+                    <p className="text-gray-600">
+                      Versuchen Sie einen größeren Umkreis oder eine andere PLZ
+                    </p>
+                  </div>
+                )}
+
+                {/* Results */}
+                {!loading && workshops.length > 0 && (
+                  <div className="space-y-4">
+                    {/* Sort Bar */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold text-gray-900">{sortedWorkshops.length}</span> Werkstätten gefunden
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Sortieren:</span>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value as any)}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                        >
+                          <option value="distance">Entfernung</option>
+                          <option value="price">Preis</option>
+                          <option value="rating">Bewertung</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Workshop Cards */}
+                    {sortedWorkshops.map((workshop) => {
+                      const isFavorite = favorites.includes(workshop.id)
+                      
+                      return (
+                        <div
+                          key={workshop.id}
+                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 relative"
+                        >
+                          {/* Favorite Button */}
+                          <button
+                            onClick={() => toggleFavorite(workshop.id)}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all z-10"
+                            title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                          >
+                            <svg
+                              className={`w-6 h-6 transition-colors ${
+                                isFavorite
+                                  ? 'fill-red-500 text-red-500'
+                                  : 'fill-none text-gray-400 hover:text-red-500'
+                              }`}
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                              />
+                            </svg>
+                          </button>
+
+                          <div className="flex flex-col md:flex-row gap-6">
+                            {/* Workshop Image Placeholder */}
+                            <div className="w-full md:w-48 h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <span className="text-4xl">🔧</span>
+                            </div>
+
+                            {/* Workshop Info */}
+                            <div className="flex-1">
+                              <div className="pr-10">
+                                <h3 className="text-xl font-bold text-gray-900 mb-1">{workshop.name}</h3>
+                                
+                                {/* Ort/Stadt unter Name */}
+                                {workshop.city && (
+                                  <p className="text-sm text-gray-600 mb-2">{workshop.city}</p>
+                                )}
+                                
+                                {/* Bewertung */}
+                                {workshop.rating && workshop.rating > 0 && (
+                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                                    {workshop.reviewCount > 0 && (
+                                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {/* Öffnungszeiten ohne Status */}
+                                {(() => {
+                                  let hoursText = ''
+                                  
+                                  try {
+                                    if (workshop.openingHours) {
+                                      if (typeof workshop.openingHours === 'string' && workshop.openingHours.startsWith('{')) {
+                                        const hours = JSON.parse(workshop.openingHours)
+                                        const today = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
+                                        const todayHours = hours[today]
+                                        if (todayHours && !todayHours.closed) {
+                                          hoursText = `${todayHours.from} - ${todayHours.to} Uhr`
+                                        } else {
+                                          hoursText = 'Heute geschlossen'
+                                        }
+                                      } else {
+                                        hoursText = workshop.openingHours
+                                      }
+                                    }
+                                  } catch (e) {
+                                    if (workshop.openingHours) {
+                                      hoursText = workshop.openingHours
+                                    }
+                                  }
+                                  
+                                  if (hoursText) {
+                                    return (
+                                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                        <Clock className="w-4 h-4" />
+                                        <span>{hoursText}</span>
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                })()}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  {workshop.distance.toFixed(1)} km entfernt
+                                </span>
+                                {workshop.address && (
+                                  <span>{workshop.address}</span>
+                                )}
+                              </div>
+                              
+                              {/* Badges */}
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {workshop.availableToday && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                    ✓ Heute verfügbar
+                                  </span>
+                                )}
+                                {workshop.fastBooking && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                                    ⚡ Schnelle Terminvergabe
+                                  </span>
+                                )}
+                                {workshop.certified && (
+                                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                    🏆 Zertifiziert
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-end justify-between">
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                                  <p className="text-3xl font-bold text-primary-600">
+                                    {formatEUR(workshop.totalPrice)}
+                                  </p>
+                                  {workshop.estimatedDuration && (
+                                    <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                  )}
+                                </div>
+                                
+                                <button
+                                  onClick={() => handleBooking(workshop)}
+                                  className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
+                                >
+                                  Verfügbarkeit prüfen
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </main>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Stats Section - Only show when not searched */}
+      {!hasSearched && (
+        <>
+          <section className="py-12 bg-gray-50 border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((stat, index) => (
@@ -346,6 +888,8 @@ export default function NewHomePage() {
           </button>
         </div>
       </section>
+        </>
+      )}
 
       {/* Footer - Reused from current homepage */}
       <footer className="bg-gray-900 text-white">

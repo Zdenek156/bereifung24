@@ -681,8 +681,22 @@ export default function NewHomePage() {
                                     if (workshop.openingHours) {
                                       if (typeof workshop.openingHours === 'string' && workshop.openingHours.startsWith('{')) {
                                         const hours = JSON.parse(workshop.openingHours)
-                                        const today = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
-                                        const todayHours = hours[today]
+                                        
+                                        // Map German weekday to English key
+                                        const dayMap: Record<string, string> = {
+                                          'montag': 'monday',
+                                          'dienstag': 'tuesday',
+                                          'mittwoch': 'wednesday',
+                                          'donnerstag': 'thursday',
+                                          'freitag': 'friday',
+                                          'samstag': 'saturday',
+                                          'sonntag': 'sunday'
+                                        }
+                                        
+                                        const todayGerman = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
+                                        const todayEnglish = dayMap[todayGerman] || todayGerman
+                                        const todayHours = hours[todayEnglish]
+                                        
                                         if (todayHours && !todayHours.closed) {
                                           hoursText = `${todayHours.from} - ${todayHours.to} Uhr`
                                         } else {

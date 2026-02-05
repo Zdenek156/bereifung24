@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         const estimatedDuration = baseDuration + balancingDuration
 
         // Calculate rating
-        const reviews = workshop.bookings.filter(b => b.tireRating)
+        const reviews = workshop.bookings.filter(b => b.tireRating || b.review)
         const avgRating = reviews.length > 0
           ? reviews.reduce((sum, b) => sum + (b.tireRating || 0), 0) / reviews.length
           : 0

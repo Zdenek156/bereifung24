@@ -667,29 +667,30 @@ export default function NewHomePage() {
                                   </span>
                                 )}
                               </div>
+                            </div>
 
-                              <div className="flex flex-col items-center">
-                                <div className="mb-3 text-center">
-                                  <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
-                                  <p className="text-3xl font-bold text-primary-600">
-                                    {formatEUR(workshop.totalPrice)}
-                                  </p>
-                                  {/* MwSt-Hinweis */}
-                                  {workshop.showVatNote && (
-                                    <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
-                                  )}
-                                  {workshop.estimatedDuration && (
-                                    <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
-                                  )}
-                                </div>
-                                
-                                <button
-                                  onClick={() => handleBooking(workshop)}
-                                  className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
-                                >
-                                  Verfügbarkeit prüfen
-                                </button>
+                            {/* Preis und Button - Rechts oben */}
+                            <div className="flex flex-col items-end justify-start md:w-64">
+                              <div className="text-right mb-3">
+                                <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                                <p className="text-3xl font-bold text-primary-600">
+                                  {formatEUR(workshop.totalPrice)}
+                                </p>
+                                {/* MwSt-Hinweis */}
+                                {workshop.showVatNote && (
+                                  <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
+                                )}
+                                {workshop.estimatedDuration && (
+                                  <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                )}
                               </div>
+                              
+                              <button
+                                onClick={() => handleBooking(workshop)}
+                                className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
+                              >
+                                Verfügbarkeit prüfen
+                              </button>
                             </div>
                           </div>
                         </div>

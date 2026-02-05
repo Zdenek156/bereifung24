@@ -60,21 +60,21 @@ export default function NewHomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      {/* Top Navigation - Blue like current homepage */}
+      <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl font-bold">B24</span>
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-primary-600 text-xl font-bold">B24</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Bereifung24</h1>
+                <h1 className="text-xl font-bold text-white">Bereifung24</h1>
               </div>
             </div>
             <Link
               href="/login"
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               Anmelden
             </Link>
@@ -102,92 +102,71 @@ export default function NewHomePage() {
             </p>
           </div>
 
-          {/* Search Card - Booking Style */}
+          {/* Search Card - Booking.com Style: One Line */}
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
-              {/* Service Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Welcher Service wird benötigt?
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {SERVICES.map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => setSelectedService(service.id)}
-                      className={`
-                        relative p-4 rounded-xl border-2 transition-all
-                        ${selectedService === service.id
-                          ? 'border-primary-600 bg-primary-50 shadow-lg scale-105'
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                        }
-                      `}
-                    >
-                      <div className="text-3xl mb-2">{service.icon}</div>
-                      <div className={`text-sm font-semibold ${
-                        selectedService === service.id ? 'text-primary-600' : 'text-gray-700'
-                      }`}>
-                        {service.label}
-                      </div>
-                      {selectedService === service.id && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+            <div className="bg-white rounded-2xl shadow-2xl p-3">
+              <div className="flex flex-col md:flex-row gap-2">
+                {/* Service Dropdown */}
+                <div className="flex-1">
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value as any)}
+                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                  >
+                    {SERVICES.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.icon} {service.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
 
-              {/* Location Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Wo suchst du?
-                </label>
-                <div className="flex flex-col md:flex-row gap-3">
+                {/* Location Input */}
+                <div className="flex-1">
                   {!useGeolocation ? (
-                    <div className="flex-1 relative">
+                    <div className="relative h-16">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        placeholder="PLZ oder Ort eingeben"
-                        className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-lg"
+                        placeholder="PLZ oder Ort"
+                        className="w-full h-full pl-12 pr-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
                       />
                     </div>
                   ) : (
-                    <div className="flex-1 px-4 py-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
-                      <Navigation className="w-5 h-5 text-green-600" />
-                      <span className="text-green-700 font-semibold">Aktueller Standort wird verwendet</span>
+                    <div className="h-16 px-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-2">
+                      <Navigation className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <span className="text-green-700 font-semibold text-sm">Standort aktiv</span>
                     </div>
                   )}
-                  
-                  <button
-                    onClick={() => {
-                      if (useGeolocation) {
-                        setUseGeolocation(false)
-                      } else {
-                        requestGeolocation()
-                      }
-                    }}
-                    className="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors whitespace-nowrap"
-                  >
-                    <Navigation className="w-5 h-5 inline mr-2" />
-                    {useGeolocation ? 'Deaktivieren' : 'Mein Standort'}
-                  </button>
                 </div>
-              </div>
 
-              {/* Search Button */}
-              <button
-                onClick={handleSearch}
-                className="w-full py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
-              >
-                <Search className="w-6 h-6 inline mr-2" />
-                Werkstätten finden
-              </button>
+                {/* Geolocation Toggle */}
+                <button
+                  onClick={() => {
+                    if (useGeolocation) {
+                      setUseGeolocation(false)
+                    } else {
+                      requestGeolocation()
+                    }
+                  }}
+                  className="w-full md:w-16 h-16 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors flex items-center justify-center"
+                  title={useGeolocation ? 'Standort deaktivieren' : 'Mein Standort'}
+                >
+                  <Navigation className="w-6 h-6" />
+                </button>
+
+                {/* Search Button */}
+                <button
+                  onClick={handleSearch}
+                  className="w-full md:w-auto h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Search className="w-5 h-5" />
+                  <span className="hidden md:inline">Suchen</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

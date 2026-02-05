@@ -655,16 +655,30 @@ export default function NewHomePage() {
                             {/* Workshop Info */}
                             <div className="flex-1">
                               <div className="pr-10">
-                                <h3 className="text-xl font-bold text-gray-900 mb-1">{workshop.name}</h3>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
                                 
-                                {/* Ort/Stadt unter Name */}
-                                {workshop.city && (
-                                  <p className="text-sm text-gray-600 mb-2">{workshop.city}</p>
-                                )}
+                                {/* Stadt mit Maps-Button */}
+                                <div className="flex items-center gap-2 mb-3">
+                                  {workshop.city && (
+                                    <>
+                                      <span className="text-sm text-gray-600">{workshop.city}</span>
+                                      <button
+                                        onClick={() => {
+                                          const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
+                                          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
+                                        }}
+                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                                      >
+                                        <MapPin className="w-3 h-3" />
+                                        In Maps öffnen
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                                 
                                 {/* Bewertung */}
                                 {workshop.rating && workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                     <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
                                     {workshop.reviewCount > 0 && (
@@ -673,66 +687,68 @@ export default function NewHomePage() {
                                   </div>
                                 )}
                                 
-                                {/* Öffnungszeiten ohne Status */}
-                                {(() => {
-                                  let hoursText = ''
-                                  
-                                  try {
-                                    if (workshop.openingHours) {
-                                      if (typeof workshop.openingHours === 'string' && workshop.openingHours.startsWith('{')) {
-                                        const hours = JSON.parse(workshop.openingHours)
-                                        
-                                        // Map German weekday to English key
-                                        const dayMap: Record<string, string> = {
-                                          'montag': 'monday',
-                                          'dienstag': 'tuesday',
-                                          'mittwoch': 'wednesday',
-                                          'donnerstag': 'thursday',
-                                          'freitag': 'friday',
-                                          'samstag': 'saturday',
-                                          'sonntag': 'sunday'
-                                        }
-                                        
-                                        const todayGerman = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
-                                        const todayEnglish = dayMap[todayGerman] || todayGerman
-                                        const todayHours = hours[todayEnglish]
-                                        
-                                        if (todayHours && !todayHours.closed) {
-                                          hoursText = `${todayHours.from} - ${todayHours.to} Uhr`
-                                        } else {
-                                          hoursText = 'Heute geschlossen'
-                                        }
-                                      } else {
-                                        hoursText = workshop.openingHours
-                                      }
+                                {/* Distanz */}
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-4">
+                                  <MapPin className="w-4 h-4" />
+                                  {workshop.distance.toFixed(1)} km entfernt
+                                </div>
+                              </div>
+                              
+                              {/* Öffnungszeiten - Mittlerer Bereich */}
+                              {(() => {
+                                try {
+                                  if (workshop.openingHours && typeof workshop.openingHours === 'string' && workshop.openingHours.startsWith('{')) {
+                                    const hours = JSON.parse(workshop.openingHours)
+                                    
+                                    const dayMap: Record<string, string> = {
+                                      'monday': 'Mo',
+                                      'tuesday': 'Di',
+                                      'wednesday': 'Mi',
+                                      'thursday': 'Do',
+                                      'friday': 'Fr',
+                                      'saturday': 'Sa',
+                                      'sunday': 'So'
                                     }
-                                  } catch (e) {
-                                    if (workshop.openingHours) {
-                                      hoursText = workshop.openingHours
+                                    
+                                    const todayGerman = new Date().toLocaleDateString('de-DE', { weekday: 'long' }).toLowerCase()
+                                    const todayEnglishMap: Record<string, string> = {
+                                      'montag': 'monday',
+                                      'dienstag': 'tuesday',
+                                      'mittwoch': 'wednesday',
+                                      'donnerstag': 'thursday',
+                                      'freitag': 'friday',
+                                      'samstag': 'saturday',
+                                      'sonntag': 'sunday'
                                     }
-                                  }
-                                  
-                                  if (hoursText) {
+                                    const todayEnglish = todayEnglishMap[todayGerman] || 'monday'
+                                    
                                     return (
-                                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                        <Clock className="w-4 h-4" />
-                                        <span>{hoursText}</span>
+                                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Clock className="w-4 h-4 text-gray-600" />
+                                          <span className="text-sm font-semibold text-gray-700">Öffnungszeiten</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                          {Object.entries(hours).map(([day, data]: [string, any]) => (
+                                            <div 
+                                              key={day}
+                                              className={`flex justify-between ${day === todayEnglish ? 'font-bold text-primary-600' : 'text-gray-600'}`}
+                                            >
+                                              <span>{dayMap[day] || day}:</span>
+                                              <span>
+                                                {data.closed ? 'Geschlossen' : `${data.from} - ${data.to}`}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
                                       </div>
                                     )
                                   }
-                                  return null
-                                })()}
-                              </div>
-                              
-                              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
-                                  {workshop.distance.toFixed(1)} km entfernt
-                                </span>
-                                {workshop.address && (
-                                  <span>{workshop.address}</span>
-                                )}
-                              </div>
+                                } catch (e) {
+                                  console.error('Error parsing opening hours:', e)
+                                }
+                                return null
+                              })()}
                               
                               {/* Badges */}
                               <div className="flex flex-wrap gap-2 mb-4">

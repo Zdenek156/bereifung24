@@ -44,7 +44,7 @@ export default function NewHomePage() {
       return
     }
     
-    // Redirect to direct booking with parameters
+    // Redirect to public search page (no login required)
     const params = new URLSearchParams({
       service: selectedService,
       radiusKm: radiusKm.toString(),
@@ -53,7 +53,7 @@ export default function NewHomePage() {
       ...(selectedService === 'WHEEL_CHANGE' && hasBalancing && { balancing: 'true' }),
       ...(selectedService === 'WHEEL_CHANGE' && hasStorage && { storage: 'true' }),
     })
-    router.push(`/dashboard/customer/direct-booking?${params.toString()}`)
+    router.push(`/suche?${params.toString()}`)
   }
 
   const requestGeolocation = () => {

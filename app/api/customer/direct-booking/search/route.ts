@@ -94,10 +94,7 @@ export async function POST(request: NextRequest) {
         user: {
           select: {
             email: true,
-            phone: true,
-            address: true,
-            city: true,
-            postalCode: true
+            phone: true
           }
         }
       }
@@ -146,9 +143,9 @@ export async function POST(request: NextRequest) {
         return {
           id: workshop.id,
           name: workshop.companyName,
-          address: workshop.user?.address || null,
-          city: workshop.user?.city || null,
-          postalCode: workshop.user?.postalCode || null,
+          address: null,
+          city: null,
+          postalCode: null,
           distance: Math.round(distance * 10) / 10, // Round to 1 decimal
           
           // Pricing

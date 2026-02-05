@@ -8,9 +8,10 @@ const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
-  '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber',
+  '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder',
-  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml'
+  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/app-download', '/demo',
+  '/smart-tire-advisor'
 ]
 
 // Map admin routes to application keys for permission checking

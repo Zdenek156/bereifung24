@@ -456,52 +456,6 @@ export default function NewHomePage() {
 
                     {/* Filters */}
                     <div className={`${showFilters ? 'block' : 'hidden lg:block'}`}>
-                      {/* Price Range */}
-                      <div className="p-4 border-b border-gray-200">
-                        <h4 className="font-semibold mb-3">Ihr Budget</h4>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>{formatEUR(priceRange[0])}</span>
-                            <span>{formatEUR(priceRange[1])}</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max={maxPrice}
-                            value={priceRange[1]}
-                            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                            className="w-full"
-                          />
-                          <p className="text-xs text-gray-500">
-                            {filteredWorkshops.length} von {workshops.length} Werkstätten
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Popular Filters */}
-                      <div className="p-4 border-b border-gray-200">
-                        <h4 className="font-semibold mb-3">Beliebte Filter</h4>
-                        <div className="space-y-2">
-                          <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={showOnlyHighRated}
-                              onChange={(e) => setShowOnlyHighRated(e.target.checked)}
-                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                            />
-                            <span className="text-sm">Sehr gut: 8+ ({workshops.filter(w => w.rating >= 4).length})</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={showOnlyNearby}
-                              onChange={(e) => setShowOnlyNearby(e.target.checked)}
-                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                            />
-                            <span className="text-sm">Weniger als 10 km ({workshops.filter(w => w.distance <= 10).length})</span>
-                          </label>
-                        </div>
-                      </div>
 
                       {/* Service-Specific Options (for WHEEL_CHANGE only) */}
                       {selectedService === 'WHEEL_CHANGE' && (
@@ -515,7 +469,7 @@ export default function NewHomePage() {
                                 onChange={(e) => setHasBalancing(e.target.checked)}
                                 className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                               />
-                              <span className="text-sm">Zusätzlich Auswuchten</span>
+                              <span className="text-sm">zzgl. Auswuchten</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                               <input
@@ -723,16 +677,16 @@ export default function NewHomePage() {
                                     const todayEnglish = todayEnglishMap[todayGerman] || 'monday'
                                     
                                     return (
-                                      <div className="bg-gray-50 rounded-lg p-2 mb-3 max-w-md">
+                                      <div className="bg-gray-50 rounded-lg p-2 mb-3 max-w-md mx-auto">
                                         <div className="flex items-center gap-2 mb-1">
                                           <Clock className="w-4 h-4 text-gray-600" />
                                           <span className="text-sm font-semibold text-gray-700">Öffnungszeiten</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-x-1 gap-y-0.5 text-sm">
+                                        <div className="grid grid-cols-2 gap-x-0 gap-y-0.5 text-sm">
                                           {Object.entries(hours).map(([day, data]: [string, any]) => (
                                             <div 
                                               key={day}
-                                              className={`flex justify-between ${day === todayEnglish ? 'font-bold text-primary-600' : 'text-gray-600'}`}
+                                              className={`flex gap-0.5 ${day === todayEnglish ? 'font-bold text-primary-600' : 'text-gray-600'}`}
                                             >
                                               <span>{dayMap[day] || day}:</span>
                                               <span>

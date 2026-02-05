@@ -724,11 +724,11 @@ export default function NewHomePage() {
                                     
                                     return (
                                       <div className="bg-gray-50 rounded-lg p-2 mb-3 max-w-md">
-                                        <div className="flex items-center gap-1 mb-1">
-                                          <Clock className="w-3 h-3 text-gray-600" />
-                                          <span className="text-xs font-semibold text-gray-700">Öffnungszeiten</span>
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Clock className="w-4 h-4 text-gray-600" />
+                                          <span className="text-sm font-semibold text-gray-700">Öffnungszeiten</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
+                                        <div className="grid grid-cols-2 gap-x-1 gap-y-0.5 text-sm">
                                           {Object.entries(hours).map(([day, data]: [string, any]) => (
                                             <div 
                                               key={day}

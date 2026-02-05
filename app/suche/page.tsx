@@ -11,7 +11,9 @@ import {
   SlidersHorizontal,
   Check,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Search,
+  RefreshCw
 } from 'lucide-react'
 
 const SERVICE_TYPES = {
@@ -21,17 +23,21 @@ const SERVICE_TYPES = {
   AC_SERVICE: { label: 'Klimaanlagen-Service', icon: '❄️' },
 }
 
+const RADIUS_OPTIONS = [5, 10, 25, 50, 100]
+
 export default function SuchePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  // URL Parameters
-  const serviceParam = searchParams.get('service') || 'WHEEL_CHANGE'
-  const postalCodeParam = searchParams.get('postalCode') || ''
-  const radiusParam = searchParams.get('radiusKm') || '25'
-  const balancingParam = searchParams.get('balancing') === 'true'
-  const storageParam = searchParams.get('storage') === 'true'
-  const useGeoParam = searchParams.get('useGeo') === 'true'
+  // Search form state (editable)
+  const [selectedService, setSelectedService] = useState(searchParams.get('service') || 'WHEEL_CHANGE')
+  const [postalCode, setPostalCode] = useState(searchParams.get('postalCode') || '')
+  const [radiusKm, setRadiusKm] = useState(Number(searchParams.get('radiusKm')) || 25)
+  const [useGeolocation, setUseGeolocation] = useState(searchParams.get('useGeo') === 'true')
+  
+  // Service-specific filter state (in sidebar)
+  const [hasBalancing, setHasBalancing] = useState(searchParams.get('balancing') === 'true')
+  const [hasStorage, setHasStorage] = useState(searchParams.get('storage') === 'true')
   
   // Search State
   const [workshops, setWorkshops] = useState<any[]>([])
@@ -72,28 +78,113 @@ export default function SuchePage() {
     }
   }
 
+  // Geolocation handling
+  const requestGeolocation = () => {
+    if (!useGeolocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          }
+          setCustomerLocation(loc)
+          setUseGeolocation(true)
+          setPostalCode('') // Clear PLZ when using geolocation
+        },
+        (error) => {
+          alert('Standortzugriff verweigert. Bitte geben Sie eine PLZ ein.')
+        }
+      )
+    } else {
+      setUseGeolocation(false)
+      setCustomerLocation(null)
+    }
+  }
+
+  // Search handler for form
+  const handleSearch = async () => {
+    if (!postalCode && !useGeolocation) {
+      alert('Bitte PLZ eingeben oder Standort aktivieren')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    setHasSearched(true)
+
+    try {
+      let location = customerLocation
+
+      // Get location
+      if (useGeolocation && !location) {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const loc = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+              }
+              setCustomerLocation(loc)
+              await searchWorkshops(loc)
+            },
+            () => {
+              setError('Standortzugriff verweigert. Bitte geben Sie eine PLZ ein.')
+              setLoading(false)
+            }
+          )
+          return
+        }
+      } else if (postalCode && !location) {
+        location = await geocodePostalCode(postalCode)
+        if (!location) {
+          setError('PLZ konnte nicht gefunden werden.')
+          setLoading(false)
+          return
+        }
+        setCustomerLocation(location)
+      }
+
+      if (location) {
+        await searchWorkshops(location)
+      } else {
+        setError('Bitte geben Sie eine PLZ ein oder aktivieren Sie den Standortzugriff.')
+        setLoading(false)
+      }
+    } catch (err) {
+      setError('Fehler bei der Suche')
+      setLoading(false)
+    }
+  }
+
   // Initial search on page load
   useEffect(() => {
-    const performSearch = async () => {
+    const performInitialSearch = async () => {
+      const urlPostalCode = searchParams.get('postalCode') || ''
+      const urlUseGeo = searchParams.get('useGeo') === 'true'
+
+      if (!urlPostalCode && !urlUseGeo) {
+        return // No search params, don't auto-search
+      }
+
       setLoading(true)
       setHasSearched(true)
       setError(null)
 
       try {
-        let location = customerLocation
+        let location = null
 
         // Get location from postal code or geolocation
-        if (useGeoParam && !location) {
+        if (urlUseGeo) {
           // Request geolocation
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-              (position) => {
+              async (position) => {
                 const loc = {
                   lat: position.coords.latitude,
                   lon: position.coords.longitude
                 }
                 setCustomerLocation(loc)
-                searchWorkshops(loc)
+                await searchWorkshops(loc)
               },
               () => {
                 setError('Standortzugriff verweigert. Bitte geben Sie eine PLZ ein.')
@@ -102,8 +193,8 @@ export default function SuchePage() {
             )
             return
           }
-        } else if (postalCodeParam && !location) {
-          location = await geocodePostalCode(postalCodeParam)
+        } else if (urlPostalCode) {
+          location = await geocodePostalCode(urlPostalCode)
           if (!location) {
             setError('PLZ konnte nicht gefunden werden.')
             setLoading(false)
@@ -124,8 +215,18 @@ export default function SuchePage() {
       }
     }
 
-    performSearch()
-  }, [])
+    performInitialSearch()
+  }, []) // Only run once on mount
+
+  // Re-search when service-specific filters change
+  useEffect(() => {
+    if (hasSearched && customerLocation) {
+      const debounce = setTimeout(() => {
+        searchWorkshops(customerLocation)
+      }, 300)
+      return () => clearTimeout(debounce)
+    }
+  }, [hasBalancing, hasStorage])
 
   const searchWorkshops = async (location: { lat: number; lon: number }) => {
     try {
@@ -133,10 +234,10 @@ export default function SuchePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          serviceType: serviceParam,
-          hasBalancing: balancingParam,
-          hasStorage: storageParam,
-          radiusKm: parseInt(radiusParam),
+          serviceType: selectedService,
+          hasBalancing,
+          hasStorage,
+          radiusKm,
           customerLat: location.lat,
           customerLon: location.lon
         })
@@ -221,19 +322,113 @@ export default function SuchePage() {
         </div>
       </nav>
 
-      {/* Search Header */}
-      <div className="bg-primary-600 text-white py-6">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-2">
-            {SERVICE_TYPES[serviceParam as keyof typeof SERVICE_TYPES]?.icon}{' '}
-            {SERVICE_TYPES[serviceParam as keyof typeof SERVICE_TYPES]?.label}
+      {/* Hero Section with Search Bar */}
+      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center mb-12">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+            Finde deine Werkstatt
           </h2>
-          <p className="text-primary-100 flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            {postalCodeParam || 'Aktueller Standort'} · {radiusParam} km Umkreis
+          <p className="text-xl text-primary-100">
+            Vergleiche Preise, buche direkt online – einfach und transparent
           </p>
         </div>
-      </div>
+
+        {/* Search Bar */}
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-3">
+            <div className="flex flex-col md:flex-row gap-3">
+              {/* Service Selection */}
+              <div className="flex-1 min-w-[200px]">
+                <select
+                  value={selectedService}
+                  onChange={(e) => setSelectedService(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-700 font-medium"
+                >
+                  <option value="WHEEL_CHANGE">🔄 Räderwechsel</option>
+                  <option value="TIRE_REPAIR">🔧 Reifenreparatur</option>
+                  <option value="WHEEL_ALIGNMENT">📐 Achsvermessung</option>
+                  <option value="AC_SERVICE">❄️ Klimaanlagen-Service</option>
+                </select>
+              </div>
+
+              {/* Location Input or Geolocation Indicator */}
+              <div className="flex-1 min-w-[200px]">
+                {useGeolocation ? (
+                  <div className="w-full px-4 py-3 rounded-xl border-2 border-green-500 bg-green-50 flex items-center gap-2 text-green-700 font-medium">
+                    <Navigation className="w-5 h-5" />
+                    <span>Standort aktiv</span>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="PLZ oder Ort"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-700"
+                  />
+                )}
+              </div>
+
+              {/* Radius Selection */}
+              <div className="flex-none w-full md:w-32">
+                <select
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-700 font-medium"
+                >
+                  {RADIUS_OPTIONS.map((radius) => (
+                    <option key={radius} value={radius}>
+                      {radius} km
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Standort nutzen Button */}
+              <button
+                onClick={requestGeolocation}
+                className={`flex-none px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                  useGeolocation
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                <Navigation className="w-5 h-5" />
+                <span className="hidden sm:inline">
+                  {useGeolocation ? 'Deaktivieren' : 'Standort nutzen'}
+                </span>
+              </button>
+
+              {/* Search Button */}
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="flex-none px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Suche...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    <span>Suchen</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
@@ -303,6 +498,39 @@ export default function SuchePage() {
                     </label>
                   </div>
                 </div>
+
+                {/* Service-Specific Options (for WHEEL_CHANGE only) */}
+                {selectedService === 'WHEEL_CHANGE' && (
+                  <div className="p-4 border-b border-gray-200">
+                    <h4 className="font-semibold mb-3">Service-Optionen</h4>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={hasBalancing}
+                          onChange={(e) => {
+                            setHasBalancing(e.target.checked)
+                            // Will trigger re-search via useEffect
+                          }}
+                          className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                        />
+                        <span className="text-sm">🎯 Auswuchten inkl.</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={hasStorage}
+                          onChange={(e) => {
+                            setHasStorage(e.target.checked)
+                            // Will trigger re-search via useEffect
+                          }}
+                          className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                        />
+                        <span className="text-sm">📦 Einlagerung gewünscht</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
 
                 {/* Rating Filter */}
                 <div className="p-4 border-b border-gray-200">

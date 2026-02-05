@@ -4,16 +4,28 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
-})
-
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Load Stripe key from database settings
+    const stripeSecretSetting = await prisma.setting.findUnique({
+      where: { key: 'STRIPE_SECRET_KEY' }
+    })
+    
+    if (!stripeSecretSetting?.value) {
+      return NextResponse.json(
+        { error: 'Stripe nicht konfiguriert' },
+        { status: 500 }
+      )
+    }
+
+    const stripe = new Stripe(stripeSecretSetting.value, {
+      apiVersion: '2024-11-20.acacia'
+    })
 
     const body = await request.json()
     const {

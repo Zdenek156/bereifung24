@@ -74,12 +74,7 @@ export async function POST(request: NextRequest) {
           }
         }
       },
-      select: {
-        id: true,
-        companyName: true,
-        latitude: true,
-        longitude: true,
-        openingHours: true,
+      include: {
         workshopServices: {
           where: {
             serviceType: serviceType,

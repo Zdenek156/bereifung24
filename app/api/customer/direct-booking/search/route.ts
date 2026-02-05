@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         user: {
           select: {
             email: true,
-            phoneNumber: true,
+            phone: true,
             address: true,
             city: true,
             postalCode: true
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
           openingHours: workshop.openingHours || null,
           
           // Contact
-          phone: workshop.user?.phoneNumber || null,
+          phone: workshop.user?.phone || null,
           email: workshop.user?.email || null
         }
       })

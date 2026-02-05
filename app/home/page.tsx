@@ -676,8 +676,8 @@ export default function NewHomePage() {
                                   )}
                                 </div>
                                 
-                                {/* Bewertung */}
-                                {workshop.rating && workshop.rating > 0 && (
+                                {/* Bewertung - nur wenn rating > 0 */}
+                                {workshop.rating > 0 && (
                                   <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                     <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
@@ -688,7 +688,7 @@ export default function NewHomePage() {
                                 )}
                                 
                                 {/* Distanz */}
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-4">
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
                                   <MapPin className="w-4 h-4" />
                                   {workshop.distance.toFixed(1)} km entfernt
                                 </div>
@@ -723,12 +723,12 @@ export default function NewHomePage() {
                                     const todayEnglish = todayEnglishMap[todayGerman] || 'monday'
                                     
                                     return (
-                                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Clock className="w-4 h-4 text-gray-600" />
-                                          <span className="text-sm font-semibold text-gray-700">Öffnungszeiten</span>
+                                      <div className="bg-gray-50 rounded-lg p-2 mb-3 max-w-md">
+                                        <div className="flex items-center gap-1 mb-1">
+                                          <Clock className="w-3 h-3 text-gray-600" />
+                                          <span className="text-xs font-semibold text-gray-700">Öffnungszeiten</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
                                           {Object.entries(hours).map(([day, data]: [string, any]) => (
                                             <div 
                                               key={day}

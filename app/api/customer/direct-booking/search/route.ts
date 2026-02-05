@@ -82,7 +82,11 @@ export async function POST(request: NextRequest) {
           },
           select: {
             tireRating: true,
-            review: true
+            review: {
+              select: {
+                rating: true
+              }
+            }
           }
         },
         user: {
@@ -134,7 +138,11 @@ export async function POST(request: NextRequest) {
         // Calculate rating
         const reviews = workshop.bookings.filter(b => b.tireRating || b.review)
         const avgRating = reviews.length > 0
-          ? reviews.reduce((sum, b) => sum + (b.tireRating || 0), 0) / reviews.length
+          ? reviews.reduce((sum, b) => {
+              // Priorisiere review.rating, dann tireRating
+              const rating = b.review?.rating || b.tireRating || 0
+              return sum + rating
+            }, 0) / reviews.length
           : 0
 
         // MwSt-Logik: Für öffentliche Suche immer Preise inkl. MwSt anzeigen

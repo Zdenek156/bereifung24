@@ -350,7 +350,7 @@ export default function NewHomePage() {
                   >
                     {SERVICES.map((service) => (
                       <option key={service.id} value={service.id}>
-                        {service.icon} {service.label}
+                        {service.label}
                       </option>
                     ))}
                   </select>

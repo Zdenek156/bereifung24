@@ -630,7 +630,8 @@ export default function NewHomePage() {
                                   )}
                                 </div>
                                 
-                                {/* Bewertung - nur wenn rating > 0 */}
+                                {/* Bewertung - Debug */}
+                                {console.log('Workshop Rating:', workshop.name, 'Rating:', workshop.rating, 'ReviewCount:', workshop.reviewCount)}
                                 {workshop.rating > 0 && (
                                   <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -669,8 +670,8 @@ export default function NewHomePage() {
                               </div>
                             </div>
 
-                            {/* Preis und Button - Rechts oben */}
-                            <div className="flex flex-col items-end justify-start md:w-64">
+                            {/* Preis und Button - Rechts oben mit Abstand für Favoriten-Icon */}
+                            <div className="flex flex-col items-end justify-start md:w-64 pt-12">
                               <div className="text-right mb-3">
                                 <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
                                 <p className="text-3xl font-bold text-primary-600">

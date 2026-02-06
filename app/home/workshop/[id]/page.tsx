@@ -18,21 +18,40 @@ export default function WorkshopDetailPage() {
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [busySlots, setBusySlots] = useState<any[]>([])
 
-  // Load workshop details from URL params or fetch
+  // Load workshop details from URL params and API
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search)
-    const workshopData = {
-      id: workshopId,
-      name: searchParams.get('name') || '',
-      city: searchParams.get('city') || '',
-      distance: parseFloat(searchParams.get('distance') || '0'),
-      rating: parseFloat(searchParams.get('rating') || '0'),
-      reviewCount: parseInt(searchParams.get('reviewCount') || '0'),
-      totalPrice: parseFloat(searchParams.get('totalPrice') || '0'),
-      estimatedDuration: parseInt(searchParams.get('duration') || '60'),
+    const loadWorkshop = async () => {
+      const searchParams = new URLSearchParams(window.location.search)
+      const workshopData = {
+        id: workshopId,
+        name: searchParams.get('name') || '',
+        city: searchParams.get('city') || '',
+        distance: parseFloat(searchParams.get('distance') || '0'),
+        rating: parseFloat(searchParams.get('rating') || '0'),
+        reviewCount: parseInt(searchParams.get('reviewCount') || '0'),
+        totalPrice: parseFloat(searchParams.get('totalPrice') || '0'),
+        estimatedDuration: parseInt(searchParams.get('duration') || '60'),
+        description: '',
+      }
+      
+      // Fetch full workshop details including description
+      try {
+        const response = await fetch(`/api/workshops/${workshopId}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.workshop?.companySettings?.description) {
+            workshopData.description = data.workshop.companySettings.description
+          }
+        }
+      } catch (error) {
+        console.error('Error loading workshop details:', error)
+      }
+      
+      setWorkshop(workshopData)
+      setLoading(false)
     }
-    setWorkshop(workshopData)
-    setLoading(false)
+    
+    loadWorkshop()
   }, [workshopId])
 
   // Fetch available slots when month changes
@@ -162,8 +181,8 @@ export default function WorkshopDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Full-Width Header with Search - Like /home */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
+      {/* Hero Section - Exact Same as /home */}
+      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -172,70 +191,70 @@ export default function WorkshopDetailPage() {
           }}></div>
         </div>
 
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            {/* Back to Search Link */}
-            <div className="mb-8">
-              <Link href="/home" className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors">
-                <ArrowLeft className="w-5 h-5" />
-                <span>Zurück zur Suche</span>
-              </Link>
-            </div>
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Back to Search Link - subtle, top left */}
+          <div className="absolute top-0 left-4 sm:left-6 lg:left-8">
+            <Link href="/home" className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Zurück zur Suche</span>
+            </Link>
+          </div>
 
-            {/* Logo/Title */}
-            <div className="flex items-center gap-3 mb-8">
-              <div className="bg-white rounded-xl p-3 shadow-lg">
-                <div className="text-primary-600 font-bold text-2xl">B24</div>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold">Bereifung24</h1>
-            </div>
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+              Finde deine Werkstatt
+            </h2>
+            <p className="text-xl text-primary-100">
+              Vergleiche Preise, buche direkt online
+            </p>
+          </div>
 
-            {/* Search Form - Same structure as /home */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
-              <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1.5fr_auto] gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Service
-                  </label>
+          {/* Search Card - Booking.com Style: One Line - Same as /home */}
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-2xl p-3">
+              <div className="flex flex-col md:flex-row gap-2">
+                {/* Service Dropdown */}
+                <div className="flex-1">
                   <select
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-700 font-medium"
                     defaultValue="TIRE_CHANGE"
+                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
                     disabled
                   >
                     <option value="TIRE_CHANGE">Räderwechsel</option>
                   </select>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    📍 Postleitzahl
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="z.B. 59955"
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-700 font-medium"
-                    disabled
-                  />
+
+                {/* Location Input */}
+                <div className="flex-1">
+                  <div className="relative h-16">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="PLZ oder Ort"
+                      className="w-full h-full pl-12 pr-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
+                      disabled
+                    />
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Umkreis
-                  </label>
+
+                {/* Radius Dropdown */}
+                <div className="w-full md:w-32">
                   <select
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-700 font-medium"
                     defaultValue="25"
+                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
                     disabled
                   >
                     <option value="25">25 km</option>
                   </select>
                 </div>
 
+                {/* Search Button */}
                 <Link
                   href="/home"
-                  className="h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  className="w-full md:w-auto h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                 >
-                  Neue Suche
+                  <span className="hidden md:inline">Neue Suche</span>
+                  <span className="md:hidden">Suchen</span>
                 </Link>
               </div>
             </div>
@@ -289,6 +308,16 @@ export default function WorkshopDetailPage() {
               </p>
             </div>
           </div>
+
+          {/* Workshop Description */}
+          {workshop.description && (
+            <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">Über die Werkstatt</h3>
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {workshop.description}
+              </p>
+            </div>
+          )}
         </div>
 
           {/* Calendar Section */}

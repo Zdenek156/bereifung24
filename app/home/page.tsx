@@ -610,16 +610,16 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex flex-col gap-4">
-                            {/* Workshop Image Placeholder */}
-                            <div className="w-full h-32 sm:h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center">
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Workshop Logo - Links, viereckig */}
+                            <div className="w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center">
                               <span className="text-3xl sm:text-4xl">🔧</span>
                             </div>
 
                             {/* Workshop Info */}
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <div className="pr-10 sm:pr-12">
-                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 truncate">{workshop.name}</h3>
                                 
                                 {/* Stadt mit Maps-Button */}
                                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -678,30 +678,30 @@ export default function NewHomePage() {
                                   </span>
                                 )}
                               </div>
-                            </div>
 
-                            {/* Preis und Button */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
-                              <div className="flex-1">
-                                <p className="text-xs sm:text-sm text-gray-600 mb-1">Gesamtpreis</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                  {formatEUR(workshop.totalPrice)}
-                                </p>
-                                {/* MwSt-Hinweis */}
-                                {workshop.showVatNote && (
-                                  <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
-                                )}
-                                {workshop.estimatedDuration && (
-                                  <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
-                                )}
-                              </div>
+                              {/* Preis und Button - Desktop rechts, Mobile unten */}
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100 sm:border-0 sm:pt-0">
+                                <div className="flex-1">
+                                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                                  <p className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                    {formatEUR(workshop.totalPrice)}
+                                  </p>
+                                  {/* MwSt-Hinweis */}
+                                  {workshop.showVatNote && (
+                                    <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
+                                  )}
+                                  {workshop.estimatedDuration && (
+                                    <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                  )}
+                                </div>
                               
-                              <button
-                                onClick={() => handleBooking(workshop)}
-                                className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
-                              >
-                                Verfügbarkeit prüfen
-                              </button>
+                                <button
+                                  onClick={() => handleBooking(workshop)}
+                                  className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                  Verfügbarkeit prüfen
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

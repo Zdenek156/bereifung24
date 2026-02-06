@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
       include: {
         workshopServices: {
           where: {
-            serviceType: serviceType,
             isActive: true,
             allowsDirectBooking: true
           }
@@ -103,9 +102,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate distance and filter by radius
     const workshopsWithDistance = workshops
-      .filter(workshop => workshop.workshopServices.length > 0) // Filter out workshops without services
+      .filter(workshop => workshop.workshopServices.some(s => s.serviceType === serviceType)) // Must have the searched service
       .map(workshop => {
-        const service = workshop.workshopServices[0]
+        const service = workshop.workshopServices.find(s => s.serviceType === serviceType)!
         
         // Haversine formula for distance calculation
         const lat1 = customerLat
@@ -182,7 +181,10 @@ export async function POST(request: NextRequest) {
           
           // Contact
           phone: workshop.user?.phone || null,
-          email: workshop.user?.email || null
+          email: workshop.user?.email || null,
+          
+          // Available Services
+          availableServices: workshop.workshopServices.map(s => s.serviceType)
         }
       })
       .filter(w => radiusKm === undefined || w.distance <= radiusKm)

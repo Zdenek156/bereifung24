@@ -379,6 +379,7 @@ export default function NewHomePage() {
       reviewCount: workshop.reviewCount.toString(),
       totalPrice: workshop.totalPrice.toString(),
       duration: workshop.estimatedDuration?.toString() || '60',
+      service: selectedService, // Add service type for checkout
     })
     router.push(`/home/workshop/${workshop.id}?${params.toString()}`)
   }

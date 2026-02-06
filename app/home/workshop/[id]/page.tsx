@@ -43,6 +43,7 @@ export default function WorkshopDetailPage() {
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
   const [openingHours, setOpeningHours] = useState<any>(null)
+  const [serviceType, setServiceType] = useState<string>('WHEEL_CHANGE') // Store service type from URL
   
   // Additional services
   const [showServicesModal, setShowServicesModal] = useState(false)
@@ -79,6 +80,10 @@ export default function WorkshopDetailPage() {
         estimatedDuration: parseInt(searchParams.get('duration') || '60'),
         description: '',
       }
+      
+      // Extract service type from URL
+      const service = searchParams.get('service') || 'WHEEL_CHANGE'
+      setServiceType(service)
       
       // Fetch full workshop details including description
       try {
@@ -313,6 +318,7 @@ export default function WorkshopDetailPage() {
     // URL für Checkout mit allen Parametern
     const checkoutUrl = `/dashboard/customer/direct-booking/checkout?` +
       `workshopId=${workshopId}&` +
+      `service=${serviceType}&` +
       `date=${selectedDate.toISOString().split('T')[0]}&` +
       `time=${selectedSlot.time}`
     

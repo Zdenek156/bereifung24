@@ -623,7 +623,7 @@ export default function NewHomePage() {
                           {/* Favorite Button */}
                           <button
                             onClick={() => toggleFavorite(workshop.id)}
-                            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all z-10"
+                            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all"
                             title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
                           >
                             <svg

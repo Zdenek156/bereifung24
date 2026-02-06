@@ -558,12 +558,12 @@ export default function NewHomePage() {
                 {!loading && workshops.length > 0 && (
                   <div className="space-y-4">
                     {/* Sort Bar */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <p className="text-sm text-gray-600">
                         <span className="font-semibold text-gray-900">{sortedWorkshops.length}</span> Werkstätten gefunden
                       </p>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Sortieren:</span>
+                        <span className="text-sm text-gray-600 whitespace-nowrap">Sortieren:</span>
                         <select
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as any)}
@@ -583,16 +583,16 @@ export default function NewHomePage() {
                       return (
                         <div
                           key={workshop.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 relative"
+                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-4 sm:p-6 relative"
                         >
                           {/* Favorite Button */}
                           <button
                             onClick={() => toggleFavorite(workshop.id)}
-                            className="absolute top-4 right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all z-10"
+                            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all z-10"
                             title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
                           >
                             <svg
-                              className={`w-6 h-6 transition-colors ${
+                              className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${
                                 isFavorite
                                   ? 'fill-red-500 text-red-500'
                                   : 'fill-none text-gray-400 hover:text-red-500'
@@ -610,19 +610,19 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex flex-col gap-4">
                             {/* Workshop Image Placeholder */}
-                            <div className="w-full md:w-48 h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <span className="text-4xl">🔧</span>
+                            <div className="w-full h-32 sm:h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center">
+                              <span className="text-3xl sm:text-4xl">🔧</span>
                             </div>
 
                             {/* Workshop Info */}
                             <div className="flex-1">
-                              <div className="pr-10">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                              <div className="pr-10 sm:pr-12">
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
                                 
                                 {/* Stadt mit Maps-Button */}
-                                <div className="flex items-center gap-2 mb-3">
+                                <div className="flex flex-wrap items-center gap-2 mb-3">
                                   {workshop.city && (
                                     <>
                                       <span className="text-sm text-gray-600">{workshop.city}</span>
@@ -631,7 +631,7 @@ export default function NewHomePage() {
                                           const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
                                           window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
                                         }}
-                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors whitespace-nowrap"
                                       >
                                         <MapPin className="w-3 h-3" />
                                         In Maps öffnen
@@ -680,11 +680,11 @@ export default function NewHomePage() {
                               </div>
                             </div>
 
-                            {/* Preis und Button - Rechts oben mit Abstand für Favoriten-Icon */}
-                            <div className="flex flex-col items-end justify-start md:w-64 pt-12">
-                              <div className="text-right mb-3">
-                                <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
-                                <p className="text-3xl font-bold text-primary-600">
+                            {/* Preis und Button */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                              <div className="flex-1">
+                                <p className="text-xs sm:text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-primary-600">
                                   {formatEUR(workshop.totalPrice)}
                                 </p>
                                 {/* MwSt-Hinweis */}
@@ -698,7 +698,7 @@ export default function NewHomePage() {
                               
                               <button
                                 onClick={() => handleBooking(workshop)}
-                                className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
+                                className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
                               >
                                 Verfügbarkeit prüfen
                               </button>

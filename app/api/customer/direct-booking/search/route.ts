@@ -73,6 +73,13 @@ export async function POST(request: NextRequest) {
           where: {
             isActive: true,
             allowsDirectBooking: true
+          },
+          include: {
+            servicePackages: {
+              where: {
+                isActive: true
+              }
+            }
           }
         },
         bookings: {
@@ -124,14 +131,32 @@ export async function POST(request: NextRequest) {
         const distance = R * c
 
         // Calculate prices - Convert Decimal to Number
-        const basePrice = service.basePrice ? Number(service.basePrice) : 0
+        // Prioritize package prices if available, otherwise use service basePrice
+        let basePrice = 0
+        let baseDuration = service.durationMinutes || 30
+        
+        if (service.servicePackages && service.servicePackages.length > 0) {
+          // Use cheapest package price as base (or first active package)
+          const cheapestPackage = service.servicePackages
+            .filter(pkg => pkg.isActive)
+            .sort((a, b) => Number(a.price) - Number(b.price))[0]
+          
+          if (cheapestPackage) {
+            basePrice = Number(cheapestPackage.price)
+            baseDuration = cheapestPackage.durationMinutes
+          } else {
+            basePrice = service.basePrice ? Number(service.basePrice) : 0
+          }
+        } else {
+          basePrice = service.basePrice ? Number(service.basePrice) : 0
+        }
+        
         const balancingPricePerTire = hasBalancing ? (service.balancingPrice ? Number(service.balancingPrice) : 0) : 0
         const totalBalancingPrice = balancingPricePerTire * 4 // 4 Räder
         const storagePriceTotal = hasStorage ? (service.storagePrice ? Number(service.storagePrice) : 0) : 0
         const totalPrice = basePrice + totalBalancingPrice + storagePriceTotal
 
         // Calculate estimated duration
-        const baseDuration = service.durationMinutes || 30
         const balancingDuration = hasBalancing ? (service.balancingMinutes || 0) * 4 : 0
         const estimatedDuration = baseDuration + balancingDuration
 

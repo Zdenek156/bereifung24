@@ -175,6 +175,9 @@ export default function WorkshopServicesPage() {
       }
     })
     
+    // Add directBooking option for all services with packages
+    initialPackages['directBooking'] = { price: '', duration: '', active: false }
+    
     setPackages(initialPackages)
   }
 
@@ -187,7 +190,7 @@ export default function WorkshopServicesPage() {
         base: { price: '', duration: '60', active: true },
         balancing: { price: '', duration: '5', active: false },
         storage: { price: '', duration: '0', active: false },
-        directBooking: { active: false }
+        directBooking: { price: '', duration: '', active: false }
       })
     } else {
       // Initialize packages if service type supports them
@@ -271,6 +274,13 @@ export default function WorkshopServicesPage() {
         if (disposalFee) {
           requestBody.disposalFee = parseFloat(disposalFee)
         }
+        // Add allowsDirectBooking for TIRE_CHANGE
+        requestBody.allowsDirectBooking = packages.directBooking?.active || false
+      }
+
+      // Add allowsDirectBooking for other package-based services
+      if (['TIRE_REPAIR', 'MOTORCYCLE_TIRE', 'ALIGNMENT_BOTH', 'CLIMATE_SERVICE'].includes(selectedServiceType)) {
+        requestBody.allowsDirectBooking = packages.directBooking?.active || false
       }
       
       const response = await fetch(url, {
@@ -345,6 +355,8 @@ export default function WorkshopServicesPage() {
           active: !!service.storagePrice 
         },
         directBooking: {
+          price: '',
+          duration: '',
           active: service.allowsDirectBooking || false
         }
       })
@@ -365,6 +377,12 @@ export default function WorkshopServicesPage() {
           active: pkg.isActive
         }
       })
+      // Add directBooking status for package-based services
+      loadedPackages['directBooking'] = {
+        price: '',
+        duration: '',
+        active: service.allowsDirectBooking || false
+      }
       setPackages(loadedPackages)
     } else {
       initializePackages(service.serviceType)
@@ -860,7 +878,31 @@ export default function WorkshopServicesPage() {
                 </div>
               )}
 
-
+              {/* Direktbuchung erlauben für Services mit Paketen */}
+              {['TIRE_CHANGE', 'TIRE_REPAIR', 'MOTORCYCLE_TIRE', 'ALIGNMENT_BOTH', 'CLIMATE_SERVICE'].includes(selectedServiceType) && (
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={packages.directBooking?.active !== false}
+                      onChange={(e) => handlePackageChange('directBooking', 'active', e.target.checked)}
+                      className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                    />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        ⚡ Direktbuchung erlauben (Fast-Track)
+                      </h3>
+                      <p className="text-sm text-gray-700">
+                        Kunden können direkt online buchen und bezahlen, ohne Angebot anzufordern.
+                        Sie erscheinen in der <strong>Schnellbuchungs-Suche</strong> und erhalten sofortige Zahlungen.
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        💡 Empfohlen: Erhöht Ihre Conversion-Rate und spart Zeit bei der Angebotserstellung!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <button

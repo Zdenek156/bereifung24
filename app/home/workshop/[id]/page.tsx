@@ -161,17 +161,25 @@ export default function WorkshopDetailPage() {
     // Parse opening hours for this day
     if (openingHours && openingHours[dayName]) {
       const hours = openingHours[dayName]
-      if (hours && hours !== 'closed') {
+      if (hours && typeof hours === 'string' && hours !== 'closed') {
         // Format: "09:00-18:00" or "09:00-12:00,14:00-18:00" (with lunch break)
         const ranges = hours.split(',')
         const firstRange = ranges[0].split('-')
         if (firstRange.length === 2) {
-          startHour = parseInt(firstRange[0].split(':')[0])
+          const startTime = firstRange[0].split(':')
+          if (startTime.length >= 1) {
+            startHour = parseInt(startTime[0])
+          }
           // Use last range's end time
           const lastRange = ranges[ranges.length - 1].split('-')
-          endHour = parseInt(lastRange[1].split(':')[0])
+          if (lastRange.length === 2) {
+            const endTime = lastRange[1].split(':')
+            if (endTime.length >= 1) {
+              endHour = parseInt(endTime[0])
+            }
+          }
         }
-      } else {
+      } else if (hours === 'closed') {
         // Workshop is closed on this day
         return []
       }

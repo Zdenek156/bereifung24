@@ -769,7 +769,6 @@ export default function NewHomePage() {
                               </div>
                             </div>
                           </div>
-                        </div>
                       )
                     })}
                   </div>

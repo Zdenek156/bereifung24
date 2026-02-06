@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -22,7 +22,8 @@ import {
   ClipboardList,
   Calendar,
   BookOpen,
-  Car
+  Car,
+  Cloud
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 
@@ -53,6 +54,7 @@ const STATS = [
 export default function NewHomePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const [selectedService, setSelectedService] = useState('WHEEL_CHANGE')
   const [postalCode, setPostalCode] = useState('')
   const [radiusKm, setRadiusKm] = useState(25)
@@ -69,6 +71,20 @@ export default function NewHomePage() {
   
   // Service-specific package filters
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
   
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
@@ -383,7 +399,7 @@ export default function NewHomePage() {
             </div>
             
             {/* User Menu */}
-            <div className="relative">
+            <div className="relative" ref={userMenuRef}>
               {status === 'loading' ? (
                 <div className="px-5 py-2.5 text-sm font-medium text-white">
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -400,12 +416,7 @@ export default function NewHomePage() {
                   </button>
                   
                   {showUserMenu && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setShowUserMenu(false)}
-                      />
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                         <div className="px-4 py-3 border-b border-gray-200">
                           <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
                           <p className="text-xs text-gray-500">{session.user?.email}</p>
@@ -479,7 +490,7 @@ export default function NewHomePage() {
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          <MapPin className="w-4 h-4" />
+                          <Cloud className="w-4 h-4" />
                           Wetter-Erinnerung
                         </Link>
                         
@@ -506,7 +517,6 @@ export default function NewHomePage() {
                           Abmelden
                         </button>
                       </div>
-                    </>
                   )}
                 </div>
               ) : (

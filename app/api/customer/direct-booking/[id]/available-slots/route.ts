@@ -19,6 +19,9 @@ export async function GET(
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
+    console.log(`\n[CUSTOMER SLOTS API] Request for workshop ${params.id}`)
+    console.log(`[CUSTOMER SLOTS API] Date range: ${startDate} to ${endDate}`)
+
     if (!startDate || !endDate) {
       return NextResponse.json(
         { error: 'Start- und Enddatum fehlen' },
@@ -92,20 +95,29 @@ export async function GET(
     let googleAccessToken: string | null = null
     let googleRefreshToken: string | null = null
     
+    console.log(`[CUSTOMER SLOTS API] Workshop calendarMode: ${workshop.calendarMode}`)
+    console.log(`[CUSTOMER SLOTS API] Workshop has googleCalendarId: ${!!workshop.googleCalendarId}`)
+    console.log(`[CUSTOMER SLOTS API] Workshop has googleAccessToken: ${!!workshop.googleAccessToken}`)
+    console.log(`[CUSTOMER SLOTS API] Employees count: ${workshop.employees.length}`)
+    
     // Use workshop calendar or first employee calendar
     if (workshop.calendarMode === 'workshop' && workshop.googleCalendarId) {
       googleCalendarId = workshop.googleCalendarId
       googleAccessToken = workshop.googleAccessToken
       googleRefreshToken = workshop.googleRefreshToken
-      console.log(`[CUSTOMER SLOTS API] Using WORKSHOP Google Calendar: ${googleCalendarId}`)
+      console.log(`[CUSTOMER SLOTS API] ✅ Using WORKSHOP Google Calendar: ${googleCalendarId}`)
     } else if (workshop.employees.length > 0) {
       const employeeWithCalendar = workshop.employees.find(e => e.googleCalendarId && e.googleAccessToken)
       if (employeeWithCalendar) {
         googleCalendarId = employeeWithCalendar.googleCalendarId
         googleAccessToken = employeeWithCalendar.googleAccessToken
         googleRefreshToken = employeeWithCalendar.googleRefreshToken
-        console.log(`[CUSTOMER SLOTS API] Using EMPLOYEE Google Calendar: ${googleCalendarId}`)
+        console.log(`[CUSTOMER SLOTS API] ✅ Using EMPLOYEE Google Calendar: ${googleCalendarId}`)
+      } else {
+        console.log(`[CUSTOMER SLOTS API] ❌ No employee with calendar found`)
       }
+    } else {
+      console.log(`[CUSTOMER SLOTS API] ❌ No Google Calendar configured`)
     }
     
     if (googleCalendarId && googleAccessToken && googleRefreshToken) {

@@ -161,8 +161,25 @@ export default function WorkshopDetailPage() {
     // Parse opening hours for this day
     if (openingHours && openingHours[dayName]) {
       const hours = openingHours[dayName]
-      if (hours && typeof hours === 'string' && hours !== 'closed') {
-        // Format: "09:00-18:00" or "09:00-12:00,14:00-18:00" (with lunch break)
+      
+      // Check if workshop is closed
+      if (hours && typeof hours === 'object' && hours.closed === true) {
+        return []
+      }
+      
+      // Parse object format: {from: "08:00", to: "18:00", closed: false}
+      if (hours && typeof hours === 'object' && hours.from && hours.to) {
+        const fromParts = hours.from.split(':')
+        const toParts = hours.to.split(':')
+        if (fromParts.length >= 1) {
+          startHour = parseInt(fromParts[0])
+        }
+        if (toParts.length >= 1) {
+          endHour = parseInt(toParts[0])
+        }
+      }
+      // Parse string format: "09:00-18:00" or "09:00-12:00,14:00-18:00"
+      else if (hours && typeof hours === 'string' && hours !== 'closed') {
         const ranges = hours.split(',')
         const firstRange = ranges[0].split('-')
         if (firstRange.length === 2) {
@@ -180,7 +197,6 @@ export default function WorkshopDetailPage() {
           }
         }
       } else if (hours === 'closed') {
-        // Workshop is closed on this day
         return []
       }
     }

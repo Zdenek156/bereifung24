@@ -668,12 +668,18 @@ export default function NewHomePage() {
                             <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden self-start">
                               {workshop.logoUrl ? (
                                 <img 
-                                  src={workshop.logoUrl} 
+                                  src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : `/uploads/logos/${workshop.logoUrl}`} 
                                   alt={`${workshop.name} Logo`}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
-                                    e.currentTarget.style.display = 'none'
-                                    e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl md:text-3xl">🔧</span>'
+                                    const parent = e.currentTarget.parentElement
+                                    if (parent) {
+                                      e.currentTarget.remove()
+                                      const span = document.createElement('span')
+                                      span.className = 'text-2xl md:text-3xl'
+                                      span.textContent = '🔧'
+                                      parent.appendChild(span)
+                                    }
                                   }}
                                 />
                               ) : (

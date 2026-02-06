@@ -16,7 +16,7 @@ export default function WorkshopDetailPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<any>(null)
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
-  const [busySlots, setBusySlots] = useState<any[]>([])
+  const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
 
   // Load workshop details from URL params and API
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function WorkshopDetailPage() {
       if (response.ok) {
         const data = await response.json()
         setAvailableSlots(data.availableSlots || [])
-        setBusySlots(data.busySlots || [])
+        setBusySlots(data.busySlots || {})
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
@@ -120,7 +120,13 @@ export default function WorkshopDetailPage() {
   const isDateAvailable = (date: Date | null) => {
     if (!date) return false
     const dateStr = date.toISOString().split('T')[0]
-    return availableSlots.some(slot => slot.date === dateStr && slot.availableSlots > 0)
+    // busySlots is now an object: { "2026-02-19": ["16:00", "08:00"], ... }
+    // A date is available if it's not fully booked (has some free slots)
+    // We consider a date available if it either has no busy slots, or if workshop is open that day
+    // For now, we'll show all future dates as potentially available (workshop can configure open hours)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date >= today
   }
 
   const isDatePast = (date: Date | null) => {
@@ -132,8 +138,21 @@ export default function WorkshopDetailPage() {
 
   const getSlotsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0]
-    const daySlots = availableSlots.find(slot => slot.date === dateStr)
-    return daySlots?.slots || []
+    // Generate time slots for business hours (8:00 - 18:00, every 30 min)
+    const slots = []
+    const busyTimes = busySlots[dateStr] || []
+    
+    for (let hour = 8; hour < 18; hour++) {
+      for (let minute of [0, 30]) {
+        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+        slots.push({
+          time: timeStr,
+          available: !busyTimes.includes(timeStr)
+        })
+      }
+    }
+    
+    return slots
   }
 
   const handleDateClick = (date: Date | null) => {

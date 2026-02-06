@@ -14,27 +14,20 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Clock,
-  ChevronUp,
-  RefreshCcw,
-  Wrench,
-  Ruler,
-  Snowflake,
-  Bike,
-  Car,
-  Gauge
+  ChevronUp
 } from 'lucide-react'
 
 const SERVICES = [
-  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: RefreshCcw, description: 'Sommer-/Winterreifen wechseln' },
-  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: Wrench, description: 'Reifen flicken und abdichten' },
-  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: Ruler, description: 'Spur und Sturz einstellen' },
-  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: Snowflake, description: 'Wartung und Desinfektion' },
-  { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: Car, description: 'Reifen montieren/demontieren' },
-  { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: Bike, description: 'Motorradreifen-Service' },
-  { id: 'ALIGNMENT_BOTH', label: 'VA+HA Vermessung', icon: Ruler, description: 'Vorder- und Hinterachse' },
-  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: Snowflake, description: 'Klimaanlage prüfen' },
-  { id: 'BRAKE_SERVICE', label: 'Bremsenservice', icon: Gauge, description: 'Bremsen prüfen/wechseln' },
-  { id: 'BATTERY_SERVICE', label: 'Batterieservice', icon: Gauge, description: 'Batterie prüfen/laden' },
+  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
+  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
+  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: '📐', description: 'Spur und Sturz einstellen' },
+  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: '❄️', description: 'Wartung und Desinfektion' },
+  { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🚗', description: 'Reifen montieren/demontieren' },
+  { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', description: 'Motorradreifen-Service' },
+  { id: 'ALIGNMENT_BOTH', label: 'VA+HA Vermessung', icon: '📏', description: 'Vorder- und Hinterachse' },
+  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '🌡️', description: 'Klimaanlage prüfen' },
+  { id: 'BRAKE_SERVICE', label: 'Bremsenservice', icon: '🛑', description: 'Bremsen prüfen/wechseln' },
+  { id: 'BATTERY_SERVICE', label: 'Batterieservice', icon: '🔋', description: 'Batterie prüfen/laden' },
 ]
 
 const RADIUS_OPTIONS = [
@@ -755,14 +748,13 @@ export default function NewHomePage() {
                                       const service = SERVICES.find(s => s.id === serviceType)
                                       if (!service) return null
                                       
-                                      const Icon = service.icon
                                       return (
                                         <span 
                                           key={serviceType}
                                           className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
                                           title={service.description}
                                         >
-                                          <Icon className="w-3 h-3" />
+                                          <span>{service.icon}</span>
                                           {service.label}
                                         </span>
                                       )

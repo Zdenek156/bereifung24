@@ -668,7 +668,7 @@ export default function NewHomePage() {
                             <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden self-start">
                               {workshop.logoUrl ? (
                                 <img 
-                                  src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : `/uploads/logos/${workshop.logoUrl}`} 
+                                  src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
                                   alt={`${workshop.name} Logo`}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {

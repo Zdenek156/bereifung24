@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, MapPin, Star, Clock, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Star, Clock, ArrowLeft, Plus } from 'lucide-react'
 import Link from 'next/link'
+import AddServicesModal from './components/AddServicesModal'
 
 export default function WorkshopDetailPage() {
   const params = useParams()
@@ -18,6 +19,12 @@ export default function WorkshopDetailPage() {
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
   const [openingHours, setOpeningHours] = useState<any>(null)
+  
+  // Additional services
+  const [showServicesModal, setShowServicesModal] = useState(false)
+  const [additionalServices, setAdditionalServices] = useState<any[]>([])
+  const [basePrice, setBasePrice] = useState(0)
+  const [baseDuration, setBaseDuration] = useState(60)
 
   // Load workshop details from URL params and API
   useEffect(() => {
@@ -55,6 +62,8 @@ export default function WorkshopDetailPage() {
       }
       
       setWorkshop(workshopData)
+      setBasePrice(workshopData.totalPrice)
+      setBaseDuration(workshopData.estimatedDuration)
       setLoading(false)
     }
     
@@ -238,6 +247,26 @@ export default function WorkshopDetailPage() {
 
   const handleSlotSelect = (slot: any) => {
     setSelectedSlot(slot)
+  }
+
+  const handleAdditionalServicesSelected = (services: any[]) => {
+    setAdditionalServices(services)
+  }
+
+  const calculateTotalPrice = () => {
+    let total = basePrice
+    additionalServices.forEach(service => {
+      total += service.price
+    })
+    return total
+  }
+
+  const calculateTotalDuration = () => {
+    let total = baseDuration
+    additionalServices.forEach(service => {
+      total += service.duration
+    })
+    return total
   }
 
   const handleBooking = () => {
@@ -425,10 +454,10 @@ export default function WorkshopDetailPage() {
                 <span>📍 {workshop.distance.toFixed(1)} km entfernt</span>
               </div>
               
-              {workshop.estimatedDuration && (
+              {baseDuration > 0 && (
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  <span>~ {workshop.estimatedDuration} Min.</span>
+                  <span>~ {calculateTotalDuration()} Min.</span>
                 </div>
               )}
             </div>
@@ -439,8 +468,13 @@ export default function WorkshopDetailPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
                   <p className="text-3xl font-bold text-primary-600">
-                    {formatEUR(workshop.totalPrice)}
+                    {formatEUR(calculateTotalPrice())}
                   </p>
+                  {additionalServices.length > 0 && (
+                    <p className="text-sm text-gray-500">
+                      inkl. {additionalServices.length} zusätzliche{additionalServices.length > 1 ? 'r' : ''} Service{additionalServices.length > 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => {
@@ -466,6 +500,46 @@ export default function WorkshopDetailPage() {
               </p>
             </div>
           )}
+
+          {/* Additional Services Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-primary-50 rounded-xl shadow-sm border-2 border-primary-200 p-6 mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  ➕ Weitere Services hinzufügen
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Möchten Sie gleich weitere Services dieser Werkstatt mitbuchen? Wählen Sie aus allen verfügbaren Leistungen.
+                </p>
+                
+                {additionalServices.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    <p className="text-sm font-semibold text-gray-700">Ausgewählte Services:</p>
+                    {additionalServices.map((service, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-primary-200">
+                        <div>
+                          <span className="font-semibold text-gray-900">{service.serviceName}</span>
+                          <span className="text-sm text-gray-500 ml-2">• {service.packageName}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-primary-600">{formatEUR(service.price)}</div>
+                          <div className="text-xs text-gray-500">+{service.duration} Min.</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={() => setShowServicesModal(true)}
+                className="px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <Plus className="w-5 h-5" />
+                {additionalServices.length > 0 ? 'Bearbeiten' : 'Auswählen'}
+              </button>
+            </div>
+          </div>
 
           {/* Calendar Section */}
           <div id="calendar-section" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
@@ -649,6 +723,14 @@ export default function WorkshopDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Additional Services Modal */}
+      <AddServicesModal
+        isOpen={showServicesModal}
+        onClose={() => setShowServicesModal(false)}
+        workshopId={workshopId}
+        onServicesSelected={handleAdditionalServicesSelected}
+      />
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white">

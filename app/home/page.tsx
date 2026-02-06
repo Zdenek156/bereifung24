@@ -14,14 +14,27 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Clock,
-  ChevronUp
+  ChevronUp,
+  RefreshCcw,
+  Wrench,
+  Ruler,
+  Snowflake,
+  Bike,
+  Car,
+  Gauge
 } from 'lucide-react'
 
 const SERVICES = [
-  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
-  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
-  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: '📐', description: 'Spur und Sturz einstellen' },
-  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: '❄️', description: 'Wartung und Desinfektion' },
+  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: RefreshCcw, description: 'Sommer-/Winterreifen wechseln' },
+  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: Wrench, description: 'Reifen flicken und abdichten' },
+  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: Ruler, description: 'Spur und Sturz einstellen' },
+  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: Snowflake, description: 'Wartung und Desinfektion' },
+  { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: Car, description: 'Reifen montieren/demontieren' },
+  { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: Bike, description: 'Motorradreifen-Service' },
+  { id: 'ALIGNMENT_BOTH', label: 'VA+HA Vermessung', icon: Ruler, description: 'Vorder- und Hinterachse' },
+  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: Snowflake, description: 'Klimaanlage prüfen' },
+  { id: 'BRAKE_SERVICE', label: 'Bremsenservice', icon: Gauge, description: 'Bremsen prüfen/wechseln' },
+  { id: 'BATTERY_SERVICE', label: 'Batterieservice', icon: Gauge, description: 'Batterie prüfen/laden' },
 ]
 
 const RADIUS_OPTIONS = [
@@ -732,6 +745,36 @@ export default function NewHomePage() {
                                 </div>
                               </div>
 
+                              
+                              {/* Available Services */}
+                              {workshop.availableServices && workshop.availableServices.length > 0 && (
+                                <div className="mb-3">
+                                  <p className="text-xs text-gray-500 mb-1.5">Verfügbare Services:</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {workshop.availableServices.map((serviceType: string) => {
+                                      const service = SERVICES.find(s => s.id === serviceType)
+                                      if (!service) return null
+                                      
+                                      const Icon = service.icon
+                                      return (
+                                        <span 
+                                          key={serviceType}
+                                          className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                                          title={service.description}
+                                        >
+                                          <Icon className="w-3 h-3" />
+                                          {service.label}
+                                        </span>
+                                      )
+                                    })}
+                                    {workshop.availableServices.filter((s: string) => !SERVICES.find(svc => svc.id === s)).length > 0 && (
+                                      <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+                                        +{workshop.availableServices.filter((s: string) => !SERVICES.find(svc => svc.id === s)).length} weitere
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                               
                               {/* Badges */}
                               <div className="flex flex-wrap gap-2 mb-4">

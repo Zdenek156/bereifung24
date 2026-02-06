@@ -414,9 +414,9 @@ export default function WorkshopDetailPage() {
 
           {/* Workshop Description */}
           {workshop.description && (
-            <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">Über die Werkstatt</h3>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">📜 Über die Werkstatt</h3>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                 {workshop.description}
               </p>
             </div>
@@ -424,11 +424,11 @@ export default function WorkshopDetailPage() {
         </div>
 
           {/* Calendar Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-8">Verfügbare Termine</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-6">📅 Verfügbare Termine</h3>
           
           {/* Calendar Navigation */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <button
               onClick={prevMonth}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -438,7 +438,7 @@ export default function WorkshopDetailPage() {
             </button>
             
             <div className="text-center">
-              <span className="text-lg font-semibold">
+              <span className="text-base font-semibold">
                 {month1.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
                 {' - '}
                 {month2.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
@@ -454,15 +454,15 @@ export default function WorkshopDetailPage() {
           </div>
 
           {/* Two Month Calendar */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Month 1 */}
             <div>
-              <h4 className="text-center font-bold text-lg mb-4">
+              <h4 className="text-center font-semibold text-base mb-3">
                 {month1.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
               </h4>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1">
                 {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-                  <div key={day} className="text-center text-sm font-bold text-gray-600 py-2">
+                  <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
                     {day}
                   </div>
                 ))}
@@ -472,7 +472,7 @@ export default function WorkshopDetailPage() {
                     onClick={() => handleDateClick(date)}
                     disabled={!date || isDatePast(date) || !isDateAvailable(date)}
                     className={`
-                      aspect-square flex items-center justify-center text-sm font-medium rounded-lg transition-all
+                      aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
                       ${!date ? 'invisible' : ''}
                       ${isDatePast(date) ? 'text-gray-300 cursor-not-allowed' : ''}
                       ${isDateAvailable(date) ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-semibold' : ''}
@@ -488,12 +488,12 @@ export default function WorkshopDetailPage() {
 
             {/* Month 2 */}
             <div>
-              <h4 className="text-center font-bold text-lg mb-4">
+              <h4 className="text-center font-semibold text-base mb-3">
                 {month2.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
               </h4>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1">
                 {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-                  <div key={day} className="text-center text-sm font-bold text-gray-600 py-2">
+                  <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
                     {day}
                   </div>
                 ))}
@@ -503,7 +503,7 @@ export default function WorkshopDetailPage() {
                     onClick={() => handleDateClick(date)}
                     disabled={!date || isDatePast(date) || !isDateAvailable(date)}
                     className={`
-                      aspect-square flex items-center justify-center text-sm font-medium rounded-lg transition-all
+                      aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
                       ${!date ? 'invisible' : ''}
                       ${isDatePast(date) ? 'text-gray-300 cursor-not-allowed' : ''}
                       ${isDateAvailable(date) ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-semibold' : ''}
@@ -519,21 +519,21 @@ export default function WorkshopDetailPage() {
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-4 justify-center mb-8 text-sm">
+          <div className="flex flex-wrap gap-3 justify-center mb-6 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-100 rounded-lg border border-green-200"></div>
+              <div className="w-6 h-6 bg-green-100 rounded-lg border border-green-200"></div>
               <span className="text-gray-600">Verfügbar</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg border border-gray-200"></div>
+              <div className="w-6 h-6 bg-gray-100 rounded-lg border border-gray-200"></div>
               <span className="text-gray-600">Ausgebucht</span>
             </div>
           </div>
 
           {/* Time Slots */}
           {selectedDate && (
-            <div className="border-t pt-8">
-              <h4 className="text-xl font-bold mb-6">
+            <div className="border-t pt-6">
+              <h4 className="text-lg font-bold mb-4">
                 Verfügbare Zeiten am {selectedDate.toLocaleDateString('de-DE', { 
                   weekday: 'long', 
                   day: 'numeric', 
@@ -543,22 +543,22 @@ export default function WorkshopDetailPage() {
               </h4>
               
               {getSlotsForDate(selectedDate).length === 0 ? (
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 text-center">
-                  <div className="text-5xl mb-3">🕐</div>
-                  <h5 className="text-xl font-bold text-gray-900 mb-2">Außerhalb der Öffnungszeiten</h5>
-                  <p className="text-gray-600">
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+                  <div className="text-4xl mb-2">🕐</div>
+                  <h5 className="text-lg font-bold text-gray-900 mb-2">Außerhalb der Öffnungszeiten</h5>
+                  <p className="text-sm text-gray-600">
                     Die Werkstatt hat an diesem Tag geschlossen oder es sind keine Termine verfügbar.
                     Bitte wählen Sie ein anderes Datum.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2">
                   {getSlotsForDate(selectedDate).map((slot: any, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => handleSlotSelect(slot)}
                       className={`
-                        px-4 py-4 rounded-lg border-2 transition-all font-semibold text-base
+                        px-3 py-3 rounded-lg border-2 transition-all font-semibold text-sm
                         ${selectedSlot?.time === slot.time
                           ? 'border-primary-500 bg-primary-50 text-primary-700'
                           : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
@@ -575,12 +575,12 @@ export default function WorkshopDetailPage() {
 
           {/* Booking Button */}
           {selectedSlot && (
-            <div className="border-t mt-8 pt-8">
-              <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-6 mb-6">
-                <p className="text-sm text-gray-600 mb-2">
+            <div className="border-t mt-6 pt-6">
+              <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
+                <p className="text-xs text-gray-600 mb-1">
                   <strong>📅 Ausgewählter Termin:</strong>
                 </p>
-                <p className="text-xl font-bold text-primary-700">
+                <p className="text-lg font-bold text-primary-700">
                   {selectedDate?.toLocaleDateString('de-DE', { 
                     weekday: 'long', 
                     day: 'numeric', 

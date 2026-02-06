@@ -696,37 +696,39 @@ export default function NewHomePage() {
                               </div>
                               
                               {/* Available Services - Under Logo */}
-                              {workshop.availableServices && workshop.availableServices.length > 1 && (
-                                <div className="max-w-xs">
-                                  <p className="text-xs font-semibold text-gray-700 mb-1.5">📌 Weitere Services:</p>
-                                  <p className="text-xs text-gray-500 mb-2">Zusätzlich buchbar</p>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {workshop.availableServices
-                                      .filter((serviceType: string) => serviceType !== selectedService)
-                                      .slice(0, 5)
-                                      .map((serviceType: string) => {
-                                        const service = SERVICES.find(s => s.id === serviceType)
-                                        if (!service) return null
-                                        
-                                        return (
-                                          <span 
-                                            key={serviceType}
-                                            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
-                                            title={service.description}
-                                          >
-                                            <span>{service.icon}</span>
-                                            {service.label}
-                                          </span>
-                                        )
-                                      })}
-                                    {workshop.availableServices.length > 6 && (
-                                      <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
-                                        +{workshop.availableServices.length - 6} weitere
-                                      </span>
-                                    )}
+                              {workshop.availableServices && workshop.availableServices.length > 0 && (() => {
+                                const additionalServices = workshop.availableServices.filter((serviceType: string) => serviceType !== selectedService)
+                                return additionalServices.length > 0 && (
+                                  <div className="max-w-xs">
+                                    <p className="text-xs font-semibold text-gray-700 mb-1.5">📌 Weitere Services:</p>
+                                    <p className="text-xs text-gray-500 mb-2">Zusätzlich buchbar</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {additionalServices
+                                        .slice(0, 5)
+                                        .map((serviceType: string) => {
+                                          const service = SERVICES.find(s => s.id === serviceType)
+                                          if (!service) return null
+                                          
+                                          return (
+                                            <span 
+                                              key={serviceType}
+                                              className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                                              title={service.description}
+                                            >
+                                              <span>{service.icon}</span>
+                                              {service.label}
+                                            </span>
+                                          )
+                                        })}
+                                      {additionalServices.length > 5 && (
+                                        <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+                                          +{additionalServices.length - 5} weitere
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )
+                              })()}
                             </div>
 
                             {/* Workshop Info - Takes remaining space */}

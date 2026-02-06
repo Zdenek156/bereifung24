@@ -793,6 +793,7 @@ export default function NewHomePage() {
                               </button>
                             </div>
                           </div>
+                        </div>
                       )
                     })}
                   </div>

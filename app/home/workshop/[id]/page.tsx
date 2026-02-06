@@ -17,6 +17,7 @@ export default function WorkshopDetailPage() {
   const [selectedSlot, setSelectedSlot] = useState<any>(null)
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
+  const [openingHours, setOpeningHours] = useState<any>(null)
 
   // Load workshop details from URL params and API
   useEffect(() => {
@@ -80,6 +81,14 @@ export default function WorkshopDetailPage() {
         const data = await response.json()
         setAvailableSlots(data.availableSlots || [])
         setBusySlots(data.busySlots || {})
+        // Parse opening hours from API
+        if (data.openingHours) {
+          try {
+            setOpeningHours(JSON.parse(data.openingHours))
+          } catch (e) {
+            console.error('Error parsing opening hours:', e)
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
@@ -138,11 +147,38 @@ export default function WorkshopDetailPage() {
 
   const getSlotsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0]
-    // Generate time slots for business hours (8:00 - 18:00, every 30 min)
     const slots = []
     const busyTimes = busySlots[dateStr] || []
     
-    for (let hour = 8; hour < 18; hour++) {
+    // Get day name (monday, tuesday, etc.)
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const dayName = dayNames[date.getDay()]
+    
+    // Default business hours if no opening hours set
+    let startHour = 8
+    let endHour = 18
+    
+    // Parse opening hours for this day
+    if (openingHours && openingHours[dayName]) {
+      const hours = openingHours[dayName]
+      if (hours && hours !== 'closed') {
+        // Format: "09:00-18:00" or "09:00-12:00,14:00-18:00" (with lunch break)
+        const ranges = hours.split(',')
+        const firstRange = ranges[0].split('-')
+        if (firstRange.length === 2) {
+          startHour = parseInt(firstRange[0].split(':')[0])
+          // Use last range's end time
+          const lastRange = ranges[ranges.length - 1].split('-')
+          endHour = parseInt(lastRange[1].split(':')[0])
+        }
+      } else {
+        // Workshop is closed on this day
+        return []
+      }
+    }
+    
+    // Generate time slots for opening hours (every 30 min)
+    for (let hour = startHour; hour < endHour; hour++) {
       for (let minute of [0, 30]) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
         slots.push({

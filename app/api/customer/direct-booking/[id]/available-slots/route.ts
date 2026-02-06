@@ -26,10 +26,16 @@ export async function GET(
       )
     }
 
-    // Get Workshop with employees (for Google Calendar)
+    // Get Workshop with employees (for Google Calendar) and opening hours
     const workshop = await prisma.workshop.findUnique({
       where: { id: params.id },
-      include: {
+      select: {
+        id: true,
+        openingHours: true,
+        calendarMode: true,
+        googleCalendarId: true,
+        googleAccessToken: true,
+        googleRefreshToken: true,
         employees: {
           select: {
             id: true,
@@ -155,11 +161,12 @@ export async function GET(
       }
     }
 
-    // Return busy slots grouped by date (client will generate available slots)
+    // Return busy slots grouped by date + opening hours
     return NextResponse.json({
       success: true,
       availableSlots: [], // Client generates based on workshop hours
-      busySlots: busySlotsByDate
+      busySlots: busySlotsByDate,
+      openingHours: workshop.openingHours // Send opening hours to client
     })
   } catch (error) {
     console.error('Error fetching slots:', error)

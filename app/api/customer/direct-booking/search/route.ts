@@ -157,6 +157,9 @@ export async function POST(request: NextRequest) {
           postalCode: workshop.user?.zipCode || null,
           distance: Math.round(distance * 10) / 10, // Round to 1 decimal
           
+          // Logo
+          logoUrl: workshop.logoUrl || null,
+          
           // Pricing
           basePrice,
           balancingPricePerTire,

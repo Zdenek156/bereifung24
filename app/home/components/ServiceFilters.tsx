@@ -63,9 +63,9 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   },
   WHEEL_CHANGE: {
     groups: [
-      {multiSelect: false, // Radio buttons - nur eine Auswahl
-        
+      {
         label: 'Leistungsumfang',
+        multiSelect: false, // Radio buttons - nur eine Auswahl
         options: [
           { 
             packageType: 'basic', 
@@ -94,8 +94,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   ALIGNMENT_BOTH: {
     groups: [
       {
-        multiSelect: false, // Radio buttons innerhalb der Gruppe
         label: 'Nur Messung',
+        multiSelect: false, // Radio buttons innerhalb der Gruppe
         options: [
           { 
             packageType: 'measurement_front', 
@@ -114,9 +114,9 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           }
         ]
       },
-      {multiSelect: false, // Radio buttons innerhalb der Gruppe
-        
+      {
         label: 'Mit Einstellung',
+        multiSelect: false, // Radio buttons innerhalb der Gruppe
         options: [
           { 
             packageType: 'adjustment_front', 
@@ -135,9 +135,9 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           }
         ]
       },
-      {multiSelect: false, // Radio button
-        
+      {
         label: 'Komplett-Service',
+        multiSelect: false, // Radio button
         options: [
           { 
             packageType: 'full_service', 
@@ -150,9 +150,9 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   },
   TIRE_REPAIR: {
     groups: [
-      {multiSelect: false, // Radio buttons
-        
+      {
         label: 'Reparatur-Art',
+        multiSelect: false, // Radio buttons
         options: [
           { 
             packageType: 'foreign_object', 
@@ -169,10 +169,10 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     ]
   },
   MOTORCYCLE_TIRE: {
-    groumultiSelect: false, // Radio buttons
-        ps: [
+    groups: [
       {
         label: 'Position',
+        multiSelect: false, // Radio buttons
         options: [
           { 
             packageType: 'front', 
@@ -194,10 +194,10 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     ]
   },
   CLIMATE_SERVICE: {
-    groumultiSelect: false, // Radio buttons
-        ps: [
+    groups: [
       {
         label: 'Service-Umfang',
+        multiSelect: false, // Radio buttons
         options: [
           { 
             packageType: 'check', 
@@ -233,7 +233,10 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
   // Reset filters when service changes
   useEffect(() => {
     setSelectedPackages([])
-    onFiltersChange([]), group: FilterGroup) => {
+    onFiltersChange([])
+  }, [selectedService])
+
+  const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
     
     if (group.multiSelect) {
@@ -246,10 +249,7 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
       const groupPackageTypes = group.options.map(opt => opt.packageType)
       newSelection = selectedPackages.filter(p => !groupPackageTypes.includes(p))
       newSelection.push(packageType)
-    }ng) => {
-    const newSelection = selectedPackages.includes(packageType)
-      ? selectedPackages.filter(p => p !== packageType)
-      : [...selectedPackages, packageType]
+    }
     
     setSelectedPackages(newSelection)
     onFiltersChange(newSelection)
@@ -263,11 +263,10 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-4">🔍 Service-Filter</h3>
       
-      {config.groups.ma{group.multiSelect ? 'checkbox' : 'radio'}
-                  name={group.multiSelect ? undefined : `filter-${groupIndex}`}
-                  checked={selectedPackages.includes(option.packageType)}
-                  onChange={() => togglePackage(option.packageType, group)}
-                  className="w-4 h-4 text-primary-600 border-gray-300
+      {config.groups.map((group, groupIndex) => (
+        <div key={groupIndex} className="mb-4 last:mb-0">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 pb-2 border-b border-gray-200">
+            {group.label}
           </h4>
           
           <div className="space-y-2">
@@ -277,10 +276,11 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
                 className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
               >
                 <input
-                  type="checkbox"
+                  type={group.multiSelect ? 'checkbox' : 'radio'}
+                  name={group.multiSelect ? undefined : `filter-${groupIndex}`}
                   checked={selectedPackages.includes(option.packageType)}
-                  onChange={() => togglePackage(option.packageType)}
-                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  onChange={() => togglePackage(option.packageType, group)}
+                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
                 />
                 <span className="ml-2 text-sm text-gray-700 flex items-center">
                   {option.label}

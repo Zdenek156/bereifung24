@@ -310,13 +310,19 @@ export default function WorkshopDetailPage() {
   const handleBooking = () => {
     if (!selectedSlot || !selectedDate) return
     
-    // Redirect to login with return URL to checkout
-    const returnUrl = `/dashboard/customer/direct-booking/checkout?` +
+    // URL für Checkout mit allen Parametern
+    const checkoutUrl = `/dashboard/customer/direct-booking/checkout?` +
       `workshopId=${workshopId}&` +
       `date=${selectedDate.toISOString().split('T')[0]}&` +
       `time=${selectedSlot.time}`
     
-    router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`)
+    // Wenn angemeldet → direkt zur Bezahlung
+    if (session) {
+      router.push(checkoutUrl)
+    } else {
+      // Wenn nicht angemeldet → zur Login-Seite mit Redirect zurück zur Bezahlung
+      router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`)
+    }
   }
 
   const nextMonth = () => {
@@ -883,11 +889,15 @@ export default function WorkshopDetailPage() {
                 onClick={handleBooking}
                 className="w-full px-8 py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-xl transition-all text-xl shadow-lg hover:shadow-xl"
               >
-                Jetzt buchen
+                {session ? 'Jetzt buchen' : 'Anmelden & buchen'}
               </button>
               
               <p className="text-sm text-gray-500 text-center mt-4">
-                🔒 Sie werden zur Anmeldung weitergeleitet
+                {session ? (
+                  <>🔒 Sichere Bezahlung</>
+                ) : (
+                  <>🔐 Bitte melden Sie sich an, um die Buchung abzuschließen</>
+                )}
               </p>
             </div>
           )}

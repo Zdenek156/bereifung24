@@ -668,7 +668,7 @@ export default function NewHomePage() {
                           <div className="flex items-start gap-4">
                             {/* Left: Logo */}
                             <div className="flex-shrink-0">
-                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
+                              <div className="w-40 h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
                                 {workshop.logoUrl ? (
                                   <img 
                                     src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
@@ -777,11 +777,6 @@ export default function NewHomePage() {
                                 <p className="text-3xl font-bold text-primary-600">
                                   {formatEUR(workshop.totalPrice)}
                                 </p>
-                                {workshop.totalPrice === 0 && (
-                                  <p className="text-xs text-red-500 mt-0.5">
-                                    Base: {workshop.basePrice}€ | Balancing: {workshop.totalBalancingPrice}€ | Storage: {workshop.storagePriceTotal}€
-                                  </p>
-                                )}
                                 {workshop.estimatedDuration && (
                                   <p className="text-xs text-gray-500 mt-0.5">~ {workshop.estimatedDuration} Min.</p>
                                 )}

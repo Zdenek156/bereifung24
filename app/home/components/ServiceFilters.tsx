@@ -13,6 +13,7 @@ interface FilterGroup {
   label: string
   options: FilterOption[]
   multiSelect?: boolean // Default: false (radio), true = checkboxes
+  note?: string // Optional warning/info note below the filter group
 }
 
 interface ServiceFilterConfig {
@@ -202,24 +203,25 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           { 
             packageType: 'check', 
             label: 'Basis-Check', 
-            info: 'Funktionsprüfung der Klimaanlage und Temperaturmessung'
+            info: 'Sichtprüfung der Klimaanlage, Funktionstest und Temperaturmessung. Prüfung auf Leckagen und Kompressor-Funktion. Keine Befüllung enthalten.'
           },
           { 
             packageType: 'basic', 
             label: 'Standard-Service', 
-            info: 'Funktionscheck und Nachfüllen von Kältemittel bei Bedarf'
+            info: 'Funktionscheck, Druckprüfung und Nachfüllen von Kältemittel (R134a/R1234yf). Bis zu 100ml inklusive, darüber hinaus nach Bedarf gegen Aufpreis.'
           },
           { 
             packageType: 'comfort', 
             label: 'Komfort-Service', 
-            info: 'Standard-Service plus Wechsel des Innenraumfilters für bessere Luftqualität'
+            info: 'Standard-Service inkl. Kältemittel-Nachfüllung (bis 200ml), Wechsel des Innenraumfilters (Pollenfilter) und Reinigung der Verdampfer-Lamellen für optimale Luftqualität.'
           },
           { 
             packageType: 'premium', 
             label: 'Premium-Service', 
-            info: 'Kompletter Service mit Desinfektion, Premium-Pollenfilter und Duftstoff'
+            info: 'Kompletter Service: Vollständige Kältemittel-Befüllung (bis 500ml), professionelle Desinfektion des Klimasystems mit Ozon/Ultraschall, Premium-Aktivkohlefilter, UV-Additiv gegen Bakterien und optionaler Duftstoff.'
           }
-        ]
+        ],
+        note: '💡 Hinweis: Bei größerem Kältemittelverlust (über die inkludierten Mengen hinaus) berechnen die meisten Werkstätten einen Aufpreis pro 100ml Kältemittel (ca. 15-25€). Der genaue Bedarf wird vor Ort ermittelt.'
       }
     ]
   }
@@ -289,6 +291,15 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
               </label>
             ))}
           </div>
+          
+          {/* Display note if present */}
+          {group.note && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800 leading-relaxed">
+                {group.note}
+              </p>
+            </div>
+          )}
         </div>
       ))}
 

@@ -286,11 +286,11 @@ export default function WorkshopDetailPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/home" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary-600 text-xl font-bold">B24</span>
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-primary-600 text-2xl font-bold">B24</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Bereifung24</h1>
+                <h1 className="text-2xl font-bold text-white">Bereifung24</h1>
               </div>
             </Link>
             <Link
@@ -434,7 +434,7 @@ export default function WorkshopDetailPage() {
             </div>
             
             {/* Price and Button - Below everything */}
-            <div className="border-t pt-4">
+            <div className="border-t pt-2">
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>

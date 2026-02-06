@@ -192,12 +192,15 @@ export default function WorkshopDetailPage() {
         </div>
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back to Search Link - subtle, top left */}
+          {/* Back to Search Button - uses browser history */}
           <div className="absolute top-0 left-4 sm:left-6 lg:left-8">
-            <Link href="/home" className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
+            <button 
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
+            >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Zurück zur Suche</span>
-            </Link>
+            </button>
           </div>
 
           <div className="max-w-4xl mx-auto text-center mb-12">
@@ -307,6 +310,8 @@ export default function WorkshopDetailPage() {
                 {formatEUR(workshop.totalPrice)}
               </p>
             </div>
+          </div>
+
           </div>
 
           {/* Workshop Description */}

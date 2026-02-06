@@ -52,11 +52,46 @@ export default function NewHomePage() {
   const [hasSearched, setHasSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const [scrollPosition, setScrollPosition] = useState(0)
   
   // Service-specific filters (in sidebar)
   const [hasBalancing, setHasBalancing] = useState(false)
   const [hasStorage, setHasStorage] = useState(false)
   
+  // Restore search from URL on page load (for browser back button)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const savedWorkshops = searchParams.get('results')
+      const savedService = searchParams.get('service')
+      const savedPostalCode = searchParams.get('postalCode')
+      const savedRadius = searchParams.get('radius')
+      const savedLat = searchParams.get('lat')
+      const savedLon = searchParams.get('lon')
+      const savedScroll = searchParams.get('scroll')
+
+      if (savedWorkshops) {
+        try {
+          const parsedWorkshops = JSON.parse(decodeURIComponent(savedWorkshops))
+          setWorkshops(parsedWorkshops)
+          setHasSearched(true)
+          if (savedService) setSelectedService(savedService)
+          if (savedPostalCode) setPostalCode(savedPostalCode)
+          if (savedRadius) setRadiusKm(Number(savedRadius))
+          if (savedLat && savedLon) {
+            setCustomerLocation({ lat: Number(savedLat), lon: Number(savedLon) })
+          }
+          // Restore scroll position
+          if (savedScroll) {
+            setTimeout(() => window.scrollTo(0, Number(savedScroll)), 100)
+          }
+        } catch (e) {
+          console.error('Error restoring search:', e)
+        }
+      }
+    }
+  }, [])
+
   // Favorites
   const [favorites, setFavorites] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -174,14 +209,25 @@ export default function NewHomePage() {
       const result = await response.json()
 
       if (response.ok && result.success) {
-        setWorkshops(result.workshops || [])
-        setError(null) // Clear any previous errors
+        const workshops = result.workshops || []
+        setWorkshops(workshops)
+        setError(null)
+        
+        // Save search to URL (for browser back button)
+        const params = new URLSearchParams()
+        params.set('results', encodeURIComponent(JSON.stringify(workshops)))
+        params.set('service', selectedService)
+        params.set('postalCode', postalCode)
+        params.set('radius', radiusKm.toString())
+        params.set('lat', location.lat.toString())
+        params.set('lon', location.lon.toString())
+        window.history.replaceState({}, '', `?${params.toString()}`)
       } else {
-        setWorkshops([]) // Clear workshops when no results found
+        setWorkshops([])
         setError(result.error || 'Keine Werkstätten gefunden')
       }
     } catch (err) {
-      setWorkshops([]) // Clear workshops on error
+      setWorkshops([])
       setError('Fehler bei der Suche')
     } finally {
       setLoading(false)
@@ -290,6 +336,13 @@ export default function NewHomePage() {
   }
 
   const handleBooking = (workshop: any) => {
+    // Save current scroll position
+    const currentScroll = window.scrollY
+    const currentUrl = window.location.search
+    const urlParams = new URLSearchParams(currentUrl)
+    urlParams.set('scroll', currentScroll.toString())
+    window.history.replaceState({}, '', `?${urlParams.toString()}`)
+    
     // Navigate to workshop detail page with all workshop data as URL params
     const params = new URLSearchParams({
       name: workshop.name,

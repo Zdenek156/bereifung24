@@ -219,6 +219,12 @@ export default function WorkshopDetailPage() {
     if (!date || isDatePast(date) || !isDateAvailable(date)) return
     setSelectedDate(date)
     setSelectedSlot(null) // Reset slot selection
+    
+    // Debug: Log busy slots for this date
+    const dateStr = date.toISOString().split('T')[0]
+    console.log(`[CUSTOMER CALENDAR] Selected date: ${dateStr}`)
+    console.log(`[CUSTOMER CALENDAR] Busy slots:`, busySlots[dateStr] || [])
+    console.log(`[CUSTOMER CALENDAR] All busy slots:`, busySlots)
   }
 
   const handleSlotSelect = (slot: any) => {
@@ -527,23 +533,37 @@ export default function WorkshopDetailPage() {
                 })}
               </h4>
               
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {getSlotsForDate(selectedDate).map((slot: any, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSlotSelect(slot)}
-                    className={`
-                      px-4 py-4 rounded-lg border-2 transition-all font-semibold text-base
-                      ${selectedSlot?.time === slot.time
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    {slot.time}
-                  </button>
-                ))}
-              </div>
+              {getSlotsForDate(selectedDate).length === 0 ? (
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 text-center">
+                  <div className="text-5xl mb-3">🕐</div>
+                  <h5 className="text-xl font-bold text-gray-900 mb-2">Außerhalb der Öffnungszeiten</h5>
+                  <p className="text-gray-600">
+                    Die Werkstatt hat an diesem Tag geschlossen oder es sind keine Termine verfügbar.
+                    Bitte wählen Sie ein anderes Datum.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {getSlotsForDate(selectedDate).map((slot: any, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSlotSelect(slot)}
+                      disabled={!slot.available}
+                      className={`
+                        px-4 py-4 rounded-lg border-2 transition-all font-semibold text-base
+                        ${!slot.available
+                          ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : selectedSlot?.time === slot.time
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      {slot.time}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

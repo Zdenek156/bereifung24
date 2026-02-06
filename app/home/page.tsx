@@ -638,7 +638,7 @@ export default function NewHomePage() {
                       return (
                         <div
                           key={workshop.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-4 sm:p-6 relative"
+                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-3 sm:p-4 relative"
                         >
                           {/* Favorite Button */}
                           <button
@@ -665,7 +665,7 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex gap-4">
+                          <div className="flex gap-3">
                             {/* Left Column: Logo + Services */}
                             <div className="flex-shrink-0">
                               {/* Workshop Logo - Größer */}
@@ -698,7 +698,7 @@ export default function NewHomePage() {
                                   <div className="max-w-xs">
                                     <p className="text-xs font-semibold text-gray-700 mb-0.5">📌 Weitere Services:</p>
                                     <p className="text-xs text-gray-500 mb-1">Zusätzlich buchbar</p>
-                                    <div className="flex flex-wrap gap-1.5">
+                                    <div className="flex flex-wrap gap-1">
                                       {additionalServices
                                         .slice(0, 5)
                                         .map((serviceType: string) => {
@@ -770,7 +770,7 @@ export default function NewHomePage() {
                               </div>
 
                               {/* Badges */}
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-1.5">
                                 {workshop.availableToday && (
                                   <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                                     ✓ Heute verfügbar

@@ -17,7 +17,12 @@ import {
   Clock,
   ChevronUp,
   User,
-  LogOut
+  LogOut,
+  Plus,
+  ClipboardList,
+  Calendar,
+  BookOpen,
+  Car
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 
@@ -411,8 +416,35 @@ export default function NewHomePage() {
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          <User className="w-4 h-4" />
-                          Mein Dashboard
+                          <Star className="w-4 h-4" />
+                          Startseite
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/select-service"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Neue Anfrage
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/requests"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <ClipboardList className="w-4 h-4" />
+                          Meine Anfragen
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/appointments"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Calendar className="w-4 h-4" />
+                          Termine
                         </Link>
                         
                         <Link
@@ -420,16 +452,53 @@ export default function NewHomePage() {
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          <Clock className="w-4 h-4" />
-                          Meine Buchungen
+                          <BookOpen className="w-4 h-4" />
+                          Buchungen
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/vehicles"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Car className="w-4 h-4" />
+                          Fahrzeuge
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/tire-history"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          Reifenhistorie
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/weather-alert"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <MapPin className="w-4 h-4" />
+                          Wetter-Erinnerung
                         </Link>
                         
                         <div className="border-t border-gray-200 my-2"></div>
                         
+                        <Link
+                          href="/dashboard/customer/settings"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <SlidersHorizontal className="w-4 h-4" />
+                          Einstellungen
+                        </Link>
+                        
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setShowUserMenu(false)
-                            window.location.href = '/api/auth/signout'
+                            await fetch('/api/auth/signout', { method: 'POST' })
+                            window.location.href = '/'
                           }}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >

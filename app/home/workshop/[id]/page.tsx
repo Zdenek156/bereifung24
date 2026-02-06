@@ -246,8 +246,8 @@ export default function WorkshopDetailPage() {
       {/* Workshop Info - Centered with max-width */}
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                 {workshop.name}
@@ -291,8 +291,8 @@ export default function WorkshopDetailPage() {
           </div>
         </div>
 
-        {/* Calendar Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+          {/* Calendar Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
           <h3 className="text-2xl font-bold text-gray-900 mb-8">Verfügbare Termine</h3>
           
           {/* Calendar Navigation */}
@@ -459,6 +459,7 @@ export default function WorkshopDetailPage() {
               </p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

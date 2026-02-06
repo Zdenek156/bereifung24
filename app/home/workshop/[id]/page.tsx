@@ -281,6 +281,28 @@ export default function WorkshopDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Top Navigation - Blue like home page */}
+      <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/home" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-primary-600 text-xl font-bold">B24</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Bereifung24</h1>
+              </div>
+            </Link>
+            <Link
+              href="/login"
+              className="px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              Anmelden
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section - Exact Same as /home */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32">
         {/* Background Pattern */}
@@ -369,46 +391,69 @@ export default function WorkshopDetailPage() {
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            {/* Top Row: Name and Heart */}
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 flex-1">
                 {workshop.name}
               </h2>
-              
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                {workshop.rating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
-                    {workshop.reviewCount > 0 && (
-                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
-                    )}
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{workshop.city}</span>
-                </div>
-                
-                <div className="flex items-center gap-1">
-                  <span>📍 {workshop.distance.toFixed(1)} km entfernt</span>
-                </div>
-                
-                {workshop.estimatedDuration && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>~ {workshop.estimatedDuration} Min.</span>
-                  </div>
-                )}
-              </div>
+              <button 
+                className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Zu Favoriten hinzufügen"
+              >
+                <span className="text-2xl">🤍</span>
+              </button>
             </div>
             
-            <div className="text-right">
-              <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
-              <p className="text-3xl font-bold text-primary-600">
-                {formatEUR(workshop.totalPrice)}
-              </p>
+            {/* Workshop Details */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-2">
+              {workshop.rating > 0 && (
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                  {workshop.reviewCount > 0 && (
+                    <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
+                  )}
+                </div>
+              )}
+              
+              <div className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                <span>{workshop.city}</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <span>📍 {workshop.distance.toFixed(1)} km entfernt</span>
+              </div>
+              
+              {workshop.estimatedDuration && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>~ {workshop.estimatedDuration} Min.</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Price and Button - Below everything */}
+            <div className="border-t pt-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                  <p className="text-3xl font-bold text-primary-600">
+                    {formatEUR(workshop.totalPrice)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const calendarSection = document.getElementById('calendar-section')
+                    if (calendarSection) {
+                      calendarSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                  className="px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  Verfügbarkeit prüfen
+                </button>
+              </div>
             </div>
           </div>
 
@@ -421,10 +466,9 @@ export default function WorkshopDetailPage() {
               </p>
             </div>
           )}
-        </div>
 
           {/* Calendar Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <div id="calendar-section" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">📅 Verfügbare Termine</h3>
           
           {/* Calendar Navigation */}

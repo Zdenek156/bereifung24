@@ -663,9 +663,9 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                            {/* Workshop Logo - Smaller, responsive */}
-                            <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden self-start">
+                          <div className="flex gap-4">
+                            {/* Workshop Logo - Smaller, left */}
+                            <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
                               {workshop.logoUrl ? (
                                 <img 
                                   src={workshop.logoUrl} 
@@ -673,23 +673,20 @@ export default function NewHomePage() {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none'
-                                    e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl md:text-3xl">🔧</span>'
+                                    e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl">🔧</span>'
                                   }}
                                 />
                               ) : (
-                                <span className="text-2xl md:text-3xl">🔧</span>
+                                <span className="text-2xl">🔧</span>
                               )}
                             </div>
 
-                            {/* Workshop Info - Takes remaining space */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                                {/* Left: Workshop details */}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
-                                
-                                {/* Stadt mit Maps-Button */}
-                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                            {/* Workshop Info - Center, flexible */}
+                            <div className="flex-1 min-w-0 pr-4">
+                              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                              
+                              {/* Stadt mit Maps-Button */}
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
                                   {workshop.city && (
                                     <>
                                       <span className="text-sm text-gray-600">{workshop.city}</span>
@@ -707,28 +704,25 @@ export default function NewHomePage() {
                                   )}
                                 </div>
                                 
-                                {/* Bewertung - Debug */}
-                                {console.log('Workshop Rating:', workshop.name, 'Rating:', workshop.rating, 'ReviewCount:', workshop.reviewCount)}
-                                {workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
-                                    {workshop.reviewCount > 0 && (
-                                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
-                                    )}
-                                  </div>
-                                )}
-                                
-                                {/* Distanz */}
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                                  <MapPin className="w-4 h-4" />
-                                  {workshop.distance.toFixed(1)} km entfernt
+                              {/* Bewertung */}
+                              {workshop.rating > 0 && (
+                                <div className="flex items-center gap-1 text-xs md:text-sm text-gray-600 mb-2">
+                                  <Star className="w-3 h-3 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                                  {workshop.reviewCount > 0 && (
+                                    <span className="text-gray-500">({workshop.reviewCount})</span>
+                                  )}
                                 </div>
+                              )}
+                              
+                              {/* Distanz */}
+                              <div className="flex items-center gap-1 text-xs md:text-sm text-gray-600 mb-2">
+                                <MapPin className="w-3 h-3 md:w-4 md:h-4" />
+                                {workshop.distance.toFixed(1)} km entfernt
                               </div>
-
                               
                               {/* Badges */}
-                              <div className="flex flex-wrap gap-2 mb-4">
+                              <div className="flex flex-wrap gap-1.5">
                                 {workshop.availableToday && (
                                   <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                                     ✓ Heute verfügbar

@@ -12,6 +12,7 @@ interface FilterOption {
 interface FilterGroup {
   label: string
   options: FilterOption[]
+  multiSelect?: boolean // Default: false (radio), true = checkboxes
 }
 
 interface ServiceFilterConfig {
@@ -28,6 +29,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     groups: [
       {
         label: 'Anzahl Reifen',
+        multiSelect: false, // Radio buttons - nur eine Auswahl
         options: [
           { 
             packageType: 'two_tires', 
@@ -43,16 +45,17 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
       },
       {
         label: 'Zusatzleistungen',
+        multiSelect: true, // Checkboxes - mehrere möglich
         options: [
           { 
             packageType: 'with_disposal', 
             label: 'Mit Entsorgung', 
-            info: 'Fachgerechte Entsorgung der alten Reifen inklusive'
+            info: 'Fachgerechte Entsorgung der alten Reifen inklusive (Preis pro Reifen)'
           },
           { 
             packageType: 'runflat', 
             label: 'Runflat-Reifen', 
-            info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad). Erfordert besondere Montagetechniken.'
+            info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad). Erfordert besondere Montagetechniken. Aufpreis pro Reifen.'
           }
         ]
       }
@@ -60,7 +63,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   },
   WHEEL_CHANGE: {
     groups: [
-      {
+      {multiSelect: false, // Radio buttons - nur eine Auswahl
+        
         label: 'Leistungsumfang',
         options: [
           { 
@@ -90,6 +94,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   ALIGNMENT_BOTH: {
     groups: [
       {
+        multiSelect: false, // Radio buttons innerhalb der Gruppe
         label: 'Nur Messung',
         options: [
           { 
@@ -109,7 +114,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           }
         ]
       },
-      {
+      {multiSelect: false, // Radio buttons innerhalb der Gruppe
+        
         label: 'Mit Einstellung',
         options: [
           { 
@@ -129,7 +135,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           }
         ]
       },
-      {
+      {multiSelect: false, // Radio button
+        
         label: 'Komplett-Service',
         options: [
           { 
@@ -143,7 +150,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   },
   TIRE_REPAIR: {
     groups: [
-      {
+      {multiSelect: false, // Radio buttons
+        
         label: 'Reparatur-Art',
         options: [
           { 
@@ -161,7 +169,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     ]
   },
   MOTORCYCLE_TIRE: {
-    groups: [
+    groumultiSelect: false, // Radio buttons
+        ps: [
       {
         label: 'Position',
         options: [
@@ -185,7 +194,8 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     ]
   },
   CLIMATE_SERVICE: {
-    groups: [
+    groumultiSelect: false, // Radio buttons
+        ps: [
       {
         label: 'Service-Umfang',
         options: [
@@ -223,10 +233,20 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
   // Reset filters when service changes
   useEffect(() => {
     setSelectedPackages([])
-    onFiltersChange([])
-  }, [selectedService])
-
-  const togglePackage = (packageType: string) => {
+    onFiltersChange([]), group: FilterGroup) => {
+    let newSelection: string[]
+    
+    if (group.multiSelect) {
+      // Checkboxes: Toggle on/off
+      newSelection = selectedPackages.includes(packageType)
+        ? selectedPackages.filter(p => p !== packageType)
+        : [...selectedPackages, packageType]
+    } else {
+      // Radio buttons: Remove all options from this group, then add selected one
+      const groupPackageTypes = group.options.map(opt => opt.packageType)
+      newSelection = selectedPackages.filter(p => !groupPackageTypes.includes(p))
+      newSelection.push(packageType)
+    }ng) => {
     const newSelection = selectedPackages.includes(packageType)
       ? selectedPackages.filter(p => p !== packageType)
       : [...selectedPackages, packageType]
@@ -243,10 +263,11 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-4">🔍 Service-Filter</h3>
       
-      {config.groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="mb-4 last:mb-0">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2 pb-2 border-b border-gray-200">
-            {group.label}
+      {config.groups.ma{group.multiSelect ? 'checkbox' : 'radio'}
+                  name={group.multiSelect ? undefined : `filter-${groupIndex}`}
+                  checked={selectedPackages.includes(option.packageType)}
+                  onChange={() => togglePackage(option.packageType, group)}
+                  className="w-4 h-4 text-primary-600 border-gray-300
           </h4>
           
           <div className="space-y-2">

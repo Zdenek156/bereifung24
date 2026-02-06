@@ -129,25 +129,47 @@ export async function POST(request: NextRequest) {
         const distance = R * c
 
         // Calculate prices - Convert Decimal to Number
-        // Prioritize package prices if available, otherwise use service basePrice
+        // NEW LOGIC: Package prices are BASE prices (e.g., two_tires OR four_tires)
+        // Additional fees (disposal, runflat) are added based on tire count
         let basePrice = 0
         let baseDuration = service.durationMinutes || 30
+        let tireCount = 0 // For TIRE_CHANGE: 2 or 4
         
-        // Filter packages by selected packageTypes (if any)
+        // Separate main packages from additional services
+        const mainPackageTypes = ['two_tires', 'four_tires', 'basic', 'with_balancing', 'with_storage', 'complete',
+                                   'measurement_front', 'measurement_rear', 'measurement_both',
+                                   'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service',
+                                   'foreign_object', 'valve_damage', 'front', 'rear', 'both',
+                                   'check', 'basic', 'comfort', 'premium']
+        const additionalServices = ['with_disposal', 'runflat']
+        
+        // Get selected main package and additional services
+        const selectedMainPackages = packageTypes.filter(pt => mainPackageTypes.includes(pt))
+        const selectedAdditionalServices = packageTypes.filter(pt => additionalServices.includes(pt))
+        
+        // Filter packages by selected main package types
         let relevantPackages = service.servicePackages || []
-        if (packageTypes && packageTypes.length > 0) {
+        if (selectedMainPackages.length > 0) {
           relevantPackages = relevantPackages.filter(pkg => 
-            pkg.isActive && packageTypes.includes(pkg.packageType)
+            pkg.isActive && selectedMainPackages.includes(pkg.packageType)
           )
         } else {
           relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
         }
         
         if (relevantPackages.length > 0) {
-          // Calculate total price from all selected packages
-          basePrice = relevantPackages.reduce((total, pkg) => total + Number(pkg.price), 0)
-          // Use longest duration
-          baseDuration = Math.max(...relevantPackages.map(pkg => pkg.durationMinutes))
+          // Use the FIRST selected package as base (not sum!)
+          // For radio-button groups, only one should be selected
+          const selectedPackage = relevantPackages[0]
+          basePrice = Number(selectedPackage.price)
+          baseDuration = selectedPackage.durationMinutes
+          
+          // Determine tire count from package type
+          if (selectedPackage.packageType === 'two_tires') {
+            tireCount = 2
+          } else if (selectedPackage.packageType === 'four_tires') {
+            tireCount = 4
+          }
         } else if (service.servicePackages && service.servicePackages.length > 0) {
           // No filter applied, use cheapest package as base
           const cheapestPackage = service.servicePackages
@@ -157,6 +179,13 @@ export async function POST(request: NextRequest) {
           if (cheapestPackage) {
             basePrice = Number(cheapestPackage.price)
             baseDuration = cheapestPackage.durationMinutes
+            
+            // Determine tire count
+            if (cheapestPackage.packageType === 'two_tires') {
+              tireCount = 2
+            } else if (cheapestPackage.packageType === 'four_tires') {
+              tireCount = 4
+            }
           } else {
             basePrice = service.basePrice ? Number(service.basePrice) : 0
           }
@@ -164,7 +193,18 @@ export async function POST(request: NextRequest) {
           basePrice = service.basePrice ? Number(service.basePrice) : 0
         }
         
-        const totalPrice = basePrice
+        // Add additional service fees (multiplied by tire count)
+        let additionalFees = 0
+        if (serviceType === 'TIRE_CHANGE' && tireCount > 0) {
+          if (selectedAdditionalServices.includes('with_disposal') && service.disposalFee) {
+            additionalFees += Number(service.disposalFee) * tireCount
+          }
+          if (selectedAdditionalServices.includes('runflat') && service.runFlatSurcharge) {
+            additionalFees += Number(service.runFlatSurcharge) * tireCount
+          }
+        }
+        
+        const totalPrice = basePrice + additionalFees
         const estimatedDuration = baseDuration
 
         // Calculate rating

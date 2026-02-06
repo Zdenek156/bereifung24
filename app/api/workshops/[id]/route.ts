@@ -20,7 +20,7 @@ export async function GET(
         user: {
           select: {
             city: true,
-            postalCode: true,
+            zipCode: true,
             street: true,
             phone: true
           }
@@ -56,7 +56,7 @@ export async function GET(
         id: workshop.id,
         name: workshop.companyName,
         city: workshop.user.city || null,
-        postalCode: workshop.user.postalCode || null,
+        postalCode: workshop.user.zipCode || null,
         street: workshop.user.street || null,
         phone: workshop.user.phone || null,
         rating: avgRating,

@@ -10,8 +10,7 @@ import { prisma } from '@/lib/prisma'
  * Body:
  * {
  *   serviceType: string (WHEEL_CHANGE, TIRE_REPAIR, etc.),
- *   hasBalancing?: boolean (only for WHEEL_CHANGE),
- *   hasStorage?: boolean (only for WHEEL_CHANGE),
+ *   packageTypes?: string[] (filter by specific package types),
  *   radiusKm: number,
  *   customerLat: number,
  *   customerLon: number
@@ -24,7 +23,7 @@ import { prisma } from '@/lib/prisma'
  *     id, name, address, distance,
  *     rating, reviewCount,
  *     openingHours,
- *     basePrice, balancingPrice, storagePrice, totalPrice,
+ *     basePrice, totalPrice,
  *     estimatedDuration
  *   }>
  * }
@@ -38,8 +37,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       serviceType = 'WHEEL_CHANGE',
-      hasBalancing,
-      hasStorage,
+      packageTypes = [], // Array of package types to filter
       radiusKm,
       customerLat,
       customerLon
@@ -135,8 +133,23 @@ export async function POST(request: NextRequest) {
         let basePrice = 0
         let baseDuration = service.durationMinutes || 30
         
-        if (service.servicePackages && service.servicePackages.length > 0) {
-          // Use cheapest package price as base (or first active package)
+        // Filter packages by selected packageTypes (if any)
+        let relevantPackages = service.servicePackages || []
+        if (packageTypes && packageTypes.length > 0) {
+          relevantPackages = relevantPackages.filter(pkg => 
+            pkg.isActive && packageTypes.includes(pkg.packageType)
+          )
+        } else {
+          relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
+        }
+        
+        if (relevantPackages.length > 0) {
+          // Calculate total price from all selected packages
+          basePrice = relevantPackages.reduce((total, pkg) => total + Number(pkg.price), 0)
+          // Use longest duration
+          baseDuration = Math.max(...relevantPackages.map(pkg => pkg.durationMinutes))
+        } else if (service.servicePackages && service.servicePackages.length > 0) {
+          // No filter applied, use cheapest package as base
           const cheapestPackage = service.servicePackages
             .filter(pkg => pkg.isActive)
             .sort((a, b) => Number(a.price) - Number(b.price))[0]
@@ -151,14 +164,8 @@ export async function POST(request: NextRequest) {
           basePrice = service.basePrice ? Number(service.basePrice) : 0
         }
         
-        const balancingPricePerTire = hasBalancing ? (service.balancingPrice ? Number(service.balancingPrice) : 0) : 0
-        const totalBalancingPrice = balancingPricePerTire * 4 // 4 Räder
-        const storagePriceTotal = hasStorage ? (service.storagePrice ? Number(service.storagePrice) : 0) : 0
-        const totalPrice = basePrice + totalBalancingPrice + storagePriceTotal
-
-        // Calculate estimated duration
-        const balancingDuration = hasBalancing ? (service.balancingMinutes || 0) * 4 : 0
-        const estimatedDuration = baseDuration + balancingDuration
+        const totalPrice = basePrice
+        const estimatedDuration = baseDuration
 
         // Calculate rating
         const reviews = workshop.bookings.filter(b => b.tireRating || b.review)
@@ -187,9 +194,6 @@ export async function POST(request: NextRequest) {
           
           // Pricing
           basePrice,
-          balancingPricePerTire,
-          totalBalancingPrice,
-          storagePriceTotal,
           totalPrice,
           
           // VAT

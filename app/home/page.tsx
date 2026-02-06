@@ -16,6 +16,7 @@ import {
   Clock,
   ChevronUp
 } from 'lucide-react'
+import ServiceFilters from './components/ServiceFilters'
 
 const SERVICES = [
   { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
@@ -56,9 +57,8 @@ export default function NewHomePage() {
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [scrollPosition, setScrollPosition] = useState(0)
   
-  // Service-specific filters (in sidebar)
-  const [hasBalancing, setHasBalancing] = useState(false)
-  const [hasStorage, setHasStorage] = useState(false)
+  // Service-specific package filters
+  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
   
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
@@ -200,8 +200,7 @@ export default function NewHomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           serviceType: selectedService,
-          hasBalancing,
-          hasStorage,
+          packageTypes: selectedPackages,
           radiusKm,
           customerLat: location.lat,
           customerLon: location.lon
@@ -300,7 +299,7 @@ export default function NewHomePage() {
       }, 300)
       return () => clearTimeout(debounce)
     }
-  }, [hasBalancing, hasStorage])
+  }, [selectedPackages])
 
   // Apply filters
   const filteredWorkshops = workshops.filter((w) => {
@@ -522,32 +521,13 @@ export default function NewHomePage() {
                     {/* Filters */}
                     <div className={`${showFilters ? 'block' : 'hidden lg:block'}`}>
 
-                      {/* Service-Specific Options (for WHEEL_CHANGE only) */}
-                      {selectedService === 'WHEEL_CHANGE' && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">Service-Optionen</h4>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                              <input
-                                type="checkbox"
-                                checked={hasBalancing}
-                                onChange={(e) => setHasBalancing(e.target.checked)}
-                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                              />
-                              <span className="text-sm">zzgl. Auswuchten</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                              <input
-                                type="checkbox"
-                                checked={hasStorage}
-                                onChange={(e) => setHasStorage(e.target.checked)}
-                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                              />
-                              <span className="text-sm">Räder einlagern</span>
-                            </label>
-                          </div>
-                        </div>
-                      )}
+                      {/* Service-Specific Package Filters */}
+                      <div className="p-4 border-b border-gray-200">
+                        <ServiceFilters
+                          selectedService={selectedService}
+                          onFiltersChange={(packages) => setSelectedPackages(packages)}
+                        />
+                      </div>
 
                       {/* Rating Filter */}
                       <div className="p-4 border-b border-gray-200">
@@ -774,9 +754,15 @@ export default function NewHomePage() {
                             <div className="flex flex-col sm:items-end justify-between w-full sm:w-auto sm:ml-auto flex-shrink-0 mt-2 sm:mt-14">
                               <div className="text-left sm:text-right mb-3">
                                 <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                  {formatEUR(workshop.totalPrice)}
-                                </p>
+                                {workshop.totalPrice > 0 ? (
+                                  <p className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                    {formatEUR(workshop.totalPrice)}
+                                  </p>
+                                ) : (
+                                  <p className="text-lg sm:text-xl font-semibold text-gray-500">
+                                    Preis auf Anfrage
+                                  </p>
+                                )}
                                 {workshop.estimatedDuration && (
                                   <p className="text-xs text-gray-500 mt-0.5">~ {workshop.estimatedDuration} Min.</p>
                                 )}

@@ -19,15 +19,11 @@ import {
 
 const SERVICES = [
   { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
-  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
-  { id: 'WHEEL_ALIGNMENT', label: 'Achsvermessung', icon: '📐', description: 'Spur und Sturz einstellen' },
-  { id: 'AC_SERVICE', label: 'Klimaanlagen-Service', icon: '❄️', description: 'Wartung und Desinfektion' },
   { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🚗', description: 'Reifen montieren/demontieren' },
+  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
   { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', description: 'Motorradreifen-Service' },
-  { id: 'ALIGNMENT_BOTH', label: 'VA+HA Vermessung', icon: '📏', description: 'Vorder- und Hinterachse' },
-  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '🌡️', description: 'Klimaanlage prüfen' },
-  { id: 'BRAKE_SERVICE', label: 'Bremsenservice', icon: '🛑', description: 'Bremsen prüfen/wechseln' },
-  { id: 'BATTERY_SERVICE', label: 'Batterieservice', icon: '🔋', description: 'Batterie prüfen/laden' },
+  { id: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '📏', description: 'Vorder- und Hinterachse vermessen' },
+  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️', description: 'Klimaanlage warten & prüfen' },
 ]
 
 const RADIUS_OPTIONS = [

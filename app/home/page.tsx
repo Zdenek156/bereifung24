@@ -695,7 +695,7 @@ export default function NewHomePage() {
                                   <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
                                 
                                 {/* Stadt mit Maps-Button */}
-                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                <div className="flex flex-wrap items-center gap-2 mb-1.5">
                                   {workshop.city && (
                                     <>
                                       <span className="text-sm text-gray-600">{workshop.city}</span>
@@ -716,7 +716,7 @@ export default function NewHomePage() {
                                 {/* Bewertung - Debug */}
                                 {console.log('Workshop Rating:', workshop.name, 'Rating:', workshop.rating, 'ReviewCount:', workshop.reviewCount)}
                                 {workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-1.5">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                     <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
                                     {workshop.reviewCount > 0 && (
@@ -726,7 +726,7 @@ export default function NewHomePage() {
                                 )}
                                 
                                 {/* Distanz */}
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-1.5">
                                   <MapPin className="w-4 h-4" />
                                   {workshop.distance.toFixed(1)} km entfernt
                                 </div>

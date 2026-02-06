@@ -123,11 +123,11 @@ export async function POST(request: NextRequest) {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
         const distance = R * c
 
-        // Calculate prices
-        const basePrice = service.basePrice || 0
-        const balancingPricePerTire = hasBalancing ? (service.balancingPrice || 0) : 0
+        // Calculate prices - Convert Decimal to Number
+        const basePrice = service.basePrice ? Number(service.basePrice) : 0
+        const balancingPricePerTire = hasBalancing ? (service.balancingPrice ? Number(service.balancingPrice) : 0) : 0
         const totalBalancingPrice = balancingPricePerTire * 4 // 4 Räder
-        const storagePriceTotal = hasStorage ? (service.storagePrice || 0) : 0
+        const storagePriceTotal = hasStorage ? (service.storagePrice ? Number(service.storagePrice) : 0) : 0
         const totalPrice = basePrice + totalBalancingPrice + storagePriceTotal
 
         // Calculate estimated duration

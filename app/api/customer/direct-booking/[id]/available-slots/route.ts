@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/customer/direct-booking/[id]/available-slots
- * Get available time slots for a specific date
+ * Get busy slots for a workshop (public API - no auth required)
  */
 
 export async function GET(
@@ -13,41 +11,70 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Nicht authentifiziert' },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get('date')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
 
-    if (!date) {
+    if (!startDate || !endDate) {
       return NextResponse.json(
-        { error: 'Datum fehlt' },
+        { error: 'Start- und Enddatum fehlen' },
         { status: 400 }
       )
     }
 
-    // Get DirectBooking
-    const directBooking = await prisma.directBooking.findUnique({
-      where: { id: params.id },
-      include: {
-        workshop: true
-      }
+    // Get Workshop directly (params.id is workshopId)
+    const workshop = await prisma.workshop.findUnique({
+      where: { id: params.id }
     })
 
-    if (!directBooking) {
+    if (!workshop) {
       return NextResponse.json(
-        { error: 'Buchung nicht gefunden' },
+        { error: 'Werkstatt nicht gefunden' },
         { status: 404 }
       )
     }
 
-    // Verify ownership
+    // Get busy slots from existing bookings for this workshop
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    
+    const existingBookings = await prisma.booking.findMany({
+      where: {
+        workshopId: params.id,
+        appointmentDate: {
+          gte: start,
+          lte: end
+        },
+        status: { in: ['CONFIRMED', 'COMPLETED', 'PENDING'] }
+      },
+      select: {
+        appointmentDate: true,
+        appointmentTime: true,
+        estimatedDuration: true
+      }
+    })
+
+    // Format busy slots
+    const busySlots = existingBookings.map(booking => ({
+      date: booking.appointmentDate.toISOString().split('T')[0],
+      time: booking.appointmentTime,
+      duration: booking.estimatedDuration || 60
+    }))
+
+    // Return busy slots (client will generate available slots)
+    return NextResponse.json({
+      success: true,
+      availableSlots: [], // Client generates based on workshop hours
+      busySlots: busySlots
+    })
+  } catch (error) {
+    console.error('Error fetching slots:', error)
+    return NextResponse.json(
+      { error: 'Fehler beim Laden der Zeitslots' },
+      { status: 500 }
+    )
+  }
+}
     if (directBooking.customerId !== session.user.id) {
       return NextResponse.json(
         { error: 'Keine Berechtigung' },

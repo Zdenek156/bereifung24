@@ -14,7 +14,7 @@ export async function GET(
       where: { id: params.id },
       select: {
         id: true,
-        name: true,
+        companyName: true,
         city: true,
         postalCode: true,
         street: true,
@@ -50,7 +50,7 @@ export async function GET(
       success: true,
       workshop: {
         id: workshop.id,
-        name: workshop.name,
+        name: workshop.companyName,
         city: workshop.city,
         postalCode: workshop.postalCode,
         street: workshop.street,

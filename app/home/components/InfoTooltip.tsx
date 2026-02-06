@@ -27,7 +27,7 @@ export default function InfoTooltip({ content }: InfoTooltipProps) {
       </button>
       
       {isOpen && (
-        <div className="absolute left-0 top-6 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm text-gray-700">
+        <div className="absolute left-0 top-6 z-[9999] w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-xl text-sm text-gray-700">
           <div className="absolute -top-2 left-2 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
           {content}
         </div>

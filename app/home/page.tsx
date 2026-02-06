@@ -665,11 +665,10 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex gap-3">
-                            {/* Left Column: Logo + Services */}
+                          <div className="flex items-start gap-4">
+                            {/* Left: Logo */}
                             <div className="flex-shrink-0">
-                              {/* Workshop Logo - Größer */}
-                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-2">
+                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
                                 {workshop.logoUrl ? (
                                   <img 
                                     src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
@@ -690,12 +689,54 @@ export default function NewHomePage() {
                                   <span className="text-4xl">🔧</span>
                                 )}
                               </div>
+                            </div>
+
+                            {/* Middle: All Info */}
+                            <div className="flex-1 min-w-0">
+                              {/* Workshop Name */}
+                              <h3 className="text-xl font-bold text-gray-900 mb-0.5">{workshop.name}</h3>
                               
-                              {/* Available Services - Under Logo */}
+                              {/* Stadt mit Maps-Button */}
+                              <div className="flex items-center gap-2 mb-0.5">
+                                {workshop.city && (
+                                  <>
+                                    <span className="text-sm text-gray-600">{workshop.city}</span>
+                                    <button
+                                      onClick={() => {
+                                        const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
+                                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
+                                      }}
+                                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                                    >
+                                      <MapPin className="w-3 h-3" />
+                                      In Maps öffnen
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {/* Bewertung */}
+                              {workshop.rating > 0 && (
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                                  {workshop.reviewCount > 0 && (
+                                    <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Distanz */}
+                              <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
+                                <MapPin className="w-4 h-4" />
+                                {workshop.distance.toFixed(1)} km entfernt
+                              </div>
+
+                              {/* Available Services */}
                               {workshop.availableServices && workshop.availableServices.length > 0 && (() => {
                                 const additionalServices = workshop.availableServices.filter((serviceType: string) => serviceType !== selectedService)
                                 return additionalServices.length > 0 && (
-                                  <div className="max-w-xs">
+                                  <div>
                                     <p className="text-xs font-semibold text-gray-700 mb-0.5">📌 Weitere Services:</p>
                                     <p className="text-xs text-gray-500 mb-1">Zusätzlich buchbar</p>
                                     <div className="flex flex-wrap gap-1">
@@ -727,82 +768,20 @@ export default function NewHomePage() {
                               })()}
                             </div>
 
-                            {/* Middle Column: Workshop Info */}
-                            <div className="flex-1 min-w-0">
-                              {/* Workshop Name */}
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">{workshop.name}</h3>
-                              
-                              {/* Stadt mit Maps-Button */}
-                              <div className="flex flex-wrap items-center gap-2 mb-1">
-                                {workshop.city && (
-                                  <>
-                                    <span className="text-sm text-gray-600">{workshop.city}</span>
-                                    <button
-                                      onClick={() => {
-                                        const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
-                                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
-                                      }}
-                                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors whitespace-nowrap"
-                                    >
-                                      <MapPin className="w-3 h-3" />
-                                        In Maps öffnen
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {/* Bewertung */}
-                                {workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
-                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
-                                    {workshop.reviewCount > 0 && (
-                                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
-                                    )}
-                                  </div>
-                                )}
-                                
-                                {/* Distanz */}
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
-                                  <MapPin className="w-4 h-4" />
-                                  {workshop.distance.toFixed(1)} km entfernt
-                                </div>
-                              </div>
-
-                              {/* Badges */}
-                              <div className="flex flex-wrap gap-1.5">
-                                {workshop.availableToday && (
-                                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                    ✓ Heute verfügbar
-                                  </span>
-                                )}
-                                {workshop.fastBooking && (
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                    ⚡ Schnelle Terminvergabe
-                                  </span>
-                                )}
-                                {workshop.certified && (
-                                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                                    🏆 Zertifiziert
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Right Column: Price and Button */}
-                            <div className="flex flex-col items-end justify-between ml-auto">
-                              <div className="text-right">
-                                <p className="text-xs text-gray-600 mb-1">Gesamtpreis</p>
+                            {/* Right: Price and Button */}
+                            <div className="flex flex-col items-end justify-between ml-auto flex-shrink-0">
+                              <div className="text-right mb-3">
+                                <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
                                 <p className="text-3xl font-bold text-primary-600">
                                   {formatEUR(workshop.totalPrice)}
                                 </p>
                                 {workshop.totalPrice === 0 && (
-                                  <p className="text-xs text-red-500 mt-1">
+                                  <p className="text-xs text-red-500 mt-0.5">
                                     Base: {workshop.basePrice}€ | Balancing: {workshop.totalBalancingPrice}€ | Storage: {workshop.storagePriceTotal}€
                                   </p>
                                 )}
                                 {workshop.estimatedDuration && (
-                                  <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                  <p className="text-xs text-gray-500 mt-0.5">~ {workshop.estimatedDuration} Min.</p>
                                 )}
                               </div>
                               

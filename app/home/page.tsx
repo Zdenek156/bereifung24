@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { 
   Search, 
   MapPin, 
@@ -14,7 +15,9 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Clock,
-  ChevronUp
+  ChevronUp,
+  User,
+  LogOut
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 
@@ -44,10 +47,12 @@ const STATS = [
 
 export default function NewHomePage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [selectedService, setSelectedService] = useState('WHEEL_CHANGE')
   const [postalCode, setPostalCode] = useState('')
   const [radiusKm, setRadiusKm] = useState(25)
   const [useGeolocation, setUseGeolocation] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   
   // Search state
   const [workshops, setWorkshops] = useState<any[]>([])
@@ -371,12 +376,87 @@ export default function NewHomePage() {
                 <h1 className="text-xl font-bold text-white">Bereifung24</h1>
               </div>
             </div>
-            <Link
-              href="/login"
-              className="px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              Anmelden
-            </Link>
+            
+            {/* User Menu */}
+            <div className="relative">
+              {status === 'loading' ? (
+                <div className="px-5 py-2.5 text-sm font-medium text-white">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </div>
+              ) : session ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="hidden sm:inline">{session.user?.name || 'Mein Konto'}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowUserMenu(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                        <div className="px-4 py-3 border-b border-gray-200">
+                          <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
+                          <p className="text-xs text-gray-500">{session.user?.email}</p>
+                        </div>
+                        
+                        <Link
+                          href="/dashboard/customer"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User className="w-4 h-4" />
+                          Mein Dashboard
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer/bookings"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Clock className="w-4 h-4" />
+                          Meine Buchungen
+                        </Link>
+                        
+                        <div className="border-t border-gray-200 my-2"></div>
+                        
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            window.location.href = '/api/auth/signout'
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Abmelden
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/register/customer"
+                    className="px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    Registrieren
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="px-5 py-2.5 text-sm font-medium bg-white text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Anmelden
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -823,7 +903,7 @@ export default function NewHomePage() {
                   document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }}
               >
-                <div className={`w-16 h-16 bg-gradient-to-br ${service.color} rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
                   {service.icon}
                 </div>
                 <h4 className="text-xl font-bold text-gray-900 mb-2">

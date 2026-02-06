@@ -665,11 +665,11 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                          <div className="flex gap-4">
                             {/* Left Column: Logo + Services */}
-                            <div className="w-full md:w-auto flex-shrink-0">
-                              {/* Workshop Logo */}
-                              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                            <div className="flex-shrink-0">
+                              {/* Workshop Logo - Größer */}
+                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-3">
                                 {workshop.logoUrl ? (
                                   <img 
                                     src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
@@ -680,14 +680,14 @@ export default function NewHomePage() {
                                       if (parent) {
                                         e.currentTarget.remove()
                                         const span = document.createElement('span')
-                                        span.className = 'text-2xl md:text-3xl'
+                                        span.className = 'text-4xl'
                                         span.textContent = '🔧'
                                         parent.appendChild(span)
                                       }
                                     }}
                                   />
                                 ) : (
-                                  <span className="text-2xl md:text-3xl">🔧</span>
+                                  <span className="text-4xl">🔧</span>
                                 )}
                               </div>
                               
@@ -727,26 +727,24 @@ export default function NewHomePage() {
                               })()}
                             </div>
 
-                            {/* Workshop Info - Takes remaining space */}
+                            {/* Middle Column: Workshop Info */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                                {/* Left: Workshop details */}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
-                                
-                                {/* Stadt mit Maps-Button */}
-                                <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                  {workshop.city && (
-                                    <>
-                                      <span className="text-sm text-gray-600">{workshop.city}</span>
-                                      <button
-                                        onClick={() => {
-                                          const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
-                                          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
-                                        }}
-                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors whitespace-nowrap"
-                                      >
-                                        <MapPin className="w-3 h-3" />
+                              {/* Workshop Name */}
+                              <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                              
+                              {/* Stadt mit Maps-Button */}
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                {workshop.city && (
+                                  <>
+                                    <span className="text-sm text-gray-600">{workshop.city}</span>
+                                    <button
+                                      onClick={() => {
+                                        const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
+                                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
+                                      }}
+                                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors whitespace-nowrap"
+                                    >
+                                      <MapPin className="w-3 h-3" />
                                         In Maps öffnen
                                       </button>
                                     </>
@@ -790,28 +788,26 @@ export default function NewHomePage() {
                                   </span>
                                 )}
                               </div>
-                                </div>
+                            </div>
 
-                                {/* Right: Price and Button */}
-                                <div className="flex flex-col items-start md:items-end gap-3 mt-auto">
-                                  <div className="text-left md:text-right">
-                                    <p className="text-xs md:text-sm text-gray-600 mb-1">Gesamtpreis</p>
-                                    <p className="text-2xl md:text-3xl font-bold text-primary-600">
-                                      {formatEUR(workshop.totalPrice)}
-                                    </p>
-                                    {workshop.estimatedDuration && (
-                                      <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
-                                    )}
-                                  </div>
-                                  
-                                  <button
-                                    onClick={() => handleBooking(workshop)}
-                                    className="w-full md:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
-                                  >
-                                    Verfügbarkeit prüfen
-                                  </button>
-                                </div>
+                            {/* Right Column: Price and Button */}
+                            <div className="flex flex-col items-end justify-between ml-auto">
+                              <div className="text-right">
+                                <p className="text-xs text-gray-600 mb-1">Gesamtpreis</p>
+                                <p className="text-3xl font-bold text-primary-600">
+                                  {formatEUR(workshop.totalPrice)}
+                                </p>
+                                {workshop.estimatedDuration && (
+                                  <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                )}
                               </div>
+                              
+                              <button
+                                onClick={() => handleBooking(workshop)}
+                                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+                              >
+                                Verfügbarkeit prüfen
+                              </button>
                             </div>
                           </div>
                       )

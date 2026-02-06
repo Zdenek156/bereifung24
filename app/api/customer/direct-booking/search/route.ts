@@ -102,9 +102,10 @@ export async function POST(request: NextRequest) {
 
     // Calculate distance and filter by radius
     const workshopsWithDistance = workshops
-      .filter(workshop => workshop.workshopServices.some(s => s.serviceType === serviceType)) // Must have the searched service
       .map(workshop => {
-        const service = workshop.workshopServices.find(s => s.serviceType === serviceType)!
+        // Find the searched service
+        const service = workshop.workshopServices.find(s => s.serviceType === serviceType)
+        if (!service) return null // Skip workshops without the searched service
         
         // Haversine formula for distance calculation
         const lat1 = customerLat
@@ -187,6 +188,7 @@ export async function POST(request: NextRequest) {
           availableServices: workshop.workshopServices.map(s => s.serviceType)
         }
       })
+      .filter((w): w is NonNullable<typeof w> => w !== null) // Remove null entries
       .filter(w => radiusKm === undefined || w.distance <= radiusKm)
       .sort((a, b) => {
         // Sort by: 1. Rating (desc), 2. Distance (asc)

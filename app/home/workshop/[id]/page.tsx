@@ -39,9 +39,15 @@ export default function WorkshopDetailPage() {
         const response = await fetch(`/api/workshops/${workshopId}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.workshop?.companySettings?.description) {
-            workshopData.description = data.workshop.companySettings.description
+          if (data.success && data.workshop) {
+            // Safely extract description
+            const desc = data.workshop.companySettings?.description
+            if (desc && desc.trim()) {
+              workshopData.description = desc
+            }
           }
+        } else {
+          console.error('Workshop API error:', response.status, response.statusText)
         }
       } catch (error) {
         console.error('Error loading workshop details:', error)

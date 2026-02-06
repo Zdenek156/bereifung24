@@ -669,7 +669,7 @@ export default function NewHomePage() {
                             {/* Left Column: Logo + Services */}
                             <div className="flex-shrink-0">
                               {/* Workshop Logo - Größer */}
-                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                              <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-2">
                                 {workshop.logoUrl ? (
                                   <img 
                                     src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
@@ -696,8 +696,8 @@ export default function NewHomePage() {
                                 const additionalServices = workshop.availableServices.filter((serviceType: string) => serviceType !== selectedService)
                                 return additionalServices.length > 0 && (
                                   <div className="max-w-xs">
-                                    <p className="text-xs font-semibold text-gray-700 mb-1.5">📌 Weitere Services:</p>
-                                    <p className="text-xs text-gray-500 mb-2">Zusätzlich buchbar</p>
+                                    <p className="text-xs font-semibold text-gray-700 mb-0.5">📌 Weitere Services:</p>
+                                    <p className="text-xs text-gray-500 mb-1">Zusätzlich buchbar</p>
                                     <div className="flex flex-wrap gap-1.5">
                                       {additionalServices
                                         .slice(0, 5)
@@ -730,10 +730,10 @@ export default function NewHomePage() {
                             {/* Middle Column: Workshop Info */}
                             <div className="flex-1 min-w-0">
                               {/* Workshop Name */}
-                              <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">{workshop.name}</h3>
                               
                               {/* Stadt mit Maps-Button */}
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 {workshop.city && (
                                   <>
                                     <span className="text-sm text-gray-600">{workshop.city}</span>
@@ -751,10 +751,9 @@ export default function NewHomePage() {
                                   )}
                                 </div>
                                 
-                                {/* Bewertung - Debug */}
-                                {console.log('Workshop Rating:', workshop.name, 'Rating:', workshop.rating, 'ReviewCount:', workshop.reviewCount)}
+                                {/* Bewertung */}
                                 {workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-1.5">
+                                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                     <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
                                     {workshop.reviewCount > 0 && (
@@ -764,7 +763,7 @@ export default function NewHomePage() {
                                 )}
                                 
                                 {/* Distanz */}
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-1.5">
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
                                   <MapPin className="w-4 h-4" />
                                   {workshop.distance.toFixed(1)} km entfernt
                                 </div>
@@ -797,6 +796,11 @@ export default function NewHomePage() {
                                 <p className="text-3xl font-bold text-primary-600">
                                   {formatEUR(workshop.totalPrice)}
                                 </p>
+                                {workshop.totalPrice === 0 && (
+                                  <p className="text-xs text-red-500 mt-1">
+                                    Base: {workshop.basePrice}€ | Balancing: {workshop.totalBalancingPrice}€ | Storage: {workshop.storagePriceTotal}€
+                                  </p>
+                                )}
                                 {workshop.estimatedDuration && (
                                   <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
                                 )}

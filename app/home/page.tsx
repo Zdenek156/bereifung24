@@ -670,26 +670,62 @@ export default function NewHomePage() {
                           </button>
 
                           <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                            {/* Workshop Logo - Smaller, responsive */}
-                            <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden self-start">
-                              {workshop.logoUrl ? (
-                                <img 
-                                  src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
-                                  alt={`${workshop.name} Logo`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const parent = e.currentTarget.parentElement
-                                    if (parent) {
-                                      e.currentTarget.remove()
-                                      const span = document.createElement('span')
-                                      span.className = 'text-2xl md:text-3xl'
-                                      span.textContent = '🔧'
-                                      parent.appendChild(span)
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-2xl md:text-3xl">🔧</span>
+                            {/* Left Column: Logo + Services */}
+                            <div className="w-full md:w-auto flex-shrink-0">
+                              {/* Workshop Logo */}
+                              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                                {workshop.logoUrl ? (
+                                  <img 
+                                    src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
+                                    alt={`${workshop.name} Logo`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const parent = e.currentTarget.parentElement
+                                      if (parent) {
+                                        e.currentTarget.remove()
+                                        const span = document.createElement('span')
+                                        span.className = 'text-2xl md:text-3xl'
+                                        span.textContent = '🔧'
+                                        parent.appendChild(span)
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-2xl md:text-3xl">🔧</span>
+                                )}
+                              </div>
+                              
+                              {/* Available Services - Under Logo */}
+                              {workshop.availableServices && workshop.availableServices.length > 1 && (
+                                <div className="max-w-xs">
+                                  <p className="text-xs font-semibold text-gray-700 mb-1.5">📌 Weitere Services:</p>
+                                  <p className="text-xs text-gray-500 mb-2">Zusätzlich buchbar</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {workshop.availableServices
+                                      .filter((serviceType: string) => serviceType !== selectedService)
+                                      .slice(0, 5)
+                                      .map((serviceType: string) => {
+                                        const service = SERVICES.find(s => s.id === serviceType)
+                                        if (!service) return null
+                                        
+                                        return (
+                                          <span 
+                                            key={serviceType}
+                                            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                                            title={service.description}
+                                          >
+                                            <span>{service.icon}</span>
+                                            {service.label}
+                                          </span>
+                                        )
+                                      })}
+                                    {workshop.availableServices.length > 6 && (
+                                      <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+                                        +{workshop.availableServices.length - 6} weitere
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               )}
                             </div>
 
@@ -738,38 +774,8 @@ export default function NewHomePage() {
                                 </div>
                               </div>
 
-                              
-                              {/* Available Services */}
-                              {workshop.availableServices && workshop.availableServices.length > 0 && (
-                                <div className="mb-3">
-                                  <p className="text-xs text-gray-500 mb-1.5">Verfügbare Services:</p>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {workshop.availableServices.map((serviceType: string) => {
-                                      const service = SERVICES.find(s => s.id === serviceType)
-                                      if (!service) return null
-                                      
-                                      return (
-                                        <span 
-                                          key={serviceType}
-                                          className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
-                                          title={service.description}
-                                        >
-                                          <span>{service.icon}</span>
-                                          {service.label}
-                                        </span>
-                                      )
-                                    })}
-                                    {workshop.availableServices.filter((s: string) => !SERVICES.find(svc => svc.id === s)).length > 0 && (
-                                      <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
-                                        +{workshop.availableServices.filter((s: string) => !SERVICES.find(svc => svc.id === s)).length} weitere
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              
                               {/* Badges */}
-                              <div className="flex flex-wrap gap-2 mb-4">
+                              <div className="flex flex-wrap gap-2">
                                 {workshop.availableToday && (
                                   <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                                     ✓ Heute verfügbar

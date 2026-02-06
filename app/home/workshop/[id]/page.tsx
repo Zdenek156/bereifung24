@@ -1,8 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, MapPin, Star, Clock, ArrowLeft, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  MapPin, 
+  Star, 
+  Clock, 
+  ArrowLeft, 
+  Plus,
+  User,
+  LogOut,
+  ClipboardList,
+  Calendar,
+  BookOpen,
+  Car,
+  TrendingUp,
+  Cloud,
+  SlidersHorizontal,
+  ChevronDown,
+  Loader2
+} from 'lucide-react'
 import Link from 'next/link'
 import AddServicesModal from './components/AddServicesModal'
 
@@ -10,6 +30,10 @@ export default function WorkshopDetailPage() {
   const params = useParams()
   const router = useRouter()
   const workshopId = params.id as string
+
+  const { data: session, status } = useSession()
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   const [workshop, setWorkshop] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +49,20 @@ export default function WorkshopDetailPage() {
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
   const [basePrice, setBasePrice] = useState(0)
   const [baseDuration, setBaseDuration] = useState(60)
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   // Load workshop details from URL params and API
   useEffect(() => {
@@ -322,12 +360,145 @@ export default function WorkshopDetailPage() {
                 <h1 className="text-2xl font-bold text-white">Bereifung24</h1>
               </div>
             </Link>
-            <Link
-              href="/login"
-              className="px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              Anmelden
-            </Link>
+            
+            {/* User Menu */}
+            <div className="relative" ref={userMenuRef}>
+              {status === 'loading' ? (
+                <div className="px-5 py-2.5 text-sm font-medium text-white">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </div>
+              ) : session ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="hidden sm:inline">{session.user?.name || 'Mein Konto'}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="text-sm font-semibold text-gray-900">{session.user?.name}</p>
+                        <p className="text-xs text-gray-500">{session.user?.email}</p>
+                      </div>
+                      
+                      <Link
+                        href="/dashboard/customer"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Star className="w-4 h-4" />
+                        Startseite
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/select-service"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Neue Anfrage
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/requests"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <ClipboardList className="w-4 h-4" />
+                        Meine Anfragen
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/appointments"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        Termine
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/bookings"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        Buchungen
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/vehicles"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Car className="w-4 h-4" />
+                        Fahrzeuge
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/tire-history"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        Reifenhistorie
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/customer/weather-alert"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Cloud className="w-4 h-4" />
+                        Wetter-Erinnerung
+                      </Link>
+                      
+                      <div className="border-t border-gray-200 my-2"></div>
+                      
+                      <Link
+                        href="/dashboard/customer/settings"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Einstellungen
+                      </Link>
+                      
+                      <button
+                        onClick={async () => {
+                          setShowUserMenu(false)
+                          await fetch('/api/auth/signout', { method: 'POST' })
+                          window.location.href = '/'
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Abmelden
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/register/customer"
+                    className="px-4 py-2 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    Registrieren
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Anmelden
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

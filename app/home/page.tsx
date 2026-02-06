@@ -665,10 +665,10 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex items-start gap-4">
-                            {/* Left: Logo */}
+                          <div className="flex flex-col sm:flex-row items-start gap-4">
+                            {/* Logo */}
                             <div className="flex-shrink-0">
-                              <div className="w-40 h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
+                              <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
                                 {workshop.logoUrl ? (
                                   <img 
                                     src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
@@ -691,13 +691,13 @@ export default function NewHomePage() {
                               </div>
                             </div>
 
-                            {/* Middle: All Info */}
+                            {/* Info Section */}
                             <div className="flex-1 min-w-0">
-                              {/* Workshop Name + Bewertung inline */}
-                              <div className="flex items-center gap-3 mb-0.5">
-                                <h3 className="text-xl font-bold text-gray-900">{workshop.name}</h3>
+                              {/* Workshop Name + Bewertung */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-0.5">
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">{workshop.name}</h3>
                                 
-                                {/* Bewertung direkt neben Name */}
+                                {/* Bewertung */}
                                 {workshop.rating > 0 && (
                                   <div className="flex items-center gap-1 text-sm text-gray-600">
                                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -770,11 +770,11 @@ export default function NewHomePage() {
                               })()}
                             </div>
 
-                            {/* Right: Price and Button */}
-                            <div className="flex flex-col items-end justify-between ml-auto flex-shrink-0 mt-14">
-                              <div className="text-right mb-3">
+                            {/* Price and Button */}
+                            <div className="flex flex-col sm:items-end justify-between w-full sm:w-auto sm:ml-auto flex-shrink-0 mt-2 sm:mt-14">
+                              <div className="text-left sm:text-right mb-3">
                                 <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
-                                <p className="text-3xl font-bold text-primary-600">
+                                <p className="text-2xl sm:text-3xl font-bold text-primary-600">
                                   {formatEUR(workshop.totalPrice)}
                                 </p>
                                 {workshop.estimatedDuration && (
@@ -784,7 +784,7 @@ export default function NewHomePage() {
                               
                               <button
                                 onClick={() => handleBooking(workshop)}
-                                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+                                className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
                               >
                                 Verfügbarkeit prüfen
                               </button>

@@ -663,9 +663,9 @@ export default function NewHomePage() {
                             </svg>
                           </button>
 
-                          <div className="flex flex-col md:flex-row gap-6">
-                            {/* Workshop Logo - Links, viereckig */}
-                            <div className="w-full md:w-48 h-48 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
+                          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                            {/* Workshop Logo - Smaller, responsive */}
+                            <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden self-start">
                               {workshop.logoUrl ? (
                                 <img 
                                   src={workshop.logoUrl} 
@@ -673,18 +673,20 @@ export default function NewHomePage() {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none'
-                                    e.currentTarget.parentElement!.innerHTML = '<span class="text-4xl">🔧</span>'
+                                    e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl md:text-3xl">🔧</span>'
                                   }}
                                 />
                               ) : (
-                                <span className="text-4xl">🔧</span>
+                                <span className="text-2xl md:text-3xl">🔧</span>
                               )}
                             </div>
 
-                            {/* Workshop Info */}
+                            {/* Workshop Info - Takes remaining space */}
                             <div className="flex-1 min-w-0">
-                              <div className="pr-10 md:pr-12">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
+                              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                                {/* Left: Workshop details */}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{workshop.name}</h3>
                                 
                                 {/* Stadt mit Maps-Button */}
                                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -743,30 +745,28 @@ export default function NewHomePage() {
                                   </span>
                                 )}
                               </div>
-                            </div>
+                                </div>
 
-                            {/* Preis und Button - Rechts oben */}
-                            <div className="flex flex-col items-end justify-start md:w-64 pt-0 md:pt-12">
-                              <div className="text-right mb-3">
-                                <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
-                                <p className="text-3xl font-bold text-primary-600">
-                                  {formatEUR(workshop.totalPrice)}
-                                </p>
-                                {/* MwSt-Hinweis */}
-                                {workshop.showVatNote && (
-                                  <p className="text-xs text-gray-500 mt-1">zzgl. MwSt.</p>
-                                )}
-                                {workshop.estimatedDuration && (
-                                  <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
-                                )}
+                                {/* Right: Price and Button */}
+                                <div className="flex flex-col items-start md:items-end gap-3 mt-auto">
+                                  <div className="text-left md:text-right">
+                                    <p className="text-xs md:text-sm text-gray-600 mb-1">Gesamtpreis</p>
+                                    <p className="text-2xl md:text-3xl font-bold text-primary-600">
+                                      {formatEUR(workshop.totalPrice)}
+                                    </p>
+                                    {workshop.estimatedDuration && (
+                                      <p className="text-xs text-gray-500 mt-1">~ {workshop.estimatedDuration} Min.</p>
+                                    )}
+                                  </div>
+                                  
+                                  <button
+                                    onClick={() => handleBooking(workshop)}
+                                    className="w-full md:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+                                  >
+                                    Verfügbarkeit prüfen
+                                  </button>
+                                </div>
                               </div>
-                              
-                              <button
-                                onClick={() => handleBooking(workshop)}
-                                className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
-                              >
-                                Verfügbarkeit prüfen
-                              </button>
                             </div>
                           </div>
                         </div>

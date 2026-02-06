@@ -55,7 +55,7 @@ export async function GET(
         phone: workshop.phone,
         rating: avgRating,
         reviewCount: workshop._count.reviews,
-        companySettings: workshop.companySettings
+        companySettings: workshop.companySettings || null
       }
     })
   } catch (error) {

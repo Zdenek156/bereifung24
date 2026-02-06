@@ -174,7 +174,7 @@ export default function AddServicesModal({
                     {service.packages.map((pkg) => (
                       <label
                         key={pkg.id}
-                        className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                        className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
                           selectedPackages[service.id] === pkg.id
                             ? 'border-primary-500 bg-primary-50'
                             : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -185,7 +185,7 @@ export default function AddServicesModal({
                           name={`service-${service.id}`}
                           checked={selectedPackages[service.id] === pkg.id}
                           onChange={() => handlePackageSelect(service.id, pkg.id)}
-                          className="mt-1 w-4 h-4 text-primary-600"
+                          className="w-4 h-4 text-primary-600"
                         />
                         <div className="ml-3 flex-1">
                           <div className="flex items-center justify-between">
@@ -214,10 +214,6 @@ export default function AddServicesModal({
         <div className="p-6 border-t border-gray-200 bg-gray-50">
           {hasSelection && (
             <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">Zusätzliche Services:</span>
-                <span className="text-sm font-semibold text-gray-900">{Object.keys(selectedPackages).length}</span>
-              </div>
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-gray-900">Zusätzliche Kosten:</span>
                 <div className="text-right">

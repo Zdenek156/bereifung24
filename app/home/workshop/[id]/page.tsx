@@ -146,7 +146,12 @@ export default function WorkshopDetailPage() {
   }
 
   const getSlotsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Format date as YYYY-MM-DD WITHOUT timezone conversion (toISOString would shift to UTC)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
     const slots = []
     const busyTimes = busySlots[dateStr] || []
     
@@ -202,13 +207,17 @@ export default function WorkshopDetailPage() {
     }
     
     // Generate time slots for opening hours (every 30 min)
+    // Only include AVAILABLE slots (skip busy times completely)
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute of [0, 30]) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-        slots.push({
-          time: timeStr,
-          available: !busyTimes.includes(timeStr)
-        })
+        // Only add slot if NOT busy
+        if (!busyTimes.includes(timeStr)) {
+          slots.push({
+            time: timeStr,
+            available: true
+          })
+        }
       }
     }
     
@@ -548,12 +557,9 @@ export default function WorkshopDetailPage() {
                     <button
                       key={idx}
                       onClick={() => handleSlotSelect(slot)}
-                      disabled={!slot.available}
                       className={`
                         px-4 py-4 rounded-lg border-2 transition-all font-semibold text-base
-                        ${!slot.available
-                          ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : selectedSlot?.time === slot.time
+                        ${selectedSlot?.time === slot.time
                           ? 'border-primary-500 bg-primary-50 text-primary-700'
                           : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
                         }

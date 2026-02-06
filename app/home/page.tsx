@@ -14,9 +14,7 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Clock,
-  ChevronUp,
-  X,
-  Plus
+  ChevronUp
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 
@@ -594,108 +592,6 @@ export default function NewHomePage() {
                 {/* Results */}
                 {!loading && workshops.length > 0 && (
                   <div className="space-y-4">
-                    {/* Quick Selection Chips Bar */}
-                    <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-sm border-2 border-primary-100 p-4 sticky top-20 z-40">
-                      <div className="flex flex-wrap gap-2 items-center">
-                        <span className="text-sm font-semibold text-gray-700 mr-2">Deine Auswahl:</span>
-                        
-                        {/* Main Service Chip */}
-                        <div className="px-4 py-2 bg-primary-600 text-white rounded-full font-medium text-sm flex items-center gap-2 shadow-md">
-                          {SERVICES.find(s => s.id === selectedService)?.icon} {SERVICES.find(s => s.id === selectedService)?.label}
-                        </div>
-                        
-                        {/* Active Additional Services */}
-                        {selectedPackages.includes('two_tires') && (
-                          <div className="px-4 py-2 bg-white text-primary-700 rounded-full font-medium text-sm flex items-center gap-2 shadow-sm border-2 border-primary-200">
-                            2 Reifen
-                            <button
-                              onClick={() => {
-                                setSelectedPackages(prev => prev.filter(p => p !== 'two_tires'))
-                              }}
-                              className="hover:bg-primary-100 rounded-full p-0.5 transition-colors"
-                              title="Entfernen"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {selectedPackages.includes('four_tires') && (
-                          <div className="px-4 py-2 bg-white text-primary-700 rounded-full font-medium text-sm flex items-center gap-2 shadow-sm border-2 border-primary-200">
-                            4 Reifen
-                            <button
-                              onClick={() => {
-                                setSelectedPackages(prev => prev.filter(p => p !== 'four_tires'))
-                              }}
-                              className="hover:bg-primary-100 rounded-full p-0.5 transition-colors"
-                              title="Entfernen"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {selectedPackages.includes('with_disposal') && (
-                          <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium text-sm flex items-center gap-2 shadow-sm border-2 border-green-300">
-                            ✓ Mit Entsorgung
-                            <button
-                              onClick={() => {
-                                setSelectedPackages(prev => prev.filter(p => p !== 'with_disposal'))
-                              }}
-                              className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                              title="Entfernen"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {selectedPackages.includes('runflat') && (
-                          <div className="px-4 py-2 bg-orange-100 text-orange-800 rounded-full font-medium text-sm flex items-center gap-2 shadow-sm border-2 border-orange-300">
-                            ✓ Runflat-Reifen
-                            <button
-                              onClick={() => {
-                                setSelectedPackages(prev => prev.filter(p => p !== 'runflat'))
-                              }}
-                              className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
-                              title="Entfernen"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {/* Quick-Add Buttons for Available Services (Tire Change only) */}
-                        {selectedService === 'TIRE_CHANGE' && (
-                          <>
-                            {!selectedPackages.includes('with_disposal') && (
-                              <button
-                                onClick={() => {
-                                  setSelectedPackages(prev => [...prev, 'with_disposal'])
-                                }}
-                                className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-full hover:border-green-500 hover:bg-green-50 text-gray-600 hover:text-green-700 font-medium text-sm flex items-center gap-2 transition-all"
-                                title="Entsorgung hinzufügen"
-                              >
-                                <Plus className="w-4 h-4" /> Entsorgung
-                              </button>
-                            )}
-                            
-                            {!selectedPackages.includes('runflat') && (
-                              <button
-                                onClick={() => {
-                                  setSelectedPackages(prev => [...prev, 'runflat'])
-                                }}
-                                className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-full hover:border-orange-500 hover:bg-orange-50 text-gray-600 hover:text-orange-700 font-medium text-sm flex items-center gap-2 transition-all"
-                                title="Runflat-Service hinzufügen"
-                              >
-                                <Plus className="w-4 h-4" /> Runflat
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
                     {/* Sort Bar */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <p className="text-sm text-gray-600">

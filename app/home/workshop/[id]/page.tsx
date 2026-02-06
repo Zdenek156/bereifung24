@@ -312,8 +312,6 @@ export default function WorkshopDetailPage() {
             </div>
           </div>
 
-          </div>
-
           {/* Workshop Description */}
           {workshop.description && (
             <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">

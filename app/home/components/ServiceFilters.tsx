@@ -51,12 +51,12 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           { 
             packageType: 'with_disposal', 
             label: 'Mit Entsorgung', 
-            info: 'Fachgerechte Entsorgung der alten Reifen inklusive (Preis pro Reifen)'
+            info: 'Fachgerechte Entsorgung der alten Reifen inklusive'
           },
           { 
             packageType: 'runflat', 
             label: 'Runflat-Reifen', 
-            info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad). Erfordert besondere Montagetechniken. Aufpreis pro Reifen.'
+            info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad). Erfordert besondere Montagetechniken mit entsprechendem Aufpreis.'
           }
         ]
       }

@@ -693,8 +693,21 @@ export default function NewHomePage() {
 
                             {/* Middle: All Info */}
                             <div className="flex-1 min-w-0">
-                              {/* Workshop Name */}
-                              <h3 className="text-xl font-bold text-gray-900 mb-0.5">{workshop.name}</h3>
+                              {/* Workshop Name + Bewertung inline */}
+                              <div className="flex items-center gap-3 mb-0.5">
+                                <h3 className="text-xl font-bold text-gray-900">{workshop.name}</h3>
+                                
+                                {/* Bewertung direkt neben Name */}
+                                {workshop.rating > 0 && (
+                                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                                    {workshop.reviewCount > 0 && (
+                                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                               
                               {/* Stadt mit Maps-Button */}
                               <div className="flex items-center gap-2 mb-0.5">
@@ -714,17 +727,6 @@ export default function NewHomePage() {
                                   </>
                                 )}
                               </div>
-                              
-                              {/* Bewertung */}
-                              {workshop.rating > 0 && (
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mb-0.5">
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
-                                  {workshop.reviewCount > 0 && (
-                                    <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
-                                  )}
-                                </div>
-                              )}
                               
                               {/* Distanz */}
                               <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
@@ -769,7 +771,7 @@ export default function NewHomePage() {
                             </div>
 
                             {/* Right: Price and Button */}
-                            <div className="flex flex-col items-end justify-between ml-auto flex-shrink-0">
+                            <div className="flex flex-col items-end justify-between ml-auto flex-shrink-0 mt-14">
                               <div className="text-right mb-3">
                                 <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
                                 <p className="text-3xl font-bold text-primary-600">

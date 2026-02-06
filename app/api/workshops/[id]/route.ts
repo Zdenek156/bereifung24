@@ -15,12 +15,16 @@ export async function GET(
       select: {
         id: true,
         companyName: true,
-        city: true,
-        postalCode: true,
-        street: true,
-        phone: true,
         description: true,
         website: true,
+        user: {
+          select: {
+            city: true,
+            postalCode: true,
+            street: true,
+            phone: true
+          }
+        },
         _count: {
           select: {
             reviews: true
@@ -51,10 +55,10 @@ export async function GET(
       workshop: {
         id: workshop.id,
         name: workshop.companyName,
-        city: workshop.city,
-        postalCode: workshop.postalCode,
-        street: workshop.street,
-        phone: workshop.phone,
+        city: workshop.user.city || null,
+        postalCode: workshop.user.postalCode || null,
+        street: workshop.user.street || null,
+        phone: workshop.user.phone || null,
         rating: avgRating,
         reviewCount: workshop._count.reviews,
         companySettings: {

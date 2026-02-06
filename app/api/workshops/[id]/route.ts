@@ -12,13 +12,15 @@ export async function GET(
   try {
     const workshop = await prisma.workshop.findUnique({
       where: { id: params.id },
-      include: {
-        companySettings: {
-          select: {
-            description: true,
-            website: true,
-          }
-        },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+        postalCode: true,
+        street: true,
+        phone: true,
+        description: true,
+        website: true,
         _count: {
           select: {
             reviews: true
@@ -55,7 +57,10 @@ export async function GET(
         phone: workshop.phone,
         rating: avgRating,
         reviewCount: workshop._count.reviews,
-        companySettings: workshop.companySettings || null
+        companySettings: {
+          description: workshop.description || null,
+          website: workshop.website || null
+        }
       }
     })
   } catch (error) {

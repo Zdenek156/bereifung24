@@ -78,8 +78,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
             label: 'Mit Auswuchten', 
             info: 'Radwechsel inkl. professionellem Auswuchten für ruhigen Lauf und gleichmäßigen Reifenverschleiß'
           }
-        ],
-        note: 'Hinweis: Nicht alle Werkstätten bieten unterschiedliche Pakete an. Manche haben nur einen Festpreis.'
+        ]
       }
     ]
   },

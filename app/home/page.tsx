@@ -262,7 +262,6 @@ export default function NewHomePage() {
   }
 
   // Handle search
-  // Handle search
   const handleSearch = async () => {
     if (!postalCode && !useGeolocation) {
       alert('Bitte PLZ oder Ort eingeben oder Standort aktivieren')
@@ -272,12 +271,13 @@ export default function NewHomePage() {
     setLoading(true)
     setError(null)
     setHasSearched(true)
+    setWorkshops([]) // Clear previous results
 
     try {
       let location = customerLocation
 
-      // Get location
-      if (useGeolocation && !location) {
+      // Get location from geolocation
+      if (useGeolocation) {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             async (position) => {
@@ -295,7 +295,9 @@ export default function NewHomePage() {
           )
           return
         }
-      } else if (postalCode && !location) {
+      } 
+      // Get location from postal code
+      else if (postalCode) {
         location = await geocodePostalCode(postalCode)
         if (!location) {
           setError('PLZ oder Ort konnte nicht gefunden werden. Bitte überprüfen Sie Ihre Eingabe.')

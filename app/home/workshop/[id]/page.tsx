@@ -342,9 +342,8 @@ export default function WorkshopDetailPage() {
   const handleBooking = () => {
     if (!selectedSlot || !selectedDate || !selectedVehicle) return
     
-    // URL für Checkout/Payment mit allen Parametern
-    const checkoutUrl = `/dashboard/customer/direct-booking/checkout?` +
-      `workshopId=${workshopId}&` +
+    // URL für neue Payment-Seite mit allen Parametern
+    const paymentUrl = `/home/workshop/${workshopId}/payment?` +
       `service=${serviceType}&` +
       `date=${selectedDate.toISOString().split('T')[0]}&` +
       `time=${selectedSlot.time}&` +
@@ -352,10 +351,10 @@ export default function WorkshopDetailPage() {
     
     // Wenn angemeldet → direkt zur Bezahlungsseite
     if (session) {
-      router.push(checkoutUrl)
+      router.push(paymentUrl)
     } else {
       // Wenn nicht angemeldet → zur Login-Seite mit Redirect zurück zur Bezahlung
-      router.push(`/login?redirect=${encodeURIComponent(checkoutUrl)}`)
+      router.push(`/login?redirect=${encodeURIComponent(paymentUrl)}`)
     }
   }
 

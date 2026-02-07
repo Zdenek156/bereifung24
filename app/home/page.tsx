@@ -97,9 +97,11 @@ export default function NewHomePage() {
       const savedLat = searchParams.get('lat')
       const savedLon = searchParams.get('lon')
       const savedScroll = searchParams.get('scroll')
+      const savedPackages = searchParams.get('packages')
 
       if (savedWorkshops) {
         try {
+          console.log('🔍 [Hard Refresh] Restoring search from URL...')
           const parsedWorkshops = JSON.parse(decodeURIComponent(savedWorkshops))
           setWorkshops(parsedWorkshops)
           setHasSearched(true)
@@ -109,10 +111,21 @@ export default function NewHomePage() {
           if (savedLat && savedLon) {
             setCustomerLocation({ lat: Number(savedLat), lon: Number(savedLon) })
           }
+          // CRITICAL: Restore selected packages to prevent re-search with wrong packages
+          if (savedPackages) {
+            try {
+              const packages = JSON.parse(savedPackages)
+              console.log('🔍 [Hard Refresh] Restored packages:', packages)
+              setSelectedPackages(packages)
+            } catch (e) {
+              console.error('Error parsing packages:', e)
+            }
+          }
           // Restore scroll position
           if (savedScroll) {
             setTimeout(() => window.scrollTo(0, Number(savedScroll)), 100)
           }
+          console.log('✅ [Hard Refresh] Search restored successfully, workshops:', parsedWorkshops.length)
         } catch (e) {
           console.error('Error restoring search:', e)
         }
@@ -220,6 +233,13 @@ export default function NewHomePage() {
 
   // Search workshops
   const searchWorkshops = async (location: { lat: number; lon: number }) => {
+    console.log('🔍 [searchWorkshops] Starting search...', {
+      serviceType: selectedService,
+      packageTypes: selectedPackages,
+      radiusKm,
+      location
+    })
+    
     try {
       const response = await fetch('/api/customer/direct-booking/search', {
         method: 'POST',
@@ -234,6 +254,11 @@ export default function NewHomePage() {
       })
 
       const result = await response.json()
+      console.log('📊 [searchWorkshops] API Response:', {
+        success: result.success,
+        workshopsCount: result.workshops?.length || 0,
+        error: result.error
+      })
 
       if (response.ok && result.success) {
         const workshops = result.workshops || []
@@ -248,10 +273,13 @@ export default function NewHomePage() {
         params.set('radius', radiusKm.toString())
         params.set('lat', location.lat.toString())
         params.set('lon', location.lon.toString())
+        params.set('packages', JSON.stringify(selectedPackages))
         window.history.replaceState({}, '', `?${params.toString()}`)
+        console.log('✅ [searchWorkshops] Search completed successfully, workshops:', workshops.length)
       } else {
         setWorkshops([])
         setError(result.error || 'Keine Werkstätten gefunden')
+        console.warn('⚠️ [searchWorkshops] No workshops found or error:', result.error)
       }
     } catch (err) {
       setWorkshops([])
@@ -324,20 +352,36 @@ export default function NewHomePage() {
   
   // Re-search when service-specific filters change (but not on initial mount or while loading)
   useEffect(() => {
+    console.log('🔄 [useEffect - selectedPackages] Triggered', {
+      isInitialMount: isInitialMount.current,
+      loading,
+      hasSearched,
+      customerLocation: !!customerLocation,
+      selectedPackages,
+      workshopsCount: workshops.length
+    })
+    
     if (isInitialMount.current) {
+      console.log('⏭️  [useEffect] Skipping: Initial mount')
       isInitialMount.current = false
       return
     }
     
     // Don't trigger search if already loading or haven't searched yet
     if (loading || !hasSearched || !customerLocation) {
+      console.log('⏭️  [useEffect] Skipping search:', { loading, hasSearched, customerLocation: !!customerLocation })
       return
     }
     
+    console.log('⏱️  [useEffect] Debouncing search for 300ms...')
     const debounce = setTimeout(() => {
+      console.log('🔎 [useEffect] Executing re-search with packages:', selectedPackages)
       searchWorkshops(customerLocation)
     }, 300)
-    return () => clearTimeout(debounce)
+    return () => {
+      console.log('🚫 [useEffect] Debounce cleared')
+      clearTimeout(debounce)
+    }
   }, [selectedPackages])
 
   // Apply filters

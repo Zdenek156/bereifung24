@@ -104,7 +104,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
             <button
-              onClick={() => router.push('/dashboard/customer/direct-booking')}
+              onClick={() => router.push('/home')}
               className="w-full px-6 py-3 bg-white text-green-700 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
             >
               <span className="text-2xl">🔄</span>

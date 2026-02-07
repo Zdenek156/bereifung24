@@ -226,26 +226,38 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
 
   // Reset filters when service changes (but not on initial mount to avoid triggering search twice)
   useEffect(() => {
+    console.log('🎛️ [ServiceFilters useEffect] Triggered', {
+      isInitialMount: isInitialMount.current,
+      selectedService,
+      selectedPackages
+    })
+    
     if (isInitialMount.current) {
+      console.log('⏭️ [ServiceFilters] Initial mount - setting packages without triggering parent search')
       isInitialMount.current = false
       // Set initial value without triggering parent re-search
       if (selectedService === 'WHEEL_CHANGE') {
         setSelectedPackages(['basic'])
         onFiltersChange(['basic'])
+        console.log('✅ [ServiceFilters] Set initial packages: [basic]')
       } else {
         setSelectedPackages([])
         onFiltersChange([])
+        console.log('✅ [ServiceFilters] Set initial packages: []')
       }
       return
     }
     
+    console.log('🔄 [ServiceFilters] Service changed - resetting packages')
     // Only reset when service actually changes (not on mount)
     if (selectedService === 'WHEEL_CHANGE') {
       setSelectedPackages(['basic'])
       onFiltersChange(['basic'])
+      console.log('✅ [ServiceFilters] Reset to: [basic]')
     } else {
       setSelectedPackages([])
       onFiltersChange([])
+      console.log('✅ [ServiceFilters] Reset to: []')
     }
   }, [selectedService])
 

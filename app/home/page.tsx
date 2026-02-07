@@ -322,19 +322,22 @@ export default function NewHomePage() {
   // Track if this is the initial mount
   const isInitialMount = useRef(true)
   
-  // Re-search when service-specific filters change (but not on initial mount)
+  // Re-search when service-specific filters change (but not on initial mount or while loading)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false
       return
     }
     
-    if (hasSearched && customerLocation) {
-      const debounce = setTimeout(() => {
-        searchWorkshops(customerLocation)
-      }, 300)
-      return () => clearTimeout(debounce)
+    // Don't trigger search if already loading or haven't searched yet
+    if (loading || !hasSearched || !customerLocation) {
+      return
     }
+    
+    const debounce = setTimeout(() => {
+      searchWorkshops(customerLocation)
+    }, 300)
+    return () => clearTimeout(debounce)
   }, [selectedPackages])
 
   // Apply filters

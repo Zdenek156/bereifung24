@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import InfoTooltip from './InfoTooltip'
 
 interface FilterOption {
@@ -220,12 +220,26 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
 
 export default function ServiceFilters({ selectedService, onFiltersChange }: ServiceFiltersProps) {
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  const isInitialMount = useRef(true)
 
   const config = FILTER_CONFIG[selectedService]
 
-  // Reset filters when service changes
+  // Reset filters when service changes (but not on initial mount to avoid triggering search twice)
   useEffect(() => {
-    // For WHEEL_CHANGE, set default to 'basic' so price updates immediately
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      // Set initial value without triggering parent re-search
+      if (selectedService === 'WHEEL_CHANGE') {
+        setSelectedPackages(['basic'])
+        onFiltersChange(['basic'])
+      } else {
+        setSelectedPackages([])
+        onFiltersChange([])
+      }
+      return
+    }
+    
+    // Only reset when service actually changes (not on mount)
     if (selectedService === 'WHEEL_CHANGE') {
       setSelectedPackages(['basic'])
       onFiltersChange(['basic'])

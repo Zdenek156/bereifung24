@@ -51,6 +51,9 @@ export default function WorkshopDetailPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
   const [loadingVehicles, setLoadingVehicles] = useState(false)
   
+  // Favorites
+  const [isFavorite, setIsFavorite] = useState(false)
+  
   // Additional services
   const [showServicesModal, setShowServicesModal] = useState(false)
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
@@ -70,6 +73,44 @@ export default function WorkshopDetailPage() {
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showUserMenu])
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedFavorites = localStorage.getItem('workshop_favorites')
+      if (savedFavorites) {
+        try {
+          const favorites = JSON.parse(savedFavorites)
+          setIsFavorite(favorites.includes(workshopId))
+        } catch (e) {
+          console.error('Error loading favorites:', e)
+        }
+      }
+    }
+  }, [workshopId])
+  
+  // Toggle favorite
+  const toggleFavorite = () => {
+    if (typeof window !== 'undefined') {
+      const savedFavorites = localStorage.getItem('workshop_favorites')
+      let favorites: string[] = []
+      
+      if (savedFavorites) {
+        try {
+          favorites = JSON.parse(savedFavorites)
+        } catch (e) {
+          favorites = []
+        }
+      }
+      
+      const newFavorites = favorites.includes(workshopId)
+        ? favorites.filter(id => id !== workshopId)
+        : [...favorites, workshopId]
+      
+      localStorage.setItem('workshop_favorites', JSON.stringify(newFavorites))
+      setIsFavorite(newFavorites.includes(workshopId))
+    }
+  }
 
   // Load user vehicles when logged in
   useEffect(() => {
@@ -592,10 +633,27 @@ export default function WorkshopDetailPage() {
                 {workshop.name}
               </h2>
               <button 
+                onClick={toggleFavorite}
                 className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Zu Favoriten hinzufügen"
+                title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
               >
-                <span className="text-2xl">🤍</span>
+                <svg
+                  className={`w-6 h-6 transition-colors ${
+                    isFavorite
+                      ? 'fill-red-500 text-red-500'
+                      : 'fill-none text-gray-400 hover:text-red-500'
+                  }`}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
+                </svg>
               </button>
             </div>
             

@@ -69,8 +69,8 @@ export default function NewHomePage() {
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [scrollPosition, setScrollPosition] = useState(0)
   
-  // Service-specific package filters
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  // Service-specific package filters - Initialize with 'basic' for WHEEL_CHANGE
+  const [selectedPackages, setSelectedPackages] = useState<string[]>(['basic'])
   
   // Close user menu when clicking outside
   useEffect(() => {

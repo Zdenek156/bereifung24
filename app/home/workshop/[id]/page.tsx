@@ -564,64 +564,20 @@ export default function WorkshopDetailPage() {
             </button>
           </div>
 
-          <div className="max-w-4xl mx-auto text-center mb-12">
+          <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-              Finde deine Werkstatt
+              {workshop?.name || 'Werkstatt Details'}
             </h2>
-            <p className="text-xl text-primary-100">
-              Vergleiche Preise, buche direkt online
+            <p className="text-xl text-primary-100 mb-6">
+              Wähle deinen Wunschtermin und buche direkt online
             </p>
-          </div>
-
-          {/* Search Card - Booking.com Style: One Line - Same as /home */}
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-3">
-              <div className="flex flex-col md:flex-row gap-2">
-                {/* Service Dropdown */}
-                <div className="flex-1">
-                  <select
-                    defaultValue="TIRE_CHANGE"
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
-                    disabled
-                  >
-                    <option value="TIRE_CHANGE">Räderwechsel</option>
-                  </select>
-                </div>
-
-                {/* Location Input */}
-                <div className="flex-1">
-                  <div className="relative h-16">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="PLZ oder Ort"
-                      className="w-full h-full pl-12 pr-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                {/* Radius Dropdown */}
-                <div className="w-full md:w-32">
-                  <select
-                    defaultValue="25"
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
-                    disabled
-                  >
-                    <option value="25">25 km</option>
-                  </select>
-                </div>
-
-                {/* Search Button */}
-                <Link
-                  href="/home"
-                  className="w-full md:w-auto h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="hidden md:inline">Neue Suche</span>
-                  <span className="md:hidden">Suchen</span>
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/home"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all shadow-lg"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Zurück zur Werkstattsuche
+            </Link>
           </div>
         </div>
       </section>
@@ -930,13 +886,19 @@ export default function WorkshopDetailPage() {
                   </div>
                 ) : vehicles.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">Sie haben noch keine Fahrzeuge gespeichert.</p>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
+                      <p className="text-yellow-800 font-semibold mb-2">⚠️ Fahrzeug erforderlich</p>
+                      <p className="text-yellow-700 text-sm mb-4">
+                        Um einen Termin zu buchen, müssen Sie zunächst ein Fahrzeug hinzufügen.
+                        Das Kennzeichen wird zur Identifikation bei der Werkstatt benötigt.
+                      </p>
+                    </div>
                     <Link
                       href="/dashboard/customer/vehicles"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
                     >
-                      <Plus className="w-4 h-4" />
-                      Fahrzeug hinzufügen
+                      <Plus className="w-5 h-5" />
+                      Fahrzeug jetzt hinzufügen
                     </Link>
                   </div>
                 ) : (

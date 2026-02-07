@@ -154,6 +154,23 @@ export async function POST(request: NextRequest) {
             pkg.isActive && selectedMainPackages.includes(pkg.packageType)
           )
           
+          // SPECIAL CASE: For WHEEL_CHANGE with 'with_balancing' filter
+          // Also accept workshops that have 'basic' package + legacy balancingPrice field
+          if (service.serviceType === 'WHEEL_CHANGE' && selectedMainPackages.includes('with_balancing')) {
+            const hasBasicPackage = service.servicePackages?.some(pkg => 
+              pkg.isActive && pkg.packageType === 'basic'
+            )
+            const hasBalancingPrice = service.balancingPrice && service.balancingPrice > 0
+            
+            // If workshop has basic package + balancingPrice, treat it as having with_balancing
+            if (hasBasicPackage && hasBalancingPrice && relevantPackages.length === 0) {
+              // Use the basic package as base
+              relevantPackages = service.servicePackages?.filter(pkg => 
+                pkg.isActive && pkg.packageType === 'basic'
+              ) || []
+            }
+          }
+          
           // CRITICAL: If user selected specific packages, workshop MUST have them
           // Only show workshop if it has the selected package activated
           if (relevantPackages.length === 0) {

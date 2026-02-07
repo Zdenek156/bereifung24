@@ -243,7 +243,7 @@ export default function WorkshopServicesPage() {
         durationMinutes: packagesData.length === 0 ? 60 : undefined
       }
 
-      // WHEEL_CHANGE: Simple pricing with base + optional balancing + optional storage
+      // WHEEL_CHANGE: Create ServicePackages from configuration
       if (selectedServiceType === 'WHEEL_CHANGE') {
         // Only save if base service is active
         if (!packages.base?.active) {
@@ -251,14 +251,54 @@ export default function WorkshopServicesPage() {
           return
         }
         
+        const wheelPackages = []
+        
+        // Always create basic package
+        wheelPackages.push({
+          packageType: 'basic',
+          name: 'Basis-Räderwechsel',
+          price: packages.base?.price ? parseFloat(packages.base.price) : 0,
+          durationMinutes: packages.base?.duration ? parseInt(packages.base.duration) : 60,
+          isActive: true
+        })
+        
+        // Add with_balancing package if balancing is active
+        if (packages.balancing?.active && packages.balancing?.price) {
+          const basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
+          const balancingPrice = parseFloat(packages.balancing.price)
+          wheelPackages.push({
+            packageType: 'with_balancing',
+            name: 'Mit Auswuchten',
+            price: basePrice + (balancingPrice * 4), // Price per wheel * 4 wheels
+            durationMinutes: (packages.base?.duration ? parseInt(packages.base.duration) : 60) + 
+                           (packages.balancing?.duration ? parseInt(packages.balancing.duration) * 4 : 0),
+            isActive: true
+          })
+        }
+        
+        // Add with_storage package if storage is active
+        if (packages.storage?.active && packages.storage?.price) {
+          const basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
+          const storagePrice = parseFloat(packages.storage.price)
+          wheelPackages.push({
+            packageType: 'with_storage',
+            name: 'Mit Einlagerung',
+            price: basePrice + storagePrice,
+            durationMinutes: packages.base?.duration ? parseInt(packages.base.duration) : 60,
+            isActive: true
+          })
+        }
+        
+        requestBody.packages = wheelPackages
+        requestBody.allowsDirectBooking = packages.directBooking?.active || false
+        
+        // Keep legacy fields for backwards compatibility (but packages take priority)
         requestBody.basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
         requestBody.durationMinutes = packages.base?.duration ? parseInt(packages.base.duration) : 60
         requestBody.balancingPrice = packages.balancing?.active && packages.balancing?.price ? parseFloat(packages.balancing.price) : null
         requestBody.balancingMinutes = packages.balancing?.active && packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
         requestBody.storagePrice = packages.storage?.active && packages.storage?.price ? parseFloat(packages.storage.price) : null
         requestBody.storageAvailable = packages.storage?.active && !!packages.storage?.price
-        requestBody.allowsDirectBooking = packages.directBooking?.active || false
-        requestBody.packages = undefined // No packages for WHEEL_CHANGE
       }
 
       // Add refrigerant price for CLIMATE_SERVICE

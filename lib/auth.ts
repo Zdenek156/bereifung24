@@ -142,7 +142,7 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   debug: process.env.NODE_ENV === 'development',
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
       name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
@@ -150,6 +150,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
+        domain: process.env.NODE_ENV === 'production' ? '.bereifung24.de' : undefined,
         secure: process.env.NODE_ENV === 'production',
       },
     },

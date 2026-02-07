@@ -233,22 +233,21 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
     })
     
     if (isInitialMount.current) {
-      console.log('⏭️ [ServiceFilters] Initial mount - setting packages without triggering parent search')
+      console.log('⏭️ [ServiceFilters] Initial mount - setting local state only, NOT calling parent')
       isInitialMount.current = false
-      // Set initial value without triggering parent re-search
+      // Set initial value in local state only, without triggering parent callback
       if (selectedService === 'WHEEL_CHANGE') {
         setSelectedPackages(['basic'])
-        onFiltersChange(['basic'])
-        console.log('✅ [ServiceFilters] Set initial packages: [basic]')
+        console.log('✅ [ServiceFilters] Set initial local packages: [basic]')
       } else {
         setSelectedPackages([])
-        onFiltersChange([])
-        console.log('✅ [ServiceFilters] Set initial packages: []')
+        console.log('✅ [ServiceFilters] Set initial local packages: []')
       }
+      // DO NOT call onFiltersChange here - parent will handle initial state
       return
     }
     
-    console.log('🔄 [ServiceFilters] Service changed - resetting packages')
+    console.log('🔄 [ServiceFilters] Service changed - resetting packages and notifying parent')
     // Only reset when service actually changes (not on mount)
     if (selectedService === 'WHEEL_CHANGE') {
       setSelectedPackages(['basic'])

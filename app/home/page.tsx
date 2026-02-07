@@ -319,8 +319,16 @@ export default function NewHomePage() {
     }
   }
 
-  // Re-search when service-specific filters change
+  // Track if this is the initial mount
+  const isInitialMount = useRef(true)
+  
+  // Re-search when service-specific filters change (but not on initial mount)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    
     if (hasSearched && customerLocation) {
       const debounce = setTimeout(() => {
         searchWorkshops(customerLocation)

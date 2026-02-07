@@ -665,7 +665,7 @@ export default function NewHomePage() {
               {/* Left Sidebar - Filters */}
               {workshops.length > 0 && (
                 <aside className="lg:w-80 flex-shrink-0">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-24 z-50">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-24 z-40">
                     {/* Filter Header */}
                     <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                       <h3 className="font-bold text-lg flex items-center gap-2">

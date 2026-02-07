@@ -234,8 +234,14 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
 
   // Reset filters when service changes
   useEffect(() => {
-    setSelectedPackages([])
-    onFiltersChange([])
+    // For WHEEL_CHANGE, set default to 'basic' so price updates immediately
+    if (selectedService === 'WHEEL_CHANGE') {
+      setSelectedPackages(['basic'])
+      onFiltersChange(['basic'])
+    } else {
+      setSelectedPackages([])
+      onFiltersChange([])
+    }
   }, [selectedService])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {

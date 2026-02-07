@@ -990,13 +990,6 @@ export default function WorkshopDetailPage() {
                         </div>
                       </button>
                     ))}
-                    <Link
-                      href="/dashboard/customer/vehicles"
-                      className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-400 hover:text-primary-600 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Weiteres Fahrzeug hinzufügen
-                    </Link>
                   </div>
                 )}
               </div>

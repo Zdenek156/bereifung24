@@ -155,9 +155,10 @@ export async function POST(request: NextRequest) {
           )
           
           // CRITICAL: If user selected specific packages but workshop doesn't offer them,
-          // exclude this workshop from results completely
-          if (relevantPackages.length === 0) {
-            return null // Workshop doesn't offer the selected package type
+          // exclude this workshop ONLY if the workshop has packages but not the right ones
+          // If workshop has NO packages at all, show it with basePrice
+          if (relevantPackages.length === 0 && service.servicePackages && service.servicePackages.length > 0) {
+            return null // Workshop has packages but not the selected type
           }
         } else {
           relevantPackages = relevantPackages.filter(pkg => pkg.isActive)

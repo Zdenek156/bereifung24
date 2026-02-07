@@ -153,6 +153,12 @@ export async function POST(request: NextRequest) {
           relevantPackages = relevantPackages.filter(pkg => 
             pkg.isActive && selectedMainPackages.includes(pkg.packageType)
           )
+          
+          // CRITICAL: If user selected specific packages but workshop doesn't offer them,
+          // exclude this workshop from results completely
+          if (relevantPackages.length === 0) {
+            return null // Workshop doesn't offer the selected package type
+          }
         } else {
           relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
         }

@@ -70,25 +70,16 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
         options: [
           { 
             packageType: 'basic', 
-            label: 'Basis', 
+            label: 'Basis-Räderwechsel', 
             info: 'Einfacher Radwechsel ohne Zusatzleistungen'
           },
           { 
             packageType: 'with_balancing', 
             label: 'Mit Auswuchten', 
             info: 'Radwechsel inkl. professionellem Auswuchten für ruhigen Lauf und gleichmäßigen Reifenverschleiß'
-          },
-          { 
-            packageType: 'with_storage', 
-            label: 'Mit Einlagerung', 
-            info: 'Radwechsel inkl. Einlagerung der nicht benötigten Räder in der Werkstatt'
-          },
-          { 
-            packageType: 'complete', 
-            label: 'Komplett-Service', 
-            info: 'Radwechsel mit Auswuchten und Einlagerung - rundum sorglos Paket'
           }
-        ]
+        ],
+        note: 'Hinweis: Nicht alle Werkstätten bieten unterschiedliche Pakete an. Manche haben nur einen Festpreis.'
       }
     ]
   },

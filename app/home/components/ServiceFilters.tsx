@@ -65,18 +65,18 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   WHEEL_CHANGE: {
     groups: [
       {
-        label: 'Leistungsumfang',
-        multiSelect: false, // Radio buttons - nur eine Auswahl
+        label: 'Zusatzleistungen',
+        multiSelect: true, // Checkboxes - mehrere möglich
         options: [
-          { 
-            packageType: 'basic', 
-            label: 'Basis-Räderwechsel', 
-            info: 'Einfacher Radwechsel ohne Zusatzleistungen'
-          },
           { 
             packageType: 'with_balancing', 
             label: 'Mit Auswuchten', 
             info: 'Radwechsel inkl. professionellem Auswuchten für ruhigen Lauf und gleichmäßigen Reifenverschleiß'
+          },
+          { 
+            packageType: 'with_storage', 
+            label: 'Mit Einlagerung', 
+            info: 'Radwechsel inkl. fachgerechte Einlagerung Ihrer Reifen'
           }
         ]
       }
@@ -235,28 +235,17 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
       console.log('⏭️ [ServiceFilters] Initial mount - setting local state only, NOT calling parent')
       isInitialMount.current = false
       // Set initial value in local state only, without triggering parent callback
-      if (selectedService === 'WHEEL_CHANGE') {
-        setSelectedPackages(['basic'])
-        console.log('✅ [ServiceFilters] Set initial local packages: [basic]')
-      } else {
-        setSelectedPackages([])
-        console.log('✅ [ServiceFilters] Set initial local packages: []')
-      }
+      setSelectedPackages([])
+      console.log('✅ [ServiceFilters] Set initial local packages: []')
       // DO NOT call onFiltersChange here - parent will handle initial state
       return
     }
     
     console.log('🔄 [ServiceFilters] Service changed - resetting packages and notifying parent')
-    // Only reset when service actually changes (not on mount)
-    if (selectedService === 'WHEEL_CHANGE') {
-      setSelectedPackages(['basic'])
-      onFiltersChange(['basic'])
-      console.log('✅ [ServiceFilters] Reset to: [basic]')
-    } else {
-      setSelectedPackages([])
-      onFiltersChange([])
-      console.log('✅ [ServiceFilters] Reset to: []')
-    }
+    // Reset to empty when service changes
+    setSelectedPackages([])
+    onFiltersChange([])
+    console.log('✅ [ServiceFilters] Reset to: []')
   }, [selectedService])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {

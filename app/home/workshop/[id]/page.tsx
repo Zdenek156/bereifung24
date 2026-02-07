@@ -21,7 +21,8 @@ import {
   Cloud,
   SlidersHorizontal,
   ChevronDown,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react'
 import Link from 'next/link'
 import AddServicesModal from './components/AddServicesModal'
@@ -45,6 +46,11 @@ export default function WorkshopDetailPage() {
   const [openingHours, setOpeningHours] = useState<any>(null)
   const [serviceType, setServiceType] = useState<string>('WHEEL_CHANGE') // Store service type from URL
   
+  // Vehicle selection
+  const [vehicles, setVehicles] = useState<any[]>([])
+  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
+  const [loadingVehicles, setLoadingVehicles] = useState(false)
+  
   // Additional services
   const [showServicesModal, setShowServicesModal] = useState(false)
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
@@ -64,6 +70,27 @@ export default function WorkshopDetailPage() {
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showUserMenu])
+
+  // Load user vehicles when logged in
+  useEffect(() => {
+    const loadVehicles = async () => {
+      if (session?.user) {
+        setLoadingVehicles(true)
+        try {
+          const response = await fetch('/api/customer/vehicles')
+          if (response.ok) {
+            const data = await response.json()
+            setVehicles(data.vehicles || [])
+          }
+        } catch (error) {
+          console.error('Error loading vehicles:', error)
+        } finally {
+          setLoadingVehicles(false)
+        }
+      }
+    }
+    loadVehicles()
+  }, [session])
 
   // Load workshop details from URL params and API
   useEffect(() => {
@@ -313,16 +340,17 @@ export default function WorkshopDetailPage() {
   }
 
   const handleBooking = () => {
-    if (!selectedSlot || !selectedDate) return
+    if (!selectedSlot || !selectedDate || !selectedVehicle) return
     
-    // URL für Checkout mit allen Parametern
+    // URL für Checkout/Payment mit allen Parametern
     const checkoutUrl = `/dashboard/customer/direct-booking/checkout?` +
       `workshopId=${workshopId}&` +
       `service=${serviceType}&` +
       `date=${selectedDate.toISOString().split('T')[0]}&` +
-      `time=${selectedSlot.time}`
+      `time=${selectedSlot.time}&` +
+      `vehicleId=${selectedVehicle}`
     
-    // Wenn angemeldet → direkt zur Bezahlung
+    // Wenn angemeldet → direkt zur Bezahlungsseite
     if (session) {
       router.push(checkoutUrl)
     } else {
@@ -874,8 +902,90 @@ export default function WorkshopDetailPage() {
             </div>
           )}
 
-          {/* Booking Button */}
-          {selectedSlot && (
+          {/* Vehicle Selection */}
+          {selectedSlot && session && (
+            <div className="border-t mt-6 pt-6">
+              <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
+                <p className="text-xs text-gray-600 mb-1">
+                  <strong>📅 Ausgewählter Termin:</strong>
+                </p>
+                <p className="text-lg font-bold text-primary-700">
+                  {selectedDate?.toLocaleDateString('de-DE', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}, {selectedSlot.time} Uhr
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-4">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Car className="w-5 h-5 text-primary-600" />
+                  Mit welchem Fahrzeug kommen Sie?
+                </h4>
+                
+                {loadingVehicles ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+                  </div>
+                ) : vehicles.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">Sie haben noch keine Fahrzeuge gespeichert.</p>
+                    <Link
+                      href="/dashboard/customer/vehicles"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Fahrzeug hinzufügen
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {vehicles.map((vehicle: any) => (
+                      <button
+                        key={vehicle.id}
+                        onClick={() => setSelectedVehicle(vehicle.id)}
+                        className={`
+                          w-full p-4 rounded-lg border-2 text-left transition-all
+                          ${selectedVehicle === vehicle.id
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {vehicle.make} {vehicle.model}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {vehicle.licensePlate} • {vehicle.year}
+                            </p>
+                          </div>
+                          {selectedVehicle === vehicle.id && (
+                            <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                    <Link
+                      href="/dashboard/customer/vehicles"
+                      className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-400 hover:text-primary-600 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Weiteres Fahrzeug hinzufügen
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Booking Button for non-logged in users */}
+          {selectedSlot && !session && (
             <div className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">
@@ -893,17 +1003,30 @@ export default function WorkshopDetailPage() {
               
               <button
                 onClick={handleBooking}
-                className="w-full px-8 py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-xl transition-all text-xl shadow-lg hover:shadow-xl"
+                disabled
+                className="w-full px-8 py-5 bg-gray-400 text-white font-bold rounded-xl transition-all text-xl shadow-lg cursor-not-allowed"
               >
-                {session ? 'Jetzt buchen' : 'Anmelden & buchen'}
+                Anmelden & buchen
               </button>
               
               <p className="text-sm text-gray-500 text-center mt-4">
-                {session ? (
-                  <>🔒 Sichere Bezahlung</>
-                ) : (
-                  <>🔐 Bitte melden Sie sich an, um die Buchung abzuschließen</>
-                )}
+                🔐 Bitte melden Sie sich an, um die Buchung abzuschließen
+              </p>
+            </div>
+          )}
+
+          {/* Booking Button for logged in users */}
+          {selectedSlot && session && selectedVehicle && (
+            <div className="mt-4">
+              <button
+                onClick={handleBooking}
+                className="w-full px-8 py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-xl transition-all text-xl shadow-lg hover:shadow-xl"
+              >
+                Jetzt buchen
+              </button>
+              
+              <p className="text-sm text-gray-500 text-center mt-4">
+                🔒 Sichere Bezahlung
               </p>
             </div>
           )}

@@ -386,14 +386,14 @@ export default function PaymentPage() {
                         {/* Logos Row */}
                         <div className="flex items-center gap-3">
                           <Image
-                            src="/payment-logos/58482354cef1014c0b5e49c0.png"
+                            src="/payment-logos/58482363cef1014c0b5e49c1.png"
                             alt="Visa"
                             width={60}
                             height={40}
                             className="h-6 w-auto"
                           />
                           <Image
-                            src="/payment-logos/58482363cef1014c0b5e49c1.png"
+                            src="/payment-logos/58482354cef1014c0b5e49c0.png"
                             alt="Mastercard"
                             width={60}
                             height={40}
@@ -441,7 +441,7 @@ export default function PaymentPage() {
                           alt="PayPal"
                           width={200}
                           height={51}
-                          className="h-8 w-auto"
+                          className="w-auto max-h-8"
                         />
                         {/* Text */}
                         <div className="text-left">
@@ -477,7 +477,7 @@ export default function PaymentPage() {
                           alt="PayPal Ratenzahlung"
                           width={200}
                           height={60}
-                          className="h-8 w-auto"
+                          className="w-auto max-h-8"
                         />
                         {/* Text */}
                         <div className="text-left">

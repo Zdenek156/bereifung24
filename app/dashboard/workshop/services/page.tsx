@@ -221,20 +221,22 @@ export default function WorkshopServicesPage() {
     })
     
     try {
-      // Prepare packages data
-      const packagesData = Object.entries(packages)
-        .filter(([_, pkg]) => pkg.active && pkg.price && pkg.duration)
-        .map(([type, pkg]) => {
-          const config = packageConfigurations[selectedServiceType]?.find(p => p.type === type)
-          return {
-            packageType: type,
-            name: config?.name || type,
-            description: config?.description || null,
-            price: parseFloat(pkg.price),
-            durationMinutes: parseInt(pkg.duration),
-            isActive: pkg.active
-          }
-        })
+      // Prepare packages data (skip for WHEEL_CHANGE - it has custom logic)
+      const packagesData = selectedServiceType === 'WHEEL_CHANGE' 
+        ? [] 
+        : Object.entries(packages)
+            .filter(([_, pkg]) => pkg.active && pkg.price && pkg.duration)
+            .map(([type, pkg]) => {
+              const config = packageConfigurations[selectedServiceType]?.find(p => p.type === type)
+              return {
+                packageType: type,
+                name: config?.name || type,
+                description: config?.description || null,
+                price: parseFloat(pkg.price),
+                durationMinutes: parseInt(pkg.duration),
+                isActive: pkg.active
+              }
+            })
 
       const url = editingService 
         ? `/api/workshop/services/${editingService.id}`

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="75" viewBox="0 0 120 75">
+  <!-- Official Mastercard Logo from Brand Center -->
+  <g>
+    <!-- Red Circle -->
+    <circle cx="41.25" cy="37.5" r="26.25" fill="#EB001B"/>
+    <!-- Orange/Yellow Circle -->
+    <circle cx="78.75" cy="37.5" r="26.25" fill="#FF5F00"/>
+    <!-- Orange Overlap -->
+    <path d="M60 15.83c-5.47 4.13-9 10.62-9 17.92s3.53 13.79 9 17.92c5.47-4.13 9-10.62 9-17.92s-3.53-13.79-9-17.92z" fill="#FF5F00"/>
+  </g>
+</svg>

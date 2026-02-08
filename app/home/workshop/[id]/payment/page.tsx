@@ -110,7 +110,7 @@ export default function PaymentPage() {
             serviceType,
             date,
             time,
-            price: servicePricing.price || servicePricing.basePrice,
+            totalPrice: servicePricing.price || servicePricing.basePrice,
             workshopName: workshop.name,
             serviceName: serviceLabels[serviceType] || serviceType
           })
@@ -120,7 +120,8 @@ export default function PaymentPage() {
         if (data.sessionId && data.url) {
           window.location.href = data.url
         } else {
-          alert('Fehler beim Erstellen der Zahlungssitzung')
+          console.error('Stripe error:', data)
+          alert('Fehler beim Erstellen der Zahlungssitzung: ' + (data.error || 'Unbekannter Fehler'))
         }
       } else if (paymentMethod === 'paypal') {
         // Create PayPal Order

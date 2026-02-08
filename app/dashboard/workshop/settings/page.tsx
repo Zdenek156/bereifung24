@@ -176,6 +176,8 @@ export default function WorkshopSettings() {
     const tab = searchParams.get('tab')
     const success = searchParams.get('success')
     const error = searchParams.get('error')
+    const stripeOnboarding = searchParams.get('stripe_onboarding')
+    const stripeRefresh = searchParams.get('stripe_refresh')
 
     if (tab === 'terminplanung') {
       setActiveTab('terminplanung')
@@ -187,6 +189,14 @@ export default function WorkshopSettings() {
       setMessage({ type: 'success', text: 'Google Kalender erfolgreich verbunden!' })
       // Reload employees to get updated calendar status
       fetchProfile()
+    }
+
+    // Check Stripe Connect onboarding status
+    if (stripeOnboarding === 'success') {
+      setMessage({ type: 'success', text: 'Stripe Konto erfolgreich verbunden! Die Zahlungen werden jetzt direkt auf Ihr Konto überwiesen.' })
+      fetchProfile() // Reload to get updated Stripe account status
+    } else if (stripeRefresh === 'true') {
+      setMessage({ type: 'info', text: 'Bitte schließen Sie die Stripe-Verifizierung ab.' })
     }
 
     if (error) {
@@ -1318,60 +1328,93 @@ export default function WorkshopSettings() {
                 </div>
                 {paymentMethods.stripe && (
                   <div className="ml-7 mt-3 space-y-3">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                      <p className="text-sm text-blue-900 dark:text-blue-300 font-medium mb-2">
-                        ℹ️ Stripe Account einrichten
-                      </p>
-                      <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
-                        Sie benötigen ein Stripe-Konto, um Zahlungen zu empfangen. Falls Sie noch keins haben:
-                      </p>
-                      <div className="space-y-2 text-xs text-blue-800 dark:text-blue-300">
-                        <div className="flex items-start gap-2">
-                          <span className="font-bold">1.</span>
-                          <span>Registrieren Sie sich bei <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Stripe</a></span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="font-bold">2.</span>
-                          <span>Tragen Sie Ihre Firmendaten ein</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="font-bold">3.</span>
-                          <span>Kopieren Sie Ihre Account-ID (acct_xxx) aus dem Dashboard</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="font-bold">4.</span>
-                          <span>Geben Sie die Account-ID unten ein</span>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <a
-                          href="https://dashboard.stripe.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
-                        >
-                          Zum Stripe Dashboard
-                          <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
-                        </a>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                            🚀 Automatisches Stripe Connect Onboarding
+                          </p>
+                          <p className="text-xs text-blue-700 dark:text-blue-400">
+                            Zahlungen gehen direkt auf Ihr Konto. Einfaches Setup in 5 Minuten.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Stripe Account ID <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={paymentMethods.stripeAccountId || ''}
-                        onChange={(e) => setPaymentMethods({ ...paymentMethods, stripeAccountId: e.target.value })}
-                        placeholder="acct_xxxxxxxxxxxxx"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 font-mono"
-                        required={paymentMethods.stripe}
-                      />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Ihre Stripe Account-ID finden Sie im <a href="https://dashboard.stripe.com/settings/account" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Stripe Dashboard → Einstellungen</a>
-                      </p>
+                      
+                      {!paymentMethods.stripeAccountId ? (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              setSaving(true)
+                              const response = await fetch('/api/workshop/stripe-connect/create-account-link', {
+                                method: 'POST'
+                              })
+                              const data = await response.json()
+                              if (data.url) {
+                                window.location.href = data.url
+                              } else {
+                                alert('Fehler beim Erstellen des Stripe-Links')
+                              }
+                            } catch (error) {
+                              console.error('Error:', error)
+                              alert('Fehler beim Verbinden mit Stripe')
+                            } finally {
+                              setSaving(false)
+                            }
+                          }}
+                          disabled={saving}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                          {saving ? 'Lädt...' : 'Jetzt mit Stripe verbinden'}
+                        </button>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-green-900 dark:text-green-300">
+                                Stripe Konto verbunden
+                              </p>
+                              <p className="text-xs text-green-700 dark:text-green-400 font-mono">
+                                {paymentMethods.stripeAccountId}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch('/api/workshop/stripe-connect/create-account-link', {
+                                  method: 'POST'
+                                })
+                                const data = await response.json()
+                                if (data.url) {
+                                  window.location.href = data.url
+                                }
+                              } catch (error) {
+                                console.error('Error:', error)
+                              }
+                            }}
+                            className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Einstellungen verwalten
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

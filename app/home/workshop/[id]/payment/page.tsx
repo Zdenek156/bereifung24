@@ -483,7 +483,6 @@ export default function PaymentPage() {
                             style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
                           />
                         </div>
-                        />
                         {/* Text */}
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">PayPal Ratenzahlung</p>

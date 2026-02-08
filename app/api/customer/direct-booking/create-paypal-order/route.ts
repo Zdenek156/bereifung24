@@ -108,16 +108,9 @@ export async function POST(request: NextRequest) {
           value: amount.toFixed(2)
         },
         description: paymentDescription,
-        custom_id: `booking_${session.user.id}_${Date.now()}`, // Eindeutige Referenz
-        invoice_id: `INV-${Date.now()}` // Rechnungsnummer
-      }],
-      application_context: {
-        brand_name: 'Bereifung24',
-        landing_page: 'NO_PREFERENCE',
-        user_action: 'PAY_NOW',
-        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
-      }
+        custom_id: `booking_${session.user.id}_${Date.now()}`,
+        invoice_id: `INV-${Date.now()}`
+      }]
     }
 
     // PayPal Ratenzahlung aktivieren
@@ -135,6 +128,15 @@ export async function POST(request: NextRequest) {
             cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
           }
         }
+      }
+    } else {
+      // Nur für normale PayPal Zahlungen application_context verwenden
+      orderPayload.application_context = {
+        brand_name: 'Bereifung24',
+        landing_page: 'NO_PREFERENCE',
+        user_action: 'PAY_NOW',
+        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
       }
     }
 

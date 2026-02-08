@@ -312,24 +312,6 @@ export default function WorkshopServicesPage() {
           })
         }
         
-        // Add combined package if BOTH balancing AND storage are active
-        if (packages.balancing?.active && packages.balancing?.price && 
-            packages.storage?.active && packages.storage?.price) {
-          const basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
-          const balancingPrice = parseFloat(packages.balancing.price)
-          const storagePrice = parseFloat(packages.storage.price)
-          const baseDuration = packages.base?.duration ? parseInt(packages.base.duration) : 60
-          const balancingDuration = packages.balancing?.duration ? parseInt(packages.balancing.duration) * 4 : 0
-          
-          wheelPackages.push({
-            packageType: 'with_balancing_and_storage',
-            name: 'Mit Auswuchten und Einlagerung',
-            price: basePrice + (balancingPrice * 4) + storagePrice,
-            durationMinutes: baseDuration + balancingDuration,
-            isActive: true
-          })
-        }
-        
         requestBody.packages = wheelPackages
         console.log('✅ [WHEEL_CHANGE] Generated packages:', wheelPackages)
         requestBody.allowsDirectBooking = packages.directBooking?.active || false

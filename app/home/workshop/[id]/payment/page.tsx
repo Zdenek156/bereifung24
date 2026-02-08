@@ -134,15 +134,21 @@ export default function PaymentPage() {
             serviceType,
             date,
             time,
-            amount: servicePricing.price || servicePricing.basePrice
+            amount: servicePricing.price || servicePricing.basePrice,
+            description: `${serviceLabels[serviceType] || serviceType} bei ${workshop.name}`,
+            workshopName: workshop.name,
+            customerName: session?.user?.name,
+            customerEmail: session?.user?.email
           })
         })
 
         const data = await response.json()
+        console.log('PayPal response:', data)
         if (data.orderId && data.approvalUrl) {
           window.location.href = data.approvalUrl
         } else {
-          alert('Fehler beim Erstellen der PayPal-Zahlung')
+          console.error('PayPal error:', data)
+          alert('Fehler beim Erstellen der PayPal-Zahlung: ' + (data.error || 'Unbekannter Fehler'))
         }
       }
     } catch (error) {
@@ -352,18 +358,25 @@ export default function PaymentPage() {
                         {/* Logos Row */}
                         <div className="flex items-center gap-3">
                           <Image
-                            src="/payment-logos/visa.svg"
+                            src="/payment-logos/visa-official.svg"
                             alt="Visa"
                             width={60}
                             height={20}
-                            className="h-5 w-auto"
+                            className="h-6 w-auto"
                           />
                           <Image
-                            src="/payment-logos/mastercard.svg"
+                            src="/payment-logos/mastercard-official.svg"
                             alt="Mastercard"
                             width={60}
                             height={40}
                             className="h-7 w-auto"
+                          />
+                          <Image
+                            src="/payment-logos/amex-official.svg"
+                            alt="American Express"
+                            width={60}
+                            height={40}
+                            className="h-6 w-auto"
                           />
                         </div>
                         {/* Text Row */}
@@ -396,11 +409,11 @@ export default function PaymentPage() {
                       <div className="flex flex-col gap-3 flex-1">
                         {/* PayPal Logo */}
                         <Image
-                          src="/payment-logos/paypal.svg"
+                          src="/payment-logos/paypal-official.svg"
                           alt="PayPal"
                           width={100}
                           height={26}
-                          className="h-6 w-auto"
+                          className="h-7 w-auto"
                         />
                         {/* Text */}
                         <div className="text-left">

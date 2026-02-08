@@ -245,6 +245,15 @@ export default function WorkshopServicesPage() {
 
       // WHEEL_CHANGE: Create ServicePackages from configuration
       if (selectedServiceType === 'WHEEL_CHANGE') {
+        console.log('🔧 [WHEEL_CHANGE] Generating ServicePackages...', {
+          hasBase: !!packages.base,
+          baseActive: packages.base?.active,
+          hasBalancing: !!packages.balancing,
+          balancingActive: packages.balancing?.active,
+          hasStorage: !!packages.storage,
+          storageActive: packages.storage?.active
+        })
+        
         // Only save if base service is active
         if (!packages.base?.active) {
           alert('Bitte aktivieren Sie den Basis-Service!')
@@ -290,6 +299,7 @@ export default function WorkshopServicesPage() {
         }
         
         requestBody.packages = wheelPackages
+        console.log('✅ [WHEEL_CHANGE] Generated packages:', wheelPackages)
         requestBody.allowsDirectBooking = packages.directBooking?.active || false
         
         // Keep legacy fields for backwards compatibility (but packages take priority)

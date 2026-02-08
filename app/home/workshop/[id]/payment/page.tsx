@@ -33,7 +33,7 @@ export default function PaymentPage() {
   const [workshop, setWorkshop] = useState<any>(null)
   const [vehicle, setVehicle] = useState<any>(null)
   const [servicePricing, setServicePricing] = useState<any>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe')
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | 'paypal-installments'>('stripe')
   const [processing, setProcessing] = useState(false)
 
   // Service labels
@@ -149,6 +149,34 @@ export default function PaymentPage() {
         } else {
           console.error('PayPal error:', data)
           alert('Fehler beim Erstellen der PayPal-Zahlung: ' + (data.error || 'Unbekannter Fehler'))
+        }
+      } else if (paymentMethod === 'paypal-installments') {
+        // Create PayPal Installments Order
+        const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workshopId,
+            vehicleId,
+            serviceType,
+            date,
+            time,
+            amount: servicePricing.price || servicePricing.basePrice,
+            description: `${serviceLabels[serviceType] || serviceType} bei ${workshop.name}`,
+            workshopName: workshop.name,
+            customerName: session?.user?.name,
+            customerEmail: session?.user?.email,
+            installments: true // Flag for PayPal Installments
+          })
+        })
+
+        const data = await response.json()
+        console.log('PayPal Installments response:', data)
+        if (data.orderId && data.approvalUrl) {
+          window.location.href = data.approvalUrl
+        } else {
+          console.error('PayPal Installments error:', data)
+          alert('Fehler beim Erstellen der PayPal Ratenzahlung: ' + (data.error || 'Unbekannter Fehler'))
         }
       }
     } catch (error) {
@@ -358,24 +386,24 @@ export default function PaymentPage() {
                         {/* Logos Row */}
                         <div className="flex items-center gap-3">
                           <Image
-                            src="/payment-logos/visa-brand.svg"
+                            src="/payment-logos/58482354cef1014c0b5e49c0.png"
                             alt="Visa"
-                            width={80}
-                            height={80}
+                            width={60}
+                            height={40}
                             className="h-6 w-auto"
                           />
                           <Image
-                            src="/payment-logos/mastercard-brand.svg"
+                            src="/payment-logos/58482363cef1014c0b5e49c1.png"
                             alt="Mastercard"
-                            width={80}
-                            height={53}
+                            width={60}
+                            height={40}
                             className="h-7 w-auto"
                           />
                           <Image
-                            src="/payment-logos/amex-brand.svg"
+                            src="/payment-logos/620670d4d7b91b0004122618.png"
                             alt="American Express"
-                            width={90}
-                            height={60}
+                            width={60}
+                            height={40}
                             className="h-6 w-auto"
                           />
                         </div>
@@ -409,11 +437,11 @@ export default function PaymentPage() {
                       <div className="flex flex-col gap-3 flex-1">
                         {/* PayPal Logo */}
                         <Image
-                          src="/payment-logos/paypal-brand.png"
+                          src="/payment-logos/de-pp-logo-200px.png"
                           alt="PayPal"
-                          width={150}
-                          height={38}
-                          className="h-7 w-auto"
+                          width={200}
+                          height={51}
+                          className="h-8 w-auto"
                         />
                         {/* Text */}
                         <div className="text-left">
@@ -422,6 +450,42 @@ export default function PaymentPage() {
                         </div>
                       </div>
                       {paymentMethod === 'paypal' && (
+                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* PayPal Ratenzahlung */}
+                  <button
+                    onClick={() => setPaymentMethod('paypal-installments')}
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all ${
+                      paymentMethod === 'paypal-installments'
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    } ${
+                      processing ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3 flex-1">
+                        {/* PayPal Ratenzahlung Logo */}
+                        <Image
+                          src="/payment-logos/PayPal_Ratenzahlung_h_farbe.png"
+                          alt="PayPal Ratenzahlung"
+                          width={200}
+                          height={60}
+                          className="h-8 w-auto"
+                        />
+                        {/* Text */}
+                        <div className="text-left">
+                          <p className="font-semibold text-gray-900">PayPal Ratenzahlung</p>
+                          <p className="text-xs text-gray-500">In bequemen Raten bezahlen</p>
+                        </div>
+                      </div>
+                      {paymentMethod === 'paypal-installments' && (
                         <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
                           <Check className="w-4 h-4 text-white" />
                         </div>
@@ -445,7 +509,11 @@ export default function PaymentPage() {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    {paymentMethod === 'stripe' ? 'Mit Kreditkarte bezahlen' : 'Mit PayPal bezahlen'}
+                    {paymentMethod === 'stripe' 
+                      ? 'Mit Kreditkarte bezahlen' 
+                      : paymentMethod === 'paypal-installments'
+                      ? 'Mit PayPal Ratenzahlung bezahlen'
+                      : 'Mit PayPal bezahlen'}
                   </>
                 )}
               </button>

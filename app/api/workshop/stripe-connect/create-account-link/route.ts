@@ -53,36 +53,18 @@ export async function POST(request: NextRequest) {
         },
       }
 
-      // Add company info if available
-      if (workshop.companyName) {
-        accountData.business_type = 'company'
-        accountData.company = {
-          name: workshop.companyName,
-        }
+      // DON'T set business_type - let Stripe ask during onboarding
+      // This way workshops can choose: Individual, Company, Non-profit, etc.
+      // Avoids forcing "company" which requires HRB-Nummer that most workshops don't have ready
 
-        // Add address if we have at least city and postal code
-        if (workshop.user.city && workshop.user.zipCode) {
-          accountData.company.address = {
-            city: workshop.user.city,
-            postal_code: workshop.user.zipCode,
-            country: 'DE',
-          }
-          
-          // Add street if available
-          if (workshop.user.street) {
-            accountData.company.address.line1 = workshop.user.street
-          }
-        }
+      // DON'T set business_type - let Stripe ask during onboarding
+      // This way workshops can choose: Individual, Company, Non-profit, etc.
+      // Avoids forcing "company" which requires HRB-Nummer that most workshops don't have ready
 
-        // Add tax ID if available (must be valid format)
-        if (workshop.taxId && workshop.taxId.trim() !== '') {
-          accountData.company.tax_id = workshop.taxId
-        }
-      }
-
-      // Add business profile
+      // Add business profile (optional, helps pre-fill some fields)
       accountData.business_profile = {
         name: workshop.companyName || workshop.user.name || 'Werkstatt',
+        mcc: '7538', // MCC Code for Automotive Service Shops (Fahrzeugdienstleistungen)
       }
       
       if (workshop.user.email) {
@@ -93,13 +75,16 @@ export async function POST(request: NextRequest) {
         accountData.business_profile.url = workshop.website
       }
 
+      // Add phone number if available
+      if (workshop.phone) {
+        accountData.business_profile.support_phone = workshop.phone
+      }
+
       console.log('[STRIPE CONNECT] Creating account with data:', JSON.stringify({
         type: accountData.type,
         country: accountData.country,
         email: accountData.email,
-        hasCompany: !!accountData.company,
-        hasAddress: !!(accountData.company?.address),
-        hasTaxId: !!(accountData.company?.tax_id),
+        businessProfileName: accountData.business_profile?.name,
       }))
 
       const account = await stripe.accounts.create(accountData)

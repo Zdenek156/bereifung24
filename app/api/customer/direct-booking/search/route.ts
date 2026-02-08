@@ -152,22 +152,13 @@ export async function POST(request: NextRequest) {
         
         // Special handling for WHEEL_CHANGE with additive pricing (checkboxes)
         if (serviceType === 'WHEEL_CHANGE') {
-          const hasBalancing = selectedMainPackages.includes('with_balancing')
-          const hasStorage = selectedMainPackages.includes('with_storage')
-          
-          console.log('[WHEEL_CHANGE DEBUG] Starting additive calculation:', {
-            workshopName: workshop.companyName,
-            selectedMainPackages,
-            hasBalancing,
-            hasStorage
-          })
-          
           // Find required packages
           const basicPackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'basic')
           const balancingPackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'with_balancing')
           const storagePackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'with_storage')
           
           console.log('[WHEEL_CHANGE DEBUG] Found packages:', {
+            workshopName: workshop.companyName,
             basicPackage: basicPackage ? { id: basicPackage.id, price: basicPackage.price, type: basicPackage.packageType } : null,
             balancingPackage: balancingPackage ? { id: balancingPackage.id, price: balancingPackage.price, type: balancingPackage.packageType } : null,
             storagePackage: storagePackage ? { id: storagePackage.id, price: storagePackage.price, type: storagePackage.packageType } : null
@@ -178,60 +169,79 @@ export async function POST(request: NextRequest) {
             return null // Workshop must have basic package
           }
           
-          // Check if workshop offers selected options
-          if (hasBalancing && !balancingPackage) {
-            console.log('[WHEEL_CHANGE DEBUG] User wants balancing but workshop does not offer it - filtering out')
-            return null // User wants balancing but workshop doesn't offer it
-          }
-          if (hasStorage && !storagePackage) {
-            console.log('[WHEEL_CHANGE DEBUG] User wants storage but workshop does not offer it - filtering out')
-            return null // User wants storage but workshop doesn't offer it
-          }
-          
-          // Calculate additive price: start with basic
-          let totalPrice = Number(basicPackage.price)
-          let totalDuration = basicPackage.durationMinutes
-          
-          console.log('[WHEEL_CHANGE DEBUG] Starting with basic:', { totalPrice, totalDuration })
-          
-          // Add balancing surcharge if selected
-          if (hasBalancing && balancingPackage) {
-            const basicPrice = Number(basicPackage.price)
-            const balancingFullPrice = Number(balancingPackage.price)
-            const balancingSurcharge = balancingFullPrice - basicPrice // Extract only the surcharge
-            totalPrice += balancingSurcharge
-            totalDuration = balancingPackage.durationMinutes // Use longer duration
-            console.log('[WHEEL_CHANGE DEBUG] Added balancing surcharge:', {
-              basicPrice,
-              balancingFullPrice,
-              balancingSurcharge,
-              newTotalPrice: totalPrice,
-              newTotalDuration: totalDuration
+          // If no filters selected, return only basic package with its original price
+          if (selectedMainPackages.length === 0) {
+            console.log('[WHEEL_CHANGE DEBUG] No filters selected - returning basic package only:', {
+              price: basicPackage.price,
+              duration: basicPackage.durationMinutes
             })
-          }
-          
-          // Add storage surcharge if selected
-          if (hasStorage && storagePackage) {
-            const basicPrice = Number(basicPackage.price)
-            const storageFullPrice = Number(storagePackage.price)
-            const storageSurcharge = storageFullPrice - basicPrice // Extract only the surcharge
-            totalPrice += storageSurcharge
-            console.log('[WHEEL_CHANGE DEBUG] Added storage surcharge:', {
-              basicPrice,
-              storageFullPrice,
-              storageSurcharge,
-              newTotalPrice: totalPrice
+            relevantPackages = [basicPackage]
+          } else {
+            // Calculate additive price based on selected filters
+            const hasBalancing = selectedMainPackages.includes('with_balancing')
+            const hasStorage = selectedMainPackages.includes('with_storage')
+            
+            console.log('[WHEEL_CHANGE DEBUG] Filters selected:', {
+              selectedMainPackages,
+              hasBalancing,
+              hasStorage
             })
+            
+            // Check if workshop offers selected options
+            if (hasBalancing && !balancingPackage) {
+              console.log('[WHEEL_CHANGE DEBUG] User wants balancing but workshop does not offer it - filtering out')
+              return null // User wants balancing but workshop doesn't offer it
+            }
+            if (hasStorage && !storagePackage) {
+              console.log('[WHEEL_CHANGE DEBUG] User wants storage but workshop does not offer it - filtering out')
+              return null // User wants storage but workshop doesn't offer it
+            }
+            
+            // Calculate additive price: start with basic
+            let totalPrice = Number(basicPackage.price)
+            let totalDuration = basicPackage.durationMinutes
+            
+            console.log('[WHEEL_CHANGE DEBUG] Starting with basic:', { totalPrice, totalDuration })
+            
+            // Add balancing surcharge if selected
+            if (hasBalancing && balancingPackage) {
+              const basicPrice = Number(basicPackage.price)
+              const balancingFullPrice = Number(balancingPackage.price)
+              const balancingSurcharge = balancingFullPrice - basicPrice // Extract only the surcharge
+              totalPrice += balancingSurcharge
+              totalDuration = balancingPackage.durationMinutes // Use longer duration
+              console.log('[WHEEL_CHANGE DEBUG] Added balancing surcharge:', {
+                basicPrice,
+                balancingFullPrice,
+                balancingSurcharge,
+                newTotalPrice: totalPrice,
+                newTotalDuration: totalDuration
+              })
+            }
+            
+            // Add storage surcharge if selected
+            if (hasStorage && storagePackage) {
+              const basicPrice = Number(basicPackage.price)
+              const storageFullPrice = Number(storagePackage.price)
+              const storageSurcharge = storageFullPrice - basicPrice // Extract only the surcharge
+              totalPrice += storageSurcharge
+              console.log('[WHEEL_CHANGE DEBUG] Added storage surcharge:', {
+                basicPrice,
+                storageFullPrice,
+                storageSurcharge,
+                newTotalPrice: totalPrice
+              })
+            }
+            
+            console.log('[WHEEL_CHANGE DEBUG] Final calculated price:', {
+              totalPrice,
+              totalDuration,
+              expectedPrice: hasBalancing && hasStorage ? 8.9 : (hasBalancing ? 3.9 : (hasStorage ? 6.9 : 1.9))
+            })
+            
+            // Use basic package as base but with calculated price
+            relevantPackages = [{ ...basicPackage, price: totalPrice, durationMinutes: totalDuration }]
           }
-          
-          console.log('[WHEEL_CHANGE DEBUG] Final calculated price:', {
-            totalPrice,
-            totalDuration,
-            expectedPrice: hasBalancing && hasStorage ? 8.9 : (hasBalancing ? 3.9 : (hasStorage ? 6.9 : 1.9))
-          })
-          
-          // Use basic package as base but with calculated price
-          relevantPackages = [{ ...basicPackage, price: totalPrice, durationMinutes: totalDuration }]
         } else {
           // Standard logic for other services
           if (selectedMainPackages.length > 0) {

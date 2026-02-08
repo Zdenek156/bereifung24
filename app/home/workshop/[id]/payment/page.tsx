@@ -337,22 +337,40 @@ export default function PaymentPage() {
                   {/* Stripe */}
                   <button
                     onClick={() => setPaymentMethod('stripe')}
-                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all ${
                       paymentMethod === 'stripe'
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-gray-200 hover:border-gray-300'
+                    } ${
+                      processing ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="w-5 h-5 text-gray-600" />
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src="/payment-logos/visa.svg"
+                            alt="Visa"
+                            width={50}
+                            height={20}
+                            className="h-6 w-auto"
+                          />
+                          <Image
+                            src="/payment-logos/mastercard.svg"
+                            alt="Mastercard"
+                            width={50}
+                            height={30}
+                            className="h-8 w-auto"
+                          />
+                        </div>
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">Kreditkarte</p>
                           <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
                         </div>
                       </div>
                       {paymentMethod === 'stripe' && (
-                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
                           <Check className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -362,22 +380,31 @@ export default function PaymentPage() {
                   {/* PayPal */}
                   <button
                     onClick={() => setPaymentMethod('paypal')}
-                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all ${
                       paymentMethod === 'paypal'
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-gray-200 hover:border-gray-300'
+                    } ${
+                      processing ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 font-bold text-blue-600">PP</div>
+                      <div className="flex items-center gap-4">
+                        <Image
+                          src="/payment-logos/paypal.svg"
+                          alt="PayPal"
+                          width={100}
+                          height={26}
+                          className="h-7 w-auto"
+                        />
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">PayPal</p>
                           <p className="text-xs text-gray-500">Schnell & sicher</p>
                         </div>
                       </div>
                       {paymentMethod === 'paypal' && (
-                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
                           <Check className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -390,17 +417,17 @@ export default function PaymentPage() {
               <button
                 onClick={handlePayment}
                 disabled={processing}
-                className="w-full py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold rounded-lg transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Verarbeite...
+                    Wird verarbeitet...
                   </>
                 ) : (
                   <>
-                    <Shield className="w-5 h-5" />
-                    Jetzt sicher bezahlen
+                    <CreditCard className="w-5 h-5" />
+                    {paymentMethod === 'stripe' ? 'Mit Kreditkarte bezahlen' : 'Mit PayPal bezahlen'}
                   </>
                 )}
               </button>

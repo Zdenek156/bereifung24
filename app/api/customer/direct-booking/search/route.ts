@@ -149,35 +149,50 @@ export async function POST(request: NextRequest) {
         
         // Filter packages by selected main package types
         let relevantPackages = service.servicePackages || []
-        if (selectedMainPackages.length > 0) {
-          relevantPackages = relevantPackages.filter(pkg => 
-            pkg.isActive && selectedMainPackages.includes(pkg.packageType)
-          )
+        
+        // Special handling for WHEEL_CHANGE with multiple options (checkboxes)
+        if (serviceType === 'WHEEL_CHANGE') {
+          const hasBalancing = selectedMainPackages.includes('with_balancing')
+          const hasStorage = selectedMainPackages.includes('with_storage')
           
-          // SPECIAL CASE: For WHEEL_CHANGE with 'with_balancing' filter
-          // Also accept workshops that have 'basic' package + legacy balancingPrice field
-          if (service.serviceType === 'WHEEL_CHANGE' && selectedMainPackages.includes('with_balancing')) {
-            const hasBasicPackage = service.servicePackages?.some(pkg => 
-              pkg.isActive && pkg.packageType === 'basic'
+          if (hasBalancing && hasStorage) {
+            // User wants BOTH → find combined package
+            const combinedPackage = relevantPackages.find(pkg => 
+              pkg.isActive && pkg.packageType === 'with_balancing_and_storage'
             )
-            const hasBalancingPrice = service.balancingPrice && service.balancingPrice > 0
-            
-            // If workshop has basic package + balancingPrice, treat it as having with_balancing
-            if (hasBasicPackage && hasBalancingPrice && relevantPackages.length === 0) {
-              // Use the basic package as base
-              relevantPackages = service.servicePackages?.filter(pkg => 
-                pkg.isActive && pkg.packageType === 'basic'
-              ) || []
+            if (combinedPackage) {
+              relevantPackages = [combinedPackage]
+            } else {
+              // Fallback: no combined package exists
+              return null
             }
-          }
-          
-          // CRITICAL: If user selected specific packages, workshop MUST have them
-          // Only show workshop if it has the selected package activated
-          if (relevantPackages.length === 0) {
-            return null // Workshop doesn't offer the selected package type (or it's not active)
+          } else if (selectedMainPackages.length > 0) {
+            // User wants only one option
+            relevantPackages = relevantPackages.filter(pkg => 
+              pkg.isActive && selectedMainPackages.includes(pkg.packageType)
+            )
+            if (relevantPackages.length === 0) {
+              return null
+            }
+          } else {
+            // No filter → show basic package
+            relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
           }
         } else {
-          relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
+          // Standard logic for other services
+          if (selectedMainPackages.length > 0) {
+            relevantPackages = relevantPackages.filter(pkg => 
+              pkg.isActive && selectedMainPackages.includes(pkg.packageType)
+            )
+            
+            // CRITICAL: If user selected specific packages, workshop MUST have them
+            // Only show workshop if it has the selected package activated
+            if (relevantPackages.length === 0) {
+              return null // Workshop doesn't offer the selected package type (or it's not active)
+            }
+          } else {
+            relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
+          }
         }
         
         if (relevantPackages.length > 0) {

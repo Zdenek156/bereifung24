@@ -214,6 +214,12 @@ export default function WorkshopServicesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('💾 [SAVE] Starting save process...', {
+      selectedServiceType,
+      packages,
+      editingService: editingService?.id
+    })
+    
     try {
       // Prepare packages data
       const packagesData = Object.entries(packages)
@@ -242,6 +248,12 @@ export default function WorkshopServicesPage() {
         basePrice: packagesData.length === 0 ? 0 : undefined,
         durationMinutes: packagesData.length === 0 ? 60 : undefined
       }
+
+      console.log('📦 [SAVE] Initial requestBody:', {
+        serviceType: requestBody.serviceType,
+        packagesCount: packagesData.length,
+        packagesData
+      })
 
       // WHEEL_CHANGE: Create ServicePackages from configuration
       if (selectedServiceType === 'WHEEL_CHANGE') {

@@ -150,34 +150,51 @@ export async function POST(request: NextRequest) {
         // Filter packages by selected main package types
         let relevantPackages = service.servicePackages || []
         
-        // Special handling for WHEEL_CHANGE with multiple options (checkboxes)
+        // Special handling for WHEEL_CHANGE with additive pricing (checkboxes)
         if (serviceType === 'WHEEL_CHANGE') {
           const hasBalancing = selectedMainPackages.includes('with_balancing')
           const hasStorage = selectedMainPackages.includes('with_storage')
           
-          if (hasBalancing && hasStorage) {
-            // User wants BOTH → find combined package
-            const combinedPackage = relevantPackages.find(pkg => 
-              pkg.isActive && pkg.packageType === 'with_balancing_and_storage'
-            )
-            if (combinedPackage) {
-              relevantPackages = [combinedPackage]
-            } else {
-              // Fallback: no combined package exists
-              return null
-            }
-          } else if (selectedMainPackages.length > 0) {
-            // User wants only one option
-            relevantPackages = relevantPackages.filter(pkg => 
-              pkg.isActive && selectedMainPackages.includes(pkg.packageType)
-            )
-            if (relevantPackages.length === 0) {
-              return null
-            }
-          } else {
-            // No filter → show basic package
-            relevantPackages = relevantPackages.filter(pkg => pkg.isActive)
+          // Find required packages
+          const basicPackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'basic')
+          const balancingPackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'with_balancing')
+          const storagePackage = relevantPackages.find(pkg => pkg.isActive && pkg.packageType === 'with_storage')
+          
+          if (!basicPackage) {
+            return null // Workshop must have basic package
           }
+          
+          // Check if workshop offers selected options
+          if (hasBalancing && !balancingPackage) {
+            return null // User wants balancing but workshop doesn't offer it
+          }
+          if (hasStorage && !storagePackage) {
+            return null // User wants storage but workshop doesn't offer it
+          }
+          
+          // Calculate additive price: start with basic
+          let totalPrice = Number(basicPackage.price)
+          let totalDuration = basicPackage.durationMinutes
+          
+          // Add balancing surcharge if selected
+          if (hasBalancing && balancingPackage) {
+            const basicPrice = Number(basicPackage.price)
+            const balancingFullPrice = Number(balancingPackage.price)
+            const balancingSurcharge = balancingFullPrice - basicPrice // Extract only the surcharge
+            totalPrice += balancingSurcharge
+            totalDuration = balancingPackage.durationMinutes // Use longer duration
+          }
+          
+          // Add storage surcharge if selected
+          if (hasStorage && storagePackage) {
+            const basicPrice = Number(basicPackage.price)
+            const storageFullPrice = Number(storagePackage.price)
+            const storageSurcharge = storageFullPrice - basicPrice // Extract only the surcharge
+            totalPrice += storageSurcharge
+          }
+          
+          // Use basic package as base but with calculated price
+          relevantPackages = [{ ...basicPackage, price: totalPrice, durationMinutes: totalDuration }]
         } else {
           // Standard logic for other services
           if (selectedMainPackages.length > 0) {

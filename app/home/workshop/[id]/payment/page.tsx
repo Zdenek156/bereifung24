@@ -347,23 +347,25 @@ export default function PaymentPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-3 flex-1">
+                        {/* Logos Row */}
+                        <div className="flex items-center gap-3">
                           <Image
                             src="/payment-logos/visa.svg"
                             alt="Visa"
-                            width={50}
+                            width={60}
                             height={20}
-                            className="h-6 w-auto"
+                            className="h-5 w-auto"
                           />
                           <Image
                             src="/payment-logos/mastercard.svg"
                             alt="Mastercard"
-                            width={50}
-                            height={30}
-                            className="h-8 w-auto"
+                            width={60}
+                            height={40}
+                            className="h-7 w-auto"
                           />
                         </div>
+                        {/* Text Row */}
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">Kreditkarte</p>
                           <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
@@ -390,14 +392,16 @@ export default function PaymentPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex flex-col gap-3 flex-1">
+                        {/* PayPal Logo */}
                         <Image
                           src="/payment-logos/paypal.svg"
                           alt="PayPal"
                           width={100}
                           height={26}
-                          className="h-7 w-auto"
+                          className="h-6 w-auto"
                         />
+                        {/* Text */}
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">PayPal</p>
                           <p className="text-xs text-gray-500">Schnell & sicher</p>

@@ -181,7 +181,14 @@ export async function POST(request: NextRequest) {
     console.log('[PAYPAL CREATE ORDER] ✅ Order created:', orderData.id)
 
     // Extract approval URL from links
-    const approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href
+    // For normal PayPal: rel='approve'
+    // For PayPal Installments (payment_source): rel='payer-action'
+    let approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href
+    
+    if (!approvalUrl) {
+      // Try payer-action for installments
+      approvalUrl = orderData.links?.find((link: any) => link.rel === 'payer-action')?.href
+    }
     
     if (!approvalUrl) {
       console.error('[PAYPAL CREATE ORDER] No approval URL found in response:', orderData)

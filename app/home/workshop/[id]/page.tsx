@@ -1052,6 +1052,8 @@ export default function WorkshopDetailPage() {
         onClose={() => setShowServicesModal(false)}
         workshopId={workshopId}
         onServicesSelected={handleAdditionalServicesSelected}
+        selectedServiceType={serviceType}
+        additionalSelectedServices={additionalServices.map(s => s.serviceId)}
       />
 
       {/* Footer */}

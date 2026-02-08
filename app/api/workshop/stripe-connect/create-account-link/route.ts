@@ -42,25 +42,71 @@ export async function POST(request: NextRequest) {
     if (!accountId) {
       console.log('[STRIPE CONNECT] Creating new Express account for workshop:', workshop.id)
       
-      // Build account creation data - MINIMAL to avoid forcing business type
+      // Build account creation data for Individual (Privatperson/Einzelunternehmen)
       const accountData: Stripe.AccountCreateParams = {
         type: 'express',
         country: 'DE',
         email: workshop.user.email,
+        business_type: 'individual', // Force Individual (not Company) to avoid HRB requirement
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
       }
 
-      // DON'T set business_type, business_profile, or company data
-      // Let Stripe collect everything during onboarding flow
-      // This way workshops can choose Individual vs Company themselves
+      // Add individual data (person details)
+      accountData.individual = {
+        email: workshop.user.email,
+      }
 
-      console.log('[STRIPE CONNECT] Creating account with MINIMAL data:', JSON.stringify({
+      // Split full name into first and last name if available
+      if (workshop.user.name) {
+        const nameParts = workshop.user.name.trim().split(' ')
+        if (nameParts.length >= 2) {
+          accountData.individual.first_name = nameParts[0]
+          accountData.individual.last_name = nameParts.slice(1).join(' ')
+        } else {
+          accountData.individual.first_name = nameParts[0]
+        }
+      }
+
+      // Add business profile with address and phone
+      accountData.business_profile = {
+        name: workshop.companyName || workshop.user.name || 'Werkstatt',
+        mcc: '7538', // Automotive Service Shops
+      }
+
+      // Add phone if available
+      if (workshop.phone) {
+        accountData.business_profile.support_phone = workshop.phone
+        accountData.individual.phone = workshop.phone
+      }
+
+      // Add address if available
+      if (workshop.address && workshop.city && workshop.zipCode) {
+        accountData.individual.address = {
+          line1: workshop.address,
+          city: workshop.city,
+          postal_code: workshop.zipCode,
+          country: 'DE',
+        }
+
+        accountData.business_profile.support_address = {
+          line1: workshop.address,
+          city: workshop.city,
+          postal_code: workshop.zipCode,
+          country: 'DE',
+        }
+      }
+
+      console.log('[STRIPE CONNECT] Creating INDIVIDUAL account with data:', JSON.stringify({
         type: accountData.type,
+        business_type: accountData.business_type,
         country: accountData.country,
         email: accountData.email,
+        individualName: accountData.individual.first_name + ' ' + (accountData.individual.last_name || ''),
+        businessName: accountData.business_profile?.name,
+        phone: workshop.phone,
       }))
 
       const account = await stripe.accounts.create(accountData)

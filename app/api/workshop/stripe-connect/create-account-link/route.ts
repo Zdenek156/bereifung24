@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (!accountId) {
       console.log('[STRIPE CONNECT] Creating new Express account for workshop:', workshop.id)
       
-      // Build account creation data with only valid fields
+      // Build account creation data - MINIMAL to avoid forcing business type
       const accountData: Stripe.AccountCreateParams = {
         type: 'express',
         country: 'DE',
@@ -53,38 +53,14 @@ export async function POST(request: NextRequest) {
         },
       }
 
-      // DON'T set business_type - let Stripe ask during onboarding
-      // This way workshops can choose: Individual, Company, Non-profit, etc.
-      // Avoids forcing "company" which requires HRB-Nummer that most workshops don't have ready
+      // DON'T set business_type, business_profile, or company data
+      // Let Stripe collect everything during onboarding flow
+      // This way workshops can choose Individual vs Company themselves
 
-      // DON'T set business_type - let Stripe ask during onboarding
-      // This way workshops can choose: Individual, Company, Non-profit, etc.
-      // Avoids forcing "company" which requires HRB-Nummer that most workshops don't have ready
-
-      // Add business profile (optional, helps pre-fill some fields)
-      accountData.business_profile = {
-        name: workshop.companyName || workshop.user.name || 'Werkstatt',
-        mcc: '7538', // MCC Code for Automotive Service Shops (Fahrzeugdienstleistungen)
-      }
-      
-      if (workshop.user.email) {
-        accountData.business_profile.support_email = workshop.user.email
-      }
-
-      if (workshop.website && workshop.website.startsWith('http')) {
-        accountData.business_profile.url = workshop.website
-      }
-
-      // Add phone number if available
-      if (workshop.phone) {
-        accountData.business_profile.support_phone = workshop.phone
-      }
-
-      console.log('[STRIPE CONNECT] Creating account with data:', JSON.stringify({
+      console.log('[STRIPE CONNECT] Creating account with MINIMAL data:', JSON.stringify({
         type: accountData.type,
         country: accountData.country,
         email: accountData.email,
-        businessProfileName: accountData.business_profile?.name,
       }))
 
       const account = await stripe.accounts.create(accountData)

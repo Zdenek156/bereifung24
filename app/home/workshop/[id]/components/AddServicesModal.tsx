@@ -34,6 +34,8 @@ interface AddServicesModalProps {
   onClose: () => void
   workshopId: string
   onServicesSelected: (services: SelectedService[]) => void
+  selectedServiceType?: string // The main service from URL (e.g. 'WHEEL_CHANGE')
+  additionalSelectedServices?: string[] // Array of service IDs already selected
 }
 
 const SERVICE_TYPE_LABELS: Record<string, string> = {
@@ -50,6 +52,8 @@ export default function AddServicesModal({
   onClose,
   workshopId,
   onServicesSelected,
+  selectedServiceType,
+  additionalSelectedServices = [],
 }: AddServicesModalProps) {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +71,20 @@ export default function AddServicesModal({
       const response = await fetch(`/api/workshop/${workshopId}/services/all`)
       if (response.ok) {
         const data = await response.json()
-        setServices(data.services || [])
+        // Filter out already selected services
+        const allServices = data.services || []
+        const filteredServices = allServices.filter((service: Service) => {
+          // Exclude main service from URL
+          if (selectedServiceType && service.type === selectedServiceType) {
+            return false
+          }
+          // Exclude additional selected services
+          if (additionalSelectedServices.includes(service.id)) {
+            return false
+          }
+          return true
+        })
+        setServices(filteredServices)
       }
     } catch (error) {
       console.error('Error fetching services:', error)

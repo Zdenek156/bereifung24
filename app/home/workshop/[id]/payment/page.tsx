@@ -436,13 +436,15 @@ export default function PaymentPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-3 flex-1">
                         {/* PayPal Logo */}
-                        <Image
-                          src="/payment-logos/de-pp-logo-200px.png"
-                          alt="PayPal"
-                          width={200}
-                          height={51}
-                          className="w-auto max-h-8"
-                        />
+                        <div className="h-8 flex items-center">
+                          <Image
+                            src="/payment-logos/de-pp-logo-200px.png"
+                            alt="PayPal"
+                            width={200}
+                            height={51}
+                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
+                          />
+                        </div>
                         {/* Text */}
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">PayPal</p>
@@ -472,12 +474,15 @@ export default function PaymentPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-3 flex-1">
                         {/* PayPal Ratenzahlung Logo */}
-                        <Image
-                          src="/payment-logos/PayPal_Ratenzahlung_h_farbe.png"
-                          alt="PayPal Ratenzahlung"
-                          width={200}
-                          height={60}
-                          className="w-auto max-h-8"
+                        <div className="h-8 flex items-center">
+                          <Image
+                            src="/payment-logos/PayPal_Ratenzahlung_h_farbe.png"
+                            alt="PayPal Ratenzahlung"
+                            width={200}
+                            height={60}
+                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
+                          />
+                        </div>
                         />
                         {/* Text */}
                         <div className="text-left">

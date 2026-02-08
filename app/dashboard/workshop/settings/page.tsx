@@ -1345,7 +1345,8 @@ export default function WorkshopSettings() {
                         </div>
                       </div>
                       
-                      {!paymentMethods.stripeAccountId ? (
+                      <div className="space-y-3">
+                        {/* Option 1: Automatisches Onboarding */}
                         <button
                           type="button"
                           onClick={async () => {
@@ -1375,21 +1376,46 @@ export default function WorkshopSettings() {
                           </svg>
                           {saving ? 'Lädt...' : 'Jetzt mit Stripe verbinden'}
                         </button>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-green-900 dark:text-green-300">
-                                Stripe Konto verbunden
-                              </p>
-                              <p className="text-xs text-green-700 dark:text-green-400 font-mono">
-                                {paymentMethods.stripeAccountId}
-                              </p>
-                            </div>
+
+                        {/* Option 2: Manuelle Eingabe */}
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                            Oder: Bereits einen Stripe Account? Account ID manuell eingeben:
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={paymentMethods.stripeAccountId || ''}
+                              onChange={(e) => setPaymentMethods({
+                                ...paymentMethods,
+                                stripeAccountId: e.target.value
+                              })}
+                              placeholder="acct_..."
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                            {paymentMethods.stripeAccountId && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm('Stripe Account ID wirklich löschen?')) {
+                                    setPaymentMethods({
+                                      ...paymentMethods,
+                                      stripeAccountId: ''
+                                    })
+                                  }
+                                }}
+                                className="px-3 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg transition-colors"
+                                title="Account ID löschen"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )}
                           </div>
+                        </div>
+                        
+                        {paymentMethods.stripeAccountId && (
                           <button
                             type="button"
                             onClick={async () => {
@@ -1413,8 +1439,8 @@ export default function WorkshopSettings() {
                             </svg>
                             Einstellungen verwalten
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

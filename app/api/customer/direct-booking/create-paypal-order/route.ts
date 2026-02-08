@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { amount, description, customerName, customerEmail, workshopName, date, time, street, city, zipCode, country, installments } = body
+    const { amount, description, customerName, customerEmail, workshopId, workshopName, date, time, street, city, zipCode, country, installments } = body
     console.log('[PAYPAL CREATE ORDER] Request body:', { 
       amount, 
       hasDescription: !!description,
       customerName,
       customerEmail,
+      workshopId,
       workshopName,
       date,
       time,
@@ -81,13 +82,29 @@ export async function POST(request: NextRequest) {
       installments
     })
 
-    if (!amount) {
-      console.log('[PAYPAL CREATE ORDER] Missing amount')
+    if (!amount || !workshopId) {
+      console.log('[PAYPAL CREATE ORDER] Missing amount or workshopId')
       return NextResponse.json(
         { error: 'Fehlende Parameter' },
         { status: 400 }
       )
     }
+
+    // Get workshop's PayPal email
+    const { prisma } = await import('@/lib/prisma')
+    const workshop = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+      select: { paypalEmail: true, companyName: true }
+    })
+
+    if (!workshop?.paypalEmail) {
+      console.error('[PAYPAL] Workshop PayPal not configured:', workshopId)
+      return NextResponse.json({ 
+        error: 'Diese Werkstatt akzeptiert keine PayPal-Zahlungen. Bitte wählen Sie eine andere Zahlungsmethode.' 
+      }, { status: 400 })
+    }
+
+    console.log('[PAYPAL CREATE ORDER] Payment goes directly to workshop:', workshop.paypalEmail)
 
     console.log('[PAYPAL CREATE ORDER] Generating access token...')
     const accessToken = await generatePayPalAccessToken()
@@ -108,6 +125,10 @@ export async function POST(request: NextRequest) {
           value: amount.toFixed(2)
         },
         description: paymentDescription,
+        // PayPal Direct Payment: Money goes to workshop
+        payee: {
+          email_address: workshop.paypalEmail // Payment directly to workshop
+        },
         custom_id: `booking_${session.user.id}_${Date.now()}`,
         invoice_id: `INV-${Date.now()}`
       }]

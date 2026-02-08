@@ -22,7 +22,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
     }
 
+    // Get workshop's Stripe Account ID
+    const { prisma } = await import('@/lib/prisma')
+    const workshop = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+      select: { stripeAccountId: true, stripeEnabled: true, companyName: true }
+    })
+
+    if (!workshop?.stripeEnabled || !workshop?.stripeAccountId) {
+      console.error('[STRIPE] Workshop Stripe not configured:', workshopId)
+      return NextResponse.json({ 
+        error: 'Diese Werkstatt akzeptiert keine Stripe-Zahlungen. Bitte wählen Sie eine andere Zahlungsmethode.' 
+      }, { status: 400 })
+    }
+
     console.log('[STRIPE] Creating session with mode:', stripeMode)
+    console.log('[STRIPE] Payment goes directly to workshop:', workshop.stripeAccountId)
 
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2024-12-18.acacia',
@@ -35,15 +50,16 @@ export async function POST(request: NextRequest) {
       STORAGE: 'Einlagerung',
     }
 
-    // Create Stripe Checkout Session
+    // Create Stripe Checkout Session with Direct Charges to Workshop
+    // Payment goes 100% to workshop (no platform fee)
     const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'sepa_debit', 'giropay', 'sofort'],
       line_items: [
         {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: serviceName || serviceLabels[serviceType] || serviceType,
+              name: `${serviceName || serviceLabels[serviceType] || serviceType} bei ${workshop.companyName}`,
               description: vehicleInfo || 'Fahrzeug',
             },
             unit_amount: Math.round(totalPrice * 100), // Convert to cents
@@ -55,8 +71,18 @@ export async function POST(request: NextRequest) {
       customer_email: session.user.email || undefined,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,
+      
+      // Stripe Connect: Payment goes directly to workshop's account
+      payment_intent_data: {
+        on_behalf_of: workshop.stripeAccountId, // Workshop receives 100% of payment
+        transfer_data: {
+          destination: workshop.stripeAccountId, // Direct to workshop
+        },
+      },
+      
       metadata: {
         workshopId,
+        workshopName: workshop.companyName,
         customerId: session.user.id,
         date,
         time,

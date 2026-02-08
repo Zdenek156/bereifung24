@@ -159,9 +159,22 @@ export async function POST(request: NextRequest) {
 
     console.log('[PAYPAL CREATE ORDER] ✅ Order created:', orderData.id)
 
-    // SDK v6 requires { id } format
+    // Extract approval URL from links
+    const approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href
+    
+    if (!approvalUrl) {
+      console.error('[PAYPAL CREATE ORDER] No approval URL found in response:', orderData)
+      return NextResponse.json(
+        { error: 'PayPal approval URL nicht gefunden' },
+        { status: 500 }
+      )
+    }
+
+    console.log('[PAYPAL CREATE ORDER] Approval URL:', approvalUrl)
+
     return NextResponse.json({ 
-      id: orderData.id
+      orderId: orderData.id,
+      approvalUrl: approvalUrl
     })
 
   } catch (error) {

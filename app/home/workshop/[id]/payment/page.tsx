@@ -358,24 +358,24 @@ export default function PaymentPage() {
                         {/* Logos Row */}
                         <div className="flex items-center gap-3">
                           <Image
-                            src="/payment-logos/visa-official.svg"
+                            src="/payment-logos/visa-brand.svg"
                             alt="Visa"
-                            width={60}
-                            height={20}
+                            width={80}
+                            height={80}
                             className="h-6 w-auto"
                           />
                           <Image
-                            src="/payment-logos/mastercard-official.svg"
+                            src="/payment-logos/mastercard-brand.svg"
                             alt="Mastercard"
-                            width={60}
-                            height={40}
+                            width={80}
+                            height={53}
                             className="h-7 w-auto"
                           />
                           <Image
-                            src="/payment-logos/amex-official.svg"
+                            src="/payment-logos/amex-brand.svg"
                             alt="American Express"
-                            width={60}
-                            height={40}
+                            width={90}
+                            height={60}
                             className="h-6 w-auto"
                           />
                         </div>
@@ -409,10 +409,10 @@ export default function PaymentPage() {
                       <div className="flex flex-col gap-3 flex-1">
                         {/* PayPal Logo */}
                         <Image
-                          src="/payment-logos/paypal-official.svg"
+                          src="/payment-logos/paypal-brand.png"
                           alt="PayPal"
-                          width={100}
-                          height={26}
+                          width={150}
+                          height={38}
                           className="h-7 w-auto"
                         />
                         {/* Text */}

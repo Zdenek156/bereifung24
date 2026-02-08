@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     if (!accountId) {
       console.log('[STRIPE CONNECT] Creating new Express account for workshop:', workshop.id)
       
-      const account = await stripe.accounts.create({
+      // Build account creation data with only valid fields
+      const accountData: Stripe.AccountCreateParams = {
         type: 'express',
         country: 'DE',
         email: workshop.user.email,
@@ -50,23 +51,58 @@ export async function POST(request: NextRequest) {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        business_type: 'company',
-        company: {
+      }
+
+      // Add company info if available
+      if (workshop.companyName) {
+        accountData.business_type = 'company'
+        accountData.company = {
           name: workshop.companyName,
-          tax_id: workshop.taxId || undefined,
-          address: {
-            line1: workshop.user.street || '',
-            postal_code: workshop.user.zipCode || '',
-            city: workshop.user.city || '',
+        }
+
+        // Add address if we have at least city and postal code
+        if (workshop.user.city && workshop.user.zipCode) {
+          accountData.company.address = {
+            city: workshop.user.city,
+            postal_code: workshop.user.zipCode,
             country: 'DE',
-          },
-        },
-        business_profile: {
-          name: workshop.companyName,
-          url: workshop.website || undefined,
-          support_email: workshop.user.email,
-        },
-      })
+          }
+          
+          // Add street if available
+          if (workshop.user.street) {
+            accountData.company.address.line1 = workshop.user.street
+          }
+        }
+
+        // Add tax ID if available (must be valid format)
+        if (workshop.taxId && workshop.taxId.trim() !== '') {
+          accountData.company.tax_id = workshop.taxId
+        }
+      }
+
+      // Add business profile
+      accountData.business_profile = {
+        name: workshop.companyName || workshop.user.name || 'Werkstatt',
+      }
+      
+      if (workshop.user.email) {
+        accountData.business_profile.support_email = workshop.user.email
+      }
+
+      if (workshop.website && workshop.website.startsWith('http')) {
+        accountData.business_profile.url = workshop.website
+      }
+
+      console.log('[STRIPE CONNECT] Creating account with data:', JSON.stringify({
+        type: accountData.type,
+        country: accountData.country,
+        email: accountData.email,
+        hasCompany: !!accountData.company,
+        hasAddress: !!(accountData.company?.address),
+        hasTaxId: !!(accountData.company?.tax_id),
+      }))
+
+      const account = await stripe.accounts.create(accountData)
 
       accountId = account.id
       console.log('[STRIPE CONNECT] Account created:', accountId)

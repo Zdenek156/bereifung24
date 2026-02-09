@@ -136,6 +136,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Special configuration for different payment methods with Stripe Connect
+    // Note: Klarna and customer_balance (bank transfer) don't support on_behalf_of
+    // They only work with transfer_data (direct charges)
     if (enabledPaymentMethods.includes('customer_balance')) {
       // Bank Transfer requires customer_balance configuration
       sessionConfig.payment_method_options = {
@@ -152,8 +154,15 @@ export async function POST(request: NextRequest) {
           destination: workshop.stripeAccountId,
         },
       }
+    } else if (enabledPaymentMethods.includes('klarna')) {
+      // Klarna only works with transfer_data (no on_behalf_of)
+      sessionConfig.payment_intent_data = {
+        transfer_data: {
+          destination: workshop.stripeAccountId,
+        },
+      }
     } else {
-      // For card and other payment methods, use both on_behalf_of and transfer_data
+      // For card payment methods, use both on_behalf_of and transfer_data
       sessionConfig.payment_intent_data = {
         on_behalf_of: workshop.stripeAccountId,
         transfer_data: {

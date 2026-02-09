@@ -18,6 +18,7 @@ export default function PaymentSuccessPage() {
   const date = searchParams?.get('date') || ''
   const time = searchParams?.get('time') || ''
   const vehicleId = searchParams?.get('vehicleId') || ''
+  const reservationId = searchParams?.get('reservationId') || '' // NEW: Reservation ID from payment flow
 
   const [loading, setLoading] = useState(true)
   const [bookingCreated, setBookingCreated] = useState(false)
@@ -61,43 +62,86 @@ export default function PaymentSuccessPage() {
           setVehicle(foundVehicle)
         }
 
-        // Verify payment if session_id is present (Stripe)
-        if (sessionId) {
-          const verifyRes = await fetch('/api/customer/direct-booking/verify-stripe-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId })
-          })
+        // Verify reservation before creating booking (required for all payments now)
+        if (!reservationId) {
+          throw new Error('Keine Reservierungs-ID gefunden. Bitte kontaktieren Sie den Support.')
+        }
 
-          if (!verifyRes.ok) {
-            throw new Error('Zahlung konnte nicht verifiziert werden')
+        console.log('[SUCCESS] Verifying reservation:', reservationId)
+        
+        // Fetch and verify reservation
+        const reservationRes = await fetch(`/api/customer/direct-booking/reservation/${reservationId}`)
+        
+        if (!reservationRes.ok) {
+          const reservationError = await reservationRes.json()
+          if (reservationRes.status === 410) {
+            // 410 Gone = Reservation expired
+            throw new Error('Ihre Reservierung ist abgelaufen (über 10 Minuten). Bitte buchen Sie den Termin erneut.')
+          } else if (reservationRes.status === 404) {
+            throw new Error('Reservierung nicht gefunden. Der Termin wurde möglicherweise bereits gebucht.')
+          } else {
+            throw new Error(reservationError.error || 'Fehler beim Überprüfen der Reservierung')
           }
         }
 
-        // Create booking
-        const bookingRes = await fetch('/api/bookings', {
+        const reservationData = await reservationRes.json()
+        const reservation = reservationData.reservation
+
+        console.log('[SUCCESS] Reservation verified:', reservation)
+
+        // Validate reservation status
+        if (reservation.status !== 'RESERVED') {
+          throw new Error('Diese Reservierung wurde bereits verwendet oder storniert.')
+        }
+
+        // Use reservation data for booking (authoritative source)
+        const bookingData = {
+          workshopId: reservation.workshopId,
+          vehicleId: reservation.vehicleId,
+          serviceType: reservation.serviceType,
+          date: new Date(reservation.date).toISOString().split('T')[0],
+          time: reservation.time,
+          paymentStatus: 'PAID',
+          paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL',
+          sendEmails: true,
+          createCalendarEvent: true
+        }
+
+        // Create booking with all post-payment actions (new direct booking API)
+        const bookingRes = await fetch('/api/bookings/direct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workshopId,
-            vehicleId,
-            serviceType,
-            date,
-            time,
-            status: 'CONFIRMED',
-            paymentStatus: 'PAID',
-            paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL'
-          })
+          body: JSON.stringify(bookingData)
         })
 
         if (!bookingRes.ok) {
           const errorData = await bookingRes.json()
+          
+          // Special handling for slot conflict (409)
+          if (bookingRes.status === 409) {
+            throw new Error('Dieser Termin wurde bereits von einem anderen Kunden gebucht. Bitte wählen Sie einen anderen Termin.')
+          }
+          
           throw new Error(errorData.error || 'Fehler beim Erstellen der Buchung')
+        }
+
+        const finalBookingData = await bookingRes.json()
+        console.log('[SUCCESS] Booking created with calendar event and emails sent:', finalBookingData)
+
+        // Clean up reservation after successful booking
+        if (reservationId) {
+          console.log('[SUCCESS] Cleaning up reservation:', reservationId)
+          await fetch(`/api/customer/direct-booking/reservation/${reservationId}`, {
+            method: 'DELETE'
+          }).catch(err => {
+            // Non-critical error, just log it
+            console.warn('[SUCCESS] Failed to delete reservation:', err)
+          })
         }
 
         setBookingCreated(true)
       } catch (err: any) {
-        console.error('Error creating booking:', err)
+        console.error('[SUCCESS] Error creating booking:', err)
         setError(err.message || 'Ein Fehler ist aufgetreten')
       } finally {
         setLoading(false)
@@ -105,7 +149,7 @@ export default function PaymentSuccessPage() {
     }
 
     verifyAndCreateBooking()
-  }, [session, status, sessionId, workshopId, vehicleId, serviceType, date, time, router])
+  }, [session, status, sessionId, workshopId, vehicleId, serviceType, date, time, router, reservationId])
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''

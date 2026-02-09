@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       customerEmail,
       workshopId,
       workshopName,
-      reservationId
+      reservationId,
       date,
       time,
       street,

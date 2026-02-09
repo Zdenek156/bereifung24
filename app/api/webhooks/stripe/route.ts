@@ -15,6 +15,7 @@ import Stripe from 'stripe'
  * - payment_intent.succeeded
  * - payment_intent.payment_failed
  * - charge.refunded
+ * - account.updated (for Stripe Connect)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -66,6 +67,10 @@ export async function POST(request: NextRequest) {
 
       case 'charge.refunded':
         await handleChargeRefunded(event.data.object as Stripe.Charge)
+        break
+
+      case 'account.updated':
+        await handleAccountUpdated(event.data.object as Stripe.Account)
         break
 
       default:
@@ -236,5 +241,66 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     console.log('✅ Booking refunded')
   } catch (error) {
     console.error('❌ Error handling refund:', error)
+  }
+}
+
+/**
+ * Handle Stripe Connect account updates
+ * Automatically activates workshop when account is verified
+ */
+async function handleAccountUpdated(account: Stripe.Account) {
+  try {
+    console.log('🔄 Stripe Connect account updated:', account.id)
+
+    // Check if account is fully verified and ready to accept payments
+    const isVerified = account.charges_enabled && account.payouts_enabled
+    const requirementsCurrentlyDue = account.requirements?.currently_due || []
+    const hasRequirements = requirementsCurrentlyDue.length > 0
+
+    console.log('  charges_enabled:', account.charges_enabled)
+    console.log('  payouts_enabled:', account.payouts_enabled)
+    console.log('  requirements:', requirementsCurrentlyDue)
+
+    // Find workshop by Stripe Account ID
+    const workshop = await prisma.workshop.findFirst({
+      where: { stripeAccountId: account.id }
+    })
+
+    if (!workshop) {
+      console.log('⚠️  No workshop found for Stripe account:', account.id)
+      return
+    }
+
+    // Update workshop status based on account verification
+    if (isVerified && !hasRequirements) {
+      // Account is fully verified - enable Stripe payments
+      if (!workshop.stripeEnabled) {
+        await prisma.workshop.update({
+          where: { id: workshop.id },
+          data: { stripeEnabled: true }
+        })
+        console.log('✅ Stripe activated for workshop:', workshop.companyName)
+        console.log('   Klarna, Card, and Bank Transfer payments are now available!')
+      } else {
+        console.log('ℹ️  Stripe already enabled for workshop:', workshop.companyName)
+      }
+    } else {
+      // Account not yet verified or has pending requirements
+      if (workshop.stripeEnabled) {
+        await prisma.workshop.update({
+          where: { id: workshop.id },
+          data: { stripeEnabled: false }
+        })
+        console.log('⚠️  Stripe disabled for workshop:', workshop.companyName)
+        console.log('   Reason: Account not fully verified or has pending requirements')
+      } else {
+        console.log('ℹ️  Workshop still pending verification:', workshop.companyName)
+        if (hasRequirements) {
+          console.log('   Pending requirements:', requirementsCurrentlyDue.join(', '))
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error handling account update:', error)
   }
 }

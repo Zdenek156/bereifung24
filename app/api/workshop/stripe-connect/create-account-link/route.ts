@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
       accountData.business_profile = {
         name: workshop.companyName || workshop.user.name || 'Werkstatt',
         mcc: '7538', // Automotive Service Shops
+        url: workshop.website && workshop.website.startsWith('http') 
+          ? workshop.website 
+          : 'https://bereifung24.de', // Fallback so customer knows it's about bereifung24.de
       }
 
       // Add phone if available
@@ -124,12 +127,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create Account Link for onboarding
+    // Create Account Link for onboarding with collection_options to specify what to collect
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?stripe_refresh=true`,
       return_url: `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?stripe_onboarding=success`,
       type: 'account_onboarding',
+      collection_options: {
+        fields: 'eventually_due', // Only collect fields that are required
+        future_requirements: 'include', // Include future requirements
+      },
     })
 
     console.log('[STRIPE CONNECT] Account link created for:', accountId)

@@ -117,6 +117,60 @@ export async function POST(request: NextRequest) {
       accountId = account.id
       console.log('[STRIPE CONNECT] Account created:', accountId)
 
+      // Create Person object to pre-fill name and address (Stripe docs requirement)
+      // "After creating the Account, create a Person to represent the person responsible 
+      // for opening the account, with relationship.representative set to true"
+      const personData: Stripe.PersonCreateParams = {
+        relationship: {
+          representative: true,
+        },
+      }
+
+      // Add first/last name if available
+      if (workshop.user.name) {
+        const nameParts = workshop.user.name.trim().split(' ')
+        if (nameParts.length >= 2) {
+          personData.first_name = nameParts[0]
+          personData.last_name = nameParts.slice(1).join(' ')
+        } else {
+          personData.first_name = nameParts[0]
+        }
+      }
+
+      // Add address if available
+      if (workshop.address && workshop.city && workshop.zipCode) {
+        personData.address = {
+          line1: workshop.address,
+          city: workshop.city,
+          postal_code: workshop.zipCode,
+          country: 'DE',
+        }
+      }
+
+      // Add phone if available
+      if (workshop.phone) {
+        personData.phone = workshop.phone
+      }
+
+      // Add email
+      personData.email = workshop.user.email
+
+      console.log('[STRIPE CONNECT] Creating Person for account:', {
+        accountId,
+        firstName: personData.first_name,
+        lastName: personData.last_name,
+        hasAddress: !!personData.address,
+        hasPhone: !!personData.phone,
+      })
+
+      try {
+        await stripe.accounts.createPerson(accountId, personData)
+        console.log('[STRIPE CONNECT] Person created successfully')
+      } catch (personError) {
+        console.error('[STRIPE CONNECT] Error creating person:', personError)
+        // Don't fail the whole process if person creation fails
+      }
+
       // Save account ID to database
       await prisma.workshop.update({
         where: { id: workshop.id },

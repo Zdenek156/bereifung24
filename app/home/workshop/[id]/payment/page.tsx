@@ -98,32 +98,7 @@ export default function PaymentPage() {
 
     setProcessing(true)
     try {
-      if (method === 'bank-transfer') {
-        // Banküberweisung (Vorkasse) - Create booking with PENDING status
-        const response = await fetch('/api/customer/direct-booking/create-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workshopId,
-            vehicleId,
-            serviceType,
-            date,
-            time,
-            amount: servicePricing.price || servicePricing.basePrice,
-            paymentMethod: 'BANK_TRANSFER',
-            paymentStatus: 'PENDING'
-          })
-        })
-
-        const data = await response.json()
-        if (data.success) {
-          // Redirect to success page with bank transfer instructions
-          router.push(`/home/workshop/${workshopId}/payment/bank-transfer-info?bookingId=${data.bookingId}`)
-        } else {
-          console.error('Booking error:', data)
-          alert('Fehler beim Erstellen der Buchung: ' + (data.error || 'Unbekannter Fehler'))
-        }
-      } else if (method === 'paypal' || method === 'paypal-installments') {
+      if (method === 'paypal' || method === 'paypal-installments') {
         // Create PayPal Order
         const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
           method: 'POST',
@@ -152,6 +127,7 @@ export default function PaymentPage() {
         }
       } else {
         // Stripe - Create Checkout Session with specific payment method
+        // For bank-transfer, use 'customer_balance' payment method
         const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -164,7 +140,7 @@ export default function PaymentPage() {
             totalPrice: servicePricing.price || servicePricing.basePrice,
             workshopName: workshop.name,
             serviceName: serviceLabels[serviceType] || serviceType,
-            paymentMethodType: method // Specify which payment method to use
+            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method // Use customer_balance for bank transfer
           })
         })
 

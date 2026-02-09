@@ -98,6 +98,36 @@ export default function PaymentPage() {
 
     setProcessing(true)
     try {
+      // STEP 1: Create reservation first (blocks slot for 10 minutes during payment)
+      console.log('[PAYMENT] Creating reservation before payment...')
+      const reserveResponse = await fetch('/api/customer/direct-booking/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workshopId,
+          vehicleId,
+          serviceType,
+          date,
+          time,
+          basePrice: servicePricing.basePrice || servicePricing.price,
+          balancingPrice: 0,
+          storagePrice: 0,
+          hasBalancing: false,
+          hasStorage: false,
+          totalPrice: servicePricing.price || servicePricing.basePrice
+        })
+      })
+
+      const reserveData = await reserveResponse.json()
+      
+      if (!reserveResponse.ok) {
+        alert(reserveData.error || 'Fehler bei der Reservierung. Der Termin könnte bereits gebucht sein.')
+        return
+      }
+
+      console.log('[PAYMENT] Reservation created:', reserveData.reservationId, 'expires at:', reserveData.expiresAt)
+      
+      // STEP 2: Proceed with payment
       if (method === 'paypal' || method === 'paypal-installments') {
         // Create PayPal Order
         const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
@@ -114,7 +144,8 @@ export default function PaymentPage() {
             workshopName: workshop.name,
             customerName: session?.user?.name,
             customerEmail: session?.user?.email,
-            installments: method === 'paypal-installments'
+            installments: method === 'paypal-installments',
+            reservationId: reserveData.reservationId // Pass reservation ID to include in success URL
           })
         })
 
@@ -140,7 +171,8 @@ export default function PaymentPage() {
             totalPrice: servicePricing.price || servicePricing.basePrice,
             workshopName: workshop.name,
             serviceName: serviceLabels[serviceType] || serviceType,
-            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method // Use customer_balance for bank transfer
+            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method, // Use customer_balance for bank transfer
+            reservationId: reserveData.reservationId // Pass reservation ID to include in success URL
           })
         })
 

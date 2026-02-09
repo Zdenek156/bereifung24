@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo, paymentMethodType } = await request.json()
+    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo, paymentMethodType, reservationId } = await request.json()
 
     // Get Stripe keys from database
     const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       customer: stripeCustomerId, // Set customer for customer_balance
       customer_email: stripeCustomerId ? undefined : (session.user.email || undefined), // Only set if no customer
       
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/home/workshop/${workshopId}/payment/success?session_id={CHECKOUT_SESSION_ID}&service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/home/workshop/${workshopId}/payment/success?session_id={CHECKOUT_SESSION_ID}&service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}${reservationId ? `&reservationId=${reservationId}` : ''}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/home/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`,
       
       metadata: {

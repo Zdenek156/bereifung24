@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { amount, description, customerName, customerEmail, workshopId, workshopName, date, time, street, city, zipCode, country, installments } = body
+    const { amount, description, customerName, customerEmail, workshopId, workshopName, date, time, street, city, zipCode, country, installments, reservationId } = body
     console.log('[PAYPAL CREATE ORDER] Request body:', { 
       amount, 
       hasDescription: !!description,
@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       customerEmail,
       workshopId,
       workshopName,
+      reservationId
       date,
       time,
       street,
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
             locale: 'de-DE',
             landing_page: 'LOGIN',
             user_action: 'PAY_NOW',
-            return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`,
+            return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}${reservationId ? `&reservationId=${reservationId}` : ''}`,
             cancel_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`
           }
         }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
         brand_name: 'Bereifung24',
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
-        return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`,
+        return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}${reservationId ? `&reservationId=${reservationId}` : ''}`,
         cancel_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`
       }
     }

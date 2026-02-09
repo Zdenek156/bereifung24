@@ -93,7 +93,7 @@ export default function PaymentPage() {
     loadData()
   }, [session, workshopId, serviceType, vehicleId])
 
-  const handlePayment = async (method: 'card' | 'klarna' | 'paypal' | 'paypal-installments' | 'bank-transfer') => {
+  const handlePayment = async (method: 'card' | 'paypal' | 'paypal-installments') => {
     if (!workshop || !vehicle || !servicePricing) return
 
     setProcessing(true)

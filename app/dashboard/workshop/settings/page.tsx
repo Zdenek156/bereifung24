@@ -194,6 +194,8 @@ export default function WorkshopSettings() {
     // Check Stripe Connect onboarding status
     if (stripeOnboarding === 'success') {
       setMessage({ type: 'success', text: 'Stripe Konto erfolgreich verbunden! Die Zahlungen werden jetzt direkt auf Ihr Konto überwiesen.' })
+      // Check account status with Stripe to verify and enable
+      checkStripeAccountStatus()
       fetchProfile() // Reload to get updated Stripe account status
     } else if (stripeRefresh === 'true') {
       setMessage({ type: 'info', text: 'Bitte schließen Sie die Stripe-Verifizierung ab.' })
@@ -346,6 +348,28 @@ export default function WorkshopSettings() {
       console.error('Error fetching profile:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkStripeAccountStatus = async () => {
+    try {
+      console.log('[Stripe] Checking account status...')
+      const response = await fetch('/api/workshop/stripe-connect/account-status')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('[Stripe] Account status:', data)
+        if (data.onboardingComplete) {
+          console.log('[Stripe] Onboarding complete! Account enabled.')
+          // Reload profile to show updated status
+          setTimeout(() => fetchProfile(), 1000)
+        } else {
+          console.log('[Stripe] Onboarding not complete yet')
+        }
+      } else {
+        console.error('[Stripe] Failed to check account status:', response.status)
+      }
+    } catch (error) {
+      console.error('[Stripe] Error checking account status:', error)
     }
   }
 

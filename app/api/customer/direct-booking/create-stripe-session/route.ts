@@ -65,6 +65,36 @@ export async function POST(request: NextRequest) {
     // Create Stripe Checkout Session with Direct Charges to Workshop
     // Payment goes 100% to workshop (no platform fee)
     
+    // For customer_balance, we need to create or retrieve a Stripe Customer
+    let stripeCustomerId: string | undefined = undefined
+    if (enabledPaymentMethods.includes('customer_balance')) {
+      // Check if customer already has a Stripe Customer ID
+      const customer = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { stripeCustomerId: true }
+      })
+
+      if (customer?.stripeCustomerId) {
+        stripeCustomerId = customer.stripeCustomerId
+      } else {
+        // Create new Stripe Customer
+        const stripeCustomer = await stripe.customers.create({
+          email: session.user.email || undefined,
+          name: session.user.name || undefined,
+          metadata: {
+            userId: session.user.id
+          }
+        })
+        stripeCustomerId = stripeCustomer.id
+
+        // Save Stripe Customer ID to database
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: { stripeCustomerId }
+        })
+      }
+    }
+    
     // Build session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: enabledPaymentMethods,
@@ -82,7 +112,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      customer_email: session.user.email || undefined,
+      customer: stripeCustomerId, // Set customer for customer_balance
+      customer_email: stripeCustomerId ? undefined : (session.user.email || undefined), // Only set if no customer
       
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,

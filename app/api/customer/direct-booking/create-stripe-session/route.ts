@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo } = await request.json()
+    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo, paymentMethodType } = await request.json()
 
     // Get Stripe keys from database
     const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
@@ -50,11 +50,23 @@ export async function POST(request: NextRequest) {
       STORAGE: 'Einlagerung',
     }
 
+    // Map payment method types to Stripe payment_method_types
+    const paymentMethodMap: Record<string, string[]> = {
+      'card': ['card'],
+      'sepa': ['sepa_debit'],
+      'giropay': ['giropay'],
+      'klarna': ['klarna'],
+    }
+
+    // Determine which payment methods to enable
+    const enabledPaymentMethods = paymentMethodType && paymentMethodMap[paymentMethodType]
+      ? paymentMethodMap[paymentMethodType]
+      : ['card'] // Default to card if not specified
+
     // Create Stripe Checkout Session with Direct Charges to Workshop
     // Payment goes 100% to workshop (no platform fee)
-    // Automatically shows all payment methods enabled in Stripe Dashboard
     const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'], // Start with card, others will be added via automatic_payment_methods
+      payment_method_types: enabledPaymentMethods,
       line_items: [
         {
           price_data: {
@@ -70,12 +82,6 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'payment',
       customer_email: session.user.email || undefined,
-      
-      // Enable all payment methods configured in Stripe Dashboard
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always', // Allow redirect-based methods like Giropay, SOFORT
-      },
       
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,

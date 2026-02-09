@@ -93,12 +93,37 @@ export default function PaymentPage() {
     loadData()
   }, [session, workshopId, serviceType, vehicleId])
 
-  const handlePayment = async (method: 'card' | 'sepa' | 'giropay' | 'klarna' | 'paypal' | 'paypal-installments') => {
+  const handlePayment = async (method: 'card' | 'klarna' | 'paypal' | 'paypal-installments' | 'bank-transfer') => {
     if (!workshop || !vehicle || !servicePricing) return
 
     setProcessing(true)
     try {
-      if (method === 'paypal' || method === 'paypal-installments') {
+      if (method === 'bank-transfer') {
+        // Banküberweisung (Vorkasse) - Create booking with PENDING status
+        const response = await fetch('/api/customer/direct-booking/create-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workshopId,
+            vehicleId,
+            serviceType,
+            date,
+            time,
+            amount: servicePricing.price || servicePricing.basePrice,
+            paymentMethod: 'BANK_TRANSFER',
+            paymentStatus: 'PENDING'
+          })
+        })
+
+        const data = await response.json()
+        if (data.success) {
+          // Redirect to success page with bank transfer instructions
+          router.push(`/home/workshop/${workshopId}/payment/bank-transfer-info?bookingId=${data.bookingId}`)
+        } else {
+          console.error('Booking error:', data)
+          alert('Fehler beim Erstellen der Buchung: ' + (data.error || 'Unbekannter Fehler'))
+        }
+      } else if (method === 'paypal' || method === 'paypal-installments') {
         // Create PayPal Order
         const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
           method: 'POST',
@@ -363,40 +388,21 @@ export default function PaymentPage() {
                     </div>
                   </button>
 
-                  {/* SEPA Direct Debit */}
+                  {/* Bank Transfer (Vorkasse) */}
                   <button
-                    onClick={() => handlePayment('sepa')}
+                    onClick={() => handlePayment('bank-transfer')}
                     disabled={processing}
                     className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">SEPA-Lastschrift</p>
-                          <p className="text-xs text-gray-500">Bankeinzug</p>
+                          <p className="font-semibold text-gray-900">Banküberweisung</p>
+                          <p className="text-xs text-gray-500">Vorkasse - Zahlung per Überweisung</p>
                         </div>
                       </div>
                       <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Giropay */}
-                  <button
-                    onClick={() => handlePayment('giropay')}
-                    disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="text-left">
-                          <p className="font-semibold text-gray-900">Giropay</p>
-                          <p className="text-xs text-gray-500">Direkte Banküberweisung</p>
-                        </div>
-                      </div>
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                       </svg>
                     </div>
                   </button>

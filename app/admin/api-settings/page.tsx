@@ -244,6 +244,7 @@ export default function AdminApiSettings() {
             <li>• <strong>API_NINJAS_KEY</strong> - API Ninjas für VIN Lookup und Fahrzeugsuche (Free: 50k/Monat)</li>
             <li>• <strong>STRIPE_SECRET_KEY</strong> - Stripe Secret Key (sk_test_xxx oder sk_live_xxx)</li>
             <li>• <strong>STRIPE_PUBLISHABLE_KEY</strong> - Stripe Publishable Key (pk_test_xxx oder pk_live_xxx)</li>
+            <li>• <strong>STRIPE_WEBHOOK_SECRET</strong> - Stripe Webhook Signing Secret (whsec_xxx) für Webhook-Verifizierung</li>
           </ul>
           <p className="text-xs text-blue-600 mt-3">
             💡 <strong>API Ninjas Key:</strong> Kostenlos registrieren auf <a href="https://api-ninjas.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">api-ninjas.com/register</a>
@@ -310,13 +311,15 @@ export default function AdminApiSettings() {
               📝 <strong>Setup-Anleitung:</strong>
             </p>
             <ol className="text-xs text-indigo-700 space-y-1 mt-1 ml-4 list-decimal">
-              <li>Gehe zu <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900">Stripe Dashboard > API keys</a></li>
+              <li>Gehe zu <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900">Stripe Dashboard &gt; API keys</a></li>
               <li>Für Test-Modus: "Test mode" aktivieren (Toggle oben rechts)</li>
               <li>Secret key kopieren (sk_test_xxx oder sk_live_xxx)</li>
               <li>Publishable key kopieren (pk_test_xxx oder pk_live_xxx)</li>
               <li>Beide Keys hier eintragen und speichern</li>
-              <li>Webhook einrichten: <code className="bg-indigo-100 px-1 rounded">https://bereifung24.de/api/webhooks/stripe</code></li>
-              <li>Events: payment_intent.succeeded, payment_intent.payment_failed</li>
+              <li><strong>Webhook einrichten:</strong> Gehe zu <a href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900">Webhooks</a></li>
+              <li>URL: <code className="bg-indigo-100 px-1 rounded">https://bereifung24.de/api/webhooks/stripe</code></li>
+              <li>Events: checkout.session.completed, payment_intent.succeeded, payment_intent.payment_failed, charge.refunded, <strong>account.updated</strong></li>
+              <li>Webhook Secret (whsec_xxx) kopieren und als <strong>STRIPE_WEBHOOK_SECRET</strong> hier speichern</li>
             </ol>
           </div>
           <div className="mt-3 pt-3 border-t border-indigo-200">

@@ -33,7 +33,6 @@ export default function PaymentPage() {
   const [workshop, setWorkshop] = useState<any>(null)
   const [vehicle, setVehicle] = useState<any>(null)
   const [servicePricing, setServicePricing] = useState<any>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | 'paypal-installments'>('stripe')
   const [processing, setProcessing] = useState(false)
 
   // Service labels
@@ -94,36 +93,12 @@ export default function PaymentPage() {
     loadData()
   }, [session, workshopId, serviceType, vehicleId])
 
-  const handlePayment = async () => {
+  const handlePayment = async (method: 'card' | 'sepa' | 'giropay' | 'klarna' | 'paypal' | 'paypal-installments') => {
     if (!workshop || !vehicle || !servicePricing) return
 
     setProcessing(true)
     try {
-      if (paymentMethod === 'stripe') {
-        // Create Stripe Checkout Session
-        const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workshopId,
-            vehicleId,
-            serviceType,
-            date,
-            time,
-            totalPrice: servicePricing.price || servicePricing.basePrice,
-            workshopName: workshop.name,
-            serviceName: serviceLabels[serviceType] || serviceType
-          })
-        })
-
-        const data = await response.json()
-        if (data.sessionId && data.url) {
-          window.location.href = data.url
-        } else {
-          console.error('Stripe error:', data)
-          alert('Fehler beim Erstellen der Zahlungssitzung: ' + (data.error || 'Unbekannter Fehler'))
-        }
-      } else if (paymentMethod === 'paypal') {
+      if (method === 'paypal' || method === 'paypal-installments') {
         // Create PayPal Order
         const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
           method: 'POST',
@@ -138,21 +113,21 @@ export default function PaymentPage() {
             description: `${serviceLabels[serviceType] || serviceType} bei ${workshop.name}`,
             workshopName: workshop.name,
             customerName: session?.user?.name,
-            customerEmail: session?.user?.email
+            customerEmail: session?.user?.email,
+            installments: method === 'paypal-installments'
           })
         })
 
         const data = await response.json()
-        console.log('PayPal response:', data)
         if (data.orderId && data.approvalUrl) {
           window.location.href = data.approvalUrl
         } else {
           console.error('PayPal error:', data)
           alert('Fehler beim Erstellen der PayPal-Zahlung: ' + (data.error || 'Unbekannter Fehler'))
         }
-      } else if (paymentMethod === 'paypal-installments') {
-        // Create PayPal Installments Order
-        const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
+      } else {
+        // Stripe - Create Checkout Session with specific payment method
+        const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -161,22 +136,19 @@ export default function PaymentPage() {
             serviceType,
             date,
             time,
-            amount: servicePricing.price || servicePricing.basePrice,
-            description: `${serviceLabels[serviceType] || serviceType} bei ${workshop.name}`,
+            totalPrice: servicePricing.price || servicePricing.basePrice,
             workshopName: workshop.name,
-            customerName: session?.user?.name,
-            customerEmail: session?.user?.email,
-            installments: true // Flag for PayPal Installments
+            serviceName: serviceLabels[serviceType] || serviceType,
+            paymentMethodType: method // Specify which payment method to use
           })
         })
 
         const data = await response.json()
-        console.log('PayPal Installments response:', data)
-        if (data.orderId && data.approvalUrl) {
-          window.location.href = data.approvalUrl
+        if (data.sessionId && data.url) {
+          window.location.href = data.url
         } else {
-          console.error('PayPal Installments error:', data)
-          alert('Fehler beim Erstellen der PayPal Ratenzahlung: ' + (data.error || 'Unbekannter Fehler'))
+          console.error('Stripe error:', data)
+          alert('Fehler beim Erstellen der Zahlungssitzung: ' + (data.error || 'Unbekannter Fehler'))
         }
       }
     } catch (error) {
@@ -369,165 +341,163 @@ export default function PaymentPage() {
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Zahlungsmethode wählen</h3>
                 <div className="space-y-3">
-                  {/* Stripe */}
+                  {/* Credit Card */}
                   <button
-                    onClick={() => setPaymentMethod('stripe')}
+                    onClick={() => handlePayment('card')}
                     disabled={processing}
-                    className={`w-full p-4 rounded-xl border-2 transition-all ${
-                      paymentMethod === 'stripe'
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    } ${
-                      processing ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-3 flex-1">
-                        {/* Logos Row */}
+                      <div className="flex flex-col gap-2 flex-1">
                         <div className="flex items-center gap-3">
-                          <Image
-                            src="/payment-logos/58482363cef1014c0b5e49c1.png"
-                            alt="Visa"
-                            width={60}
-                            height={40}
-                            className="h-6 w-auto"
-                          />
-                          <Image
-                            src="/payment-logos/58482354cef1014c0b5e49c0.png"
-                            alt="Mastercard"
-                            width={60}
-                            height={40}
-                            className="h-7 w-auto"
-                          />
-                          <Image
-                            src="/payment-logos/620670d4d7b91b0004122618.png"
-                            alt="American Express"
-                            width={60}
-                            height={40}
-                            className="h-6 w-auto"
-                          />
+                          <Image src="/payment-logos/58482363cef1014c0b5e49c1.png" alt="Visa" width={50} height={32} className="h-5 w-auto" />
+                          <Image src="/payment-logos/58482354cef1014c0b5e49c0.png" alt="Mastercard" width={50} height={32} className="h-6 w-auto" />
+                          <Image src="/payment-logos/620670d4d7b91b0004122618.png" alt="Amex" width={50} height={32} className="h-5 w-auto" />
                         </div>
-                        {/* Text Row */}
                         <div className="text-left">
                           <p className="font-semibold text-gray-900">Kreditkarte</p>
                           <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
                         </div>
                       </div>
-                      {paymentMethod === 'stripe' && (
-                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+                      <CreditCard className="w-5 h-5 text-gray-400" />
                     </div>
                   </button>
 
-                  {/* PayPal */}
+                  {/* SEPA Direct Debit */}
                   <button
-                    onClick={() => setPaymentMethod('paypal')}
+                    onClick={() => handlePayment('sepa')}
                     disabled={processing}
-                    className={`w-full p-4 rounded-xl border-2 transition-all ${
-                      paymentMethod === 'paypal'
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    } ${
-                      processing ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-3 flex-1">
-                        {/* PayPal Logo */}
-                        <div className="h-8 flex items-center">
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="text-left">
+                          <p className="font-semibold text-gray-900">SEPA-Lastschrift</p>
+                          <p className="text-xs text-gray-500">Bankeinzug</p>
+                        </div>
+                      </div>
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Giropay */}
+                  <button
+                    onClick={() => handlePayment('giropay')}
+                    disabled={processing}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="text-left">
+                          <p className="font-semibold text-gray-900">Giropay</p>
+                          <p className="text-xs text-gray-500">Direkte Banküberweisung</p>
+                        </div>
+                      </div>
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Klarna */}
+                  <button
+                    onClick={() => handlePayment('klarna')}
+                    disabled={processing}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="text-left">
+                          <p className="font-semibold text-gray-900">Klarna</p>
+                          <p className="text-xs text-gray-500">Jetzt kaufen, später bezahlen</p>
+                        </div>
+                      </div>
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">oder</span>
+                    </div>
+                  </div>
+
+                  {/* PayPal */}
+                  <button
+                    onClick={() => handlePayment('paypal')}
+                    disabled={processing}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="h-7 flex items-center">
                           <Image
                             src="/payment-logos/de-pp-logo-200px.png"
                             alt="PayPal"
-                            width={200}
-                            height={51}
-                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
+                            width={120}
+                            height={31}
+                            style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
                           />
                         </div>
-                        {/* Text */}
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">PayPal</p>
                           <p className="text-xs text-gray-500">Schnell & sicher</p>
                         </div>
                       </div>
-                      {paymentMethod === 'paypal' && (
-                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
                     </div>
                   </button>
 
                   {/* PayPal Ratenzahlung */}
                   <button
-                    onClick={() => setPaymentMethod('paypal-installments')}
+                    onClick={() => handlePayment('paypal-installments')}
                     disabled={processing}
-                    className={`w-full p-4 rounded-xl border-2 transition-all ${
-                      paymentMethod === 'paypal-installments'
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    } ${
-                      processing ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-3 flex-1">
-                        {/* PayPal Ratenzahlung Logo */}
-                        <div className="h-8 flex items-center">
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="h-7 flex items-center">
                           <Image
                             src="/payment-logos/PayPal_Ratenzahlung_h_farbe.png"
                             alt="PayPal Ratenzahlung"
-                            width={200}
-                            height={60}
-                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
+                            width={140}
+                            height={42}
+                            style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
                           />
                         </div>
-                        {/* Text */}
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">PayPal Ratenzahlung</p>
                           <p className="text-xs text-gray-500">In bequemen Raten bezahlen</p>
                         </div>
                       </div>
-                      {paymentMethod === 'paypal-installments' && (
-                        <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
                     </div>
                   </button>
                 </div>
               </div>
 
-              {/* Payment Button */}
-              <button
-                onClick={handlePayment}
-                disabled={processing}
-                className="w-full py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Wird verarbeitet...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5" />
-                    {paymentMethod === 'stripe' 
-                      ? 'Mit Kreditkarte bezahlen' 
-                      : paymentMethod === 'paypal-installments'
-                      ? 'Mit PayPal Ratenzahlung bezahlen'
-                      : 'Mit PayPal bezahlen'}
-                  </>
-                )}
-              </button>
+              {/* Processing Overlay */}
+              {processing && (
+                <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
+                    <div>
+                      <p className="font-semibold text-primary-900">Zahlung wird vorbereitet...</p>
+                      <p className="text-sm text-primary-700">Sie werden zur Zahlungsseite weitergeleitet.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Security Note */}
-              <div className="mt-4 flex items-start gap-2 text-xs text-gray-500">
+              <div className="flex items-start gap-2 text-xs text-gray-500">
                 <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <p>
-                  Ihre Zahlung wird sicher über {paymentMethod === 'stripe' ? 'Stripe' : 'PayPal'} verarbeitet. 
-                  Ihre Daten sind SSL-verschlüsselt.
+                  Ihre Zahlung wird sicher verschlüsselt verarbeitet. Alle Transaktionen sind durch SSL/TLS geschützt.
                 </p>
               </div>
             </div>

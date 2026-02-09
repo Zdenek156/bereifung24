@@ -61,6 +61,8 @@ export async function GET() {
       // Payment Methods
       paymentMethods: user.workshop.paymentMethods,
       paypalEmail: user.workshop.paypalEmail,
+      stripeAccountId: user.workshop.stripeAccountId,
+      stripeEnabled: user.workshop.stripeEnabled,
       
       // Notifications
       emailNotifyRequests: user.workshop.emailNotifyRequests,

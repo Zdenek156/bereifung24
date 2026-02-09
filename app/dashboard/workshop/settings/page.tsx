@@ -275,12 +275,19 @@ export default function WorkshopSettings() {
               bankTransferIban: parsed.bankTransferIban || '',
               paypal: parsed.paypal ?? false,
               paypalEmail: parsed.paypalEmail || '',
-              stripe: parsed.stripe ?? false,
-              stripeAccountId: parsed.stripeAccountId || '',
+              stripe: data.stripeEnabled ?? parsed.stripe ?? false, // Use stripeEnabled from profile
+              stripeAccountId: data.stripeAccountId || parsed.stripeAccountId || '',
             })
           } catch (e) {
             console.log('Could not parse payment methods:', e)
           }
+        } else {
+          // If no payment methods JSON, use direct values from profile
+          setPaymentMethods(prev => ({
+            ...prev,
+            stripe: data.stripeEnabled ?? false,
+            stripeAccountId: data.stripeAccountId || '',
+          }))
         }
       }
       
@@ -1352,120 +1359,176 @@ export default function WorkshopSettings() {
                 </div>
                 {paymentMethods.stripe && (
                   <div className="ml-7 mt-3 space-y-3">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
-                            🚀 Automatisches Stripe Connect Onboarding
-                          </p>
-                          <p className="text-xs text-blue-700 dark:text-blue-400">
-                            Zahlungen gehen direkt auf Ihr Konto. Einfaches Setup in 5 Minuten.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {/* Option 1: Automatisches Onboarding */}
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              setSaving(true)
-                              const response = await fetch('/api/workshop/stripe-connect/create-account-link', {
-                                method: 'POST'
-                              })
-                              const data = await response.json()
-                              if (data.url) {
-                                window.location.href = data.url
-                              } else {
-                                alert('Fehler beim Erstellen des Stripe-Links')
-                              }
-                            } catch (error) {
-                              console.error('Error:', error)
-                              alert('Fehler beim Verbinden mit Stripe')
-                            } finally {
-                              setSaving(false)
-                            }
-                          }}
-                          disabled={saving}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                          {saving ? 'Lädt...' : 'Jetzt mit Stripe verbinden'}
-                        </button>
-
-                        {/* Option 2: Manuelle Eingabe */}
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                            Oder: Bereits einen Stripe Account? Account ID manuell eingeben:
-                          </p>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={paymentMethods.stripeAccountId || ''}
-                              onChange={(e) => setPaymentMethods({
-                                ...paymentMethods,
-                                stripeAccountId: e.target.value
-                              })}
-                              placeholder="acct_..."
-                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            />
-                            {paymentMethods.stripeAccountId && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (confirm('Stripe Account ID wirklich löschen?')) {
-                                    setPaymentMethods({
-                                      ...paymentMethods,
-                                      stripeAccountId: ''
-                                    })
-                                  }
-                                }}
-                                className="px-3 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg transition-colors"
-                                title="Account ID löschen"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
+                    {/* Show connected status if account ID exists */}
+                    {paymentMethods.stripeAccountId ? (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="flex-shrink-0 w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-green-900 dark:text-green-300 mb-1">
+                              ✅ Stripe Account verbunden
+                            </p>
+                            <p className="text-xs text-green-700 dark:text-green-400">
+                              Zahlungen werden direkt auf Ihr Konto überwiesen
+                            </p>
                           </div>
                         </div>
                         
-                        {paymentMethods.stripeAccountId && (
+                        <div className="space-y-3">
+                          {/* Account ID anzeigen */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Account ID</p>
+                                <p className="text-sm font-mono text-gray-900 dark:text-white">{paymentMethods.stripeAccountId}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    const response = await fetch('/api/workshop/stripe-connect/account-status')
+                                    if (response.ok) {
+                                      const data = await response.json()
+                                      if (data.onboardingComplete) {
+                                        alert('✅ Stripe Account ist vollständig eingerichtet und aktiv!')
+                                      } else {
+                                        alert('⚠️ Onboarding noch nicht abgeschlossen. Bitte schließen Sie die Einrichtung ab.')
+                                      }
+                                    }
+                                  } catch (error) {
+                                    console.error('Error checking status:', error)
+                                    alert('Fehler beim Prüfen des Status')
+                                  }
+                                }}
+                                className="px-3 py-1.5 text-xs bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 rounded-lg transition-colors"
+                              >
+                                Status prüfen
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Account erneut verbinden / Dashboard öffnen */}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/workshop/stripe-connect/create-account-link', {
+                                    method: 'POST'
+                                  })
+                                  const data = await response.json()
+                                  if (data.url) {
+                                    window.location.href = data.url
+                                  }
+                                } catch (error) {
+                                  console.error('Error:', error)
+                                  alert('Fehler beim Öffnen des Stripe-Dashboards')
+                                }
+                              }}
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              Account verwalten
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm('Möchten Sie die Stripe-Verbindung wirklich trennen? Sie können sich jederzeit neu verbinden.')) {
+                                  setPaymentMethods({
+                                    ...paymentMethods,
+                                    stripeAccountId: '',
+                                    stripe: false
+                                  })
+                                }
+                              }}
+                              className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-sm rounded-lg transition-colors"
+                              title="Verbindung trennen"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Show onboarding if no account connected */
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                              🚀 Automatisches Stripe Connect Onboarding
+                            </p>
+                            <p className="text-xs text-blue-700 dark:text-blue-400">
+                              Zahlungen gehen direkt auf Ihr Konto. Einfaches Setup in 5 Minuten.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {/* Option 1: Automatisches Onboarding */}
                           <button
                             type="button"
                             onClick={async () => {
                               try {
+                                setSaving(true)
                                 const response = await fetch('/api/workshop/stripe-connect/create-account-link', {
                                   method: 'POST'
                                 })
                                 const data = await response.json()
                                 if (data.url) {
                                   window.location.href = data.url
+                                } else {
+                                  alert('Fehler beim Erstellen des Stripe-Links')
                                 }
                               } catch (error) {
                                 console.error('Error:', error)
+                                alert('Fehler beim Verbinden mit Stripe')
+                              } finally {
+                                setSaving(false)
                               }
                             }}
-                            className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                            disabled={saving}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
-                            Einstellungen verwalten
+                            {saving ? 'Lädt...' : 'Jetzt mit Stripe verbinden'}
                           </button>
-                        )}
+
+                          {/* Option 2: Manuelle Eingabe */}
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                              Oder: Bereits einen Stripe Account? Account ID manuell eingeben:
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={paymentMethods.stripeAccountId || ''}
+                                onChange={(e) => setPaymentMethods({
+                                  ...paymentMethods,
+                                  stripeAccountId: e.target.value
+                                })}
+                                placeholder="acct_..."
+                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>

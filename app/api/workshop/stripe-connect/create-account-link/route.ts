@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
       return_url: `${process.env.NEXTAUTH_URL}/dashboard/workshop/settings?stripe_onboarding=success`,
       type: 'account_onboarding',
       collection_options: {
-        fields: 'eventually_due', // Only collect fields that are required
-        future_requirements: 'include', // Include future requirements
+        fields: 'currently_due', // Only collect fields that are currently required (not future)
+        future_requirements: 'omit', // Don't collect future requirements yet
       },
     })
 

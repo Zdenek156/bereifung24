@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe Checkout Session with Direct Charges to Workshop
     // Payment goes 100% to workshop (no platform fee)
-    const checkoutSession = await stripe.checkout.sessions.create({
+    
+    // Build session configuration
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: enabledPaymentMethods,
       line_items: [
         {
@@ -86,14 +88,6 @@ export async function POST(request: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,
       
-      // Stripe Connect: Payment goes directly to workshop's account
-      payment_intent_data: {
-        on_behalf_of: workshop.stripeAccountId, // Workshop receives 100% of payment
-        transfer_data: {
-          destination: workshop.stripeAccountId, // Direct to workshop
-        },
-      },
-      
       metadata: {
         workshopId,
         workshopName: workshop.companyName,
@@ -109,7 +103,33 @@ export async function POST(request: NextRequest) {
         hasBalancing: hasBalancing?.toString() || 'false',
         hasStorage: hasStorage?.toString() || 'false',
       },
-    })
+    }
+
+    // SEPA debit requires special configuration for Stripe Connect
+    if (enabledPaymentMethods.includes('sepa_debit')) {
+      // For SEPA, only use transfer_data (not on_behalf_of)
+      sessionConfig.payment_intent_data = {
+        transfer_data: {
+          destination: workshop.stripeAccountId,
+        },
+      }
+      // SEPA requires billing details collection
+      sessionConfig.payment_method_options = {
+        sepa_debit: {
+          setup_future_usage: 'off_session', // Allow mandate creation
+        },
+      }
+    } else {
+      // For card and other payment methods, use both on_behalf_of and transfer_data
+      sessionConfig.payment_intent_data = {
+        on_behalf_of: workshop.stripeAccountId,
+        transfer_data: {
+          destination: workshop.stripeAccountId,
+        },
+      }
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(sessionConfig)
 
     console.log('[STRIPE] Checkout session created:', checkoutSession.id)
 

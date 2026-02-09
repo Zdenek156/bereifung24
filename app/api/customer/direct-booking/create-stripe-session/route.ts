@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe Checkout Session with Direct Charges to Workshop
     // Payment goes 100% to workshop (no platform fee)
+    // Automatically shows all payment methods enabled in Stripe Dashboard
     const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'sepa_debit', 'giropay', 'sofort'],
+      payment_method_types: ['card'], // Start with card, others will be added via automatic_payment_methods
       line_items: [
         {
           price_data: {
@@ -69,6 +70,13 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'payment',
       customer_email: session.user.email || undefined,
+      
+      // Enable all payment methods configured in Stripe Dashboard
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'always', // Allow redirect-based methods like Giropay, SOFORT
+      },
+      
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,
       

@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
             locale: 'de-DE',
             landing_page: 'LOGIN',
             user_action: 'PAY_NOW',
-            return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
-            cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
+            return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`,
+            cancel_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`
           }
         }
       }
@@ -156,8 +156,8 @@ export async function POST(request: NextRequest) {
         brand_name: 'Bereifung24',
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
-        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/success`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/direct-booking/checkout`
+        return_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment/success?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/home/workshop/${workshopId}/payment?service=${body.serviceType}&date=${date}&time=${time}&vehicleId=${body.vehicleId}`
       }
     }
 

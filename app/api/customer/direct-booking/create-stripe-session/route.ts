@@ -53,8 +53,7 @@ export async function POST(request: NextRequest) {
     // Map payment method types to Stripe payment_method_types
     const paymentMethodMap: Record<string, string[]> = {
       'card': ['card'],
-      'sepa': ['sepa_debit'],
-      'giropay': ['giropay'],
+      'customer_balance': ['customer_balance'], // Bank Transfer (Überweisung)
       'klarna': ['klarna'],
     }
 
@@ -105,18 +104,21 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    // SEPA debit requires special configuration for Stripe Connect
-    if (enabledPaymentMethods.includes('sepa_debit')) {
-      // For SEPA, only use transfer_data (not on_behalf_of)
+    // Special configuration for different payment methods with Stripe Connect
+    if (enabledPaymentMethods.includes('customer_balance')) {
+      // Bank Transfer requires customer_balance configuration
+      sessionConfig.payment_method_options = {
+        customer_balance: {
+          funding_type: 'bank_transfer',
+          bank_transfer: {
+            type: 'eu_bank_transfer', // For European bank transfers
+          },
+        },
+      }
+      // For bank transfer, only use transfer_data
       sessionConfig.payment_intent_data = {
         transfer_data: {
           destination: workshop.stripeAccountId,
-        },
-      }
-      // SEPA requires billing details collection
-      sessionConfig.payment_method_options = {
-        sepa_debit: {
-          setup_future_usage: 'off_session', // Allow mandate creation
         },
       }
     } else {

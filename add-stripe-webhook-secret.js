@@ -3,8 +3,10 @@ const prisma = new PrismaClient()
 
 async function addStripeWebhookSecret() {
   try {
+    console.log('🔍 Suche nach STRIPE_WEBHOOK_SECRET...')
+    
     // Prüfe ob STRIPE_WEBHOOK_SECRET bereits existiert
-    const existing = await prisma.apiSetting.findUnique({
+    const existing = await prisma.adminApiSetting.findUnique({
       where: { key: 'STRIPE_WEBHOOK_SECRET' }
     })
 
@@ -15,8 +17,10 @@ async function addStripeWebhookSecret() {
       return
     }
 
+    console.log('📝 Erstelle STRIPE_WEBHOOK_SECRET...')
+    
     // Erstelle STRIPE_WEBHOOK_SECRET
-    const created = await prisma.apiSetting.create({
+    const created = await prisma.adminApiSetting.create({
       data: {
         key: 'STRIPE_WEBHOOK_SECRET',
         value: '',
@@ -34,6 +38,7 @@ async function addStripeWebhookSecret() {
 
   } catch (error) {
     console.error('❌ Fehler:', error.message)
+    console.error('Stack:', error.stack)
   } finally {
     await prisma.$disconnect()
   }

@@ -17,6 +17,7 @@ export async function GET(
         companyName: true,
         description: true,
         website: true,
+        stripeEnabled: true,
         user: {
           select: {
             city: true,
@@ -61,6 +62,7 @@ export async function GET(
         phone: workshop.user.phone || null,
         rating: avgRating,
         reviewCount: workshop._count.reviews,
+        stripeEnabled: workshop.stripeEnabled || false,
         companySettings: {
           description: workshop.description || null,
           website: workshop.website || null

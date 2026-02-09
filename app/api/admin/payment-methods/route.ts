@@ -11,7 +11,12 @@ import Stripe from 'stripe'
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Allow ADMIN and B24_EMPLOYEE (middleware already checks application access)
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

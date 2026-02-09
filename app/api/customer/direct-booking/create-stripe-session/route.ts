@@ -115,8 +115,8 @@ export async function POST(request: NextRequest) {
       customer: stripeCustomerId, // Set customer for customer_balance
       customer_email: stripeCustomerId ? undefined : (session.user.email || undefined), // Only set if no customer
       
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/success?session_id={CHECKOUT_SESSION_ID}&payment_method=STRIPE`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/direct-booking/checkout`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/home/workshop/${workshopId}/payment/success?session_id={CHECKOUT_SESSION_ID}&service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/home/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`,
       
       metadata: {
         workshopId,

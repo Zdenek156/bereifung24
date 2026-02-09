@@ -93,7 +93,7 @@ export default function PaymentPage() {
     loadData()
   }, [session, workshopId, serviceType, vehicleId])
 
-  const handlePayment = async (method: 'card' | 'paypal' | 'paypal-installments') => {
+  const handlePayment = async (method: 'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments') => {
     if (!workshop || !vehicle || !servicePricing) return
 
     setProcessing(true)
@@ -383,7 +383,8 @@ export default function PaymentPage() {
                     </div>
                   </button>
 
-                  {/* Klarna */}
+                  {/* Klarna - Only show if workshop has Stripe fully enabled */}
+                  {workshop.stripeEnabled && (
                   <button
                     onClick={() => handlePayment('klarna')}
                     disabled={processing}
@@ -401,6 +402,7 @@ export default function PaymentPage() {
                       </svg>
                     </div>
                   </button>
+                  )}
 
                   {/* Divider */}
                   <div className="relative py-2">

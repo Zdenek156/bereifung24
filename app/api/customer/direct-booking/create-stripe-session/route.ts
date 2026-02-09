@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (enabledPaymentMethods.includes('klarna')) {
       // Klarna only works with transfer_data (no on_behalf_of)
+      // Note: Klarna also requires the connected account to have Klarna capabilities enabled
       sessionConfig.payment_intent_data = {
         transfer_data: {
           destination: workshop.stripeAccountId,
@@ -182,6 +183,34 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('[STRIPE] Error creating checkout session:', error)
+    
+    // Provide more helpful error messages
+    if (error instanceof Stripe.errors.StripeError) {
+      const errorMessage = error.message
+      
+      // Check for common Klarna errors
+      if (errorMessage.includes('klarna') && errorMessage.includes('invalid')) {
+        return NextResponse.json(
+          { 
+            error: 'Klarna ist für diese Werkstatt noch nicht verfügbar', 
+            details: 'Die Werkstatt muss zuerst die Stripe-Verifizierung abschließen, um Klarna-Zahlungen zu akzeptieren.' 
+          },
+          { status: 400 }
+        )
+      }
+      
+      // Check for payment method capability errors
+      if (errorMessage.includes('payment method') && errorMessage.includes('not supported')) {
+        return NextResponse.json(
+          { 
+            error: 'Diese Zahlungsmethode ist nicht verfügbar', 
+            details: 'Bitte wählen Sie eine andere Zahlungsmethode.' 
+          },
+          { status: 400 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Failed to create Stripe session', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

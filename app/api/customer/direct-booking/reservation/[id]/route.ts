@@ -32,14 +32,9 @@ export async function GET(
       )
     }
 
-    // Fetch reservation
+    // Fetch reservation (without includes to avoid null relation errors)
     const reservation = await prisma.directBooking.findUnique({
-      where: { id: reservationId },
-      include: {
-        workshop: true,
-        vehicle: true,
-        customer: true
-      }
+      where: { id: reservationId }
     })
 
     if (!reservation) {

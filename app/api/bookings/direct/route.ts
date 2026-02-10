@@ -138,17 +138,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Use DirectBooking's stored date and time (authoritative source)
-    // Combine date and time to create appointment datetime
-    const bookingDate = directBooking.date // Already a Date object
+    // Combine date and time to create appointment datetime in Berlin timezone
+    const bookingDate = directBooking.date // Date object from DB (UTC)
     const [hours, minutes] = directBooking.time.split(':').map(Number)
     
-    // Create appointment datetime in local timezone
-    const appointmentDateTime = new Date(bookingDate)
-    appointmentDateTime.setHours(hours, minutes, 0, 0)
+    // Convert booking date to Berlin timezone and extract date components
+    const berlinDateStr = bookingDate.toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+    
+    // Parse DD.MM.YYYY to get Berlin date components
+    const [day, month, year] = berlinDateStr.split(/[.\s]/).filter(Boolean)
+    
+    // Create appointment datetime in Berlin timezone
+    const appointmentDateTime = new Date(`${year}-${month}-${day}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+01:00`)
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
       time: directBooking.time,
+      berlin_date: berlinDateStr,
       combined: appointmentDateTime.toISOString(),
       local_string: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
     })

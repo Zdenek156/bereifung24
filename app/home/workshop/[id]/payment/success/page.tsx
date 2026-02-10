@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Check, Loader2, Calendar, Clock, MapPin, Car } from 'lucide-react'
@@ -26,6 +26,7 @@ export default function PaymentSuccessPage() {
   const [workshop, setWorkshop] = useState<any>(null)
   const [vehicle, setVehicle] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const bookingInProgress = useRef(false) // Prevent duplicate booking creation
 
   // Service labels
   const serviceLabels: Record<string, string> = {
@@ -43,8 +44,14 @@ export default function PaymentSuccessPage() {
       router.push(`/login?redirect=${encodeURIComponent(window.location.href)}`)
       return
     }
+// Prevent duplicate booking creation
+    if (bookingInProgress.current || bookingCreated) {
+      return
+    }
 
     const verifyAndCreateBooking = async () => {
+      try {
+        bookingInProgress.current = true // Set flag to prevent duplicate callserifyAndCreateBooking = async () => {
       try {
         setLoading(true)
 
@@ -181,13 +188,14 @@ export default function PaymentSuccessPage() {
       } catch (err: any) {
         console.error('[SUCCESS] Error creating booking:', err)
         setError(err.message || 'Ein Fehler ist aufgetreten')
+        bookingInProgress.current = false // Reset flag on error
       } finally {
         setLoading(false)
       }
     }
 
     verifyAndCreateBooking()
-  }, [session, status, sessionId, workshopId, vehicleId, serviceType, date, time, router, reservationId])
+  }, [session, status, sessionId, workshopId, vehicleId, serviceType, date, time, router, reservationId, bookingCreated])
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''

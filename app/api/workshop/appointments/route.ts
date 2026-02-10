@@ -59,8 +59,10 @@ export async function GET() {
     const directBookingsRaw = await prisma.directBooking.findMany({
       where: { 
         workshopId: user.workshop.id,
-        customerId: { not: null },
-        vehicleId: { not: null }
+        NOT: [
+          { customerId: null },
+          { vehicleId: null }
+        ]
       },
       // Keine Sortierung - wird clientseitig gemacht
     })

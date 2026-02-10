@@ -13,7 +13,8 @@ export default function PaymentSuccessPage() {
   const { data: session, status } = useSession()
 
   const workshopId = params.id as string
-  const sessionId = searchParams?.get('session_id') || ''
+  const sessionId = searchParams?.get('session_id') || '' // Stripe session ID
+  const paypalToken = searchParams?.get('token') || '' // PayPal order ID
   const serviceType = searchParams?.get('service') || ''
   const date = searchParams?.get('date') || ''
   const time = searchParams?.get('time') || ''
@@ -94,6 +95,25 @@ export default function PaymentSuccessPage() {
           throw new Error('Diese Reservierung wurde bereits verwendet oder storniert.')
         }
 
+        // PAYPAL: Capture order before creating booking
+        if (paypalToken) {
+          console.log('[SUCCESS] Capturing PayPal order:', paypalToken)
+          
+          const captureRes = await fetch('/api/customer/direct-booking/capture-paypal-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: paypalToken })
+          })
+
+          if (!captureRes.ok) {
+            const captureError = await captureRes.json()
+            throw new Error(captureError.error || 'PayPal-Zahlung konnte nicht erfasst werden')
+          }
+
+          const captureData = await captureRes.json()
+          console.log('[SUCCESS] PayPal order captured:', captureData)
+        }
+
         // Use reservation data for booking (authoritative source)
         const bookingData = {
           workshopId: reservation.workshopId,
@@ -103,6 +123,7 @@ export default function PaymentSuccessPage() {
           time: reservation.time,
           paymentStatus: 'PAID',
           paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL',
+          paymentId: sessionId || paypalToken, // Store payment reference
           sendEmails: true,
           createCalendarEvent: true,
           reservationId: reservation.id // Pass the reservation ID to update it

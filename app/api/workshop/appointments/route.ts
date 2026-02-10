@@ -54,10 +54,16 @@ export async function GET() {
       // Keine Sortierung - wird clientseitig gemacht
     })
 
-    // Get all direct bookings (PayPal/Stripe)
+    // Get all direct bookings (PayPal/Stripe) - only include those where customer and vehicle still exist
     const directBookings = await prisma.directBooking.findMany({
       where: { 
-        workshopId: user.workshop.id
+        workshopId: user.workshop.id,
+        customer: {
+          isNot: null
+        },
+        vehicle: {
+          isNot: null
+        }
       },
       include: {
         customer: {

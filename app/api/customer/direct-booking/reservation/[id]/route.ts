@@ -36,31 +36,9 @@ export async function GET(
     const reservation = await prisma.directBooking.findUnique({
       where: { id: reservationId },
       include: {
-        workshop: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
+        workshop: true,
         vehicle: true,
-        customer: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true
-              }
-            }
-          }
-        }
+        customer: true
       }
     })
 

@@ -245,14 +245,32 @@ export async function POST(req: NextRequest) {
       const appointmentStart = appointmentDateTime
       const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
       
+      // Create detailed description in German
+      const icsDescription = [
+        `${serviceName} bei ${workshop.companyName}`,
+        '',
+        `📅 Termin: ${formattedDate} um ${time} Uhr`,
+        `⏱️ Dauer: ca. ${estimatedDuration} Minuten`,
+        `🚗 Fahrzeug: ${vehicleStr}`,
+        `💰 Preis: ${priceStr}`,
+        '',
+        `📍 Adresse:`,
+        `${workshop.companyName}`,
+        workshopAddress,
+        '',
+        `📞 Kontakt: ${workshop.user.phone || workshop.user.email}`,
+      ].join('\\n')
+      
       const icsContent = createICSFile({
         start: appointmentStart,
         end: appointmentEnd,
-        summary: `${serviceName} - ${workshop.companyName}`,
-        description: `${serviceName} bei ${workshop.companyName}\\n\\nFahrzeug: ${vehicleStr}\\nPreis: ${priceStr}`,
+        summary: `Termin: ${serviceName} bei ${workshop.companyName}`,
+        description: icsDescription,
         location: `${workshop.companyName}, ${workshopAddress}`,
         organizerEmail: workshop.user.email,
-        attendeeEmail: customer.user.email
+        organizerName: workshop.companyName,
+        attendeeEmail: customer.user.email,
+        attendeeName: `${customer.user.firstName} ${customer.user.lastName}`
       })
 
       // Send to customer with ICS attachment

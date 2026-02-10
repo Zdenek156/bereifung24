@@ -264,10 +264,10 @@ export default function BWAPage() {
                     Sonstige Erlöse
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-900 text-right">
-                    {formatCurrency(data.current.revenue.otherRevenue)}
+                    {formatCurrency((data.current as any).revenue?.otherRevenue || 0)}
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.revenue.otherRevenue, data.current.revenue.total)}
+                    {formatPercent((data.current as any).revenue?.otherRevenue || 0, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr className="bg-gray-50 font-semibold">
@@ -275,7 +275,7 @@ export default function BWAPage() {
                     Gesamtleistung
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-900 text-right">
-                    {formatCurrency(data.current.revenue.total)}
+                    {formatCurrency((data.current as any).revenue?.total || 0)}
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-900 text-right">
                     100%
@@ -296,7 +296,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.costOfSales.commissionExpense)}
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.costOfSales.commissionExpense, data.current.revenue.total)}
+                    {formatPercent(data.current.costOfSales.commissionExpense, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -309,7 +309,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.grossProfit)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 text-right">
-                    {formatPercent(data.current.grossProfit, data.current.revenue.total)}
+                    {formatPercent(data.current.grossProfit, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -334,7 +334,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.personnel.wages)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.personnel.wages, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.personnel.wages, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -345,7 +345,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.personnel.socialSecurity)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.personnel.socialSecurity, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.personnel.socialSecurity, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -363,7 +363,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.roomCosts.rent)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.roomCosts.rent, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.roomCosts.rent, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -374,7 +374,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.roomCosts.utilities)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.roomCosts.utilities, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.roomCosts.utilities, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -392,7 +392,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.vehicle.fuel)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.vehicle.fuel, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.vehicle.fuel, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -403,7 +403,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.vehicle.maintenance)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.vehicle.maintenance, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.vehicle.maintenance, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -416,7 +416,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.marketing)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.marketing, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.marketing, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -427,7 +427,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.insurance)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.insurance, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.insurance, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -438,7 +438,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.travel)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.travel, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.travel, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -449,7 +449,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.office)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.office, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.office, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>
@@ -460,7 +460,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingExpenses.other)}
                   </td>
                   <td className="px-6 py-2 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.operatingExpenses.other, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingExpenses.other, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -475,7 +475,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.operatingResult)}
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-gray-700 text-right">
-                    {formatPercent(data.current.operatingResult, data.current.revenue.total)}
+                    {formatPercent(data.current.operatingResult, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
 
@@ -492,7 +492,7 @@ export default function BWAPage() {
                     {formatCurrency(data.current.netIncome)}
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-gray-700 text-right">
-                    {formatPercent(data.current.netIncome, data.current.revenue.total)}
+                    {formatPercent(data.current.netIncome, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
               </tbody>

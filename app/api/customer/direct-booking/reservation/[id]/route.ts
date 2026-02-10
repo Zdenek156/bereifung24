@@ -20,6 +20,18 @@ export async function GET(
 
     const reservationId = params.id
 
+    // Get customer from session user
+    const customer = await prisma.customer.findUnique({
+      where: { userId: session.user.id }
+    })
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Kunde nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
     // Fetch reservation
     const reservation = await prisma.directBooking.findUnique({
       where: { id: reservationId },
@@ -73,7 +85,7 @@ export async function GET(
     }
 
     // Verify customer owns this reservation
-    if (reservation.customerId !== session.user.id) {
+    if (reservation.customerId !== customer.id) {
       return NextResponse.json(
         { error: 'Zugriff verweigert' },
         { status: 403 }
@@ -115,6 +127,18 @@ export async function DELETE(
 
     const reservationId = params.id
 
+    // Get customer from session user
+    const customer = await prisma.customer.findUnique({
+      where: { userId: session.user.id }
+    })
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Kunde nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
     // Verify reservation exists and belongs to user
     const reservation = await prisma.directBooking.findUnique({
       where: { id: reservationId }
@@ -125,7 +149,7 @@ export async function DELETE(
       return NextResponse.json({ success: true })
     }
 
-    if (reservation.customerId !== session.user.id) {
+    if (reservation.customerId !== customer.id) {
       return NextResponse.json(
         { error: 'Zugriff verweigert' },
         { status: 403 }

@@ -79,7 +79,7 @@ export async function GET(
       }
     })
 
-    // Group busy slots by date
+    // Group busy slots by date (accounting for booking duration)
     const busySlotsByDate: Record<string, string[]> = {}
     
     existingBookings.forEach(booking => {
@@ -87,7 +87,38 @@ export async function GET(
       if (!busySlotsByDate[dateStr]) {
         busySlotsByDate[dateStr] = []
       }
-      busySlotsByDate[dateStr].push(booking.appointmentTime)
+      
+      // Block all slots covered by this booking based on duration
+      const [startHour, startMinute] = booking.appointmentTime.split(':').map(Number)
+      const duration = booking.estimatedDuration || 60 // Default 60 minutes
+      const endMinutes = startHour * 60 + startMinute + duration
+      const endHour = Math.floor(endMinutes / 60)
+      const endMinute = endMinutes % 60
+      
+      // Block all 30-minute slots from start to end (including partial overlaps)
+      let currentHour = startHour
+      let currentMinute = startMinute
+      
+      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+        const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`
+        if (!busySlotsByDate[dateStr].includes(timeStr)) {
+          busySlotsByDate[dateStr].push(timeStr)
+        }
+        
+        currentMinute += 30
+        if (currentMinute >= 60) {
+          currentMinute -= 60
+          currentHour += 1
+        }
+      }
+      
+      // If the booking ends after the hour mark (e.g., 09:20), also block that hour's slot
+      if (endMinute > 0 && endMinute <= 30) {
+        const lastSlotTime = `${String(endHour).padStart(2, '0')}:00`
+        if (!busySlotsByDate[dateStr].includes(lastSlotTime)) {
+          busySlotsByDate[dateStr].push(lastSlotTime)
+        }
+      }
     })
 
     // 2. Check Google Calendar for busy slots
@@ -134,26 +165,46 @@ export async function GET(
         
         // Add Google Calendar busy times to busySlotsByDate
         gcalBusySlots.forEach((busy: any) => {
-          // Parse ISO datetime with timezone: "2026-02-19T08:00:00+01:00"
-          const startMatch = busy.start.match(/(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/)
-          const endMatch = busy.end.match(/(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/)
+          // Parse ISO datetime with timezone correctly using Date object
+          // busy.start is like "2026-02-19T08:00:00+01:00"
+          const busyStartDate = new Date(busy.start)
+          const busyEndDate = new Date(busy.end)
           
-          if (!startMatch || !endMatch) return
+          // Convert to Berlin timezone to get the correct local time
+          const dateStr = busyStartDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' }) // "2026-02-19"
+          const startTime = busyStartDate.toLocaleTimeString('de-DE', { 
+            timeZone: 'Europe/Berlin', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) // "08:00"
+          const endTime = busyEndDate.toLocaleTimeString('de-DE', { 
+            timeZone: 'Europe/Berlin', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) // "09:20"
           
-          const dateStr = startMatch[1] // "2026-02-19"
-          const startTime = `${startMatch[2]}:${startMatch[3]}` // "08:00"
-          const endTime = `${endMatch[2]}:${endMatch[3]}` // "09:00"
+          console.log(`[CUSTOMER SLOTS API] Blocking busy slot: ${startTime} - ${endTime} on ${dateStr}`)
           
           if (!busySlotsByDate[dateStr]) {
             busySlotsByDate[dateStr] = []
           }
           
-          // Add all 30-min slots between start and end time
-          let currentHour = parseInt(startMatch[2])
-          let currentMinute = parseInt(startMatch[3])
-          const endHour = parseInt(endMatch[2])
-          const endMinute = parseInt(endMatch[3])
+          // Add all 30-min slots that would conflict with this event
+          // A slot at X:00 is blocked if the event extends past X:00
+          // Example: Event 08:00-09:20 blocks slots 08:00, 08:30, 09:00
+          // (because a booking at 09:00 would conflict with an event ending at 09:20)
           
+          // Parse times from Berlin timezone strings
+          const [startHour, startMinute] = startTime.split(':').map(Number)
+          const [endHour, endMinute] = endTime.split(':').map(Number)
+          
+          let currentHour = startHour
+          let currentMinute = startMinute
+          
+          // Block all slots from start up to (but not including) the end
+          // BUT if end time is not on a 30-min boundary, also block the slot at the last 30-min mark
           while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
             const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`
             if (!busySlotsByDate[dateStr].includes(timeStr)) {
@@ -164,6 +215,15 @@ export async function GET(
             if (currentMinute >= 60) {
               currentMinute -= 60
               currentHour += 1
+            }
+          }
+          
+          // If the event ends after the hour mark (e.g., 09:20), also block that hour's slot
+          // This prevents booking a slot at 09:00 when an event runs until 09:20
+          if (endMinute > 0 && endMinute <= 30) {
+            const lastSlotTime = `${String(endHour).padStart(2, '0')}:00`
+            if (!busySlotsByDate[dateStr].includes(lastSlotTime)) {
+              busySlotsByDate[dateStr].push(lastSlotTime)
             }
           }
         })

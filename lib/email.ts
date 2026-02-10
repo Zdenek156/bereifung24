@@ -138,6 +138,14 @@ export async function sendEmail({ to, subject, text, html, attachments }: EmailO
     // Hole Email-Settings aus Datenbank
     const config = await getEmailSettings()
 
+    console.log('[EMAIL] Config loaded:', {
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      passwordSet: !!config.password,
+      from: config.from
+    })
+
     // Wenn Email nicht konfiguriert ist, logge nur
     if (!config.host || !config.user) {
       console.log('📧 Email würde gesendet werden (nicht konfiguriert):')

@@ -106,8 +106,8 @@ interface ComparisonData {
 export default function GuvPage() {
   const router = useRouter()
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
-  const [incomeStatement, setIncomeStatement] = useState<IncomeStatementData | null>(null)
-  const [comparison, setComparison] = useState<ComparisonData | null>(null)
+  const [incomeStatement, setIncomeStatement] = useState<any>(null)
+  const [comparison, setComparison] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'single' | 'comparison'>('single')
   const [showCharts, setShowCharts] = useState(false)

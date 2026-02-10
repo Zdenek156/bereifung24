@@ -55,19 +55,40 @@ export async function GET() {
     })
 
     // Get all direct bookings (PayPal/Stripe)
+    // Load customers and vehicles separately to avoid Prisma validation errors on null relations
     const directBookingsRaw = await prisma.directBooking.findMany({
       where: { 
-        workshopId: user.workshop.id
-      },
-      include: {
-        customer: true,
-        vehicle: true,
+        workshopId: user.workshop.id,
+        customerId: { not: null },
+        vehicleId: { not: null }
       },
       // Keine Sortierung - wird clientseitig gemacht
     })
 
-    // Filter out bookings with deleted customers or vehicles
-    const directBookings = directBookingsRaw.filter(db => db.customer !== null && db.vehicle !== null)
+    // Load customers and vehicles separately
+    const customerIds = [...new Set(directBookingsRaw.map(db => db.customerId).filter(id => id !== null))]
+    const vehicleIds = [...new Set(directBookingsRaw.map(db => db.vehicleId).filter(id => id !== null))]
+    
+    const customers = await prisma.user.findMany({
+      where: { id: { in: customerIds as string[] } }
+    })
+    
+    const vehicles = await prisma.vehicle.findMany({
+      where: { id: { in: vehicleIds as string[] } }
+    })
+
+    // Create lookup maps
+    const customerMap = new Map(customers.map(c => [c.id, c]))
+    const vehicleMap = new Map(vehicles.map(v => [v.id, v]))
+
+    // Attach customer and vehicle data
+    const directBookings = directBookingsRaw
+      .map(db => ({
+        ...db,
+        customer: db.customerId ? customerMap.get(db.customerId) : null,
+        vehicle: db.vehicleId ? vehicleMap.get(db.vehicleId) : null
+      }))
+      .filter(db => db.customer !== null && db.customer !== undefined && db.vehicle !== null && db.vehicle !== undefined)
 
     // Transform direct bookings to match appointment structure
     const transformedDirectBookings = directBookings.map(db => ({

@@ -26,10 +26,11 @@ export async function POST(req: NextRequest) {
       paymentMethod,
       paymentStatus,
       sendEmails = false,
-      createCalendarEvent: shouldCreateCalendarEvent = false
+      createCalendarEvent: shouldCreateCalendarEvent = false,
+      reservationId // Add reservationId to identify the DirectBooking to update
     } = body
 
-    console.log('[DIRECT BOOKING] Creating booking:', { workshopId, vehicleId, serviceType, date, time, paymentMethod })
+    console.log('[DIRECT BOOKING] Creating booking:', { workshopId, vehicleId, serviceType, date, time, paymentMethod, reservationId })
 
     // Validate required fields
     if (!workshopId || !vehicleId || !serviceType || !date || !time) {
@@ -77,42 +78,61 @@ export async function POST(req: NextRequest) {
     const appointmentDateTime = new Date(`${date}T${time}:00`)
     const estimatedDuration = 60 // Default 60 minutes
 
-    // Check if slot is still available (double-check to prevent race conditions)
+    // Check if slot is still available in DirectBooking (double-check to prevent race conditions)
     const dateOnly = appointmentDateTime.toISOString().split('T')[0]
-    const existingBookings = await prisma.booking.findMany({
+    const existingDirectBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        appointmentDate: appointmentDateTime,
-        appointmentTime: time,
+        date: new Date(dateOnly),
+        time,
         status: { in: ['CONFIRMED', 'COMPLETED'] }
       }
     })
 
-    if (existingBookings.length > 0) {
+    if (existingDirectBookings.length > 0) {
       return NextResponse.json(
         { error: 'Dieser Termin wurde bereits gebucht. Bitte wählen Sie einen anderen Termin.' },
         { status: 409 }
       )
     }
 
-    // Create booking
-    const booking = await prisma.booking.create({
-      data: {
-        customerId: customer.id,
-        workshopId,
-        vehicleId,
-        appointmentDate: appointmentDateTime,
-        appointmentTime: time,
-        estimatedDuration,
-        status: 'CONFIRMED',
-        paymentMethod: paymentMethod || 'STRIPE',
-        paymentStatus: paymentStatus || 'PAID',
-        paidAt: new Date(),
-        serviceType
-      }
-    })
+    // Update DirectBooking from RESERVED to CONFIRMED (or create new if no reservationId)
+    let directBooking: any
+    
+    if (reservationId) {
+      // Update existing reservation
+      directBooking = await prisma.directBooking.update({
+        where: { id: reservationId },
+        data: {
+          status: 'CONFIRMED',
+          paymentMethod: paymentMethod || 'STRIPE',
+          paymentStatus: paymentStatus || 'PAID',
+          paidAt: new Date()
+        }
+      })
+      console.log('[DIRECT BOOKING] Reservation confirmed:', directBooking.id)
+    } else {
+      // Create new DirectBooking
+      directBooking = await prisma.directBooking.create({
+        data: {
+          customerId: customer.user.id,
+          workshopId,
+          vehicleId,
+          serviceType,
+          date: new Date(dateOnly),
+          time,
+          durationMinutes: estimatedDuration,
+          basePrice: totalPrice,
+          totalPrice: totalPrice,
+          status: 'CONFIRMED',
+          paymentMethod: paymentMethod || 'STRIPE',
+          paymentStatus: paymentStatus || 'PAID',
+          paidAt: new Date()
+        }
+      })
+      console.log('[DIRECT BOOKING] New booking created:', directBooking.id)
+    }
 
-    console.log('[DIRECT BOOKING] Booking created:', booking.id)
 
     let calendarEventId: string | null = null
 
@@ -174,10 +194,10 @@ export async function POST(req: NextRequest) {
           calendarEventId = calendarEvent.id || null
           
           if (calendarEventId) {
-            await prisma.booking.update({
-              where: { id: booking.id },
-              data: { googleEventId: calendarEventId }
-            })
+            // Store calendar event ID in DirectBooking (we don't have a field for it yet, so skip for now)
+            // TODO: Add googleEventId field to DirectBooking model
+            console.log('[CALENDAR] Event ID:', calendarEventId)
+          }
             console.log('[CALENDAR] Event created in workshop calendar:', calendarEventId)
           }
         } catch (error) {
@@ -300,12 +320,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       booking: {
-        id: booking.id,
-        appointmentDate: booking.appointmentDate.toISOString(),
-        appointmentTime: booking.appointmentTime,
-        status: booking.status,
+        id: directBooking.id,
+        appointmentDate: directBooking.date.toISOString(),
+        appointmentTime: directBooking.time,
+        status: directBooking.status,
         googleEventId: calendarEventId,
-        paymentStatus: booking.paymentStatus
+        paymentStatus: directBooking.paymentStatus
       }
     })
 

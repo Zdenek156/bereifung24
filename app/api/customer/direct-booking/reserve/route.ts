@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         workshopId,
         vehicleId,
         serviceType,
-        date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
+        date: new Date(dateOnly), // Convert string to Date object
         time,
         durationMinutes: 60, // Default 60 minutes for wheel change
         basePrice: basePrice || 0,

@@ -143,24 +143,30 @@ export async function POST(req: NextRequest) {
     const bookingDate = directBooking.date // Date object from DB (UTC)
     const [hours, minutes] = directBooking.time.split(':').map(Number)
     
-    // Extract year, month, day from the stored date
-    // Use UTC methods to avoid timezone shifts
-    const year = bookingDate.getUTCFullYear()
-    const month = bookingDate.getUTCMonth()
-    const day = bookingDate.getUTCDate()
+    // Extract Berlin date components (not UTC!) because DB stores Berlin date at UTC midnight
+    // Example: DB has "2026-02-10T23:00:00Z" which represents 2026-02-11 00:00 Berlin
+    // We need to extract day=11 (Berlin), not day=10 (UTC)
+    const berlinDateStr = bookingDate.toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
     
-    // Create new date with the booking time in UTC (treating stored date as Berlin date)
-    // The DB date is "2026-02-09T23:00:00Z" which represents 2026-02-10 00:00 Berlin time
-    // We want to create "2026-02-10 12:00 Berlin time" = "2026-02-10 11:00 UTC"
-    // So we take the UTC date components (which represent Berlin date) and subtract 1 hour for CET offset
-    const appointmentDateTime = new Date(Date.UTC(year, month, day, hours - 1, minutes, 0))
+    // Parse DD.MM.YYYY format
+    const [day, month, year] = berlinDateStr.split('.').map(s => parseInt(s.trim()))
+    
+    // Create UTC timestamp for Berlin date+time
+    // Berlin 11.02 12:00 = UTC 11.02 11:00 (CET = UTC+1)
+    const appointmentDateTime = new Date(Date.UTC(year, month - 1, day, hours - 1, minutes, 0))
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
       time: directBooking.time,
-      extracted_utc_date: `${year}-${month+1}-${day}`,
-      combined: appointmentDateTime.toISOString(),
-      local_string: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
+      berlin_date: berlinDateStr,
+      extracted_berlin_components: `${year}-${month}-${day}`,
+      combined_utc: appointmentDateTime.toISOString(),
+      berlin_display: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
     })
 
     let calendarEventId: string | null = null

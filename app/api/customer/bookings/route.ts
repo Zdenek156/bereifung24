@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Alle Buchungen des Kunden abrufen (nur CONFIRMED und COMPLETED, keine RESERVED)
+    console.log('[BOOKINGS API] Fetching bookings for customer:', session.user.id)
+    
     const bookings = await prisma.directBooking.findMany({
       where: {
         customerId: session.user.id,
@@ -70,6 +72,8 @@ export async function GET(request: NextRequest) {
       storagePrice: booking.storagePrice ? Number(booking.storagePrice) : null,
       totalPrice: Number(booking.totalPrice)
     }))
+
+    console.log('[BOOKINGS API] Found', bookingsData.length, 'bookings for customer')
 
     return NextResponse.json({
       success: true,

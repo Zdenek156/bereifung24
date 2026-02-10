@@ -87,6 +87,11 @@ export default function PaymentSuccessPage() {
           }
         }
 
+        // If no cached data but already marked as created, show error (something went wrong)
+        if (bookingCreated) {
+          throw new Error('Buchung wurde bereits erstellt, aber Details konnten nicht geladen werden. Bitte kontaktieren Sie den Support.')
+        }
+
         // Verify reservation before creating booking (required for all payments now)
         if (!reservationId) {
           throw new Error('Keine Reservierungs-ID gefunden. Bitte kontaktieren Sie den Support.')

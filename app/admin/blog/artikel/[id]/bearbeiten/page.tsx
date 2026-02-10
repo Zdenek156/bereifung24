@@ -265,7 +265,7 @@ export default function EditArticlePage() {
                 {post?.status}
               </span>
               <span className="text-gray-600 text-sm">
-                • {post?._count?.blogViews || 0} Views
+                • {(post as any)?._count?.blogViews || 0} Views
               </span>
             </div>
           </div>

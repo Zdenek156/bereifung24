@@ -71,20 +71,20 @@ export default function PaymentSuccessPage() {
         }
 
         // Check if booking already exists (skip reservation check on reload)
-        const existingBookingId = sessionStorage.getItem(`booking_created_${reservationId}`)
-        if (existingBookingId) {
-          console.log('[SUCCESS] Booking already created:', existingBookingId)
-          // Fetch existing booking details
-          const bookingRes = await fetch(`/api/customer/direct-booking/${existingBookingId}`)
-          if (bookingRes.ok) {
-            const bookingData = await bookingRes.json()
-            setBooking(bookingData.booking)
+        const cachedBookingData = sessionStorage.getItem(`booking_data_${reservationId}`)
+        if (cachedBookingData) {
+          console.log('[SUCCESS] Booking already created, loading from cache')
+          try {
+            const bookingData = JSON.parse(cachedBookingData)
+            setBooking(bookingData)
             setBookingCreated(true)
             setLoading(false)
             return
+          } catch (parseError) {
+            console.warn('[SUCCESS] Failed to parse cached booking data:', parseError)
+            // Clear invalid cache and continue with normal flow
+            sessionStorage.removeItem(`booking_data_${reservationId}`)
           }
-          // If fetch fails, continue with normal flow
-          sessionStorage.removeItem(`booking_created_${reservationId}`)
         }
 
         // Verify reservation before creating booking (required for all payments now)
@@ -190,10 +190,12 @@ export default function PaymentSuccessPage() {
         const finalBookingData = await bookingRes.json()
         console.log('[SUCCESS] Booking created with calendar event and emails sent:', finalBookingData)
 
-        // Store booking ID to prevent re-creation on page reload
-        if (finalBookingData.booking?.id && reservationId) {
-          sessionStorage.setItem(`booking_created_${reservationId}`, finalBookingData.booking.id)
+        // Store complete booking data to prevent re-creation on page reload
+        if (finalBookingData.booking && reservationId) {
+          sessionStorage.setItem(`booking_data_${reservationId}`, JSON.stringify(finalBookingData.booking))
         }
+        
+        setBooking(finalBookingData.booking)
 
         // Clean up reservation after successful booking
         if (reservationId) {

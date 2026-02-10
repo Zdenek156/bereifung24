@@ -196,8 +196,6 @@ export async function POST(req: NextRequest) {
           if (calendarEventId) {
             // Store calendar event ID in DirectBooking (we don't have a field for it yet, so skip for now)
             // TODO: Add googleEventId field to DirectBooking model
-            console.log('[CALENDAR] Event ID:', calendarEventId)
-          }
             console.log('[CALENDAR] Event created in workshop calendar:', calendarEventId)
           }
         } catch (error) {

@@ -22,10 +22,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Alle Buchungen des Kunden abrufen
+    // Alle Buchungen des Kunden abrufen (nur CONFIRMED und COMPLETED, keine RESERVED)
     const bookings = await prisma.directBooking.findMany({
       where: {
-        customerId: session.user.id
+        customerId: session.user.id,
+        status: {
+          in: ['CONFIRMED', 'COMPLETED', 'CANCELLED']
+        }
       },
       include: {
         workshop: {

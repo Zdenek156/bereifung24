@@ -82,6 +82,15 @@ export async function GET() {
       // Keine Sortierung - wird clientseitig gemacht
     })
 
+    console.log('[WORKSHOP APPOINTMENTS] DirectBookings loaded:', directBookings.length)
+    console.log('[WORKSHOP APPOINTMENTS] DirectBookings data:', directBookings.map(db => ({
+      id: db.id,
+      status: db.status,
+      date: db.date,
+      time: db.time,
+      customerEmail: db.customer.email
+    })))
+
     // Transform direct bookings to match appointment structure
     const transformedDirectBookings = directBookings.map(db => ({
       id: db.id,

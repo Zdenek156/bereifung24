@@ -67,9 +67,6 @@ export async function GET() {
     // Load related data
     const customerIds = directBookingsRaw.map(db => db.customerId).filter(Boolean) as string[]
     const vehicleIds = directBookingsRaw.map(db => db.vehicleId).filter(Boolean) as string[]
-    // Load related data
-    const customerIds = directBookingsRaw.map(db => db.customerId).filter(Boolean) as string[]
-    const vehicleIds = directBookingsRaw.map(db => db.vehicleId).filter(Boolean) as string[]
     
     const customers = await prisma.user.findMany({
       where: { id: { in: [...new Set(customerIds)] } }

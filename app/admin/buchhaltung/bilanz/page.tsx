@@ -771,12 +771,12 @@ export default function BilanzPage() {
             </tr>
             <tr>
               <td style={{ paddingLeft: '20px' }}>I. Gezeichnetes Kapital</td>
-              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.stammkapital || 0)}</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.gezeichnetesKapital || 0)}</td>
               <td></td>
             </tr>
             <tr>
               <td style={{ paddingLeft: '20px' }}>II. Kapitalrücklage</td>
-              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.kapitalruecklage || 0)}</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.kapitalruecklagen || 0)}</td>
               <td></td>
             </tr>
             <tr>
@@ -785,22 +785,16 @@ export default function BilanzPage() {
               <td></td>
             </tr>
             <tr>
-              <td style={{ paddingLeft: '20px' }}>IV. Gewinnvortrag/Verlustvortrag</td>
-              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.gewinnvortrag || 0)}</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style={{ paddingLeft: '20px' }}>V. Jahresüberschuss/Jahresfehlbetrag</td>
+              <td style={{ paddingLeft: '20px' }}>IV. Jahresüberschuss/Jahresfehlbetrag</td>
               <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.eigenkapital.jahresueberschuss || 0)}</td>
               <td></td>
             </tr>
             <tr style={{ fontWeight: 'bold' }}>
               <td>Summe Eigenkapital</td>
               <td style={{ textAlign: 'right' }}>
-                {formatEUR((balanceSheet?.passiva.eigenkapital.stammkapital || 0) + 
-                          (balanceSheet?.passiva.eigenkapital.kapitalruecklage || 0) + 
+                {formatEUR((balanceSheet?.passiva.eigenkapital.gezeichnetesKapital || 0) + 
+                          (balanceSheet?.passiva.eigenkapital.kapitalruecklagen || 0) + 
                           (balanceSheet?.passiva.eigenkapital.gewinnruecklagen || 0) + 
-                          (balanceSheet?.passiva.eigenkapital.gewinnvortrag || 0) + 
                           (balanceSheet?.passiva.eigenkapital.jahresueberschuss || 0))}
               </td>
               <td></td>
@@ -847,7 +841,7 @@ export default function BilanzPage() {
             </tr>
             <tr>
               <td style={{ paddingLeft: '20px' }}>3. Verbindlichkeiten aus Lieferungen und Leistungen</td>
-              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungenLeistungen || 0)}</td>
+              <td style={{ textAlign: 'right' }}>{formatEUR(balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungen || 0)}</td>
               <td></td>
             </tr>
             <tr>
@@ -860,7 +854,7 @@ export default function BilanzPage() {
               <td style={{ textAlign: 'right' }}>
                 {formatEUR((balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenKreditinstitute || 0) + 
                           (balanceSheet?.passiva.verbindlichkeiten.erhalteneAnzahlungen || 0) + 
-                          (balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungenLeistungen || 0) + 
+                          (balanceSheet?.passiva.verbindlichkeiten.verbindlichkeitenLieferungen || 0) + 
                           (balanceSheet?.passiva.verbindlichkeiten.sonstigeVerbindlichkeiten || 0))}
               </td>
               <td></td>

@@ -404,10 +404,16 @@ export default function WorkshopDetailPage() {
   const handleBooking = () => {
     if (!selectedSlot || !selectedDate || !selectedVehicle) return
     
+    // Format date in local timezone (YYYY-MM-DD) to avoid timezone offset issues
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(selectedDate.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
     // URL für neue Payment-Seite mit allen Parametern
     const paymentUrl = `/home/workshop/${workshopId}/payment?` +
       `service=${serviceType}&` +
-      `date=${selectedDate.toISOString().split('T')[0]}&` +
+      `date=${dateStr}&` +
       `time=${selectedSlot.time}&` +
       `vehicleId=${selectedVehicle}`
     

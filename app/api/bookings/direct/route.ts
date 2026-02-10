@@ -74,10 +74,6 @@ export async function POST(req: NextRequest) {
       totalPrice = pricingData.price || pricingData.basePrice || 0
     }
 
-    // Parse date and time
-    // Create date object that represents the exact time in Europe/Berlin timezone
-    // date format: "2026-02-19", time format: "10:00"
-    const appointmentDateTime = new Date(`${date}T${time}:00+01:00`) // Force Europe/Berlin timezone (UTC+1)
     const estimatedDuration = 60 // Default 60 minutes
 
     // Check if slot is still available in DirectBooking (double-check to prevent race conditions)
@@ -141,6 +137,21 @@ export async function POST(req: NextRequest) {
       console.log('[DIRECT BOOKING] New booking created:', directBooking.id)
     }
 
+    // Use DirectBooking's stored date and time (authoritative source)
+    // Combine date and time to create appointment datetime
+    const bookingDate = directBooking.date // Already a Date object
+    const [hours, minutes] = directBooking.time.split(':').map(Number)
+    
+    // Create appointment datetime in local timezone
+    const appointmentDateTime = new Date(bookingDate)
+    appointmentDateTime.setHours(hours, minutes, 0, 0)
+    
+    console.log('[DIRECT BOOKING] Appointment datetime:', {
+      stored_date: bookingDate.toISOString(),
+      time: directBooking.time,
+      combined: appointmentDateTime.toISOString(),
+      local_string: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
+    })
 
     let calendarEventId: string | null = null
 

@@ -44,8 +44,20 @@ export async function GET(
       )
     }
 
-    // Check if reservation has expired
-    if (reservation.reservedUntil && new Date() > reservation.reservedUntil) {
+    // If booking is already confirmed/completed, return it (not expired)
+    if (reservation.status === 'CONFIRMED' || reservation.status === 'COMPLETED') {
+      console.log('[RESERVATION API] Booking already confirmed:', {
+        id: reservationId,
+        status: reservation.status
+      })
+      return NextResponse.json({
+        success: true,
+        reservation
+      })
+    }
+
+    // Check if RESERVED booking has expired
+    if (reservation.status === 'RESERVED' && reservation.reservedUntil && new Date() > reservation.reservedUntil) {
       console.log('[RESERVATION API] Reservation expired, deleting:', reservationId)
       
       // Delete expired reservation

@@ -327,12 +327,33 @@ export default function WorkshopDetailPage() {
     }
     
     // Generate time slots for opening hours (every 30 min)
-    // Only include AVAILABLE slots (skip busy times completely)
+    // Only include slots where the ENTIRE service duration would be free
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute of [0, 30]) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-        // Only add slot if NOT busy
-        if (!busyTimes.includes(timeStr)) {
+        
+        // Check if this slot AND all following slots for the service duration are free
+        const slotMinutes = hour * 60 + minute
+        const serviceDurationMinutes = baseDuration // Use actual service duration from booking
+        
+        let isFullServicePeriodFree = true
+        
+        // Check all 30-min slots within the service duration
+        for (let offset = 0; offset < serviceDurationMinutes; offset += 30) {
+          const checkMinutes = slotMinutes + offset
+          const checkHour = Math.floor(checkMinutes / 60)
+          const checkMinute = checkMinutes % 60
+          const checkTimeStr = `${String(checkHour).padStart(2, '0')}:${String(checkMinute).padStart(2, '0')}`
+          
+          // If any slot in the service period is busy, this start time is not available
+          if (busyTimes.includes(checkTimeStr)) {
+            isFullServicePeriodFree = false
+            break
+          }
+        }
+        
+        // Only add slot if the entire service period is free
+        if (isFullServicePeriodFree) {
           slots.push({
             time: timeStr,
             available: true

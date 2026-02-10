@@ -159,7 +159,7 @@ export default function InvoiceSettingsPage() {
             {settings.logoUrl && (
               <div className="flex items-center gap-4">
                 <img src={settings.logoUrl} alt="Logo" className="h-20 object-contain border p-2 rounded" />
-                <Button variant="destructive" size="sm" onClick={handleDeleteLogo}>
+                <Button variant="outline" size="sm" onClick={handleDeleteLogo} className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Löschen
                 </Button>

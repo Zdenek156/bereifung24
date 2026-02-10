@@ -690,7 +690,8 @@ export default function AdminTireRequestsPage() {
             <Button
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              variant="destructive"
+              variant="outline"
+              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
               size="sm"
             >
               <Trash2 className="h-4 w-4 mr-2" />

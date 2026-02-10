@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
         serviceType,
         date: dateOnly, // PostgreSQL DATE field requires YYYY-MM-DD format
         time,
+        durationMinutes: 60, // Default 60 minutes for wheel change
         basePrice: basePrice || 0,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,

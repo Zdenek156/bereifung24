@@ -69,7 +69,18 @@ export async function POST(request: NextRequest) {
     const dateObj = new Date(date)
     const dateOnly = dateObj.toISOString().split('T')[0]
     
-    // Fetch all bookings for this workshop and filter in code
+    // FIRST: Delete expired reservations (older than 10 minutes)
+    const now = new Date()
+    await prisma.directBooking.deleteMany({
+      where: {
+        status: 'RESERVED',
+        reservedUntil: {
+          lt: now // Less than now = expired
+        }
+      }
+    })
+    
+    // THEN: Fetch all bookings for this workshop and filter in code
     // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
     const allBookings = await prisma.directBooking.findMany({
       where: {
@@ -79,18 +90,34 @@ export async function POST(request: NextRequest) {
         id: true,
         date: true,
         time: true,
-        status: true
+        status: true,
+        reservedUntil: true
       }
     })
     
-    // Filter for matching date, time AND active status
+    // Filter for matching date, time AND active status (RESERVED or CONFIRMED)
+    // For RESERVED status, also check if not expired
     const existingReservation = allBookings.find(booking => {
       const bookingDateStr = booking.date.toISOString().split('T')[0]
-      const isActiveStatus = ['RESERVED', 'CONFIRMED'].includes(booking.status)
-      return bookingDateStr === dateOnly && booking.time === time && isActiveStatus
+      
+      if (bookingDateStr !== dateOnly || booking.time !== time) {
+        return false // Different date or time
+      }
+      
+      if (booking.status === 'CONFIRMED') {
+        return true // Confirmed bookings always block the slot
+      }
+      
+      if (booking.status === 'RESERVED') {
+        // Check if reservation is still valid (not expired)
+        return booking.reservedUntil && booking.reservedUntil > now
+      }
+      
+      return false
     })
 
     if (existingReservation) {
+      console.log('[RESERVE] Slot already taken:', { date: dateOnly, time, status: existingReservation.status })
       return NextResponse.json(
         { error: 'Dieser Termin wurde gerade gebucht. Bitte wählen Sie einen anderen.' },
         { status: 409 }

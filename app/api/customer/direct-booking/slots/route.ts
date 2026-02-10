@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
               googleCalendarBookedSlots.push(startTime)
             }
             
-            // Also block slots during the event duration
+            // Also block slots during the event duration (every 30 minutes)
             let currentMinutes = berlinStart.getHours() * 60 + berlinStart.getMinutes()
             const endMinutes = berlinEnd.getHours() * 60 + berlinEnd.getMinutes()
             
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
                 googleCalendarBookedSlots.push(slotTime)
               }
               
-              currentMinutes += duration // Increment by service duration
+              currentMinutes += 30 // Increment by 30 minutes (slot interval)
             }
           }
         })
@@ -333,10 +333,14 @@ export async function POST(request: NextRequest) {
                 googleCalendarBookedSlots.push(startTime)
               }
               
-              // Also block slots during the event duration
+              // Block ALL time slots that would overlap with this event
+              // We need to check which of our service slots (generated based on service duration)
+              // would overlap with this calendar event
+              // For this, we generate all possible time slots and mark them as busy
               let currentMinutes = berlinStart.getHours() * 60 + berlinStart.getMinutes()
               const endMinutes = berlinEnd.getHours() * 60 + berlinEnd.getMinutes()
               
+              // Block in intervals matching the service duration to match the generated slots
               while (currentMinutes < endMinutes) {
                 const slotHour = Math.floor(currentMinutes / 60)
                 const slotMin = currentMinutes % 60
@@ -346,7 +350,7 @@ export async function POST(request: NextRequest) {
                   googleCalendarBookedSlots.push(slotTime)
                 }
                 
-                currentMinutes += duration // Increment by service duration
+                currentMinutes += duration // Increment by service duration to match slot generation
               }
             }
           })

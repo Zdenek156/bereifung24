@@ -182,17 +182,31 @@ export async function GET(request: Request) {
 
     console.log(`[SLOTS API] Existing DB appointments: ${existingAppointments.length}`)
     existingAppointments.forEach(apt => {
-      console.log(`[SLOTS API]   - Booking ${apt.id}: ${apt.appointmentTime} (Status: ${apt.status})`)
+      console.log(`[SLOTS API]   - Booking ${apt.id}: ${apt.appointmentTime} (Status: ${apt.status}, Duration: ${apt.estimatedDuration} min)`)
     })
 
-    // Markiere bereits gebuchte Slots als nicht verfügbar
+    // Markiere bereits gebuchte Slots als nicht verfügbar (berücksichtige Dauer)
     existingAppointments.forEach(apt => {
-      const time = apt.appointmentTime
-      const slot = slots.find(s => s.time === time)
-      if (slot) {
-        slot.available = false
-        console.log(`[SLOTS API]   - Blocked ${time} (DB booking)`)
-      }
+      const [startHour, startMinute] = apt.appointmentTime.split(':').map(Number)
+      const duration = apt.estimatedDuration || 60 // Default 60 minutes
+      const endMinutes = startHour * 60 + startMinute + duration
+      const endHour = Math.floor(endMinutes / 60)
+      const endMinute = endMinutes % 60
+      
+      // Block all slots that would conflict with this booking
+      slots.forEach(slot => {
+        const slotHour = parseInt(slot.time.split(':')[0])
+        const slotMinute = parseInt(slot.time.split(':')[1])
+        const slotMinutes = slotHour * 60 + slotMinute
+        const startMinutes = startHour * 60 + startMinute
+        const bookingEndMinutes = endMinutes
+        
+        // Block if slot starts within the booking period
+        if (slotMinutes >= startMinutes && slotMinutes < bookingEndMinutes) {
+          slot.available = false
+          console.log(`[SLOTS API]   - Blocked ${slot.time} (DB booking, ${apt.appointmentTime}-${endHour}:${String(endMinute).padStart(2, '0')})`)
+        }
+      })
     })
     
     // 2. Prüfe Google Calendar Events (falls Kalender verbunden)
@@ -231,23 +245,47 @@ export async function GET(request: Request) {
         
         // Blockiere Slots die mit Google Calendar Events überschneiden
         busySlots.forEach((busy: any) => {
-          // Parse with timezone offset (e.g., "2026-02-19T08:00:00+01:00")
-          // Extract time from ISO string: "2026-02-19T08:00:00+01:00" -> "08:00"
-          const startMatch = busy.start.match(/T(\d{2}):(\d{2})/)
-          const endMatch = busy.end.match(/T(\d{2}):(\d{2})/)
+          // Parse ISO datetime with timezone correctly using Date object
+          // busy.start is like "2026-02-19T08:00:00+01:00"
+          const busyStartDate = new Date(busy.start)
+          const busyEndDate = new Date(busy.end)
           
-          if (!startMatch || !endMatch) return
-          
-          const busyStartTime = `${startMatch[1]}:${startMatch[2]}`
-          const busyEndTime = `${endMatch[1]}:${endMatch[2]}`
+          // Convert to Berlin timezone to get the correct local time
+          const busyStartTime = busyStartDate.toLocaleTimeString('de-DE', { 
+            timeZone: 'Europe/Berlin', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) // "08:00"
+          const busyEndTime = busyEndDate.toLocaleTimeString('de-DE', { 
+            timeZone: 'Europe/Berlin', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) // "09:20"
           
           console.log(`[SLOTS API]   - Busy from ${busyStartTime} to ${busyEndTime}`)
           
-          // Blockiere alle Slots die in diesem Zeitraum liegen
+          // Blockiere alle Slots die mit diesem Termin kollidieren würden
+          // Ein Slot ist blockiert, wenn sein Start-Zeitpunkt VOR dem Ende des Termins liegt
+          // Beispiel: Termin 08:00-09:20 blockiert 08:00, 08:30 UND 09:00
+          // (weil eine Buchung um 09:00 mit dem laufenden Termin bis 09:20 kollidiert)
+          const [busyEndHour, busyEndMinute] = busyEndTime.split(':').map(Number)
+          
           slots.forEach(slot => {
-            if (slot.time >= busyStartTime && slot.time < busyEndTime) {
-              slot.available = false
-              console.log(`[SLOTS API]   - Blocked ${slot.time} (Google Calendar)`)
+            const slotHour = parseInt(slot.time.split(':')[0])
+            const slotMinute = parseInt(slot.time.split(':')[1])
+            
+            // Block slot if it starts before the event ends
+            if (slot.time >= busyStartTime) {
+              // Compare as minutes since midnight for accurate comparison
+              const slotMinutes = slotHour * 60 + slotMinute
+              const busyEndMinutes = busyEndHour * 60 + busyEndMinute
+              
+              if (slotMinutes < busyEndMinutes) {
+                slot.available = false
+                console.log(`[SLOTS API]   - Blocked ${slot.time} (Google Calendar)`)
+              }
             }
           })
         })

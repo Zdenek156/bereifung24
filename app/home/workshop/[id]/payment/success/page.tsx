@@ -44,15 +44,15 @@ export default function PaymentSuccessPage() {
       router.push(`/login?redirect=${encodeURIComponent(window.location.href)}`)
       return
     }
-// Prevent duplicate booking creation
+
+    // Prevent duplicate booking creation
     if (bookingInProgress.current || bookingCreated) {
       return
     }
 
     const verifyAndCreateBooking = async () => {
       try {
-        bookingInProgress.current = true // Set flag to prevent duplicate callserifyAndCreateBooking = async () => {
-      try {
+        bookingInProgress.current = true // Set flag to prevent duplicate calls
         setLoading(true)
 
         // Load workshop details

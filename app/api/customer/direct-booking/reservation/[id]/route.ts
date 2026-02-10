@@ -32,8 +32,8 @@ export async function GET(
       )
     }
 
-    // Fetch reservation (without includes to avoid null relation errors)
-    const reservation = await prisma.directBooking.findUnique({
+    // Fetch reservation from DirectBookingReservation table
+    const reservation = await prisma.directBookingReservation.findUnique({
       where: { id: reservationId }
     })
 
@@ -49,7 +49,7 @@ export async function GET(
       console.log('[RESERVATION API] Reservation expired, deleting:', reservationId)
       
       // Delete expired reservation
-      await prisma.directBooking.delete({
+      await prisma.directBookingReservation.delete({
         where: { id: reservationId }
       })
 
@@ -115,7 +115,7 @@ export async function DELETE(
     }
 
     // Verify reservation exists and belongs to user
-    const reservation = await prisma.directBooking.findUnique({
+    const reservation = await prisma.directBookingReservation.findUnique({
       where: { id: reservationId }
     })
 
@@ -132,7 +132,7 @@ export async function DELETE(
     }
 
     // Delete reservation
-    await prisma.directBooking.delete({
+    await prisma.directBookingReservation.delete({
       where: { id: reservationId }
     })
 

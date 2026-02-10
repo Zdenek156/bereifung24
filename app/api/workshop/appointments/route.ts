@@ -111,6 +111,7 @@ export async function GET() {
       completedAt: null,
       customerNotes: null,
       workshopNotes: null,
+      createdAt: db.createdAt.toISOString(), // When the booking was created
       isDirectBooking: true, // Flag to identify direct bookings
       paymentMethod: db.paymentMethod,
       totalPrice: Number(db.totalPrice),

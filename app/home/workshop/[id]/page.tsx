@@ -370,8 +370,11 @@ export default function WorkshopDetailPage() {
     setSelectedDate(date)
     setSelectedSlot(null) // Reset slot selection
     
-    // Debug: Log busy slots for this date
-    const dateStr = date.toISOString().split('T')[0]
+    // Debug: Log busy slots for this date (format without UTC conversion)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
     console.log(`[CUSTOMER CALENDAR] Selected date: ${dateStr}`)
     console.log(`[CUSTOMER CALENDAR] Busy slots:`, busySlots[dateStr] || [])
     console.log(`[CUSTOMER CALENDAR] All busy slots:`, busySlots)

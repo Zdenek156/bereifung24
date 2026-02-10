@@ -70,6 +70,23 @@ export default function PaymentSuccessPage() {
           setVehicle(foundVehicle)
         }
 
+        // Check if booking already exists (skip reservation check on reload)
+        const existingBookingId = sessionStorage.getItem(`booking_created_${reservationId}`)
+        if (existingBookingId) {
+          console.log('[SUCCESS] Booking already created:', existingBookingId)
+          // Fetch existing booking details
+          const bookingRes = await fetch(`/api/customer/direct-booking/${existingBookingId}`)
+          if (bookingRes.ok) {
+            const bookingData = await bookingRes.json()
+            setBooking(bookingData.booking)
+            setBookingCreated(true)
+            setLoading(false)
+            return
+          }
+          // If fetch fails, continue with normal flow
+          sessionStorage.removeItem(`booking_created_${reservationId}`)
+        }
+
         // Verify reservation before creating booking (required for all payments now)
         if (!reservationId) {
           throw new Error('Keine Reservierungs-ID gefunden. Bitte kontaktieren Sie den Support.')
@@ -172,6 +189,11 @@ export default function PaymentSuccessPage() {
 
         const finalBookingData = await bookingRes.json()
         console.log('[SUCCESS] Booking created with calendar event and emails sent:', finalBookingData)
+
+        // Store booking ID to prevent re-creation on page reload
+        if (finalBookingData.booking?.id && reservationId) {
+          sessionStorage.setItem(`booking_created_${reservationId}`, finalBookingData.booking.id)
+        }
 
         // Clean up reservation after successful booking
         if (reservationId) {

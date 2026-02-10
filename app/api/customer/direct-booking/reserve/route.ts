@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
     // Filter for matching date, time AND active status (RESERVED or CONFIRMED)
     // For RESERVED status, also check if not expired
     const existingReservation = allBookings.find(booking => {
-      const bookingDateStr = booking.date.toISOString().split('T')[0]
+      // Format date in Europe/Berlin timezone for comparison
+      const bookingDateStr = `${booking.date.getFullYear()}-${String(booking.date.getMonth() + 1).padStart(2, '0')}-${String(booking.date.getDate()).padStart(2, '0')}`
       
       if (bookingDateStr !== dateOnly || booking.time !== time) {
         return false // Different date or time
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
         workshopId,
         vehicleId,
         serviceType,
-        date: new Date(dateOnly), // Convert YYYY-MM-DD string to Date object
+        date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
         time,
         durationMinutes: 60, // Default 60 minutes for wheel change
         basePrice: basePrice || 0,

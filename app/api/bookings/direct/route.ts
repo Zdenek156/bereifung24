@@ -81,11 +81,11 @@ export async function POST(req: NextRequest) {
     const estimatedDuration = 60 // Default 60 minutes
 
     // Check if slot is still available in DirectBooking (double-check to prevent race conditions)
-    const dateOnly = appointmentDateTime.toISOString().split('T')[0]
+    const dateOnly = date // Already in YYYY-MM-DD format
     const existingDirectBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: new Date(dateOnly),
+        date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
         time,
         status: { in: ['CONFIRMED', 'COMPLETED'] }
       }
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
           workshopId,
           vehicleId,
           serviceType,
-          date: new Date(dateOnly),
+          date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
           time,
           durationMinutes: estimatedDuration,
           basePrice: totalPrice,

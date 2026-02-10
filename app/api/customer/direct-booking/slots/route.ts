@@ -184,7 +184,8 @@ export async function POST(request: NextRequest) {
     // Filter bookings for the requested date AND active status
     // For RESERVED status, also check if not expired
     const existingBookings = allBookings.filter(booking => {
-      const bookingDateStr = booking.date.toISOString().split('T')[0]
+      // Format date in local timezone for comparison
+      const bookingDateStr = `${booking.date.getFullYear()}-${String(booking.date.getMonth() + 1).padStart(2, '0')}-${String(booking.date.getDate()).padStart(2, '0')}`
       
       if (bookingDateStr !== dateOnly) {
         return false // Different date

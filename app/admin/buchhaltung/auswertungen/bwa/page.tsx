@@ -253,10 +253,10 @@ export default function BWAPage() {
                     Provisionserlöse
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-900 text-right">
-                    {formatCurrency(data.current.revenue.commission)}
+                    {formatCurrency((data.current as any).revenue?.commission || 0)}
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-500 text-right">
-                    {formatPercent(data.current.revenue.commission, data.current.revenue.total)}
+                    {formatPercent((data.current as any).revenue?.commission || 0, (data.current as any).revenue?.total || 0)}
                   </td>
                 </tr>
                 <tr>

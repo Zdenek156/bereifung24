@@ -109,6 +109,9 @@ export async function POST(req: NextRequest) {
           status: 'CONFIRMED',
           paymentMethod: paymentMethod || 'STRIPE',
           paymentStatus: paymentStatus || 'PAID',
+          paymentId: body.paymentId, // Store Stripe session ID or PayPal order ID
+          stripeSessionId: paymentMethod === 'STRIPE' ? body.paymentId : null,
+          paypalOrderId: paymentMethod === 'PAYPAL' ? body.paymentId : null,
           paidAt: new Date()
         }
       })
@@ -129,6 +132,9 @@ export async function POST(req: NextRequest) {
           status: 'CONFIRMED',
           paymentMethod: paymentMethod || 'STRIPE',
           paymentStatus: paymentStatus || 'PAID',
+          paymentId: body.paymentId,
+          stripeSessionId: paymentMethod === 'STRIPE' ? body.paymentId : null,
+          paypalOrderId: paymentMethod === 'PAYPAL' ? body.paymentId : null,
           paidAt: new Date()
         }
       })

@@ -54,41 +54,20 @@ export async function GET() {
       // Keine Sortierung - wird clientseitig gemacht
     })
 
-    // Get all direct bookings (PayPal/Stripe) - only include those where customer and vehicle still exist
-    const directBookings = await prisma.directBooking.findMany({
+    // Get all direct bookings (PayPal/Stripe)
+    const directBookingsRaw = await prisma.directBooking.findMany({
       where: { 
-        workshopId: user.workshop.id,
-        customer: {
-          isNot: null
-        },
-        vehicle: {
-          isNot: null
-        }
+        workshopId: user.workshop.id
       },
       include: {
-        customer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-            street: true,
-            zipCode: true,
-            city: true,
-          },
-        },
-        vehicle: {
-          select: {
-            make: true,
-            model: true,
-            year: true,
-            licensePlate: true,
-          },
-        },
+        customer: true,
+        vehicle: true,
       },
       // Keine Sortierung - wird clientseitig gemacht
     })
+
+    // Filter out bookings with deleted customers or vehicles
+    const directBookings = directBookingsRaw.filter(db => db.customer !== null && db.vehicle !== null)
 
     // Transform direct bookings to match appointment structure
     const transformedDirectBookings = directBookings.map(db => ({

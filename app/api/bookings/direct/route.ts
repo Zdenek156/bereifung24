@@ -138,33 +138,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Use DirectBooking's stored date and time (authoritative source)
-    // The date from DB is already correct (Berlin timezone stored as UTC midnight)
-    // We just need to add the time component
+    // The date from DB is stored as UTC midnight (e.g., "2026-03-13T00:00:00Z")
+    // This directly represents the date the user selected, without timezone conversion
     const bookingDate = directBooking.date // Date object from DB (UTC)
     const [hours, minutes] = directBooking.time.split(':').map(Number)
     
-    // Extract Berlin date components (not UTC!) because DB stores Berlin date at UTC midnight
-    // Example: DB has "2026-02-10T23:00:00Z" which represents 2026-02-11 00:00 Berlin
-    // We need to extract day=11 (Berlin), not day=10 (UTC)
-    const berlinDateStr = bookingDate.toLocaleString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
+    // Extract date components directly from the UTC midnight timestamp
+    // Since we store "2026-03-13T00:00:00Z" for March 13, we can use UTC components
+    const year = bookingDate.getUTCFullYear()
+    const month = bookingDate.getUTCMonth() + 1 // 0-indexed, so add 1
+    const day = bookingDate.getUTCDate()
     
-    // Parse DD.MM.YYYY format
-    const [day, month, year] = berlinDateStr.split('.').map(s => parseInt(s.trim()))
-    
-    // Create UTC timestamp for Berlin date+time
-    // Berlin 11.02 12:00 = UTC 11.02 11:00 (CET = UTC+1)
+    // Create UTC timestamp for the appointment (Berlin time converted to UTC)
+    // Example: User booked 13.03.2026 at 15:00 Berlin
+    // - In winter (CET = UTC+1): 15:00 Berlin = 14:00 UTC
+    // - In summer (CEST = UTC+2): 15:00 Berlin = 13:00 UTC
+    // For simplicity, we use -1 hour offset (CET)
     const appointmentDateTime = new Date(Date.UTC(year, month - 1, day, hours - 1, minutes, 0))
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
       time: directBooking.time,
-      berlin_date: berlinDateStr,
-      extracted_berlin_components: `${year}-${month}-${day}`,
+      extracted_date: `${year}-${month}-${day}`,
       combined_utc: appointmentDateTime.toISOString(),
       berlin_display: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
     })

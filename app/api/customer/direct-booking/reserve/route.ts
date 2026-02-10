@@ -125,13 +125,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Create temporary reservation (expires in 10 minutes)
+    // 
+    // IMPORTANT: date field stores the booking date as YYYY-MM-DD without timezone conversion
+    // User selects "2026-03-13" → Store as UTC timestamp "2026-03-13T00:00:00Z"
+    // This way the DATE always matches what user selected, regardless of timezone
+    // The appointmentDateTime (date + time) will handle Berlin timezone conversion separately
+    const berlinMidnight = new Date(`${dateOnly}T00:00:00Z`) // Parse as UTC midnight
+    
+    console.log('[RESERVE] Date storage:', {
+      user_selected: dateOnly,
+      stored_utc: berlinMidnight.toISOString(),
+      will_display_as: berlinMidnight.toISOString().split('T')[0]
+    })
+    
     const reservation = await prisma.directBooking.create({
       data: {
         customerId: customer.id,
         workshopId,
         vehicleId,
         serviceType,
-        date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
+        date: berlinMidnight,
         time,
         durationMinutes: 60, // Default 60 minutes for wheel change
         basePrice: basePrice || 0,

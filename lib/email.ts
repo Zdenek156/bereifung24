@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/prisma'
+import { canSendBookingEmail } from './email-rate-limiter'
 
 // Helper function to get template from database by key
 export async function getEmailTemplate(templateKey: string) {
@@ -153,6 +154,16 @@ export async function sendEmail({ to, subject, text, html, attachments }: EmailO
       console.log(`   Betreff: ${subject}`)
       console.log(`   Inhalt: ${text || html.substring(0, 100)}...`)
       return { success: true, messageId: 'development-mode' }
+    }
+
+    // ANTI-SPAM: Rate limiting check
+    if (!canSendBookingEmail(to)) {
+      console.warn(`[EMAIL RATE LIMIT] Blocked email to ${to} - too many emails in short time`)
+      return { 
+        success: false, 
+        messageId: 'rate-limited',
+        error: 'Rate limit exceeded - zu viele Emails in kurzer Zeit'
+      }
     }
 
     // Transporter mit aktuellen Settings erstellen

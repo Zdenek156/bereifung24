@@ -94,20 +94,21 @@ export async function GET() {
     // Transform direct bookings to match appointment structure
     const transformedDirectBookings = directBookings.map(db => ({
       id: db.id,
-      appointmentDate: db.date,
+      appointmentDate: db.date.toISOString(), // Convert Date to ISO string for frontend
       appointmentTime: db.time,
-      estimatedDuration: 60, // Default duration
+      estimatedDuration: db.durationMinutes || 60, // Use stored duration or default
       status: db.status,
       paymentStatus: db.paymentStatus,
       completedAt: null,
       customerNotes: null,
       workshopNotes: null,
       isDirectBooking: true, // Flag to identify direct bookings
-      paymentMethod: 'PAYPAL',
+      paymentMethod: db.paymentMethod,
       totalPrice: Number(db.totalPrice),
       basePrice: Number(db.basePrice),
       balancingPrice: db.balancingPrice ? Number(db.balancingPrice) : null,
       storagePrice: db.storagePrice ? Number(db.storagePrice) : null,
+      serviceType: db.serviceType,
       customer: {
         user: {
           firstName: db.customer.firstName,

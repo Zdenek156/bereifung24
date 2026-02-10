@@ -61,9 +61,10 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Decimal-Felder zu Numbers konvertieren
+    // Decimal-Felder zu Numbers konvertieren, Datum zu ISO String
     const bookingsData = bookings.map(booking => ({
       ...booking,
+      date: booking.date.toISOString(), // Explizit zu ISO String konvertieren
       basePrice: Number(booking.basePrice),
       balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : null,
       storagePrice: booking.storagePrice ? Number(booking.storagePrice) : null,

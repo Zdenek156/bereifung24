@@ -183,7 +183,9 @@ export function createICSFile(data: {
   description: string
   location: string
   organizerEmail: string
+  organizerName?: string
   attendeeEmail?: string
+  attendeeName?: string
 }): string {
   // Format date in local timezone (Europe/Berlin) - NOT UTC
   const formatDate = (date: Date): string => {
@@ -234,11 +236,11 @@ export function createICSFile(data: {
     `SUMMARY:${escapeICS(data.summary)}`,
     `DESCRIPTION:${escapeICS(data.description)}`,
     `LOCATION:${escapeICS(data.location)}`,
-    `ORGANIZER:mailto:${data.organizerEmail}`,
+    `ORGANIZER;CN="${escapeICS(data.organizerName || data.organizerEmail)}":mailto:${data.organizerEmail}`,
   ]
 
   if (data.attendeeEmail) {
-    icsContent.push(`ATTENDEE:mailto:${data.attendeeEmail}`)
+    icsContent.push(`ATTENDEE;CN="${escapeICS(data.attendeeName || data.attendeeEmail)}";RSVP=TRUE:mailto:${data.attendeeEmail}`)
   }
 
   icsContent.push(

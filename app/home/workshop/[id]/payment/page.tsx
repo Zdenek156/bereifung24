@@ -194,7 +194,9 @@ export default function PaymentPage() {
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''
-    const date = new Date(dateStr)
+    // Parse date in local timezone to avoid timezone offset issues
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
     return date.toLocaleDateString('de-DE', {
       weekday: 'long',
       day: 'numeric',

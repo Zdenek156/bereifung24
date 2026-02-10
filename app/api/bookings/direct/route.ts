@@ -75,7 +75,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse date and time
-    const appointmentDateTime = new Date(`${date}T${time}:00`)
+    // Create date object that represents the exact time in Europe/Berlin timezone
+    // date format: "2026-02-19", time format: "10:00"
+    const appointmentDateTime = new Date(`${date}T${time}:00+01:00`) // Force Europe/Berlin timezone (UTC+1)
     const estimatedDuration = 60 // Default 60 minutes
 
     // Check if slot is still available in DirectBooking (double-check to prevent race conditions)

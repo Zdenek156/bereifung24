@@ -185,14 +185,16 @@ export function createICSFile(data: {
   organizerEmail: string
   attendeeEmail?: string
 }): string {
+  // Format date in local timezone (Europe/Berlin) - NOT UTC
   const formatDate = (date: Date): string => {
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const hours = String(date.getUTCHours()).padStart(2, '0')
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0')
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0')
-    return `${year}${month}${day}T${hours}${minutes}${seconds}Z`
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    // Return without Z to indicate it's in local timezone
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`
   }
 
   const escapeICS = (text: string): string => {
@@ -208,11 +210,27 @@ export function createICSFile(data: {
     'PRODID:-//Bereifung24//Booking System//DE',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
+    // Add timezone definition for Europe/Berlin
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Berlin',
+    'BEGIN:STANDARD',
+    'DTSTART:19701025T030000',
+    'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+    'TZOFFSETFROM:+0200',
+    'TZOFFSETTO:+0100',
+    'END:STANDARD',
+    'BEGIN:DAYLIGHT',
+    'DTSTART:19700329T020000',
+    'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+    'TZOFFSETFROM:+0100',
+    'TZOFFSETTO:+0200',
+    'END:DAYLIGHT',
+    'END:VTIMEZONE',
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${formatDate(now)}`,
-    `DTSTART:${formatDate(data.start)}`,
-    `DTEND:${formatDate(data.end)}`,
+    `DTSTART;TZID=Europe/Berlin:${formatDate(data.start)}`,
+    `DTEND;TZID=Europe/Berlin:${formatDate(data.end)}`,
     `SUMMARY:${escapeICS(data.summary)}`,
     `DESCRIPTION:${escapeICS(data.description)}`,
     `LOCATION:${escapeICS(data.location)}`,

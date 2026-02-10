@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
     // DEBUG: Check customer emails for both IDs
     const customer1 = await prisma.user.findUnique({
       where: { id: 'cml3jmzte000jdlybqcf4lv2t' },
-      select: { email: true, name: true }
+      select: { email: true, firstName: true, lastName: true }
     })
     const customer2 = await prisma.user.findUnique({
       where: { id: 'cml3jmzte000kdlybn0aqsi6i' },
-      select: { email: true, name: true }
+      select: { email: true, firstName: true, lastName: true }
     })
     console.log('[BOOKINGS API DEBUG] Customer 1 (old bookings):', JSON.stringify(customer1))
     console.log('[BOOKINGS API DEBUG] Customer 2 (today bookings):', JSON.stringify(customer2))

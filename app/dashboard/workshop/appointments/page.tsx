@@ -13,6 +13,7 @@ interface Appointment {
   status: string
   paymentStatus: string
   completedAt: string | null
+  createdAt?: string
   customerNotes: string | null
   workshopNotes: string | null
   isDirectBooking?: boolean
@@ -158,12 +159,14 @@ export default function WorkshopAppointments() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
+      RESERVED: 'bg-yellow-100 text-yellow-800',
       CONFIRMED: 'bg-blue-100 text-blue-800',
       COMPLETED: 'bg-green-100 text-green-800',
       CANCELLED: 'bg-red-100 text-red-800',
       NO_SHOW: 'bg-orange-100 text-orange-800',
     }
     const labels = {
+      RESERVED: 'Reserviert',
       CONFIRMED: 'Bestätigt',
       COMPLETED: 'Abgeschlossen',
       CANCELLED: 'Storniert',
@@ -553,6 +556,18 @@ export default function WorkshopAppointments() {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Uhrzeit: {apt.appointmentTime} ({apt.estimatedDuration} Minuten)
                     </p>
+                    {apt.createdAt && (
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        Erstellt: {new Date(apt.createdAt).toLocaleDateString('de-DE', {
+                          day: '2-digit',
+                          month: '2-digit', 
+                          year: 'numeric'
+                        })} um {new Date(apt.createdAt).toLocaleTimeString('de-DE', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     {(() => {

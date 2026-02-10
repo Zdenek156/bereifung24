@@ -138,49 +138,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Use DirectBooking's stored date and time (authoritative source)
-    // Combine date and time to create appointment datetime in Berlin timezone
+    // The date from DB is already correct (Berlin timezone stored as UTC midnight)
+    // We just need to add the time component
     const bookingDate = directBooking.date // Date object from DB (UTC)
     const [hours, minutes] = directBooking.time.split(':').map(Number)
     
-    // Convert booking date to Berlin timezone and extract date components
-    const berlinDateStr = bookingDate.toLocaleString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
+    // Extract year, month, day from the stored date
+    // Use UTC methods to avoid timezone shifts
+    const year = bookingDate.getUTCFullYear()
+    const month = bookingDate.getUTCMonth()
+    const day = bookingDate.getUTCDate()
     
-    // Parse DD.MM.YYYY to get Berlin date components
-    const [day, month, year] = berlinDateStr.split(/[.\s]/).filter(Boolean)
-    
-    // Create a Date object representing Berlin time, then convert to UTC
-    // We need to account for the timezone offset
-    const berlinDateString = `${year}-${month}-${day}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`
-    const appointmentDateTime = new Date(berlinDateString)
-    
-    // Adjust for Berlin timezone offset (CET = UTC+1, CEST = UTC+2)
-    // Check if date is in DST (last Sunday of March to last Sunday of October)
-    const isDST = (date: Date) => {
-      const jan = new Date(date.getFullYear(), 0, 1).getTimezoneOffset()
-      const jul = new Date(date.getFullYear(), 6, 1).getTimezoneOffset()
-      return Math.max(jan, jul) !== date.getTimezoneOffset()
-    }
-    
-    // Get timezone offset in minutes for Berlin (negative because Berlin is ahead of UTC)
-    const berlinOffset = isDST(appointmentDateTime) ? -120 : -60 // CEST = -120, CET = -60
-    
-    // Adjust the date by subtracting the Berlin offset to get correct UTC time
-    appointmentDateTime.setMinutes(appointmentDateTime.getMinutes() - berlinOffset)
+    // Create new date with the booking time in UTC (treating stored date as Berlin date)
+    // The DB date is "2026-02-09T23:00:00Z" which represents 2026-02-10 00:00 Berlin time
+    // We want to create "2026-02-10 12:00 Berlin time" = "2026-02-10 11:00 UTC"
+    // So we take the UTC date components (which represent Berlin date) and subtract 1 hour for CET offset
+    const appointmentDateTime = new Date(Date.UTC(year, month, day, hours - 1, minutes, 0))
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
       time: directBooking.time,
-      berlin_date: berlinDateStr,
-      berlin_string: berlinDateString,
+      extracted_utc_date: `${year}-${month+1}-${day}`,
       combined: appointmentDateTime.toISOString(),
-      local_string: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }),
-      dst: isDST(appointmentDateTime),
-      offset: berlinOffset
+      local_string: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
     })
 
     let calendarEventId: string | null = null

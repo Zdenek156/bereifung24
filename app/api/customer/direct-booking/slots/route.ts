@@ -159,6 +159,17 @@ export async function POST(request: NextRequest) {
     
     console.log('Input date:', date, '→ Looking for bookings on:', dateOnly)
     
+    // FIRST: Delete expired reservations (older than 10 minutes) before checking slots
+    const now = new Date()
+    await prisma.directBooking.deleteMany({
+      where: {
+        status: 'RESERVED',
+        reservedUntil: {
+          lt: now // Less than now = expired
+        }
+      }
+    })
+    
     // Fetch ALL bookings for this workshop (we'll filter by date AND status in code)
     // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
     const allBookings = await prisma.directBooking.findMany({
@@ -169,15 +180,30 @@ export async function POST(request: NextRequest) {
         id: true,
         date: true,
         time: true,
-        status: true
+        status: true,
+        reservedUntil: true
       }
     })
     
     // Filter bookings for the requested date AND active status
+    // For RESERVED status, also check if not expired
     const existingBookings = allBookings.filter(booking => {
       const bookingDateStr = booking.date.toISOString().split('T')[0]
-      const isActiveStatus = ['RESERVED', 'CONFIRMED', 'COMPLETED'].includes(booking.status)
-      return bookingDateStr === dateOnly && isActiveStatus
+      
+      if (bookingDateStr !== dateOnly) {
+        return false // Different date
+      }
+      
+      if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
+        return true // Always include confirmed/completed bookings
+      }
+      
+      if (booking.status === 'RESERVED') {
+        // Only include if not expired
+        return booking.reservedUntil && booking.reservedUntil > now
+      }
+      
+      return false
     })
     
     console.log('Total workshop bookings:', allBookings.length, '| Bookings on', dateOnly + ':', existingBookings.length)

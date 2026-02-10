@@ -552,7 +552,8 @@ export default function JahresabschlussPage() {
             <h1 className="text-3xl font-bold">Jahresabschluss Wizard</h1>
           </div>
           <Button 
-            variant="destructive" 
+            variant="outline"
+            className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200" 
             size="sm"
             onClick={handleUnlockYear}
           >

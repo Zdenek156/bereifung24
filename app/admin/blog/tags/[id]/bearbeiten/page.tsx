@@ -161,9 +161,10 @@ export default function BearbeitenTagPage() {
           <div className="flex justify-between mt-6 pt-6 border-t">
             <Button
               type="button"
-              variant="destructive"
+              variant="outline"
               onClick={handleDelete}
               disabled={saving}
+              className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Löschen

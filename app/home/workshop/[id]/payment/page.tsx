@@ -34,6 +34,7 @@ export default function PaymentPage() {
   const [vehicle, setVehicle] = useState<any>(null)
   const [servicePricing, setServicePricing] = useState<any>(null)
   const [processing, setProcessing] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments' | null>(null)
 
   // Service labels
   const serviceLabels: Record<string, string> = {
@@ -378,9 +379,13 @@ export default function PaymentPage() {
                 <div className="space-y-3">
                   {/* Credit Card */}
                   <button
-                    onClick={() => handlePayment('card')}
+                    onClick={() => setSelectedPaymentMethod('card')}
                     disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'card'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
@@ -394,15 +399,24 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
                         </div>
                       </div>
-                      <CreditCard className="w-5 h-5 text-gray-400" />
+                      <div className="flex items-center gap-2">
+                        {selectedPaymentMethod === 'card' && (
+                          <Check className="w-5 h-5 text-primary-600" />
+                        )}
+                        <CreditCard className="w-5 h-5 text-gray-400" />
+                      </div>
                     </div>
                   </button>
 
                   {/* Bank Transfer (Vorkasse) */}
                   <button
-                    onClick={() => handlePayment('bank-transfer')}
+                    onClick={() => setSelectedPaymentMethod('bank-transfer')}
                     disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'bank-transfer'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
@@ -411,18 +425,27 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">Vorkasse - Zahlung per Überweisung</p>
                         </div>
                       </div>
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                      </svg>
+                      <div className="flex items-center gap-2">
+                        {selectedPaymentMethod === 'bank-transfer' && (
+                          <Check className="w-5 h-5 text-primary-600" />
+                        )}
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                      </div>
                     </div>
                   </button>
 
                   {/* Klarna - Only show if workshop has Stripe fully enabled */}
                   {workshop.stripeEnabled && (
                   <button
-                    onClick={() => handlePayment('klarna')}
+                    onClick={() => setSelectedPaymentMethod('klarna')}
                     disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'klarna'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
@@ -431,9 +454,14 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">Jetzt kaufen, später bezahlen</p>
                         </div>
                       </div>
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                      </svg>
+                      <div className="flex items-center gap-2">
+                        {selectedPaymentMethod === 'klarna' && (
+                          <Check className="w-5 h-5 text-primary-600" />
+                        )}
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                        </svg>
+                      </div>
                     </div>
                   </button>
                   )}
@@ -450,9 +478,13 @@ export default function PaymentPage() {
 
                   {/* PayPal */}
                   <button
-                    onClick={() => handlePayment('paypal')}
+                    onClick={() => setSelectedPaymentMethod('paypal')}
                     disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'paypal'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
@@ -469,14 +501,21 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">Schnell & sicher</p>
                         </div>
                       </div>
+                      {selectedPaymentMethod === 'paypal' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                   </button>
 
                   {/* PayPal Ratenzahlung */}
                   <button
-                    onClick={() => handlePayment('paypal-installments')}
+                    onClick={() => setSelectedPaymentMethod('paypal-installments')}
                     disabled={processing}
-                    className="w-full p-4 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'paypal-installments'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
@@ -493,23 +532,31 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">In bequemen Raten bezahlen</p>
                         </div>
                       </div>
+                      {selectedPaymentMethod === 'paypal-installments' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                   </button>
                 </div>
               </div>
 
-              {/* Processing Overlay */}
-              {processing && (
-                <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
-                    <div>
-                      <p className="font-semibold text-primary-900">Zahlung wird vorbereitet...</p>
-                      <p className="text-sm text-primary-700">Sie werden zur Zahlungsseite weitergeleitet.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Pay Button */}
+              <button
+                onClick={() => selectedPaymentMethod && handlePayment(selectedPaymentMethod)}
+                disabled={!selectedPaymentMethod || processing}
+                className="w-full py-4 px-6 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-colors shadow-lg hover:shadow-xl disabled:shadow-none mb-4"
+              >
+                {processing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Zahlung wird vorbereitet...
+                  </span>
+                ) : selectedPaymentMethod ? (
+                  `Jetzt bezahlen – ${formatPrice(totalPrice)}`
+                ) : (
+                  'Zahlungsmethode wählen'
+                )}
+              </button>
 
               {/* Security Note */}
               <div className="flex items-start gap-2 text-xs text-gray-500">

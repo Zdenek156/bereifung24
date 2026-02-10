@@ -51,7 +51,7 @@ interface BWAData {
 export default function BWAPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<{ current: { period: any, bwa: BWAData }, comparison: any } | null>(null)
+  const [data, setData] = useState<{ current: any, comparison: any } | null>(null)
   
   // Default to current month
   const now = new Date()

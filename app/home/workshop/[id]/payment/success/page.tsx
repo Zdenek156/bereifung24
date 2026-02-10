@@ -115,11 +115,18 @@ export default function PaymentSuccessPage() {
         }
 
         // Use reservation data for booking (authoritative source)
+        // Parse reservation.date without timezone conversion to preserve the selected date
+        const reservationDate = new Date(reservation.date)
+        const year = reservationDate.getFullYear()
+        const month = String(reservationDate.getMonth() + 1).padStart(2, '0')
+        const day = String(reservationDate.getDate()).padStart(2, '0')
+        const dateStr = `${year}-${month}-${day}`
+        
         const bookingData = {
           workshopId: reservation.workshopId,
           vehicleId: reservation.vehicleId,
           serviceType: reservation.serviceType,
-          date: new Date(reservation.date).toISOString().split('T')[0],
+          date: dateStr, // Use manually formatted date to avoid UTC conversion
           time: reservation.time,
           paymentStatus: 'PAID',
           paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL',
@@ -175,7 +182,9 @@ export default function PaymentSuccessPage() {
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''
-    const dateObj = new Date(dateStr)
+    // Parse date components without timezone conversion to preserve the selected date
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const dateObj = new Date(year, month - 1, day) // Create date in local timezone
     return dateObj.toLocaleDateString('de-DE', {
       weekday: 'long',
       day: 'numeric',

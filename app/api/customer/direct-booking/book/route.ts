@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           serviceType,
           vehicleId,
           customerId: session.user.id,
-          date: new Date(date + 'T00:00:00'),
+          date: new Date(date + 'T00:00:00'), // Convert YYYY-MM-DD to Date at midnight
           time,
           hasBalancing: hasBalancing || false,
           hasStorage: hasStorage || false,

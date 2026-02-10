@@ -66,8 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Check if slot is still available
     // WORKAROUND: @db.Date fields don't support direct equality in Prisma
-    const dateObj = new Date(date)
-    const dateOnly = dateObj.toISOString().split('T')[0]
+    const dateOnly = date // Already in YYYY-MM-DD format from frontend
     
     // FIRST: Delete expired reservations (older than 10 minutes)
     const now = new Date()
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
         workshopId,
         vehicleId,
         serviceType,
-        date: new Date(dateOnly), // Convert string to Date object
+        date: new Date(dateOnly), // Convert YYYY-MM-DD string to Date object
         time,
         durationMinutes: 60, // Default 60 minutes for wheel change
         basePrice: basePrice || 0,

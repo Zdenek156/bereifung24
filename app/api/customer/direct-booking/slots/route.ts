@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
     // Get day of week (monday, tuesday, etc.)
     const dateObj = new Date(date)
     const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-    console.log('Day of week:', dayOfWeek, 'Date:', date)
     
     if (!openingHours || !openingHours[dayOfWeek]) {
       console.log('No opening hours for', dayOfWeek, '- Available days:', openingHours ? Object.keys(openingHours) : 'none')
@@ -154,10 +153,7 @@ export async function POST(request: NextRequest) {
     // Get existing bookings for this date
     // WORKAROUND: @db.Date fields in Prisma don't support direct equality checks
     // We need to fetch all bookings for this workshop and filter by date in code
-    const dateForQuery = new Date(date)
-    const dateOnly = dateForQuery.toISOString().split('T')[0] // Extract YYYY-MM-DD
-    
-    console.log('Input date:', date, '→ Looking for bookings on:', dateOnly)
+    const dateOnly = date // Already in YYYY-MM-DD format from frontend
     
     // FIRST: Delete expired reservations (older than 10 minutes) before checking slots
     const now = new Date()

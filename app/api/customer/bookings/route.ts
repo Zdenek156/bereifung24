@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const today = new Date('2026-02-10T00:00:00.000Z')
     const todayBookings = await prisma.directBooking.findMany({
       where: { createdAt: { gte: today } },
-      select: { id: true, status: true, paymentStatus: true, customerId: true, customerEmail: true, createdAt: true }
+      select: { id: true, status: true, paymentStatus: true, customerId: true, createdAt: true }
     })
     console.log('[BOOKINGS API DEBUG] ALL bookings created today:', JSON.stringify(todayBookings))
     

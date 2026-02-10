@@ -25,6 +25,14 @@ export async function GET(request: NextRequest) {
     // Alle Buchungen des Kunden abrufen (nur CONFIRMED und COMPLETED, keine RESERVED)
     console.log('[BOOKINGS API] Fetching bookings for customer:', session.user.id)
     
+    // DEBUG: Check ALL bookings from today
+    const today = new Date('2026-02-10T00:00:00.000Z')
+    const todayBookings = await prisma.directBooking.findMany({
+      where: { createdAt: { gte: today } },
+      select: { id: true, status: true, paymentStatus: true, customerId: true, customerEmail: true, createdAt: true }
+    })
+    console.log('[BOOKINGS API DEBUG] ALL bookings created today:', JSON.stringify(todayBookings))
+    
     // DEBUG: Check ALL bookings without filter
     const allBookings = await prisma.directBooking.findMany({
       where: { customerId: session.user.id },

@@ -104,7 +104,8 @@ export default function PaymentSuccessPage() {
           paymentStatus: 'PAID',
           paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL',
           sendEmails: true,
-          createCalendarEvent: true
+          createCalendarEvent: true,
+          reservationId: reservation.id // Pass the reservation ID to update it
         }
 
         // Create booking with all post-payment actions (new direct booking API)

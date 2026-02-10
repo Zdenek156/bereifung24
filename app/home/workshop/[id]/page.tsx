@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -59,6 +60,25 @@ export default function WorkshopDetailPage() {
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
   const [basePrice, setBasePrice] = useState(0)
   const [baseDuration, setBaseDuration] = useState(60)
+  
+  // Handle image load errors globally
+  useEffect(() => {
+    const handleImageError = (e: Event) => {
+      const target = e.target as HTMLImageElement
+      if (target.tagName === 'IMG' && target.src.includes('/uploads/logos/')) {
+        // Prevent infinite loop
+        if (!target.src.includes('data:image')) {
+          console.log('[IMAGE ERROR] Failed to load logo:', target.src)
+          // Set placeholder
+          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="40" text-anchor="middle" dy=".3em"%3E🔧%3C/text%3E%3C/svg%3E'
+          target.onerror = null // Prevent further error handling
+        }
+      }
+    }
+    
+    document.addEventListener('error', handleImageError, true)
+    return () => document.removeEventListener('error', handleImageError, true)
+  }, [])
 
   // Close user menu when clicking outside
   useEffect(() => {

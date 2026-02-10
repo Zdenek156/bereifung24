@@ -23,6 +23,7 @@ export default function PaymentSuccessPage() {
 
   const [loading, setLoading] = useState(true)
   const [bookingCreated, setBookingCreated] = useState(false)
+  const [booking, setBooking] = useState<any>(null)
   const [workshop, setWorkshop] = useState<any>(null)
   const [vehicle, setVehicle] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)

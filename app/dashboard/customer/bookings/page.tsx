@@ -95,14 +95,24 @@ const paymentStatusLabels: Record<string, { label: string, color: string }> = {
 
 export default function BookingsPage() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [bookings, setBookings] = useState<DirectBooking[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all')
 
   useEffect(() => {
-    fetchBookings()
-  }, [])
+    if (status === 'loading') return
+    if (!session) {
+      router.push('/login?redirect=/dashboard/customer/bookings')
+      return
+    }
+  }, [session, status, router])
+
+  useEffect(() => {
+    if (session) {
+      fetchBookings()
+    }
+  }, [session])
 
   const fetchBookings = async () => {
     try {

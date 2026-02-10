@@ -115,18 +115,27 @@ export default function PaymentSuccessPage() {
         }
 
         // Use reservation data for booking (authoritative source)
-        // Parse reservation.date without timezone conversion to preserve the selected date
+        // The reservation.date from DB is stored as UTC timestamp
+        // We need to convert it to Europe/Berlin timezone to get the correct date
         const reservationDate = new Date(reservation.date)
-        const year = reservationDate.getFullYear()
-        const month = String(reservationDate.getMonth() + 1).padStart(2, '0')
-        const day = String(reservationDate.getDate()).padStart(2, '0')
+        
+        // Convert to Berlin timezone and extract date components
+        const berlinDateStr = reservationDate.toLocaleString('de-DE', {
+          timeZone: 'Europe/Berlin',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        })
+        
+        // Parse DD.MM.YYYY format to YYYY-MM-DD
+        const [day, month, year] = berlinDateStr.split(/[.\s]/).filter(Boolean)
         const dateStr = `${year}-${month}-${day}`
         
         const bookingData = {
           workshopId: reservation.workshopId,
           vehicleId: reservation.vehicleId,
           serviceType: reservation.serviceType,
-          date: dateStr, // Use manually formatted date to avoid UTC conversion
+          date: dateStr, // Use Berlin timezone date
           time: reservation.time,
           paymentStatus: 'PAID',
           paymentMethod: sessionId ? 'STRIPE' : 'PAYPAL',

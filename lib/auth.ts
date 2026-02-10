@@ -269,19 +269,27 @@ export const authOptions: NextAuthOptions = {
         tokenId: token.id
       })
       
-      if (session?.user) {
-        session.user.role = token.role as string
-        session.user.id = token.id as string
-        session.user.customerId = token.customerId as string | undefined
-        session.user.workshopId = token.workshopId as string | undefined
-        session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
-        
-        console.log('[AUTH SESSION] Session updated:', {
-          email: session.user.email,
-          role: session.user.role,
-          id: session.user.id
-        })
+      // Ensure session.user exists
+      if (!session.user) {
+        session.user = {
+          email: token.email as string || '',
+          name: token.name as string || ''
+        }
       }
+      
+      // Add user data from token
+      session.user.role = token.role as string
+      session.user.id = token.id as string
+      session.user.customerId = token.customerId as string | undefined
+      session.user.workshopId = token.workshopId as string | undefined
+      session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
+      
+      console.log('[AUTH SESSION] Session updated:', {
+        email: session.user.email,
+        role: session.user.role,
+        id: session.user.id
+      })
+
       return session
     }
   },

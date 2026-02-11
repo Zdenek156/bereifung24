@@ -1681,6 +1681,28 @@ export default function NewHomePage() {
                     />
                   </div>
                   
+                  {/* PayPal Ratenzahlung */}
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/paypal-ratenzahlung.png" 
+                      alt="PayPal Ratenzahlung" 
+                      width={100} 
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  
+                  {/* American Express */}
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/amex.png" 
+                      alt="American Express" 
+                      width={50} 
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  
                   {/* SSL Badge */}
                   <div className="bg-gray-800 px-3 py-2 rounded flex items-center gap-1.5 h-10 border border-gray-700">
                     <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">

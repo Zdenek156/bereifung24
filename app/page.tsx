@@ -803,6 +803,42 @@ export default function NewHomePage() {
                 </button>
               </div>
             </div>
+            
+            {/* Micro Social Proof under search */}
+            <div className="max-w-5xl mx-auto mt-4 flex flex-wrap items-center justify-center gap-4 text-primary-100 text-sm">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-semibold">{stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}/5` : '5.0/5'} von {stats.totalReviews > 0 ? stats.totalReviews : '500+'} Kunden</span>
+              </div>
+              <span className="text-primary-200">•</span>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>{stats.workshopCount > 0 ? `${stats.workshopCount}+` : '100+'} geprüfte Werkstätten</span>
+              </div>
+              <span className="text-primary-200">•</span>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                <span>Bis zu 40% günstiger</span>
+              </div>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="max-w-5xl mx-auto mt-6 flex flex-wrap items-center justify-center gap-3 text-primary-100 text-xs">
+              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                <span className="font-medium">SSL-verschlüsselt</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
+                <Check className="w-4 h-4" />
+                <span className="font-medium">Sichere Zahlung</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
+                <Star className="w-4 h-4" />
+                <span className="font-medium">Geprüfte Qualität</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1535,6 +1571,26 @@ export default function NewHomePage() {
           >
             Jetzt Werkstatt finden
           </button>
+          
+          {/* Trust indicators */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-primary-100 text-sm">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              <span>100% geprüfte Werkstätten</span>
+            </div>
+            <span>•</span>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span>5.0 Sterne Durchschnitt</span>
+            </div>
+            <span>•</span>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span>Sichere Bezahlung</span>
+            </div>
+          </div>
         </div>
       </section>
         </>
@@ -1628,11 +1684,54 @@ export default function NewHomePage() {
 
           {/* Bottom Bar */}
           <div className="border-t border-gray-800 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
-              <p>&copy; 2026 Bereifung24. Alle Rechte vorbehalten.</p>
-              <p className="mt-4 md:mt-0">
-                Made with ❤️ in Deutschland
-              </p>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <p>&copy; 2026 Bereifung24. Alle Rechte vorbehalten.</p>
+                <p className="hidden md:block">|</p>
+                <p>Made with ❤️ in Deutschland</p>
+              </div>
+              
+              {/* Payment Methods & Trust Badges */}
+              <div className="flex flex-col items-center md:items-end gap-3">
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <span>Sichere Zahlungsmethoden:</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* VISA */}
+                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
+                    <svg className="h-5" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.5 1.5h-3.2L12 14.5h3.2l3.3-13zm8.8 8.5c0-1.7-2-1.8-2-2.5 0-.3.3-.5.9-.6.3 0 1.3 0 2.2.4l.4-1.8c-.5-.2-1.3-.4-2.2-.4-2.3 0-3.9 1.2-3.9 3 0 1.3 1.2 2 2 2.4.9.4 1.2.7 1.2 1.1 0 .6-.7.9-1.4.9-1.2 0-1.8-.2-2.8-.6l-.5 2c.6.3 1.8.5 3 .5 2.5-.1 4.1-1.2 4.1-3.4zm6.2 4.5h2.8l-2.4-13h-2.6c-.6 0-1.1.3-1.3.8l-4.7 12.2h2.5l.5-1.4h3.1l.1 1.4zm-2.7-3.3l1.3-3.5.7 3.5h-2zm-11.6-10.7l-2.5 10-1.5-7.5c-.2-.8-.7-1.3-1.4-1.3H8.2l0 .4c1.1.2 2.4.6 3.2 1l2.7 10.4h2.5l3.9-13h-2.5z" fill="#1A1F71"/>
+                    </svg>
+                  </div>
+                  
+                  {/* Mastercard */}
+                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
+                    <svg className="h-5" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="18" cy="16" r="10" fill="#EB001B"/>
+                      <circle cx="30" cy="16" r="10" fill="#F79E1B"/>
+                      <path d="M24 8.5c-2 1.5-3.3 3.9-3.3 6.5s1.3 5 3.3 6.5c2-1.5 3.3-3.9 3.3-6.5s-1.3-5-3.3-6.5z" fill="#FF5F00"/>
+                    </svg>
+                  </div>
+                  
+                  {/* PayPal */}
+                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
+                    <svg className="h-5" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.5 2c-.8-.8-2.3-1-4.3-1H8.4c-.4 0-.8.3-.9.7L5 14.5c0 .3.2.5.5.5h3.3l.8-5.2v.2c.1-.4.5-.7.9-.7h1.8c3.6 0 6.4-1.4 7.2-5.6 0-.1 0-.2.1-.3-.1-.1-.1-.2-.1-.4zM19.3 6.1c-.8 4.3-4.8 4.3-8.6 4.3h-.8l.8-5.2c0-.2.3-.4.5-.4h.5c1.3 0 2.5 0 3.1.7.4.4.5 1 .3 1.6h.2z" fill="#003087"/>
+                      <path d="M29 6.1c-.8 4.3-4.8 4.3-8.6 4.3h-.8l.8-5.2c0-.2.3-.4.5-.4h.5c1.3 0 2.5 0 3.1.7.4.4.5 1 .3 1.6h.2zm-.7-4.1c-.8-.8-2.3-1-4.3-1h-5.8c-.4 0-.8.3-.9.7l-2.5 14.8c0 .3.2.5.5.5h3.7l.9-5.8v.2c.1-.4.5-.7.9-.7h1.8c3.6 0 6.4-1.4 7.2-5.6 0-.1 0-.2.1-.3-.1-.1-.1-.2-.1-.4-.5-.4-1-.7-1.5-.3z" fill="#0070E0"/>
+                      <path d="M40 5.7l-2.5 14.8c0 .3.2.5.5.5h3.2c.4 0 .8-.3.9-.7l2.5-14.8c0-.3-.2-.5-.5-.5h-3.6c-.3 0-.5.3-.5.7z" fill="#003087"/>
+                      <path d="M43.1 2h-4.9c-.3 0-.5.3-.5.6l-.1.9h5.5c.3 0 .5-.3.5-.6l-.5-3.9" fill="#0070E0"/>
+                    </svg>
+                  </div>
+                  
+                  {/* SSL Badge */}
+                  <div className="bg-gray-800 px-3 py-1.5 rounded flex items-center gap-1.5 h-8 border border-gray-700">
+                    <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-300">SSL</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

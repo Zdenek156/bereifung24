@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { 
   Search, 
   MapPin, 
@@ -1648,34 +1649,41 @@ export default function NewHomePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   {/* VISA */}
-                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
-                    <svg className="h-5" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18.5 1.5h-3.2L12 14.5h3.2l3.3-13zm8.8 8.5c0-1.7-2-1.8-2-2.5 0-.3.3-.5.9-.6.3 0 1.3 0 2.2.4l.4-1.8c-.5-.2-1.3-.4-2.2-.4-2.3 0-3.9 1.2-3.9 3 0 1.3 1.2 2 2 2.4.9.4 1.2.7 1.2 1.1 0 .6-.7.9-1.4.9-1.2 0-1.8-.2-2.8-.6l-.5 2c.6.3 1.8.5 3 .5 2.5-.1 4.1-1.2 4.1-3.4zm6.2 4.5h2.8l-2.4-13h-2.6c-.6 0-1.1.3-1.3.8l-4.7 12.2h2.5l.5-1.4h3.1l.1 1.4zm-2.7-3.3l1.3-3.5.7 3.5h-2zm-11.6-10.7l-2.5 10-1.5-7.5c-.2-.8-.7-1.3-1.4-1.3H8.2l0 .4c1.1.2 2.4.6 3.2 1l2.7 10.4h2.5l3.9-13h-2.5z" fill="#1A1F71"/>
-                    </svg>
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/visa.png" 
+                      alt="VISA" 
+                      width={50} 
+                      height={32}
+                      className="object-contain"
+                    />
                   </div>
                   
                   {/* Mastercard */}
-                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
-                    <svg className="h-5" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="18" cy="16" r="10" fill="#EB001B"/>
-                      <circle cx="30" cy="16" r="10" fill="#F79E1B"/>
-                      <path d="M24 8.5c-2 1.5-3.3 3.9-3.3 6.5s1.3 5 3.3 6.5c2-1.5 3.3-3.9 3.3-6.5s-1.3-5-3.3-6.5z" fill="#FF5F00"/>
-                    </svg>
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/mastercard.png" 
+                      alt="Mastercard" 
+                      width={50} 
+                      height={32}
+                      className="object-contain"
+                    />
                   </div>
                   
                   {/* PayPal */}
-                  <div className="bg-white px-3 py-1.5 rounded flex items-center justify-center h-8">
-                    <svg className="h-5" viewBox="0 0 48 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18.5 2c-.8-.8-2.3-1-4.3-1H8.4c-.4 0-.8.3-.9.7L5 14.5c0 .3.2.5.5.5h3.3l.8-5.2v.2c.1-.4.5-.7.9-.7h1.8c3.6 0 6.4-1.4 7.2-5.6 0-.1 0-.2.1-.3-.1-.1-.1-.2-.1-.4zM19.3 6.1c-.8 4.3-4.8 4.3-8.6 4.3h-.8l.8-5.2c0-.2.3-.4.5-.4h.5c1.3 0 2.5 0 3.1.7.4.4.5 1 .3 1.6h.2z" fill="#003087"/>
-                      <path d="M29 6.1c-.8 4.3-4.8 4.3-8.6 4.3h-.8l.8-5.2c0-.2.3-.4.5-.4h.5c1.3 0 2.5 0 3.1.7.4.4.5 1 .3 1.6h.2zm-.7-4.1c-.8-.8-2.3-1-4.3-1h-5.8c-.4 0-.8.3-.9.7l-2.5 14.8c0 .3.2.5.5.5h3.7l.9-5.8v.2c.1-.4.5-.7.9-.7h1.8c3.6 0 6.4-1.4 7.2-5.6 0-.1 0-.2.1-.3-.1-.1-.1-.2-.1-.4-.5-.4-1-.7-1.5-.3z" fill="#0070E0"/>
-                      <path d="M40 5.7l-2.5 14.8c0 .3.2.5.5.5h3.2c.4 0 .8-.3.9-.7l2.5-14.8c0-.3-.2-.5-.5-.5h-3.6c-.3 0-.5.3-.5.7z" fill="#003087"/>
-                      <path d="M43.1 2h-4.9c-.3 0-.5.3-.5.6l-.1.9h5.5c.3 0 .5-.3.5-.6l-.5-3.9" fill="#0070E0"/>
-                    </svg>
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/paypal.png" 
+                      alt="PayPal" 
+                      width={80} 
+                      height={32}
+                      className="object-contain"
+                    />
                   </div>
                   
                   {/* SSL Badge */}
-                  <div className="bg-gray-800 px-3 py-1.5 rounded flex items-center gap-1.5 h-8 border border-gray-700">
-                    <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="bg-gray-800 px-3 py-2 rounded flex items-center gap-1.5 h-10 border border-gray-700">
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                     </svg>
                     <span className="text-xs font-medium text-gray-300">SSL</span>

@@ -663,17 +663,43 @@ export default function NewHomePage() {
                             setShowUserMenu(false)
                             
                             console.log('[LOGOUT DEBUG] 3. Deleting all NextAuth cookies...')
-                            // Delete all NextAuth cookies explicitly
-                            document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                            document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;'
-                            document.cookie = '__Host-next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                            document.cookie = 'next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                            // Delete all NextAuth cookies with all possible variations
+                            const cookieOptions = [
+                              'next-auth.session-token',
+                              '__Secure-next-auth.session-token',
+                              '__Host-next-auth.csrf-token',
+                              'next-auth.csrf-token',
+                              'next-auth.callback-url'
+                            ]
+                            
+                            cookieOptions.forEach(name => {
+                              // Delete without domain
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+                              // Delete with secure flag
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;`
+                              // Delete with domain
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.bereifung24.de;`
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=bereifung24.de;`
+                              // Delete with domain and secure
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.bereifung24.de; secure;`
+                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=bereifung24.de; secure;`
+                            })
                             
                             console.log('[LOGOUT DEBUG] 4. Cookies after deletion:', document.cookie)
                             console.log('[LOGOUT DEBUG] 5. Calling signOut({ redirect: false })...')
                             await signOut({ redirect: false })
                             console.log('[LOGOUT DEBUG] 6. signOut completed, redirecting to /')
                             console.log('[LOGOUT DEBUG] 7. Final cookies before redirect:', document.cookie)
+                            
+                            // Clear all storage
+                            try {
+                              localStorage.clear()
+                              sessionStorage.clear()
+                              console.log('[LOGOUT DEBUG] 8. Storage cleared')
+                            } catch (e) {
+                              console.error('[LOGOUT DEBUG] Error clearing storage:', e)
+                            }
+                            
                             window.location.href = '/'
                           }}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

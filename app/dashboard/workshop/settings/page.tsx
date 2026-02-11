@@ -192,15 +192,23 @@ function SuppliersTab() {
 
   const testConnection = async (supplier: Supplier) => {
     try {
-      // Call test API endpoint
-      const response = await fetch(`/api/admin/tyresystem/test?action=inquiry`)
-      if (response.ok) {
-        alert('✅ Verbindung erfolgreich!')
+      const response = await fetch('/api/workshop/suppliers/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supplier: supplier.supplier }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('✅ Verbindung erfolgreich!\n\nDie API-Verbindung wurde erfolgreich getestet.')
+        fetchSuppliers() // Refresh to show updated lastApiCheck
       } else {
-        alert('❌ Verbindung fehlgeschlagen')
+        alert(`❌ Verbindung fehlgeschlagen\n\nFehler: ${data.error}\n\n${data.details || ''}`)
       }
     } catch (error) {
-      alert('❌ Verbindungsfehler')
+      console.error('Connection test error:', error)
+      alert('❌ Verbindungsfehler\n\nEs konnte keine Verbindung zum Server hergestellt werden.')
     }
   }
 

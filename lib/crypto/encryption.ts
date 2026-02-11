@@ -6,16 +6,23 @@ import crypto from 'crypto'
  */
 
 const ALGORITHM = 'aes-256-cbc'
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || ''
 
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
-  throw new Error(
-    'ENCRYPTION_KEY must be set in environment variables and be 64 characters (32 bytes hex)'
-  )
+/**
+ * Get encryption key from environment
+ * IMPORTANT: Read at runtime, not at module load time!
+ */
+function getEncryptionKey(): string {
+  if (!process.env.ENCRYPTION_KEY) {
+    console.error('⚠️  CRITICAL: ENCRYPTION_KEY not found in environment!')
+    throw new Error('ENCRYPTION_KEY must be set in environment variables')
+  }
+  
+  if (process.env.ENCRYPTION_KEY.length !== 64) {
+    throw new Error('ENCRYPTION_KEY must be 64 characters (32 bytes hex)')
+  }
+  
+  return process.env.ENCRYPTION_KEY
 }
-
-// Convert hex string to buffer
-const KEY = Buffer.from(ENCRYPTION_KEY, 'hex')
 
 /**
  * Encrypt a string value
@@ -24,11 +31,14 @@ const KEY = Buffer.from(ENCRYPTION_KEY, 'hex')
  */
 export function encrypt(text: string): { encrypted: string; iv: string } {
   try {
+    // Get encryption key at runtime
+    const key = Buffer.from(getEncryptionKey(), 'hex')
+    
     // Generate random initialization vector
     const iv = crypto.randomBytes(16)
     
     // Create cipher
-    const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv)
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv)
     
     // Encrypt
     let encrypted = cipher.update(text, 'utf8', 'hex')
@@ -52,11 +62,14 @@ export function encrypt(text: string): { encrypted: string; iv: string } {
  */
 export function decrypt(encrypted: string, iv: string): string {
   try {
+    // Get encryption key at runtime
+    const key = Buffer.from(getEncryptionKey(), 'hex')
+    
     // Convert IV from hex
     const ivBuffer = Buffer.from(iv, 'hex')
     
     // Create decipher
-    const decipher = crypto.createDecipheriv(ALGORITHM, KEY, ivBuffer)
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, ivBuffer)
     
     // Decrypt
     let decrypted = decipher.update(encrypted, 'hex', 'utf8')

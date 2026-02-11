@@ -1074,16 +1074,33 @@ export default function WorkshopServicesPage() {
                                     </span>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
-                                  className={`px-3 py-1 rounded text-xs font-medium ${
-                                    pkg.isActive 
-                                      ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                  }`}
-                                >
-                                  {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <Link
+                                    href={`/services/${{
+                                      WHEEL_CHANGE: 'raederwechsel',
+                                      TIRE_CHANGE: 'reifenwechsel',
+                                      TIRE_REPAIR: 'reifenreparatur',
+                                      MOTORCYCLE_TIRE: 'motorradreifen',
+                                      ALIGNMENT_BOTH: 'achsvermessung',
+                                      CLIMATE_SERVICE: 'klimaservice'
+                                    }[service.serviceType] || '#'}`}
+                                    target="_blank"
+                                    className="px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-200 rounded text-xs font-medium"
+                                    title="Details zu diesem Service anzeigen"
+                                  >
+                                    ℹ️ Info
+                                  </Link>
+                                  <button
+                                    onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
+                                    className={`px-3 py-1 rounded text-xs font-medium ${
+                                      pkg.isActive 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>

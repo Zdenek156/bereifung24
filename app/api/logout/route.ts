@@ -83,20 +83,28 @@ export async function POST(request: NextRequest) {
     
     // Set all cookies to expired (delete them)
     cookieNames.forEach(name => {
-      // Try multiple domain configurations
-      const domains = [undefined, 'bereifung24.de', '.bereifung24.de']
+      // Delete without domain
+      response.cookies.set(name, '', {
+        expires: new Date(0),
+        maxAge: -1,
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax'
+      })
       
-      domains.forEach(domain => {
+      // Delete with explicit domain for production
+      if (process.env.NODE_ENV === 'production') {
         response.cookies.set(name, '', {
           expires: new Date(0),
-          maxAge: 0,
+          maxAge: -1,
           path: '/',
+          domain: 'bereifung24.de',
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          ...(domain && { domain })
+          secure: true,
+          sameSite: 'lax'
         })
-      })
+      }
       
       console.log(`[CUSTOM LOGOUT] Deleted cookie: ${name}`)
     })

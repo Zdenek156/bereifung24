@@ -7,7 +7,20 @@ import bcrypt from 'bcrypt'
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt', // JWT for Credentials + Google
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 24 * 60 * 60, // 1 day (short duration for better logout behavior)
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? `__Secure-next-auth.session-token` 
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
   },
   providers: [
     GoogleProvider({

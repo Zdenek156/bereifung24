@@ -664,25 +664,16 @@ export default function NewHomePage() {
                             setShowUserMenu(false)
                             
                             try {
-                              // Step 1: Call custom logout endpoint (outside /api/auth/* to avoid NextAuth blocking)
-                              console.log('[LOGOUT] Step 1: Calling /api/logout to delete cookies')
-                              const response = await fetch('/api/logout', {
+                              // Step 1: Call NextAuth signout first
+                              console.log('[LOGOUT] Step 1: Calling NextAuth signout')
+                              await signOut({ redirect: false })
+                              
+                              // Step 2: Call custom logout endpoint to force cookie deletion
+                              console.log('[LOGOUT] Step 2: Calling /api/logout to force delete cookies')
+                              await fetch('/api/logout', {
                                 method: 'POST',
                                 credentials: 'include'
                               })
-                              
-                              const data = await response.json()
-                              console.log('[LOGOUT] Step 1 complete:', data)
-                              
-                              // Step 2: Call NextAuth signout
-                              console.log('[LOGOUT] Step 2: Calling NextAuth signout')
-                              await fetch('/api/auth/signout', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                body: 'callbackUrl=/',
-                                credentials: 'include'
-                              })
-                              console.log('[LOGOUT] Step 2 complete')
                               
                               // Step 3: Clear all client storage
                               console.log('[LOGOUT] Step 3: Clearing storage')

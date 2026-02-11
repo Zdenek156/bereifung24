@@ -699,44 +699,47 @@ export default function NewHomePage() {
                   )}
                 </div>
 
-                {/* Radius Dropdown */}
-                <div className="w-full md:w-32">
-                  <select
-                    value={radiusKm}
-                    onChange={(e) => setRadiusKm(Number(e.target.value))}
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
-                  >
-                    {RADIUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* Radius + Geolocation Row (side by side on mobile) */}
+                <div className="flex gap-2 w-full md:w-auto">
+                  {/* Radius Dropdown */}
+                  <div className="flex-1 md:w-32">
+                    <select
+                      value={radiusKm}
+                      onChange={(e) => setRadiusKm(Number(e.target.value))}
+                      className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                    >
+                      {RADIUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Geolocation Button - Only Icon */}
-                <button
-                  onClick={() => {
-                    if (useGeolocation) {
-                      setUseGeolocation(false)
-                      setCustomerLocation(null)
-                      setHasSearched(false)
-                    } else {
-                      requestGeolocation()
-                    }
-                  }}
-                  className={`w-16 h-16 rounded-xl font-semibold transition-all flex items-center justify-center ${
-                    useGeolocation
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
-                  title={useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
-                >
-                  <Navigation className="w-6 h-6" />
-                  <span className="sr-only">
-                    {useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
-                  </span>
-                </button>
+                  {/* Geolocation Button - Only Icon */}
+                  <button
+                    onClick={() => {
+                      if (useGeolocation) {
+                        setUseGeolocation(false)
+                        setCustomerLocation(null)
+                        setHasSearched(false)
+                      } else {
+                        requestGeolocation()
+                      }
+                    }}
+                    className={`w-16 h-16 flex-shrink-0 rounded-xl font-semibold transition-all flex items-center justify-center ${
+                      useGeolocation
+                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                    title={useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
+                  >
+                    <Navigation className="w-6 h-6" />
+                    <span className="sr-only">
+                      {useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
+                    </span>
+                  </button>
+                </div>
 
                 {/* Search Button */}
                 <button

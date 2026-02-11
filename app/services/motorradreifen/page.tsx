@@ -25,18 +25,9 @@ export default function MotorradreifenPage() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Motorradreifen
             </h1>
-            <p className="text-xl text-primary-100 mb-4">
+            <p className="text-xl text-primary-100 mb-8">
               Professionelle Reifenmontage für Motorräder
             </p>
-            <div className="bg-orange-500 border-2 border-orange-300 rounded-xl p-4 mb-6 max-w-2xl mx-auto">
-              <p className="text-white font-bold text-lg">
-                ⚠️ WICHTIG: Nur für ausgebaute Räder!
-              </p>
-              <p className="text-orange-100 mt-2">
-                Die Werkstatt montiert Reifen nur auf <strong>mitgebrachten Rädern/Felgen</strong>. 
-                Der Aus- und Einbau der Räder vom/ins Motorrad ist NICHT im Service enthalten.
-              </p>
-            </div>
             <Link
               href="/?service=MOTORCYCLE_TIRE"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-2xl"
@@ -51,24 +42,6 @@ export default function MotorradreifenPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-8">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-8 h-8 text-red-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-xl font-bold text-red-900 mb-2">
-                    ⚠️ NUR FÜR AUSGEBAUTE RÄDER!
-                  </h3>
-                  <p className="text-red-900 mb-2">
-                    Dieser Service ist <strong>ausschließlich für bereits vom Motorrad ausgebaute Räder/Felgen</strong>.
-                  </p>
-                  <p className="text-red-800">
-                    Die Werkstatt baut die Räder <strong>NICHT vom Motorrad aus</strong> und auch <strong>NICHT wieder ein</strong>. 
-                    Du bringst die Felgen mit und nimmst sie wieder mit.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
               Motorradreifen-Service
             </h2>
@@ -126,16 +99,12 @@ export default function MotorradreifenPage() {
               <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Vorderrad wechseln</h3>
                 <p className="text-gray-700 mb-4">
-                  Reifenwechsel am Vorderrad des Motorrads
+                  Reifenwechsel am ausgebauten Vorderrad (nur Felge)
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Ausbau des Vorderrads (Gabel)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Demontage des alten Reifens</span>
+                    <span className="text-gray-700">Demontage des alten Reifens von der Felge</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
@@ -149,10 +118,6 @@ export default function MotorradreifenPage() {
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
                     <span className="text-gray-700">Auswuchten des Rades</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Einbau und Einstellung</span>
-                  </li>
                 </ul>
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-900">
@@ -165,20 +130,16 @@ export default function MotorradreifenPage() {
               <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Hinterrad wechseln</h3>
                 <p className="text-gray-700 mb-4">
-                  Reifenwechsel am Hinterrad des Motorrads (komplexer)
+                  Reifenwechsel am ausgebauten Hinterrad (nur Felge)
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Ausbau des Hinterrads (Schwinge, Kette/Riemen)</span>
+                    <span className="text-gray-700">Demontage des alten Reifens von der Felge</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Demontage des alten Reifens</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Montage des neuen Reifens</span>
+                    <span className="text-gray-700">Montage des neuen Reifens mit spezieller Motorrad-Montagemaschine</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
@@ -187,14 +148,6 @@ export default function MotorradreifenPage() {
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-primary-600 mt-0.5" />
                     <span className="text-gray-700">Auswuchten des Rades</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Einbau, Ketteneinstellung und Ausrichtung</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
-                    <span className="text-gray-700">Kontrolle der Kettenspannung</span>
                   </li>
                 </ul>
                 <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">

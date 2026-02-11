@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
+import LiveChat from '@/components/LiveChat'
 
 const SERVICES = [
   { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
@@ -530,6 +531,10 @@ export default function NewHomePage() {
       <Suspense fallback={null}>
         <AffiliateTracker />
       </Suspense>
+      
+      {/* Live Chat Widget */}
+      <LiveChat />
+      
       {/* Top Navigation - Blue like current homepage */}
       <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -1326,7 +1331,7 @@ export default function NewHomePage() {
       </section>
 
       {/* Popular Services */}
-      <section className="py-16">
+      <section className="py-16" loading="lazy">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">
             Beliebte Services

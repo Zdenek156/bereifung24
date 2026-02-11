@@ -203,16 +203,10 @@ export default function PaymentSuccessPage() {
         
         setBooking(finalBookingData.booking)
 
-        // Clean up reservation after successful booking
-        if (reservationId) {
-          console.log('[SUCCESS] Cleaning up reservation:', reservationId)
-          await fetch(`/api/customer/direct-booking/reservation/${reservationId}`, {
-            method: 'DELETE'
-          }).catch(err => {
-            // Non-critical error, just log it
-            console.warn('[SUCCESS] Failed to delete reservation:', err)
-          })
-        }
+        // NO LONGER DELETE reservation - it was already converted to CONFIRMED booking
+        // The /api/bookings/direct route updates the reservation status to CONFIRMED
+        // Deleting it here would remove the confirmed booking from the database!
+        console.log('[SUCCESS] Reservation converted to confirmed booking:', reservationId)
 
         setBookingCreated(true)
       } catch (err: any) {

@@ -1052,23 +1052,15 @@ export default function NewHomePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div className="text-center">
                   <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    {stats.workshopCount > 0 ? `${stats.workshopCount}+` : '1000+'}
+                    100%
                   </div>
                   <div className="text-sm text-gray-600 font-medium">
-                    Werkstätten
+                    Geprüfte Werkstätten
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    {stats.bookingCount > 0 ? `${Math.floor(stats.bookingCount / 1000)}k+` : '50k+'}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Zufriedene Kunden
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '4.8★'}
+                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '5.0★'}
                   </div>
                   <div className="text-sm text-gray-600 font-medium">
                     Durchschnittsbewertung
@@ -1080,6 +1072,14 @@ export default function NewHomePage() {
                   </div>
                   <div className="text-sm text-gray-600 font-medium">
                     Online Buchung
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                    <Clock className="w-8 h-8 md:w-10 md:h-10 mx-auto text-primary-600" />
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Schneller Termin
                   </div>
                 </div>
               </div>
@@ -1131,7 +1131,6 @@ export default function NewHomePage() {
                         <p className="font-semibold text-gray-900">{review.customerName}</p>
                         <p className="text-sm text-gray-600">
                           {review.workshopName}
-                          {review.workshopCity && ` • ${review.workshopCity}`}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           {new Date(review.createdAt).toLocaleDateString('de-DE', {
@@ -1145,7 +1144,90 @@ export default function NewHomePage() {
                 </div>
               </div>
             </section>
-          )}
+          )
+
+      {/* How It Works - Ablauf */}
+      <section className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              So einfach geht's
+            </h2>
+            <p className="text-xl text-gray-600">
+              In 3 Schritten zum Wunschtermin
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Step 1 */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                  1
+                </div>
+                <div className="mb-6 mt-4">
+                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto">
+                    <Search className="w-10 h-10 text-primary-600" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Werkstatt finden
+                </h3>
+                <p className="text-gray-600">
+                  Service wählen, Standort eingeben und passende Werkstätten mit Festpreisen vergleichen
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                  2
+                </div>
+                <div className="mb-6 mt-4">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <Calendar className="w-10 h-10 text-green-600" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Online buchen & bezahlen
+                </h3>
+                <p className="text-gray-600">
+                  Wunschtermin wählen, sicher online bezahlen und Bestätigung per E-Mail erhalten
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                  3
+                </div>
+                <div className="mb-6 mt-4">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-10 h-10 text-blue-600" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Zur Werkstatt fahren
+                </h3>
+                <p className="text-gray-600">
+                  Einfach zum vereinbarten Termin erscheinen - alles ist vorbereitet und erledigt
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="text-center mt-12">
+              <button
+                onClick={() => document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                className="px-8 py-4 bg-primary-600 text-white rounded-xl font-bold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-xl inline-flex items-center gap-2"
+              >
+                <Search className="w-5 h-5" />
+                Jetzt Werkstatt finden
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Popular Services */}
       <section className="py-16">

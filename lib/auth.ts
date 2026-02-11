@@ -1,15 +1,12 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 
 export const authOptions: NextAuthOptions = {
-  // Use Prisma Adapter only for Google OAuth
-  adapter: PrismaAdapter(prisma),
   session: {
-    strategy: 'jwt', // Must use JWT for Credentials Provider
+    strategy: 'jwt', // JWT for Credentials + Google
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
@@ -274,17 +271,6 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signOut({ session, token }) {
       console.log('[AUTH] User signed out:', session?.user?.email || token?.email)
-      
-      // Delete session from database if it exists
-      if (session?.user?.email) {
-        await prisma.session.deleteMany({
-          where: {
-            user: {
-              email: session.user.email
-            }
-          }
-        }).catch(err => console.error('[AUTH] Error deleting sessions:', err))
-      }
     }
   },
 }

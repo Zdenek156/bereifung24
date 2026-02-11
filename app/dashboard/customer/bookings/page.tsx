@@ -101,18 +101,16 @@ export default function BookingsPage() {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all')
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (status === 'loading') return // Wait for session to load
+    
     if (!session) {
       router.push('/login?redirect=/dashboard/customer/bookings')
       return
     }
+    
+    // Session is ready, fetch bookings
+    fetchBookings()
   }, [session, status, router])
-
-  useEffect(() => {
-    if (session) {
-      fetchBookings()
-    }
-  }, [session])
 
   const fetchBookings = async () => {
     try {
@@ -163,7 +161,7 @@ export default function BookingsPage() {
     return true
   })
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>

@@ -658,28 +658,43 @@ export default function NewHomePage() {
                         
                         <button
                           onClick={async () => {
-                            console.log('[LOGOUT] Starting force logout...')
+                            console.log('[LOGOUT] Starting logout...')
                             setShowUserMenu(false)
                             
                             try {
-                              // Call server-side force logout endpoint
-                              const response = await fetch('/api/auth/force-logout', {
+                              // Step 1: Call custom logout endpoint (outside /api/auth/* to avoid NextAuth blocking)
+                              console.log('[LOGOUT] Step 1: Calling /api/logout to delete cookies')
+                              const response = await fetch('/api/logout', {
                                 method: 'POST',
                                 credentials: 'include'
                               })
                               
-                              console.log('[LOGOUT] Server response:', await response.json())
+                              const data = await response.json()
+                              console.log('[LOGOUT] Step 1 complete:', data)
                               
-                              // Clear all storage
+                              // Step 2: Call NextAuth signout
+                              console.log('[LOGOUT] Step 2: Calling NextAuth signout')
+                              await fetch('/api/auth/signout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: 'callbackUrl=/',
+                                credentials: 'include'
+                              })
+                              console.log('[LOGOUT] Step 2 complete')
+                              
+                              // Step 3: Clear all client storage
+                              console.log('[LOGOUT] Step 3: Clearing storage')
                               localStorage.clear()
                               sessionStorage.clear()
                               
-                              console.log('[LOGOUT] Reloading page...')
-                              // Force page reload to clear all client state
+                              // Step 4: Force page reload
+                              console.log('[LOGOUT] Step 4: Reloading to /')
                               window.location.href = '/'
                             } catch (error) {
-                              console.error('[LOGOUT] Error:', error)
-                              // Fallback: force reload anyway
+                              console.error('[LOGOUT] Error during logout:', error)
+                              // Force reload anyway
+                              localStorage.clear()
+                              sessionStorage.clear()
                               window.location.href = '/'
                             }
                           }}

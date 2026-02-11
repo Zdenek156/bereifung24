@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       where: {
         customerId: customer.id,
         status: {
-          in: ['CONFIRMED', 'COMPLETED', 'CANCELLED']
+          in: ['CONFIRMED', 'COMPLETED']
         }
       },
       include: {

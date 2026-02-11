@@ -1526,7 +1526,7 @@ export default function NewHomePage() {
             <span>•</span>
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span>5.0 Sterne Durchschnitt</span>
+              <span>{stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}` : '4.9'} Sterne Durchschnitt</span>
             </div>
             <span>•</span>
             <div className="flex items-center gap-2">

@@ -74,13 +74,27 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Get or create Customer record
+      let customer = await prisma.customer.findUnique({
+        where: { userId: session.user.id }
+      })
+
+      if (!customer) {
+        console.log('[BOOK API] Creating new Customer record for user:', session.user.id)
+        customer = await prisma.customer.create({
+          data: {
+            userId: session.user.id
+          }
+        })
+      }
+
       // Create booking after successful payment
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,
           serviceType,
           vehicleId,
-          customerId: session.user.id,
+          customerId: customer.id,
           date: new Date(date + 'T00:00:00'), // Convert YYYY-MM-DD to Date at midnight
           time,
           hasBalancing: hasBalancing || false,

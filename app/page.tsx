@@ -1144,7 +1144,7 @@ export default function NewHomePage() {
                 </div>
               </div>
             </section>
-          )
+          )}
 
       {/* How It Works - Ablauf */}
       <section className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">

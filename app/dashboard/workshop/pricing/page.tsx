@@ -746,7 +746,7 @@ export default function PricingPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={autoTemplate.fixedMarkup}
+                      value={autoTemplate.fixedMarkup || ''}
                       onChange={(e) => setAutoTemplate({ ...autoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="0.00"
@@ -759,7 +759,7 @@ export default function PricingPage() {
                       step="0.1"
                       min="0"
                       max="100"
-                      value={autoTemplate.percentMarkup}
+                      value={autoTemplate.percentMarkup || ''}
                       onChange={(e) => setAutoTemplate({ ...autoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="0"
@@ -802,7 +802,7 @@ export default function PricingPage() {
                             type="number"
                             step="0.01"
                             min="0"
-                            value={values.fixedMarkup}
+                            value={values.fixedMarkup || ''}
                             onChange={(e) => updateTirePricingFormValue('AUTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="0.00"
@@ -815,7 +815,7 @@ export default function PricingPage() {
                             step="0.1"
                             min="0"
                             max="100"
-                            value={values.percentMarkup}
+                            value={values.percentMarkup || ''}
                             onChange={(e) => updateTirePricingFormValue('AUTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="0"
@@ -871,7 +871,7 @@ export default function PricingPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={motoTemplate.fixedMarkup}
+                      value={motoTemplate.fixedMarkup || ''}
                       onChange={(e) => setMotoTemplate({ ...motoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="0.00"
@@ -884,7 +884,7 @@ export default function PricingPage() {
                       step="0.1"
                       min="0"
                       max="100"
-                      value={motoTemplate.percentMarkup}
+                      value={motoTemplate.percentMarkup || ''}
                       onChange={(e) => setMotoTemplate({ ...motoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="0"
@@ -927,7 +927,7 @@ export default function PricingPage() {
                             type="number"
                             step="0.01"
                             min="0"
-                            value={values.fixedMarkup}
+                            value={values.fixedMarkup || ''}
                             onChange={(e) => updateTirePricingFormValue('MOTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="0.00"
@@ -940,7 +940,7 @@ export default function PricingPage() {
                             step="0.1"
                             min="0"
                             max="100"
-                            value={values.percentMarkup}
+                            value={values.percentMarkup || ''}
                             onChange={(e) => updateTirePricingFormValue('MOTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="0"

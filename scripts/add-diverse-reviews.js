@@ -8,6 +8,29 @@ const prisma = new PrismaClient()
 
 const bcrypt = require('bcryptjs')
 
+const WORKSHOPS = [
+  { name: 'Reifen Meister', city: 'München', zipCode: '80331' },
+  { name: 'AutoService Schmidt', city: 'Hamburg', zipCode: '20095' },
+  { name: 'Reifen-Express', city: 'Berlin', zipCode: '10115' },
+  { name: 'KFZ-Werkstatt Müller', city: 'Köln', zipCode: '50667' },
+  { name: 'Reifenprofi24', city: 'Frankfurt', zipCode: '60311' },
+  { name: 'Auto-Center Wagner', city: 'Stuttgart', zipCode: '70173' },
+  { name: 'Reifen-Service Plus', city: 'Düsseldorf', zipCode: '40213' },
+  { name: 'Meisterwerkstatt Becker', city: 'Dortmund', zipCode: '44135' },
+  { name: 'Reifen Fischer', city: 'Essen', zipCode: '45127' },
+  { name: 'AutoHaus Klein', city: 'Leipzig', zipCode: '04109' },
+  { name: 'Reifen-Team Weber', city: 'Bremen', zipCode: '28195' },
+  { name: 'KFZ-Profi Hoffmann', city: 'Hannover', zipCode: '30159' },
+  { name: 'Reifen-Center Koch', city: 'Nürnberg', zipCode: '90402' },
+  { name: 'Auto-Service Wolf', city: 'Dresden', zipCode: '01067' },
+  { name: 'Meisterbetrieb Schulz', city: 'Mannheim', zipCode: '68159' },
+  { name: 'Reifen Schwarz', city: 'Duisburg', zipCode: '47051' },
+  { name: 'KFZ-Zentrum Braun', city: 'Bochum', zipCode: '44787' },
+  { name: 'Reifen-Station Krüger', city: 'Wuppertal', zipCode: '42103' },
+  { name: 'Auto-Werkstatt Zimmermann', city: 'Bielefeld', zipCode: '33602' },
+  { name: 'Reifen-Shop Neumann', city: 'Bonn', zipCode: '53111' },
+]
+
 const DIVERSE_REVIEWS = [
   {
     firstName: 'Michael',
@@ -132,45 +155,35 @@ const DIVERSE_REVIEWS = [
 ]
 
 async function addDiverseReviews() {
-  console.log('🔄 Adding diverse reviews with fake German customer names...')
+  console.log('🔄 Adding diverse reviews with fake German customers and workshops...')
 
   try {
-    // Get Anton's workshop (Luxus24)
-    const antonWorkshop = await prisma.workshop.findFirst({
-      where: {
-        companyName: 'Luxus24'
-      }
-    })
-
-    if (!antonWorkshop) {
-      console.error('❌ Luxus24 workshop not found!')
-      return
-    }
-
-    console.log(`✅ Found Luxus24 workshop`)
-
     // Hash a dummy password for fake users
     const dummyPassword = await bcrypt.hash('DummyPassword2026!', 10)
 
     let reviewsAdded = 0
 
-    // Create fake customers and reviews
-    for (const review of DIVERSE_REVIEWS) {
+    // Create fake customers, workshops and reviews
+    for (let i = 0; i < DIVERSE_REVIEWS.length; i++) {
+      const review = DIVERSE_REVIEWS[i]
+      const workshop = WORKSHOPS[i % WORKSHOPS.length] // Rotate through workshops
+
       try {
-        const email = `${review.firstName.toLowerCase()}.${review.lastName.toLowerCase()}@review-customer.bereifung24.de`
+        // Create customer email
+        const customerEmail = `${review.firstName.toLowerCase()}.${review.lastName.toLowerCase()}@review-customer.bereifung24.de`
         
-        // Check if user already exists
-        let user = await prisma.user.findUnique({
-          where: { email }
+        // Check if customer user already exists
+        let customerUser = await prisma.user.findUnique({
+          where: { email: customerEmail }
         })
 
         let customer
 
-        if (!user) {
-          // Create fake user
-          user = await prisma.user.create({
+        if (!customerUser) {
+          // Create fake customer user
+          customerUser = await prisma.user.create({
             data: {
-              email,
+              email: customerEmail,
               password: dummyPassword,
               role: 'CUSTOMER',
               firstName: review.firstName,
@@ -186,7 +199,7 @@ async function addDiverseReviews() {
           // Create customer profile
           customer = await prisma.customer.create({
             data: {
-              userId: user.id
+              userId: customerUser.id
             }
           })
 
@@ -194,7 +207,7 @@ async function addDiverseReviews() {
         } else {
           // Get existing customer
           customer = await prisma.customer.findUnique({
-            where: { userId: user.id }
+            where: { userId: customerUser.id }
           })
         }
 
@@ -203,16 +216,66 @@ async function addDiverseReviews() {
           continue
         }
 
+        // Create workshop email
+        const workshopEmail = `${workshop.name.toLowerCase().replace(/\s+/g, '.')}@review-workshop.bereifung24.de`
+
+        // Check if workshop user already exists
+        let workshopUser = await prisma.user.findUnique({
+          where: { email: workshopEmail }
+        })
+
+        let workshopProfile
+
+        if (!workshopUser) {
+          // Create fake workshop user
+          workshopUser = await prisma.user.create({
+            data: {
+              email: workshopEmail,
+              password: dummyPassword,
+              role: 'WORKSHOP',
+              firstName: 'Inhaber',
+              lastName: workshop.name,
+              phone: '+49 000 00000000',
+              zipCode: workshop.zipCode,
+              city: workshop.city,
+              emailVerified: new Date(),
+              isActive: true
+            }
+          })
+
+          // Create workshop profile
+          workshopProfile = await prisma.workshop.create({
+            data: {
+              userId: workshopUser.id,
+              companyName: workshop.name,
+              customerNumber: `WS${Math.floor(100000 + Math.random() * 900000)}`, // Random 6-digit number
+              verifiedAt: new Date() // Auto-verify fake workshops
+            }
+          })
+
+          console.log(`✅ Created fake workshop: ${workshop.name} in ${workshop.city}`)
+        } else {
+          // Get existing workshop
+          workshopProfile = await prisma.workshop.findUnique({
+            where: { userId: workshopUser.id }
+          })
+        }
+
+        if (!workshopProfile) {
+          console.log(`⚠️ Could not find/create workshop ${workshop.name}, skipping`)
+          continue
+        }
+
         // Check if this customer already has a review for this workshop
         const existingReview = await prisma.review.findFirst({
           where: {
             customerId: customer.id,
-            workshopId: antonWorkshop.id
+            workshopId: workshopProfile.id
           }
         })
 
         if (existingReview) {
-          console.log(`⏭️ Review already exists for ${review.firstName} ${review.lastName}`)
+          console.log(`⏭️ Review already exists for ${review.firstName} ${review.lastName} at ${workshop.name}`)
           continue
         }
 
@@ -251,7 +314,7 @@ async function addDiverseReviews() {
         const offer = await prisma.offer.create({
           data: {
             tireRequestId: tireRequest.id,
-            workshopId: antonWorkshop.id,
+            workshopId: workshopProfile.id,
             tireBrand: 'Continental',
             tireModel: 'PremiumContact 6',
             price: 560.0, // Total price (4 tires * 120 + 80 service)
@@ -267,7 +330,7 @@ async function addDiverseReviews() {
           data: {
             tireRequestId: tireRequest.id,
             customerId: customer.id,
-            workshopId: antonWorkshop.id,
+            workshopId: workshopProfile.id,
             offerId: offer.id,
             appointmentDate: bookingDate,
             appointmentTime: '10:00',
@@ -285,7 +348,7 @@ async function addDiverseReviews() {
           data: {
             bookingId: booking.id,
             customerId: customer.id,
-            workshopId: antonWorkshop.id,
+            workshopId: workshopProfile.id,
             rating: review.rating,
             comment: review.comment,
             createdAt: reviewDate
@@ -293,7 +356,7 @@ async function addDiverseReviews() {
         })
 
         reviewsAdded++
-        console.log(`✅ Added review from ${review.firstName} ${review.lastName}: "${review.comment.substring(0, 50)}..."`)
+        console.log(`✅ Added review from ${review.firstName} ${review.lastName} for ${workshop.name}: "${review.comment.substring(0, 50)}..."`)
 
       } catch (error) {
         console.error(`❌ Error adding review for ${review.firstName}:`, error.message)

@@ -198,7 +198,10 @@ export default function AdminNotificationSettings() {
               </p>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: '/login', redirect: true })}
+              onClick={async () => {
+                await signOut({ redirect: false })
+                window.location.href = '/login'
+              }}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Abmelden

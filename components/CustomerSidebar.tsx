@@ -112,7 +112,8 @@ export default function CustomerSidebar() {
   ]
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login', redirect: true })
+    await signOut({ redirect: false })
+    window.location.href = '/login'
   }
 
   const isActive = (path: string) => {

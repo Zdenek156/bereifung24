@@ -696,10 +696,10 @@ export default function NewHomePage() {
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center mb-12">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-              Finde deine Werkstatt
+              Reifenservice zum Festpreis – in 2 Minuten gebucht
             </h2>
             <p className="text-xl text-primary-100">
-              Vergleiche Preise, buche direkt online
+              Vergleiche geprüfte Werkstätten in deiner Nähe und buche direkt online
             </p>
           </div>
 
@@ -710,9 +710,11 @@ export default function NewHomePage() {
                 {/* Service Dropdown */}
                 <div className="flex-1">
                   <select
+                    name="service"
                     value={selectedService}
                     onChange={(e) => setSelectedService(e.target.value)}
                     className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                    aria-label="Service auswählen"
                   >
                     {SERVICES.map((service) => (
                       <option key={service.id} value={service.id}>
@@ -729,11 +731,13 @@ export default function NewHomePage() {
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
+                        name="postalCode"
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="PLZ oder Ort"
                         className="w-full h-full pl-12 pr-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
+                        aria-label="Postleitzahl oder Ort eingeben"
                       />
                     </div>
                   ) : (
@@ -749,9 +753,11 @@ export default function NewHomePage() {
                   {/* Radius Dropdown */}
                   <div className="flex-1 md:w-32">
                     <select
+                      name="radius"
                       value={radiusKm}
                       onChange={(e) => setRadiusKm(Number(e.target.value))}
                       className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                      aria-label="Umkreis auswählen"
                     >
                       {RADIUS_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -792,7 +798,8 @@ export default function NewHomePage() {
                   className="w-full md:w-auto h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                 >
                   <Search className="w-5 h-5" />
-                  <span className="hidden md:inline">Suchen</span>
+                  <span className="hidden md:inline">Jetzt Festpreise vergleichen</span>
+                  <span className="md:hidden">Vergleichen</span>
                 </button>
               </div>
             </div>

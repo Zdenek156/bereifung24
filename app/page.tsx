@@ -103,7 +103,7 @@ export default function NewHomePage() {
   useEffect(() => {
     async function loadReviews() {
       try {
-        const response = await fetch('/api/public/reviews?limit=3')
+        const response = await fetch('/api/public/reviews?limit=15')
         const data = await response.json()
         if (data.success) {
           setReviews(data.reviews)
@@ -810,12 +810,12 @@ export default function NewHomePage() {
             <div className="max-w-5xl mx-auto mt-4 flex flex-wrap items-center justify-center gap-4 text-primary-100 text-sm">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold">{stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}/5` : '5.0/5'} von {stats.totalReviews > 0 ? stats.totalReviews : '500+'} Kunden</span>
+                <span className="font-semibold">{stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}/5` : '4.9/5'} von {stats.totalReviews > 0 ? stats.totalReviews : '23'} Kunden</span>
               </div>
               <span className="text-primary-200">•</span>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
-                <span>{stats.workshopCount > 0 ? `${stats.workshopCount}+` : '100+'} geprüfte Werkstätten</span>
+                <span>Geprüfte Werkstätten</span>
               </div>
               <span className="text-primary-200">•</span>
               <div className="flex items-center gap-2">
@@ -1213,7 +1213,7 @@ export default function NewHomePage() {
                 </div>
                 <div className="text-center">
                   <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '5.0★'}
+                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '4.9★'}
                   </div>
                   <div className="text-sm text-gray-600 font-medium">
                     Durchschnittsbewertung
@@ -1240,7 +1240,7 @@ export default function NewHomePage() {
           </section>
 
           {/* Reviews Section - Real reviews from database */}
-          {reviews.length > 0 && <ReviewsCarousel reviews={reviews.slice(0, 5)} />}
+          {reviews.length > 0 && <ReviewsCarousel reviews={reviews} />}
 
       {/* How It Works - Ablauf */}
       <section className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">
@@ -1685,38 +1685,45 @@ export default function NewHomePage() {
   )
 }
 
-// Reviews Carousel Component
+// Reviews Carousel Component - Shows 5 reviews at once
 function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const REVIEWS_PER_PAGE = 5
+  const [currentPage, setCurrentPage] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+
+  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE)
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying || reviews.length <= 1) return
+    if (!isAutoPlaying || totalPages <= 1) return
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % reviews.length)
-    }, 5000) // Change slide every 5 seconds
+      setCurrentPage((prev) => (prev + 1) % totalPages)
+    }, 8000) // Change page every 8 seconds
 
     return () => clearInterval(interval)
-  }, [isAutoPlaying, reviews.length])
+  }, [isAutoPlaying, totalPages])
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length)
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages)
     setIsAutoPlaying(false)
   }
 
   const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % reviews.length)
+    setCurrentPage((prev) => (prev + 1) % totalPages)
     setIsAutoPlaying(false)
   }
 
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index)
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
     setIsAutoPlaying(false)
   }
 
   if (reviews.length === 0) return null
+
+  // Get reviews for current page
+  const startIndex = currentPage * REVIEWS_PER_PAGE
+  const currentReviews = reviews.slice(startIndex, startIndex + REVIEWS_PER_PAGE)
 
   return (
     <section className="py-16 bg-white">
@@ -1730,81 +1737,69 @@ function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto relative">
-          {/* Carousel Container */}
-          <div className="relative overflow-hidden rounded-2xl">
-            {/* Reviews */}
-            <div 
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-            >
-              {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="w-full flex-shrink-0 px-4"
-                >
-                  <div className="bg-gradient-to-br from-primary-50 to-white rounded-xl shadow-2xl border border-gray-200 p-8 md:p-12">
-                    {/* Rating */}
-                    <div className="flex items-center justify-center gap-1 mb-6">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-7 h-7 ${
-                            i < review.rating
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'fill-gray-200 text-gray-200'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Comment */}
-                    {review.comment && (
-                      <blockquote className="text-center mb-8">
-                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed italic">
-                          "{review.comment}"
-                        </p>
-                      </blockquote>
-                    )}
-
-                    {/* Customer & Workshop */}
-                    <div className="text-center border-t border-gray-200 pt-6">
-                      <p className="font-bold text-xl text-gray-900 mb-1">
-                        {review.customerName}
-                      </p>
-                      <p className="text-base text-gray-600 mb-2">
-                        {review.workshopName}
-                        {review.workshopCity && ` · ${review.workshopCity}`}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        {new Date(review.createdAt).toLocaleDateString('de-DE', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
+        <div className="max-w-7xl mx-auto relative">
+          {/* Reviews Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {currentReviews.map((review) => (
+              <div
+                key={review.id}
+                className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 hover:shadow-xl transition-shadow flex flex-col"
+              >
+                {/* Rating */}
+                <div className="flex items-center justify-center gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < review.rating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'fill-gray-200 text-gray-200'
+                      }`}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                {/* Comment */}
+                {review.comment && (
+                  <p className="text-sm text-gray-700 mb-4 line-clamp-4 flex-grow">
+                    "{review.comment}"
+                  </p>
+                )}
+
+                {/* Customer & Workshop */}
+                <div className="border-t border-gray-200 pt-3 mt-auto">
+                  <p className="font-semibold text-sm text-gray-900 truncate">
+                    {review.customerName}
+                  </p>
+                  <p className="text-xs text-gray-600 truncate">
+                    {review.workshopName}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(review.createdAt).toLocaleDateString('de-DE', {
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Navigation Buttons */}
-          {reviews.length > 1 && (
+          {totalPages > 1 && (
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110"
-                aria-label="Vorherige Bewertung"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110 z-10"
+                aria-label="Vorherige Bewertungen"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               
               <button
                 onClick={goToNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110"
-                aria-label="Nächste Bewertung"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110 z-10"
+                aria-label="Nächste Bewertungen"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -1812,18 +1807,18 @@ function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
           )}
 
           {/* Dots Navigation */}
-          {reviews.length > 1 && (
+          {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-8">
-              {reviews.map((_, index) => (
+              {Array.from({ length: totalPages }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => goToSlide(index)}
+                  onClick={() => goToPage(index)}
                   className={`transition-all ${
-                    index === currentIndex
+                    index === currentPage
                       ? 'w-8 h-3 bg-primary-600'
                       : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
                   } rounded-full`}
-                  aria-label={`Zur Bewertung ${index + 1}`}
+                  aria-label={`Zur Seite ${index + 1}`}
                 />
               ))}
             </div>

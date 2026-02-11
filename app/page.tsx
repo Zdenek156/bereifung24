@@ -96,7 +96,7 @@ export default function NewHomePage() {
   useEffect(() => {
     async function loadReviews() {
       try {
-        const response = await fetch('/api/public/reviews?limit=6')
+        const response = await fetch('/api/public/reviews?limit=3')
         const data = await response.json()
         if (data.success) {
           setReviews(data.reviews)
@@ -1095,7 +1095,7 @@ export default function NewHomePage() {
                     Das sagen unsere Kunden
                   </h2>
                   <p className="text-xl text-gray-600">
-                    {stats.totalReviews} echte Bewertungen von zufriedenen Kunden
+                    Echte Bewertungen von zufriedenen Kunden
                   </p>
                 </div>
 
@@ -1235,31 +1235,126 @@ export default function NewHomePage() {
           <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">
             Beliebte Services
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {SERVICES.map((service) => (
-              <div
-                key={service.id}
-                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 cursor-pointer group"
-                onClick={() => {
-                  setSelectedService(service.id)
-                  document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                }}
-              >
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                  {service.icon}
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">
-                  {service.label}
-                </h4>
-                <p className="text-gray-600 text-sm mb-4">
-                  Jetzt Werkstätten vergleichen und direkt buchen
-                </p>
-                <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                  <span>Mehr erfahren</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Räderwechsel */}
+            <Link
+              href="/services/raederwechsel"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                🔧
               </div>
-            ))}
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Räderwechsel
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Kompletter Radwechsel vom Winter- auf Sommerreifen oder umgekehrt
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Reifenwechsel */}
+            <Link
+              href="/services/reifenwechsel"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                🔄
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Reifenwechsel
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Reifen von Felge ab- und aufziehen mit professioneller Montage
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Reifenreparatur */}
+            <Link
+              href="/services/reifenreparatur"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                🔨
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Reifenreparatur
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Professionelle Reparatur von Reifenschäden mit Vulkanisierung
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Motorradreifen */}
+            <Link
+              href="/services/motorradreifen"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                🏍️
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Motorradreifen
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Spezialisierte Montage für Motorrad-Vorder- und Hinterreifen
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Achsvermessung */}
+            <Link
+              href="/services/achsvermessung"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                📏
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Achsvermessung
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                3D-Vermessung und Einstellung für optimalen Geradeauslauf
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Klimaservice */}
+            <Link
+              href="/services/klimaservice"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                ❄️
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Klimaservice
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Wartung, Desinfektion und Befüllung der Auto-Klimaanlage
+              </p>
+              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                <span>Mehr erfahren</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -1317,7 +1412,7 @@ export default function NewHomePage() {
             Bereit für deinen Reifenservice?
           </h3>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Über 50.000 zufriedene Kunden vertrauen bereits auf Bereifung24
+            Tausende zufriedene Kunden vertrauen bereits auf Bereifung24
           </p>
           <button
             onClick={() => document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}

@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
       where: { userId: session.user.id }
     })
 
+    console.log('🔍 [CUSTOMER BOOKINGS] User:', session.user.email, '| Customer ID:', customer?.id)
+
     if (!customer) {
       console.log('[BOOKINGS API] No customer record found for user:', session.user.id)
       return NextResponse.json({

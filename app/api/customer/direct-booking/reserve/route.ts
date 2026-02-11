@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     
     // FIRST: Delete expired reservations (older than 10 minutes)
     const now = new Date()
-    await prisma.directBooking.deleteMany({
+    const deleteResult = await prisma.directBooking.deleteMany({
       where: {
         status: 'RESERVED',
         reservedUntil: {
@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    console.log(`🧹 [RESERVE] Deleted ${deleteResult.count} expired reservations`)
     
     // THEN: Fetch all bookings for this workshop and filter in code
     // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
@@ -158,6 +160,8 @@ export async function POST(request: NextRequest) {
         paymentStatus: 'PENDING'
       }
     })
+
+    console.log('✅ [RESERVE] Reservation created:', reservation.id, '| Expires in 10 min')
 
     return NextResponse.json({
       success: true,

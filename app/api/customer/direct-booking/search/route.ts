@@ -282,6 +282,43 @@ export async function POST(request: NextRequest) {
         // "zzgl. MwSt." nur bei eingeloggten B2B-Kunden (später implementieren)
         const showVatNote = false
 
+        // Parse opening hours to determine availability patterns
+        let openSaturday = false
+        let openEvening = false
+        let openEarly = false
+        
+        if (workshop.openingHours) {
+          try {
+            const hours = JSON.parse(workshop.openingHours)
+            // Check Saturday
+            if (hours.saturday && hours.saturday !== 'closed') {
+              openSaturday = true
+            }
+            // Check evening hours (after 18:00)
+            Object.values(hours).forEach((time: any) => {
+              if (typeof time === 'string' && time.includes('-')) {
+                const [_, closeTime] = time.split('-')
+                const closeHour = parseInt(closeTime.split(':')[0])
+                if (closeHour >= 18) {
+                  openEvening = true
+                }
+              }
+            })
+            // Check early hours (before 08:00)
+            Object.values(hours).forEach((time: any) => {
+              if (typeof time === 'string' && time.includes('-')) {
+                const [openTime, _] = time.split('-')
+                const openHour = parseInt(openTime.split(':')[0])
+                if (openHour <= 8) {
+                  openEarly = true
+                }
+              }
+            })
+          } catch (e) {
+            // Ignore parsing errors
+          }
+        }
+
         return {
           id: workshop.id,
           name: workshop.companyName,
@@ -309,13 +346,22 @@ export async function POST(request: NextRequest) {
           
           // Opening Hours
           openingHours: workshop.openingHours || null,
+          openSaturday,
+          openEvening,
+          openEarly,
           
           // Contact
           phone: workshop.user?.phone || null,
           email: workshop.user?.email || null,
           
+          // Payment Methods
+          stripeEnabled: workshop.stripeEnabled || false,
+          paypalEmail: workshop.paypalEmail || null,
+          installmentAvailable: false, // TODO: Add installment logic later
+          
           // Available Services
-          availableServices: workshop.workshopServices.map(s => s.serviceType)
+          availableServices: workshop.workshopServices.map(s => s.serviceType),
+          hasMultipleServices: workshop.workshopServices.length > 1
         }
       })
       .filter((w): w is NonNullable<typeof w> => w !== null) // Remove null entries

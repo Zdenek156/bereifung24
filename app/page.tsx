@@ -23,7 +23,12 @@ import {
   Calendar,
   BookOpen,
   Car,
-  Cloud
+  Cloud,
+  CreditCard,
+  Sunrise,
+  Sunset,
+  CalendarDays,
+  Wrench
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
@@ -187,6 +192,11 @@ export default function NewHomePage() {
   const [showOnlyNearby, setShowOnlyNearby] = useState(false)
   const [showFilters, setShowFilters] = useState(true)
   const [sortBy, setSortBy] = useState<'distance' | 'price' | 'rating'>('distance')
+  
+  // New filters
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([])
+  const [openingHours, setOpeningHours] = useState<string[]>([])
+  const [hasMultipleServices, setHasMultipleServices] = useState(false)
 
   // Geocode postal code
   const geocodePostalCode = async (input: string) => {
@@ -423,11 +433,46 @@ export default function NewHomePage() {
 
   // Apply filters
   const filteredWorkshops = workshops.filter((w) => {
+    // Price range filter
     if (w.totalPrice < priceRange[0] || w.totalPrice > priceRange[1]) return false
+    
+    // Rating filter
     if (w.rating && w.rating < minRating) return false
+    
+    // Distance filter
     if (w.distance > maxDistance) return false
+    
+    // High rated filter
     if (showOnlyHighRated && w.rating < 4) return false
+    
+    // Nearby filter
     if (showOnlyNearby && w.distance > 10) return false
+    
+    // Payment methods filter
+    if (paymentMethods.length > 0) {
+      const hasRequiredPayment = paymentMethods.some(method => {
+        if (method === 'CREDIT_CARD' && w.stripeEnabled) return true
+        if (method === 'PAYPAL' && w.paypalEmail) return true
+        if (method === 'INSTALLMENT' && w.installmentAvailable) return true
+        return false
+      })
+      if (!hasRequiredPayment) return false
+    }
+    
+    // Opening hours filter
+    if (openingHours.length > 0) {
+      const meetsOpeningHours = openingHours.every(hours => {
+        if (hours === 'SATURDAY' && !w.openSaturday) return false
+        if (hours === 'EVENING' && !w.openEvening) return false
+        if (hours === 'EARLY' && !w.openEarly) return false
+        return true
+      })
+      if (!meetsOpeningHours) return false
+    }
+    
+    // Multiple services filter
+    if (hasMultipleServices && !w.hasMultipleServices) return false
+    
     return true
   })
 
@@ -789,31 +834,91 @@ export default function NewHomePage() {
                         />
                       </div>
 
-                      {/* Rating Filter */}
+                      {/* Payment Methods Filter */}
                       <div className="p-4 border-b border-gray-200">
-                        <h4 className="font-semibold mb-3">Bewertung</h4>
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" />
+                          Zahlungsmethoden
+                        </h4>
                         <div className="space-y-2">
-                          {[5, 4, 3, 2, 1].map((rating) => (
-                            <button
-                              key={rating}
-                              onClick={() => setMinRating(minRating === rating ? 0 : rating)}
-                              className={`w-full flex items-center gap-2 p-2 rounded-lg transition-colors ${
-                                minRating === rating ? 'bg-primary-50 text-primary-600' : 'hover:bg-gray-50'
-                              }`}
+                          {[
+                            { id: 'CREDIT_CARD', label: 'Kreditkarte' },
+                            { id: 'PAYPAL', label: 'PayPal' },
+                            { id: 'INSTALLMENT', label: 'Ratenzahlung' }
+                          ].map((method) => (
+                            <label
+                              key={method.id}
+                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                             >
-                              <div className="flex items-center gap-1">
-                                {Array.from({ length: rating }).map((_, i) => (
-                                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                ))}
-                              </div>
-                              <span className="text-sm">& höher</span>
-                              {minRating === rating && <Check className="w-4 h-4 ml-auto" />}
-                            </button>
+                              <input
+                                type="checkbox"
+                                checked={paymentMethods.includes(method.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setPaymentMethods([...paymentMethods, method.id])
+                                  } else {
+                                    setPaymentMethods(paymentMethods.filter(m => m !== method.id))
+                                  }
+                                }}
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              <span className="text-sm">{method.label}</span>
+                            </label>
                           ))}
                         </div>
                       </div>
 
-                      {/* Distance Filter - REMOVED (already in top radius selector) */}
+                      {/* Opening Hours Filter */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Öffnungszeiten
+                        </h4>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'SATURDAY', label: 'Samstag geöffnet', icon: CalendarDays },
+                            { id: 'EVENING', label: 'Abends (nach 18 Uhr)', icon: Sunset },
+                            { id: 'EARLY', label: 'Frühmorgens (vor 8 Uhr)', icon: Sunrise }
+                          ].map((hours) => (
+                            <label
+                              key={hours.id}
+                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={openingHours.includes(hours.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setOpeningHours([...openingHours, hours.id])
+                                  } else {
+                                    setOpeningHours(openingHours.filter(h => h !== hours.id))
+                                  }
+                                }}
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              <hours.icon className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm">{hours.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Multiple Services Filter */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          <Wrench className="w-4 h-4" />
+                          Weitere Services
+                        </h4>
+                        <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={hasMultipleServices}
+                            onChange={(e) => setHasMultipleServices(e.target.checked)}
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm">Nur Werkstätten mit weiteren Services</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </aside>

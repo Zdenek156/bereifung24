@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { 
   Search, 
@@ -657,10 +657,9 @@ export default function NewHomePage() {
                         </Link>
                         
                         <button
-                          onClick={async () => {
+                          onClick={() => {
                             setShowUserMenu(false)
-                            await fetch('/api/auth/signout', { method: 'POST' })
-                            window.location.href = '/'
+                            signOut({ callbackUrl: '/', redirect: true })
                           }}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >

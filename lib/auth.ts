@@ -249,14 +249,10 @@ export const authOptions: NextAuthOptions = {
         trigger: trigger
       })
       
-      // If this is a signOut trigger, return null token to destroy session
-      if (trigger === 'signOut') {
-        console.log('[AUTH JWT] SignOut triggered - returning empty token')
-        return {} as any
-      }
-      
       if (user) {
         // Initial sign in - user comes from authorize()
+        // Generate unique JWT ID (jti) for blacklist tracking
+        token.jti = Math.random().toString(36).substring(2) + Date.now().toString(36)
         token.role = user.role
         token.id = user.id
         token.customerId = user.customerId
@@ -264,11 +260,23 @@ export const authOptions: NextAuthOptions = {
         token.isB24Employee = user.isB24Employee
         token.b24EmployeeId = user.b24EmployeeId
         
-        console.log('[AUTH JWT] Token updated with user data:', {
-          role: token.role,
-          id: token.id
-        })
+        console.log('[AUTH JWT] Token created with JTI:', token.jti)
+      } else if (token.jti) {
+        // Check if token is in blacklist (revoked)
+        try {
+          const revoked = await prisma.revokedToken.findUnique({
+            where: { jti: token.jti as string }
+          })
+          
+          if (revoked) {
+            console.log('[AUTH JWT] Token is REVOKED - returning null')
+            return {} as any // Return empty token to force logout
+          }
+        } catch (error) {
+          console.error('[AUTH JWT] Error checking blacklist:', error)
+        }
       }
+      
       return token
     },
     async session({ session, token }) {

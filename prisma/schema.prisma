@@ -5570,3 +5570,19 @@ model ChatMessage {
   @@index([createdAt])
   @@map("chat_messages")
 }
+
+// ============================================
+// REVOKED JWT TOKENS (for logout)
+// ============================================
+
+model RevokedToken {
+  id        String   @id @default(cuid())
+  jti       String   @unique // JWT ID (token identifier)
+  userId    String   // User who logged out
+  expiresAt DateTime // When the token would naturally expire
+  revokedAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("revoked_tokens")
+}

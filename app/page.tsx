@@ -28,7 +28,9 @@ import {
   Sunrise,
   Sunset,
   CalendarDays,
-  Wrench
+  Wrench,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
@@ -1238,64 +1240,7 @@ export default function NewHomePage() {
           </section>
 
           {/* Reviews Section - Real reviews from database */}
-          {reviews.length > 0 && (
-            <section className="py-16 bg-white">
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Das sagen unsere Kunden
-                  </h2>
-                  <p className="text-xl text-gray-600">
-                    Echte Bewertungen von zufriedenen Kunden
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                  {reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow"
-                    >
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < review.rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'fill-gray-200 text-gray-200'
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Comment */}
-                      {review.comment && (
-                        <p className="text-gray-700 mb-4 line-clamp-4">
-                          "{review.comment}"
-                        </p>
-                      )}
-
-                      {/* Customer & Workshop */}
-                      <div className="border-t border-gray-200 pt-4">
-                        <p className="font-semibold text-gray-900">{review.customerName}</p>
-                        <p className="text-sm text-gray-600">
-                          {review.workshopName}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {new Date(review.createdAt).toLocaleDateString('de-DE', {
-                            year: 'numeric',
-                            month: 'long'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+          {reviews.length > 0 && <ReviewsCarousel reviews={reviews.slice(0, 5)} />}
 
       {/* How It Works - Ablauf */}
       <section className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">
@@ -1737,5 +1682,154 @@ export default function NewHomePage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+// Reviews Carousel Component
+function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!isAutoPlaying || reviews.length <= 1) return
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % reviews.length)
+    }, 5000) // Change slide every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [isAutoPlaying, reviews.length])
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length)
+    setIsAutoPlaying(false)
+  }
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % reviews.length)
+    setIsAutoPlaying(false)
+  }
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index)
+    setIsAutoPlaying(false)
+  }
+
+  if (reviews.length === 0) return null
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Das sagen unsere Kunden
+          </h2>
+          <p className="text-xl text-gray-600">
+            Echte Bewertungen von zufriedenen Kunden
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto relative">
+          {/* Carousel Container */}
+          <div className="relative overflow-hidden rounded-2xl">
+            {/* Reviews */}
+            <div 
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="w-full flex-shrink-0 px-4"
+                >
+                  <div className="bg-gradient-to-br from-primary-50 to-white rounded-xl shadow-2xl border border-gray-200 p-8 md:p-12">
+                    {/* Rating */}
+                    <div className="flex items-center justify-center gap-1 mb-6">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-7 h-7 ${
+                            i < review.rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'fill-gray-200 text-gray-200'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Comment */}
+                    {review.comment && (
+                      <blockquote className="text-center mb-8">
+                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed italic">
+                          "{review.comment}"
+                        </p>
+                      </blockquote>
+                    )}
+
+                    {/* Customer & Workshop */}
+                    <div className="text-center border-t border-gray-200 pt-6">
+                      <p className="font-bold text-xl text-gray-900 mb-1">
+                        {review.customerName}
+                      </p>
+                      <p className="text-base text-gray-600 mb-2">
+                        {review.workshopName}
+                        {review.workshopCity && ` · ${review.workshopCity}`}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {new Date(review.createdAt).toLocaleDateString('de-DE', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation Buttons */}
+          {reviews.length > 1 && (
+            <>
+              <button
+                onClick={goToPrevious}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110"
+                aria-label="Vorherige Bewertung"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              
+              <button
+                onClick={goToNext}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110"
+                aria-label="Nächste Bewertung"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+
+          {/* Dots Navigation */}
+          {reviews.length > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              {reviews.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`transition-all ${
+                    index === currentIndex
+                      ? 'w-8 h-3 bg-primary-600'
+                      : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
+                  } rounded-full`}
+                  aria-label={`Zur Bewertung ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   )
 }

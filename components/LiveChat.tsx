@@ -118,11 +118,11 @@ export default function LiveChat() {
           </div>
 
           {/* Chat Body */}
-          <div className="p-4 h-[400px] flex flex-col">
+          <div className="p-4 flex flex-col max-h-[500px]">
             {!sent ? (
               <>
                 {/* Offline Message */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 flex-shrink-0">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <User className="w-4 h-4 text-yellow-600" />
@@ -139,8 +139,8 @@ export default function LiveChat() {
                 </div>
 
                 {/* Contact Form */}
-                <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-                  <div className="space-y-3 flex-1">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                  <div className="space-y-3 overflow-y-auto flex-1 pr-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Ihr Name *
@@ -185,7 +185,7 @@ export default function LiveChat() {
                   </div>
 
                   {error && (
-                    <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+                    <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 flex-shrink-0">
                       {error}
                     </div>
                   )}
@@ -193,7 +193,7 @@ export default function LiveChat() {
                   <button
                     type="submit"
                     disabled={sending || !name || !email || !message}
-                    className="mt-4 w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="mt-3 w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 flex-shrink-0"
                   >
                     {sending ? (
                       <>

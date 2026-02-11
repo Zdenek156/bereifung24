@@ -5545,3 +5545,28 @@ enum DirectBookingPaymentStatus {
   FAILED
   REFUNDED
 }
+
+// ============================================
+// LIVE CHAT MESSAGES
+// ============================================
+
+model ChatMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  message String @db.Text
+  
+  // Status
+  status    String   @default("NEW") // NEW, READ, REPLIED, CLOSED
+  repliedAt DateTime? @map("replied_at")
+  repliedBy String?   @map("replied_by") // User ID who replied
+  reply     String?   @db.Text
+  
+  // Metadata
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@index([status])
+  @@index([createdAt])
+  @@map("chat_messages")
+}

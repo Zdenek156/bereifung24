@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer'
 
 /**
  * POST /api/chat/message
- * Save offline chat message and send notification email to admin
+ * Save offline chat message to database and send notification email to admin
  */
 export async function POST(request: NextRequest) {
   try {
@@ -27,8 +27,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Save to database (you can create a ChatMessage model later)
-    // For now, we'll save it as a note or send it via email
+    // Save to database
+    const chatMessage = await prisma.chatMessage.create({
+      data: {
+        name,
+        email,
+        message,
+        status: 'NEW'
+      }
+    })
+
+    console.log('✅ Chat message saved to database:', chatMessage.id)
 
     // Send notification email to admin
     try {

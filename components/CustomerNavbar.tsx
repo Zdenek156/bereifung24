@@ -63,8 +63,7 @@ export default function CustomerNavbar() {
   }, [pathname])
 
   const handleLogout = async () => {
-    await signOut({ redirect: false })
-    router.push('/login')
+    await signOut({ callbackUrl: '/login', redirect: true })
   }
 
   const getUserInitials = () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import BackButton from '@/components/BackButton'
@@ -198,10 +198,7 @@ export default function AdminNotificationSettings() {
               </p>
             </div>
             <button
-              onClick={() => {
-                fetch('/api/auth/signout', { method: 'POST' })
-                router.push('/login')
-              }}
+              onClick={() => signOut({ callbackUrl: '/login', redirect: true })}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Abmelden

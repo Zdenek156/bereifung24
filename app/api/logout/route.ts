@@ -1,45 +1,66 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { decode } from 'next-auth/jwt'
 import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
 
 /**
  * Custom logout endpoint that properly deletes all NextAuth cookies
  * AND adds JWT token to blacklist for immediate revocation
  * Must be outside /api/auth/* path as NextAuth blocks those routes
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     console.log('[CUSTOM LOGOUT] Force logout requested')
     
-    // Get current session to extract JWT ID
-    const session = await getServerSession(authOptions)
+    // Try to decode JWT token directly from cookie
+    const cookieStore = cookies()
+    const sessionToken = cookieStore.get('__Secure-next-auth.session-token')?.value || 
+                        cookieStore.get('next-auth.session-token')?.value
     
-    if (session?.user) {
-      console.log('[CUSTOM LOGOUT] User session found:', session.user.email)
+    if (sessionToken) {
+      console.log('[CUSTOM LOGOUT] Session token found, decoding...')
       
-      // Add JWT to blacklist if we have the token
       try {
-        const token = await getServerSession(authOptions)
-        // @ts-ignore - accessing internal token structure
-        const jti = token?.jti
+        // Decode JWT to extract JTI
+        const decoded = await decode({
+          token: sessionToken,
+          secret: process.env.NEXTAUTH_SECRET!
+        })
         
-        if (jti) {
-          // Add to revoked tokens table
-          await prisma.revokedToken.create({
-            data: {
-              jti: jti,
-              userId: session.user.id,
-              expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-            }
+        if (decoded) {
+          console.log('[CUSTOM LOGOUT] Token decoded:', {
+            hasJTI: !!decoded.jti,
+            userId: decoded.id,
+            email: decoded.email
           })
-          console.log('[CUSTOM LOGOUT] JWT added to blacklist:', jti)
+          
+          // @ts-ignore
+          const jti = decoded.jti
+          // @ts-ignore
+          const userId = decoded.id
+          
+          if (jti && userId) {
+            // Add to revoked tokens table
+            await prisma.revokedToken.create({
+              data: {
+                jti: jti,
+                userId: userId,
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+              }
+            })
+            console.log('[CUSTOM LOGOUT] JWT added to blacklist:', jti)
+          } else {
+            console.log('[CUSTOM LOGOUT] No JTI or userId in decoded token')
+          }
         } else {
-          console.log('[CUSTOM LOGOUT] No JTI found in token')
+          console.log('[CUSTOM LOGOUT] Could not decode token')
         }
       } catch (error) {
-        console.error('[CUSTOM LOGOUT] Error adding to blacklist:', error)
+        console.error('[CUSTOM LOGOUT] Error decoding/blacklisting token:', error)
       }
+    } else {
+      console.log('[CUSTOM LOGOUT] No session token found in cookies')
     }
     
     // Create response

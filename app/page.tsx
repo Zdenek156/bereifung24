@@ -45,12 +45,22 @@ const RADIUS_OPTIONS = [
   { value: 100, label: '100 km' },
 ]
 
-const STATS = [
-  { value: '1000+', label: 'Werkstätten' },
-  { value: '50.000+', label: 'Zufriedene Kunden' },
-  { value: '4.8★', label: 'Durchschnittsbewertung' },
-  { value: '24/7', label: 'Online Buchung' },
-]
+interface Review {
+  id: string
+  rating: number
+  comment: string | null
+  customerName: string
+  workshopName: string
+  workshopCity: string | null
+  createdAt: string
+}
+
+interface Stats {
+  totalReviews: number
+  avgRating: number
+  workshopCount: number
+  bookingCount: number
+}
 
 export default function NewHomePage() {
   const router = useRouter()
@@ -70,8 +80,34 @@ export default function NewHomePage() {
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [scrollPosition, setScrollPosition] = useState(0)
   
+  // Reviews and stats
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [stats, setStats] = useState<Stats>({
+    totalReviews: 0,
+    avgRating: 0,
+    workshopCount: 0,
+    bookingCount: 0
+  })
+  
   // Service-specific package filters - Start empty, set defaults in useEffect when service changes
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  
+  // Load reviews on page load
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        const response = await fetch('/api/public/reviews?limit=6')
+        const data = await response.json()
+        if (data.success) {
+          setReviews(data.reviews)
+          setStats(data.stats)
+        }
+      } catch (error) {
+        console.error('Error loading reviews:', error)
+      }
+    }
+    loadReviews()
+  }, [])
   
   // Close user menu when clicking outside
   useEffect(() => {
@@ -1012,21 +1048,104 @@ export default function NewHomePage() {
       {!hasSearched && (
         <>
           <section className="py-12 bg-gray-50 border-b border-gray-200">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                  {stat.value}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                    {stats.workshopCount > 0 ? `${stats.workshopCount}+` : '1000+'}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Werkstätten
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600 font-medium">
-                  {stat.label}
+                <div className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                    {stats.bookingCount > 0 ? `${Math.floor(stats.bookingCount / 1000)}k+` : '50k+'}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Zufriedene Kunden
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '4.8★'}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Durchschnittsbewertung
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                    24/7
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Online Buchung
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
+          </section>
+
+          {/* Reviews Section - Real reviews from database */}
+          {reviews.length > 0 && (
+            <section className="py-16 bg-white">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Das sagen unsere Kunden
+                  </h2>
+                  <p className="text-xl text-gray-600">
+                    {stats.totalReviews} echte Bewertungen von zufriedenen Kunden
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                  {reviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow"
+                    >
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-3">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${
+                              i < review.rating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'fill-gray-200 text-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Comment */}
+                      {review.comment && (
+                        <p className="text-gray-700 mb-4 line-clamp-4">
+                          "{review.comment}"
+                        </p>
+                      )}
+
+                      {/* Customer & Workshop */}
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="font-semibold text-gray-900">{review.customerName}</p>
+                        <p className="text-sm text-gray-600">
+                          {review.workshopName}
+                          {review.workshopCity && ` • ${review.workshopCity}`}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(review.createdAt).toLocaleDateString('de-DE', {
+                            year: 'numeric',
+                            month: 'long'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
       {/* Popular Services */}
       <section className="py-16">

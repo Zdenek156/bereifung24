@@ -43,143 +43,12 @@ interface PricingSettings {
   serviceIncludeVat: boolean
 }
 
-// Separate component for tire size pricing card
-function TireSizePricingCard({ 
-  size, 
-  vehicleType, 
-  pricing, 
-  onUpdate, 
-  onDelete,
-  calculateExample 
-}: { 
-  size: number
-  vehicleType: 'AUTO' | 'MOTO'
-  pricing: TirePricingBySize | undefined
-  onUpdate: (size: number, vehicleType: 'AUTO' | 'MOTO', fixed: number, percent: number, vat: boolean) => Promise<void>
-  onDelete: (size: number, vehicleType: 'AUTO' | 'MOTO') => Promise<void>
-  calculateExample: (costPrice: number, manual: boolean, fixed: number, percent: number, includeVat: boolean) => number
-}) {
-  const [editMode, setEditMode] = useState(false)
-  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
-  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
-  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
-
-  const isPKW = vehicleType === 'AUTO'
-  const colorClass = isPKW ? 'primary' : 'orange'
-  const examplePrice = isPKW ? 100 : 150
-
-  return (
-    <div className={`border rounded-lg p-4 ${pricing ? `border-${colorClass}-300 bg-${colorClass}-50 dark:bg-${colorClass}-900/20` : 'border-gray-200 dark:border-gray-700'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
-        {pricing && !editMode && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => setEditMode(true)}
-              className="text-blue-600 hover:text-blue-700 text-sm"
-            >
-              Bearbeiten
-            </button>
-            <button
-              onClick={() => onDelete(size, vehicleType)}
-              className="text-red-600 hover:text-red-700 text-sm"
-            >
-              Löschen
-            </button>
-          </div>
-        )}
-      </div>
-
-      {(editMode || !pricing) ? (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Fester Aufschlag (€)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={fixedMarkup}
-              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-${colorClass}-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Prozentualer Aufschlag (%)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="100"
-              value={percentMarkup}
-              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-${colorClass}-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={includeVat}
-                onChange={(e) => setIncludeVat(e.target.checked)}
-                className={`w-4 h-4 text-${colorClass}-600 rounded focus:ring-${colorClass}-500`}
-              />
-              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
-                Mit MwSt.
-              </span>
-            </label>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={async () => {
-                await onUpdate(size, vehicleType, fixedMarkup, percentMarkup, includeVat)
-                setEditMode(false)
-              }}
-              className={`flex-1 px-3 py-2 text-sm bg-${colorClass}-600 text-white rounded hover:bg-${colorClass}-700`}
-            >
-              Speichern
-            </button>
-            {editMode && (
-              <button
-                onClick={() => {
-                  setEditMode(false)
-                  setFixedMarkup(pricing?.fixedMarkup || 0)
-                  setPercentMarkup(pricing?.percentMarkup || 0)
-                  setIncludeVat(pricing?.includeVat || false)
-                }}
-                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-              >
-                Abbrechen
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Prozent: <strong>{pricing.percentMarkup}%</strong>
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
-          </p>
-          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel ({examplePrice}€):</p>
-            <p className={`text-sm font-bold text-${colorClass}-600 dark:text-${colorClass}-400`}>
-              {calculateExample(examplePrice, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+interface TirePricingForm {
+  [key: string]: {
+    fixedMarkup: number
+    percentMarkup: number
+    includeVat: boolean
+  }
 }
 
 export default function PricingPage() {
@@ -187,7 +56,16 @@ export default function PricingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingTirePricing, setSavingTirePricing] = useState(false)
   const [tirePricingBySize, setTirePricingBySize] = useState<TirePricingBySize[]>([])
+  
+  // Form state for tire pricing (all sizes at once)
+  const [tirePricingForm, setTirePricingForm] = useState<TirePricingForm>({})
+  
+  // Template values for "Apply to all"
+  const [autoTemplate, setAutoTemplate] = useState({ fixedMarkup: 0, percentMarkup: 0, includeVat: false })
+  const [motoTemplate, setMotoTemplate] = useState({ fixedMarkup: 0, percentMarkup: 0, includeVat: false })
+  
   const [settings, setSettings] = useState<PricingSettings>({
     id: '',
     autoManualPricing: true,
@@ -258,6 +136,17 @@ export default function PricingPage() {
         const data = await tirePricingResponse.json()
         if (data.success && data.data) {
           setTirePricingBySize(data.data)
+          // Initialize form with existing data
+          const formData: TirePricingForm = {}
+          data.data.forEach((pricing: TirePricingBySize) => {
+            const key = `${pricing.vehicleType}-${pricing.rimSize}`
+            formData[key] = {
+              fixedMarkup: pricing.fixedMarkup,
+              percentMarkup: pricing.percentMarkup,
+              includeVat: pricing.includeVat
+            }
+          })
+          setTirePricingForm(formData)
         }
       }
     } catch (error) {
@@ -315,55 +204,80 @@ export default function PricingPage() {
     return sellingPrice
   }
 
-  const handleUpdateTirePricing = async (rimSize: number, vehicleType: 'AUTO' | 'MOTO', fixedMarkup: number, percentMarkup: number, includeVat: boolean) => {
-    try {
-      const response = await fetch('/api/workshop/tire-pricing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rimSize, vehicleType, fixedMarkup, percentMarkup, includeVat })
-      })
+  const updateTirePricingFormValue = (vehicleType: 'AUTO' | 'MOTO', rimSize: number, field: 'fixedMarkup' | 'percentMarkup' | 'includeVat', value: number | boolean) => {
+    const key = `${vehicleType}-${rimSize}`
+    setTirePricingForm(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key] || { fixedMarkup: 0, percentMarkup: 0, includeVat: false },
+        [field]: value
+      }
+    }))
+  }
 
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          // Update local state
-          setTirePricingBySize(prev => {
-            const existing = prev.find(p => p.rimSize === rimSize && p.vehicleType === vehicleType)
-            if (existing) {
-              return prev.map(p => 
-                p.rimSize === rimSize && p.vehicleType === vehicleType 
-                  ? { ...p, fixedMarkup, percentMarkup, includeVat }
-                  : p
-              )
-            } else {
-              return [...prev, { id: data.data.id, rimSize, vehicleType, fixedMarkup, percentMarkup, includeVat }]
-            }
+  const applyToAll = (vehicleType: 'AUTO' | 'MOTO') => {
+    const template = vehicleType === 'AUTO' ? autoTemplate : motoTemplate
+    const newForm: TirePricingForm = { ...tirePricingForm }
+    
+    for (let size = 13; size <= 23; size++) {
+      const key = `${vehicleType}-${size}`
+      newForm[key] = { ...template }
+    }
+    
+    setTirePricingForm(newForm)
+  }
+
+  const handleSaveTirePricing = async () => {
+    setSavingTirePricing(true)
+    try {
+      const updates = []
+      
+      for (const [key, values] of Object.entries(tirePricingForm)) {
+        const [vehicleType, rimSizeStr] = key.split('-')
+        const rimSize = parseInt(rimSizeStr)
+        
+        // Only save if values are set (not all zeros)
+        if (values.fixedMarkup > 0 || values.percentMarkup > 0) {
+          updates.push({
+            rimSize,
+            vehicleType,
+            ...values
           })
         }
       }
-    } catch (error) {
-      console.error('Error updating tire pricing:', error)
-    }
-  }
 
-  const handleDeleteTirePricing = async (rimSize: number, vehicleType: 'AUTO' | 'MOTO') => {
-    if (!confirm(`Möchten Sie die Preiskonfiguration für ${rimSize}" ${vehicleType === 'AUTO' ? 'PKW' : 'Motorrad'} wirklich löschen?`)) return
-    
-    try {
-      const response = await fetch(`/api/workshop/tire-pricing?rimSize=${rimSize}&vehicleType=${vehicleType}`, {
-        method: 'DELETE'
-      })
+      // Save all at once
+      const promises = updates.map(update =>
+        fetch('/api/workshop/tire-pricing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(update)
+        })
+      )
 
+      await Promise.all(promises)
+      
+      // Refresh data
+      const response = await fetch('/api/workshop/tire-pricing')
       if (response.ok) {
-        setTirePricingBySize(prev => prev.filter(p => !(p.rimSize === rimSize && p.vehicleType === vehicleType)))
+        const data = await response.json()
+        if (data.success && data.data) {
+          setTirePricingBySize(data.data)
+        }
       }
+
+      alert('Reifenpreise erfolgreich gespeichert!')
     } catch (error) {
-      console.error('Error deleting tire pricing:', error)
+      console.error('Error saving tire pricing:', error)
+      alert('Fehler beim Speichern der Reifenpreise')
+    } finally {
+      setSavingTirePricing(false)
     }
   }
 
-  const getTirePricing = (rimSize: number, vehicleType: 'AUTO' | 'MOTO') => {
-    return tirePricingBySize.find(p => p.rimSize === rimSize && p.vehicleType === vehicleType)
+  const getTirePricingValue = (vehicleType: 'AUTO' | 'MOTO', rimSize: number) => {
+    const key = `${vehicleType}-${rimSize}`
+    return tirePricingForm[key] || { fixedMarkup: 0, percentMarkup: 0, includeVat: false }
   }
 
   if (status === 'loading' || loading) {
@@ -800,7 +714,7 @@ export default function PricingPage() {
                 <div className="ml-3">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
                     <strong>Hinweis:</strong> Diese Einstellungen überschreiben die allgemeinen PKW/Motorrad-Einstellungen für spezifische Felgengrößen. 
-                    Größere Reifen (z.B. 20"-23") können Sie mit höheren Aufschlägen kalkulieren.
+                    Nutzen Sie "Auf alle anwenden" um schnell alle Größen mit dem gleichen Aufschlag zu konfigurieren.
                   </p>
                 </div>
               </div>
@@ -808,48 +722,263 @@ export default function PricingPage() {
 
             {/* PKW Tire Pricing by Size */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                PKW-Reifen (Auto)
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => (
-                  <TireSizePricingCard
-                    key={`auto-${size}`}
-                    size={size}
-                    vehicleType="AUTO"
-                    pricing={getTirePricing(size, 'AUTO')}
-                    onUpdate={handleUpdateTirePricing}
-                    onDelete={handleDeleteTirePricing}
-                    calculateExample={calculateExample}
-                  />
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  PKW-Reifen (Auto)
+                </h3>
+              </div>
+
+              {/* Template for "Apply to All" */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 border-2 border-primary-200 dark:border-primary-800">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="font-medium text-gray-900 dark:text-white">Vorlage für alle PKW-Größen</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={autoTemplate.fixedMarkup}
+                      onChange={(e) => setAutoTemplate({ ...autoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={autoTemplate.percentMarkup}
+                      onChange={(e) => setAutoTemplate({ ...autoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoTemplate.includeVat}
+                        onChange={(e) => setAutoTemplate({ ...autoTemplate, includeVat: e.target.checked })}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
+                    </label>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => applyToAll('AUTO')}
+                      className="w-full px-4 py-2 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
+                    >
+                      Auf alle anwenden
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of tire sizes */}
+              <div className="space-y-2">
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                  const values = getTirePricingValue('AUTO', size)
+                  const hasValue = values.fixedMarkup > 0 || values.percentMarkup > 0
+                  return (
+                    <div key={`auto-${size}`} className={`border rounded-lg p-3 ${hasValue ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700' : 'border-gray-200 dark:border-gray-700'}`}>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+                        <div className="font-bold text-lg text-gray-900 dark:text-white">{size}"</div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={values.fixedMarkup}
+                            onChange={(e) => updateTirePricingFormValue('AUTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="100"
+                            value={values.percentMarkup}
+                            onChange={(e) => updateTirePricingFormValue('AUTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={values.includeVat}
+                              onChange={(e) => updateTirePricingFormValue('AUTO', size, 'includeVat', e.target.checked)}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                            <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
+                          </label>
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="text-xs">Beispiel (100€):</span>
+                          <div className="font-bold text-primary-600 dark:text-primary-400">
+                            {calculateExample(100, false, values.fixedMarkup, values.percentMarkup, values.includeVat).toFixed(2)} €
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
             {/* Motorrad Tire Pricing by Size */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Motorradreifen
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => (
-                  <TireSizePricingCard
-                    key={`moto-${size}`}
-                    size={size}
-                    vehicleType="MOTO"
-                    pricing={getTirePricing(size, 'MOTO')}
-                    onUpdate={handleUpdateTirePricing}
-                    onDelete={handleDeleteTirePricing}
-                    calculateExample={calculateExample}
-                  />
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Motorradreifen
+                </h3>
               </div>
+
+              {/* Template for "Apply to All" */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 border-2 border-orange-200 dark:border-orange-800">
+                <div className="flex items-center mb-3">
+                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium text-gray-900 dark:text-white">Vorlage für alle Motorrad-Größen</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={motoTemplate.fixedMarkup}
+                      onChange={(e) => setMotoTemplate({ ...motoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={motoTemplate.percentMarkup}
+                      onChange={(e) => setMotoTemplate({ ...motoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={motoTemplate.includeVat}
+                        onChange={(e) => setMotoTemplate({ ...motoTemplate, includeVat: e.target.checked })}
+                        className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                      />
+                      <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
+                    </label>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => applyToAll('MOTO')}
+                      className="w-full px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
+                    >
+                      Auf alle anwenden
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of tire sizes */}
+              <div className="space-y-2">
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                  const values = getTirePricingValue('MOTO', size)
+                  const hasValue = values.fixedMarkup > 0 || values.percentMarkup > 0
+                  return (
+                    <div key={`moto-${size}`} className={`border rounded-lg p-3 ${hasValue ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700' : 'border-gray-200 dark:border-gray-700'}`}>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+                        <div className="font-bold text-lg text-gray-900 dark:text-white">{size}"</div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={values.fixedMarkup}
+                            onChange={(e) => updateTirePricingFormValue('MOTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="100"
+                            value={values.percentMarkup}
+                            onChange={(e) => updateTirePricingFormValue('MOTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={values.includeVat}
+                              onChange={(e) => updateTirePricingFormValue('MOTO', size, 'includeVat', e.target.checked)}
+                              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                            />
+                            <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
+                          </label>
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="text-xs">Beispiel (150€):</span>
+                          <div className="font-bold text-orange-600 dark:text-orange-400">
+                            {calculateExample(150, false, values.fixedMarkup, values.percentMarkup, values.includeVat).toFixed(2)} €
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Save Button for Tire Pricing */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleSaveTirePricing}
+                disabled={savingTirePricing}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingTirePricing ? 'Speichern...' : 'Reifenpreise speichern'}
+              </button>
             </div>
           </div>
         </div>

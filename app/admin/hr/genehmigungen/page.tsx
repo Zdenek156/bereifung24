@@ -115,14 +115,13 @@ export default function PendingApprovalsPage() {
   }
 
   return (
-    <PermissionGuard permissions={['admin', 'employee']}>
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <BackButton />
-          <div>
-            <h1 className="text-3xl font-bold">Ausstehende Genehmigungen</h1>
-            <p className="text-gray-600">Offene Anträge und Freigaben</p>
-          </div>
+    <div className="container mx-auto p-6">
+      <div className="flex items-center gap-4 mb-6">
+        <BackButton />
+        <div>
+          <h1 className="text-3xl font-bold">Ausstehende Genehmigungen</h1>
+          <p className="text-gray-600">Offene Anträge und Freigaben</p>
+        </div>
         </div>
 
         {loading ? (
@@ -186,6 +185,5 @@ export default function PendingApprovalsPage() {
           </Card>
         )}
       </div>
-    </PermissionGuard>
   )
 }

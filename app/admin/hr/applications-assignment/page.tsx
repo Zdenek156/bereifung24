@@ -15,6 +15,7 @@ interface Employee {
   email: string
   position?: string
   isActive: boolean
+  role?: string
 }
 
 interface Application {

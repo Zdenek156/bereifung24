@@ -23,6 +23,7 @@ interface Provision {
   releasedAt?: string;
   year: number;
   createdAt: string;
+  entryId?: string;
 }
 
 interface ProvisionTotals {

@@ -55,6 +55,7 @@
     "react-markdown": "^10.1.0",
     "react-quill": "^2.0.0",
     "react-select": "^5.8.0",
+    "redis": "^5.10.0",
     "remark-gfm": "^4.0.1",
     "socket.io": "^4.8.3",
     "tailwind-merge": "^2.1.0",

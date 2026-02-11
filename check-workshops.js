@@ -1,38 +1,39 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 async function checkWorkshops() {
   try {
     const workshops = await prisma.workshop.findMany({
-      select: {
-        id: true,
-        companyName: true,
-        googleCalendarId: true,
-        googleAccessToken: true,
-        googleRefreshToken: true,
-        googleTokenExpiry: true,
-        calendarMode: true,
-        openingHours: true
+      where: {
+        user: {
+          email: 'luxus24.me@gmail.com'
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true
+          }
+        }
       }
-    })
+    });
     
-    console.log('Total workshops:', workshops.length)
-    workshops.forEach(w => {
-      console.log('\n---')
-      console.log('ID:', w.id)
-      console.log('Name:', w.companyName)
-      console.log('Calendar ID:', w.googleCalendarId || 'NULL')
-      console.log('Has Access Token:', !!w.googleAccessToken)
-      console.log('Has Refresh Token:', !!w.googleRefreshToken)
-      console.log('Token Expiry:', w.googleTokenExpiry || 'NULL')
-      console.log('Calendar Mode:', w.calendarMode || 'NULL')
-      console.log('Opening Hours:', w.openingHours ? 'Set' : 'NULL')
-    })
+    console.log('Found', workshops.length, 'workshops for luxus24.me@gmail.com:');
+    for (const w of workshops) {
+      console.log('---');
+      console.log('Workshop ID:', w.id);
+      console.log('User ID:', w.userId);
+      console.log('Company:', w.companyName);
+      console.log('User Email:', w.user.email);
+      console.log('Created:', w.createdAt);
+    }
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error.message);
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }
 
-checkWorkshops()
+checkWorkshops();

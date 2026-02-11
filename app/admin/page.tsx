@@ -15,7 +15,7 @@
  * 5. Berechtigungen über HR → Anwendungsverwaltung vergeben
  */
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import EmployeeAdminTiles from '@/components/EmployeeAdminTiles'
@@ -100,10 +100,7 @@ export default function AdminDashboard() {
               <p className="mt-1 text-sm text-gray-600">Bereifung24 Administration</p>
             </div>
             <button
-              onClick={() => {
-                fetch('/api/auth/signout', { method: 'POST' })
-                router.push('/login')
-              }}
+              onClick={() => signOut({ callbackUrl: '/login', redirect: true })}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Abmelden

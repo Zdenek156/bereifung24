@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 
@@ -139,29 +140,12 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   pages: {
     signIn: '/login',
     error: '/login',
   },
   debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
   callbacks: {
     async signIn({ user, account, profile }) {
       // Nur Google OAuth für Kunden erlauben
@@ -247,78 +231,56 @@ export const authOptions: NextAuthOptions = {
 
       return true
     },
-    async jwt({ token, user, account, trigger }) {
-      console.log('[AUTH JWT] Called with:', {
-        hasUser: !!user,
-        userRole: user?.role,
-        tokenRole: token.role,
-        trigger: trigger
-      })
+    async session({ session, user }) {
+      console.log('[AUTH SESSION] Creating session for user:', user.id)
       
-      if (user) {
-        // Initial sign in - user comes from authorize()
-        // Generate unique JWT ID (jti) for blacklist tracking
-        token.jti = Math.random().toString(36).substring(2) + Date.now().toString(36)
-        token.role = user.role
-        token.id = user.id
-        token.customerId = user.customerId
-        token.workshopId = user.workshopId
-        token.isB24Employee = user.isB24Employee
-        token.b24EmployeeId = user.b24EmployeeId
-        
-        console.log('[AUTH JWT] Token created with JTI:', token.jti)
-      } else if (token.jti) {
-        // Check if token is in blacklist (revoked)
-        try {
-          const revoked = await prisma.revokedToken.findUnique({
-            where: { jti: token.jti as string }
+      if (user && session.user) {
+        session.user.id = user.id
+        session.user.role = user.role
+        session.user.firstName = user.firstName
+        session.user.lastName = user.lastName
+        session.user.email = user.email
+
+        // Add workshop/customer ID if available
+        if (user.role === 'WORKSHOP') {
+          const workshop = await prisma.workshop.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
           })
-          
-          if (revoked) {
-            console.log('[AUTH JWT] Token is REVOKED - returning null')
-            return {} as any // Return empty token to force logout
-          }
-        } catch (error) {
-          console.error('[AUTH JWT] Error checking blacklist:', error)
+          session.user.workshopId = workshop?.id || null
+        } else if (user.role === 'CUSTOMER') {
+          const customer = await prisma.customer.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+          })
+          session.user.customerId = customer?.id || null
+        } else if (user.role === 'EMPLOYEE') {
+          const employee = await prisma.employee.findUnique({
+            where: { userId: user.id },
+            select: { id: true, workshopId: true },
+          })
+          session.user.employeeId = employee?.id || null
+          session.user.workshopId = employee?.workshopId || null
+        } else if (user.role === 'ADMIN') {
+          const b24Employee = await prisma.b24Employee.findUnique({
+            where: { email: user.email },
+            select: { id: true },
+          })
+          session.user.b24EmployeeId = b24Employee?.id || null
         }
+
+        console.log('[AUTH SESSION] Session created:', {
+          email: session.user.email,
+          role: session.user.role,
+        })
       }
-      
-      return token
-    },
-    async session({ session, token }) {
-      console.log('[AUTH SESSION] Token to session:', {
-        tokenRole: token.role,
-        tokenId: token.id
-      })
-      
-      // Ensure session.user exists
-      if (!session.user) {
-        session.user = {
-          email: token.email as string || '',
-          name: token.name as string || ''
-        }
-      }
-      
-      // Add user data from token
-      session.user.role = token.role as string
-      session.user.id = token.id as string
-      session.user.customerId = token.customerId as string | undefined
-      session.user.workshopId = token.workshopId as string | undefined
-      session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
-      
-      console.log('[AUTH SESSION] Session updated:', {
-        email: session.user.email,
-        role: session.user.role,
-        id: session.user.id
-      })
 
       return session
     }
   },
   events: {
-    async signOut({ token, session }) {
-      console.log('[AUTH] User signed out:', token?.email)
+    async signOut({ session }) {
+      console.log('[AUTH] User signed out:', session?.user?.email)
     }
   },
-  secret: process.env.NEXTAUTH_SECRET,
 }

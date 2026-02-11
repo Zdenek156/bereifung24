@@ -143,17 +143,12 @@ export default function WorkshopSidebar() {
 
   const handleLogout = async () => {
     try {
-      // Step 1: Delete cookies via server endpoint
+      // Step 1: Call NextAuth signout first
+      await signOut({ redirect: false })
+      
+      // Step 2: Force delete cookies via server endpoint
       await fetch('/api/logout', {
         method: 'POST',
-        credentials: 'include'
-      })
-      
-      // Step 2: Call NextAuth signout
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'callbackUrl=/login',
         credentials: 'include'
       })
       
@@ -162,12 +157,12 @@ export default function WorkshopSidebar() {
       sessionStorage.clear()
       
       // Step 4: Redirect
-      window.location.href = '/login'
+      window.location.href = '/'
     } catch (error) {
       console.error('[LOGOUT] Error:', error)
       localStorage.clear()
       sessionStorage.clear()
-      window.location.href = '/login'
+      window.location.href = '/'
     }
   }
 

@@ -6,11 +6,11 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 
 export const authOptions: NextAuthOptions = {
+  // Use Prisma Adapter only for Google OAuth
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: 'database',
+    strategy: 'jwt', // Must use JWT for Credentials Provider
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
   },
   providers: [
     GoogleProvider({
@@ -231,43 +231,36 @@ export const authOptions: NextAuthOptions = {
 
       return true
     },
-    async session({ session, user }) {
-      console.log('[AUTH SESSION] Creating session for user:', user.id)
+    async jwt({ token, user, account }) {
+      // Initial sign in
+      if (user) {
+        token.id = user.id
+        token.email = user.email
+        token.role = user.role
+        token.firstName = user.firstName
+        token.lastName = user.lastName
+        token.customerId = user.customerId
+        token.workshopId = user.workshopId
+        token.employeeId = user.employeeId
+        token.b24EmployeeId = user.b24EmployeeId
+        token.isB24Employee = user.isB24Employee
+      }
       
-      if (user && session.user) {
-        session.user.id = user.id
-        session.user.role = user.role
-        session.user.firstName = user.firstName
-        session.user.lastName = user.lastName
-        session.user.email = user.email
-
-        // Add workshop/customer ID if available
-        if (user.role === 'WORKSHOP') {
-          const workshop = await prisma.workshop.findUnique({
-            where: { userId: user.id },
-            select: { id: true },
-          })
-          session.user.workshopId = workshop?.id || null
-        } else if (user.role === 'CUSTOMER') {
-          const customer = await prisma.customer.findUnique({
-            where: { userId: user.id },
-            select: { id: true },
-          })
-          session.user.customerId = customer?.id || null
-        } else if (user.role === 'EMPLOYEE') {
-          const employee = await prisma.employee.findUnique({
-            where: { userId: user.id },
-            select: { id: true, workshopId: true },
-          })
-          session.user.employeeId = employee?.id || null
-          session.user.workshopId = employee?.workshopId || null
-        } else if (user.role === 'ADMIN') {
-          const b24Employee = await prisma.b24Employee.findUnique({
-            where: { email: user.email },
-            select: { id: true },
-          })
-          session.user.b24EmployeeId = b24Employee?.id || null
-        }
+      return token
+    },
+    async session({ session, token }) {
+      console.log('[AUTH SESSION] Creating session from token')
+      
+      if (token && session.user) {
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.role = token.role as string
+        session.user.firstName = token.firstName as string
+        session.user.lastName = token.lastName as string
+        session.user.customerId = token.customerId as string | undefined
+        session.user.workshopId = token.workshopId as string | undefined
+        session.user.employeeId = token.employeeId as string | undefined
+        session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
 
         console.log('[AUTH SESSION] Session created:', {
           email: session.user.email,
@@ -279,8 +272,19 @@ export const authOptions: NextAuthOptions = {
     }
   },
   events: {
-    async signOut({ session }) {
-      console.log('[AUTH] User signed out:', session?.user?.email)
+    async signOut({ session, token }) {
+      console.log('[AUTH] User signed out:', session?.user?.email || token?.email)
+      
+      // Delete session from database if it exists
+      if (session?.user?.email) {
+        await prisma.session.deleteMany({
+          where: {
+            user: {
+              email: session.user.email
+            }
+          }
+        }).catch(err => console.error('[AUTH] Error deleting sessions:', err))
+      }
     }
   },
 }

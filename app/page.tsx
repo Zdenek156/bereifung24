@@ -36,6 +36,7 @@ import {
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
 import LiveChat from '@/components/LiveChat'
+import LoginModal from '@/components/LoginModal'
 
 const SERVICES = [
   { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
@@ -80,6 +81,7 @@ export default function NewHomePage() {
   const [radiusKm, setRadiusKm] = useState(25)
   const [useGeolocation, setUseGeolocation] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   
   // Search state
   const [workshops, setWorkshops] = useState<any[]>([])
@@ -714,18 +716,24 @@ export default function NewHomePage() {
                   >
                     Registrieren
                   </Link>
-                  <Link
-                    href="/login"
+                  <button
+                    onClick={() => setShowLoginModal(true)}
                     className="px-5 py-2.5 text-sm font-medium bg-white text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     Anmelden
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
 
       {/* Hero Section - Booking.com Style */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32">
@@ -1616,7 +1624,7 @@ export default function NewHomePage() {
               <h4 className="text-lg font-bold mb-4">Für Kunden</h4>
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/register/customer" className="hover:text-white transition-colors">Kostenlos registrieren</Link></li>
-                <li><Link href="/login" className="hover:text-white transition-colors">Anmelden</Link></li>
+                <li><button onClick={() => setShowLoginModal(true)} className="hover:text-white transition-colors">Anmelden</button></li>
                 <li><Link href="/dashboard/customer/select-service" className="hover:text-white transition-colors">Alle Services</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</Link></li>
                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>

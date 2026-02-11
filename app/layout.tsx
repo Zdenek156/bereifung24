@@ -6,7 +6,12 @@ import CookieBanner from '@/components/CookieBanner'
 import Analytics from './components/Analytics'
 import StructuredData from './components/StructuredData'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'arial']
+})
 
 export const metadata: Metadata = {
   title: 'Bereifung24 - Reifenservice zum Festpreis online buchen',
@@ -45,6 +50,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" translate="no">
+      <head>
+        {/* Resource Hints for Performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.google.com" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" as="style" href="/globals.css" />
+      </head>
       <body className={`${inter.className} notranslate`}>
         <StructuredData />
         <SessionWrapper>

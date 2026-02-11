@@ -377,7 +377,7 @@ export default function FilesPage() {
             setShowUploadDialog(true)
             fileInputRef.current?.click()
           }}
-          variant="secondary"
+          variant="outline"
         >
           <Upload className="w-4 h-4 mr-2" />
           Datei hochladen

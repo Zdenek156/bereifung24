@@ -105,16 +105,15 @@ export default function PayrollAnalyticsPage() {
   }
 
   return (
-    <PermissionGuard permissions={['admin', 'employee']}>
-      <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <div>
-              <h1 className="text-3xl font-bold">Gehaltsabrechnungen - Auswertungen</h1>
-              <p className="text-gray-600">Statistiken und Übersichten</p>
-            </div>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-3xl font-bold">Gehaltsabrechnungen - Auswertungen</h1>
+            <p className="text-gray-600">Statistiken und Übersichten</p>
           </div>
+        </div>
           
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
@@ -228,6 +227,5 @@ export default function PayrollAnalyticsPage() {
           </Card>
         )}
       </div>
-    </PermissionGuard>
   )
 }

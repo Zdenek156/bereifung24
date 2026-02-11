@@ -71,13 +71,12 @@ export default function ApprovalHistoryPage() {
   )
 
   return (
-    <PermissionGuard permissions={['admin', 'employee']}>
-      <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <div>
-              <h1 className="text-3xl font-bold">Genehmigungs-Historie</h1>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-3xl font-bold">Genehmigungs-Historie</h1>
               <p className="text-gray-600">Alle freigegebenen und abgelehnten Anträge</p>
             </div>
           </div>
@@ -160,6 +159,5 @@ export default function ApprovalHistoryPage() {
           </Card>
         )}
       </div>
-    </PermissionGuard>
   )
 }

@@ -310,6 +310,10 @@ model Workshop {
   // Direct Bookings
   directBookings DirectBooking[] @relation("DirectBookingWorkshop")
 
+  // Tire Supplier Integration
+  tirePricingBySizes TirePricingBySize[] @relation("WorkshopTirePricing")
+  suppliers          WorkshopSupplier[]  @relation("WorkshopSuppliers")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -355,6 +359,66 @@ model PricingSettings {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("pricing_settings")
+}
+
+// ============================================
+// TIRE PRICING BY SIZE
+// ============================================
+
+model TirePricingBySize {
+  id         String   @id @default(cuid())
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation("WorkshopTirePricing", fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Tire Size Configuration
+  rimSize    Int      @map("rim_size") // Zollgröße (13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
+  vehicleType String  @default("AUTO") @map("vehicle_type") // AUTO or MOTO
+
+  // Pricing Configuration
+  fixedMarkup   Float   @default(0) @map("fixed_markup") // Fester Aufschlag pro Reifen in EUR
+  percentMarkup Float   @default(0) @map("percent_markup") // Prozentualer Aufschlag (0-100)
+  includeVat    Boolean @default(false) @map("include_vat") // Preise inkl. MwSt. anzeigen
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, rimSize, vehicleType])
+  @@map("tire_pricing_by_size")
+}
+
+// ============================================
+// WORKSHOP SUPPLIER (TyreSystem, etc.)
+// ============================================
+
+model WorkshopSupplier {
+  id         String   @id @default(cuid())
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation("WorkshopSuppliers", fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Supplier Information
+  supplier String // 'TYRESYSTEM', 'SUPPLIER_B', etc.
+  name     String // Display name: "TyreSystem GmbH"
+
+  // Encrypted Credentials
+  usernameEncrypted String  @map("username_encrypted") // AES-256 encrypted
+  passwordEncrypted String  @map("password_encrypted") // AES-256 encrypted
+  encryptionIv      String  @map("encryption_iv") // Initialization vector for decryption
+
+  // Settings
+  isActive       Boolean @default(true) @map("is_active") // Supplier aktiviert
+  autoOrder      Boolean @default(false) @map("auto_order") // Automatisch bestellen bei Buchung
+  priority       Int     @default(1) // Priorität (1 = höchste, für Multi-Supplier später)
+
+  // Status Tracking
+  lastApiCheck   DateTime? @map("last_api_check") // Letzte erfolgreiche API-Verbindung
+  lastApiError   String?   @map("last_api_error") // Letzter API-Fehler
+  apiCallsToday  Int       @default(0) @map("api_calls_today") // Rate limiting tracking
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, supplier])
+  @@map("workshop_suppliers")
 }
 
 model Employee {

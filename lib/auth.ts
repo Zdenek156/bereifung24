@@ -241,12 +241,19 @@ export const authOptions: NextAuthOptions = {
 
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       console.log('[AUTH JWT] Called with:', {
         hasUser: !!user,
         userRole: user?.role,
-        tokenRole: token.role
+        tokenRole: token.role,
+        trigger: trigger
       })
+      
+      // If this is a signOut trigger, return null token to destroy session
+      if (trigger === 'signOut') {
+        console.log('[AUTH JWT] SignOut triggered - returning empty token')
+        return {} as any
+      }
       
       if (user) {
         // Initial sign in - user comes from authorize()

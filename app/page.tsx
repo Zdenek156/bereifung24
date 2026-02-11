@@ -28,6 +28,7 @@ import {
   CreditCard,
   Sunrise,
   Sunset,
+  LayoutDashboard,
   CalendarDays,
   Wrench,
   ChevronLeft,
@@ -576,12 +577,21 @@ export default function NewHomePage() {
                         </div>
                         
                         <Link
-                          href="/dashboard/customer"
+                          href="/"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
                           <Star className="w-4 h-4" />
                           Startseite
+                        </Link>
+                        
+                        <Link
+                          href="/dashboard/customer"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          Dashboard
                         </Link>
                         
                         <Link
@@ -627,15 +637,6 @@ export default function NewHomePage() {
                         >
                           <Car className="w-4 h-4" />
                           Fahrzeuge
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/tire-history"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <TrendingUp className="w-4 h-4" />
-                          Reifenhistorie
                         </Link>
                         
                         <Link

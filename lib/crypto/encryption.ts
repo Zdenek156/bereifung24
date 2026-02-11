@@ -27,15 +27,16 @@ function getEncryptionKey(): string {
 /**
  * Encrypt a string value
  * @param text - Plain text to encrypt
+ * @param existingIv - Optional: Use existing IV (hex string) instead of generating new one
  * @returns Object with encrypted text and IV
  */
-export function encrypt(text: string): { encrypted: string; iv: string } {
+export function encrypt(text: string, existingIv?: string): { encrypted: string; iv: string } {
   try {
     // Get encryption key at runtime
     const key = Buffer.from(getEncryptionKey(), 'hex')
     
-    // Generate random initialization vector
-    const iv = crypto.randomBytes(16)
+    // Use existing IV or generate new one
+    const iv = existingIv ? Buffer.from(existingIv, 'hex') : crypto.randomBytes(16)
     
     // Create cipher
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv)

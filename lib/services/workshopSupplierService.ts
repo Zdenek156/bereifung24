@@ -28,9 +28,10 @@ export async function upsertWorkshopSupplier(
   settings?: Partial<SupplierSettings>
 ) {
   try {
-    // Encrypt credentials
+    // Encrypt credentials with SHARED IV
     const usernameEncryption = encrypt(credentials.username)
-    const passwordEncryption = encrypt(credentials.password)
+    // CRITICAL: Use the same IV for password to ensure both can be decrypted
+    const passwordEncryption = encrypt(credentials.password, usernameEncryption.iv)
 
     // Check if supplier already exists
     const existing = await prisma.workshopSupplier.findUnique({
@@ -50,7 +51,7 @@ export async function upsertWorkshopSupplier(
           name,
           usernameEncrypted: usernameEncryption.encrypted,
           passwordEncrypted: passwordEncryption.encrypted,
-          encryptionIv: usernameEncryption.iv, // Use same IV for both (they're paired)
+          encryptionIv: usernameEncryption.iv, // Shared IV for both
           isActive: settings?.isActive ?? true,
           autoOrder: settings?.autoOrder ?? false,
           priority: settings?.priority ?? 1,
@@ -66,7 +67,7 @@ export async function upsertWorkshopSupplier(
           name,
           usernameEncrypted: usernameEncryption.encrypted,
           passwordEncrypted: passwordEncryption.encrypted,
-          encryptionIv: usernameEncryption.iv,
+          encryptionIv: usernameEncryption.iv, // Shared IV for both
           isActive: settings?.isActive ?? true,
           autoOrder: settings?.autoOrder ?? false,
           priority: settings?.priority ?? 1,

@@ -8,10 +8,10 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '6')
+    const limit = parseInt(searchParams.get('limit') || '3')
 
-    // Get latest reviews with rating >= 4
-    const reviews = await prisma.review.findMany({
+    // Get ALL reviews with rating >= 4 first
+    const allReviews = await prisma.review.findMany({
       where: {
         rating: {
           gte: 4 // Only show 4-5 star reviews on homepage
@@ -40,9 +40,12 @@ export async function GET(request: NextRequest) {
       },
       orderBy: {
         createdAt: 'desc'
-      },
-      take: limit
+      }
     })
+
+    // Shuffle reviews for rotation - different reviews each time
+    const shuffled = [...allReviews].sort(() => Math.random() - 0.5)
+    const reviews = shuffled.slice(0, limit)
 
     // Calculate stats
     const totalReviews = await prisma.review.count()
@@ -62,15 +65,20 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      reviews: reviews.map(review => ({
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        customerName: review.customer.user.firstName || 'Kunde', // Only first name for privacy
-        workshopName: review.workshop.companyName,
-        workshopCity: review.workshop.user.city || null,
-        createdAt: review.createdAt
-      })),
+      reviews: reviews.map(review => {
+        // Extract only first name (split by space and take first part)
+        const firstName = review.customer.user.firstName?.split(' ')[0] || 'Kunde'
+        
+        return {
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          customerName: firstName, // Only first name for privacy
+          workshopName: review.workshop.companyName,
+          workshopCity: review.workshop.user.city || null,
+          createdAt: review.createdAt
+        }
+      }),
       stats: {
         totalReviews,
         avgRating: avgRating._avg.rating || 0,

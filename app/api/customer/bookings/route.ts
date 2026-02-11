@@ -22,39 +22,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Alle Buchungen des Kunden abrufen (nur CONFIRMED und COMPLETED, keine RESERVED)
-    console.log('[BOOKINGS API] Fetching bookings for customer:', session.user.id)
-    
-    // DEBUG: Check customer emails for both IDs
-    const customer1 = await prisma.user.findUnique({
-      where: { id: 'cml3jmzte000jdlybqcf4lv2t' },
-      select: { email: true, firstName: true, lastName: true }
+    // Get customer record for this user
+    const customer = await prisma.customer.findUnique({
+      where: { userId: session.user.id }
     })
-    const customer2 = await prisma.user.findUnique({
-      where: { id: 'cml3jmzte000kdlybn0aqsi6i' },
-      select: { email: true, firstName: true, lastName: true }
-    })
-    console.log('[BOOKINGS API DEBUG] Customer 1 (old bookings):', JSON.stringify(customer1))
-    console.log('[BOOKINGS API DEBUG] Customer 2 (today bookings):', JSON.stringify(customer2))
-    
-    // DEBUG: Check ALL bookings from today
-    const today = new Date('2026-02-10T00:00:00.000Z')
-    const todayBookings = await prisma.directBooking.findMany({
-      where: { createdAt: { gte: today } },
-      select: { id: true, status: true, paymentStatus: true, customerId: true, createdAt: true }
-    })
-    console.log('[BOOKINGS API DEBUG] ALL bookings created today:', JSON.stringify(todayBookings))
-    
-    // DEBUG: Check ALL bookings without filter
-    const allBookings = await prisma.directBooking.findMany({
-      where: { customerId: session.user.id },
-      select: { id: true, status: true, paymentStatus: true, date: true, createdAt: true }
-    })
-    console.log('[BOOKINGS API DEBUG] ALL bookings (no filter):', JSON.stringify(allBookings))
+
+    if (!customer) {
+      console.log('[BOOKINGS API] No customer record found for user:', session.user.id)
+      return NextResponse.json({
+        success: true,
+        bookings: []
+      })
+    }
+
+    console.log('[BOOKINGS API] Fetching bookings for customer:', customer.id)
     
     const bookings = await prisma.directBooking.findMany({
       where: {
-        customerId: session.user.id,
+        customerId: customer.id,
         status: {
           in: ['CONFIRMED', 'COMPLETED', 'CANCELLED']
         }

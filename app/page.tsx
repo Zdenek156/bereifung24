@@ -453,7 +453,7 @@ export default function NewHomePage() {
       const hasRequiredPayment = paymentMethods.some(method => {
         if (method === 'CREDIT_CARD' && w.stripeEnabled) return true
         if (method === 'PAYPAL' && w.paypalEmail) return true
-        if (method === 'INSTALLMENT' && w.installmentAvailable) return true
+        if (method === 'INSTALLMENT' && w.paypalEmail) return true // Ratenzahlung über PayPal
         return false
       })
       if (!hasRequiredPayment) return false

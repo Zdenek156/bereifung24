@@ -25,9 +25,18 @@ export default function MotorradreifenPage() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Motorradreifen
             </h1>
-            <p className="text-xl text-primary-100 mb-8">
-              Spezialisierter Service für Motorrad- und Rollerreifen
+            <p className="text-xl text-primary-100 mb-4">
+              Professionelle Reifenmontage für Motorräder
             </p>
+            <div className="bg-orange-500 border-2 border-orange-300 rounded-xl p-4 mb-6 max-w-2xl mx-auto">
+              <p className="text-white font-bold text-lg">
+                ⚠️ WICHTIG: Nur für ausgebaute Räder!
+              </p>
+              <p className="text-orange-100 mt-2">
+                Die Werkstatt montiert Reifen nur auf <strong>mitgebrachten Rädern/Felgen</strong>. 
+                Der Aus- und Einbau der Räder vom/ins Motorrad ist NICHT im Service enthalten.
+              </p>
+            </div>
             <Link
               href="/?service=MOTORCYCLE_TIRE"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-2xl"
@@ -42,6 +51,24 @@ export default function MotorradreifenPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-8">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-8 h-8 text-red-600 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-xl font-bold text-red-900 mb-2">
+                    ⚠️ NUR FÜR AUSGEBAUTE RÄDER!
+                  </h3>
+                  <p className="text-red-900 mb-2">
+                    Dieser Service ist <strong>ausschließlich für bereits vom Motorrad ausgebaute Räder/Felgen</strong>.
+                  </p>
+                  <p className="text-red-800">
+                    Die Werkstatt baut die Räder <strong>NICHT vom Motorrad aus</strong> und auch <strong>NICHT wieder ein</strong>. 
+                    Du bringst die Felgen mit und nimmst sie wieder mit.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
               Motorradreifen-Service
             </h2>

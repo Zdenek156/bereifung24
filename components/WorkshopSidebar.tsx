@@ -142,6 +142,11 @@ export default function WorkshopSidebar() {
   ]
 
   const handleLogout = async () => {
+    // Delete all NextAuth cookies explicitly
+    document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;'
+    document.cookie = '__Host-next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = 'next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     await signOut({ redirect: false })
     window.location.href = '/login'
   }

@@ -101,22 +101,23 @@ export default function AdminDashboard() {
             </div>
             <button
               onClick={async () => {
-                console.log('[LOGOUT DEBUG] 1. Starting logout from Admin page')
-                console.log('[LOGOUT DEBUG] 2. Current cookies:', document.cookie)
-                
-                console.log('[LOGOUT DEBUG] 3. Deleting all NextAuth cookies...')
-                // Delete all NextAuth cookies explicitly
-                document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;'
-                document.cookie = '__Host-next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                document.cookie = 'next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                
-                console.log('[LOGOUT DEBUG] 4. Cookies after deletion:', document.cookie)
-                console.log('[LOGOUT DEBUG] 5. Calling signOut({ redirect: false })...')
-                await signOut({ redirect: false })
-                console.log('[LOGOUT DEBUG] 6. signOut completed, redirecting to /login')
-                console.log('[LOGOUT DEBUG] 7. Final cookies before redirect:', document.cookie)
-                window.location.href = '/login'
+                try {
+                  await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                  await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'callbackUrl=/login',
+                    credentials: 'include'
+                  })
+                  localStorage.clear()
+                  sessionStorage.clear()
+                  window.location.href = '/login'
+                } catch (error) {
+                  console.error('[LOGOUT] Error:', error)
+                  localStorage.clear()
+                  sessionStorage.clear()
+                  window.location.href = '/login'
+                }
               }}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >

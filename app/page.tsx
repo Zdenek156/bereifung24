@@ -658,49 +658,30 @@ export default function NewHomePage() {
                         
                         <button
                           onClick={async () => {
-                            console.log('[LOGOUT DEBUG] 1. Starting logout process from homepage dropdown')
-                            console.log('[LOGOUT DEBUG] 2. Current cookies:', document.cookie)
+                            console.log('[LOGOUT] Starting force logout...')
                             setShowUserMenu(false)
                             
-                            console.log('[LOGOUT DEBUG] 3. Deleting all NextAuth cookies...')
-                            // Delete all NextAuth cookies with all possible variations
-                            const cookieOptions = [
-                              'next-auth.session-token',
-                              '__Secure-next-auth.session-token',
-                              '__Host-next-auth.csrf-token',
-                              'next-auth.csrf-token',
-                              'next-auth.callback-url'
-                            ]
-                            
-                            cookieOptions.forEach(name => {
-                              // Delete without domain
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-                              // Delete with secure flag
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;`
-                              // Delete with domain
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.bereifung24.de;`
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=bereifung24.de;`
-                              // Delete with domain and secure
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.bereifung24.de; secure;`
-                              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=bereifung24.de; secure;`
-                            })
-                            
-                            console.log('[LOGOUT DEBUG] 4. Cookies after deletion:', document.cookie)
-                            console.log('[LOGOUT DEBUG] 5. Calling signOut({ redirect: false })...')
-                            await signOut({ redirect: false })
-                            console.log('[LOGOUT DEBUG] 6. signOut completed, redirecting to /')
-                            console.log('[LOGOUT DEBUG] 7. Final cookies before redirect:', document.cookie)
-                            
-                            // Clear all storage
                             try {
+                              // Call server-side force logout endpoint
+                              const response = await fetch('/api/auth/force-logout', {
+                                method: 'POST',
+                                credentials: 'include'
+                              })
+                              
+                              console.log('[LOGOUT] Server response:', await response.json())
+                              
+                              // Clear all storage
                               localStorage.clear()
                               sessionStorage.clear()
-                              console.log('[LOGOUT DEBUG] 8. Storage cleared')
-                            } catch (e) {
-                              console.error('[LOGOUT DEBUG] Error clearing storage:', e)
+                              
+                              console.log('[LOGOUT] Reloading page...')
+                              // Force page reload to clear all client state
+                              window.location.href = '/'
+                            } catch (error) {
+                              console.error('[LOGOUT] Error:', error)
+                              // Fallback: force reload anyway
+                              window.location.href = '/'
                             }
-                            
-                            window.location.href = '/'
                           }}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >

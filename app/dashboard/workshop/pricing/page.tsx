@@ -43,6 +43,145 @@ interface PricingSettings {
   serviceIncludeVat: boolean
 }
 
+// Separate component for tire size pricing card
+function TireSizePricingCard({ 
+  size, 
+  vehicleType, 
+  pricing, 
+  onUpdate, 
+  onDelete,
+  calculateExample 
+}: { 
+  size: number
+  vehicleType: 'AUTO' | 'MOTO'
+  pricing: TirePricingBySize | undefined
+  onUpdate: (size: number, vehicleType: 'AUTO' | 'MOTO', fixed: number, percent: number, vat: boolean) => Promise<void>
+  onDelete: (size: number, vehicleType: 'AUTO' | 'MOTO') => Promise<void>
+  calculateExample: (costPrice: number, manual: boolean, fixed: number, percent: number, includeVat: boolean) => number
+}) {
+  const [editMode, setEditMode] = useState(false)
+  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
+  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
+  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
+
+  const isPKW = vehicleType === 'AUTO'
+  const colorClass = isPKW ? 'primary' : 'orange'
+  const examplePrice = isPKW ? 100 : 150
+
+  return (
+    <div className={`border rounded-lg p-4 ${pricing ? `border-${colorClass}-300 bg-${colorClass}-50 dark:bg-${colorClass}-900/20` : 'border-gray-200 dark:border-gray-700'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
+        {pricing && !editMode && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditMode(true)}
+              className="text-blue-600 hover:text-blue-700 text-sm"
+            >
+              Bearbeiten
+            </button>
+            <button
+              onClick={() => onDelete(size, vehicleType)}
+              className="text-red-600 hover:text-red-700 text-sm"
+            >
+              Löschen
+            </button>
+          </div>
+        )}
+      </div>
+
+      {(editMode || !pricing) ? (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Fester Aufschlag (€)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={fixedMarkup}
+              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
+              className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-${colorClass}-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Prozentualer Aufschlag (%)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              value={percentMarkup}
+              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
+              className={`w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-${colorClass}-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeVat}
+                onChange={(e) => setIncludeVat(e.target.checked)}
+                className={`w-4 h-4 text-${colorClass}-600 rounded focus:ring-${colorClass}-500`}
+              />
+              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
+                Mit MwSt.
+              </span>
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                await onUpdate(size, vehicleType, fixedMarkup, percentMarkup, includeVat)
+                setEditMode(false)
+              }}
+              className={`flex-1 px-3 py-2 text-sm bg-${colorClass}-600 text-white rounded hover:bg-${colorClass}-700`}
+            >
+              Speichern
+            </button>
+            {editMode && (
+              <button
+                onClick={() => {
+                  setEditMode(false)
+                  setFixedMarkup(pricing?.fixedMarkup || 0)
+                  setPercentMarkup(pricing?.percentMarkup || 0)
+                  setIncludeVat(pricing?.includeVat || false)
+                }}
+                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+              >
+                Abbrechen
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Prozent: <strong>{pricing.percentMarkup}%</strong>
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
+          </p>
+          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel ({examplePrice}€):</p>
+            <p className={`text-sm font-bold text-${colorClass}-600 dark:text-${colorClass}-400`}>
+              {calculateExample(examplePrice, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PricingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -676,126 +815,17 @@ export default function PricingPage() {
                 PKW-Reifen (Auto)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
-                  const pricing = getTirePricing(size, 'AUTO')
-                  const [editMode, setEditMode] = useState(false)
-                  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
-                  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
-                  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
-
-                  return (
-                    <div key={`auto-${size}`} className={`border rounded-lg p-4 ${pricing ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
-                        {pricing && !editMode && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setEditMode(true)}
-                              className="text-blue-600 hover:text-blue-700 text-sm"
-                            >
-                              Bearbeiten
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTirePricing(size, 'AUTO')}
-                              className="text-red-600 hover:text-red-700 text-sm"
-                            >
-                              Löschen
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {(editMode || !pricing) ? (
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Fester Aufschlag (€)
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={fixedMarkup}
-                              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Prozentualer Aufschlag (%)
-                            </label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="100"
-                              value={percentMarkup}
-                              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                              placeholder="0"
-                            />
-                          </div>
-                          <div>
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={includeVat}
-                                onChange={(e) => setIncludeVat(e.target.checked)}
-                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                              />
-                              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
-                                Mit MwSt.
-                              </span>
-                            </label>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={async () => {
-                                await handleUpdateTirePricing(size, 'AUTO', fixedMarkup, percentMarkup, includeVat)
-                                setEditMode(false)
-                              }}
-                              className="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                            >
-                              Speichern
-                            </button>
-                            {editMode && (
-                              <button
-                                onClick={() => {
-                                  setEditMode(false)
-                                  setFixedMarkup(pricing?.fixedMarkup || 0)
-                                  setPercentMarkup(pricing?.percentMarkup || 0)
-                                  setIncludeVat(pricing?.includeVat || false)
-                                }}
-                                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-                              >
-                                Abbrechen
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Prozent: <strong>{pricing.percentMarkup}%</strong>
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
-                          </p>
-                          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel (100€):</p>
-                            <p className="text-sm font-bold text-primary-600 dark:text-primary-400">
-                              {calculateExample(100, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => (
+                  <TireSizePricingCard
+                    key={`auto-${size}`}
+                    size={size}
+                    vehicleType="AUTO"
+                    pricing={getTirePricing(size, 'AUTO')}
+                    onUpdate={handleUpdateTirePricing}
+                    onDelete={handleDeleteTirePricing}
+                    calculateExample={calculateExample}
+                  />
+                ))}
               </div>
             </div>
 
@@ -808,126 +838,17 @@ export default function PricingPage() {
                 Motorradreifen
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
-                  const pricing = getTirePricing(size, 'MOTO')
-                  const [editMode, setEditMode] = useState(false)
-                  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
-                  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
-                  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
-
-                  return (
-                    <div key={`moto-${size}`} className={`border rounded-lg p-4 ${pricing ? 'border-orange-300 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
-                        {pricing && !editMode && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setEditMode(true)}
-                              className="text-blue-600 hover:text-blue-700 text-sm"
-                            >
-                              Bearbeiten
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTirePricing(size, 'MOTO')}
-                              className="text-red-600 hover:text-red-700 text-sm"
-                            >
-                              Löschen
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {(editMode || !pricing) ? (
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Fester Aufschlag (€)
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={fixedMarkup}
-                              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Prozentualer Aufschlag (%)
-                            </label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="100"
-                              value={percentMarkup}
-                              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                              placeholder="0"
-                            />
-                          </div>
-                          <div>
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={includeVat}
-                                onChange={(e) => setIncludeVat(e.target.checked)}
-                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                              />
-                              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
-                                Mit MwSt.
-                              </span>
-                            </label>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={async () => {
-                                await handleUpdateTirePricing(size, 'MOTO', fixedMarkup, percentMarkup, includeVat)
-                                setEditMode(false)
-                              }}
-                              className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
-                            >
-                              Speichern
-                            </button>
-                            {editMode && (
-                              <button
-                                onClick={() => {
-                                  setEditMode(false)
-                                  setFixedMarkup(pricing?.fixedMarkup || 0)
-                                  setPercentMarkup(pricing?.percentMarkup || 0)
-                                  setIncludeVat(pricing?.includeVat || false)
-                                }}
-                                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-                              >
-                                Abbrechen
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Prozent: <strong>{pricing.percentMarkup}%</strong>
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
-                          </p>
-                          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel (150€):</p>
-                            <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                              {calculateExample(150, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => (
+                  <TireSizePricingCard
+                    key={`moto-${size}`}
+                    size={size}
+                    vehicleType="MOTO"
+                    pricing={getTirePricing(size, 'MOTO')}
+                    onUpdate={handleUpdateTirePricing}
+                    onDelete={handleDeleteTirePricing}
+                    calculateExample={calculateExample}
+                  />
+                ))}
               </div>
             </div>
           </div>

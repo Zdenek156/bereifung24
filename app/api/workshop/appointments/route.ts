@@ -56,6 +56,8 @@ export async function GET() {
 
     // Get all direct bookings (PayPal/Stripe)
     // Note: ALL direct bookings have customerId and vehicleId (validated at creation)
+    console.log('🔍 [WORKSHOP APPOINTMENTS] Loading for workshop:', user.workshop.id, user.workshop.companyName)
+    
     const directBookings = await prisma.directBooking.findMany({
       where: { 
         workshopId: user.workshop.id

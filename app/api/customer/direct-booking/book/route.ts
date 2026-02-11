@@ -75,6 +75,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Get or create Customer record
+      console.log('🔍 [BOOK] Looking for customer, User:', session.user.email)
+      
       let customer = await prisma.customer.findUnique({
         where: { userId: session.user.id }
       })
@@ -88,7 +90,11 @@ export async function POST(request: NextRequest) {
         })
       }
 
+      console.log('✅ [BOOK] Customer found/created:', customer.id)
+
       // Create booking after successful payment
+      console.log('💰 [BOOK] Creating CONFIRMED booking:', { workshop: workshopId, date, totalPrice })
+      
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,

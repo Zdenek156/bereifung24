@@ -196,7 +196,15 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
  */
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   try {
-    console.log('❌ Payment failed:', paymentIntent.id)
+    console.log('❌ [STRIPE WEBHOOK] Payment failed:', paymentIntent.id)
+
+    // Find booking before update
+    const booking = await prisma.directBooking.findFirst({
+      where: { stripePaymentId: paymentIntent.id },
+      select: { id: true, status: true, paymentStatus: true, appointmentDate: true }
+    })
+
+    console.log('📋 [STRIPE WEBHOOK] Booking before cancel:', booking)
 
     // Update payment record
     await prisma.directBooking.updateMany({
@@ -207,7 +215,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       }
     })
 
-    console.log('✅ Booking cancelled due to payment failure')
+    console.log('🚫 [STRIPE WEBHOOK] Booking marked as CANCELLED:', booking?.id)
   } catch (error) {
     console.error('❌ Error handling payment failure:', error)
   }

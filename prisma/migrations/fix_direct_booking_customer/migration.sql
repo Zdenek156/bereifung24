@@ -5,7 +5,7 @@
 ALTER TABLE "direct_bookings" ADD COLUMN "new_customer_id" TEXT;
 
 -- Step 2: Create Customer records for all Users that have DirectBookings but no Customer record
-INSERT INTO "customers" ("id", "user_id", "created_at", "updated_at")
+INSERT INTO "customers" ("id", "userId", "createdAt", "updatedAt")
 SELECT 
   gen_random_uuid(),
   u.id,
@@ -13,14 +13,14 @@ SELECT
   NOW()
 FROM "users" u
 INNER JOIN "direct_bookings" db ON db.customer_id = u.id
-LEFT JOIN "customers" c ON c.user_id = u.id
+LEFT JOIN "customers" c ON c."userId" = u.id
 WHERE c.id IS NULL;
 
 -- Step 3: Update DirectBooking.new_customer_id to point to Customer.id instead of User.id
 UPDATE "direct_bookings" db
 SET "new_customer_id" = c.id
 FROM "customers" c
-INNER JOIN "users" u ON c.user_id = u.id
+INNER JOIN "users" u ON c."userId" = u.id
 WHERE db.customer_id = u.id;
 
 -- Step 4: Drop old foreign key constraint

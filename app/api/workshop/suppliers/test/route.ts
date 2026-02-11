@@ -30,11 +30,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get workshop for user
+    const workshop = await prisma.workshop.findUnique({
+      where: { userId: session.user.id },
+    })
+
+    if (!workshop) {
+      return NextResponse.json({ error: 'Workshop not found' }, { status: 404 })
+    }
+
     // Get workshop supplier credentials
     const workshopSupplier = await prisma.workshopSupplier.findUnique({
       where: {
         workshopId_supplier: {
-          workshopId: session.user.id,
+          workshopId: workshop.id,
           supplier: supplier,
         },
       },

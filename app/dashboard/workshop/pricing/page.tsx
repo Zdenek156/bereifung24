@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+interface TirePricingBySize {
+  id: string
+  rimSize: number
+  vehicleType: 'AUTO' | 'MOTO'
+  fixedMarkup: number
+  percentMarkup: number
+  includeVat: boolean
+}
+
 interface PricingSettings {
   id: string
   // Auto Reifen
@@ -39,6 +48,7 @@ export default function PricingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [tirePricingBySize, setTirePricingBySize] = useState<TirePricingBySize[]>([])
   const [settings, setSettings] = useState<PricingSettings>({
     id: '',
     autoManualPricing: true,
@@ -78,9 +88,13 @@ export default function PricingPage() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('/api/workshop/pricing-settings')
-      if (response.ok) {
-        const data = await response.json()
+      const [settingsResponse, tirePricingResponse] = await Promise.all([
+        fetch('/api/workshop/pricing-settings'),
+        fetch('/api/workshop/tire-pricing')
+      ])
+      
+      if (settingsResponse.ok) {
+        const data = await settingsResponse.json()
         if (data.settings) {
           // Ensure all fields have default values
           setSettings({
@@ -98,6 +112,13 @@ export default function PricingPage() {
             servicePercentMarkup: data.settings.servicePercentMarkup ?? 0,
             serviceIncludeVat: data.settings.serviceIncludeVat ?? false
           })
+        }
+      }
+      
+      if (tirePricingResponse.ok) {
+        const data = await tirePricingResponse.json()
+        if (data.success && data.data) {
+          setTirePricingBySize(data.data)
         }
       }
     } catch (error) {
@@ -153,6 +174,57 @@ export default function PricingPage() {
     }
     
     return sellingPrice
+  }
+
+  const handleUpdateTirePricing = async (rimSize: number, vehicleType: 'AUTO' | 'MOTO', fixedMarkup: number, percentMarkup: number, includeVat: boolean) => {
+    try {
+      const response = await fetch('/api/workshop/tire-pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rimSize, vehicleType, fixedMarkup, percentMarkup, includeVat })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Update local state
+          setTirePricingBySize(prev => {
+            const existing = prev.find(p => p.rimSize === rimSize && p.vehicleType === vehicleType)
+            if (existing) {
+              return prev.map(p => 
+                p.rimSize === rimSize && p.vehicleType === vehicleType 
+                  ? { ...p, fixedMarkup, percentMarkup, includeVat }
+                  : p
+              )
+            } else {
+              return [...prev, { id: data.data.id, rimSize, vehicleType, fixedMarkup, percentMarkup, includeVat }]
+            }
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error updating tire pricing:', error)
+    }
+  }
+
+  const handleDeleteTirePricing = async (rimSize: number, vehicleType: 'AUTO' | 'MOTO') => {
+    if (!confirm(`Möchten Sie die Preiskonfiguration für ${rimSize}" ${vehicleType === 'AUTO' ? 'PKW' : 'Motorrad'} wirklich löschen?`)) return
+    
+    try {
+      const response = await fetch(`/api/workshop/tire-pricing?rimSize=${rimSize}&vehicleType=${vehicleType}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setTirePricingBySize(prev => prev.filter(p => !(p.rimSize === rimSize && p.vehicleType === vehicleType)))
+      }
+    } catch (error) {
+      console.error('Error deleting tire pricing:', error)
+    }
+  }
+
+  const getTirePricing = (rimSize: number, vehicleType: 'AUTO' | 'MOTO') => {
+    return tirePricingBySize.find(p => p.rimSize === rimSize && p.vehicleType === vehicleType)
   }
 
   if (status === 'loading' || loading) {
@@ -562,6 +634,302 @@ export default function PricingPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Tire Pricing by Rim Size */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+              <svg className="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Reifenpreise nach Zollgröße
+            </h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Individuelle Aufschläge für verschiedene Felgengrößen (13" - 23")
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Hinweis:</strong> Diese Einstellungen überschreiben die allgemeinen PKW/Motorrad-Einstellungen für spezifische Felgengrößen. 
+                    Größere Reifen (z.B. 20"-23") können Sie mit höheren Aufschlägen kalkulieren.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* PKW Tire Pricing by Size */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                PKW-Reifen (Auto)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                  const pricing = getTirePricing(size, 'AUTO')
+                  const [editMode, setEditMode] = useState(false)
+                  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
+                  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
+                  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
+
+                  return (
+                    <div key={`auto-${size}`} className={`border rounded-lg p-4 ${pricing ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
+                        {pricing && !editMode && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditMode(true)}
+                              className="text-blue-600 hover:text-blue-700 text-sm"
+                            >
+                              Bearbeiten
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTirePricing(size, 'AUTO')}
+                              className="text-red-600 hover:text-red-700 text-sm"
+                            >
+                              Löschen
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {(editMode || !pricing) ? (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Fester Aufschlag (€)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={fixedMarkup}
+                              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Prozentualer Aufschlag (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              max="100"
+                              value={percentMarkup}
+                              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={includeVat}
+                                onChange={(e) => setIncludeVat(e.target.checked)}
+                                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                              />
+                              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
+                                Mit MwSt.
+                              </span>
+                            </label>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                await handleUpdateTirePricing(size, 'AUTO', fixedMarkup, percentMarkup, includeVat)
+                                setEditMode(false)
+                              }}
+                              className="flex-1 px-3 py-2 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
+                            >
+                              Speichern
+                            </button>
+                            {editMode && (
+                              <button
+                                onClick={() => {
+                                  setEditMode(false)
+                                  setFixedMarkup(pricing?.fixedMarkup || 0)
+                                  setPercentMarkup(pricing?.percentMarkup || 0)
+                                  setIncludeVat(pricing?.includeVat || false)
+                                }}
+                                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                              >
+                                Abbrechen
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Prozent: <strong>{pricing.percentMarkup}%</strong>
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
+                          </p>
+                          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel (100€):</p>
+                            <p className="text-sm font-bold text-primary-600 dark:text-primary-400">
+                              {calculateExample(100, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Motorrad Tire Pricing by Size */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Motorradreifen
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                  const pricing = getTirePricing(size, 'MOTO')
+                  const [editMode, setEditMode] = useState(false)
+                  const [fixedMarkup, setFixedMarkup] = useState(pricing?.fixedMarkup || 0)
+                  const [percentMarkup, setPercentMarkup] = useState(pricing?.percentMarkup || 0)
+                  const [includeVat, setIncludeVat] = useState(pricing?.includeVat || false)
+
+                  return (
+                    <div key={`moto-${size}`} className={`border rounded-lg p-4 ${pricing ? 'border-orange-300 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{size}"</h4>
+                        {pricing && !editMode && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditMode(true)}
+                              className="text-blue-600 hover:text-blue-700 text-sm"
+                            >
+                              Bearbeiten
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTirePricing(size, 'MOTO')}
+                              className="text-red-600 hover:text-red-700 text-sm"
+                            >
+                              Löschen
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {(editMode || !pricing) ? (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Fester Aufschlag (€)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={fixedMarkup}
+                              onChange={(e) => setFixedMarkup(parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Prozentualer Aufschlag (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              max="100"
+                              value={percentMarkup}
+                              onChange={(e) => setPercentMarkup(parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={includeVat}
+                                onChange={(e) => setIncludeVat(e.target.checked)}
+                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                              />
+                              <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">
+                                Mit MwSt.
+                              </span>
+                            </label>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                await handleUpdateTirePricing(size, 'MOTO', fixedMarkup, percentMarkup, includeVat)
+                                setEditMode(false)
+                              }}
+                              className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
+                            >
+                              Speichern
+                            </button>
+                            {editMode && (
+                              <button
+                                onClick={() => {
+                                  setEditMode(false)
+                                  setFixedMarkup(pricing?.fixedMarkup || 0)
+                                  setPercentMarkup(pricing?.percentMarkup || 0)
+                                  setIncludeVat(pricing?.includeVat || false)
+                                }}
+                                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                              >
+                                Abbrechen
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Fest: <strong>{pricing.fixedMarkup.toFixed(2)} €</strong>
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Prozent: <strong>{pricing.percentMarkup}%</strong>
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            MwSt.: <strong>{pricing.includeVat ? 'Inkl.' : 'Zzgl.'}</strong>
+                          </p>
+                          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Beispiel (150€):</p>
+                            <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                              {calculateExample(150, false, pricing.fixedMarkup, pricing.percentMarkup, pricing.includeVat).toFixed(2)} €
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

@@ -56,49 +56,31 @@ export async function GET() {
 
     // Get all direct bookings (PayPal/Stripe)
     // Note: ALL direct bookings have customerId and vehicleId (validated at creation)
-    const directBookingsRaw = await prisma.directBooking.findMany({
+    const directBookings = await prisma.directBooking.findMany({
       where: { 
         workshopId: user.workshop.id
+      },
+      include: {
+        customer: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                street: true,
+                zipCode: true,
+                city: true,
+              }
+            }
+          }
+        },
+        vehicle: true
       }
     })
 
-    console.log(`[APPOINTMENTS] Found ${directBookingsRaw.length} DirectBookings`)
-
-    // Load related data
-    const customerIds = directBookingsRaw.map(db => db.customerId).filter(Boolean) as string[]
-    const vehicleIds = directBookingsRaw.map(db => db.vehicleId).filter(Boolean) as string[]
-    
-    const customers = await prisma.user.findMany({
-      where: { id: { in: [...new Set(customerIds)] } }
-    })
-    
-    const vehicles = await prisma.vehicle.findMany({
-      where: { id: { in: [...new Set(vehicleIds)] } }
-    })
-
-    console.log(`[APPOINTMENTS] Loaded ${customers.length} customers, ${vehicles.length} vehicles`)
-
-    // Create lookup maps
-    const customerMap = new Map(customers.map(c => [c.id, c]))
-    const vehicleMap = new Map(vehicles.map(v => [v.id, v]))
-
-    // Attach relations and filter out invalid entries
-    const directBookings = directBookingsRaw
-      .map(db => {
-        const customer = db.customerId ? customerMap.get(db.customerId) : null
-        const vehicle = db.vehicleId ? vehicleMap.get(db.vehicleId) : null
-        
-        // Skip if missing required data
-        if (!customer || !vehicle) {
-          console.warn(`[APPOINTMENTS] Skipping DirectBooking ${db.id}: missing customer or vehicle`)
-          return null
-        }
-        
-        return { ...db, customer, vehicle }
-      })
-      .filter((db): db is NonNullable<typeof db> => db !== null)
-
-    console.log(`[APPOINTMENTS] Valid DirectBookings: ${directBookings.length}`)
+    console.log(`[APPOINTMENTS] Found ${directBookings.length} DirectBookings`)
 
     // Transform direct bookings to match appointment structure
     const transformedDirectBookings = directBookings.map(db => ({
@@ -121,17 +103,16 @@ export async function GET() {
       serviceType: db.serviceType,
       customer: {
         user: {
-          firstName: db.customer.firstName,
-          lastName: db.customer.lastName,
-          email: db.customer.email,
-          phone: db.customer.phone,
-          street: db.customer.street,
-          zipCode: db.customer.zipCode,
-          city: db.customer.city,
+          firstName: db.customer.user.firstName,
+          lastName: db.customer.user.lastName,
+          email: db.customer.user.email,
+          phone: db.customer.user.phone,
+          street: db.customer.user.street,
+          zipCode: db.customer.user.zipCode,
+          city: db.customer.user.city,
         },
       },
       vehicle: db.vehicle,
-      serviceType: db.serviceType,
       tireRequest: null,
       offer: null,
       review: null,

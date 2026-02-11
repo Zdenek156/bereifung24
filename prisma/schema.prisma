@@ -142,9 +142,6 @@ model User {
   // Customer Reminders
   createdReminders CustomerReminder[] @relation("ReminderCreatedBy")
 
-  // Direct Bookings
-  directBookings DirectBooking[] @relation("DirectBookingCustomer")
-
   @@map("users")
 }
 
@@ -163,6 +160,7 @@ model Customer {
   // Relations
   tireRequests         TireRequest[]
   bookings             Booking[]
+  directBookings       DirectBooking[]       @relation("DirectBookingCustomer")
   reviews              Review[]
   tireRatings          TireRating[]
   vehicles             Vehicle[]
@@ -242,8 +240,8 @@ model Workshop {
   paypalEmail String?
 
   // Stripe
-  stripeAccountId String?  @map("stripe_account_id") // Stripe Connected Account ID (für Direct Charges)
-  stripeEnabled   Boolean  @default(false) @map("stripe_enabled") // Ob Stripe-Zahlungen akzeptiert werden
+  stripeAccountId String? @map("stripe_account_id") // Stripe Connected Account ID (für Direct Charges)
+  stripeEnabled   Boolean @default(false) @map("stripe_enabled") // Ob Stripe-Zahlungen akzeptiert werden
 
   // GoCardless Integration
   gocardlessCustomerId       String?   @unique // GoCardless Customer ID
@@ -843,9 +841,9 @@ model Commission {
 // Dieses Model dient nur zur Nachverfolgung und Automatisierung
 
 model Payment {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   // Beträge
   amount   Decimal @db.Decimal(10, 2)
@@ -935,8 +933,8 @@ model WorkshopService {
   runFlatSurcharge         Float? // Aufpreis für Runflat-Reifen (pro Reifen bei TIRE_CHANGE)
   disposalFee              Float? // Entsorgungsgebühr (pro Reifen)
   wheelSizeSurcharge       Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
-  balancingPrice           Float? @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
-  storagePrice             Float? @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+  balancingPrice           Float?  @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
+  storagePrice             Float?  @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
   allowsDirectBooking      Boolean @default(false) @map("allows_direct_booking") // Werkstatt erlaubt Direktbuchungen für diesen Service
   refrigerantPricePer100ml Float? // Preis pro 100ml Kältemittel (nur bei CLIMATE_SERVICE)
 
@@ -5367,20 +5365,20 @@ model WorkshopManualAppointment {
 // ============================================
 
 model CustomerDocument {
-  id         String   @id @default(cuid())
-  customerId String   @map("customer_id")
-  
+  id         String @id @default(cuid())
+  customerId String @map("customer_id")
+
   // File Info
   name     String // Original filename
   filename String // Stored filename (with timestamp)
   type     String // MIME type
   size     Int // File size in bytes
   url      String // Public URL path
-  
+
   // Metadata
-  uploadedBy String @map("uploaded_by")
+  uploadedBy String   @map("uploaded_by")
   uploadedAt DateTime @default(now()) @map("uploaded_at")
-  
+
   @@index([customerId])
   @@map("customer_documents")
 }
@@ -5390,22 +5388,22 @@ model CustomerDocument {
 // ============================================
 
 model CustomerReminder {
-  id         String   @id @default(cuid())
-  customerId String   @map("customer_id")
-  workshopId String   @map("workshop_id")
-  
+  id         String @id @default(cuid())
+  customerId String @map("customer_id")
+  workshopId String @map("workshop_id")
+
   // Reminder Details
   title     String
   dueDate   DateTime @map("due_date")
   notes     String?  @db.Text
   completed Boolean  @default(false)
-  
+
   // Metadata
-  createdBy     String   @map("created_by")
-  createdByUser User     @relation("ReminderCreatedBy", fields: [createdBy], references: [id])
-  createdAt     DateTime @default(now()) @map("created_at")
+  createdBy     String    @map("created_by")
+  createdByUser User      @relation("ReminderCreatedBy", fields: [createdBy], references: [id])
+  createdAt     DateTime  @default(now()) @map("created_at")
   completedAt   DateTime? @map("completed_at")
-  
+
   @@index([customerId])
   @@index([workshopId])
   @@index([dueDate])
@@ -5420,49 +5418,49 @@ model CustomerReminder {
 model DirectBooking {
   id         String   @id @default(cuid())
   customerId String   @map("customer_id")
-  customer   User     @relation("DirectBookingCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  customer   Customer @relation("DirectBookingCustomer", fields: [customerId], references: [id], onDelete: Cascade)
   workshopId String   @map("workshop_id")
   workshop   Workshop @relation("DirectBookingWorkshop", fields: [workshopId], references: [id], onDelete: Cascade)
-  
+
   // Service Details
-  serviceType       String @map("service_type") // WHEEL_CHANGE, TIRE_CHANGE, etc.
-  vehicleId         String      @map("vehicle_id")
-  vehicle           Vehicle     @relation(fields: [vehicleId], references: [id])
-  
+  serviceType String  @map("service_type") // WHEEL_CHANGE, TIRE_CHANGE, etc.
+  vehicleId   String  @map("vehicle_id")
+  vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
+
   // Options (for wheel change)
-  hasBalancing      Boolean     @default(false) @map("has_balancing")
-  hasStorage        Boolean     @default(false) @map("has_storage")
-  
+  hasBalancing Boolean @default(false) @map("has_balancing")
+  hasStorage   Boolean @default(false) @map("has_storage")
+
   // Pricing
-  basePrice         Decimal     @db.Decimal(10, 2) @map("base_price")
-  balancingPrice    Decimal?    @db.Decimal(10, 2) @map("balancing_price")
-  storagePrice      Decimal?    @db.Decimal(10, 2) @map("storage_price")
-  totalPrice        Decimal     @db.Decimal(10, 2) @map("total_price")
-  durationMinutes   Int         @map("duration_minutes")
-  
+  basePrice       Decimal  @map("base_price") @db.Decimal(10, 2)
+  balancingPrice  Decimal? @map("balancing_price") @db.Decimal(10, 2)
+  storagePrice    Decimal? @map("storage_price") @db.Decimal(10, 2)
+  totalPrice      Decimal  @map("total_price") @db.Decimal(10, 2)
+  durationMinutes Int      @map("duration_minutes")
+
   // Booking Slot
-  date              DateTime    @db.Date
-  time              String      @db.VarChar(5)
-  status            String      @default("RESERVED") // RESERVED, CONFIRMED, COMPLETED, CANCELLED
-  reservedUntil     DateTime?   @map("reserved_until")
-  
+  date          DateTime  @db.Date
+  time          String    @db.VarChar(5)
+  status        String    @default("RESERVED") // RESERVED, CONFIRMED, COMPLETED, CANCELLED
+  reservedUntil DateTime? @map("reserved_until")
+
   // Payment
-  paymentMethod     DirectBookingPaymentMethod? @map("payment_method")
-  paymentStatus     DirectBookingPaymentStatus @default(PENDING) @map("payment_status")
-  paymentId         String?     @map("payment_id")
-  stripeSessionId   String?     @map("stripe_session_id")
-  stripePaymentId   String?     @map("stripe_payment_id")
-  paypalOrderId     String?     @map("paypal_order_id")
-  paidAt            DateTime?   @map("paid_at")
-  
+  paymentMethod   DirectBookingPaymentMethod? @map("payment_method")
+  paymentStatus   DirectBookingPaymentStatus  @default(PENDING) @map("payment_status")
+  paymentId       String?                     @map("payment_id")
+  stripeSessionId String?                     @map("stripe_session_id")
+  stripePaymentId String?                     @map("stripe_payment_id")
+  paypalOrderId   String?                     @map("paypal_order_id")
+  paidAt          DateTime?                   @map("paid_at")
+
   // Booking
-  bookingId         String?     @unique @map("booking_id")
-  booking           Booking?    @relation(fields: [bookingId], references: [id])
-  
+  bookingId String?  @unique @map("booking_id")
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
   // Metadata
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([customerId])
   @@index([workshopId])
   @@index([paymentStatus])

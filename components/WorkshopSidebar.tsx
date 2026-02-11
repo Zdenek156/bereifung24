@@ -142,12 +142,21 @@ export default function WorkshopSidebar() {
   ]
 
   const handleLogout = async () => {
+    console.log('[LOGOUT DEBUG] 1. Starting logout from WorkshopSidebar')
+    console.log('[LOGOUT DEBUG] 2. Current cookies:', document.cookie)
+    
+    console.log('[LOGOUT DEBUG] 3. Deleting all NextAuth cookies...')
     // Delete all NextAuth cookies explicitly
     document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;'
     document.cookie = '__Host-next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = 'next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    
+    console.log('[LOGOUT DEBUG] 4. Cookies after deletion:', document.cookie)
+    console.log('[LOGOUT DEBUG] 5. Calling signOut({ redirect: false })...')
     await signOut({ redirect: false })
+    console.log('[LOGOUT DEBUG] 6. signOut completed, redirecting to /login')
+    console.log('[LOGOUT DEBUG] 7. Final cookies before redirect:', document.cookie)
     window.location.href = '/login'
   }
 

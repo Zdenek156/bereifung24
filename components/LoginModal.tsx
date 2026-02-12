@@ -48,10 +48,27 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         
         const pollSession = async () => {
           while (attempts < maxAttempts) {
-            const hasSession = await checkSession()
-            if (hasSession) {
+            const response = await fetch('/api/auth/session')
+            const session = await response.json()
+            
+            if (session && session.user) {
               onClose()
-              window.location.reload()
+              
+              // Redirect based on user role
+              const role = session.user.role
+              
+              if (role === 'ADMIN') {
+                window.location.href = '/admin'
+              } else if (role === 'WORKSHOP') {
+                window.location.href = '/dashboard/workshop'
+              } else if (role === 'CUSTOMER') {
+                window.location.href = '/dashboard/customer'
+              } else if (role === 'EMPLOYEE') {
+                window.location.href = '/mitarbeiter'
+              } else {
+                // Default: just reload current page
+                window.location.reload()
+              }
               return
             }
             await new Promise(resolve => setTimeout(resolve, 500))

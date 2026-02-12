@@ -51,21 +51,30 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             const response = await fetch('/api/auth/session')
             const session = await response.json()
             
+            console.log('[LOGIN MODAL] Session response:', session)
+            
             if (session && session.user) {
               onClose()
               
               // Redirect based on user role
               const role = session.user.role
               
+              console.log('[LOGIN MODAL] User role detected:', role)
+              
               if (role === 'ADMIN') {
+                console.log('[LOGIN MODAL] Redirecting to /admin')
                 window.location.href = '/admin'
               } else if (role === 'WORKSHOP') {
+                console.log('[LOGIN MODAL] Redirecting to /dashboard/workshop')
                 window.location.href = '/dashboard/workshop'
               } else if (role === 'CUSTOMER') {
+                console.log('[LOGIN MODAL] Redirecting to /dashboard/customer')
                 window.location.href = '/dashboard/customer'
               } else if (role === 'EMPLOYEE') {
+                console.log('[LOGIN MODAL] Redirecting to /mitarbeiter')
                 window.location.href = '/mitarbeiter'
               } else {
+                console.log('[LOGIN MODAL] Unknown role, reloading page')
                 // Default: just reload current page
                 window.location.reload()
               }

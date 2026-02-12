@@ -176,20 +176,32 @@ export async function syncSupplierCSV(
       },
     })
 
-    console.log(`[CSV-SYNC] Deleted ${deletedResult.count} discontinued items`)
+    console.log(`[CSV-SYNC] ${supplier.name}: Deleted ${deletedResult.count} discontinued items`)
+    console.log(`[CSV-SYNC] ${supplier.name}: Processing ${rows.length} items (updating ALL prices & stock)...`)
 
-    // Bulk upsert all items (much faster than individual queries)
-    let imported = 0
-    let updated = 0
+    // Bulk upsert ALL items - prices and stock are ALWAYS updated
+    let created = 0
+    let processed = 0
 
     // Process in batches of 500 to avoid memory issues with large CSVs
     const BATCH_SIZE = 500
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE)
 
-      await Promise.all(
+      const results = await Promise.all(
         batch.map(async (row) => {
-          const result = await prisma.workshopInventory.upsert({
+          const existsBefore = await prisma.workshopInventory.findUnique({
+            where: {
+              workshopId_articleNumber_supplier: {
+                workshopId,
+                articleNumber: row.articleNumber,
+                supplier: supplier.supplier,
+              },
+            },
+            select: { id: true },
+          })
+
+          await prisma.workshopInventory.upsert({
             where: {
               workshopId_articleNumber_supplier: {
                 workshopId,
@@ -198,6 +210,7 @@ export async function syncSupplierCSV(
               },
             },
             update: {
+              // ALWAYS update all fields (prices change frequently!)
               price: row.price,
               stock: row.stock,
               ean: row.ean,
@@ -228,15 +241,22 @@ export async function syncSupplierCSV(
             },
           })
 
-          // Track if created or updated
-          if (result.createdAt >= new Date(Date.now() - 1000)) {
-            imported++
-          } else {
-            updated++
-          }
+          processed++
+          return { isNew: !existsBefore }
         })
       )
+
+      created += results.filter(r => r.isNew).length
+      
+      // Progress log for large imports
+      if (rows.length > 1000) {
+        console.log(`[CSV-SYNC] ${supplier.name}: Processed ${processed}/${rows.length} items...`)
+      }
     }
+
+    const updated = processed - created
+
+    console.log(`[CSV-SYNC] ${supplier.name}: ✅ Complete - ${created} new, ${updated} updated, ${deletedResult.count} deleted`)
 
     // Update sync status
     await prisma.workshopSupplier.update({
@@ -250,7 +270,7 @@ export async function syncSupplierCSV(
 
     return {
       success: true,
-      imported,
+      imported: created,
       updated,
       total: rows.length,
     }

@@ -35,8 +35,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
       } else {
         onClose()
-        // Refresh page to load session - user stays on current page
-        window.location.reload()
+        // Redirect to homepage or callbackUrl after successful login
+        const urlParams = new URLSearchParams(window.location.search)
+        const callbackUrl = urlParams.get('callbackUrl') || '/'
+        window.location.href = callbackUrl
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

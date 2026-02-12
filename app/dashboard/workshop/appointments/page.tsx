@@ -55,6 +55,24 @@ interface Appointment {
   review: any | null
 }
 
+// Service Type Translation Helper
+const getServiceTypeName = (serviceType: string): string => {
+  const serviceNames: Record<string, string> = {
+    'TIRE_CHANGE': 'Reifenwechsel',
+    'WHEEL_CHANGE': 'Radwechsel',
+    'BALANCING': 'Auswuchten',
+    'STORAGE': 'Einlagerung',
+    'TIRE_REPAIR': 'Reifenreparatur',
+    'MOTORCYCLE_TIRE': 'Motorradreifen',
+    'ALIGNMENT_BOTH': 'Achsvermessung',
+    'CLIMATE_SERVICE': 'Klimaservice',
+    'BRAKE_SERVICE': 'Bremsenservice',
+    'BATTERY_SERVICE': 'Batterieservice',
+    'OTHER_SERVICES': 'Sonstige Services'
+  }
+  return serviceNames[serviceType] || serviceType
+}
+
 export default function WorkshopAppointments() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -739,10 +757,7 @@ export default function WorkshopAppointments() {
                       <>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
                         <p className="text-sm text-gray-900 font-medium">
-                          {apt.serviceType === 'TIRE_CHANGE' ? 'Reifenwechsel' : 
-                           apt.serviceType === 'BALANCING' ? 'Auswuchten' : 
-                           apt.serviceType === 'STORAGE' ? 'Einlagerung' : 
-                           apt.serviceType}
+                          {getServiceTypeName(apt.serviceType || '')}
                         </p>
                         {apt.vehicle && (
                           <>

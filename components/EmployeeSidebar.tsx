@@ -200,7 +200,6 @@ export default function EmployeeSidebar() {
       window.location.href = '/'
     }
   }
-  }
 
   const isActive = (path: string) => {
     if (path === '/mitarbeiter') {

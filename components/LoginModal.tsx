@@ -35,12 +35,35 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Login successful - wait for cookie to be set
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Don't close modal or reload yet - wait for session to be ready
+        // Poll for session with a longer timeout
+        let attempts = 0
+        const maxAttempts = 20 // 10 seconds total
         
-        // Close modal and reload page to load new session
-        onClose()
-        window.location.reload()
+        const checkSession = async () => {
+          const response = await fetch('/api/auth/session')
+          const session = await response.json()
+          return session && session.user
+        }
+        
+        const pollSession = async () => {
+          while (attempts < maxAttempts) {
+            const hasSession = await checkSession()
+            if (hasSession) {
+              onClose()
+              window.location.reload()
+              return
+            }
+            await new Promise(resolve => setTimeout(resolve, 500))
+            attempts++
+          }
+          
+          // If still no session after 10 seconds, something is wrong
+          setError('Login erfolgreich, aber Session konnte nicht geladen werden. Bitte Seite neu laden.')
+          setLoading(false)
+        }
+        
+        await pollSession()
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

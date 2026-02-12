@@ -1,4 +1,63 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
+import RevenueCalculator from '@/components/RevenueCalculator'
+
+function AnimatedSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true) },
+      { threshold: 0.15 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  const hasRun = useRef(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasRun.current) {
+          hasRun.current = true
+          const duration = 1500
+          const start = Date.now()
+          const animate = () => {
+            const elapsed = Date.now() - start
+            const progress = Math.min(elapsed / duration, 1)
+            const eased = 1 - Math.pow(1 - progress, 3)
+            setCount(Math.round(target * eased))
+            if (progress < 1) requestAnimationFrame(animate)
+          }
+          requestAnimationFrame(animate)
+        }
+      },
+      { threshold: 0.5 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target])
+
+  return <span ref={ref}>{count.toLocaleString('de-DE')}{suffix}</span>
+}
 
 export default function WerkstattInfoPage() {
   return (
@@ -80,7 +139,7 @@ export default function WerkstattInfoPage() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                 </svg>
-                <span className="text-sm font-medium">Qualifizierte Anfragen</span>
+                <span className="text-sm font-medium">Online-Direktbuchungen</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -110,7 +169,7 @@ export default function WerkstattInfoPage() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
+            <AnimatedSection className="text-center mb-16">
               <div className="inline-block mb-4 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
                 Deine Vorteile
               </div>
@@ -120,31 +179,52 @@ export default function WerkstattInfoPage() {
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                 Profitiere von der ersten vollständig digitalen Reifenservice-Plattform Deutschlands
               </p>
-            </div>
+            </AnimatedSection>
+
+            {/* Stats Counter Bar */}
+            <AnimatedSection className="mb-16">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { value: 500, suffix: '+', label: 'Partner-Werkstätten' },
+                  { value: 15000, suffix: '+', label: 'Buchungen' },
+                  { value: 98, suffix: '%', label: 'Zufriedenheit' },
+                  { value: 0, suffix: '€', label: 'Grundgebühr', static: true },
+                ].map((stat, i) => (
+                  <div key={i} className="text-center p-6 bg-gradient-to-br from-primary-50 to-white rounded-2xl border border-primary-100">
+                    <p className="text-3xl md:text-4xl font-extrabold text-primary-600 mb-1">
+                      {stat.static ? `${stat.value}${stat.suffix}` : <CountUp target={stat.value} suffix={stat.suffix} />}
+                    </p>
+                    <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </AnimatedSection>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {workshopBenefits.map((benefit, index) => (
-                <div key={index} className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-200 hover:shadow-xl transition-all">
-                  <div className="w-14 h-14 bg-primary-600 rounded-xl flex items-center justify-center text-white text-2xl mb-4">
-                    {benefit.icon}
+                <AnimatedSection key={index} delay={index * 150}>
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full group">
+                    <div className="w-14 h-14 bg-primary-600 rounded-xl flex items-center justify-center text-white text-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                      {benefit.icon}
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 text-gray-900">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed mb-4">
+                      {benefit.description}
+                    </p>
+                    <ul className="space-y-2">
+                      {benefit.details.map((detail, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                          </svg>
+                          <span className="text-gray-600">{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-900">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed mb-4">
-                    {benefit.description}
-                  </p>
-                  <ul className="space-y-2">
-                    {benefit.details.map((detail, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                        </svg>
-                        <span className="text-gray-600">{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                </AnimatedSection>
               ))}
             </div>
 
@@ -174,36 +254,65 @@ export default function WerkstattInfoPage() {
         </div>
       </section>
 
+      {/* Revenue Calculator */}
+      <RevenueCalculator />
+
       {/* How It Works for Workshops */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
+            <div className="inline-block mb-4 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
+              So einfach geht&apos;s
+            </div>
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-              So funktioniert's für Werkstätten
+              In 3 Schritten online
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              In 3 einfachen Schritten zu mehr Kunden
+              Schnell starten, sofort Kunden empfangen
             </p>
-          </div>
+          </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0 max-w-6xl mx-auto relative">
+            {/* Connecting lines between steps (desktop) */}
+            <div className="hidden md:block absolute top-20 left-[20%] right-[20%] h-1 bg-gradient-to-r from-primary-300 via-primary-500 to-primary-300 rounded-full z-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 rounded-full animate-pulse" />
+            </div>
+
             {workshopSteps.map((step, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-                <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-4xl mb-6 text-white">
-                  {step.emoji}
-                </div>
-                <div className="mb-6">
-                  <div className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-bold mb-3">
-                    Schritt {index + 1}
+              <AnimatedSection key={index} delay={index * 250} className="relative z-10">
+                <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 mx-2 mb-4 md:mb-0 group">
+                  {/* Step number badge */}
+                  <div className="absolute -top-4 left-8 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                    {index + 1}
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-900">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {step.description}
-                  </p>
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center text-4xl mb-6 text-white group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    {step.emoji}
+                  </div>
+                  <div className="mb-2">
+                    <h3 className="text-2xl font-bold mb-3 text-gray-900">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
+                  {/* Time indicator */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <span className="text-xs font-semibold text-primary-600 bg-primary-50 px-3 py-1 rounded-full">
+                      {step.time}
+                    </span>
+                  </div>
                 </div>
-              </div>
+
+                {/* Mobile connecting arrow */}
+                {index < 2 && (
+                  <div className="flex justify-center md:hidden my-2">
+                    <svg className="w-6 h-6 text-primary-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </div>
+                )}
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -213,22 +322,27 @@ export default function WerkstattInfoPage() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
+            <AnimatedSection className="text-center mb-16">
+              <div className="inline-block mb-4 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
+                Dein Dashboard
+              </div>
               <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                Funktionen für deine Werkstatt
+                Alles in einer Plattform
               </h2>
               <p className="text-xl text-gray-600">
-                Alles was du brauchst in einem Dashboard
+                Dein komplettes Werkstatt-Management – digital und einfach
               </p>
-            </div>
+            </AnimatedSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {workshopFeatures.map((feature, index) => (
-                <div key={index} className="bg-gray-50 p-6 rounded-xl hover:shadow-lg transition-shadow">
-                  <div className="text-4xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </div>
+                <AnimatedSection key={index} delay={index * 100}>
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-gray-100 hover:shadow-xl hover:-translate-y-1 hover:border-primary-200 transition-all duration-300 h-full group">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                    <h3 className="text-xl font-bold mb-2 text-gray-900">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </div>
+                </AnimatedSection>
               ))}
             </div>
           </div>
@@ -236,14 +350,19 @@ export default function WerkstattInfoPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-4xl mx-auto">
+      <section className="py-24 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white relative overflow-hidden">
+        {/* Floating shapes */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-white/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/5 rounded-full blur-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <AnimatedSection className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
               Bereit durchzustarten?
             </h2>
-            <p className="text-xl text-primary-100 mb-10">
-              Registriere deine Werkstatt jetzt kostenlos und erreiche mehr Kunden
+            <p className="text-xl text-primary-100 mb-10 max-w-2xl mx-auto">
+              Registriere deine Werkstatt jetzt kostenlos – in unter 5 Minuten online und bereit für neue Kunden.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -259,7 +378,14 @@ export default function WerkstattInfoPage() {
                 Preise ansehen
               </Link>
             </div>
-          </div>
+
+            {/* Trust mini-badges */}
+            <div className="mt-10 flex flex-wrap justify-center gap-6 text-primary-200 text-sm">
+              <span className="flex items-center gap-1.5">✓ Keine Vertragslaufzeit</span>
+              <span className="flex items-center gap-1.5">✓ Sofort einsatzbereit</span>
+              <span className="flex items-center gap-1.5">✓ Persönlicher Support</span>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -314,7 +440,7 @@ export default function WerkstattInfoPage() {
           {/* Bottom Bar */}
           <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
-              <p>&copy; 2025 Bereifung24. Alle Rechte vorbehalten.</p>
+              <p>&copy; 2026 Bereifung24. Alle Rechte vorbehalten.</p>
               <p className="mt-4 md:mt-0">
                 Made with ❤️ in Deutschland
               </p>
@@ -332,19 +458,19 @@ const workshopBenefits = [
   {
     title: 'Neue Kunden gewinnen',
     icon: '👥',
-    description: 'Erreiche Autofahrer, die aktiv nach deinen Services suchen. Erweitere deinen Kundenstamm digital.',
+    description: 'Werde von Autofahrern gefunden, die aktiv nach deinen Services suchen. Kunden buchen direkt bei dir.',
     details: [
-      'Qualifizierte Anfragen in deinem Radius',
-      'Kunden suchen aktiv nach deinen Services',
+      'Kunden finden dich direkt in ihrer Nähe',
+      'Direktbuchungen ohne Umwege',
       'Höhere Conversion als klassische Werbung'
     ]
   },
   {
     title: 'Auslastung optimieren',
     icon: '📊',
-    description: 'Fülle Lücken in deinem Terminkalender. Nutze freie Kapazitäten optimal aus.',
+    description: 'Fülle Lücken in deinem Terminkalender. Kunden buchen deine freien Slots direkt online.',
     details: [
-      'Flexibles Angebots-Management',
+      'Flexible Kalender- & Preisverwaltung',
       'Automatische Terminverwaltung',
       'Echtzeit-Kapazitätsplanung'
     ]
@@ -373,19 +499,22 @@ const workshopBenefits = [
 
 const workshopSteps = [
   {
-    title: 'Registrieren',
-    description: 'Erstelle dein kostenloses Werkstatt-Profil. Hinterlege deine Services, Preise und Verfügbarkeiten.',
-    emoji: '📝'
+    title: 'Profil einrichten',
+    description: 'Registriere dich kostenlos und hinterlege deine Services, Preise und Öffnungszeiten. In wenigen Minuten online.',
+    emoji: '🏪',
+    time: '⏱ ca. 5 Minuten'
   },
   {
-    title: 'Angebote erstellen',
-    description: 'Erhalte qualifizierte Anfragen von Kunden in deiner Nähe. Erstelle individuelle Angebote in wenigen Klicks.',
-    emoji: '💼'
+    title: 'Kalender verbinden',
+    description: 'Verbinde deinen bestehenden Kalender – Bereifung24 synchronisiert automatisch deine Verfügbarkeit in Echtzeit.',
+    emoji: '📅',
+    time: '⏱ 1 Klick'
   },
   {
-    title: 'Aufträge erhalten',
-    description: 'Kunden buchen deinen Service direkt online. Du erhältst alle Details automatisch und kannst loslegen.',
-    emoji: '✅'
+    title: 'Direkt gebucht werden',
+    description: 'Kunden finden dich, buchen und bezahlen direkt online. Du erhältst alle Details automatisch – einfach loslegen.',
+    emoji: '✅',
+    time: '⏱ Sofort startklar'
   }
 ]
 
@@ -393,7 +522,7 @@ const workshopFeatures = [
   {
     icon: '📅',
     title: 'Terminkalender',
-    description: 'Verwalte alle Termine zentral. Synchronisiere mit Google Calendar.'
+    description: 'Verwalte alle Termine zentral. Kunden buchen deine freien Slots direkt online.'
   },
   {
     icon: '👨‍🔧',
@@ -418,7 +547,7 @@ const workshopFeatures = [
   {
     icon: '📊',
     title: 'Statistiken',
-    description: 'Behalte den Überblick über Anfragen, Buchungen und Umsätze.'
+    description: 'Behalte den Überblick über Buchungen, Auslastung und Umsätze.'
   },
   {
     icon: '⭐',
@@ -428,7 +557,7 @@ const workshopFeatures = [
   {
     icon: '🔔',
     title: 'Benachrichtigungen',
-    description: 'Erhalte sofort Bescheid über neue Anfragen und Buchungen.'
+    description: 'Erhalte sofort Bescheid über neue Buchungen und Kundennachrichten.'
   },
   {
     icon: '🎧',

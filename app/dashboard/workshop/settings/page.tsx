@@ -129,10 +129,25 @@ function SuppliersTab() {
 
     setSaving(true)
     try {
+      // Nur relevante Felder je nach Connection Type senden
+      const payload: any = {
+        supplier: formData.supplier,
+        name: formData.name,
+        connectionType: formData.connectionType,
+        autoOrder: formData.autoOrder,
+      }
+
+      if (formData.connectionType === 'API') {
+        payload.username = formData.username
+        payload.password = formData.password
+      } else if (formData.connectionType === 'CSV') {
+        payload.csvUrl = formData.csvUrl
+      }
+
       const response = await fetch('/api/workshop/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {

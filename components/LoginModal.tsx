@@ -33,7 +33,32 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       if (result?.error) {
         setError(result.error)
+        setLoading(false)
       } else {
+        // Wait for session to be available before redirecting
+        let retries = 0
+        const maxRetries = 10
+        
+        // Poll for session (max 5 seconds)
+        const checkSession = async (): Promise<boolean> => {
+          try {
+            const response = await fetch('/api/auth/session')
+            const session = await response.json()
+            return !!session?.user
+          } catch {
+            return false
+          }
+        }
+
+        while (retries < maxRetries) {
+          const hasSession = await checkSession()
+          if (hasSession) {
+            break
+          }
+          await new Promise(resolve => setTimeout(resolve, 500))
+          retries++
+        }
+
         onClose()
         // Redirect to homepage or callbackUrl after successful login
         const urlParams = new URLSearchParams(window.location.search)
@@ -42,7 +67,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')
-    } finally {
       setLoading(false)
     }
   }

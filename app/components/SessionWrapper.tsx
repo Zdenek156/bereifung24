@@ -9,8 +9,9 @@ export default function SessionWrapper({
 }) {
   return (
     <SessionProvider 
-      refetchInterval={60} // Refetch session every 60 seconds
-      refetchOnWindowFocus={true} // Refetch when window gains focus
+      basePath="/api/auth"
+      refetchInterval={0} // Don't refetch automatically
+      refetchOnWindowFocus={false} // Don't refetch on focus
     >
       {children}
     </SessionProvider>

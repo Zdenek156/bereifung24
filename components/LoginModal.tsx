@@ -35,34 +35,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Wait for session to be available before redirecting
-        let retries = 0
-        const maxRetries = 10
-        
-        // Poll for session (max 5 seconds)
-        const checkSession = async (): Promise<boolean> => {
-          try {
-            const response = await fetch('/api/auth/session')
-            const session = await response.json()
-            return !!session?.user
-          } catch {
-            return false
-          }
-        }
-
-        while (retries < maxRetries) {
-          const hasSession = await checkSession()
-          if (hasSession) {
-            break
-          }
-          await new Promise(resolve => setTimeout(resolve, 500))
-          retries++
-        }
-
+        // Login successful - close modal and redirect
         onClose()
-        // Redirect to homepage or callbackUrl after successful login
+        
+        // Get callbackUrl from URL params or default to homepage
         const urlParams = new URLSearchParams(window.location.search)
         const callbackUrl = urlParams.get('callbackUrl') || '/'
+        
+        // Hard redirect to force session reload
         window.location.href = callbackUrl
       }
     } catch (err) {

@@ -5,8 +5,6 @@ import SessionWrapper from './components/SessionWrapper'
 import CookieBanner from '@/components/CookieBanner'
 import Analytics from './components/Analytics'
 import StructuredData from './components/StructuredData'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -45,13 +43,11 @@ export const metadata: Metadata = {
   }
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
-  
   return (
     <html lang="de" translate="no">
       <head>
@@ -63,7 +59,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.className} notranslate`}>
         <StructuredData />
-        <SessionWrapper session={session}>
+        <SessionWrapper>
           <Analytics />
           {children}
           <CookieBanner />

@@ -205,9 +205,21 @@ export default function NewHomePage() {
   const [openingHours, setOpeningHours] = useState<string[]>([])
   const [hasMultipleServices, setHasMultipleServices] = useState(false)
 
-  // Geocode postal code
-  const geocodePostalCode = async (input: string) => {
+  // Rate limiting for Nominatim API (max 1 request per second)
+  let lastNominatimRequest = 0
+  const NOMINATIM_DELAY = 1100 // 1.1 seconds to be safe
+
+  // Geocode postal code with rate limiting and retry logic
+  const geocodePostalCode = async (input: string, retryCount = 0): Promise<any> => {
     try {
+      // Rate limiting: Wait if last request was too recent
+      const now = Date.now()
+      const timeSinceLastRequest = now - lastNominatimRequest
+      if (timeSinceLastRequest < NOMINATIM_DELAY) {
+        await new Promise(resolve => setTimeout(resolve, NOMINATIM_DELAY - timeSinceLastRequest))
+      }
+      lastNominatimRequest = Date.now()
+
       // Check if input is a postal code (5 digits) or city name
       const isPostalCode = /^\d{5}$/.test(input)
       
@@ -219,7 +231,23 @@ export default function NewHomePage() {
         url = `https://nominatim.openstreetmap.org/search?format=json&country=Germany&city=${encodeURIComponent(input)}`
       }
       
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Bereifung24.de/1.0 (contact@bereifung24.de)'
+        }
+      })
+
+      // Handle 425 (Too Early) with retry
+      if (response.status === 425 && retryCount < 2) {
+        console.warn(`⏱️ Nominatim 425 (Too Early), retry ${retryCount + 1}/2`)
+        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
+        return geocodePostalCode(input, retryCount + 1)
+      }
+
+      if (!response.ok) {
+        throw new Error(`Nominatim API error: ${response.status}`)
+      }
+      
       const data = await response.json()
       
       if (data && data.length > 0) {

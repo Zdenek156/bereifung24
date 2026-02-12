@@ -576,8 +576,14 @@ export default function NewHomePage() {
                           <p className="text-xs text-gray-500">{session.user?.email}</p>
                         </div>
                         
-                        {/* Workshop users - only Dashboard and Einstellungen */}
-                        {session.user?.role === 'WORKSHOP' ? (
+                        {/* Admin users - only Abmelden (work in /admin) */}
+                        {session.user?.role === 'ADMIN' ? (
+                          <></>
+                        ) : /* Employee users - only Abmelden (work in /mitarbeiter) */
+                        session.user?.role === 'EMPLOYEE' ? (
+                          <></>
+                        ) : /* Workshop users - Dashboard, Einstellungen, Abmelden */
+                        session.user?.role === 'WORKSHOP' ? (
                           <>
                             <Link
                               href="/dashboard/workshop"

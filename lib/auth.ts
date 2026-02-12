@@ -18,7 +18,6 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        domain: process.env.NODE_ENV === 'production' ? '.bereifung24.de' : undefined,
         secure: process.env.NODE_ENV === 'production'
       }
     }

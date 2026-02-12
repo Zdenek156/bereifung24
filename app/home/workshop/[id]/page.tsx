@@ -38,6 +38,11 @@ export default function WorkshopDetailPage() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  
+  // Refs for auto-scroll
+  const timeSlotsRef = useRef<HTMLDivElement>(null)
+  const vehicleSelectionRef = useRef<HTMLDivElement>(null)
+  const bookingButtonRef = useRef<HTMLDivElement>(null)
 
   const [workshop, setWorkshop] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -400,10 +405,24 @@ export default function WorkshopDetailPage() {
     console.log(`[CUSTOMER CALENDAR] Selected date: ${dateStr}`)
     console.log(`[CUSTOMER CALENDAR] Busy slots:`, busySlots[dateStr] || [])
     console.log(`[CUSTOMER CALENDAR] All busy slots:`, busySlots)
+    
+    // Auto-scroll to time slots after selection
+    setTimeout(() => {
+      timeSlotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   const handleSlotSelect = (slot: any) => {
     setSelectedSlot(slot)
+    
+    // Auto-scroll to vehicle selection (if logged in) or booking button (if not logged in)
+    setTimeout(() => {
+      if (session) {
+        vehicleSelectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
   const handleAdditionalServicesSelected = (services: any[]) => {
@@ -962,7 +981,7 @@ export default function WorkshopDetailPage() {
 
           {/* Time Slots */}
           {selectedDate && (
-            <div className="border-t pt-6">
+            <div ref={timeSlotsRef} className="border-t pt-6">
               <h4 className="text-lg font-bold mb-4">
                 Verfügbare Zeiten am {selectedDate.toLocaleDateString('de-DE', { 
                   weekday: 'long', 
@@ -1005,7 +1024,7 @@ export default function WorkshopDetailPage() {
 
           {/* Vehicle Selection */}
           {selectedSlot && session && (
-            <div className="border-t mt-6 pt-6">
+            <div ref={vehicleSelectionRef} className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">
                   <strong>📅 Ausgewählter Termin:</strong>
@@ -1052,7 +1071,13 @@ export default function WorkshopDetailPage() {
                     {vehicles.map((vehicle: any) => (
                       <button
                         key={vehicle.id}
-                        onClick={() => setSelectedVehicle(vehicle.id)}
+                        onClick={() => {
+                          setSelectedVehicle(vehicle.id)
+                          // Auto-scroll to booking button after vehicle selection
+                          setTimeout(() => {
+                            bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }, 100)
+                        }}
                         className={`
                           w-full p-4 rounded-lg border-2 text-left transition-all
                           ${selectedVehicle === vehicle.id
@@ -1086,7 +1111,7 @@ export default function WorkshopDetailPage() {
 
           {/* Booking Button for non-logged in users */}
           {selectedSlot && !session && (
-            <div className="border-t mt-6 pt-6">
+            <div ref={bookingButtonRef} className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">
                   <strong>📅 Ausgewählter Termin:</strong>
@@ -1117,7 +1142,7 @@ export default function WorkshopDetailPage() {
 
           {/* Booking Button for logged in users */}
           {selectedSlot && session && selectedVehicle && (
-            <div className="mt-4">
+            <div ref={bookingButtonRef} className="mt-4">
               <button
                 onClick={handleBooking}
                 className="w-full px-8 py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-xl transition-all text-xl shadow-lg hover:shadow-xl"

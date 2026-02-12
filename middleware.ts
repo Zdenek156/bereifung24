@@ -9,7 +9,7 @@ const STATIC_ROUTES = [
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
   '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
-  '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder',
+  '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
   '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/app-download', '/demo',
   '/smart-tire-advisor'
 ]

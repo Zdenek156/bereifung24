@@ -35,27 +35,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Login successful - fetch session to get role
-        const sessionResponse = await fetch('/api/auth/session')
-        const session = await sessionResponse.json()
-        
+        // Login successful - just reload, homepage will redirect based on role
         onClose()
-        
-        // Redirect based on user role
-        if (session?.user?.role === 'ADMIN') {
-          window.location.href = '/admin'
-        } else if (session?.user?.role === 'WORKSHOP') {
-          window.location.href = '/dashboard/workshop'
-        } else if (session?.user?.role === 'CUSTOMER') {
-          window.location.href = '/dashboard/customer'
-        } else if (session?.user?.role === 'EMPLOYEE') {
-          window.location.href = '/mitarbeiter'
-        } else {
-          // Default: reload current page
-          window.location.reload()
-        }
+        window.location.reload()
       }
     } catch (err) {
+      console.error('[LOGIN] Error:', err)
       setError('Ein Fehler ist aufgetreten')
       setLoading(false)
     }

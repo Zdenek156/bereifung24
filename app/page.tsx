@@ -104,6 +104,23 @@ export default function NewHomePage() {
   // Service-specific package filters - Start empty, set defaults in useEffect when service changes
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
   
+  // Auto-redirect based on user role after login
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role) {
+      const role = session.user.role
+      
+      // Redirect users to their appropriate dashboard
+      if (role === 'ADMIN') {
+        router.push('/admin')
+      } else if (role === 'WORKSHOP') {
+        router.push('/dashboard/workshop')
+      } else if (role === 'EMPLOYEE') {
+        router.push('/mitarbeiter')
+      }
+      // CUSTOMER stays on homepage or can navigate freely
+    }
+  }, [status, session, router])
+  
   // Load reviews on page load
   useEffect(() => {
     async function loadReviews() {

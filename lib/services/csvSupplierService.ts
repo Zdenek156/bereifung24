@@ -1,0 +1,308 @@
+import { prisma } from '@/lib/prisma'
+
+/**
+ * CSV Supplier Service
+ * Handles CSV import from supplier URLs
+ */
+
+export interface CSVSyncResult {
+  success: boolean
+  error?: string
+  imported?: number
+  updated?: number
+  total?: number
+}
+
+interface CSVRow {
+  articleNumber: string
+  ean?: string
+  price: number
+  stock: number
+  brand?: string
+  model?: string
+  width?: string
+  height?: string
+  diameter?: string
+  season?: string
+  vehicleType?: string
+}
+
+/**
+ * Parse CSV content (Real tire supplier format with 28 columns)
+ * Format: Artikelnummer;ean;Lagerbestand;Einkaufspreis;...;Hersteller;Profil;...;Reifenbreite;Reifenquerschnitt;Reifendurchmesser;...
+ */
+function parseCSV(csvContent: string): CSVRow[] {
+  const rows: CSVRow[] = []
+  const lines = csvContent.split('\n').filter(line => line.trim())
+
+  // Skip header line (first line)
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+
+    // Split by semicolon
+    const columns = line.split(';').map(col => col.trim())
+
+    // Real format has 28 columns
+    if (columns.length < 28) {
+      console.warn(`CSV row ${i + 1}: Expected 28 columns, got ${columns.length}. Skipping.`)
+      continue
+    }
+
+    try {
+      // Column mapping (0-indexed):
+      // 0: Artikelnummer
+      // 1: ean
+      // 2: Lagerbestand
+      // 3: Einkaufspreis
+      // 5: Hersteller
+      // 6: Profil
+      // 8: Reifenbreite
+      // 9: Reifenquerschnitt
+      // 10: Reifendurchmesser
+      // 13: Saison
+      // 14: Fahrzeugtyp
+      
+      const articleNumber = columns[0]
+      const ean = columns[1]
+      const stock = parseInt(columns[2] || '0')
+      const price = parseFloat((columns[3] || '0').replace(',', '.')) // German format: 123,45 → 123.45
+      const brand = columns[5]
+      const model = columns[6]
+      const widthStr = columns[8]
+      const heightStr = columns[9]
+      const diameterStr = columns[10]
+      const season = columns[13] // s/w/g
+      const vehicleType = columns[14] // PKW/LKW/Transporter
+
+      // Validation
+      if (!articleNumber || isNaN(price) || isNaN(stock) || price <= 0) {
+        console.warn(`CSV row ${i + 1}: Invalid data (ArticleNumber="${articleNumber}", Price="${columns[3]}", Stock="${columns[2]}"). Skipping.`)
+        continue
+      }
+
+      // Parse dimensions (keep as strings, handle "0" as null)
+      const width = widthStr && widthStr !== '0' ? widthStr : undefined
+      const height = heightStr && heightStr !== '0' ? heightStr : undefined
+      const diameter = diameterStr && diameterStr !== '0' ? diameterStr : undefined
+
+      rows.push({
+        articleNumber,
+        ean: ean || undefined,
+        stock,
+        price,
+        brand: brand || undefined,
+        model: model || undefined,
+        width,
+        height,
+        diameter,
+        season: season || undefined,
+        vehicleType: vehicleType || undefined,
+      })
+    } catch (error) {
+      console.error(`CSV row ${i + 1}: Parse error:`, error)
+      continue
+    }
+  }
+
+  return rows
+}
+
+/**
+ * Sync supplier CSV inventory
+ */
+export async function syncSupplierCSV(
+  workshopId: string,
+  supplierId: string
+): Promise<CSVSyncResult> {
+  try {
+    // Get supplier
+    const supplier = await prisma.workshopSupplier.findUnique({
+      where: { id: supplierId },
+    })
+
+    if (!supplier) {
+      return { success: false, error: 'Supplier not found' }
+    }
+
+    if (supplier.workshopId !== workshopId) {
+      return { success: false, error: 'Access denied' }
+    }
+
+    if (supplier.connectionType !== 'CSV') {
+      return { success: false, error: 'Supplier is not CSV type' }
+    }
+
+    if (!supplier.csvImportUrl) {
+      return { success: false, error: 'CSV URL not configured' }
+    }
+
+    // Update status to syncing
+    await prisma.workshopSupplier.update({
+      where: { id: supplierId },
+      data: { csvSyncStatus: 'syncing' },
+    })
+
+    // Fetch CSV
+    const response = await fetch(supplier.csvImportUrl, {
+      headers: {
+        'User-Agent': 'Bereifung24-Workshop-Bot/1.0',
+      },
+      signal: AbortSignal.timeout(30000), // 30s timeout
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const csvContent = await response.text()
+    const rows = parseCSV(csvContent)
+
+    if (rows.length === 0) {
+      throw new Error('No valid data in CSV')
+    }
+
+    // Get all article numbers from CSV
+    const csvArticleNumbers = new Set(rows.map(r => r.articleNumber))
+
+    // Delete items that are no longer in CSV (out of stock or discontinued)
+    const deletedResult = await prisma.workshopInventory.deleteMany({
+      where: {
+        workshopId,
+        supplier: supplier.supplier,
+        articleNumber: {
+          notIn: Array.from(csvArticleNumbers),
+        },
+      },
+    })
+
+    console.log(`[CSV-SYNC] Deleted ${deletedResult.count} discontinued items`)
+
+    // Bulk upsert all items (much faster than individual queries)
+    let imported = 0
+    let updated = 0
+
+    // Process in batches of 500 to avoid memory issues with large CSVs
+    const BATCH_SIZE = 500
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE)
+
+      await Promise.all(
+        batch.map(async (row) => {
+          const result = await prisma.workshopInventory.upsert({
+            where: {
+              workshopId_articleNumber_supplier: {
+                workshopId,
+                articleNumber: row.articleNumber,
+                supplier: supplier.supplier,
+              },
+            },
+            update: {
+              price: row.price,
+              stock: row.stock,
+              ean: row.ean,
+              brand: row.brand,
+              model: row.model,
+              width: row.width,
+              height: row.height,
+              diameter: row.diameter,
+              season: row.season,
+              vehicleType: row.vehicleType,
+              lastUpdated: new Date(),
+            },
+            create: {
+              workshopId,
+              supplier: supplier.supplier,
+              articleNumber: row.articleNumber,
+              price: row.price,
+              stock: row.stock,
+              ean: row.ean,
+              brand: row.brand,
+              model: row.model,
+              width: row.width,
+              height: row.height,
+              diameter: row.diameter,
+              season: row.season,
+              vehicleType: row.vehicleType,
+              lastUpdated: new Date(),
+            },
+          })
+
+          // Track if created or updated
+          if (result.createdAt >= new Date(Date.now() - 1000)) {
+            imported++
+          } else {
+            updated++
+          }
+        })
+      )
+    }
+
+    // Update sync status
+    await prisma.workshopSupplier.update({
+      where: { id: supplierId },
+      data: {
+        lastCsvSync: new Date(),
+        csvSyncStatus: 'success',
+        csvSyncError: null,
+      },
+    })
+
+    return {
+      success: true,
+      imported,
+      updated,
+      total: rows.length,
+    }
+  } catch (error) {
+    console.error('CSV sync error:', error)
+    
+    // Update error status
+    await prisma.workshopSupplier.update({
+      where: { id: supplierId },
+      data: {
+        csvSyncStatus: 'error',
+        csvSyncError: error instanceof Error ? error.message : 'Unknown error',
+      },
+    })
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Sync all active CSV suppliers (for cron job)
+ */
+export async function syncAllCSVSuppliers() {
+  try {
+    const csvSuppliers = await prisma.workshopSupplier.findMany({
+      where: {
+        connectionType: 'CSV',
+        isActive: true,
+      },
+      include: {
+        workshop: true,
+      },
+    })
+
+    const results = []
+
+    for (const supplier of csvSuppliers) {
+      const result = await syncSupplierCSV(supplier.workshopId, supplier.id)
+      results.push({
+        workshopId: supplier.workshopId,
+        supplierId: supplier.id,
+        supplier: supplier.supplier,
+        ...result,
+      })
+    }
+
+    return results
+  } catch (error) {
+    console.error('Error syncing all CSV suppliers:', error)
+    return []
+  }
+}

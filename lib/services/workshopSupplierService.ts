@@ -18,20 +18,37 @@ export interface SupplierSettings {
 }
 
 /**
- * Create or update workshop supplier credentials
+ * Create or update workshop supplier
+ * Supports both API (encrypted credentials) and CSV (import URL) modes
  */
 export async function upsertWorkshopSupplier(
   workshopId: string,
   supplier: string,
   name: string,
-  credentials: SupplierCredentials,
+  connectionType: 'API' | 'CSV',
+  credentials: SupplierCredentials | null,
+  csvUrl: string | null,
   settings?: Partial<SupplierSettings>
 ) {
   try {
-    // Encrypt credentials with SHARED IV
-    const usernameEncryption = encrypt(credentials.username)
-    // CRITICAL: Use the same IV for password to ensure both can be decrypted
-    const passwordEncryption = encrypt(credentials.password, usernameEncryption.iv)
+    let encryptedData = {}
+
+    // Handle API connection type
+    if (connectionType === 'API') {
+      if (!credentials) {
+        throw new Error('Credentials required for API connection')
+      }
+      // Encrypt credentials with SHARED IV
+      const usernameEncryption = encrypt(credentials.username)
+      // CRITICAL: Use the same IV for password to ensure both can be decrypted
+      const passwordEncryption = encrypt(credentials.password, usernameEncryption.iv)
+      
+      encryptedData = {
+        usernameEncrypted: usernameEncryption.encrypted,
+        passwordEncrypted: passwordEncryption.encrypted,
+        encryptionIv: usernameEncryption.iv, // Shared IV for both
+      }
+    }
 
     // Check if supplier already exists
     const existing = await prisma.workshopSupplier.findUnique({
@@ -43,18 +60,23 @@ export async function upsertWorkshopSupplier(
       },
     })
 
+    const baseData = {
+      name,
+      connectionType,
+      csvImportUrl: connectionType === 'CSV' ? csvUrl : null,
+      requiresManualOrder: connectionType === 'CSV',
+      isActive: settings?.isActive ?? true,
+      autoOrder: connectionType === 'API' ? (settings?.autoOrder ?? false) : false,
+      priority: settings?.priority ?? 1,
+    }
+
     if (existing) {
       // Update existing
       return await prisma.workshopSupplier.update({
         where: { id: existing.id },
         data: {
-          name,
-          usernameEncrypted: usernameEncryption.encrypted,
-          passwordEncrypted: passwordEncryption.encrypted,
-          encryptionIv: usernameEncryption.iv, // Shared IV for both
-          isActive: settings?.isActive ?? true,
-          autoOrder: settings?.autoOrder ?? false,
-          priority: settings?.priority ?? 1,
+          ...baseData,
+          ...encryptedData,
           lastApiError: null, // Reset error on update
         },
       })
@@ -64,24 +86,19 @@ export async function upsertWorkshopSupplier(
         data: {
           workshopId,
           supplier,
-          name,
-          usernameEncrypted: usernameEncryption.encrypted,
-          passwordEncrypted: passwordEncryption.encrypted,
-          encryptionIv: usernameEncryption.iv, // Shared IV for both
-          isActive: settings?.isActive ?? true,
-          autoOrder: settings?.autoOrder ?? false,
-          priority: settings?.priority ?? 1,
+          ...baseData,
+          ...encryptedData,
         },
       })
     }
   } catch (error) {
     console.error('Error upserting workshop supplier:', error)
-    throw new Error('Failed to save supplier credentials')
+    throw new Error('Failed to save supplier')
   }
 }
 
 /**
- * Get decrypted supplier credentials
+ * Get decrypted supplier credentials (API mode only)
  */
 export async function getSupplierCredentials(
   workshopId: string,
@@ -101,7 +118,16 @@ export async function getSupplierCredentials(
       return null
     }
 
+    // Only return credentials for API connection type
+    if (supplierData.connectionType !== 'API') {
+      return null
+    }
+
     // Decrypt credentials
+    if (!supplierData.usernameEncrypted || !supplierData.passwordEncrypted || !supplierData.encryptionIv) {
+      return null
+    }
+
     const username = decrypt(supplierData.usernameEncrypted, supplierData.encryptionIv)
     const password = decrypt(supplierData.passwordEncrypted, supplierData.encryptionIv)
 

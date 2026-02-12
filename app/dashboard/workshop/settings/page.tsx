@@ -54,8 +54,14 @@ interface Supplier {
   id: string
   supplier: string
   name: string
+  connectionType: string
+  csvImportUrl: string | null
+  lastCsvSync: string | null
+  csvSyncStatus: string | null
+  csvSyncError: string | null
   isActive: boolean
   autoOrder: boolean
+  requiresManualOrder: boolean
   priority: number
   lastApiCheck: string | null
   lastApiError: string | null
@@ -75,8 +81,10 @@ function SuppliersTab() {
   const [formData, setFormData] = useState({
     supplier: 'TYRESYSTEM',
     name: 'TyreSystem GmbH',
+    connectionType: 'API', // 'API' | 'CSV'
     username: '',
     password: '',
+    csvUrl: '',
     autoOrder: false,
   })
 
@@ -99,9 +107,24 @@ function SuppliersTab() {
   }
 
   const handleSaveSupplier = async () => {
-    if (!formData.username || !formData.password) {
-      alert('Bitte Benutzername und Passwort eingeben')
-      return
+    // Validierung je nach Connection Type
+    if (formData.connectionType === 'API') {
+      if (!formData.username || !formData.password) {
+        alert('Bitte Benutzername und Passwort eingeben')
+        return
+      }
+    } else if (formData.connectionType === 'CSV') {
+      if (!formData.csvUrl) {
+        alert('Bitte CSV-Download-Link eingeben')
+        return
+      }
+      // Einfache URL-Validierung
+      try {
+        new URL(formData.csvUrl)
+      } catch {
+        alert('Bitte einen gültigen URL eingeben')
+        return
+      }
     }
 
     setSaving(true)
@@ -118,8 +141,10 @@ function SuppliersTab() {
         setFormData({
           supplier: 'TYRESYSTEM',
           name: 'TyreSystem GmbH',
+          connectionType: 'API',
           username: '',
           password: '',
+          csvUrl: '',
           autoOrder: false,
         })
         fetchSuppliers()
@@ -212,6 +237,28 @@ function SuppliersTab() {
     }
   }
 
+  const syncCSVNow = async (supplier: Supplier) => {
+    try {
+      const response = await fetch('/api/workshop/suppliers/sync-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supplier: supplier.supplier }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`✅ CSV-Synchronisierung erfolgreich!\n\n${data.importedCount || 0} Artikel importiert.`)
+        fetchSuppliers() // Refresh to show updated sync status
+      } else {
+        alert(`❌ CSV-Synchronisierung fehlgeschlagen\n\nFehler: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('CSV sync error:', error)
+      alert('❌ Sync-Fehler\n\nEs konnte keine Verbindung zum Server hergestellt werden.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -289,52 +336,147 @@ function SuppliersTab() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Benutzername</label>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                placeholder="Ihr TyreSystem Benutzername"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Passwort</label>
-              <div className="relative">
+            {/* Connection Type Selection */}
+            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+              <label className="block text-sm font-semibold mb-3">Verbindungsart wählen:</label>
+              
+              {/* API Option */}
+              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                formData.connectionType === 'API' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700'
+              }">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg pr-12 dark:bg-gray-800 dark:border-gray-700"
-                  placeholder="Ihr TyreSystem Passwort"
+                  type="radio"
+                  name="connectionType"
+                  value="API"
+                  checked={formData.connectionType === 'API'}
+                  onChange={(e) => setFormData({ ...formData, connectionType: e.target.value })}
+                  className="mt-1 w-4 h-4"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Wird verschlüsselt gespeichert (AES-256)
-              </p>
-            </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">🔌</span>
+                    <span className="font-semibold">API-Integration (Automatische Bestellung)</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Direkter Zugriff über Login-Daten</p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded">✓ Auto-Bestellung möglich</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded">✓ Echtzeit-Verfügbarkeit</span>
+                  </div>
+                </div>
+              </label>
 
-            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <input
-                type="checkbox"
-                id="autoOrder"
-                checked={formData.autoOrder}
-                onChange={(e) => setFormData({ ...formData, autoOrder: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <label htmlFor="autoOrder" className="text-sm font-medium cursor-pointer">
-                Reifen automatisch bei Buchung bestellen
+              {/* CSV Option */}
+              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                formData.connectionType === 'CSV' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700'
+              }">
+                <input
+                  type="radio"
+                  name="connectionType"
+                  value="CSV"
+                  checked={formData.connectionType === 'CSV'}
+                  onChange={(e) => setFormData({ ...formData, connectionType: e.target.value })}
+                  className="mt-1 w-4 h-4"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">📄</span>
+                    <span className="font-semibold">CSV-Import (Manuelle Bestellung)</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Import via CSV-Link (stündliche Updates)</p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300 rounded">⚠ Bestellung muss manuell erfolgen</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded">ℹ Daten-Update: alle 60 Min.</span>
+                  </div>
+                </div>
               </label>
             </div>
+
+            {/* API-Felder (nur wenn API gewählt) */}
+            {formData.connectionType === 'API' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Benutzername</label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    placeholder="Ihr TyreSystem Benutzername"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Passwort</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg pr-12 dark:bg-gray-800 dark:border-gray-700"
+                      placeholder="Ihr TyreSystem Passwort"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Wird verschlüsselt gespeichert (AES-256)
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="autoOrder"
+                    checked={formData.autoOrder}
+                    onChange={(e) => setFormData({ ...formData, autoOrder: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="autoOrder" className="text-sm font-medium cursor-pointer">
+                    Reifen automatisch bei Buchung bestellen
+                  </label>
+                </div>
+              </>
+            )}
+
+            {/* CSV-Felder (nur wenn CSV gewählt) */}
+            {formData.connectionType === 'CSV' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">CSV-Download-Link</label>
+                  <input
+                    type="url"
+                    value={formData.csvUrl}
+                    onChange={(e) => setFormData({ ...formData, csvUrl: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 font-mono text-sm"
+                    placeholder="https://lieferant.de/api/export.csv?key=..."
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Direkter Download-Link zur Lieferanten-CSV-Datei
+                  </p>
+                </div>
+
+                {/* CSV Warning Box */}
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <div className="flex gap-3">
+                    <div className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</div>
+                    <div>
+                      <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">Wichtig bei CSV-Import:</h4>
+                      <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+                        <li>• <strong>Datenbank-Update:</strong> Die Daten werden automatisch <strong>jede Stunde</strong> aktualisiert</li>
+                        <li>• <strong>Bestellung:</strong> Sie müssen die Bestellung <strong>selbst beim Lieferanten</strong> durchführen</li>
+                        <li>• <strong>Keine Auto-Bestellung:</strong> Automatische Bestellung bei Buchung ist nicht verfügbar</li>
+                        <li>• <strong>CSV-Format:</strong> Standard-Format mit Artikelnummer, Preis, Lagerbestand</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex gap-3">
               <Button
@@ -395,56 +537,144 @@ function SuppliersTab() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Automatische Bestellung:</span>
+                    {/* Connection Type Badge */}
+                    <div className="col-span-full">
+                      <span className="text-gray-600 dark:text-gray-400">Verbindungsart:</span>
                       <div className="mt-1">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={supplier.autoOrder}
-                            onChange={() => handleToggleAutoOrder(supplier)}
-                            className="w-4 h-4"
-                          />
-                          <span className="font-medium">
-                            {supplier.autoOrder ? 'Aktiviert ✅' : 'Deaktiviert'}
+                        {supplier.connectionType === 'API' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-semibold rounded-full">
+                            🔌 API-Integration
                           </span>
-                        </label>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs font-semibold rounded-full">
+                            📄 CSV-Import
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">API-Aufrufe heute:</span>
-                      <p className="font-medium">{supplier.apiCallsToday}</p>
-                    </div>
+                    {/* API-spezifische Infos */}
+                    {supplier.connectionType === 'API' && (
+                      <>
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Automatische Bestellung:</span>
+                          <div className="mt-1">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={supplier.autoOrder}
+                                onChange={() => handleToggleAutoOrder(supplier)}
+                                className="w-4 h-4"
+                              />
+                              <span className="font-medium">
+                                {supplier.autoOrder ? 'Aktiviert ✅' : 'Deaktiviert'}
+                              </span>
+                            </label>
+                          </div>
+                        </div>
 
-                    {supplier.lastApiCheck && (
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">Letzte erfolgreiche Verbindung:</span>
-                        <p className="font-medium">
-                          {new Date(supplier.lastApiCheck).toLocaleString('de-DE')}
-                        </p>
-                      </div>
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">API-Aufrufe heute:</span>
+                          <p className="font-medium">{supplier.apiCallsToday}</p>
+                        </div>
+
+                        {supplier.lastApiCheck && (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Letzte erfolgreiche Verbindung:</span>
+                            <p className="font-medium">
+                              {new Date(supplier.lastApiCheck).toLocaleString('de-DE')}
+                            </p>
+                          </div>
+                        )}
+
+                        {supplier.lastApiError && (
+                          <div className="col-span-full">
+                            <span className="text-red-600 dark:text-red-400">Letzter Fehler:</span>
+                            <p className="text-red-800 dark:text-red-300 font-medium text-xs mt-1">
+                              {supplier.lastApiError}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
 
-                    {supplier.lastApiError && (
-                      <div className="col-span-full">
-                        <span className="text-red-600 dark:text-red-400">Letzter Fehler:</span>
-                        <p className="text-red-800 dark:text-red-300 font-medium text-xs mt-1">
-                          {supplier.lastApiError}
-                        </p>
-                      </div>
+                    {/* CSV-spezifische Infos */}
+                    {supplier.connectionType === 'CSV' && (
+                      <>
+                        <div className="col-span-full">
+                          <span className="text-gray-600 dark:text-gray-400">CSV-Import-URL:</span>
+                          <p className="font-mono text-xs text-gray-900 dark:text-white mt-1 break-all">
+                            {supplier.csvImportUrl || 'Nicht konfiguriert'}
+                          </p>
+                        </div>
+
+                        {supplier.lastCsvSync && (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Letzter Sync:</span>
+                            <p className="font-medium">
+                              {new Date(supplier.lastCsvSync).toLocaleString('de-DE')}
+                            </p>
+                          </div>
+                        )}
+
+                        {supplier.csvSyncStatus && (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Sync-Status:</span>
+                            <p className="font-medium">
+                              {supplier.csvSyncStatus === 'SUCCESS' ? (
+                                <span className="text-green-600 dark:text-green-400">✅ Erfolgreich</span>
+                              ) : supplier.csvSyncStatus === 'ERROR' ? (
+                                <span className="text-red-600 dark:text-red-400">❌ Fehler</span>
+                              ) : (
+                                <span className="text-yellow-600 dark:text-yellow-400">⏳ Ausstehend</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+
+                        {supplier.csvSyncError && (
+                          <div className="col-span-full">
+                            <span className="text-red-600 dark:text-red-400">Sync-Fehler:</span>
+                            <p className="text-red-800 dark:text-red-300 font-medium text-xs mt-1">
+                              {supplier.csvSyncError}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="col-span-full p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs">
+                          <span className="font-semibold text-yellow-900 dark:text-yellow-100">⚠️ Manuelle Bestellung erforderlich</span>
+                          <p className="text-yellow-800 dark:text-yellow-200 mt-1">
+                            Bestellungen müssen Sie selbst beim Lieferanten durchführen.
+                          </p>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={() => testConnection(supplier)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Verbindung testen
-                  </Button>
+                  {/* API-Mode: Verbindung testen */}
+                  {supplier.connectionType === 'API' && (
+                    <Button
+                      onClick={() => testConnection(supplier)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Verbindung testen
+                    </Button>
+                  )}
+                  
+                  {/* CSV-Mode: Jetzt synchronisieren */}
+                  {supplier.connectionType === 'CSV' && (
+                    <Button
+                      onClick={() => syncCSVNow(supplier)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      CSV jetzt sync
+                    </Button>
+                  )}
+                  
                   <Button
                     onClick={() => handleToggleActive(supplier)}
                     variant="outline"

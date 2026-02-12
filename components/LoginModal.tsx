@@ -35,61 +35,25 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Don't close modal or reload yet - wait for session to be ready
-        // Poll for session with a longer timeout
-        let attempts = 0
-        const maxAttempts = 20 // 10 seconds total
+        // Login successful - fetch session to get role
+        const sessionResponse = await fetch('/api/auth/session')
+        const session = await sessionResponse.json()
         
-        const checkSession = async () => {
-          const response = await fetch('/api/auth/session')
-          const session = await response.json()
-          return session && session.user
+        onClose()
+        
+        // Redirect based on user role
+        if (session?.user?.role === 'ADMIN') {
+          window.location.href = '/admin'
+        } else if (session?.user?.role === 'WORKSHOP') {
+          window.location.href = '/dashboard/workshop'
+        } else if (session?.user?.role === 'CUSTOMER') {
+          window.location.href = '/dashboard/customer'
+        } else if (session?.user?.role === 'EMPLOYEE') {
+          window.location.href = '/mitarbeiter'
+        } else {
+          // Default: reload current page
+          window.location.reload()
         }
-        
-        const pollSession = async () => {
-          while (attempts < maxAttempts) {
-            const response = await fetch('/api/auth/session')
-            const session = await response.json()
-            
-            console.log('[LOGIN MODAL] Session response:', session)
-            
-            if (session && session.user) {
-              onClose()
-              
-              // Redirect based on user role
-              const role = session.user.role
-              
-              console.log('[LOGIN MODAL] User role detected:', role)
-              
-              if (role === 'ADMIN') {
-                console.log('[LOGIN MODAL] Redirecting to /admin')
-                window.location.href = '/admin'
-              } else if (role === 'WORKSHOP') {
-                console.log('[LOGIN MODAL] Redirecting to /dashboard/workshop')
-                window.location.href = '/dashboard/workshop'
-              } else if (role === 'CUSTOMER') {
-                console.log('[LOGIN MODAL] Redirecting to /dashboard/customer')
-                window.location.href = '/dashboard/customer'
-              } else if (role === 'EMPLOYEE') {
-                console.log('[LOGIN MODAL] Redirecting to /mitarbeiter')
-                window.location.href = '/mitarbeiter'
-              } else {
-                console.log('[LOGIN MODAL] Unknown role, reloading page')
-                // Default: just reload current page
-                window.location.reload()
-              }
-              return
-            }
-            await new Promise(resolve => setTimeout(resolve, 500))
-            attempts++
-          }
-          
-          // If still no session after 10 seconds, something is wrong
-          setError('Login erfolgreich, aber Session konnte nicht geladen werden. Bitte Seite neu laden.')
-          setLoading(false)
-        }
-        
-        await pollSession()
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

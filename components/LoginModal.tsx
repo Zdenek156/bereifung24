@@ -35,16 +35,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Login successful - close modal
+        // Login successful - wait for cookie to be set
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // Close modal and refresh page to load new session
         onClose()
-        
-        // Get callbackUrl from URL params or default to homepage
-        const urlParams = new URLSearchParams(window.location.search)
-        const callbackUrl = urlParams.get('callbackUrl') || '/'
-        
-        // Wait a bit for cookie to be set, then redirect
-        await new Promise(resolve => setTimeout(resolve, 500))
-        window.location.href = callbackUrl
+        router.refresh()
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

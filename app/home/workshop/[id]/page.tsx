@@ -1116,11 +1116,6 @@ export default function WorkshopDetailPage() {
                               <div className="inline-flex items-stretch h-9 rounded-sm overflow-hidden shadow-md border-2 border-black font-mono font-bold">
                                 {/* Blue EU strip */}
                                 <div className="flex flex-col items-center justify-center bg-[#003399] px-1.5 text-white">
-                                  <div className="text-[8px] leading-none mb-0.5">
-                                    {[...Array(12)].map((_, i) => (
-                                      <span key={i} className="inline-block">★</span>
-                                    )).filter((_, i) => i < 6)}
-                                  </div>
                                   <div className="text-xs leading-none font-bold">D</div>
                                 </div>
                                 {/* White plate with black text */}

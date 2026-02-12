@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { 
   ChevronLeft, 
@@ -603,8 +603,44 @@ export default function WorkshopDetailPage() {
                       <button
                         onClick={async () => {
                           setShowUserMenu(false)
-                          await fetch('/api/auth/signout', { method: 'POST' })
-                          window.location.href = '/'
+                          
+                          try {
+                            // Save cookie consent before clearing storage
+                            const cookieConsent = localStorage.getItem('cookieConsent')
+                            const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+                            const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
+                            
+                            // Step 1: Call NextAuth signout first
+                            await signOut({ redirect: false })
+                            
+                            // Step 2: Call custom logout endpoint to force cookie deletion
+                            await fetch('/api/logout', {
+                              method: 'POST',
+                              credentials: 'include'
+                            })
+                            
+                            // Step 3: Clear all client storage
+                            localStorage.clear()
+                            sessionStorage.clear()
+                            
+                            // Restore cookie consent
+                            if (cookieConsent) {
+                              localStorage.setItem('cookieConsent', cookieConsent)
+                            }
+                            if (bereifung24Consent) {
+                              localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+                            }
+                            if (bereifung24ConsentDate) {
+                              localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+                            }
+                            
+                            // Step 4: Force page reload
+                            window.location.href = '/'
+                          } catch (error) {
+                            console.error('[LOGOUT] Error during logout:', error)
+                            // Force reload anyway
+                            window.location.href = '/'
+                          }
                         }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >

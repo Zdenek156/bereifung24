@@ -9,8 +9,23 @@ export default function CookieBanner() {
   useEffect(() => {
     // Check if user has already made a choice
     const consent = localStorage.getItem('bereifung24_cookie_consent')
+    const consentDate = localStorage.getItem('bereifung24_cookie_consent_date')
+    
     if (!consent) {
       setShowBanner(true)
+      return
+    }
+    
+    // Check if consent is older than 30 days
+    if (consentDate) {
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const consentDateTime = new Date(consentDate)
+      
+      if (consentDateTime < thirtyDaysAgo) {
+        // Consent expired, show banner again
+        setShowBanner(true)
+      }
     }
   }, [])
 

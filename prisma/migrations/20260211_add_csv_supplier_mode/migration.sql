@@ -2,31 +2,31 @@
 -- Migration: 20260211_add_csv_supplier_mode
 
 -- Add connection type (default API for existing suppliers)
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "connectionType" TEXT NOT NULL DEFAULT 'API';
+ALTER TABLE "workshop_suppliers" ADD COLUMN "connection_type" TEXT NOT NULL DEFAULT 'API';
 
 -- Add CSV import fields
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "csvImportUrl" TEXT;
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "lastCsvSync" TIMESTAMP(3);
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "csvSyncStatus" TEXT;
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "csvSyncError" TEXT;
-ALTER TABLE "WorkshopSupplier" ADD COLUMN "requiresManualOrder" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "workshop_suppliers" ADD COLUMN "csv_import_url" TEXT;
+ALTER TABLE "workshop_suppliers" ADD COLUMN "last_csv_sync" TIMESTAMP(3);
+ALTER TABLE "workshop_suppliers" ADD COLUMN "csv_sync_status" TEXT;
+ALTER TABLE "workshop_suppliers" ADD COLUMN "csv_sync_error" TEXT;
+ALTER TABLE "workshop_suppliers" ADD COLUMN "requires_manual_order" BOOLEAN NOT NULL DEFAULT false;
 
 -- Make API credentials optional (nullable)
-ALTER TABLE "WorkshopSupplier" ALTER COLUMN "usernameEncrypted" DROP NOT NULL;
-ALTER TABLE "WorkshopSupplier" ALTER COLUMN "passwordEncrypted" DROP NOT NULL;
-ALTER TABLE "WorkshopSupplier" ALTER COLUMN "encryptionIv" DROP NOT NULL;
+ALTER TABLE "workshop_suppliers" ALTER COLUMN "username_encrypted" DROP NOT NULL;
+ALTER TABLE "workshop_suppliers" ALTER COLUMN "password_encrypted" DROP NOT NULL;
+ALTER TABLE "workshop_suppliers" ALTER COLUMN "encryption_iv" DROP NOT NULL;
 
 -- Add check constraint for connection type
-ALTER TABLE "WorkshopSupplier" ADD CONSTRAINT "WorkshopSupplier_connectionType_check" 
-  CHECK ("connectionType" IN ('API', 'CSV'));
+ALTER TABLE "workshop_suppliers" ADD CONSTRAINT "workshop_suppliers_connection_type_check" 
+  CHECK ("connection_type" IN ('API', 'CSV'));
 
 -- Comment for documentation
-COMMENT ON COLUMN "WorkshopSupplier"."connectionType" IS 'Connection type: API (with credentials) or CSV (with import URL)';
-COMMENT ON COLUMN "WorkshopSupplier"."csvImportUrl" IS 'URL to download CSV file (for CSV connection type)';
-COMMENT ON COLUMN "WorkshopSupplier"."lastCsvSync" IS 'Last successful CSV synchronization timestamp';
-COMMENT ON COLUMN "WorkshopSupplier"."csvSyncStatus" IS 'Current sync status: pending, syncing, success, error';
-COMMENT ON COLUMN "WorkshopSupplier"."csvSyncError" IS 'Last sync error message (if any)';
-COMMENT ON COLUMN "WorkshopSupplier"."requiresManualOrder" IS 'If true, orders must be placed manually (set automatically for CSV mode)';
+COMMENT ON COLUMN "workshop_suppliers"."connection_type" IS 'Connection type: API (with credentials) or CSV (with import URL)';
+COMMENT ON COLUMN "workshop_suppliers"."csv_import_url" IS 'URL to download CSV file (for CSV connection type)';
+COMMENT ON COLUMN "workshop_suppliers"."last_csv_sync" IS 'Last successful CSV synchronization timestamp';
+COMMENT ON COLUMN "workshop_suppliers"."csv_sync_status" IS 'Current sync status: pending, syncing, success, error';
+COMMENT ON COLUMN "workshop_suppliers"."csv_sync_error" IS 'Last sync error message (if any)';
+COMMENT ON COLUMN "workshop_suppliers"."requires_manual_order" IS 'If true, orders must be placed manually (set automatically for CSV mode)';
 
 -- Create WorkshopInventory table
 CREATE TABLE "workshop_inventory" (

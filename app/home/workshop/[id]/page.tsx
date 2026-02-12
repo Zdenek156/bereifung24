@@ -1067,7 +1067,7 @@ export default function WorkshopDetailPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {vehicles.map((vehicle: any) => (
                       <button
                         key={vehicle.id}
@@ -1079,28 +1079,75 @@ export default function WorkshopDetailPage() {
                           }, 100)
                         }}
                         className={`
-                          w-full p-4 rounded-lg border-2 text-left transition-all
+                          group relative w-full p-5 rounded-xl text-left transition-all duration-300
                           ${selectedVehicle === vehicle.id
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                            ? 'border-2 border-primary-500 bg-gradient-to-br from-primary-50 to-blue-50 shadow-lg scale-[1.02]'
+                            : 'border-2 border-gray-200 hover:border-primary-300 hover:shadow-md hover:scale-[1.01] bg-white'
                           }
                         `}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {vehicle.make} {vehicle.model}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {vehicle.licensePlate} • {vehicle.year}
-                            </p>
+                        <div className="flex items-start gap-4">
+                          {/* Car Icon */}
+                          <div className={`
+                            flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all
+                            ${selectedVehicle === vehicle.id
+                              ? 'bg-primary-600 shadow-lg'
+                              : 'bg-gray-100 group-hover:bg-primary-100'
+                            }
+                          `}>
+                            <Car className={`w-7 h-7 ${selectedVehicle === vehicle.id ? 'text-white' : 'text-gray-600 group-hover:text-primary-600'}`} />
                           </div>
-                          {selectedVehicle === vehicle.id && (
-                            <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
+                          
+                          {/* Vehicle Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h5 className="text-lg font-bold text-gray-900 truncate">
+                                {vehicle.make} {vehicle.model}
+                              </h5>
+                              {selectedVehicle === vehicle.id && (
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md">
+                                  <Check className="w-4 h-4 text-white" />
+                                </div>
+                              )}
                             </div>
-                          )}
+                            
+                            <div className="flex flex-wrap items-center gap-3">
+                              {/* German License Plate */}
+                              <div className="inline-flex items-stretch h-9 rounded-sm overflow-hidden shadow-md border-2 border-black font-mono font-bold">
+                                {/* Blue EU strip */}
+                                <div className="flex flex-col items-center justify-center bg-[#003399] px-1.5 text-white">
+                                  <div className="text-[8px] leading-none mb-0.5">
+                                    {[...Array(12)].map((_, i) => (
+                                      <span key={i} className="inline-block">★</span>
+                                    )).filter((_, i) => i < 6)}
+                                  </div>
+                                  <div className="text-xs leading-none font-bold">D</div>
+                                </div>
+                                {/* White plate with black text */}
+                                <div className="flex items-center bg-white px-2.5 text-black text-base tracking-[0.15em]">
+                                  {vehicle.licensePlate}
+                                </div>
+                              </div>
+                              
+                              {/* Year Badge */}
+                              <span className={`
+                                inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium
+                                ${selectedVehicle === vehicle.id
+                                  ? 'bg-white/60 text-gray-700'
+                                  : 'bg-gray-50 text-gray-600 group-hover:bg-gray-100'
+                                }
+                              `}>
+                                <Calendar className="w-3.5 h-3.5" />
+                                {vehicle.year}
+                              </span>
+                            </div>
+                          </div>
                         </div>
+                        
+                        {/* Selected Indicator Bar */}
+                        {selectedVehicle === vehicle.id && (
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-blue-500 rounded-b-xl"></div>
+                        )}
                       </button>
                     ))}
                   </div>

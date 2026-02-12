@@ -317,6 +317,7 @@ model Workshop {
   // Tire Supplier Integration
   tirePricingBySizes TirePricingBySize[] @relation("WorkshopTirePricing")
   suppliers          WorkshopSupplier[]  @relation("WorkshopSuppliers")
+  inventory          WorkshopInventory[] @relation("WorkshopInventory")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -403,15 +404,25 @@ model WorkshopSupplier {
   supplier String // 'TYRESYSTEM', 'SUPPLIER_B', etc.
   name     String // Display name: "TyreSystem GmbH"
 
-  // Encrypted Credentials
-  usernameEncrypted String  @map("username_encrypted") // AES-256 encrypted
-  passwordEncrypted String  @map("password_encrypted") // AES-256 encrypted
-  encryptionIv      String  @map("encryption_iv") // Initialization vector for decryption
+  // Connection Type
+  connectionType String @default("API") @map("connection_type") // 'API' | 'CSV'
+
+  // API Credentials (nur wenn connectionType = 'API')
+  usernameEncrypted String? @map("username_encrypted") // AES-256 encrypted
+  passwordEncrypted String? @map("password_encrypted") // AES-256 encrypted
+  encryptionIv      String? @map("encryption_iv") // Initialization vector for decryption
+
+  // CSV Import (nur wenn connectionType = 'CSV')
+  csvImportUrl     String?   @map("csv_import_url") // Download-URL für CSV
+  lastCsvSync      DateTime? @map("last_csv_sync") // Letzter erfolgreicher Import
+  csvSyncStatus    String?   @map("csv_sync_status") // 'SUCCESS' | 'ERROR' | 'PENDING'
+  csvSyncError     String?   @map("csv_sync_error") // Letzter Fehler beim CSV-Import
 
   // Settings
-  isActive       Boolean @default(true) @map("is_active") // Supplier aktiviert
-  autoOrder      Boolean @default(false) @map("auto_order") // Automatisch bestellen bei Buchung
-  priority       Int     @default(1) // Priorität (1 = höchste, für Multi-Supplier später)
+  isActive            Boolean @default(true) @map("is_active") // Supplier aktiviert
+  autoOrder           Boolean @default(false) @map("auto_order") // Automatisch bestellen bei Buchung (nur API)
+  requiresManualOrder Boolean @default(false) @map("requires_manual_order") // true bei CSV-Modus
+  priority            Int     @default(1) // Priorität (1 = höchste, für Multi-Supplier später)
 
   // Status Tracking
   lastApiCheck   DateTime? @map("last_api_check") // Letzte erfolgreiche API-Verbindung
@@ -423,6 +434,39 @@ model WorkshopSupplier {
 
   @@unique([workshopId, supplier])
   @@map("workshop_suppliers")
+}
+
+model WorkshopInventory {
+  id         String   @id @default(cuid())
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation("WorkshopInventory", fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Supplier Reference
+  supplier String // 'TYRESYSTEM', 'SUPPLIER_B', etc.
+
+  // Product Information
+  articleNumber String  @map("article_number") // Lieferanten-Artikel-Nr
+  ean           String? // EAN-Code (Barcode)
+  brand         String? // Reifenmarke (z.B. "Continental")
+  model         String? // Modell (z.B. "WinterContact TS 870")
+  width         String? // Breite (z.B. "205")
+  height        String? // Höhe (z.B. "55")
+  diameter      String? // Durchmesser (z.B. "16" oder "19.5")
+  season        String? // Saison: s=Sommer, w=Winter, g=Ganzjahr
+  vehicleType   String? @map("vehicle_type") // PKW, LKW, Transporter
+
+  // Pricing & Availability
+  price       Float    // Preis in EUR
+  stock       Int      // Lagerbestand
+  lastUpdated DateTime @default(now()) @map("last_updated") // Letzte Aktualisierung
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, articleNumber, supplier])
+  @@index([workshopId, supplier])
+  @@index([supplier, articleNumber])
+  @@map("workshop_inventory")
 }
 
 model Employee {

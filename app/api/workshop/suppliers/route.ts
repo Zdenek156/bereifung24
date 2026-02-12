@@ -43,8 +43,14 @@ export async function GET(request: NextRequest) {
       id: s.id,
       supplier: s.supplier,
       name: s.name,
+      connectionType: s.connectionType,
+      csvImportUrl: s.csvImportUrl,
+      lastCsvSync: s.lastCsvSync,
+      csvSyncStatus: s.csvSyncStatus,
+      csvSyncError: s.csvSyncError,
       isActive: s.isActive,
       autoOrder: s.autoOrder,
+      requiresManualOrder: s.requiresManualOrder,
       priority: s.priority,
       lastApiCheck: s.lastApiCheck,
       lastApiError: s.lastApiError,
@@ -83,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { supplier, name, username, password, isActive, autoOrder, priority } = body
+    const { supplier, name, connectionType, username, password, csvUrl, isActive, autoOrder, priority } = body
 
     // Validation
     if (!supplier || !name) {
@@ -93,11 +99,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!username || !password) {
+    if (!connectionType || !['API', 'CSV'].includes(connectionType)) {
       return NextResponse.json(
-        { error: 'Username and password are required' },
+        { error: 'Valid connectionType is required (API or CSV)' },
         { status: 400 }
       )
+    }
+
+    // Validate based on connection type
+    if (connectionType === 'API') {
+      if (!username || !password) {
+        return NextResponse.json(
+          { error: 'Username and password are required for API connection' },
+          { status: 400 }
+        )
+      }
+    } else if (connectionType === 'CSV') {
+      if (!csvUrl) {
+        return NextResponse.json(
+          { error: 'CSV URL is required for CSV connection' },
+          { status: 400 }
+        )
+      }
+      // Validate URL format
+      try {
+        new URL(csvUrl)
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid CSV URL format' },
+          { status: 400 }
+        )
+      }
     }
 
     // Upsert supplier
@@ -105,7 +137,9 @@ export async function POST(request: NextRequest) {
       workshop.id,
       supplier,
       name,
-      { username, password },
+      connectionType,
+      connectionType === 'API' ? { username, password } : null,
+      connectionType === 'CSV' ? csvUrl : null,
       { isActive, autoOrder, priority }
     )
 

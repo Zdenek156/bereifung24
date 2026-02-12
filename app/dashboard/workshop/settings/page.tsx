@@ -257,13 +257,13 @@ function SuppliersTab() {
       const response = await fetch('/api/workshop/suppliers/sync-csv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ supplier: supplier.supplier }),
+        body: JSON.stringify({ supplierId: supplier.id }),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        alert(`✅ CSV-Synchronisierung erfolgreich!\n\n${data.importedCount || 0} Artikel importiert.`)
+        alert(`✅ CSV-Synchronisierung erfolgreich!\n\n${data.imported || 0} neue Artikel\n${data.updated || 0} aktualisierte Artikel\n${data.total || 0} Artikel gesamt`)
         fetchSuppliers() // Refresh to show updated sync status
       } else {
         alert(`❌ CSV-Synchronisierung fehlgeschlagen\n\nFehler: ${data.error}`)

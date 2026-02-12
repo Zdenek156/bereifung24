@@ -580,7 +580,7 @@ export default function NewHomePage() {
                         {session.user?.role === 'ADMIN' ? (
                           <></>
                         ) : /* Employee users - only Abmelden (work in /mitarbeiter) */
-                        session.user?.role === 'EMPLOYEE' ? (
+                        (session.user?.role === 'EMPLOYEE' || session.user?.role === 'B24_EMPLOYEE') ? (
                           <></>
                         ) : /* Workshop users - Dashboard, Einstellungen, Abmelden */
                         session.user?.role === 'WORKSHOP' ? (

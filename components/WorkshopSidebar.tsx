@@ -143,6 +143,9 @@ export default function WorkshopSidebar() {
 
   const handleLogout = async () => {
     try {
+      // Save cookie consent before clearing storage
+      const cookieConsent = localStorage.getItem('cookieConsent')
+      
       // Step 1: Call NextAuth signout first
       await signOut({ redirect: false })
       
@@ -156,12 +159,21 @@ export default function WorkshopSidebar() {
       localStorage.clear()
       sessionStorage.clear()
       
+      // Restore cookie consent
+      if (cookieConsent) {
+        localStorage.setItem('cookieConsent', cookieConsent)
+      }
+      
       // Step 4: Redirect
       window.location.href = '/'
     } catch (error) {
       console.error('[LOGOUT] Error:', error)
+      const cookieConsent = localStorage.getItem('cookieConsent')
       localStorage.clear()
       sessionStorage.clear()
+      if (cookieConsent) {
+        localStorage.setItem('cookieConsent', cookieConsent)
+      }
       window.location.href = '/'
     }
   }

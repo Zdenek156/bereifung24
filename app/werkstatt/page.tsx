@@ -185,16 +185,15 @@ export default function WerkstattInfoPage() {
             <AnimatedSection className="mb-16">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
-                  { value: 500, suffix: '+', label: 'Partner-Werkstätten' },
-                  { value: 15000, suffix: '+', label: 'Buchungen' },
-                  { value: 98, suffix: '%', label: 'Zufriedenheit' },
-                  { value: 0, suffix: '€', label: 'Grundgebühr', static: true },
+                  { icon: '🕐', label: '24/7 Online buchbar', desc: 'Kunden buchen rund um die Uhr' },
+                  { icon: '💰', label: '0 € Grundgebühr', desc: 'Keine monatlichen Kosten' },
+                  { icon: '⚡', label: 'In 5 Min. online', desc: 'Schnelle Registrierung' },
+                  { icon: '🔒', label: 'Kein Vertrag', desc: 'Jederzeit kündbar' },
                 ].map((stat, i) => (
-                  <div key={i} className="text-center p-6 bg-gradient-to-br from-primary-50 to-white rounded-2xl border border-primary-100">
-                    <p className="text-3xl md:text-4xl font-extrabold text-primary-600 mb-1">
-                      {stat.static ? `${stat.value}${stat.suffix}` : <CountUp target={stat.value} suffix={stat.suffix} />}
-                    </p>
-                    <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
+                  <div key={i} className="text-center p-6 bg-gradient-to-br from-primary-50 to-white rounded-2xl border border-primary-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <p className="text-3xl mb-2">{stat.icon}</p>
+                    <p className="text-lg font-bold text-gray-900 mb-1">{stat.label}</p>
+                    <p className="text-sm text-gray-600">{stat.desc}</p>
                   </div>
                 ))}
               </div>

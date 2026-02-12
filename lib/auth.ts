@@ -100,11 +100,13 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: `${user.firstName} ${user.lastName}`,
+            firstName: user.firstName,
+            lastName: user.lastName,
             role: user.role,
             customerId: user.customer?.id,
             workshopId: user.workshop?.id,
             b24EmployeeId,
-          }
+          } as any
         }
 
         // If not found, try B24 employee
@@ -140,10 +142,12 @@ export const authOptions: NextAuthOptions = {
             id: employee.id,
             email: employee.email,
             name: `${employee.firstName} ${employee.lastName}`,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
             role: 'B24_EMPLOYEE', // B24 employees get their own role
             isB24Employee: true,
             b24EmployeeId: employee.id,
-          }
+          } as any
         }
 
         throw new Error('Benutzer nicht gefunden')

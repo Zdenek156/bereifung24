@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import CustomerNavbar from '@/components/CustomerNavbar'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -13,14 +13,15 @@ export default function CustomerLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    // Only redirect if definitely unauthenticated (not during loading)
-    if (status === 'unauthenticated') {
-      console.log('[CUSTOMER LAYOUT] Not authenticated, redirecting to login')
-      router.push('/login?callbackUrl=/dashboard/customer')
+    // Only redirect if on customer dashboard pages AND not authenticated
+    if (status === 'unauthenticated' && pathname?.startsWith('/dashboard/customer')) {
+      console.log('[CUSTOMER LAYOUT] Not authenticated on customer page, redirecting to login')
+      router.push('/login?callbackUrl=' + pathname)
     }
-  }, [status, router])
+  }, [status, router, pathname])
 
   // Show loading while checking authentication
   if (status === 'loading') {

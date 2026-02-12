@@ -1,18 +1,17 @@
 'use client'
 
 import { SessionProvider } from 'next-auth/react'
+import { Session } from 'next-auth'
 
 export default function SessionWrapper({
   children,
+  session,
 }: {
   children: React.ReactNode
+  session?: Session | null
 }) {
   return (
-    <SessionProvider 
-      basePath="/api/auth"
-      refetchInterval={0} // Don't refetch automatically
-      refetchOnWindowFocus={false} // Don't refetch on focus
-    >
+    <SessionProvider session={session} basePath="/api/auth">
       {children}
     </SessionProvider>
   )

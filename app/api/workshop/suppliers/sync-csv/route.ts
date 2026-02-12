@@ -43,21 +43,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sync supplier CSV
-    const result = await syncSupplierCSV(workshop.id, supplierId)
+    // Start CSV sync in background (don't wait for completion to avoid timeout)
+    setImmediate(async () => {
+      try {
+        await syncSupplierCSV(workshop.id, supplierId)
+        console.log(`[CSV-SYNC] Background sync completed for supplier ${supplierId}`)
+      } catch (error) {
+        console.error(`[CSV-SYNC] Background sync failed for supplier ${supplierId}:`, error)
+      }
+    })
 
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      )
-    }
-
+    // Return immediately (sync runs in background)
     return NextResponse.json({
       success: true,
-      imported: result.imported,
-      updated: result.updated,
-      total: result.total,
+      message: 'CSV-Synchronisierung gestartet (läuft im Hintergrund)',
+      note: 'Die Synchronisierung läuft jetzt im Hintergrund und kann einige Minuten dauern. Status wird automatisch aktualisiert.',
     })
   } catch (error) {
     console.error('CSV sync error:', error)

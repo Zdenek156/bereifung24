@@ -263,7 +263,7 @@ function SuppliersTab() {
       const data = await response.json()
 
       if (data.success) {
-        alert(`✅ CSV-Synchronisierung erfolgreich!\n\n${data.imported || 0} neue Artikel\n${data.updated || 0} aktualisierte Artikel\n${data.total || 0} Artikel gesamt`)
+        alert(`✅ ${data.message || 'CSV-Synchronisierung erfolgreich!'}\n\n${data.note || 'Bitte warten Sie einige Minuten, bis alle Artikel importiert wurden.'}`)
         fetchSuppliers() // Refresh to show updated sync status
       } else {
         alert(`❌ CSV-Synchronisierung fehlgeschlagen\n\nFehler: ${data.error}`)

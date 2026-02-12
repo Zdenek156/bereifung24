@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import AddServicesModal from './components/AddServicesModal'
+import LoginModal from '@/components/LoginModal'
 
 export default function WorkshopDetailPage() {
   const params = useParams()
@@ -35,6 +36,7 @@ export default function WorkshopDetailPage() {
 
   const { data: session, status } = useSession()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const [workshop, setWorkshop] = useState<any>(null)
@@ -620,12 +622,12 @@ export default function WorkshopDetailPage() {
                   >
                     Registrieren
                   </Link>
-                  <Link
-                    href="/login"
+                  <button
+                    onClick={() => setShowLoginModal(true)}
                     className="px-4 py-2 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     Anmelden
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -1203,6 +1205,12 @@ export default function WorkshopDetailPage() {
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   )
 }

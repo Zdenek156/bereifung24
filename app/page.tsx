@@ -667,6 +667,8 @@ export default function NewHomePage() {
                             try {
                               // Save cookie consent before clearing storage
                               const cookieConsent = localStorage.getItem('cookieConsent')
+                              const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+                              const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
                               
                               // Step 1: Call NextAuth signout first
                               console.log('[LOGOUT] Step 1: Calling NextAuth signout')
@@ -688,6 +690,12 @@ export default function NewHomePage() {
                               if (cookieConsent) {
                                 localStorage.setItem('cookieConsent', cookieConsent)
                               }
+                              if (bereifung24Consent) {
+                                localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+                              }
+                              if (bereifung24ConsentDate) {
+                                localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+                              }
                               
                               // Step 4: Force page reload
                               console.log('[LOGOUT] Step 4: Reloading to /')
@@ -696,10 +704,18 @@ export default function NewHomePage() {
                               console.error('[LOGOUT] Error during logout:', error)
                               // Force reload anyway
                               const cookieConsent = localStorage.getItem('cookieConsent')
+                              const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+                              const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
                               localStorage.clear()
                               sessionStorage.clear()
                               if (cookieConsent) {
                                 localStorage.setItem('cookieConsent', cookieConsent)
+                              }
+                              if (bereifung24Consent) {
+                                localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+                              }
+                              if (bereifung24ConsentDate) {
+                                localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
                               }
                               window.location.href = '/'
                             }

@@ -34,8 +34,24 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       if (result?.error) {
         setError(result.error)
       } else {
+        // Get session to determine redirect
+        const response = await fetch('/api/auth/session')
+        const session = await response.json()
+        
         onClose()
-        router.refresh()
+        
+        // Hard redirect based on role (forces full page reload with fresh session)
+        if (session?.user?.role === 'B24_EMPLOYEE') {
+          window.location.href = '/mitarbeiter'
+        } else if (session?.user?.role === 'ADMIN') {
+          window.location.href = '/admin'
+        } else if (session?.user?.role === 'CUSTOMER') {
+          window.location.href = '/dashboard/customer'
+        } else if (session?.user?.role === 'WORKSHOP') {
+          window.location.href = '/dashboard/workshop'
+        } else {
+          window.location.href = '/dashboard'
+        }
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

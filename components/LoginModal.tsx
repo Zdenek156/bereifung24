@@ -35,14 +35,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setError(result.error)
         setLoading(false)
       } else {
-        // Login successful - close modal and redirect
+        // Login successful - close modal
         onClose()
         
         // Get callbackUrl from URL params or default to homepage
         const urlParams = new URLSearchParams(window.location.search)
         const callbackUrl = urlParams.get('callbackUrl') || '/'
         
-        // Hard redirect to force session reload
+        // Wait a bit for cookie to be set, then redirect
+        await new Promise(resolve => setTimeout(resolve, 500))
         window.location.href = callbackUrl
       }
     } catch (err) {

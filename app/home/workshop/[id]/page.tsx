@@ -408,7 +408,7 @@ export default function WorkshopDetailPage() {
     
     // Auto-scroll to time slots after selection
     setTimeout(() => {
-      timeSlotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      timeSlotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 100)
   }
 
@@ -418,9 +418,9 @@ export default function WorkshopDetailPage() {
     // Auto-scroll to vehicle selection (if logged in) or booking button (if not logged in)
     setTimeout(() => {
       if (session) {
-        vehicleSelectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        vehicleSelectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       } else {
-        bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }, 100)
   }
@@ -1075,7 +1075,7 @@ export default function WorkshopDetailPage() {
                           setSelectedVehicle(vehicle.id)
                           // Auto-scroll to booking button after vehicle selection
                           setTimeout(() => {
-                            bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
                           }, 100)
                         }}
                         className={`

@@ -32,7 +32,7 @@ export default function CustomerLayout({
         router.push('/dashboard')
         return
       }
-    }, 250) // Wait 250ms to ensure session is fully loaded
+    }, 500) // Wait 500ms to ensure session is fully loaded
 
     return () => clearTimeout(timer)
   }, [status, session, router])

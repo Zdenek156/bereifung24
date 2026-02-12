@@ -67,6 +67,8 @@ export default function CustomerNavbar() {
     try {
       // Save cookie consent before clearing storage
       const cookieConsent = localStorage.getItem('cookieConsent')
+      const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+      const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
       
       // Step 1: Call NextAuth signout first
       await signOut({ redirect: false })
@@ -85,16 +87,30 @@ export default function CustomerNavbar() {
       if (cookieConsent) {
         localStorage.setItem('cookieConsent', cookieConsent)
       }
+      if (bereifung24Consent) {
+        localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+      }
+      if (bereifung24ConsentDate) {
+        localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+      }
       
       // Step 4: Redirect
       window.location.href = '/'
     } catch (error) {
       console.error('[LOGOUT] Error:', error)
       const cookieConsent = localStorage.getItem('cookieConsent')
+      const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+      const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
       localStorage.clear()
       sessionStorage.clear()
       if (cookieConsent) {
         localStorage.setItem('cookieConsent', cookieConsent)
+      }
+      if (bereifung24Consent) {
+        localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+      }
+      if (bereifung24ConsentDate) {
+        localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
       }
       window.location.href = '/'
     }

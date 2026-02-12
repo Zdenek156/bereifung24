@@ -52,12 +52,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           } else if (role === 'EMPLOYEE' || role === 'B24_EMPLOYEE') {
             router.push('/mitarbeiter')
           } else {
-            // CUSTOMER stays on current page
-            window.location.reload()
+            // CUSTOMER stays on current page - just refresh to update UI
+            router.refresh()
           }
         } else {
-          // Fallback: reload page
-          window.location.reload()
+          // Fallback: refresh page
+          router.refresh()
         }
       }
     } catch (err) {

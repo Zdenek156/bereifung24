@@ -31,7 +31,7 @@ export async function upsertWorkshopSupplier(
   settings?: Partial<SupplierSettings>
 ) {
   try {
-    let encryptedData = {}
+    let encryptedData: any = {}
 
     // Handle API connection type
     if (connectionType === 'API') {
@@ -47,6 +47,13 @@ export async function upsertWorkshopSupplier(
         usernameEncrypted: usernameEncryption.encrypted,
         passwordEncrypted: passwordEncryption.encrypted,
         encryptionIv: usernameEncryption.iv, // Shared IV for both
+      }
+    } else {
+      // CSV mode: explicitly set API credentials to null
+      encryptedData = {
+        usernameEncrypted: null,
+        passwordEncrypted: null,
+        encryptionIv: null,
       }
     }
 

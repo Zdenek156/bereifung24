@@ -62,7 +62,22 @@ function parseCSV(csvContent: string): CSVRow[] {
       // 10: Reifendurchmesser
       // 13: Saison
       // 14: Fahrzeugtyp
+      // 24: Artikeltyp (Reifen/Ersatzteile/etc.)
+      // 25: Artikeluntertyp (PKW/Motorrad/LKW/Transporter)
       
+      const artikeltyp = columns[24]?.toLowerCase() || ''
+      const artikeluntertyp = columns[25]?.toLowerCase() || ''
+
+      // FILTER: Nur Reifen (keine Ersatzteile, Felgen, etc.)
+      if (artikeltyp !== 'reifen') {
+        continue
+      }
+
+      // FILTER: Nur PKW und Motorrad (keine LKW, Transporter)
+      if (!['pkw', 'motorrad'].includes(artikeluntertyp)) {
+        continue
+      }
+
       const articleNumber = columns[0]
       const ean = columns[1]
       const stock = parseInt(columns[2] || '0')
@@ -73,7 +88,7 @@ function parseCSV(csvContent: string): CSVRow[] {
       const heightStr = columns[9]
       const diameterStr = columns[10]
       const season = columns[13] // s/w/g
-      const vehicleType = columns[14] // PKW/LKW/Transporter
+      const vehicleType = columns[14] // PKW/Motorrad
 
       // Validation
       if (!articleNumber || isNaN(price) || isNaN(stock) || price <= 0) {
@@ -165,18 +180,39 @@ export async function syncSupplierCSV(
     // Get all article numbers from CSV
     const csvArticleNumbers = new Set(rows.map(r => r.articleNumber))
 
-    // Delete items that are no longer in CSV (out of stock or discontinued)
-    const deletedResult = await prisma.workshopInventory.deleteMany({
+    // Get existing articles to find discontinued ones
+    const existingArticles = await prisma.workshopInventory.findMany({
       where: {
         workshopId,
         supplier: supplier.supplier,
-        articleNumber: {
-          notIn: Array.from(csvArticleNumbers),
-        },
+      },
+      select: {
+        id: true,
+        articleNumber: true,
       },
     })
 
-    console.log(`[CSV-SYNC] ${supplier.name}: Deleted ${deletedResult.count} discontinued items`)
+    // Find discontinued articles (exist in DB but not in CSV)
+    const discontinuedIds = existingArticles
+      .filter(article => !csvArticleNumbers.has(article.articleNumber))
+      .map(article => article.id)
+
+    // Delete discontinued articles in batches (PostgreSQL limit: 32767 params)
+    let deletedCount = 0
+    if (discontinuedIds.length > 0) {
+      const DELETE_BATCH_SIZE = 5000
+      for (let i = 0; i < discontinuedIds.length; i += DELETE_BATCH_SIZE) {
+        const batch = discontinuedIds.slice(i, i + DELETE_BATCH_SIZE)
+        const result = await prisma.workshopInventory.deleteMany({
+          where: {
+            id: { in: batch },
+          },
+        })
+        deletedCount += result.count
+      }
+    }
+
+    console.log(`[CSV-SYNC] ${supplier.name}: Deleted ${deletedCount} discontinued items`)
     console.log(`[CSV-SYNC] ${supplier.name}: Processing ${rows.length} items (updating ALL prices & stock)...`)
 
     // Bulk upsert ALL items - prices and stock are ALWAYS updated
@@ -256,7 +292,7 @@ export async function syncSupplierCSV(
 
     const updated = processed - created
 
-    console.log(`[CSV-SYNC] ${supplier.name}: ✅ Complete - ${created} new, ${updated} updated, ${deletedResult.count} deleted`)
+    console.log(`[CSV-SYNC] ${supplier.name}: ✅ Complete - ${created} new, ${updated} updated, ${deletedCount} deleted`)
 
     // Update sync status
     await prisma.workshopSupplier.update({

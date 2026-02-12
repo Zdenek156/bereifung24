@@ -576,88 +576,116 @@ export default function NewHomePage() {
                           <p className="text-xs text-gray-500">{session.user?.email}</p>
                         </div>
                         
-                        <Link
-                          href="/"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Star className="w-4 h-4" />
-                          Startseite
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <LayoutDashboard className="w-4 h-4" />
-                          Dashboard
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/select-service"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Plus className="w-4 h-4" />
-                          Neue Anfrage
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/requests"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <ClipboardList className="w-4 h-4" />
-                          Meine Anfragen
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/appointments"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Calendar className="w-4 h-4" />
-                          Termine
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/bookings"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <BookOpen className="w-4 h-4" />
-                          Buchungen
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/vehicles"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Car className="w-4 h-4" />
-                          Fahrzeuge
-                        </Link>
-                        
-                        <Link
-                          href="/dashboard/customer/weather-alert"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Cloud className="w-4 h-4" />
-                          Wetter-Erinnerung
-                        </Link>
+                        {/* Workshop users - only Dashboard and Einstellungen */}
+                        {session.user?.role === 'WORKSHOP' ? (
+                          <>
+                            <Link
+                              href="/dashboard/workshop"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <LayoutDashboard className="w-4 h-4" />
+                              Dashboard
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/workshop/settings"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <SlidersHorizontal className="w-4 h-4" />
+                              Einstellungen
+                            </Link>
+                          </>
+                        ) : (
+                          /* Customer users - full menu */
+                          <>
+                            <Link
+                              href="/"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Star className="w-4 h-4" />
+                              Startseite
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <LayoutDashboard className="w-4 h-4" />
+                              Dashboard
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/select-service"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Plus className="w-4 h-4" />
+                              Neue Anfrage
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/requests"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <ClipboardList className="w-4 h-4" />
+                              Meine Anfragen
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/appointments"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Calendar className="w-4 h-4" />
+                              Termine
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/bookings"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <BookOpen className="w-4 h-4" />
+                              Buchungen
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/vehicles"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Car className="w-4 h-4" />
+                              Fahrzeuge
+                            </Link>
+                            
+                            <Link
+                              href="/dashboard/customer/weather-alert"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Cloud className="w-4 h-4" />
+                              Wetter-Erinnerung
+                            </Link>
+                            
+                            <div className="border-t border-gray-200 my-2"></div>
+                            
+                            <Link
+                              href="/dashboard/customer/settings"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <SlidersHorizontal className="w-4 h-4" />
+                              Einstellungen
+                            </Link>
+                          </>
+                        )}
                         
                         <div className="border-t border-gray-200 my-2"></div>
-                        
-                        <Link
-                          href="/dashboard/customer/settings"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <SlidersHorizontal className="w-4 h-4" />
-                          Einstellungen
-                        </Link>
                         
                         <button
                           onClick={async () => {

@@ -7,5 +7,12 @@ export default function SessionWrapper({
 }: {
   children: React.ReactNode
 }) {
-  return <SessionProvider>{children}</SessionProvider>
+  return (
+    <SessionProvider 
+      refetchInterval={60} // Refetch session every 60 seconds
+      refetchOnWindowFocus={true} // Refetch when window gains focus
+    >
+      {children}
+    </SessionProvider>
+  )
 }

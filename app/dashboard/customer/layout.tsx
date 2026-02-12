@@ -13,42 +13,36 @@ export default function CustomerLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [shouldRedirect, setShouldRedirect] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    // Only check for redirect after session is fully loaded
-    if (status === 'loading') return
-
-    // Give session more time to load properly (prevent race condition)
+    // Wait for session to fully initialize before checking
     const timer = setTimeout(() => {
-      if (status === 'unauthenticated') {
-        setShouldRedirect(true)
+      setIsChecking(false)
+      
+      // Only redirect if we're absolutely certain there's no session
+      if (status === 'unauthenticated' && !session) {
         router.push('/login')
         return
       }
 
-      if (session && session.user.role !== 'CUSTOMER') {
-        setShouldRedirect(true)
+      // Check role only if we have a session
+      if (status === 'authenticated' && session?.user.role !== 'CUSTOMER') {
         router.push('/dashboard')
         return
       }
-    }, 500) // Wait 500ms to ensure session is fully loaded
+    }, 1000) // Wait 1 second for session to fully initialize
 
     return () => clearTimeout(timer)
   }, [status, session, router])
 
-  // Show loading spinner while checking session
-  if (status === 'loading') {
+  // Show loading spinner while checking or session is loading
+  if (status === 'loading' || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
-  }
-
-  // Don't render anything while redirecting
-  if (shouldRedirect) {
-    return null
   }
 
   // Only render if authenticated with correct role
@@ -68,6 +62,10 @@ export default function CustomerLayout({
     )
   }
 
-  // Show nothing while waiting for session to load
-  return null
+  // Fallback: show loading while we wait for redirect
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+    </div>
+  )
 }

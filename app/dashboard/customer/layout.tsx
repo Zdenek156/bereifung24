@@ -15,25 +15,34 @@ export default function CustomerLayout({
   const router = useRouter()
 
   useEffect(() => {
+    // Don't redirect while loading
     if (status === 'loading') return
 
-    if (!session) {
+    // Only redirect if definitely not authenticated
+    if (status === 'unauthenticated') {
       router.push('/login')
       return
     }
 
-    if (session.user.role !== 'CUSTOMER') {
+    // Check role only after session is loaded
+    if (session && session.user.role !== 'CUSTOMER') {
       router.push('/dashboard')
       return
     }
   }, [session, status, router])
 
-  if (status === 'loading' || !session) {
+  // Show loading state while checking auth
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
+  }
+
+  // Don't render content until authenticated
+  if (!session || session.user.role !== 'CUSTOMER') {
+    return null
   }
 
   return (

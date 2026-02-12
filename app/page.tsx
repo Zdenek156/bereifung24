@@ -527,7 +527,7 @@ export default function NewHomePage() {
       duration: workshop.estimatedDuration?.toString() || '60',
       service: selectedService, // Add service type for checkout
     })
-    router.push(`/workshop/${workshop.id}?${params.toString()}`)
+    router.push(`/home/workshop/${workshop.id}?${params.toString()}`)
   }
 
   return (

@@ -49,7 +49,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             router.push('/admin')
           } else if (role === 'WORKSHOP') {
             router.push('/dashboard/workshop')
-          } else if (role === 'EMPLOYEE') {
+          } else if (role === 'EMPLOYEE' || role === 'B24_EMPLOYEE') {
             router.push('/mitarbeiter')
           } else {
             // CUSTOMER goes to customer dashboard

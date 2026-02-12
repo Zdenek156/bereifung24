@@ -38,9 +38,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         // Login successful - wait for cookie to be set
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        // Close modal and refresh page to load new session
+        // Close modal and reload page to load new session
         onClose()
-        router.refresh()
+        window.location.reload()
       }
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')

@@ -665,6 +665,9 @@ export default function NewHomePage() {
                             setShowUserMenu(false)
                             
                             try {
+                              // Save cookie consent before clearing storage
+                              const cookieConsent = localStorage.getItem('cookieConsent')
+                              
                               // Step 1: Call NextAuth signout first
                               console.log('[LOGOUT] Step 1: Calling NextAuth signout')
                               await signOut({ redirect: false })
@@ -681,14 +684,23 @@ export default function NewHomePage() {
                               localStorage.clear()
                               sessionStorage.clear()
                               
+                              // Restore cookie consent
+                              if (cookieConsent) {
+                                localStorage.setItem('cookieConsent', cookieConsent)
+                              }
+                              
                               // Step 4: Force page reload
                               console.log('[LOGOUT] Step 4: Reloading to /')
                               window.location.href = '/'
                             } catch (error) {
                               console.error('[LOGOUT] Error during logout:', error)
                               // Force reload anyway
+                              const cookieConsent = localStorage.getItem('cookieConsent')
                               localStorage.clear()
                               sessionStorage.clear()
+                              if (cookieConsent) {
+                                localStorage.setItem('cookieConsent', cookieConsent)
+                              }
                               window.location.href = '/'
                             }
                           }}

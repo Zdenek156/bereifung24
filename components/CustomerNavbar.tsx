@@ -33,12 +33,13 @@ export default function CustomerNavbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // For workshop users, only show Dashboard and Logout
+  // For workshop users, only show Dashboard, Settings and Logout
   const isWorkshop = session?.user?.role === 'WORKSHOP'
   
   const menuItems: MenuItem[] = isWorkshop 
     ? [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/workshop' },
+        { id: 'settings', label: 'Einstellungen', icon: Settings, path: '/dashboard/workshop/settings' },
       ]
     : [
         { id: 'home', label: 'Startseite', icon: Home, path: '/' },
@@ -189,17 +190,7 @@ export default function CustomerNavbar() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className={`${isWorkshop ? 'mt-2' : 'border-t border-gray-200 mt-2'}`}>
-                  {!isWorkshop && (
-                    <button
-                      onClick={() => router.push('/dashboard/customer/settings')}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Einstellungen</span>
-                    </button>
-                  )}
-                  
+                <div className="border-t border-gray-200 mt-2">
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

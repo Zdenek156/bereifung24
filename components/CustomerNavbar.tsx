@@ -33,16 +33,23 @@ export default function CustomerNavbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const menuItems: MenuItem[] = [
-    { id: 'home', label: 'Startseite', icon: Home, path: '/' },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/customer' },
-    { id: 'new-request', label: 'Neue Anfrage', icon: Plus, path: '/dashboard/customer/select-service' },
-    { id: 'requests', label: 'Meine Anfragen', icon: ClipboardList, path: '/dashboard/customer/requests' },
-    { id: 'appointments', label: 'Termine', icon: Calendar, path: '/dashboard/customer/appointments' },
-    { id: 'bookings', label: 'Buchungen', icon: BookOpen, path: '/dashboard/customer/bookings' },
-    { id: 'vehicles', label: 'Fahrzeuge', icon: Car, path: '/dashboard/customer/vehicles' },
-    { id: 'weather-alert', label: 'Wetter-Erinnerung', icon: Cloud, path: '/dashboard/customer/weather-alert' },
-  ]
+  // For workshop users, only show Dashboard and Logout
+  const isWorkshop = session?.user?.role === 'WORKSHOP'
+  
+  const menuItems: MenuItem[] = isWorkshop 
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/workshop' },
+      ]
+    : [
+        { id: 'home', label: 'Startseite', icon: Home, path: '/' },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/customer' },
+        { id: 'new-request', label: 'Neue Anfrage', icon: Plus, path: '/dashboard/customer/select-service' },
+        { id: 'requests', label: 'Meine Anfragen', icon: ClipboardList, path: '/dashboard/customer/requests' },
+        { id: 'appointments', label: 'Termine', icon: Calendar, path: '/dashboard/customer/appointments' },
+        { id: 'bookings', label: 'Buchungen', icon: BookOpen, path: '/dashboard/customer/bookings' },
+        { id: 'vehicles', label: 'Fahrzeuge', icon: Car, path: '/dashboard/customer/vehicles' },
+        { id: 'weather-alert', label: 'Wetter-Erinnerung', icon: Cloud, path: '/dashboard/customer/weather-alert' },
+      ]
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -182,14 +189,16 @@ export default function CustomerNavbar() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="border-t border-gray-200 mt-2">
-                  <button
-                    onClick={() => router.push('/dashboard/customer/settings')}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Einstellungen</span>
-                  </button>
+                <div className={`${isWorkshop ? 'mt-2' : 'border-t border-gray-200 mt-2'}`}>
+                  {!isWorkshop && (
+                    <button
+                      onClick={() => router.push('/dashboard/customer/settings')}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Einstellungen</span>
+                    </button>
+                  )}
                   
                   <button
                     onClick={handleLogout}

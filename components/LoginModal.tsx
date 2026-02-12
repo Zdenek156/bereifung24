@@ -52,8 +52,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           } else if (role === 'EMPLOYEE' || role === 'B24_EMPLOYEE') {
             router.push('/mitarbeiter')
           } else {
-            // CUSTOMER goes to customer dashboard
-            router.push('/dashboard/customer')
+            // CUSTOMER stays on current page
+            window.location.reload()
           }
         } else {
           // Fallback: reload page

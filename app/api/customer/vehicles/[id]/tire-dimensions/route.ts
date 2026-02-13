@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-// GET /api/customer/vehicles/[id]/tire-dimensions
+// GET /api/customer/vehicles/[id]/tire-dimensions?season=s|w|g
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -16,6 +16,8 @@ export async function GET(
     }
 
     const vehicleId = params.id
+    const { searchParams } = new URL(req.url)
+    const season = searchParams.get('season') || 's' // Default to summer
 
     // Get vehicle with tire specs
     const vehicle = await prisma.vehicle.findFirst({
@@ -60,56 +62,67 @@ export async function GET(
       }
     }
 
-    // 2. Check JSON tire strings (fallback) - Priority: summer > winter > allSeason
+    // 2. Check JSON tire strings based on season
     if (!dimensions) {
-      const tireJsonSources = [
-        vehicle.summerTires,
-        vehicle.winterTires,
-        vehicle.allSeasonTires
-      ]
-
-      for (const tireJson of tireJsonSources) {
-        if (!tireJson) continue
-        
+      // Select tire source based on season - try season-specific first
+      let primaryTireJson = null
+      let seasonName = ''
+      
+      if (season === 's') {
+        primaryTireJson = vehicle.summerTires
+        seasonName = 'Sommerreifen'
+      } else if (season === 'w') {
+        primaryTireJson = vehicle.winterTires
+        seasonName = 'Winterreifen'
+      } else if (season === 'g') {
+        primaryTireJson = vehicle.allSeasonTires
+        seasonName = 'Ganzjahresreifen'
+      }
+      
+      // Try primary season first
+      if (primaryTireJson) {
         try {
-          const parsed = typeof tireJson === 'string' ? JSON.parse(tireJson) : tireJson
+          const parsed = typeof primaryTireJson === 'string' ? JSON.parse(primaryTireJson) : primaryTireJson
           if (parsed.width && parsed.aspectRatio && parsed.diameter) {
             dimensions = {
               width: parsed.width,
               height: parsed.aspectRatio,
               diameter: parsed.diameter
             }
-            break
           }
         } catch (e) {
           // Ignore parse errors
         }
       }
+      
+      // If no dimensions found for selected season, return error
+      if (!dimensions) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Für dieses Fahrzeug sind keine ${seasonName} hinterlegt.`,
+          missingSeasonData: true
+        }, { status: 404 })
+      }
     }
 
-    if (!dimensions) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Keine Reifendimensionen für dieses Fahrzeug hinterlegt' 
-      }, { status: 404 })
-    }
-
-    // Check for mixed tire setup from JSON data (hasDifferentSizes flag)
+    // Check for mixed tire setup from JSON data (hasDifferentSizes flag) - season specific
     let hasMixedTires = false
     let dimensionsFront = null
     let dimensionsRear = null
 
-    const tireJsonSources = [
-      vehicle.summerTires,
-      vehicle.winterTires,
-      vehicle.allSeasonTires
-    ]
+    // Check only the selected season's tire data for mixed setup
+    let seasonTireJson = null
+    if (season === 's') {
+      seasonTireJson = vehicle.summerTires
+    } else if (season === 'w') {
+      seasonTireJson = vehicle.winterTires
+    } else if (season === 'g') {
+      seasonTireJson = vehicle.allSeasonTires
+    }
 
-    for (const tireJson of tireJsonSources) {
-      if (!tireJson) continue
-      
+    if (seasonTireJson) {
       try {
-        const parsed = typeof tireJson === 'string' ? JSON.parse(tireJson) : tireJson
+        const parsed = typeof seasonTireJson === 'string' ? JSON.parse(seasonTireJson) : seasonTireJson
         
         if (parsed.hasDifferentSizes && parsed.rearWidth && parsed.rearAspectRatio && parsed.rearDiameter) {
           // Front dimensions
@@ -129,7 +142,6 @@ export async function GET(
           }
           
           hasMixedTires = true
-          break
         }
       } catch (e) {
         // Ignore parse errors

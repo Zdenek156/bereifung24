@@ -172,6 +172,13 @@ export default function NewHomePage() {
     loadReviews()
   }, [])
   
+  // Reload tire dimensions when season changes (if vehicle selected)
+  useEffect(() => {
+    if (selectedVehicleId && includeTires && selectedService === 'TIRE_CHANGE') {
+      handleVehicleSelect(selectedVehicleId)
+    }
+  }, [selectedSeason])
+  
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -405,10 +412,21 @@ export default function NewHomePage() {
     if (!vehicle) return
 
     // Try to get tire dimensions from vehicle data
-    // Priority: currentTires > summerTires > winterTires > allSeasonTires
+    // Fetch based on selected season (summer/winter/allseason)
     try {
-      const response = await fetch(`/api/customer/vehicles/${vehicleId}/tire-dimensions`)
+      const currentSeason = selectedSeason || 's' // Default to summer
+      const response = await fetch(`/api/customer/vehicles/${vehicleId}/tire-dimensions?season=${currentSeason}`)
       const data = await response.json()
+      
+      // Check if season-specific data is missing
+      if (data.missingSeasonData) {
+        alert(`⚠️ ${data.error}\n\nBitte wählen Sie eine andere Reifenart oder hinterlegen Sie die Reifengröße in der Fahrzeugverwaltung.`)
+        setTireDimensions({ width: '', height: '', diameter: '' })
+        setHasMixedTires(false)
+        setTireDimensionsFront('')
+        setTireDimensionsRear('')
+        return
+      }
       
       if (data.success && data.dimensions) {
         setTireDimensions({
@@ -2104,10 +2122,12 @@ export default function NewHomePage() {
                                             </div>
                                           </>
                                         ) : null}
-                                        <div className="flex justify-between gap-4">
-                                          <span>Montage</span>
-                                          <span className="font-medium">{formatEUR(workshop.basePrice || 0)}</span>
-                                        </div>
+                                        {workshop.basePrice && workshop.basePrice > 0 && (
+                                          <div className="flex justify-between gap-4">
+                                            <span>Montage</span>
+                                            <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
+                                          </div>
+                                        )}
                                         {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (
                                           <div className="flex justify-between gap-4">
                                             <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec?.quantity || 0}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec?.quantity || 4))})</span>

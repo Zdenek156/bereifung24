@@ -544,6 +544,14 @@ export default function NewHomePage() {
         setWorkshops(workshops)
         setError(null)
         
+        // Auto-adjust price range to include all workshops
+        if (workshops.length > 0) {
+          const maxWorkshopPrice = Math.max(...workshops.map(w => w.totalPrice))
+          const newMaxPrice = Math.ceil(maxWorkshopPrice / 100) * 100 // Round up to nearest 100
+          setPriceRange(prev => [prev[0], Math.max(prev[1], newMaxPrice)])
+          console.log('💰 [priceRange] Auto-adjusted max price to:', newMaxPrice)
+        }
+        
         // Save search to URL (for browser back button)
         const params = new URLSearchParams()
         params.set('results', encodeURIComponent(JSON.stringify(workshops)))

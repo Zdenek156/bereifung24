@@ -414,6 +414,13 @@ export default function NewHomePage() {
           diameter: data.dimensions.diameter.toString()
         })
 
+        // DEBUG: Log what API returned
+        console.log('🔍 [handleVehicleSelect] API Response:', {
+          hasMixedTires: data.hasMixedTires,
+          dimensionsFront: data.dimensionsFront,
+          dimensionsRear: data.dimensionsRear
+        })
+
         // Set mixed tire dimensions if available
         if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
           console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {

@@ -101,20 +101,50 @@ export default function NewHomePage() {
     bookingCount: 0
   })
   
-  // Service-specific package filters - Start empty, set defaults in useEffect when service changes
+  // Service-specific package filters
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
   
+  // Handler to change service and set default packages
+  const handleServiceChange = (newService: string) => {
+    console.log('🎯 [page.tsx] Service changed to:', newService)
+    setSelectedService(newService)
+    
+    // Immediately set packages for TIRE_CHANGE
+    if (newService === 'TIRE_CHANGE') {
+      console.log('✅ [page.tsx] Setting default: four_tires')
+      setSelectedPackages(['four_tires'])
+    } else {
+      console.log('🔄 [page.tsx] Clearing packages for:', newService)
+      setSelectedPackages([])
+    }
+  }
+  
+  // Auto-set default package when user switches to TIRE_CHANGE
+  useEffect(() => {
+    console.log('🔍 [page.tsx] Effect running:', { selectedService, packageCount: selectedPackages.length })
+    if (selectedService === 'TIRE_CHANGE' && selectedPackages.length === 0) {
+      console.log('🔧 [page.tsx] Auto-setting default for TIRE_CHANGE')
+      // Use setTimeout to ensure state update happens after render
+      setTimeout(() => {
+        setSelectedPackages(['four_tires'])
+      }, 0)
+    }
+  }, [selectedService])
+  
   // Tire Search State
-  const [includeTires, setIncludeTires] = useState(false)
+  const [includeTires, setIncludeTires] = useState(true)
   const [tireDimensions, setTireDimensions] = useState({
     width: '',
     height: '',
     diameter: ''
   })
+  const [hasMixedTires, setHasMixedTires] = useState(false)
+  const [tireDimensionsFront, setTireDimensionsFront] = useState<string>('')
+  const [tireDimensionsRear, setTireDimensionsRear] = useState<string>('')
   const [tireBudgetMin, setTireBudgetMin] = useState<number>(50)
   const [tireBudgetMax, setTireBudgetMax] = useState<number>(500)
-  const [selectedSeason, setSelectedSeason] = useState<string>('') // 's', 'w', 'g', or ''
-  const [tireQuality, setTireQuality] = useState<string>('') // 'premium', 'quality', 'budget', or ''
+  const [selectedSeason, setSelectedSeason] = useState<string>('g') // 's', 'w', 'g', or ''
+  const [tireQuality, setTireQuality] = useState<string>('quality') // 'premium', 'quality', 'budget', or ''
   const [fuelEfficiency, setFuelEfficiency] = useState<string>('') // A-G or ''
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
   const [require3PMSF, setRequire3PMSF] = useState(false)
@@ -361,6 +391,9 @@ export default function NewHomePage() {
     if (!vehicleId) {
       // Clear tire dimensions if no vehicle selected
       setTireDimensions({ width: '', height: '', diameter: '' })
+      setHasMixedTires(false)
+      setTireDimensionsFront('')
+      setTireDimensionsRear('')
       return
     }
 
@@ -380,6 +413,22 @@ export default function NewHomePage() {
           height: data.dimensions.height.toString(),
           diameter: data.dimensions.diameter.toString()
         })
+
+        // Set mixed tire dimensions if available
+        if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+          console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {
+            front: data.dimensionsFront.formatted,
+            rear: data.dimensionsRear.formatted
+          })
+          setHasMixedTires(true)
+          setTireDimensionsFront(data.dimensionsFront.formatted)
+          setTireDimensionsRear(data.dimensionsRear.formatted)
+        } else {
+          console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+        }
         
         // Automatically trigger search if location is set
         if (hasSearched && customerLocation) {
@@ -392,14 +441,16 @@ export default function NewHomePage() {
   }
 
   // Search workshops
-  const searchWorkshops = async (location: { lat: number; lon: number }) => {
+  const searchWorkshops = async (location: { lat: number; lon: number }, overrideSeason?: string) => {
+    const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
     console.log('🔍 [searchWorkshops] Starting search...', {
       serviceType: selectedService,
       packageTypes: selectedPackages,
       radiusKm,
       location,
       includeTires,
-      tireDimensions
+      tireDimensions,
+      season: seasonToUse
     })
     
     try {
@@ -412,13 +463,24 @@ export default function NewHomePage() {
           radiusKm,
           customerLat: location.lat,
           customerLon: location.lon,
-          // Tire search parameters
-          includeTires,
-          tireDimensions: includeTires ? tireDimensions : undefined,
-          tireFilters: includeTires ? {
+          // Tire search parameters (only for TIRE_CHANGE service)
+          includeTires: selectedService === 'TIRE_CHANGE' ? includeTires : false,
+          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !hasMixedTires) ? tireDimensions : undefined,
+          // Mixed tire dimensions (if vehicle has different front/rear sizes)
+          tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && hasMixedTires && tireDimensionsFront) ? 
+            (() => {
+              const match = tireDimensionsFront.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              return match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+            })() : undefined,
+          tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && includeTires && hasMixedTires && tireDimensionsRear) ? 
+            (() => {
+              const match = tireDimensionsRear.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              return match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+            })() : undefined,
+          tireFilters: (selectedService === 'TIRE_CHANGE' && includeTires) ? {
             minPrice: tireBudgetMin,
-            maxPrice: tireBudgetMax,
-            seasons: selectedSeason ? [selectedSeason] : [],
+            maxPrice:tireBudgetMax,
+            seasons: seasonToUse ? [seasonToUse] : [],
             quality: tireQuality || undefined,
             fuelEfficiency: fuelEfficiency || undefined,
             wetGrip: wetGrip || undefined,
@@ -433,6 +495,11 @@ export default function NewHomePage() {
         workshopsCount: result.workshops?.length || 0,
         error: result.error
       })
+      
+      // Debug: Log first workshop totalPrice
+      if (result.workshops?.[0]) {
+        console.log('💰 [Frontend] First workshop totalPrice:', result.workshops[0].totalPrice, 'Workshop:', result.workshops[0].workshopName)
+      }
 
       if (response.ok && result.success) {
         const workshops = result.workshops || []
@@ -470,13 +537,7 @@ export default function NewHomePage() {
       return
     }
     
-    // Validate tire dimensions if tire search is enabled
-    if (includeTires) {
-      if (!tireDimensions.width || !tireDimensions.height || !tireDimensions.diameter) {
-        alert('Bitte geben Sie die Reifengröße ein (Breite/Höhe/Zoll)')
-        return
-      }
-    }
+    // No tire dimension validation - user can search first, then select vehicle in filter
     
     setLoading(true)
     setError(null)
@@ -946,7 +1007,7 @@ export default function NewHomePage() {
                   <select
                     name="service"
                     value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
+                    onChange={(e) => handleServiceChange(e.target.value)}
                     className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
                     aria-label="Service auswählen"
                   >
@@ -1103,288 +1164,301 @@ export default function NewHomePage() {
                     {/* Filters */}
                     <div className={`${showFilters ? 'block' : 'hidden lg:block'}`}>
 
-                      {/* Tire Search Option - FIRST FILTER */}
-                      <div className="p-4 border-b border-gray-200">
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          🚗 Reifen-Suche
-                        </h4>
-                        <div className="space-y-2">
-                          <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input
-                              type="radio"
-                              name="tireOption"
-                              checked={!includeTires}
-                              onChange={() => {
-                                setIncludeTires(false)
-                                // Re-search nach Änderung
-                                if (hasSearched && customerLocation) {
-                                  searchWorkshops(customerLocation)
-                                }
-                              }}
-                              className="w-4 h-4 text-primary-600"
-                            />
-                            <span className="text-sm font-medium">Nur Service</span>
-                          </label>
-                          <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input
-                              type="radio"
-                              name="tireOption"
-                              checked={includeTires}
-                              onChange={() => {
-                                setIncludeTires(true)
-                              }}
-                              className="w-4 h-4 text-primary-600"
-                            />
-                            <span className="text-sm font-medium">Mit Reifen + Montage</span>
-                          </label>
-                        </div>
-                      </div>
+                      {/* === TIRE-CHANGE SPECIFIC FILTERS (only for Reifenwechsel) === */}
+                      {selectedService === 'TIRE_CHANGE' && (
+                        <>
+                          {/* 1. Reifenmontage Art */}
+                          <div className="p-4 border-b border-gray-200">
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              🚗 Reifenmontage
+                            </h4>
+                            <div className="space-y-1">
+                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="radio"
+                                  name="tireOption"
+                                  checked={!includeTires}
+                                  onChange={() => {
+                                    setIncludeTires(false)
+                                    if (hasSearched && customerLocation) {
+                                      searchWorkshops(customerLocation)
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                />
+                                <span className="text-sm font-medium">Nur Montage</span>
+                              </label>
+                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="radio"
+                                  name="tireOption"
+                                  checked={includeTires}
+                                  onChange={() => {
+                                    setIncludeTires(true)
+                                  }}
+                                  className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                />
+                                <span className="text-sm font-medium">Reifenmontage mit Reifen</span>
+                              </label>
+                            </div>
+                          </div>
 
-                      {/* Vehicle Selection / Login Prompt (only if includeTires) */}
-                      {includeTires && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">🚙 Fahrzeug wählen</h4>
-                          {session ? (
-                            <div className="space-y-2">
-                              <select
-                                value={selectedVehicleId}
-                                onChange={(e) => handleVehicleSelect(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                              >
-                                <option value="">Fahrzeug auswählen...</option>
-                                {customerVehicles.map(vehicle => (
-                                  <option key={vehicle.id} value={vehicle.id}>
-                                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                                  </option>
-                                ))}
-                              </select>
-                              {customerVehicles.length === 0 && (
-                                <p className="text-xs text-gray-500 mt-2">
-                                  Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
-                                </p>
-                              )}
-                              {selectedVehicleId && tireDimensions.width && (
-                                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                                  <p className="text-xs text-green-800">
-                                    ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                          {/* 2. Fahrzeug wählen (only if includeTires) */}
+                          {includeTires && (
+                            <div className="p-4 border-b border-gray-200">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                🚙 Fahrzeug wählen
+                              </h4>
+                              {session ? (
+                                <div className="space-y-2">
+                                  <select
+                                    value={selectedVehicleId}
+                                    onChange={(e) => handleVehicleSelect(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                                  >
+                                    <option value="">Fahrzeug auswählen...</option>
+                                    {customerVehicles.map(vehicle => (
+                                      <option key={vehicle.id} value={vehicle.id}>
+                                        {vehicle.make} {vehicle.model} ({vehicle.year})
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {customerVehicles.length === 0 && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
+                                    </p>
+                                  )}
+                                  {selectedVehicleId && tireDimensions.width && (
+                                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                      <p className="text-xs text-green-800">
+                                        ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                  <p className="text-sm text-yellow-900 mb-2">
+                                    ⚠️ Bitte melden Sie sich an, um Ihr Fahrzeug auszuwählen
                                   </p>
+                                  <button
+                                    onClick={() => setShowLoginModal(true)}
+                                    className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                  >
+                                    Jetzt anmelden
+                                  </button>
                                 </div>
                               )}
                             </div>
-                          ) : (
-                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                              <p className="text-sm text-yellow-900 mb-2">
-                                ⚠️ Bitte melden Sie sich an, um Ihr Fahrzeug auszuwählen
-                              </p>
-                              <button
-                                onClick={() => setShowLoginModal(true)}
-                                className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                              >
-                                Jetzt anmelden
-                              </button>
+                          )}
+
+                          {/* 3. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
+                          <div className="p-4 border-b border-gray-200">
+                            <ServiceFilters
+                              key={`tire-change-${selectedService}`}
+                              selectedService={selectedService}
+                              selectedPackages={selectedPackages}
+                              onFiltersChange={(packages) => setSelectedPackages(packages)}
+                              tireDimensionsFront={tireDimensionsFront}
+                              tireDimensionsRear={tireDimensionsRear}
+                            />
+                          </div>
+
+                          {/* 4. Saison (only if includeTires) */}
+                          {includeTires && (
+                            <div className="p-4 border-b border-gray-200">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                ❄️ Saison
+                              </h4>
+                              <div className="space-y-1">
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 's'}
+                                    onChange={() => {
+                                      const newSeason = 's'
+                                      setSelectedSeason(newSeason)
+                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                        searchWorkshops(customerLocation, newSeason)
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">☀️ Sommerreifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 'w'}
+                                    onChange={() => {
+                                      const newSeason = 'w'
+                                      setSelectedSeason(newSeason)
+                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                        searchWorkshops(customerLocation, newSeason)
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">❄️ Winterreifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 'g'}
+                                    onChange={() => {
+                                      const newSeason = 'g'
+                                      setSelectedSeason(newSeason)
+                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                        searchWorkshops(customerLocation, newSeason)
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">🔄 Ganzjahresreifen</span>
+                                </label>
+                              </div>
                             </div>
                           )}
-                        </div>
-                      )}
 
-                      {/* Tire Budget (only if includeTires) */}
-                      {includeTires && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">💶 Reifen-Budget (pro Stück)</h4>
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                              <span>{formatEUR(tireBudgetMin)}</span>
-                              <span className="text-gray-400">bis</span>
-                              <span>{formatEUR(tireBudgetMax)}</span>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="block">
-                                <span className="text-xs text-gray-500">Mindestpreis</span>
-                                <input
-                                  type="range"
-                                  min="50"
-                                  max="500"
-                                  step="10"
-                                  value={tireBudgetMin}
-                                  onChange={(e) => {
-                                    const newMin = parseInt(e.target.value)
-                                    if (newMin <= tireBudgetMax) {
-                                      setTireBudgetMin(newMin)
+                          {/* 5. Qualitätsstufe (only if includeTires) */}
+                          {includeTires && (
+                            <div className="p-4 border-b border-gray-200">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                🏆 Qualitätsstufe
+                              </h4>
+                              <div className="space-y-1">
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireQuality"
+                                    checked={tireQuality === 'premium'}
+                                    onChange={() => {
+                                      setTireQuality('premium')
                                       if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
                                         searchWorkshops(customerLocation)
                                       }
-                                    }
-                                  }}
-                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
-                                />
-                              </label>
-                              <label className="block">
-                                <span className="text-xs text-gray-500">Höchstpreis</span>
-                                <input
-                                  type="range"
-                                  min="50"
-                                  max="500"
-                                  step="10"
-                                  value={tireBudgetMax}
-                                  onChange={(e) => {
-                                    const newMax = parseInt(e.target.value)
-                                    if (newMax >= tireBudgetMin) {
-                                      setTireBudgetMax(newMax)
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">⭐ Premium-Reifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireQuality"
+                                    checked={tireQuality === 'quality'}
+                                    onChange={() => {
+                                      setTireQuality('quality')
                                       if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
                                         searchWorkshops(customerLocation)
                                       }
-                                    }
-                                  }}
-                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
-                                />
-                              </label>
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">✓ Qualitäts-Reifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireQuality"
+                                    checked={tireQuality === 'budget'}
+                                    onChange={() => {
+                                      setTireQuality('budget')
+                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                        searchWorkshops(customerLocation)
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">💰 Budget-Reifen</span>
+                                </label>
+                              </div>
                             </div>
-                          </div>
+                          )}
+
+                          {/* 6. Reifen-Budget (only if includeTires) */}
+                          {includeTires && (
+                            <div className="p-4 border-b border-gray-200">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                💶 Reifen-Budget (pro Stück)
+                              </h4>
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>{formatEUR(tireBudgetMin)}</span>
+                                  <span className="text-gray-400">bis</span>
+                                  <span>{formatEUR(tireBudgetMax)}</span>
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="block">
+                                    <span className="text-xs text-gray-500">Mindestpreis</span>
+                                    <input
+                                      type="range"
+                                      min="50"
+                                      max="500"
+                                      step="10"
+                                      value={tireBudgetMin}
+                                      onChange={(e) => {
+                                        const newMin = parseInt(e.target.value)
+                                        if (newMin <= tireBudgetMax) {
+                                          setTireBudgetMin(newMin)
+                                          if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                            searchWorkshops(customerLocation)
+                                          }
+                                        }
+                                      }}
+                                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                                    />
+                                  </label>
+                                  <label className="block">
+                                    <span className="text-xs text-gray-500">Höchstpreis</span>
+                                    <input
+                                      type="range"
+                                      min="50"
+                                      max="500"
+                                      step="10"
+                                      value={tireBudgetMax}
+                                      onChange={(e) => {
+                                        const newMax = parseInt(e.target.value)
+                                        if (newMax >= tireBudgetMin) {
+                                          setTireBudgetMax(newMax)
+                                          if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                            searchWorkshops(customerLocation)
+                                          }
+                                        }
+                                      }}
+                                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* === GENERAL FILTERS (for all services) === */}
+
+                      {/* Service-Specific Package Filters (for non-TIRE_CHANGE services) */}
+                      {selectedService !== 'TIRE_CHANGE' && (
+                        <div className="p-4 border-b border-gray-200">
+                          <ServiceFilters
+                            key={`other-service-${selectedService}`}
+                            selectedService={selectedService}
+                            selectedPackages={selectedPackages}
+                            onFiltersChange={(packages) => setSelectedPackages(packages)}
+                          />
                         </div>
                       )}
 
-                      {/* Tire Season (only if includeTires) */}
-                      {includeTires && (
+                      {/* EU Labels (only for TIRE_CHANGE with tires) */}
+                      {selectedService === 'TIRE_CHANGE' && includeTires && (
                         <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">❄️ Saison</h4>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireSeason"
-                                checked={selectedSeason === ''}
-                                onChange={() => {
-                                  setSelectedSeason('')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">Alle Saisons</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireSeason"
-                                checked={selectedSeason === 's'}
-                                onChange={() => {
-                                  setSelectedSeason('s')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">☀️ Sommerreifen</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireSeason"
-                                checked={selectedSeason === 'w'}
-                                onChange={() => {
-                                  setSelectedSeason('w')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">❄️ Winterreifen</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireSeason"
-                                checked={selectedSeason === 'g'}
-                                onChange={() => {
-                                  setSelectedSeason('g')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">🔄 Ganzjahresreifen</span>
-                            </label>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tire Quality Category (only if includeTires) */}
-                      {includeTires && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">🏆 Qualitätsstufe</h4>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireQuality"
-                                checked={tireQuality === ''}
-                                onChange={() => {
-                                  setTireQuality('')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">Alle</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireQuality"
-                                checked={tireQuality === 'premium'}
-                                onChange={() => {
-                                  setTireQuality('premium')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">⭐ Premium-Reifen</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireQuality"
-                                checked={tireQuality === 'quality'}
-                                onChange={() => {
-                                  setTireQuality('quality')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">✓ Qualitäts-Reifen</span>
-                            </label>
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name="tireQuality"
-                                checked={tireQuality === 'budget'}
-                                onChange={() => {
-                                  setTireQuality('budget')
-                                  if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                className="w-4 h-4 text-primary-600"
-                              />
-                              <span className="text-sm">💰 Budget-Reifen</span>
-                            </label>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* EU Labels (only if includeTires) */}
-                      {includeTires && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">🇪🇺 EU-Label</h4>
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            🇪🇺 EU-Label
+                          </h4>
                           <div className="space-y-3">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Kraftstoffeffizienz (min.)</label>
@@ -1430,12 +1504,14 @@ export default function NewHomePage() {
                         </div>
                       )}
 
-                      {/* 3PMSF Feature (only if includeTires) */}
-                      {includeTires && (
+                      {/* Zusatzmerkmale (only for TIRE_CHANGE with tires) */}
+                      {selectedService === 'TIRE_CHANGE' && includeTires && (
                         <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">✨ Zusatzmerkmale</h4>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            ✨ Zusatzmerkmale
+                          </h4>
+                          <div className="space-y-1">
+                            <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                               <input
                                 type="checkbox"
                                 checked={require3PMSF}
@@ -1445,7 +1521,7 @@ export default function NewHomePage() {
                                     searchWorkshops(customerLocation)
                                   }
                                 }}
-                                className="w-4 h-4 text-primary-600 rounded"
+                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                               />
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
                             </label>
@@ -1453,21 +1529,13 @@ export default function NewHomePage() {
                         </div>
                       )}
 
-                      {/* Service-Specific Package Filters */}
-                      <div className="p-4 border-b border-gray-200">
-                        <ServiceFilters
-                          selectedService={selectedService}
-                          onFiltersChange={(packages) => setSelectedPackages(packages)}
-                        />
-                      </div>
-
                       {/* Payment Methods Filter */}
                       <div className="p-4 border-b border-gray-200">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <CreditCard className="w-4 h-4" />
                           Zahlungsmethoden
                         </h4>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           {[
                             { id: 'CREDIT_CARD', label: 'Kreditkarte' },
                             { id: 'PAYPAL', label: 'PayPal' },
@@ -1475,7 +1543,7 @@ export default function NewHomePage() {
                           ].map((method) => (
                             <label
                               key={method.id}
-                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                             >
                               <input
                                 type="checkbox"
@@ -1487,7 +1555,7 @@ export default function NewHomePage() {
                                     setPaymentMethods(paymentMethods.filter(m => m !== method.id))
                                   }
                                 }}
-                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                               />
                               <span className="text-sm">{method.label}</span>
                             </label>
@@ -1501,7 +1569,7 @@ export default function NewHomePage() {
                           <Clock className="w-4 h-4" />
                           Öffnungszeiten
                         </h4>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           {[
                             { id: 'SATURDAY', label: 'Samstag geöffnet', icon: CalendarDays },
                             { id: 'EVENING', label: 'Abends (nach 18 Uhr)', icon: Sunset },
@@ -1509,7 +1577,7 @@ export default function NewHomePage() {
                           ].map((hours) => (
                             <label
                               key={hours.id}
-                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                             >
                               <input
                                 type="checkbox"
@@ -1521,7 +1589,7 @@ export default function NewHomePage() {
                                     setOpeningHours(openingHours.filter(h => h !== hours.id))
                                   }
                                 }}
-                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                               />
                               <hours.icon className="w-4 h-4 text-gray-500" />
                               <span className="text-sm">{hours.label}</span>
@@ -1536,12 +1604,12 @@ export default function NewHomePage() {
                           <Wrench className="w-4 h-4" />
                           Weitere Services
                         </h4>
-                        <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                        <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                           <input
                             type="checkbox"
                             checked={hasMultipleServices}
                             onChange={(e) => setHasMultipleServices(e.target.checked)}
-                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                           />
                           <span className="text-sm">Nur Werkstätten mit weiteren Services</span>
                         </label>
@@ -1608,8 +1676,12 @@ export default function NewHomePage() {
                       const isFavorite = favorites.includes(workshop.id)
                       const tireIdx = selectedTireIndices[workshop.id] ?? 0
                       const selectedRec = workshop.tireRecommendations?.[tireIdx]
-                      const currentTirePrice = selectedRec?.totalPrice ?? workshop.tirePrice ?? 0
-                      const currentTotalPrice = (workshop.basePrice || 0) + currentTirePrice
+                      
+                      // Use workshop.totalPrice from backend (includes disposal fee)
+                      // If a different tire is selected, adjust the price by the difference
+                      const defaultTirePrice = workshop.tirePrice ?? 0
+                      const currentTirePrice = selectedRec?.totalPrice ?? defaultTirePrice
+                      const currentTotalPrice = (workshop.totalPrice || 0) - defaultTirePrice + currentTirePrice
                       
                       // EU Label color helper
                       const getLabelColor = (grade: string | null | undefined) => {
@@ -1781,12 +1853,51 @@ export default function NewHomePage() {
 
                               {/* Bottom Row: Price Info + CTA */}
                               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-auto gap-3">
-                                <div>
+                                <div className="w-full sm:w-auto">
                                   {includeTires && workshop.tireAvailable && selectedRec ? (
                                     <>
-                                      <p className="text-sm text-gray-600">
-                                        {selectedRec.quantity}× {selectedRec.brand} à {formatEUR(selectedRec.pricePerTire)} + Montage {formatEUR(workshop.basePrice || 0)}
-                                      </p>
+                                      {/* Price breakdown */}
+                                      <div className="space-y-0.5 text-sm text-gray-600 mb-2">
+                                        {workshop.isMixedTires && workshop.tireFront && workshop.tireRear ? (
+                                          <>
+                                            {/* Mixed tires: Show front and rear separately */}
+                                            <div className="flex justify-between gap-4">
+                                              <span className="text-xs">🔹 Vorderachse ({workshop.tireFront.dimensions})</span>
+                                            </div>
+                                            <div className="flex justify-between gap-4 ml-3">
+                                              <span>{workshop.tireFront.quantity}× {workshop.tireFront.brand} {workshop.tireFront.model} à {formatEUR(workshop.tireFront.pricePerTire)}</span>
+                                              <span className="font-medium">{formatEUR(workshop.tireFront.totalPrice)}</span>
+                                            </div>
+                                            <div className="flex justify-between gap-4 mt-1">
+                                              <span className="text-xs">🔸 Hinterachse ({workshop.tireRear.dimensions})</span>
+                                            </div>
+                                            <div className="flex justify-between gap-4 ml-3">
+                                              <span>{workshop.tireRear.quantity}× {workshop.tireRear.brand} {workshop.tireRear.model} à {formatEUR(workshop.tireRear.pricePerTire)}</span>
+                                              <span className="font-medium">{formatEUR(workshop.tireRear.totalPrice)}</span>
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <>
+                                            {/* Standard tires: Single tire type */}
+                                            <div className="flex justify-between gap-4">
+                                              <span>{selectedRec.quantity}× {selectedRec.brand} à {formatEUR(selectedRec.pricePerTire)}</span>
+                                              <span className="font-medium">{formatEUR(selectedRec.totalPrice)}</span>
+                                            </div>
+                                          </>
+                                        )}
+                                        <div className="flex justify-between gap-4">
+                                          <span>Montage</span>
+                                          <span className="font-medium">{formatEUR(workshop.basePrice || 0)}</span>
+                                        </div>
+                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (
+                                          <div className="flex justify-between gap-4">
+                                            <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec.quantity}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec.quantity))})</span>
+                                            <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
+                                          </div>
+                                        )}
+                                        <div className="border-t border-gray-200 pt-1 mt-1"></div>
+                                      </div>
+                                      {/* Total price */}
                                       <div className="flex items-baseline gap-2">
                                         <span className="text-xs text-gray-500">Gesamtpreis</span>
                                         <span className="text-2xl sm:text-3xl font-bold text-primary-600">

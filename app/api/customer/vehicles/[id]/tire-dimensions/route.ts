@@ -17,7 +17,7 @@ export async function GET(
 
     const vehicleId = params.id
 
-    // Get vehicle with current tires
+    // Get vehicle with tire specs
     const vehicle = await prisma.vehicle.findFirst({
       where: {
         id: vehicleId,
@@ -25,10 +25,20 @@ export async function GET(
           userId: session.user.id
         }
       },
-      include: {
+      select: {
+        id: true,
+        vehicleType: true,
+        summerTires: true,
+        winterTires: true,
+        allSeasonTires: true,
         currentTires: {
           orderBy: { createdAt: 'desc' },
-          take: 1
+          take: 1,
+          select: {
+            width: true,
+            aspectRatio: true,
+            diameter: true
+          }
         }
       }
     })
@@ -50,54 +60,30 @@ export async function GET(
       }
     }
 
-    // 2. Check JSON tire strings (fallback)
+    // 2. Check JSON tire strings (fallback) - Priority: summer > winter > allSeason
     if (!dimensions) {
-      try {
-        // Try summerTires first
-        if (vehicle.summerTires) {
-          const parsed = JSON.parse(vehicle.summerTires)
+      const tireJsonSources = [
+        vehicle.summerTires,
+        vehicle.winterTires,
+        vehicle.allSeasonTires
+      ]
+
+      for (const tireJson of tireJsonSources) {
+        if (!tireJson) continue
+        
+        try {
+          const parsed = typeof tireJson === 'string' ? JSON.parse(tireJson) : tireJson
           if (parsed.width && parsed.aspectRatio && parsed.diameter) {
             dimensions = {
               width: parsed.width,
               height: parsed.aspectRatio,
               diameter: parsed.diameter
             }
+            break
           }
+        } catch (e) {
+          // Ignore parse errors
         }
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-
-    // 3. Try winterTires
-    if (!dimensions && vehicle.winterTires) {
-      try {
-        const parsed = JSON.parse(vehicle.winterTires)
-        if (parsed.width && parsed.aspectRatio && parsed.diameter) {
-          dimensions = {
-            width: parsed.width,
-            height: parsed.aspectRatio,
-            diameter: parsed.diameter
-          }
-        }
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-
-    // 4. Try allSeasonTires
-    if (!dimensions && vehicle.allSeasonTires) {
-      try {
-        const parsed = JSON.parse(vehicle.allSeasonTires)
-        if (parsed.width && parsed.aspectRatio && parsed.diameter) {
-          dimensions = {
-            width: parsed.width,
-            height: parsed.aspectRatio,
-            diameter: parsed.diameter
-          }
-        }
-      } catch (e) {
-        // Ignore parse errors
       }
     }
 
@@ -108,9 +94,54 @@ export async function GET(
       }, { status: 404 })
     }
 
+    // Check for mixed tire setup from JSON data (hasDifferentSizes flag)
+    let hasMixedTires = false
+    let dimensionsFront = null
+    let dimensionsRear = null
+
+    const tireJsonSources = [
+      vehicle.summerTires,
+      vehicle.winterTires,
+      vehicle.allSeasonTires
+    ]
+
+    for (const tireJson of tireJsonSources) {
+      if (!tireJson) continue
+      
+      try {
+        const parsed = typeof tireJson === 'string' ? JSON.parse(tireJson) : tireJson
+        
+        if (parsed.hasDifferentSizes && parsed.rearWidth && parsed.rearAspectRatio && parsed.rearDiameter) {
+          // Front dimensions
+          dimensionsFront = {
+            width: parsed.width,
+            height: parsed.aspectRatio,
+            diameter: parsed.diameter,
+            formatted: `${parsed.width}/${parsed.aspectRatio} R${parsed.diameter}`
+          }
+          
+          // Rear dimensions
+          dimensionsRear = {
+            width: parsed.rearWidth,
+            height: parsed.rearAspectRatio,
+            diameter: parsed.rearDiameter,
+            formatted: `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}`
+          }
+          
+          hasMixedTires = true
+          break
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
       dimensions,
+      hasMixedTires,
+      dimensionsFront,
+      dimensionsRear,
       vehicleType: vehicle.vehicleType || 'CAR'
     })
   } catch (error) {

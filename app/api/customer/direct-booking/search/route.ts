@@ -45,8 +45,36 @@ export async function POST(request: NextRequest) {
       // Tire search parameters (optional)
       includeTires = false,
       tireDimensions,
+      tireDimensionsFront, // For mixed tires: front axle dimensions
+      tireDimensionsRear,  // For mixed tires: rear axle dimensions
       tireFilters
     } = body
+
+    // Determine tire count from packageTypes (for tire pricing)
+    let requestedTireCount = 4 // Default
+    let isMixedTires = false
+    let frontTireCount = 0
+    let rearTireCount = 0
+
+    if (packageTypes.includes('two_tires')) {
+      requestedTireCount = 2
+    } else if (packageTypes.includes('four_tires')) {
+      requestedTireCount = 4
+    } else if (packageTypes.includes('front_two_tires')) {
+      requestedTireCount = 2
+      isMixedTires = true
+      frontTireCount = 2
+    } else if (packageTypes.includes('rear_two_tires')) {
+      requestedTireCount = 2
+      isMixedTires = true
+      rearTireCount = 2
+    } else if (packageTypes.includes('mixed_four_tires')) {
+      requestedTireCount = 4
+      isMixedTires = true
+      frontTireCount = 2
+      rearTireCount = 2
+    }
+    console.log('🔢 [API] Requested tire count:', requestedTireCount, 'isMixedTires:', isMixedTires, 'from packageTypes:', packageTypes)
 
     // Validate location parameters only (vehicle not needed for search)
     if (customerLat === undefined || customerLon === undefined) {
@@ -141,7 +169,8 @@ export async function POST(request: NextRequest) {
         let tireCount = 0 // For TIRE_CHANGE: 2 or 4
         
         // Separate main packages from additional services
-        const mainPackageTypes = ['two_tires', 'four_tires', 'basic', 'with_balancing', 'with_storage', 'complete',
+        const mainPackageTypes = ['two_tires', 'four_tires', 'front_two_tires', 'rear_two_tires', 'mixed_four_tires', 
+                                  'basic', 'with_balancing', 'with_storage', 'complete',
                                    'measurement_front', 'measurement_rear', 'measurement_both',
                                    'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service',
                                    'foreign_object', 'valve_damage', 'front', 'rear', 'both',
@@ -235,6 +264,12 @@ export async function POST(request: NextRequest) {
             tireCount = 2
           } else if (selectedPackage.packageType === 'four_tires') {
             tireCount = 4
+          } else if (selectedPackage.packageType === 'front_two_tires') {
+            tireCount = 2
+          } else if (selectedPackage.packageType === 'rear_two_tires') {
+            tireCount = 2
+          } else if (selectedPackage.packageType === 'mixed_four_tires') {
+            tireCount = 4
           }
         } else if (service.servicePackages && service.servicePackages.length > 0) {
           // No filter applied, use cheapest package as base
@@ -251,6 +286,12 @@ export async function POST(request: NextRequest) {
               tireCount = 2
             } else if (cheapestPackage.packageType === 'four_tires') {
               tireCount = 4
+            } else if (cheapestPackage.packageType === 'front_two_tires') {
+              tireCount = 2
+            } else if (cheapestPackage.packageType === 'rear_two_tires') {
+              tireCount = 2
+            } else if (cheapestPackage.packageType === 'mixed_four_tires') {
+              tireCount = 4
             }
           } else {
             basePrice = service.basePrice ? Number(service.basePrice) : 0
@@ -259,18 +300,11 @@ export async function POST(request: NextRequest) {
           basePrice = service.basePrice ? Number(service.basePrice) : 0
         }
         
-        // Add additional service fees (multiplied by tire count)
-        let additionalFees = 0
-        if (serviceType === 'TIRE_CHANGE' && tireCount > 0) {
-          if (selectedAdditionalServices.includes('with_disposal') && service.disposalFee) {
-            additionalFees += Number(service.disposalFee) * tireCount
-          }
-          if (selectedAdditionalServices.includes('runflat') && service.runFlatSurcharge) {
-            additionalFees += Number(service.runFlatSurcharge) * tireCount
-          }
-        }
+        // Additional fees are now calculated separately:
+        // - Disposal fee: added to total at the end (disposalFeeTotal)
+        // - RunFlat surcharge: included in tire pricePerTire calculation
         
-        const totalPrice = basePrice + additionalFees
+        const totalPrice = basePrice
         const estimatedDuration = baseDuration
 
         // Calculate rating
@@ -339,6 +373,12 @@ export async function POST(request: NextRequest) {
           basePrice,
           totalPrice,
           
+          // Store service data for later use (in tire search)
+          serviceData: {
+            disposalFee: service.disposalFee ? Number(service.disposalFee) : 0,
+            runFlatSurcharge: service.runFlatSurcharge ? Number(service.runFlatSurcharge) : 0,
+          },
+          
           // VAT
           showVatNote, // Zeigt "zzgl. MwSt." wenn B2B
           
@@ -382,20 +422,149 @@ export async function POST(request: NextRequest) {
     // Add tire pricing if requested
     let workshopsWithTires = workshopsWithDistance
 
-    if (includeTires && tireDimensions) {
-      const { width, height, diameter } = tireDimensions
+    if (includeTires && (tireDimensions || (tireDimensionsFront && tireDimensionsRear))) {
+      // Determine which additional services are requested
+      const additionalServices = ['with_disposal', 'runflat']
+      const selectedAdditionalServices = packageTypes.filter(pt => additionalServices.includes(pt))
+      const requireRunFlat = selectedAdditionalServices.includes('runflat')
+      const includeDisposal = selectedAdditionalServices.includes('with_disposal')
       
-      if (width && height && diameter) {
+      // Check if this is a mixed tire setup
+      const isMixedTireSearch = isMixedTires && tireDimensionsFront && tireDimensionsRear
+      
+      if (isMixedTireSearch) {
+        // Mixed tire search: Search for front and rear tires separately
+        const { width: widthFront, height: heightFront, diameter: diameterFront } = tireDimensionsFront
+        const { width: widthRear, height: heightRear, diameter: diameterRear } = tireDimensionsRear
+        
+        if (widthFront && heightFront && diameterFront && widthRear && heightRear && diameterRear) {
+          workshopsWithTires = await Promise.all(
+            workshopsWithDistance.map(async (workshop) => {
+              try {
+                const disposalFee = workshop.serviceData?.disposalFee || 0
+                const runFlatSurcharge = workshop.serviceData?.runFlatSurcharge || 0
+                const seasonFilter = tireFilters?.seasons?.[0] || 'all'
+                
+                // Search for front tires (2 pieces)
+                const frontRecsResult = await findTireRecommendations(
+                  workshop.id,
+                  widthFront,
+                  heightFront,
+                  diameterFront,
+                  seasonFilter,
+                  'PKW',
+                  {
+                    minPrice: tireFilters?.minPrice,
+                    maxPrice: tireFilters?.maxPrice,
+                    quality: tireFilters?.quality,
+                    minFuelEfficiency: tireFilters?.fuelEfficiency,
+                    minWetGrip: tireFilters?.wetGrip,
+                    threePMSF: tireFilters?.threePMSF,
+                    runFlat: requireRunFlat || undefined,
+                  },
+                  2, // Always 2 front tires
+                  0,
+                  requireRunFlat ? runFlatSurcharge : 0
+                )
+                
+                // Search for rear tires (2 pieces)
+                const rearRecsResult = await findTireRecommendations(
+                  workshop.id,
+                  widthRear,
+                  heightRear,
+                  diameterRear,
+                  seasonFilter,
+                  'PKW',
+                  {
+                    minPrice: tireFilters?.minPrice,
+                    maxPrice: tireFilters?.maxPrice,
+                    quality: tireFilters?.quality,
+                    minFuelEfficiency: tireFilters?.fuelEfficiency,
+                    minWetGrip: tireFilters?.wetGrip,
+                    threePMSF: tireFilters?.threePMSF,
+                    runFlat: requireRunFlat || undefined,
+                  },
+                  2, // Always 2 rear tires
+                  0,
+                  requireRunFlat ? runFlatSurcharge : 0
+                )
+                
+                // Check if both searches found tires
+                if (frontRecsResult.available && frontRecsResult.recommendations.length > 0 &&
+                    rearRecsResult.available && rearRecsResult.recommendations.length > 0) {
+                  
+                  const frontRec = frontRecsResult.recommendations[0] // cheapest front
+                  const rearRec = rearRecsResult.recommendations[0]   // cheapest rear
+                  
+                  // Calculate combined price
+                  const combinedTirePrice = frontRec.totalPrice + rearRec.totalPrice
+                  const disposalFeeTotal = includeDisposal ? disposalFee * 4 : 0 // 4 tires total
+                  const newTotalPrice = workshop.totalPrice + disposalFeeTotal + combinedTirePrice
+                  
+                  console.log(`🔄 [Mixed Tires] Workshop ${workshop.id}: front=${frontRec.totalPrice} (2×${frontRec.pricePerTire}), rear=${rearRec.totalPrice} (2×${rearRec.pricePerTire}), total=${combinedTirePrice}`)
+                  
+                  return {
+                    ...workshop,
+                    // Mixed tire data
+                    isMixedTires: true,
+                    tirePrice: combinedTirePrice,
+                    tireFront: {
+                      brand: frontRec.tire.brand,
+                      model: frontRec.tire.model,
+                      pricePerTire: frontRec.pricePerTire,
+                      totalPrice: frontRec.totalPrice,
+                      quantity: 2,
+                      dimensions: `${widthFront}/${heightFront} R${diameterFront}`
+                    },
+                    tireRear: {
+                      brand: rearRec.tire.brand,
+                      model: rearRec.tire.model,
+                      pricePerTire: rearRec.pricePerTire,
+                      totalPrice: rearRec.totalPrice,
+                      quantity: 2,
+                      dimensions: `${widthRear}/${heightRear} R${diameterRear}`
+                    },
+                    tireQuantity: 4,
+                    tireAvailable: true,
+                    disposalFeeApplied: disposalFeeTotal,
+                    totalPrice: newTotalPrice
+                  }
+                }
+                
+                // If either search failed, return null (workshop excluded)
+                return null
+              } catch (error) {
+                console.error(`Error fetching mixed tires for workshop ${workshop.id}:`, error)
+                return null
+              }
+            })
+          )
+          
+          // Filter out workshops without available mixed tires
+          workshopsWithTires = workshopsWithTires.filter((w): w is NonNullable<typeof w> => w !== null)
+        }
+      } else if (tireDimensions) {
+        // Standard single tire size search
+        const { width, height, diameter } = tireDimensions
+        
+        if (width && height && diameter) {
         // Fetch tire recommendations for each workshop
         workshopsWithTires = await Promise.all(
           workshopsWithDistance.map(async (workshop) => {
             try {
+              // Get fees from serviceData that was stored during workshop mapping
+              const disposalFee = workshop.serviceData?.disposalFee || 0
+              const runFlatSurcharge = workshop.serviceData?.runFlatSurcharge || 0
+              
+              const seasonFilter = tireFilters?.seasons?.[0] || 'all'
+              console.log(`🔍 [Season Filter] Workshop ${workshop.id}: tireFilters.seasons=${JSON.stringify(tireFilters?.seasons)}, using season="${seasonFilter}"`)
+              
               const recsResult = await findTireRecommendations(
                 workshop.id,
                 width,
                 height,
                 diameter,
-                tireFilters?.seasons?.[0] || 'all',
+                seasonFilter,
                 'PKW',
                 {
                   minPrice: tireFilters?.minPrice,
@@ -404,11 +573,23 @@ export async function POST(request: NextRequest) {
                   minFuelEfficiency: tireFilters?.fuelEfficiency,
                   minWetGrip: tireFilters?.wetGrip,
                   threePMSF: tireFilters?.threePMSF,
-                }
+                  runFlat: requireRunFlat || undefined, // Only show runflat tires if filter is active
+                },
+                requestedTireCount, // Pass the requested tire count
+                0, // disposalFee NOT added to tire price
+                requireRunFlat ? runFlatSurcharge : 0 // Pass runflat surcharge per tire
               )
 
               if (recsResult.available && recsResult.recommendations.length > 0) {
                 const defaultRec = recsResult.recommendations[0] // cheapest
+                
+                // Calculate disposal fee (added to montage, not to tires)
+                const disposalFeeTotal = includeDisposal ? disposalFee * requestedTireCount : 0
+                console.log(`💰 [Disposal Fee] Workshop ${workshop.id}: includeDisposal=${includeDisposal}, disposalFee=${disposalFee}, requestedTireCount=${requestedTireCount}, disposalFeeTotal=${disposalFeeTotal}`)
+                
+                const newTotalPrice = workshop.totalPrice + disposalFeeTotal + defaultRec.totalPrice
+                console.log(`💵 [Total Price] Workshop ${workshop.id}: service=${workshop.totalPrice}, disposal=${disposalFeeTotal}, tires=${defaultRec.totalPrice}, TOTAL=${newTotalPrice}`)
+                
                 return {
                   ...workshop,
                   // Default tire (cheapest)
@@ -418,6 +599,8 @@ export async function POST(request: NextRequest) {
                   tireBrand: defaultRec.tire.brand,
                   tireModel: defaultRec.tire.model,
                   tireAvailable: true,
+                  // Price breakdown for display
+                  disposalFeeApplied: disposalFeeTotal,
                   // All recommendations for display
                   tireRecommendations: recsResult.recommendations.map(rec => ({
                     label: rec.label,
@@ -432,8 +615,8 @@ export async function POST(request: NextRequest) {
                     threePMSF: rec.tire.threePMSF,
                     runFlat: rec.tire.runFlat,
                   })),
-                  // Update total price (service + cheapest tires)
-                  totalPrice: workshop.totalPrice + defaultRec.totalPrice,
+                  // Update total price (service + disposal + cheapest tires)
+                  totalPrice: newTotalPrice,
                 }
               } else {
                 return {
@@ -455,6 +638,14 @@ export async function POST(request: NextRequest) {
           })
         )
       }
+      }
+    } else {
+      // No tire search requested
+      workshopsWithTires = workshopsWithDistance.map(workshop => ({
+        ...workshop,
+        tireAvailable: false,
+        tirePrice: 0
+      }))
     }
 
     return NextResponse.json({

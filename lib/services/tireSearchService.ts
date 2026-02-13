@@ -208,6 +208,9 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   // Season filter
   if (season && season !== 'all') {
     where.season = season
+    console.log(`🌡️ [Tire Search] Filtering by season: "${season}"`)
+  } else {
+    console.log(`🌡️ [Tire Search] No season filter applied (season="${season}")`)
   }
 
   // Quality filter (by brand)
@@ -261,6 +264,8 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
         ? { labelNoise: sortOrder }
         : { price: 'asc' },
   })
+  
+  console.log(`📊 [Tire Search] Found ${tires.length} tires. First 3 seasons:`, tires.slice(0, 3).map(t => `${t.brand} ${t.model} (season="${t.season}")`))
 
   // Calculate selling prices
   const results: TireSearchResult[] = []
@@ -372,9 +377,13 @@ export async function findTireRecommendations(
   diameter: string,
   season?: 's' | 'w' | 'g' | 'all',
   vehicleType: 'PKW' | 'Motorrad' = 'PKW',
-  additionalFilters?: Partial<TireSearchFilters>
+  additionalFilters?: Partial<TireSearchFilters>,
+  requestedQuantity?: number, // Optional: Override default quantity
+  disposalFeePerTire: number = 0, // Disposal fee per tire
+  runFlatSurchargePerTire: number = 0 // RunFlat surcharge per tire
 ): Promise<TireRecommendationsResult> {
-  const minStock = vehicleType === 'Motorrad' ? 2 : 4
+  // Use requested quantity if provided, otherwise default based on vehicle type
+  const minStock = requestedQuantity || (vehicleType === 'Motorrad' ? 2 : 4)
   const quantity = minStock
 
   // Get all matching tires sorted by price
@@ -398,11 +407,12 @@ export async function findTireRecommendations(
 
   // 1. Günstigster (cheapest overall)
   const cheapest = allTires[0]
+  const cheapestPricePerTire = cheapest.sellingPrice + disposalFeePerTire + (cheapest.runFlat ? runFlatSurchargePerTire : 0)
   recommendations.push({
     label: 'Günstigster',
     tire: cheapest,
-    pricePerTire: cheapest.sellingPrice,
-    totalPrice: parseFloat((cheapest.sellingPrice * quantity).toFixed(2)),
+    pricePerTire: parseFloat(cheapestPricePerTire.toFixed(2)),
+    totalPrice: parseFloat((cheapestPricePerTire * quantity).toFixed(2)),
     quantity,
   })
 
@@ -411,11 +421,12 @@ export async function findTireRecommendations(
     PREMIUM_BRANDS.some(b => t.brand.toLowerCase().includes(b.toLowerCase()))
   )
   if (premiumTire && premiumTire.id !== cheapest.id) {
+    const premiumPricePerTire = premiumTire.sellingPrice + disposalFeePerTire + (premiumTire.runFlat ? runFlatSurchargePerTire : 0)
     recommendations.push({
       label: 'Testsieger',
       tire: premiumTire,
-      pricePerTire: premiumTire.sellingPrice,
-      totalPrice: parseFloat((premiumTire.sellingPrice * quantity).toFixed(2)),
+      pricePerTire: parseFloat(premiumPricePerTire.toFixed(2)),
+      totalPrice: parseFloat((premiumPricePerTire * quantity).toFixed(2)),
       quantity,
     })
   }
@@ -425,11 +436,12 @@ export async function findTireRecommendations(
     QUALITY_BRANDS.some(b => t.brand.toLowerCase().includes(b.toLowerCase()))
   )
   if (qualityTire && qualityTire.id !== cheapest.id && qualityTire.id !== premiumTire?.id) {
+    const qualityPricePerTire = qualityTire.sellingPrice + disposalFeePerTire + (qualityTire.runFlat ? runFlatSurchargePerTire : 0)
     recommendations.push({
       label: 'Beliebt',
       tire: qualityTire,
-      pricePerTire: qualityTire.sellingPrice,
-      totalPrice: parseFloat((qualityTire.sellingPrice * quantity).toFixed(2)),
+      pricePerTire: parseFloat(qualityPricePerTire.toFixed(2)),
+      totalPrice: parseFloat((qualityPricePerTire * quantity).toFixed(2)),
       quantity,
     })
   }
@@ -437,11 +449,12 @@ export async function findTireRecommendations(
   // If we only have 1 recommendation and more tires, add second cheapest as alternative
   if (recommendations.length === 1 && allTires.length > 1) {
     const secondCheapest = allTires[1]
+    const secondPricePerTire = secondCheapest.sellingPrice + disposalFeePerTire + (secondCheapest.runFlat ? runFlatSurchargePerTire : 0)
     recommendations.push({
       label: 'Alternative',
       tire: secondCheapest,
-      pricePerTire: secondCheapest.sellingPrice,
-      totalPrice: parseFloat((secondCheapest.sellingPrice * quantity).toFixed(2)),
+      pricePerTire: parseFloat(secondPricePerTire.toFixed(2)),
+      totalPrice: parseFloat((secondPricePerTire * quantity).toFixed(2)),
       quantity,
     })
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import InfoTooltip from './InfoTooltip'
 
 interface FilterOption {
@@ -22,7 +22,11 @@ interface ServiceFilterConfig {
 
 interface ServiceFiltersProps {
   selectedService: string
+  selectedPackages: string[]
   onFiltersChange: (selectedPackages: string[]) => void
+  // Mixed tire dimensions (if front ≠ rear)
+  tireDimensionsFront?: string
+  tireDimensionsRear?: string
 }
 
 const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
@@ -217,36 +221,28 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   }
 }
 
-export default function ServiceFilters({ selectedService, onFiltersChange }: ServiceFiltersProps) {
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
-  const isInitialMount = useRef(true)
-
+export default function ServiceFilters({ 
+  selectedService, 
+  selectedPackages, 
+  onFiltersChange,
+  tireDimensionsFront = '',
+  tireDimensionsRear = ''
+}: ServiceFiltersProps) {
   const config = FILTER_CONFIG[selectedService]
+  
+  // Check if vehicle has mixed tires (different front/rear dimensions)
+  const hasMixedTires = tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
 
-  // Reset filters when service changes (but not on initial mount to avoid triggering search twice)
+  // Log for debugging
   useEffect(() => {
-    console.log('🎛️ [ServiceFilters useEffect] Triggered', {
-      isInitialMount: isInitialMount.current,
+    console.log('🎛️ [ServiceFilters] Rendered with:', {
       selectedService,
-      selectedPackages
+      selectedPackages,
+      tireDimensionsFront,
+      tireDimensionsRear,
+      hasMixedTires
     })
-    
-    if (isInitialMount.current) {
-      console.log('⏭️ [ServiceFilters] Initial mount - setting local state only, NOT calling parent')
-      isInitialMount.current = false
-      // Set initial value in local state only, without triggering parent callback
-      setSelectedPackages([])
-      console.log('✅ [ServiceFilters] Set initial local packages: []')
-      // DO NOT call onFiltersChange here - parent will handle initial state
-      return
-    }
-    
-    console.log('🔄 [ServiceFilters] Service changed - resetting packages and notifying parent')
-    // Reset to empty when service changes
-    setSelectedPackages([])
-    onFiltersChange([])
-    console.log('✅ [ServiceFilters] Reset to: []')
-  }, [selectedService])
+  }, [selectedService, selectedPackages, tireDimensionsFront, tireDimensionsRear, hasMixedTires])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
@@ -263,38 +259,67 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
       newSelection.push(packageType)
     }
     
-    setSelectedPackages(newSelection)
+    console.log('🔄 [ServiceFilters] toggling package:', packageType, '→', newSelection)
     onFiltersChange(newSelection)
   }
 
   if (!config) {
     return null
   }
+  
+  // Override tire count options if mixed tires detected
+  let displayConfig = config
+  if (selectedService === 'TIRE_CHANGE' && hasMixedTires) {
+    displayConfig = {
+      groups: [
+        {
+          label: 'Anzahl Reifen',
+          multiSelect: false,
+          options: [
+            {
+              packageType: 'front_two_tires',
+              label: `2 Reifen Vorderachse`,
+              info: `Wechsel der Vorderachse (${tireDimensionsFront})`
+            },
+            {
+              packageType: 'rear_two_tires',
+              label: `2 Reifen Hinterachse`,
+              info: `Wechsel der Hinterachse (${tireDimensionsRear})`
+            },
+            {
+              packageType: 'mixed_four_tires',
+              label: `4 Reifen Komplettsatz`,
+              info: `Alle 4 Reifen (2× ${tireDimensionsFront} vorne + 2× ${tireDimensionsRear} hinten)`
+            }
+          ]
+        },
+        ...config.groups.slice(1) // Keep other groups (Zusatzleistungen, etc.)
+      ]
+    }
+  }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">🔍 Service-Filter</h3>
-      
-      {config.groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="mb-4 last:mb-0">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2 pb-2 border-b border-gray-200">
+    <div>
+      {displayConfig.groups.map((group, groupIndex) => (
+        <div key={groupIndex} className={groupIndex > 0 ? 'mt-4' : ''}>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
             {group.label}
           </h4>
           
-          <div className="space-y-2">
+          <div className="space-y-1">
             {group.options.map((option) => (
               <label
                 key={option.packageType}
-                className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <input
                   type={group.multiSelect ? 'checkbox' : 'radio'}
-                  name={group.multiSelect ? undefined : `filter-${groupIndex}`}
+                  name={group.multiSelect ? undefined : `${selectedService}-filter-${groupIndex}`}
                   checked={selectedPackages.includes(option.packageType)}
                   onChange={() => togglePackage(option.packageType, group)}
-                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                  className={`w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500${group.multiSelect ? ' rounded' : ''}`}
                 />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <span className="text-sm flex items-center gap-1">
                   {option.label}
                   <InfoTooltip content={option.info} />
                 </span>
@@ -312,18 +337,6 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
           )}
         </div>
       ))}
-
-      {selectedPackages.length > 0 && (
-        <button
-          onClick={() => {
-            setSelectedPackages([])
-            onFiltersChange([])
-          }}
-          className="mt-4 w-full text-sm text-primary-600 hover:text-primary-700 font-medium"
-        >
-          Alle Filter zurücksetzen
-        </button>
-      )}
     </div>
   )
 }

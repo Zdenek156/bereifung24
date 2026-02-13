@@ -443,7 +443,16 @@ export default function NewHomePage() {
         
         // Automatically trigger search if location is set
         if (hasSearched && customerLocation) {
-          searchWorkshops(customerLocation)
+          // Pass tire dimensions directly to avoid async state issues
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            searchWorkshops(customerLocation, undefined, {
+              hasMixed: true,
+              front: data.dimensionsFront.formatted,
+              rear: data.dimensionsRear.formatted
+            })
+          } else {
+            searchWorkshops(customerLocation)
+          }
         }
       }
     } catch (error) {
@@ -452,14 +461,21 @@ export default function NewHomePage() {
   }
 
   // Search workshops
-  const searchWorkshops = async (location: { lat: number; lon: number }, overrideSeason?: string) => {
+  const searchWorkshops = async (
+    location: { lat: number; lon: number }, 
+    overrideSeason?: string,
+    // CRITICAL: Accept tire dimensions directly to avoid async state issues
+    overrideMixedTires?: { hasMixed: boolean; front?: string; rear?: string }
+  ) => {
     const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
-    console.log('🔍 [searchWorkshops] Starting search...', {
+    const mixedTiresData = overrideMixedTires || { hasMixed: hasMixedTires, front: tireDimensionsFront, rear: tireDimensionsRear }
+    
+    // DEBUG: Log all values before API call
+    console.log('🔍 [searchWorkshops] Values:', {
       serviceType: selectedService,
       packageTypes: selectedPackages,
-      radiusKm,
-      location,
       includeTires,
+      mixedTiresData,
       tireDimensions,
       season: seasonToUse
     })
@@ -476,17 +492,21 @@ export default function NewHomePage() {
           customerLon: location.lon,
           // Tire search parameters (only for TIRE_CHANGE service)
           includeTires: selectedService === 'TIRE_CHANGE' ? includeTires : false,
-          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !hasMixedTires) ? tireDimensions : undefined,
+          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !mixedTiresData.hasMixed) ? tireDimensions : undefined,
           // Mixed tire dimensions (if vehicle has different front/rear sizes)
-          tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && hasMixedTires && tireDimensionsFront) ? 
+          tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.front) ? 
             (() => {
-              const match = tireDimensionsFront.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
-              return match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+              const match = mixedTiresData.front.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+              console.log('🎯 [searchWorkshops] Parsing front dimensions:', mixedTiresData.front, '→', parsed);
+              return parsed;
             })() : undefined,
-          tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && includeTires && hasMixedTires && tireDimensionsRear) ? 
+          tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.rear) ? 
             (() => {
-              const match = tireDimensionsRear.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
-              return match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+              const match = mixedTiresData.rear.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+              console.log('🎯 [searchWorkshops] Parsing rear dimensions:', mixedTiresData.rear, '→', parsed);
+              return parsed;
             })() : undefined,
           tireFilters: (selectedService === 'TIRE_CHANGE' && includeTires) ? {
             minPrice: tireBudgetMin,

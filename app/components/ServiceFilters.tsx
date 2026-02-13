@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import InfoTooltip from './InfoTooltip'
 
 interface FilterOption {
@@ -16,13 +16,19 @@ interface FilterGroup {
   note?: string // Optional warning/info note below the filter group
 }
 
-interface ServiceFilterConfig {
+export interface ServiceFilterConfig {
   groups: FilterGroup[]
 }
 
 interface ServiceFiltersProps {
   selectedService: string
+  selectedPackages: string[]
   onFiltersChange: (selectedPackages: string[]) => void
+  // Optional: Override default config (e.g. for mixed tires)
+  customConfig?: ServiceFilterConfig
+  // Mixed tire dimensions (if front ≠ rear) - for logging only
+  tireDimensionsFront?: string
+  tireDimensionsRear?: string
 }
 
 const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
@@ -217,36 +223,29 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   }
 }
 
-export default function ServiceFilters({ selectedService, onFiltersChange }: ServiceFiltersProps) {
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
-  const isInitialMount = useRef(true)
-
-  const config = FILTER_CONFIG[selectedService]
-
-  // Reset filters when service changes (but not on initial mount to avoid triggering search twice)
+export default function ServiceFilters({ 
+  selectedService, 
+  selectedPackages, 
+  onFiltersChange,
+  customConfig,
+  tireDimensionsFront = '',
+  tireDimensionsRear = ''
+}: ServiceFiltersProps) {
+  // Use customConfig if provided (for mixed tires), otherwise use default
+  const config = customConfig || FILTER_CONFIG[selectedService]
+  
+  // Log for debugging - VERSION 4.0 MOVED LOGIC TO PAGE.TSX
   useEffect(() => {
-    console.log('🎛️ [ServiceFilters useEffect] Triggered', {
-      isInitialMount: isInitialMount.current,
+    console.log('🎯 [ServiceFilters v4.0] Rendered:', {
       selectedService,
-      selectedPackages
+      selectedPackages,
+      hasCustomConfig: !!customConfig,
+      configGroups: config?.groups.length || 0,
+      firstGroupOptions: config?.groups[0]?.options.length || 0,
+      tireDimensionsFront,
+      tireDimensionsRear
     })
-    
-    if (isInitialMount.current) {
-      console.log('⏭️ [ServiceFilters] Initial mount - setting local state only, NOT calling parent')
-      isInitialMount.current = false
-      // Set initial value in local state only, without triggering parent callback
-      setSelectedPackages([])
-      console.log('✅ [ServiceFilters] Set initial local packages: []')
-      // DO NOT call onFiltersChange here - parent will handle initial state
-      return
-    }
-    
-    console.log('🔄 [ServiceFilters] Service changed - resetting packages and notifying parent')
-    // Reset to empty when service changes
-    setSelectedPackages([])
-    onFiltersChange([])
-    console.log('✅ [ServiceFilters] Reset to: []')
-  }, [selectedService])
+  }, [selectedService, selectedPackages, customConfig, config, tireDimensionsFront, tireDimensionsRear])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
@@ -263,7 +262,7 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
       newSelection.push(packageType)
     }
     
-    setSelectedPackages(newSelection)
+    console.log('🔄 [ServiceFilters] toggling package:', packageType, '→', newSelection)
     onFiltersChange(newSelection)
   }
 
@@ -272,29 +271,27 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">🔍 Service-Filter</h3>
-      
+    <div>
       {config.groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="mb-4 last:mb-0">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2 pb-2 border-b border-gray-200">
+        <div key={groupIndex} className={groupIndex > 0 ? 'mt-4' : ''}>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
             {group.label}
           </h4>
           
-          <div className="space-y-2">
+          <div className="space-y-1">
             {group.options.map((option) => (
               <label
                 key={option.packageType}
-                className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <input
                   type={group.multiSelect ? 'checkbox' : 'radio'}
-                  name={group.multiSelect ? undefined : `filter-${groupIndex}`}
+                  name={group.multiSelect ? undefined : `${selectedService}-filter-${groupIndex}`}
                   checked={selectedPackages.includes(option.packageType)}
                   onChange={() => togglePackage(option.packageType, group)}
-                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                  className={`w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500${group.multiSelect ? ' rounded' : ''}`}
                 />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <span className="text-sm flex items-center gap-1">
                   {option.label}
                   <InfoTooltip content={option.info} />
                 </span>
@@ -312,18 +309,6 @@ export default function ServiceFilters({ selectedService, onFiltersChange }: Ser
           )}
         </div>
       ))}
-
-      {selectedPackages.length > 0 && (
-        <button
-          onClick={() => {
-            setSelectedPackages([])
-            onFiltersChange([])
-          }}
-          className="mt-4 w-full text-sm text-primary-600 hover:text-primary-700 font-medium"
-        >
-          Alle Filter zurücksetzen
-        </button>
-      )}
     </div>
   )
 }

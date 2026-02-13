@@ -417,6 +417,15 @@ export async function POST(request: NextRequest) {
                   tireBrand: cheapestTireResult.tire?.brand,
                   tireModel: cheapestTireResult.tire?.model,
                   tireAvailable: true,
+                  // Tire details for display
+                  tire: cheapestTireResult.tire ? {
+                    brand: cheapestTireResult.tire.brand,
+                    model: cheapestTireResult.tire.model,
+                    threePMSF: cheapestTireResult.tire.threePMSF,
+                    labelFuelEfficiency: cheapestTireResult.tire.labelFuelEfficiency,
+                    labelWetGrip: cheapestTireResult.tire.labelWetGrip,
+                    labelNoise: cheapestTireResult.tire.labelNoise,
+                  } : undefined,
                   // Update total price (service + tires)
                   totalPrice: workshop.totalPrice + cheapestTireResult.totalPrice,
                 }

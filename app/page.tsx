@@ -1747,23 +1747,46 @@ export default function NewHomePage() {
                                 {includeTires && workshop.tirePrice ? (
                                   <>
                                     <div className="mb-2">
-                                      <p className="text-xs text-gray-500">Service</p>
+                                      <p className="text-xs text-gray-500">Reifenmontage</p>
                                       <p className="text-lg font-semibold text-gray-700">
-                                        {formatEUR(workshop.basePrice || 0)}
+                                        ab {formatEUR(workshop.basePrice || 0)}
                                       </p>
                                     </div>
-                                    <div className="mb-2">
-                                      <p className="text-xs text-gray-500">
-                                        Reifen ({workshop.tireQuantity || 4}x {workshop.tireBrand || ''})
+                                    <div className="mb-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                      <p className="text-xs font-semibold text-blue-900 mb-1">
+                                        🛞 {workshop.tireBrand || 'Reifen'} {workshop.tireModel ? `- ${workshop.tireModel}` : ''}
                                       </p>
-                                      <p className="text-lg font-semibold text-gray-700">
-                                        {formatEUR(workshop.tirePrice || 0)}
+                                      {tireDimensions.width && tireDimensions.height && tireDimensions.diameter && (
+                                        <p className="text-xs text-blue-800 mb-0.5">
+                                          Größe: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                        </p>
+                                      )}
+                                      {workshop.tire?.threePMSF && (
+                                        <span className="inline-flex items-center text-xs text-blue-700 mr-2">
+                                          ❄️ 3PMSF
+                                        </span>
+                                      )}
+                                      {workshop.tire?.labelFuelEfficiency && (
+                                        <span className="inline-flex items-center text-xs text-blue-700 mr-2">
+                                          ⚡ Effizienz: {workshop.tire.labelFuelEfficiency}
+                                        </span>
+                                      )}
+                                      {workshop.tire?.labelWetGrip && (
+                                        <span className="inline-flex items-center text-xs text-blue-700">
+                                          💧 Nässe: {workshop.tire.labelWetGrip}
+                                        </span>
+                                      )}
+                                      <p className="text-lg font-semibold text-blue-900 mt-1">
+                                        {workshop.tireQuantity || 4}x à {formatEUR((workshop.tirePrice || 0) / (workshop.tireQuantity || 4))}
+                                      </p>
+                                      <p className="text-sm text-blue-700">
+                                        = ab {formatEUR(workshop.tirePrice || 0)}
                                       </p>
                                     </div>
                                     <div className="pt-2 border-t border-gray-200">
                                       <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
                                       <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                        {formatEUR(workshop.totalPrice)}
+                                        ab {formatEUR(workshop.totalPrice)}
                                       </p>
                                     </div>
                                   </>
@@ -1771,16 +1794,16 @@ export default function NewHomePage() {
                                   <div className="text-yellow-600">
                                     <p className="text-xs mb-1">⚠️ Keine Reifen verfügbar</p>
                                     <p className="text-lg font-semibold">
-                                      {formatEUR(workshop.basePrice || workshop.totalPrice)}
+                                      ab {formatEUR(workshop.basePrice || workshop.totalPrice)}
                                     </p>
-                                    <p className="text-xs text-gray-500">Nur Service</p>
+                                    <p className="text-xs text-gray-500">Nur Reifenmontage</p>
                                   </div>
                                 ) : (
                                   <>
                                     <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
                                     {workshop.totalPrice > 0 ? (
                                       <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                        {formatEUR(workshop.totalPrice)}
+                                        ab {formatEUR(workshop.totalPrice)}
                                       </p>
                                     ) : (
                                       <p className="text-lg sm:text-xl font-semibold text-gray-500">

@@ -51,21 +51,24 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Determine tire count from packageTypes (for tire pricing)
-    // CRITICAL: Check mixed tire packages FIRST (they have priority over standard packages)
+    // CRITICAL: Check mixed tire packages FIRST, but ONLY if dimensions are provided
     let requestedTireCount = 4 // Default
     let isMixedTires = false
     let frontTireCount = 0
     let rearTireCount = 0
 
-    if (packageTypes.includes('front_two_tires')) {
+    // Check if we have mixed tire dimensions
+    const hasMixedDimensions = tireDimensionsFront && tireDimensionsRear
+
+    if (packageTypes.includes('front_two_tires') && hasMixedDimensions) {
       requestedTireCount = 2
       isMixedTires = true
       frontTireCount = 2
-    } else if (packageTypes.includes('rear_two_tires')) {
+    } else if (packageTypes.includes('rear_two_tires') && hasMixedDimensions) {
       requestedTireCount = 2
       isMixedTires = true
       rearTireCount = 2
-    } else if (packageTypes.includes('mixed_four_tires')) {
+    } else if (packageTypes.includes('mixed_four_tires') && hasMixedDimensions) {
       requestedTireCount = 4
       isMixedTires = true
       frontTireCount = 2

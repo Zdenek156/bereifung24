@@ -652,8 +652,6 @@ export async function POST(request: NextRequest) {
                   minLoadIndex: loadIndex,
                   minSpeedIndex: speedIndex
                 },
-                  runFlat: requireRunFlat || undefined, // Only show runflat tires if filter is active
-                },
                 requestedTireCount, // Pass the requested tire count
                 0, // disposalFee NOT added to tire price
                 requireRunFlat ? runFlatSurcharge : 0 // Pass runflat surcharge per tire

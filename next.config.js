@@ -48,7 +48,9 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            // Reduced from 1 year to 1 hour for development/testing
+            // TODO: Change back to max-age=31536000 when stable
+            value: 'public, max-age=3600, must-revalidate',
           },
         ],
       },

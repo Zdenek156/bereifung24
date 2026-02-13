@@ -115,6 +115,8 @@ export default function NewHomePage() {
   const [tireSeasons, setTireSeasons] = useState<string[]>(['s', 'w', 'g'])
   const [requireRunFlat, setRequireRunFlat] = useState(false)
   const [require3PMSF, setRequire3PMSF] = useState(false)
+  const [selectedVehicleId, setSelectedVehicleId] = useState('')
+  const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
   
   // Load reviews on page load
   useEffect(() => {
@@ -323,6 +325,66 @@ export default function NewHomePage() {
       
       return newFavorites
     })
+  }
+
+  // Load customer vehicles when logged in
+  useEffect(() => {
+    const loadVehicles = async () => {
+      if (!session?.user?.id) {
+        setCustomerVehicles([])
+        return
+      }
+
+      try {
+        const response = await fetch('/api/customer/vehicles')
+        const data = await response.json()
+        
+        if (data.success && data.vehicles) {
+          setCustomerVehicles(data.vehicles)
+        }
+      } catch (error) {
+        console.error('Error loading vehicles:', error)
+      }
+    }
+
+    loadVehicles()
+  }, [session])
+
+  // Handle vehicle selection
+  const handleVehicleSelect = async (vehicleId: string) => {
+    setSelectedVehicleId(vehicleId)
+    
+    if (!vehicleId) {
+      // Clear tire dimensions if no vehicle selected
+      setTireDimensions({ width: '', height: '', diameter: '' })
+      return
+    }
+
+    // Find selected vehicle and extract tire dimensions
+    const vehicle = customerVehicles.find(v => v.id === vehicleId)
+    if (!vehicle) return
+
+    // Try to get tire dimensions from vehicle data
+    // Priority: currentTires > summerTires > winterTires > allSeasonTires
+    try {
+      const response = await fetch(`/api/customer/vehicles/${vehicleId}/tire-dimensions`)
+      const data = await response.json()
+      
+      if (data.success && data.dimensions) {
+        setTireDimensions({
+          width: data.dimensions.width.toString(),
+          height: data.dimensions.height.toString(),
+          diameter: data.dimensions.diameter.toString()
+        })
+        
+        // Automatically trigger search if location is set
+        if (hasSearched && customerLocation) {
+          searchWorkshops(customerLocation)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading tire dimensions:', error)
+    }
   }
 
   // Search workshops
@@ -1074,13 +1136,33 @@ export default function NewHomePage() {
                       {/* Vehicle Selection / Login Prompt (only if includeTires) */}
                       {includeTires && (
                         <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">🚙 Fahrzeug</h4>
+                          <h4 className="font-semibold mb-3">🚙 Fahrzeug wählen</h4>
                           {session ? (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <p className="text-sm text-blue-900">
-                                <strong>Fahrzeugauswahl:</strong><br />
-                                Wird in Kürze verfügbar sein
-                              </p>
+                            <div className="space-y-2">
+                              <select
+                                value={selectedVehicleId}
+                                onChange={(e) => handleVehicleSelect(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                              >
+                                <option value="">Fahrzeug auswählen...</option>
+                                {customerVehicles.map(vehicle => (
+                                  <option key={vehicle.id} value={vehicle.id}>
+                                    {vehicle.make} {vehicle.model} ({vehicle.year})
+                                  </option>
+                                ))}
+                              </select>
+                              {customerVehicles.length === 0 && (
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
+                                </p>
+                              )}
+                              {selectedVehicleId && tireDimensions.width && (
+                                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                  <p className="text-xs text-green-800">
+                                    ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1095,54 +1177,6 @@ export default function NewHomePage() {
                               </button>
                             </div>
                           )}
-                        </div>
-                      )}
-
-                      {/* Tire Dimensions (only if includeTires) */}
-                      {includeTires && (
-                        <div className="p-4 border-b border-gray-200">
-                          <h4 className="font-semibold mb-3">📏 Reifengröße</h4>
-                          <div className="space-y-2">
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="Breite"
-                                value={tireDimensions.width}
-                                onChange={(e) => setTireDimensions({...tireDimensions, width: e.target.value})}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                              />
-                              <span className="flex items-center text-gray-400">/</span>
-                              <input
-                                type="text"
-                                placeholder="Höhe"
-                                value={tireDimensions.height}
-                                onChange={(e) => setTireDimensions({...tireDimensions, height: e.target.value})}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                              />
-                              <span className="flex items-center text-gray-400">R</span>
-                              <input
-                                type="text"
-                                placeholder="Zoll"
-                                value={tireDimensions.diameter}
-                                onChange={(e) => setTireDimensions({...tireDimensions, diameter: e.target.value})}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                              />
-                            </div>
-                            <p className="text-xs text-gray-500">z.B. 205/55 R16</p>
-                            {tireDimensions.width && tireDimensions.height && tireDimensions.diameter && (
-                              <button
-                                onClick={() => {
-                                  if (customerLocation) {
-                                    searchWorkshops(customerLocation)
-                                  }
-                                }}
-                                disabled={loading}
-                                className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white text-sm font-semibold rounded-lg transition-colors"
-                              >
-                                {loading ? 'Suche...' : 'Reifen suchen'}
-                              </button>
-                            )}
-                          </div>
                         </div>
                       )}
 

@@ -1254,6 +1254,14 @@ export default function NewHomePage() {
 
                           {/* 3. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
+                            {/* DEBUG: Log props before passing to ServiceFilters */}
+                            {typeof window !== 'undefined' && console.log('🔧 [page.tsx] Passing props to ServiceFilters:', {
+                              tireDimensionsFront,
+                              tireDimensionsRear,
+                              hasMixedTires,
+                              frontType: typeof tireDimensionsFront,
+                              rearType: typeof tireDimensionsRear
+                            })}
                             <ServiceFilters
                               key={`tire-change-${selectedService}`}
                               selectedService={selectedService}

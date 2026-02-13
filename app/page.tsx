@@ -143,7 +143,7 @@ export default function NewHomePage() {
   const [tireDimensionsRear, setTireDimensionsRear] = useState<string>('')
   const [tireBudgetMin, setTireBudgetMin] = useState<number>(50)
   const [tireBudgetMax, setTireBudgetMax] = useState<number>(500)
-  const [selectedSeason, setSelectedSeason] = useState<string>('g') // 's', 'w', 'g', or ''
+  const [selectedSeason, setSelectedSeason] = useState<string>('s') // 's', 'w', 'g', or '' - Default to Summer
   const [tireQuality, setTireQuality] = useState<string>('quality') // 'premium', 'quality', 'budget', or ''
   const [fuelEfficiency, setFuelEfficiency] = useState<string>('') // A-G or ''
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
@@ -1241,12 +1241,11 @@ export default function NewHomePage() {
                             </div>
                           </div>
 
-                          {/* 2. Fahrzeug wählen (only if includeTires) */}
-                          {includeTires && (
-                            <div className="p-4 border-b border-gray-200">
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                🚙 Fahrzeug wählen
-                              </h4>
+                          {/* 2. Fahrzeug wählen (always show - helps with tire dimensions) */}
+                          <div className="p-4 border-b border-gray-200">
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              🚙 Fahrzeug wählen {!includeTires && <span className="text-xs text-gray-500">(Optional)</span>}
+                            </h4>
                               {session ? (
                                 <div className="space-y-2">
                                   <select

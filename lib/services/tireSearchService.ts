@@ -11,6 +11,9 @@ export interface TireSearchFilters {
   width: string
   height: string
   diameter: string
+  // CRITICAL: Load and Speed Index for safety compliance
+  minLoadIndex?: string // Minimum load index (e.g., '91', '96')
+  minSpeedIndex?: string // Minimum speed rating (e.g., 'H', 'V', 'W', 'Y')
   // Optional filters
   season?: 's' | 'w' | 'g' | 'all' // s=Summer, w=Winter, g=All-season
   minStock?: number // Default: 4 (for full set)
@@ -205,6 +208,10 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     stock: { gte: minStock },
   }
 
+  // Note: Load Index and Speed Index are filtered AFTER database query
+  // because load index requires numeric comparison but is stored as string
+  // Speed index requires custom hierarchy comparison
+
   // Season filter
   if (season && season !== 'all') {
     where.season = season
@@ -267,10 +274,33 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   
   console.log(`📊 [Tire Search] Found ${tires.length} tires. First 3 seasons:`, tires.slice(0, 3).map(t => `${t.brand} ${t.model} (season="${t.season}")`))
 
-  // Calculate selling prices
+  // Speed index hierarchy (slowest to fastest) for post-filtering
+  const SPEED_INDEX_ORDER = ['L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'H', 'V', 'W', 'Y', 'ZR']
+
+  // Calculate selling prices and apply filters
   const results: TireSearchResult[] = []
 
   for (const tire of tires) {
+    // CRITICAL: Load Index filter (must be >= vehicle's load index)
+    if (filters.minLoadIndex && tire.loadIndex) {
+      const tireLoad = parseInt(tire.loadIndex)
+      const minLoad = parseInt(filters.minLoadIndex)
+      if (!isNaN(tireLoad) && !isNaN(minLoad) && tireLoad < minLoad) {
+        console.log(`🔒 [Tire Filter] Skipping ${tire.brand} ${tire.model}: Load Index ${tire.loadIndex} < required ${filters.minLoadIndex}`)
+        continue
+      }
+    }
+
+    // CRITICAL: Speed Index filter (must be >= vehicle's speed rating)
+    if (filters.minSpeedIndex && tire.speedIndex) {
+      const tireSpeedIdx = SPEED_INDEX_ORDER.indexOf(tire.speedIndex)
+      const minSpeedIdx = SPEED_INDEX_ORDER.indexOf(filters.minSpeedIndex)
+      if (tireSpeedIdx !== -1 && minSpeedIdx !== -1 && tireSpeedIdx < minSpeedIdx) {
+        console.log(`🔒 [Tire Filter] Skipping ${tire.brand} ${tire.model}: Speed Index ${tire.speedIndex} < required ${filters.minSpeedIndex}`)
+        continue
+      }
+    }
+
     const { sellingPrice, markup } = await calculateSellingPrice(
       workshopId,
       tire.price,
@@ -312,6 +342,8 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       supplier: tire.supplier,
     })
   }
+  
+  console.log(`✅ [Tire Search] After filters: ${results.length} tires available${filters.minLoadIndex ? ` (Load ≥${filters.minLoadIndex})` : ''}${filters.minSpeedIndex ? ` (Speed ≥${filters.minSpeedIndex})` : ''}`)
 
   return results
 }

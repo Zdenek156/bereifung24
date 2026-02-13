@@ -423,11 +423,30 @@ export default function NewHomePage() {
           setHasMixedTires(true)
           setTireDimensionsFront(data.dimensionsFront.formatted)
           setTireDimensionsRear(data.dimensionsRear.formatted)
+          
+          // CRITICAL: Remove old standard packages and set mixed default
+          setSelectedPackages((prev) => {
+            const cleaned = prev.filter(p => !['two_tires', 'four_tires'].includes(p))
+            // If no mixed package selected yet, default to mixed_four_tires
+            if (!cleaned.some(p => ['front_two_tires', 'rear_two_tires', 'mixed_four_tires'].includes(p))) {
+              return ['mixed_four_tires']
+            }
+            return cleaned
+          })
         } else {
           console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
           setHasMixedTires(false)
           setTireDimensionsFront('')
           setTireDimensionsRear('')
+          
+          // Remove mixed packages, keep or set standard package
+          setSelectedPackages((prev) => {
+            const cleaned = prev.filter(p => !['front_two_tires', 'rear_two_tires', 'mixed_four_tires'].includes(p))
+            if (cleaned.length === 0) {
+              return ['four_tires']
+            }
+            return cleaned
+          })
         }
         
         // Automatically trigger search if location is set
@@ -1231,7 +1250,20 @@ export default function NewHomePage() {
                                   {selectedVehicleId && tireDimensions.width && (
                                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
                                       <p className="text-xs text-green-800">
-                                        ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                        ✅ Reifengröße: {(() => {
+                                          // Show appropriate tire size based on selection
+                                          if (hasMixedTires) {
+                                            if (selectedPackages.includes('front_two_tires')) {
+                                              return `${tireDimensionsFront} (Vorderachse)`
+                                            } else if (selectedPackages.includes('rear_two_tires')) {
+                                              return `${tireDimensionsRear} (Hinterachse)`
+                                            } else if (selectedPackages.includes('mixed_four_tires')) {
+                                              return `${tireDimensionsFront} (vorne) + ${tireDimensionsRear} (hinten)`
+                                            }
+                                          }
+                                          // Standard tires
+                                          return `${tireDimensions.width}/${tireDimensions.height} R${tireDimensions.diameter}`
+                                        })()}
                                       </p>
                                     </div>
                                   )}

@@ -1973,7 +1973,7 @@ export default function NewHomePage() {
                               {/* Bottom Row: Price Info + CTA */}
                               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-auto gap-3">
                                 <div className="w-full sm:w-auto">
-                                  {includeTires && workshop.tireAvailable && selectedRec ? (
+                                  {includeTires && workshop.tireAvailable && (selectedRec || workshop.isMixedTires) ? (
                                     <>
                                       {/* Price breakdown */}
                                       <div className="space-y-0.5 text-sm text-gray-600 mb-2">
@@ -1995,7 +1995,7 @@ export default function NewHomePage() {
                                               <span className="font-medium">{formatEUR(workshop.tireRear.totalPrice)}</span>
                                             </div>
                                           </>
-                                        ) : (
+                                        ) : selectedRec ? (
                                           <>
                                             {/* Standard tires: Single tire type */}
                                             <div className="flex justify-between gap-4">
@@ -2003,14 +2003,14 @@ export default function NewHomePage() {
                                               <span className="font-medium">{formatEUR(selectedRec.totalPrice)}</span>
                                             </div>
                                           </>
-                                        )}
+                                        ) : null}
                                         <div className="flex justify-between gap-4">
                                           <span>Montage</span>
                                           <span className="font-medium">{formatEUR(workshop.basePrice || 0)}</span>
                                         </div>
                                         {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (
                                           <div className="flex justify-between gap-4">
-                                            <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec.quantity}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec.quantity))})</span>
+                                            <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec?.quantity || 0}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec?.quantity || 4))})</span>
                                             <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
                                           </div>
                                         )}

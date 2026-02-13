@@ -233,9 +233,9 @@ export default function ServiceFilters({
   // Check if vehicle has mixed tires (different front/rear dimensions)
   const hasMixedTires = tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
 
-  // Log for debugging
+  // Log for debugging - VERSION 2.0 MIXED TIRES
   useEffect(() => {
-    console.log('🎛️ [ServiceFilters] Rendered with:', {
+    console.log('🎛️ [ServiceFilters v2.0] Rendered with:', {
       selectedService,
       selectedPackages,
       tireDimensionsFront,

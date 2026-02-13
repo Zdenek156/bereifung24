@@ -455,8 +455,8 @@ export async function POST(request: NextRequest) {
       
       if (isMixedTireSearch) {
         // Mixed tire search: Search for front and/or rear tires based on selection
-        const { width: widthFront, height: heightFront, diameter: diameterFront } = tireDimensionsFront || {}
-        const { width: widthRear, height: heightRear, diameter: diameterRear } = tireDimensionsRear || {}
+        const { width: widthFront, height: heightFront, diameter: diameterFront, loadIndex: loadIndexFront, speedIndex: speedIndexFront } = tireDimensionsFront || {}
+        const { width: widthRear, height: heightRear, diameter: diameterRear, loadIndex: loadIndexRear, speedIndex: speedIndexRear } = tireDimensionsRear || {}
         
         const searchFront = frontTireCount > 0 && widthFront && heightFront && diameterFront
         const searchRear = rearTireCount > 0 && widthRear && heightRear && diameterRear
@@ -489,6 +489,8 @@ export async function POST(request: NextRequest) {
                     minWetGrip: tireFilters?.wetGrip,
                     threePMSF: tireFilters?.threePMSF,
                     runFlat: requireRunFlat || undefined,
+                    minLoadIndex: loadIndexFront,
+                    minSpeedIndex: speedIndexFront
                   },
                     frontTireCount,
                     0,
@@ -513,6 +515,8 @@ export async function POST(request: NextRequest) {
                     minWetGrip: tireFilters?.wetGrip,
                     threePMSF: tireFilters?.threePMSF,
                     runFlat: requireRunFlat || undefined,
+                    minLoadIndex: loadIndexRear,
+                    minSpeedIndex: speedIndexRear
                   },
                     rearTireCount,
                     0,
@@ -616,7 +620,7 @@ export async function POST(request: NextRequest) {
         }
       } else if (tireDimensions) {
         // Standard single tire size search
-        const { width, height, diameter } = tireDimensions
+        const { width, height, diameter, loadIndex, speedIndex } = tireDimensions
         
         if (width && height && diameter) {
         // Fetch tire recommendations for each workshop
@@ -644,6 +648,10 @@ export async function POST(request: NextRequest) {
                   minFuelEfficiency: tireFilters?.fuelEfficiency,
                   minWetGrip: tireFilters?.wetGrip,
                   threePMSF: tireFilters?.threePMSF,
+                  runFlat: requireRunFlat || undefined,
+                  minLoadIndex: loadIndex,
+                  minSpeedIndex: speedIndex
+                },
                   runFlat: requireRunFlat || undefined, // Only show runflat tires if filter is active
                 },
                 requestedTireCount, // Pass the requested tire count

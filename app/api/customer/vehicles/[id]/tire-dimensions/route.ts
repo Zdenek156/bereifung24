@@ -58,7 +58,9 @@ export async function GET(
       dimensions = {
         width: tire.width,
         height: tire.aspectRatio,
-        diameter: tire.diameter
+        diameter: tire.diameter,
+        loadIndex: tire.loadIndex?.toString(),
+        speedIndex: tire.speedRating
       }
     }
 
@@ -87,7 +89,9 @@ export async function GET(
             dimensions = {
               width: parsed.width,
               height: parsed.aspectRatio,
-              diameter: parsed.diameter
+              diameter: parsed.diameter,
+              loadIndex: parsed.loadIndex?.toString(),
+              speedIndex: parsed.speedIndex || parsed.speedRating
             }
           }
         } catch (e) {
@@ -130,6 +134,8 @@ export async function GET(
             width: parsed.width,
             height: parsed.aspectRatio,
             diameter: parsed.diameter,
+            loadIndex: parsed.loadIndex?.toString(),
+            speedIndex: parsed.speedIndex || parsed.speedRating,
             formatted: `${parsed.width}/${parsed.aspectRatio} R${parsed.diameter}`
           }
           
@@ -138,6 +144,8 @@ export async function GET(
             width: parsed.rearWidth,
             height: parsed.rearAspectRatio,
             diameter: parsed.rearDiameter,
+            loadIndex: parsed.rearLoadIndex?.toString() || parsed.loadIndex?.toString(),
+            speedIndex: parsed.rearSpeedIndex || parsed.speedIndex || parsed.speedRating,
             formatted: `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}`
           }
           

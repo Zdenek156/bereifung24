@@ -72,6 +72,21 @@ export interface CheapestTireResult {
   available: boolean
 }
 
+export interface TireRecommendation {
+  label: string // "Günstigster", "Testsieger", "Beliebt"
+  tire: TireSearchResult
+  pricePerTire: number
+  totalPrice: number
+  quantity: number
+}
+
+export interface TireRecommendationsResult {
+  recommendations: TireRecommendation[]
+  selectedIndex: number // Index of the default/selected recommendation
+  quantity: number
+  available: boolean
+}
+
 /**
  * Calculate selling price based on workshop pricing rules
  */
@@ -339,6 +354,101 @@ export async function findCheapestTire(
     tire: cheapestTire,
     totalPrice: parseFloat(totalPrice.toFixed(2)),
     pricePerTire: cheapestTire.sellingPrice,
+    quantity,
+    available: true,
+  }
+}
+
+/**
+ * Find 3 tire recommendations: Günstigster, Testsieger (Premium), Beliebt (Quality)
+ */
+const PREMIUM_BRANDS = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
+const QUALITY_BRANDS = ['Hankook', 'Kumho', 'Yokohama', 'Toyo', 'Falken', 'BFGoodrich', 'Cooper', 'Nokian']
+
+export async function findTireRecommendations(
+  workshopId: string,
+  width: string,
+  height: string,
+  diameter: string,
+  season?: 's' | 'w' | 'g' | 'all',
+  vehicleType: 'PKW' | 'Motorrad' = 'PKW',
+  additionalFilters?: Partial<TireSearchFilters>
+): Promise<TireRecommendationsResult> {
+  const minStock = vehicleType === 'Motorrad' ? 2 : 4
+  const quantity = minStock
+
+  // Get all matching tires sorted by price
+  const allTires = await searchTires({
+    workshopId,
+    width,
+    height,
+    diameter,
+    season,
+    minStock,
+    sortBy: 'price',
+    sortOrder: 'asc',
+    ...additionalFilters,
+  })
+
+  if (allTires.length === 0) {
+    return { recommendations: [], selectedIndex: 0, quantity, available: false }
+  }
+
+  const recommendations: TireRecommendation[] = []
+
+  // 1. Günstigster (cheapest overall)
+  const cheapest = allTires[0]
+  recommendations.push({
+    label: 'Günstigster',
+    tire: cheapest,
+    pricePerTire: cheapest.sellingPrice,
+    totalPrice: parseFloat((cheapest.sellingPrice * quantity).toFixed(2)),
+    quantity,
+  })
+
+  // 2. Testsieger (best premium brand tire - cheapest of premium brands)
+  const premiumTire = allTires.find(t => 
+    PREMIUM_BRANDS.some(b => t.brand.toLowerCase().includes(b.toLowerCase()))
+  )
+  if (premiumTire && premiumTire.id !== cheapest.id) {
+    recommendations.push({
+      label: 'Testsieger',
+      tire: premiumTire,
+      pricePerTire: premiumTire.sellingPrice,
+      totalPrice: parseFloat((premiumTire.sellingPrice * quantity).toFixed(2)),
+      quantity,
+    })
+  }
+
+  // 3. Beliebt (best quality-brand tire)
+  const qualityTire = allTires.find(t => 
+    QUALITY_BRANDS.some(b => t.brand.toLowerCase().includes(b.toLowerCase()))
+  )
+  if (qualityTire && qualityTire.id !== cheapest.id && qualityTire.id !== premiumTire?.id) {
+    recommendations.push({
+      label: 'Beliebt',
+      tire: qualityTire,
+      pricePerTire: qualityTire.sellingPrice,
+      totalPrice: parseFloat((qualityTire.sellingPrice * quantity).toFixed(2)),
+      quantity,
+    })
+  }
+
+  // If we only have 1 recommendation and more tires, add second cheapest as alternative
+  if (recommendations.length === 1 && allTires.length > 1) {
+    const secondCheapest = allTires[1]
+    recommendations.push({
+      label: 'Alternative',
+      tire: secondCheapest,
+      pricePerTire: secondCheapest.sellingPrice,
+      totalPrice: parseFloat((secondCheapest.sellingPrice * quantity).toFixed(2)),
+      quantity,
+    })
+  }
+
+  return {
+    recommendations,
+    selectedIndex: 0, // Default to cheapest
     quantity,
     available: true,
   }

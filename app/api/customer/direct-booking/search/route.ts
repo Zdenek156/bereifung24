@@ -199,6 +199,7 @@ export async function POST(request: NextRequest) {
           if (pkg === 'mixed_four_tires') return 'four_tires'
           return pkg
         })
+        console.log('🔄 [API] Package mapping:', { original: selectedMainPackages, mapped: mappedPackages })
         
         // Filter packages by selected main package types
         let relevantPackages = service.servicePackages || []

@@ -39,6 +39,22 @@ export default function SuchePage() {
   const [hasBalancing, setHasBalancing] = useState(searchParams.get('balancing') === 'true')
   const [hasStorage, setHasStorage] = useState(searchParams.get('storage') === 'true')
   
+  // Tire Search State
+  const [includeTires, setIncludeTires] = useState(searchParams.get('withTires') === 'true')
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
+  const [tireDimensions, setTireDimensions] = useState({
+    width: searchParams.get('width') || '',
+    height: searchParams.get('height') || '',
+    diameter: searchParams.get('diameter') || ''
+  })
+  
+  // Tire Filter State
+  const [tireBudget, setTireBudget] = useState<number>(500)
+  const [tireSeasons, setTireSeasons] = useState<string[]>(['s', 'w', 'g']) // summer, winter, all-season
+  const [tireBrands, setTireBrands] = useState<string[]>([])
+  const [requireRunFlat, setRequireRunFlat] = useState(false)
+  const [require3PMSF, setRequire3PMSF] = useState(false)
+  
   // Search State
   const [workshops, setWorkshops] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -106,6 +122,14 @@ export default function SuchePage() {
     if (!postalCode && !useGeolocation) {
       alert('Bitte PLZ eingeben oder Standort aktivieren')
       return
+    }
+
+    // Validate tire dimensions if tire search is enabled
+    if (includeTires) {
+      if (!tireDimensions.width || !tireDimensions.height || !tireDimensions.diameter) {
+        alert('Bitte geben Sie die Reifengröße ein (Breite/Höhe/Zoll)')
+        return
+      }
     }
 
     setLoading(true)
@@ -239,7 +263,17 @@ export default function SuchePage() {
           hasStorage,
           radiusKm,
           customerLat: location.lat,
-          customerLon: location.lon
+          customerLon: location.lon,
+          // Tire search parameters
+          includeTires,
+          tireDimensions: includeTires ? tireDimensions : undefined,
+          tireFilters: includeTires ? {
+            maxPrice: tireBudget,
+            seasons: tireSeasons,
+            brands: tireBrands,
+            runFlat: requireRunFlat || undefined,
+            threePMSF: require3PMSF || undefined
+          } : undefined
         })
       })
 
@@ -343,7 +377,64 @@ export default function SuchePage() {
 
         {/* Search Bar */}
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="bg-white rounded-2xl shadow-2xl p-3">
+          <div className="bg-white rounded-2xl shadow-2xl p-6">
+            {/* Service Type Toggle */}
+            <div className="mb-4 flex gap-3">
+              <button
+                onClick={() => setIncludeTires(false)}
+                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
+                  !includeTires
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🔧 Nur Service
+              </button>
+              <button
+                onClick={() => setIncludeTires(true)}
+                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
+                  includeTires
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🚗 Reifen mit Montage
+              </button>
+            </div>
+
+            {/* Tire Dimensions (only if includeTires) */}
+            {includeTires && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <p className="text-sm font-semibold text-blue-900 mb-3">Reifengröße eingeben:</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Breite (z.B. 205)"
+                    value={tireDimensions.width}
+                    onChange={(e) => setTireDimensions({...tireDimensions, width: e.target.value})}
+                    className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                  />
+                  <span className="flex items-center text-gray-400 font-bold">/</span>
+                  <input
+                    type="text"
+                    placeholder="Höhe (z.B. 55)"
+                    value={tireDimensions.height}
+                    onChange={(e) => setTireDimensions({...tireDimensions, height: e.target.value})}
+                    className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                  />
+                  <span className="flex items-center text-gray-400 font-bold">R</span>
+                  <input
+                    type="text"
+                    placeholder="Zoll (z.B. 16)"
+                    value={tireDimensions.diameter}
+                    onChange={(e) => setTireDimensions({...tireDimensions, diameter: e.target.value})}
+                    className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                  />
+                </div>
+                <p className="text-xs text-blue-700 mt-2">z.B. 205/55 R16 (finden Sie auf der Reifenflanke)</p>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row gap-3">
               {/* Service Selection */}
               <div className="flex-1 min-w-[200px]">
@@ -532,6 +623,107 @@ export default function SuchePage() {
                   </div>
                 )}
 
+                {/* Tire Filters (only if includeTires) */}
+                {includeTires && (
+                  <>
+                    {/* Tire Budget */}
+                    <div className="p-4 border-b border-gray-200">
+                      <h4 className="font-semibold mb-3">🚗 Reifen-Budget (pro Stück)</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>bis {formatEUR(tireBudget)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="50"
+                          max="500"
+                          step="10"
+                          value={tireBudget}
+                          onChange={(e) => setTireBudget(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tire Season */}
+                    <div className="p-4 border-b border-gray-200">
+                      <h4 className="font-semibold mb-3">❄️ Saison</h4>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={tireSeasons.includes('s')}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTireSeasons([...tireSeasons, 's'])
+                              } else {
+                                setTireSeasons(tireSeasons.filter(s => s !== 's'))
+                              }
+                            }}
+                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm">☀️ Sommerreifen</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={tireSeasons.includes('w')}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTireSeasons([...tireSeasons, 'w'])
+                              } else {
+                                setTireSeasons(tireSeasons.filter(s => s !== 'w'))
+                              }
+                            }}
+                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm">❄️ Winterreifen</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={tireSeasons.includes('g')}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTireSeasons([...tireSeasons, 'g'])
+                              } else {
+                                setTireSeasons(tireSeasons.filter(s => s !== 'g'))
+                              }
+                            }}
+                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm">🔄 Ganzjahresreifen</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Tire Features */}
+                    <div className="p-4 border-b border-gray-200">
+                      <h4 className="font-semibold mb-3">✨ Eigenschaften</h4>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={requireRunFlat}
+                            onChange={(e) => setRequireRunFlat(e.target.checked)}
+                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm">🛡️ RunFlat</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={require3PMSF}
+                            onChange={(e) => setRequire3PMSF(e.target.checked)}
+                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 {/* Rating Filter */}
                 <div className="p-4 border-b border-gray-200">
                   <h4 className="font-semibold mb-3">Bewertung</h4>
@@ -674,10 +866,45 @@ export default function SuchePage() {
 
                           <div className="flex items-end justify-between">
                             <div>
-                              <p className="text-sm text-gray-500 mb-1">Gesamtpreis</p>
-                              <p className="text-2xl font-bold text-gray-900">
-                                {formatEUR(workshop.totalPrice)}
-                              </p>
+                              {includeTires && workshop.tirePrice ? (
+                                <>
+                                  <div className="mb-2">
+                                    <p className="text-xs text-gray-500">Service</p>
+                                    <p className="text-lg font-semibold text-gray-700">
+                                      {formatEUR(workshop.basePrice || 0)}
+                                    </p>
+                                  </div>
+                                  <div className="mb-2">
+                                    <p className="text-xs text-gray-500">
+                                      Reifen ({workshop.tireQuantity || 4}x {workshop.tireBrand || ''})
+                                    </p>
+                                    <p className="text-lg font-semibold text-gray-700">
+                                      {formatEUR(workshop.tirePrice || 0)}
+                                    </p>
+                                  </div>
+                                  <div className="pt-2 border-t border-gray-200">
+                                    <p className="text-sm text-gray-500 mb-1">Gesamtpreis</p>
+                                    <p className="text-2xl font-bold text-primary-600">
+                                      {formatEUR(workshop.totalPrice)}
+                                    </p>
+                                  </div>
+                                </>
+                              ) : includeTires ? (
+                                <div className="text-yellow-600">
+                                  <p className="text-xs mb-1">⚠️ Keine Reifen verfügbar</p>
+                                  <p className="text-sm font-semibold">
+                                    {formatEUR(workshop.basePrice || workshop.totalPrice)}
+                                  </p>
+                                  <p className="text-xs text-gray-500">Nur Service</p>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-gray-500 mb-1">Gesamtpreis</p>
+                                  <p className="text-2xl font-bold text-gray-900">
+                                    {formatEUR(workshop.totalPrice)}
+                                  </p>
+                                </>
+                              )}
                             </div>
                             <Link
                               href={`/login?redirect=/dashboard/customer/direct-booking?workshop=${workshop.id}`}

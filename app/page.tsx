@@ -120,6 +120,7 @@ export default function NewHomePage() {
   const [require3PMSF, setRequire3PMSF] = useState(false)
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
+  const [selectedTireIndices, setSelectedTireIndices] = useState<Record<string, number>>({}) // workshopId -> tire index
   
   // Load reviews on page load
   useEffect(() => {
@@ -1605,224 +1606,230 @@ export default function NewHomePage() {
                     {/* Workshop Cards */}
                     {sortedWorkshops.map((workshop) => {
                       const isFavorite = favorites.includes(workshop.id)
+                      const tireIdx = selectedTireIndices[workshop.id] ?? 0
+                      const selectedRec = workshop.tireRecommendations?.[tireIdx]
+                      const currentTirePrice = selectedRec?.totalPrice ?? workshop.tirePrice ?? 0
+                      const currentTotalPrice = (workshop.basePrice || 0) + currentTirePrice
+                      
+                      // EU Label color helper
+                      const getLabelColor = (grade: string | null | undefined) => {
+                        if (!grade) return 'bg-gray-200 text-gray-700'
+                        const colors: Record<string, string> = {
+                          'A': 'bg-green-600 text-white',
+                          'B': 'bg-green-500 text-white',
+                          'C': 'bg-yellow-400 text-gray-900',
+                          'D': 'bg-orange-400 text-white',
+                          'E': 'bg-red-500 text-white',
+                          'F': 'bg-red-700 text-white',
+                          'G': 'bg-red-900 text-white',
+                        }
+                        return colors[grade.toUpperCase()] || 'bg-gray-200 text-gray-700'
+                      }
                       
                       return (
                         <div
                           key={workshop.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-3 sm:p-4 relative isolate"
+                          className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden"
                         >
-                          {/* Favorite Button */}
-                          <button
-                            onClick={() => toggleFavorite(workshop.id)}
-                            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all"
-                            title={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-                          >
-                            <svg
-                              className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${
-                                isFavorite
-                                  ? 'fill-red-500 text-red-500'
-                                  : 'fill-none text-gray-400 hover:text-red-500'
-                              }`}
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                              />
-                            </svg>
-                          </button>
-
-                          <div className="flex flex-col sm:flex-row items-start gap-4">
-                            {/* Logo */}
-                            <div className="flex-shrink-0">
-                              <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center overflow-hidden">
-                                {workshop.logoUrl ? (
-                                  <img 
-                                    src={workshop.logoUrl.startsWith('http') ? workshop.logoUrl : workshop.logoUrl} 
-                                    alt={`${workshop.name} Logo`}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const parent = e.currentTarget.parentElement
-                                      if (parent) {
-                                        e.currentTarget.remove()
-                                        const span = document.createElement('span')
-                                        span.className = 'text-4xl'
-                                        span.textContent = '🔧'
-                                        parent.appendChild(span)
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <span className="text-4xl">🔧</span>
-                                )}
-                              </div>
+                          <div className="flex flex-col sm:flex-row">
+                            {/* Left: Logo + Badge */}
+                            <div className="relative flex-shrink-0 w-full sm:w-44 h-44 sm:h-auto bg-gradient-to-br from-slate-100 to-slate-200">
+                              {workshop.logoUrl ? (
+                                <img 
+                                  src={workshop.logoUrl} 
+                                  alt={`${workshop.name} Logo`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const parent = e.currentTarget.parentElement
+                                    if (parent) {
+                                      e.currentTarget.remove()
+                                      const span = document.createElement('span')
+                                      span.className = 'text-5xl absolute inset-0 flex items-center justify-center'
+                                      span.textContent = '🔧'
+                                      parent.appendChild(span)
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="text-5xl">🔧</span>
+                                </div>
+                              )}
+                              {/* BELIEBT Badge */}
+                              {workshop.rating >= 4.5 && workshop.reviewCount >= 5 && (
+                                <div className="absolute top-3 left-3 px-3 py-1 bg-primary-600 text-white text-xs font-bold uppercase rounded-md shadow-md tracking-wider">
+                                  Beliebt
+                                </div>
+                              )}
+                              {/* Favorite Button */}
+                              <button
+                                onClick={() => toggleFavorite(workshop.id)}
+                                className="absolute top-3 right-3 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all"
+                              >
+                                <svg
+                                  className={`w-5 h-5 transition-colors ${
+                                    isFavorite ? 'fill-red-500 text-red-500' : 'fill-none text-gray-500 hover:text-red-500'
+                                  }`}
+                                  stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                              </button>
                             </div>
 
-                            {/* Info Section */}
-                            <div className="flex-1 min-w-0">
-                              {/* Workshop Name + Bewertung */}
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-0.5">
-                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">{workshop.name}</h3>
-                                
-                                {/* Bewertung */}
+                            {/* Right: Content */}
+                            <div className="flex-1 p-4 sm:p-5 flex flex-col">
+                              {/* Header Row: Name + City + Rating + Distance */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
+                                <h3 className="text-xl font-bold text-gray-900">{workshop.name}</h3>
+                                {workshop.city && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                                    {workshop.city}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
+                                {/* Stars */}
                                 {workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                    <span className="font-semibold text-gray-900">{workshop.rating.toFixed(1)}</span>
+                                  <div className="flex items-center gap-1">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star
+                                        key={i}
+                                        className={`w-4 h-4 ${
+                                          i < Math.round(workshop.rating)
+                                            ? 'fill-yellow-400 text-yellow-400'
+                                            : 'fill-gray-200 text-gray-200'
+                                        }`}
+                                      />
+                                    ))}
+                                    <span className="font-semibold text-gray-900 ml-0.5">{workshop.rating.toFixed(1)}</span>
                                     {workshop.reviewCount > 0 && (
-                                      <span className="text-gray-500">({workshop.reviewCount} Bewertungen)</span>
+                                      <span className="text-gray-500">({workshop.reviewCount})</span>
                                     )}
                                   </div>
                                 )}
-                              </div>
-                              
-                              {/* Stadt mit Maps-Button */}
-                              <div className="flex items-center gap-2 mb-0.5">
-                                {workshop.city && (
-                                  <>
-                                    <span className="text-sm text-gray-600">{workshop.city}</span>
-                                    <button
-                                      onClick={() => {
-                                        const address = `${workshop.city}${workshop.address ? ', ' + workshop.address : ''}${workshop.postalCode ? ', ' + workshop.postalCode : ''}`
-                                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank')
-                                      }}
-                                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
-                                    >
-                                      <MapPin className="w-3 h-3" />
-                                      In Maps öffnen
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                              
-                              {/* Distanz */}
-                              <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
-                                <MapPin className="w-4 h-4" />
-                                {workshop.distance.toFixed(1)} km entfernt
+                                <span className="text-gray-400">·</span>
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <MapPin className="w-3.5 h-3.5 text-red-400" />
+                                  {workshop.distance.toFixed(1)} km
+                                </span>
                               </div>
 
-                              {/* Available Services */}
+                              {/* Service Tags */}
                               {workshop.availableServices && workshop.availableServices.length > 0 && (() => {
-                                const additionalServices = workshop.availableServices.filter((serviceType: string) => serviceType !== selectedService)
+                                const additionalServices = workshop.availableServices.filter((s: string) => s !== selectedService)
                                 return additionalServices.length > 0 && (
-                                  <div>
-                                    <p className="text-xs font-semibold text-gray-700 mb-0.5">📌 Weitere Services:</p>
-                                    <p className="text-xs text-gray-500 mb-1">Zusätzlich buchbar</p>
-                                    <div className="flex flex-wrap gap-1">
-                                      {additionalServices
-                                        .slice(0, 5)
-                                        .map((serviceType: string) => {
-                                          const service = SERVICES.find(s => s.id === serviceType)
-                                          if (!service) return null
-                                          
-                                          return (
-                                            <span 
-                                              key={serviceType}
-                                              className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
-                                              title={service.description}
-                                            >
-                                              <span>{service.icon}</span>
-                                              {service.label}
-                                            </span>
-                                          )
-                                        })}
-                                      {additionalServices.length > 5 && (
-                                        <span className="flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
-                                          +{additionalServices.length - 5} weitere
+                                  <div className="flex flex-wrap gap-1.5 mb-3">
+                                    {additionalServices.slice(0, 5).map((serviceType: string) => {
+                                      const service = SERVICES.find(s => s.id === serviceType)
+                                      if (!service) return null
+                                      return (
+                                        <span key={serviceType} className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200" title={service.description}>
+                                          <span className="text-xs">{service.icon}</span> {service.label}
                                         </span>
-                                      )}
-                                    </div>
+                                      )
+                                    })}
                                   </div>
                                 )
                               })()}
-                            </div>
 
-                            {/* Price and Button */}
-                            <div className="flex flex-col sm:items-end justify-between w-full sm:w-auto sm:ml-auto flex-shrink-0 mt-2 sm:mt-14">
-                              <div className="text-left sm:text-right mb-3">
-                                {includeTires && workshop.tirePrice ? (
-                                  <>
-                                    <div className="mb-2">
-                                      <p className="text-xs text-gray-500">Reifenmontage</p>
-                                      <p className="text-lg font-semibold text-gray-700">
-                                        ab {formatEUR(workshop.basePrice || 0)}
-                                      </p>
-                                    </div>
-                                    <div className="mb-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                                      <p className="text-xs font-semibold text-blue-900 mb-1">
-                                        🛞 {workshop.tireBrand || 'Reifen'} {workshop.tireModel ? `- ${workshop.tireModel}` : ''}
-                                      </p>
-                                      {tireDimensions.width && tireDimensions.height && tireDimensions.diameter && (
-                                        <p className="text-xs text-blue-800 mb-0.5">
-                                          Größe: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
-                                        </p>
-                                      )}
-                                      {workshop.tire?.threePMSF && (
-                                        <span className="inline-flex items-center text-xs text-blue-700 mr-2">
-                                          ❄️ 3PMSF
-                                        </span>
-                                      )}
-                                      {workshop.tire?.labelFuelEfficiency && (
-                                        <span className="inline-flex items-center text-xs text-blue-700 mr-2">
-                                          ⚡ Effizienz: {workshop.tire.labelFuelEfficiency}
-                                        </span>
-                                      )}
-                                      {workshop.tire?.labelWetGrip && (
-                                        <span className="inline-flex items-center text-xs text-blue-700">
-                                          💧 Nässe: {workshop.tire.labelWetGrip}
-                                        </span>
-                                      )}
-                                      <p className="text-lg font-semibold text-blue-900 mt-1">
-                                        {workshop.tireQuantity || 4}x à {formatEUR((workshop.tirePrice || 0) / (workshop.tireQuantity || 4))}
-                                      </p>
-                                      <p className="text-sm text-blue-700">
-                                        = ab {formatEUR(workshop.tirePrice || 0)}
-                                      </p>
-                                    </div>
-                                    <div className="pt-2 border-t border-gray-200">
-                                      <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
-                                      <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                        ab {formatEUR(workshop.totalPrice)}
-                                      </p>
-                                    </div>
-                                  </>
-                                ) : includeTires ? (
-                                  <div className="text-yellow-600">
-                                    <p className="text-xs mb-1">⚠️ Keine Reifen verfügbar</p>
-                                    <p className="text-lg font-semibold">
-                                      ab {formatEUR(workshop.basePrice || workshop.totalPrice)}
-                                    </p>
-                                    <p className="text-xs text-gray-500">Nur Reifenmontage</p>
+                              {/* Tire Recommendations Panel */}
+                              {includeTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (
+                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                    Reifen auswählen · {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {workshop.tireRecommendations.map((rec: any, idx: number) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => setSelectedTireIndices(prev => ({...prev, [workshop.id]: idx}))}
+                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                          tireIdx === idx
+                                            ? 'border-primary-500 bg-white shadow-sm'
+                                            : 'border-transparent bg-white hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
+                                        <p className="text-sm font-bold text-gray-900 truncate">{rec.brand}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.model}</p>
+                                        <div className="flex gap-1">
+                                          {rec.labelFuelEfficiency && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                              {rec.labelFuelEfficiency}
+                                            </span>
+                                          )}
+                                          {rec.labelWetGrip && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelWetGrip)}`} title="Nasshaftung">
+                                              {rec.labelWetGrip}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </button>
+                                    ))}
                                   </div>
-                                ) : (
-                                  <>
-                                    <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
-                                    {workshop.totalPrice > 0 ? (
-                                      <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                        ab {formatEUR(workshop.totalPrice)}
+                                </div>
+                              )}
+
+                              {/* Tire not available warning */}
+                              {includeTires && !workshop.tireAvailable && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                  <p className="text-sm text-yellow-800">⚠️ Keine passenden Reifen verfügbar</p>
+                                </div>
+                              )}
+
+                              {/* Bottom Row: Price Info + CTA */}
+                              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-auto gap-3">
+                                <div>
+                                  {includeTires && workshop.tireAvailable && selectedRec ? (
+                                    <>
+                                      <p className="text-sm text-gray-600">
+                                        {selectedRec.quantity}× {selectedRec.brand} à {formatEUR(selectedRec.pricePerTire)} + Montage {formatEUR(workshop.basePrice || 0)}
                                       </p>
-                                    ) : (
-                                      <p className="text-lg sm:text-xl font-semibold text-gray-500">
-                                        Preis auf Anfrage
-                                      </p>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-xs text-gray-500">Gesamtpreis</span>
+                                        <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                          ab {formatEUR(currentTotalPrice)}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : !includeTires ? (
+                                    <div className="flex items-baseline gap-2">
+                                      <span className="text-xs text-gray-500">Gesamtpreis</span>
+                                      {workshop.totalPrice > 0 ? (
+                                        <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                          ab {formatEUR(workshop.totalPrice)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-lg font-semibold text-gray-500">Preis auf Anfrage</span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <p className="text-sm text-gray-600">Nur Montage</p>
+                                      <span className="text-2xl font-bold text-primary-600">ab {formatEUR(workshop.basePrice || workshop.totalPrice)}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                    {workshop.estimatedDuration && (
+                                      <span>~ {workshop.estimatedDuration} Min.</span>
                                     )}
-                                  </>
-                                )}
-                                {workshop.estimatedDuration && (
-                                  <p className="text-xs text-gray-500 mt-0.5">~ {workshop.estimatedDuration} Min.</p>
-                                )}
+                                    {workshop.estimatedDuration && selectedPackages.includes('with_balancing') && (
+                                      <span>·</span>
+                                    )}
+                                    {selectedPackages.includes('with_balancing') && (
+                                      <span>inkl. Wuchten</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleBooking(workshop)}
+                                  className="flex-shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md"
+                                >
+                                  Termin buchen →
+                                </button>
                               </div>
-                              
-                              <button
-                                onClick={() => handleBooking(workshop)}
-                                className="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
-                              >
-                                Verfügbarkeit prüfen
-                              </button>
                             </div>
                           </div>
                         </div>

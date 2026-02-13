@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { findCheapestTire } from '@/lib/services/tireSearchService'
+import { findCheapestTire, findTireRecommendations } from '@/lib/services/tireSearchService'
 
 /**
  * POST /api/customer/direct-booking/search
@@ -386,17 +386,17 @@ export async function POST(request: NextRequest) {
       const { width, height, diameter } = tireDimensions
       
       if (width && height && diameter) {
-        // Fetch tire prices for each workshop
+        // Fetch tire recommendations for each workshop
         workshopsWithTires = await Promise.all(
           workshopsWithDistance.map(async (workshop) => {
             try {
-              const cheapestTireResult = await findCheapestTire(
+              const recsResult = await findTireRecommendations(
                 workshop.id,
                 width,
                 height,
                 diameter,
-                tireFilters?.seasons?.[0] || 'all', // Use first selected season or all
-                'PKW', // Default to cars, could be passed as parameter
+                tireFilters?.seasons?.[0] || 'all',
+                'PKW',
                 {
                   minPrice: tireFilters?.minPrice,
                   maxPrice: tireFilters?.maxPrice,
@@ -407,34 +407,40 @@ export async function POST(request: NextRequest) {
                 }
               )
 
-              if (cheapestTireResult.available) {
+              if (recsResult.available && recsResult.recommendations.length > 0) {
+                const defaultRec = recsResult.recommendations[0] // cheapest
                 return {
                   ...workshop,
-                  // Tire information
-                  tirePrice: cheapestTireResult.totalPrice,
-                  tirePricePerTire: cheapestTireResult.pricePerTire,
-                  tireQuantity: cheapestTireResult.quantity,
-                  tireBrand: cheapestTireResult.tire?.brand,
-                  tireModel: cheapestTireResult.tire?.model,
+                  // Default tire (cheapest)
+                  tirePrice: defaultRec.totalPrice,
+                  tirePricePerTire: defaultRec.pricePerTire,
+                  tireQuantity: defaultRec.quantity,
+                  tireBrand: defaultRec.tire.brand,
+                  tireModel: defaultRec.tire.model,
                   tireAvailable: true,
-                  // Tire details for display
-                  tire: cheapestTireResult.tire ? {
-                    brand: cheapestTireResult.tire.brand,
-                    model: cheapestTireResult.tire.model,
-                    threePMSF: cheapestTireResult.tire.threePMSF,
-                    labelFuelEfficiency: cheapestTireResult.tire.labelFuelEfficiency,
-                    labelWetGrip: cheapestTireResult.tire.labelWetGrip,
-                    labelNoise: cheapestTireResult.tire.labelNoise,
-                  } : undefined,
-                  // Update total price (service + tires)
-                  totalPrice: workshop.totalPrice + cheapestTireResult.totalPrice,
+                  // All recommendations for display
+                  tireRecommendations: recsResult.recommendations.map(rec => ({
+                    label: rec.label,
+                    brand: rec.tire.brand,
+                    model: rec.tire.model,
+                    pricePerTire: rec.pricePerTire,
+                    totalPrice: rec.totalPrice,
+                    quantity: rec.quantity,
+                    labelFuelEfficiency: rec.tire.labelFuelEfficiency || null,
+                    labelWetGrip: rec.tire.labelWetGrip || null,
+                    labelNoise: rec.tire.labelNoise || null,
+                    threePMSF: rec.tire.threePMSF,
+                    runFlat: rec.tire.runFlat,
+                  })),
+                  // Update total price (service + cheapest tires)
+                  totalPrice: workshop.totalPrice + defaultRec.totalPrice,
                 }
               } else {
-                // No tires available for this workshop
                 return {
                   ...workshop,
                   tireAvailable: false,
                   tirePrice: 0,
+                  tireRecommendations: [],
                 }
               }
             } catch (error) {
@@ -443,6 +449,7 @@ export async function POST(request: NextRequest) {
                 ...workshop,
                 tireAvailable: false,
                 tirePrice: 0,
+                tireRecommendations: [],
               }
             }
           })

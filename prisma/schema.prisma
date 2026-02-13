@@ -455,6 +455,19 @@ model WorkshopInventory {
   season        String? // Saison: s=Sommer, w=Winter, g=Ganzjahr
   vehicleType   String? @map("vehicle_type") // PKW, LKW, Transporter
 
+  // Tire Specifications
+  loadIndex   String? @map("load_index") // z.B. "91", "95"
+  speedIndex  String? @map("speed_index") // z.B. "V", "H", "W"
+  runFlat     Boolean @default(false) @map("run_flat") // RunFlat-Technologie
+  threePMSF   Boolean @default(false) @map("three_pmsf") // 3PMSF Schneeflocke
+
+  // EU Tire Label (2020/740 Regulation)
+  labelFuelEfficiency String? @map("label_fuel_efficiency") // A-G
+  labelWetGrip        String? @map("label_wet_grip") // A-G
+  labelNoise          Int?    @map("label_noise") // dB Wert
+  labelNoiseClass     String? @map("label_noise_class") // A, B, C
+  eprelUrl            String? @map("eprel_url") // EU Product Registry Link
+
   // Pricing & Availability
   price       Float    // Preis in EUR
   stock       Int      // Lagerbestand
@@ -466,6 +479,8 @@ model WorkshopInventory {
   @@unique([workshopId, articleNumber, supplier])
   @@index([workshopId, supplier])
   @@index([supplier, articleNumber])
+  @@index([workshopId, width, height, diameter, season]) // Tire search by dimensions
+  @@index([workshopId, vehicleType, season]) // Filter by vehicle type and season
   @@map("workshop_inventory")
 }
 

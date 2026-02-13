@@ -468,9 +468,9 @@ export async function POST(request: NextRequest) {
                 // Search for front tires (2 pieces)
                 const frontRecsResult = await findTireRecommendations(
                   workshop.id,
-                  widthFront,
-                  heightFront,
-                  diameterFront,
+                  String(widthFront),
+                  String(heightFront),
+                  String(diameterFront),
                   seasonFilter,
                   'PKW',
                   {
@@ -490,9 +490,9 @@ export async function POST(request: NextRequest) {
                 // Search for rear tires (2 pieces)
                 const rearRecsResult = await findTireRecommendations(
                   workshop.id,
-                  widthRear,
-                  heightRear,
-                  diameterRear,
+                  String(widthRear),
+                  String(heightRear),
+                  String(diameterRear),
                   seasonFilter,
                   'PKW',
                   {
@@ -581,9 +581,9 @@ export async function POST(request: NextRequest) {
               
               const recsResult = await findTireRecommendations(
                 workshop.id,
-                width,
-                height,
-                diameter,
+                String(width),
+                String(height),
+                String(diameter),
                 seasonFilter,
                 'PKW',
                 {

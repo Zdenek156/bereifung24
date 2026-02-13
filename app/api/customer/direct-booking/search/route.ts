@@ -191,6 +191,15 @@ export async function POST(request: NextRequest) {
         const selectedMainPackages = packageTypes.filter(pt => mainPackageTypes.includes(pt))
         const selectedAdditionalServices = packageTypes.filter(pt => additionalServices.includes(pt))
         
+        // Map mixed tire packages to standard workshop packages
+        // Mixed packages (front_two_tires, rear_two_tires, mixed_four_tires) are ONLY for tire search
+        // Workshops only have two_tires and four_tires packages
+        const mappedPackages = selectedMainPackages.map(pkg => {
+          if (pkg === 'front_two_tires' || pkg === 'rear_two_tires') return 'two_tires'
+          if (pkg === 'mixed_four_tires') return 'four_tires'
+          return pkg
+        })
+        
         // Filter packages by selected main package types
         let relevantPackages = service.servicePackages || []
         
@@ -247,9 +256,9 @@ export async function POST(request: NextRequest) {
           }
         } else {
           // Standard logic for other services
-          if (selectedMainPackages.length > 0) {
+          if (mappedPackages.length > 0) {
             relevantPackages = relevantPackages.filter(pkg => 
-              pkg.isActive && selectedMainPackages.includes(pkg.packageType)
+              pkg.isActive && mappedPackages.includes(pkg.packageType)
             )
             
             // CRITICAL: If user selected specific packages, workshop MUST have them

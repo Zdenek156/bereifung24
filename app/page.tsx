@@ -104,6 +104,18 @@ export default function NewHomePage() {
   // Service-specific package filters - Start empty, set defaults in useEffect when service changes
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
   
+  // Tire Search State
+  const [includeTires, setIncludeTires] = useState(false)
+  const [tireDimensions, setTireDimensions] = useState({
+    width: '',
+    height: '',
+    diameter: ''
+  })
+  const [tireBudget, setTireBudget] = useState<number>(500)
+  const [tireSeasons, setTireSeasons] = useState<string[]>(['s', 'w', 'g'])
+  const [requireRunFlat, setRequireRunFlat] = useState(false)
+  const [require3PMSF, setRequire3PMSF] = useState(false)
+  
   // Load reviews on page load
   useEffect(() => {
     async function loadReviews() {
@@ -319,7 +331,9 @@ export default function NewHomePage() {
       serviceType: selectedService,
       packageTypes: selectedPackages,
       radiusKm,
-      location
+      location,
+      includeTires,
+      tireDimensions
     })
     
     try {
@@ -331,7 +345,16 @@ export default function NewHomePage() {
           packageTypes: selectedPackages,
           radiusKm,
           customerLat: location.lat,
-          customerLon: location.lon
+          customerLon: location.lon,
+          // Tire search parameters
+          includeTires,
+          tireDimensions: includeTires ? tireDimensions : undefined,
+          tireFilters: includeTires ? {
+            maxPrice: tireBudget,
+            seasons: tireSeasons,
+            runFlat: requireRunFlat || undefined,
+            threePMSF: require3PMSF || undefined
+          } : undefined
         })
       })
 
@@ -376,6 +399,14 @@ export default function NewHomePage() {
     if (!postalCode && !useGeolocation) {
       alert('Bitte PLZ oder Ort eingeben oder Standort aktivieren')
       return
+    }
+    
+    // Validate tire dimensions if tire search is enabled
+    if (includeTires) {
+      if (!tireDimensions.width || !tireDimensions.height || !tireDimensions.diameter) {
+        alert('Bitte geben Sie die Reifengröße ein (Breite/Höhe/Zoll)')
+        return
+      }
     }
     
     setLoading(true)
@@ -839,7 +870,64 @@ export default function NewHomePage() {
 
           {/* Search Card - Booking.com Style: One Line */}
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-3">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
+              {/* Service Type Toggle */}
+              <div className="mb-4 flex gap-3">
+                <button
+                  onClick={() => setIncludeTires(false)}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
+                    !includeTires
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  🔧 Nur Service
+                </button>
+                <button
+                  onClick={() => setIncludeTires(true)}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
+                    includeTires
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  🚗 Reifen mit Montage
+                </button>
+              </div>
+
+              {/* Tire Dimensions (only if includeTires) */}
+              {includeTires && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm font-semibold text-blue-900 mb-3">Reifengröße eingeben:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Breite (z.B. 205)"
+                      value={tireDimensions.width}
+                      onChange={(e) => setTireDimensions({...tireDimensions, width: e.target.value})}
+                      className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-gray-900"
+                    />
+                    <span className="flex items-center text-gray-400 font-bold">/</span>
+                    <input
+                      type="text"
+                      placeholder="Höhe (z.B. 55)"
+                      value={tireDimensions.height}
+                      onChange={(e) => setTireDimensions({...tireDimensions, height: e.target.value})}
+                      className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-gray-900"
+                    />
+                    <span className="flex items-center text-gray-400 font-bold">R</span>
+                    <input
+                      type="text"
+                      placeholder="Zoll (z.B. 16)"
+                      value={tireDimensions.diameter}
+                      onChange={(e) => setTireDimensions({...tireDimensions, diameter: e.target.value})}
+                      className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-gray-900"
+                    />
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2">z.B. 205/55 R16 (finden Sie auf der Reifenflanke)</p>
+                </div>
+              )}
+
               <div className="flex flex-col md:flex-row gap-2">
                 {/* Service Dropdown */}
                 <div className="flex-1">
@@ -1295,15 +1383,50 @@ export default function NewHomePage() {
                             {/* Price and Button */}
                             <div className="flex flex-col sm:items-end justify-between w-full sm:w-auto sm:ml-auto flex-shrink-0 mt-2 sm:mt-14">
                               <div className="text-left sm:text-right mb-3">
-                                <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
-                                {workshop.totalPrice > 0 ? (
-                                  <p className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                    {formatEUR(workshop.totalPrice)}
-                                  </p>
+                                {includeTires && workshop.tirePrice ? (
+                                  <>
+                                    <div className="mb-2">
+                                      <p className="text-xs text-gray-500">Service</p>
+                                      <p className="text-lg font-semibold text-gray-700">
+                                        {formatEUR(workshop.basePrice || 0)}
+                                      </p>
+                                    </div>
+                                    <div className="mb-2">
+                                      <p className="text-xs text-gray-500">
+                                        Reifen ({workshop.tireQuantity || 4}x {workshop.tireBrand || ''})
+                                      </p>
+                                      <p className="text-lg font-semibold text-gray-700">
+                                        {formatEUR(workshop.tirePrice || 0)}
+                                      </p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-200">
+                                      <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
+                                      <p className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                        {formatEUR(workshop.totalPrice)}
+                                      </p>
+                                    </div>
+                                  </>
+                                ) : includeTires ? (
+                                  <div className="text-yellow-600">
+                                    <p className="text-xs mb-1">⚠️ Keine Reifen verfügbar</p>
+                                    <p className="text-lg font-semibold">
+                                      {formatEUR(workshop.basePrice || workshop.totalPrice)}
+                                    </p>
+                                    <p className="text-xs text-gray-500">Nur Service</p>
+                                  </div>
                                 ) : (
-                                  <p className="text-lg sm:text-xl font-semibold text-gray-500">
-                                    Preis auf Anfrage
-                                  </p>
+                                  <>
+                                    <p className="text-xs text-gray-600 mb-0.5">Gesamtpreis</p>
+                                    {workshop.totalPrice > 0 ? (
+                                      <p className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                        {formatEUR(workshop.totalPrice)}
+                                      </p>
+                                    ) : (
+                                      <p className="text-lg sm:text-xl font-semibold text-gray-500">
+                                        Preis auf Anfrage
+                                      </p>
+                                    )}
+                                  </>
                                 )}
                                 {workshop.estimatedDuration && (
                                   <p className="text-xs text-gray-500 mt-0.5">~ {workshop.estimatedDuration} Min.</p>

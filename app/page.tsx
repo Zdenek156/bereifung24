@@ -418,35 +418,27 @@ export default function NewHomePage() {
         if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
           console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {
             front: data.dimensionsFront.formatted,
-            rear: data.dimensionsRear.formatted
+            rear: data.dimensionsRear.formatted,
+            currentPackages: selectedPackages
           })
           setHasMixedTires(true)
           setTireDimensionsFront(data.dimensionsFront.formatted)
           setTireDimensionsRear(data.dimensionsRear.formatted)
           
-          // CRITICAL: Remove old standard packages and set mixed default
-          setSelectedPackages((prev) => {
-            const cleaned = prev.filter(p => !['two_tires', 'four_tires'].includes(p))
-            // If no mixed package selected yet, default to mixed_four_tires
-            if (!cleaned.some(p => ['front_two_tires', 'rear_two_tires', 'mixed_four_tires'].includes(p))) {
-              return ['mixed_four_tires']
-            }
-            return cleaned
-          })
+          // CRITICAL: Replace all packages with mixed default
+          console.log('🧹 [handleVehicleSelect] Cleaning packages: removing standard, setting mixed_four_tires')
+          setSelectedPackages(['mixed_four_tires'])
         } else {
           console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
           setHasMixedTires(false)
           setTireDimensionsFront('')
           setTireDimensionsRear('')
           
-          // Remove mixed packages, keep or set standard package
-          setSelectedPackages((prev) => {
-            const cleaned = prev.filter(p => !['front_two_tires', 'rear_two_tires', 'mixed_four_tires'].includes(p))
-            if (cleaned.length === 0) {
-              return ['four_tires']
-            }
-            return cleaned
-          })
+          // Set standard package if none selected
+          if (!selectedPackages.some(p => ['two_tires', 'four_tires'].includes(p))) {
+            console.log('🧹 [handleVehicleSelect] Setting standard: four_tires')
+            setSelectedPackages(['four_tires'])
+          }
         }
         
         // Automatically trigger search if location is set

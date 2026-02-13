@@ -396,7 +396,15 @@ export async function POST(request: NextRequest) {
                 height,
                 diameter,
                 tireFilters?.seasons?.[0] || 'all', // Use first selected season or all
-                'PKW' // Default to cars, could be passed as parameter
+                'PKW', // Default to cars, could be passed as parameter
+                {
+                  minPrice: tireFilters?.minPrice,
+                  maxPrice: tireFilters?.maxPrice,
+                  quality: tireFilters?.quality,
+                  minFuelEfficiency: tireFilters?.fuelEfficiency,
+                  minWetGrip: tireFilters?.wetGrip,
+                  threePMSF: tireFilters?.threePMSF,
+                }
               )
 
               if (cheapestTireResult.available) {

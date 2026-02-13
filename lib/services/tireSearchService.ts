@@ -14,7 +14,9 @@ export interface TireSearchFilters {
   // Optional filters
   season?: 's' | 'w' | 'g' | 'all' // s=Summer, w=Winter, g=All-season
   minStock?: number // Default: 4 (for full set)
+  minPrice?: number // Minimum price per tire
   maxPrice?: number // Maximum price per tire
+  quality?: 'premium' | 'quality' | 'budget' // Quality category
   brands?: string[] // Filter by brands
   // EU Labels
   minFuelEfficiency?: string // A-G (A=best)
@@ -161,7 +163,9 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     diameter,
     season,
     minStock = 4,
+    minPrice,
     maxPrice,
+    quality,
     brands,
     minFuelEfficiency,
     minWetGrip,
@@ -171,6 +175,11 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     sortBy = 'price',
     sortOrder = 'asc',
   } = filters
+
+  // Quality category brand mapping
+  const PREMIUM_BRANDS = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
+  const QUALITY_BRANDS = ['Hankook', 'Kumho', 'Yokohama', 'Toyo', 'Falken', 'BFGoodrich', 'Cooper', 'Nokian']
+  // Budget = all others
 
   // Build where clause
   const where: any = {
@@ -186,7 +195,18 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     where.season = season
   }
 
-  // Brand filter
+  // Quality filter (by brand)
+  if (quality) {
+    if (quality === 'premium') {
+      where.brand = { in: PREMIUM_BRANDS }
+    } else if (quality === 'quality') {
+      where.brand = { in: QUALITY_BRANDS }
+    } else if (quality === 'budget') {
+      where.brand = { notIn: [...PREMIUM_BRANDS, ...QUALITY_BRANDS] }
+    }
+  }
+
+  // Brand filter (overrides quality if both specified)
   if (brands && brands.length > 0) {
     where.brand = { in: brands }
   }
@@ -238,7 +258,10 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       tire.vehicleType || 'PKW'
     )
 
-    // Apply max price filter (on selling price)
+    // Apply price filters (on selling price)
+    if (minPrice && sellingPrice < minPrice) {
+      continue
+    }
     if (maxPrice && sellingPrice > maxPrice) {
       continue
     }
@@ -282,7 +305,8 @@ export async function findCheapestTire(
   height: string,
   diameter: string,
   season?: 's' | 'w' | 'g' | 'all',
-  vehicleType: 'PKW' | 'Motorrad' = 'PKW'
+  vehicleType: 'PKW' | 'Motorrad' = 'PKW',
+  additionalFilters?: Partial<TireSearchFilters>
 ): Promise<CheapestTireResult> {
   const minStock = vehicleType === 'Motorrad' ? 2 : 4
 
@@ -295,6 +319,7 @@ export async function findCheapestTire(
     minStock,
     sortBy: 'price',
     sortOrder: 'asc',
+    ...additionalFilters, // Spread additional filters (minPrice, maxPrice, quality, etc.)
   })
 
   if (tires.length === 0) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { findCheapestTire } from '@/lib/services/tireSearchService'
 
 /**
  * POST /api/customer/direct-booking/search
@@ -40,7 +41,11 @@ export async function POST(request: NextRequest) {
       packageTypes = [], // Array of package types to filter
       radiusKm,
       customerLat,
-      customerLon
+      customerLon,
+      // Tire search parameters (optional)
+      includeTires = false,
+      tireDimensions,
+      tireFilters
     } = body
 
     // Validate location parameters only (vehicle not needed for search)
@@ -374,9 +379,63 @@ export async function POST(request: NextRequest) {
         return a.distance - b.distance
       })
 
+    // Add tire pricing if requested
+    let workshopsWithTires = workshopsWithDistance
+
+    if (includeTires && tireDimensions) {
+      const { width, height, diameter } = tireDimensions
+      
+      if (width && height && diameter) {
+        // Fetch tire prices for each workshop
+        workshopsWithTires = await Promise.all(
+          workshopsWithDistance.map(async (workshop) => {
+            try {
+              const cheapestTireResult = await findCheapestTire(
+                workshop.id,
+                width,
+                height,
+                diameter,
+                tireFilters?.seasons?.[0] || 'all', // Use first selected season or all
+                'PKW' // Default to cars, could be passed as parameter
+              )
+
+              if (cheapestTireResult.available) {
+                return {
+                  ...workshop,
+                  // Tire information
+                  tirePrice: cheapestTireResult.totalPrice,
+                  tirePricePerTire: cheapestTireResult.pricePerTire,
+                  tireQuantity: cheapestTireResult.quantity,
+                  tireBrand: cheapestTireResult.tire?.brand,
+                  tireModel: cheapestTireResult.tire?.model,
+                  tireAvailable: true,
+                  // Update total price (service + tires)
+                  totalPrice: workshop.totalPrice + cheapestTireResult.totalPrice,
+                }
+              } else {
+                // No tires available for this workshop
+                return {
+                  ...workshop,
+                  tireAvailable: false,
+                  tirePrice: 0,
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching tires for workshop ${workshop.id}:`, error)
+              return {
+                ...workshop,
+                tireAvailable: false,
+                tirePrice: 0,
+              }
+            }
+          })
+        )
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      workshops: workshopsWithDistance
+      workshops: workshopsWithTires
     })
 
   } catch (error) {

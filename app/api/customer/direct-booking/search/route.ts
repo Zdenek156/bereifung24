@@ -51,16 +51,13 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Determine tire count from packageTypes (for tire pricing)
+    // CRITICAL: Check mixed tire packages FIRST (they have priority over standard packages)
     let requestedTireCount = 4 // Default
     let isMixedTires = false
     let frontTireCount = 0
     let rearTireCount = 0
 
-    if (packageTypes.includes('two_tires')) {
-      requestedTireCount = 2
-    } else if (packageTypes.includes('four_tires')) {
-      requestedTireCount = 4
-    } else if (packageTypes.includes('front_two_tires')) {
+    if (packageTypes.includes('front_two_tires')) {
       requestedTireCount = 2
       isMixedTires = true
       frontTireCount = 2
@@ -73,8 +70,18 @@ export async function POST(request: NextRequest) {
       isMixedTires = true
       frontTireCount = 2
       rearTireCount = 2
+    } else if (packageTypes.includes('two_tires')) {
+      requestedTireCount = 2
+    } else if (packageTypes.includes('four_tires')) {
+      requestedTireCount = 4
     }
     console.log('🔢 [API] Requested tire count:', requestedTireCount, 'isMixedTires:', isMixedTires, 'from packageTypes:', packageTypes)
+    console.log('🔍 [API] Tire dimensions received:', { 
+      includeTires, 
+      tireDimensions, 
+      tireDimensionsFront, 
+      tireDimensionsRear 
+    })
 
     // Validate location parameters only (vehicle not needed for search)
     if (customerLat === undefined || customerLon === undefined) {

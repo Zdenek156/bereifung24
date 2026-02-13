@@ -25,6 +25,15 @@ interface CSVRow {
   diameter?: string
   season?: string
   vehicleType?: string
+  loadIndex?: string
+  speedIndex?: string
+  runFlat: boolean
+  threePMSF: boolean
+  labelFuelEfficiency?: string
+  labelWetGrip?: string
+  labelNoise?: number
+  labelNoiseClass?: string
+  eprelUrl?: string
 }
 
 /**
@@ -87,8 +96,23 @@ function parseCSV(csvContent: string): CSVRow[] {
       const widthStr = columns[8]
       const heightStr = columns[9]
       const diameterStr = columns[10]
+      const loadIndex = columns[11] // z.B. "91", "95"
+      const speedIndex = columns[12] // z.B. "V", "H", "W"
       const season = columns[13] // s/w/g
       const vehicleType = columns[14] // PKW/Motorrad
+      const labelFuelEfficiency = columns[16] || undefined // A-G
+      const labelWetGrip = columns[17] || undefined // A-G
+      const labelNoiseStr = columns[18] || undefined // dB value
+      const labelNoiseClass = columns[19] || undefined // A, B, C
+      const eprelUrl = columns[27] || undefined // EU Product Registry URL
+
+      // Extract RunFlat and 3PMSF from model name (Profil)
+      const modelLower = (model || '').toLowerCase()
+      const runFlat = /runflat|run\s*flat|rft|rf[\s]/.test(modelLower)
+      const threePMSF = /3pmsf|three\s*peak|schneeflocke/.test(modelLower)
+
+      // Parse noise level
+      const labelNoise = labelNoiseStr ? parseInt(labelNoiseStr) : undefined
 
       // Validation
       if (!articleNumber || isNaN(price) || isNaN(stock) || price <= 0) {
@@ -113,6 +137,15 @@ function parseCSV(csvContent: string): CSVRow[] {
         diameter,
         season: season || undefined,
         vehicleType: vehicleType || undefined,
+        loadIndex: loadIndex || undefined,
+        speedIndex: speedIndex || undefined,
+        runFlat,
+        threePMSF,
+        labelFuelEfficiency,
+        labelWetGrip,
+        labelNoise,
+        labelNoiseClass,
+        eprelUrl,
       })
     } catch (error) {
       console.error(`CSV row ${i + 1}: Parse error:`, error)
@@ -257,6 +290,15 @@ export async function syncSupplierCSV(
               diameter: row.diameter,
               season: row.season,
               vehicleType: row.vehicleType,
+              loadIndex: row.loadIndex,
+              speedIndex: row.speedIndex,
+              runFlat: row.runFlat,
+              threePMSF: row.threePMSF,
+              labelFuelEfficiency: row.labelFuelEfficiency,
+              labelWetGrip: row.labelWetGrip,
+              labelNoise: row.labelNoise,
+              labelNoiseClass: row.labelNoiseClass,
+              eprelUrl: row.eprelUrl,
               lastUpdated: new Date(),
             },
             create: {
@@ -273,6 +315,15 @@ export async function syncSupplierCSV(
               diameter: row.diameter,
               season: row.season,
               vehicleType: row.vehicleType,
+              loadIndex: row.loadIndex,
+              speedIndex: row.speedIndex,
+              runFlat: row.runFlat,
+              threePMSF: row.threePMSF,
+              labelFuelEfficiency: row.labelFuelEfficiency,
+              labelWetGrip: row.labelWetGrip,
+              labelNoise: row.labelNoise,
+              labelNoiseClass: row.labelNoiseClass,
+              eprelUrl: row.eprelUrl,
               lastUpdated: new Date(),
             },
           })

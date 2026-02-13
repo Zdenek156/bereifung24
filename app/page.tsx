@@ -148,9 +148,12 @@ export default function NewHomePage() {
   const [fuelEfficiency, setFuelEfficiency] = useState<string>('') // A-G or ''
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
   const [require3PMSF, setRequire3PMSF] = useState(false)
+  const [requireSameBrand, setRequireSameBrand] = useState(false) // For mixed 4 tires: same brand
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
   const [selectedTireIndices, setSelectedTireIndices] = useState<Record<string, number>>({}) // workshopId -> tire index
+  const [selectedTireFrontIndices, setSelectedTireFrontIndices] = useState<Record<string, number>>({}) // workshopId -> front tire index (mixed tires)
+  const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
   
   // Load reviews on page load
   useEffect(() => {
@@ -523,7 +526,9 @@ export default function NewHomePage() {
             fuelEfficiency: fuelEfficiency || undefined,
             wetGrip: wetGrip || undefined,
             threePMSF: require3PMSF || undefined
-          } : undefined
+          } : undefined,
+          // Same brand filter (only for mixed 4 tires)
+          sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? requireSameBrand : false
         })
       })
 
@@ -1644,6 +1649,23 @@ export default function NewHomePage() {
                               />
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
                             </label>
+                            {/* Same Brand filter - only for mixed 4 tires */}
+                            {hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
+                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                  type="checkbox"
+                                  checked={requireSameBrand}
+                                  onChange={(e) => {
+                                    setRequireSameBrand(e.target.checked)
+                                    if (hasSearched && customerLocation) {
+                                      searchWorkshops(customerLocation)
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                />
+                                <span className="text-sm">🏷️ Gleicher Hersteller für alle 4 Reifen</span>
+                              </label>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1796,10 +1818,26 @@ export default function NewHomePage() {
                       const tireIdx = selectedTireIndices[workshop.id] ?? 0
                       const selectedRec = workshop.tireRecommendations?.[tireIdx]
                       
+                      // Mixed tire indices
+                      const tireFrontIdx = selectedTireFrontIndices[workshop.id] ?? 0
+                      const tireRearIdx = selectedTireRearIndices[workshop.id] ?? 0
+                      const selectedFrontRec = workshop.tireFrontRecommendations?.[tireFrontIdx]
+                      const selectedRearRec = workshop.tireRearRecommendations?.[tireRearIdx]
+                      
                       // Use workshop.totalPrice from backend (includes disposal fee)
                       // If a different tire is selected, adjust the price by the difference
                       const defaultTirePrice = workshop.tirePrice ?? 0
-                      const currentTirePrice = selectedRec?.totalPrice ?? defaultTirePrice
+                      
+                      let currentTirePrice = defaultTirePrice
+                      if (workshop.isMixedTires) {
+                        // For mixed tires: sum selected front and rear recommendations
+                        currentTirePrice = (selectedFrontRec?.totalPrice ?? workshop.tireFront?.totalPrice ?? 0) + 
+                                          (selectedRearRec?.totalPrice ?? workshop.tireRear?.totalPrice ?? 0)
+                      } else {
+                        // For standard tires: use selected recommendation
+                        currentTirePrice = selectedRec?.totalPrice ?? defaultTirePrice
+                      }
+                      
                       const currentTotalPrice = (workshop.totalPrice || 0) - defaultTirePrice + currentTirePrice
                       
                       // EU Label color helper
@@ -1963,6 +2001,60 @@ export default function NewHomePage() {
                                 </div>
                               )}
 
+                              {/* Mixed Tire Recommendations Panel - Front */}
+                              {includeTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (
+                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                    🔹 Vorderachse · {workshop.tireFront?.dimensions}
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {workshop.tireFrontRecommendations.map((rec: any, idx: number) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => setSelectedTireFrontIndices(prev => ({...prev, [workshop.id]: idx}))}
+                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                          (selectedTireFrontIndices[workshop.id] ?? 0) === idx
+                                            ? 'border-primary-500 bg-white shadow-sm'
+                                            : 'border-transparent bg-white hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
+                                        <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Mixed Tire Recommendations Panel - Rear */}
+                              {includeTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (
+                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                    🔸 Hinterachse · {workshop.tireRear?.dimensions}
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {workshop.tireRearRecommendations.map((rec: any, idx: number) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => setSelectedTireRearIndices(prev => ({...prev, [workshop.id]: idx}))}
+                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                          (selectedTireRearIndices[workshop.id] ?? 0) === idx
+                                            ? 'border-primary-500 bg-white shadow-sm'
+                                            : 'border-transparent bg-white hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
+                                        <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Tire not available warning */}
                               {includeTires && !workshop.tireAvailable && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
@@ -1977,23 +2069,31 @@ export default function NewHomePage() {
                                     <>
                                       {/* Price breakdown */}
                                       <div className="space-y-0.5 text-sm text-gray-600 mb-2">
-                                        {workshop.isMixedTires && workshop.tireFront && workshop.tireRear ? (
+                                        {workshop.isMixedTires && (selectedFrontRec || selectedRearRec) ? (
                                           <>
-                                            {/* Mixed tires: Show front and rear separately */}
-                                            <div className="flex justify-between gap-4">
-                                              <span className="text-xs">🔹 Vorderachse ({workshop.tireFront.dimensions})</span>
-                                            </div>
-                                            <div className="flex justify-between gap-4 ml-3">
-                                              <span>{workshop.tireFront.quantity}× {workshop.tireFront.brand} {workshop.tireFront.model} à {formatEUR(workshop.tireFront.pricePerTire)}</span>
-                                              <span className="font-medium">{formatEUR(workshop.tireFront.totalPrice)}</span>
-                                            </div>
-                                            <div className="flex justify-between gap-4 mt-1">
-                                              <span className="text-xs">🔸 Hinterachse ({workshop.tireRear.dimensions})</span>
-                                            </div>
-                                            <div className="flex justify-between gap-4 ml-3">
-                                              <span>{workshop.tireRear.quantity}× {workshop.tireRear.brand} {workshop.tireRear.model} à {formatEUR(workshop.tireRear.pricePerTire)}</span>
-                                              <span className="font-medium">{formatEUR(workshop.tireRear.totalPrice)}</span>
-                                            </div>
+                                            {/* Mixed tires: Show selected front and rear */}
+                                            {selectedFrontRec && (
+                                              <>
+                                                <div className="flex justify-between gap-4">
+                                                  <span className="text-xs">🔹 Vorderachse ({workshop.tireFront?.dimensions})</span>
+                                                </div>
+                                                <div className="flex justify-between gap-4 ml-3">
+                                                  <span>{selectedFrontRec.quantity}× {selectedFrontRec.tire.brand} {selectedFrontRec.tire.model} à {formatEUR(selectedFrontRec.pricePerTire)}</span>
+                                                  <span className="font-medium">{formatEUR(selectedFrontRec.totalPrice)}</span>
+                                                </div>
+                                              </>
+                                            )}
+                                            {selectedRearRec && (
+                                              <>
+                                                <div className="flex justify-between gap-4 mt-1">
+                                                  <span className="text-xs">🔸 Hinterachse ({workshop.tireRear?.dimensions})</span>
+                                                </div>
+                                                <div className="flex justify-between gap-4 ml-3">
+                                                  <span>{selectedRearRec.quantity}× {selectedRearRec.tire.brand} {selectedRearRec.tire.model} à {formatEUR(selectedRearRec.pricePerTire)}</span>
+                                                  <span className="font-medium">{formatEUR(selectedRearRec.totalPrice)}</span>
+                                                </div>
+                                              </>
+                                            )}
                                           </>
                                         ) : selectedRec ? (
                                           <>

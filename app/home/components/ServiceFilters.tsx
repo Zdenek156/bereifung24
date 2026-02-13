@@ -16,7 +16,7 @@ interface FilterGroup {
   note?: string // Optional warning/info note below the filter group
 }
 
-interface ServiceFilterConfig {
+export interface ServiceFilterConfig {
   groups: FilterGroup[]
 }
 
@@ -24,7 +24,9 @@ interface ServiceFiltersProps {
   selectedService: string
   selectedPackages: string[]
   onFiltersChange: (selectedPackages: string[]) => void
-  // Mixed tire dimensions (if front ≠ rear)
+  // Optional: Override default config (e.g. for mixed tires)
+  customConfig?: ServiceFilterConfig
+  // Mixed tire dimensions (if front ≠ rear) - for logging only
   tireDimensionsFront?: string
   tireDimensionsRear?: string
 }
@@ -225,30 +227,25 @@ export default function ServiceFilters({
   selectedService, 
   selectedPackages, 
   onFiltersChange,
+  customConfig,
   tireDimensionsFront = '',
   tireDimensionsRear = ''
 }: ServiceFiltersProps) {
-  const config = FILTER_CONFIG[selectedService]
+  // Use customConfig if provided (for mixed tires), otherwise use default
+  const config = customConfig || FILTER_CONFIG[selectedService]
   
-  // Check if vehicle has mixed tires (different front/rear dimensions)
-  const hasMixedTires = tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
-
-  // Log for debugging - VERSION 3.0 CACHE BUSTER 2026-02-13-19:15
+  // Log for debugging - VERSION 4.0 MOVED LOGIC TO PAGE.TSX
   useEffect(() => {
-    console.log('🚀 [ServiceFilters v3.0 BUILD:2026-02-13-19:15] Props received:', {
+    console.log('🎯 [ServiceFilters v4.0] Rendered:', {
       selectedService,
       selectedPackages,
+      hasCustomConfig: !!customConfig,
+      configGroups: config?.groups.length || 0,
+      firstGroupOptions: config?.groups[0]?.options.length || 0,
       tireDimensionsFront,
-      tireDimensionsRear,
-      hasMixedTires,
-      propsType: {
-        front: typeof tireDimensionsFront,
-        rear: typeof tireDimensionsRear,
-        frontValue: tireDimensionsFront || 'EMPTY',
-        rearValue: tireDimensionsRear || 'EMPTY'
-      }
+      tireDimensionsRear
     })
-  }, [selectedService, selectedPackages, tireDimensionsFront, tireDimensionsRear, hasMixedTires])
+  }, [selectedService, selectedPackages, customConfig, config, tireDimensionsFront, tireDimensionsRear])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
@@ -272,41 +269,10 @@ export default function ServiceFilters({
   if (!config) {
     return null
   }
-  
-  // Override tire count options if mixed tires detected
-  let displayConfig = config
-  if (selectedService === 'TIRE_CHANGE' && hasMixedTires) {
-    displayConfig = {
-      groups: [
-        {
-          label: 'Anzahl Reifen',
-          multiSelect: false,
-          options: [
-            {
-              packageType: 'front_two_tires',
-              label: `2 Reifen Vorderachse`,
-              info: `Wechsel der Vorderachse (${tireDimensionsFront})`
-            },
-            {
-              packageType: 'rear_two_tires',
-              label: `2 Reifen Hinterachse`,
-              info: `Wechsel der Hinterachse (${tireDimensionsRear})`
-            },
-            {
-              packageType: 'mixed_four_tires',
-              label: `4 Reifen Komplettsatz`,
-              info: `Alle 4 Reifen (2× ${tireDimensionsFront} vorne + 2× ${tireDimensionsRear} hinten)`
-            }
-          ]
-        },
-        ...config.groups.slice(1) // Keep other groups (Zusatzleistungen, etc.)
-      ]
-    }
-  }
 
   return (
     <div>
-      {displayConfig.groups.map((group, groupIndex) => (
+      {config.groups.map((group, groupIndex) => (
         <div key={groupIndex} className={groupIndex > 0 ? 'mt-4' : ''}>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
             {group.label}

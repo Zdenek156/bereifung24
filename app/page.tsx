@@ -1254,22 +1254,75 @@ export default function NewHomePage() {
 
                           {/* 3. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
-                            {/* DEBUG: Log props before passing to ServiceFilters */}
-                            {typeof window !== 'undefined' && console.log('🔧 [page.tsx] Passing props to ServiceFilters:', {
-                              tireDimensionsFront,
-                              tireDimensionsRear,
-                              hasMixedTires,
-                              frontType: typeof tireDimensionsFront,
-                              rearType: typeof tireDimensionsRear
-                            })}
-                            <ServiceFilters
-                              key={`tire-change-${selectedService}`}
-                              selectedService={selectedService}
-                              selectedPackages={selectedPackages}
-                              onFiltersChange={(packages) => setSelectedPackages(packages)}
-                              tireDimensionsFront={tireDimensionsFront}
-                              tireDimensionsRear={tireDimensionsRear}
-                            />
+                            {(() => {
+                              // Create custom config for mixed tires
+                              // CRITICAL FIX: Logic runs in page.tsx, not in cached ServiceFilters component!
+                              let customConfig = undefined
+                              
+                              if (hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear) {
+                                console.log('✅ [page.tsx v4.0] Creating MIXED tire config:', {
+                                  front: tireDimensionsFront,
+                                  rear: tireDimensionsRear
+                                })
+                                
+                                customConfig = {
+                                  groups: [
+                                    {
+                                      label: 'Anzahl Reifen',
+                                      multiSelect: false,
+                                      options: [
+                                        {
+                                          packageType: 'front_two_tires',
+                                          label: '2 Reifen Vorderachse',
+                                          info: `Wechsel der Vorderachse (${tireDimensionsFront})`
+                                        },
+                                        {
+                                          packageType: 'rear_two_tires',
+                                          label: '2 Reifen Hinterachse',
+                                          info: `Wechsel der Hinterachse (${tireDimensionsRear})`
+                                        },
+                                        {
+                                          packageType: 'mixed_four_tires',
+                                          label: '4 Reifen Komplettsatz',
+                                          info: `Alle 4 Reifen (2× ${tireDimensionsFront} vorne + 2× ${tireDimensionsRear} hinten)`
+                                        }
+                                      ]
+                                    },
+                                    // Add Zusatzleistungen group
+                                    {
+                                      label: 'Zusatzleistungen',
+                                      multiSelect: true,
+                                      options: [
+                                        { 
+                                          packageType: 'with_disposal', 
+                                          label: 'Mit Entsorgung', 
+                                          info: 'Fachgerechte Entsorgung der alten Reifen inklusive'
+                                        },
+                                        { 
+                                          packageType: 'runflat', 
+                                          label: 'Runflat-Reifen', 
+                                          info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad)'
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              } else {
+                                console.log('📋 [page.tsx v4.0] Using STANDARD tire config')
+                              }
+                              
+                              return (
+                                <ServiceFilters
+                                  key={`tire-change-${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}`}
+                                  selectedService={selectedService}
+                                  selectedPackages={selectedPackages}
+                                  onFiltersChange={(packages) => setSelectedPackages(packages)}
+                                  customConfig={customConfig}
+                                  tireDimensionsFront={tireDimensionsFront}
+                                  tireDimensionsRear={tireDimensionsRear}
+                                />
+                              )
+                            })()}
                           </div>
 
                           {/* 4. Saison (only if includeTires) */}

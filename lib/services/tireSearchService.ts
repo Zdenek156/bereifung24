@@ -257,18 +257,21 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     where.threePMSF = threePMSF
   }
 
-  // Model filters: Always exclude DEMO, optionally exclude DOT
+  // Model exclusions: Always exclude DEMO, optionally exclude DOT
   const modelExclusions: any[] = [
-    { contains: 'DEMO', mode: 'insensitive' }
+    { NOT: { model: { contains: 'DEMO', mode: 'insensitive' } } }
   ]
   
   // Only exclude DOT if showDOTTires is false (default behavior)
   if (filters.showDOTTires !== true) {
-    modelExclusions.push({ contains: 'DOT', mode: 'insensitive' })
+    modelExclusions.push({ NOT: { model: { contains: 'DOT', mode: 'insensitive' } } })
   }
   
-  where.model = {
-    NOT: modelExclusions
+  // Add model exclusions to AND clause
+  if (!where.AND) {
+    where.AND = modelExclusions
+  } else {
+    where.AND = Array.isArray(where.AND) ? [...where.AND, ...modelExclusions] : [where.AND, ...modelExclusions]
   }
 
   // Fetch matching tires

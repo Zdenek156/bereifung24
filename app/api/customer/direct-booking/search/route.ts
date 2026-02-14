@@ -543,61 +543,144 @@ export async function POST(request: NextRequest) {
                     console.log(`❌ [sameBrand Pre-Filter] Workshop ${workshop.id}: No matching brands found, skipping`)
                     return null
                   }
-                }
-                
-                // Search for front tires if needed
-                if (searchFront) {
-                  console.log(`🎯 [FRONT Search] Workshop ${workshop.id}: width=${widthFront}, brands=${matchingBrands ? matchingBrands.length + ' brands' : 'NO FILTER'}`)
-                  frontRecsResult = await findTireRecommendations(
-                  workshop.id,
-                  String(widthFront),
-                  String(heightFront),
-                  String(diameterFront),
-                  seasonFilter,
-                  'PKW',
-                  {
-                    minPrice: tireFilters?.minPrice,
-                    maxPrice: tireFilters?.maxPrice,
-                    quality: tireFilters?.quality,
-                    minFuelEfficiency: tireFilters?.fuelEfficiency,
-                    minWetGrip: tireFilters?.wetGrip,
-                    threePMSF: tireFilters?.threePMSF,
-                    runFlat: requireRunFlat || undefined,
-                    minLoadIndex: loadIndexFront,
-                    minSpeedIndex: speedIndexFront,
-                    brands: matchingBrands // Filter by matching brands if sameBrand is active
-                  },
-                    frontTireCount,
-                    0,
-                    requireRunFlat ? runFlatSurcharge : 0
-                  )
-                }
-                
-                // Search for rear tires if needed
-                if (searchRear) {
-                  rearRecsResult = await findTireRecommendations(
-                  workshop.id,
-                  String(widthRear),
-                  String(heightRear),
-                  String(diameterRear),
-                  seasonFilter,
-                  'PKW',
-                  {
-                    minPrice: tireFilters?.minPrice,
-                    maxPrice: tireFilters?.maxPrice,
-                    quality: tireFilters?.quality,
-                    minFuelEfficiency: tireFilters?.fuelEfficiency,
-                    minWetGrip: tireFilters?.wetGrip,
-                    threePMSF: tireFilters?.threePMSF,
-                    runFlat: requireRunFlat || undefined,
-                    minLoadIndex: loadIndexRear,
-                    minSpeedIndex: speedIndexRear,
-                    brands: matchingBrands // Filter by matching brands if sameBrand is active
-                  },
-                    rearTireCount,
-                    0,
-                    requireRunFlat ? runFlatSurcharge : 0
-                  )
+                  
+                  // For sameBrand: Find cheapest combination for each brand
+                  let bestBrandCombination = null
+                  let bestBrandPrice = Infinity
+                  
+                  console.log(`🔍 [sameBrand Search] Workshop ${workshop.id}: Testing ${matchingBrands.length} brands...`)
+                  
+                  for (const brand of matchingBrands) {
+                    // Search front with this specific brand
+                    const frontResult = await findTireRecommendations(
+                      workshop.id,
+                      String(widthFront),
+                      String(heightFront),
+                      String(diameterFront),
+                      seasonFilter,
+                      'PKW',
+                      {
+                        minPrice: tireFilters?.minPrice,
+                        maxPrice: tireFilters?.maxPrice,
+                        quality: tireFilters?.quality,
+                        minFuelEfficiency: tireFilters?.fuelEfficiency,
+                        minWetGrip: tireFilters?.wetGrip,
+                        threePMSF: tireFilters?.threePMSF,
+                        runFlat: requireRunFlat || undefined,
+                        minLoadIndex: loadIndexFront,
+                        minSpeedIndex: speedIndexFront,
+                        brands: [brand] // Single brand
+                      },
+                      frontTireCount,
+                      0,
+                      requireRunFlat ? runFlatSurcharge : 0
+                    )
+                    
+                    // Search rear with same brand
+                    const rearResult = await findTireRecommendations(
+                      workshop.id,
+                      String(widthRear),
+                      String(heightRear),
+                      String(diameterRear),
+                      seasonFilter,
+                      'PKW',
+                      {
+                        minPrice: tireFilters?.minPrice,
+                        maxPrice: tireFilters?.maxPrice,
+                        quality: tireFilters?.quality,
+                        minFuelEfficiency: tireFilters?.fuelEfficiency,
+                        minWetGrip: tireFilters?.wetGrip,
+                        threePMSF: tireFilters?.threePMSF,
+                        runFlat: requireRunFlat || undefined,
+                        minLoadIndex: loadIndexRear,
+                        minSpeedIndex: speedIndexRear,
+                        brands: [brand] // Same brand
+                      },
+                      rearTireCount,
+                      0,
+                      requireRunFlat ? runFlatSurcharge : 0
+                    )
+                    
+                    // Check if both searches found tires
+                    if (frontResult?.available && frontResult?.recommendations?.length > 0 &&
+                        rearResult?.available && rearResult?.recommendations?.length > 0) {
+                      const combinedPrice = frontResult.recommendations[0].totalPrice + rearResult.recommendations[0].totalPrice
+                      
+                      if (combinedPrice < bestBrandPrice) {
+                        bestBrandPrice = combinedPrice
+                        bestBrandCombination = {
+                          brand,
+                          front: frontResult,
+                          rear: rearResult
+                        }
+                      }
+                    }
+                  }
+                  
+                  if (!bestBrandCombination) {
+                    console.log(`❌ [sameBrand Search] Workshop ${workshop.id}: No valid brand combination found`)
+                    return null
+                  }
+                  
+                  console.log(`✅ [sameBrand Search] Workshop ${workshop.id}: Best combination: ${bestBrandCombination.brand} (${bestBrandPrice.toFixed(2)}€)`)
+                  
+                  // Use the best combination
+                  frontRecsResult = bestBrandCombination.front
+                  rearRecsResult = bestBrandCombination.rear
+                } else {
+                  // Normal search without sameBrand filter
+                  // Search for front tires if needed
+                  if (searchFront) {
+                    console.log(`🎯 [FRONT Search] Workshop ${workshop.id}: width=${widthFront}, brands=NO FILTER`)
+                    frontRecsResult = await findTireRecommendations(
+                    workshop.id,
+                    String(widthFront),
+                    String(heightFront),
+                    String(diameterFront),
+                    seasonFilter,
+                    'PKW',
+                    {
+                      minPrice: tireFilters?.minPrice,
+                      maxPrice: tireFilters?.maxPrice,
+                      quality: tireFilters?.quality,
+                      minFuelEfficiency: tireFilters?.fuelEfficiency,
+                      minWetGrip: tireFilters?.wetGrip,
+                      threePMSF: tireFilters?.threePMSF,
+                      runFlat: requireRunFlat || undefined,
+                      minLoadIndex: loadIndexFront,
+                      minSpeedIndex: speedIndexFront
+                    },
+                      frontTireCount,
+                      0,
+                      requireRunFlat ? runFlatSurcharge : 0
+                    )
+                  }
+                  
+                  // Search for rear tires if needed
+                  if (searchRear) {
+                    rearRecsResult = await findTireRecommendations(
+                    workshop.id,
+                    String(widthRear),
+                    String(heightRear),
+                    String(diameterRear),
+                    seasonFilter,
+                    'PKW',
+                    {
+                      minPrice: tireFilters?.minPrice,
+                      maxPrice: tireFilters?.maxPrice,
+                      quality: tireFilters?.quality,
+                      minFuelEfficiency: tireFilters?.fuelEfficiency,
+                      minWetGrip: tireFilters?.wetGrip,
+                      threePMSF: tireFilters?.threePMSF,
+                      runFlat: requireRunFlat || undefined,
+                      minLoadIndex: loadIndexRear,
+                      minSpeedIndex: speedIndexRear
+                    },
+                      rearTireCount,
+                      0,
+                      requireRunFlat ? runFlatSurcharge : 0
+                    )
+                  }
                 }
                 
                 // Check if required searches found tires
@@ -605,36 +688,8 @@ export async function POST(request: NextRequest) {
                 const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
                 if (frontAvailable && rearAvailable) {
-                  let frontRec = frontRecsResult?.recommendations?.[0]
-                  let rearRec = rearRecsResult?.recommendations?.[0]
-                  
-                  // If sameBrand is active, find matching brand combination
-                  if (sameBrand && searchFront && searchRear) {
-                    let bestMatchingCombination = null
-                    let bestMatchingPrice = Infinity
-                    
-                    // Try to find cheapest combination with same brand
-                    for (const fRec of frontRecsResult.recommendations) {
-                      for (const rRec of rearRecsResult.recommendations) {
-                        if (fRec.tire.brand.toLowerCase() === rRec.tire.brand.toLowerCase()) {
-                          const combinedPrice = fRec.totalPrice + rRec.totalPrice
-                          if (combinedPrice < bestMatchingPrice) {
-                            bestMatchingPrice = combinedPrice
-                            bestMatchingCombination = { front: fRec, rear: rRec }
-                          }
-                        }
-                      }
-                    }
-                    
-                    if (bestMatchingCombination) {
-                      frontRec = bestMatchingCombination.front
-                      rearRec = bestMatchingCombination.rear
-                      console.log(`✅ [sameBrand Match] Workshop ${workshop.id}: Found matching brand combination: ${frontRec.tire.brand} (${bestMatchingPrice}€)`)
-                    } else {
-                      console.log(`❌ [sameBrand Match] Workshop ${workshop.id}: No matching brand combination found, skipping`)
-                      return null
-                    }
-                  }
+                  const frontRec = frontRecsResult?.recommendations?.[0]
+                  const rearRec = rearRecsResult?.recommendations?.[0]
                   
                   // Calculate combined price
                   let combinedTirePrice = 0

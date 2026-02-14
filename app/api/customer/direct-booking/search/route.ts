@@ -536,6 +536,8 @@ export async function POST(request: NextRequest) {
                     matchingBrands: matchingBrands.slice(0, 10) // Only log first 10 to avoid truncation
                   })
                   
+                  console.log(`📋 [DEBUG] matchingBrands array:`, JSON.stringify(matchingBrands.slice(0, 5)))
+                  
                   // If no matching brands, skip this workshop entirely
                   if (matchingBrands.length === 0) {
                     console.log(`❌ [sameBrand Pre-Filter] Workshop ${workshop.id}: No matching brands found, skipping`)
@@ -545,6 +547,7 @@ export async function POST(request: NextRequest) {
                 
                 // Search for front tires if needed
                 if (searchFront) {
+                  console.log(`🎯 [FRONT Search] Workshop ${workshop.id}: width=${widthFront}, brands=${matchingBrands ? matchingBrands.length + ' brands' : 'NO FILTER'}`)
                   frontRecsResult = await findTireRecommendations(
                   workshop.id,
                   String(widthFront),

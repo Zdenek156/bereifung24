@@ -2216,19 +2216,22 @@ export default function NewHomePage() {
                               {/* Service Tags */}
                               {workshop.availableServices && workshop.availableServices.length > 0 && (() => {
                                 const additionalServices = workshop.availableServices.filter((s: string) => s !== selectedService)
-                                return additionalServices.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mb-3">
-                                    {additionalServices.slice(0, 5).map((serviceType: string) => {
-                                      const service = SERVICES.find(s => s.id === serviceType)
-                                      if (!service) return null
-                                      return (
-                                        <span key={serviceType} className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200" title={service.description}>
-                                          <span className="text-xs">{service.icon}</span> {service.label}
-                                        </span>
-                                      )
-                                    })}
-                                  </div>
-                                )
+                                if (additionalServices.length > 0) {
+                                  return (
+                                    <div className="flex flex-wrap gap-1.5 mb-3">
+                                      {additionalServices.slice(0, 5).map((serviceType: string) => {
+                                        const service = SERVICES.find(s => s.id === serviceType)
+                                        if (!service) return null
+                                        return (
+                                          <span key={serviceType} className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200" title={service.description}>
+                                            <span className="text-xs">{service.icon}</span> {service.label}
+                                          </span>
+                                        )
+                                      })}
+                                    </div>
+                                  )
+                                }
+                                return null
                               })()}
 
                               {/* Tire Recommendations Panel */}

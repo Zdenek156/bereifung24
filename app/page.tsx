@@ -962,6 +962,57 @@ export default function NewHomePage() {
     urlParams.set('scroll', currentScroll.toString())
     window.history.replaceState({}, '', `?${urlParams.toString()}`)
     
+    // Collect selected tire data
+    const tireIdx = selectedTireIndices[workshop.id] ?? 0
+    const selectedRec = workshop.tireRecommendations?.[tireIdx]
+    
+    // Mixed tire data
+    const brandOptionIdx = selectedBrandOptionIndices[workshop.id] ?? 0
+    const selectedBrandOption = workshop.brandOptions?.[brandOptionIdx]
+    
+    let selectedFrontRec, selectedRearRec
+    if (selectedBrandOption) {
+      selectedFrontRec = {
+        ...selectedBrandOption.front,
+        tire: selectedBrandOption.front.tire,
+        quantity: selectedBrandOption.front.quantity
+      }
+      selectedRearRec = {
+        ...selectedBrandOption.rear,
+        tire: selectedBrandOption.rear.tire,
+        quantity: selectedBrandOption.rear.quantity
+      }
+    } else {
+      const tireFrontIdx = selectedTireFrontIndices[workshop.id] ?? 0
+      const tireRearIdx = selectedTireRearIndices[workshop.id] ?? 0
+      selectedFrontRec = workshop.tireFrontRecommendations?.[tireFrontIdx]
+      selectedRearRec = workshop.tireRearRecommendations?.[tireRearIdx]
+    }
+    
+    // Prepare tire booking data
+    const tireBookingData = {
+      hasTires: includeTires && !missingSeasonError && workshop.tireAvailable,
+      isMixedTires: workshop.isMixedTires || false,
+      tireDimensions: workshop.isMixedTires ? null : {
+        width: tireDimensions.width,
+        height: tireDimensions.height,
+        diameter: tireDimensions.diameter,
+        loadIndex: tireDimensions.loadIndex,
+        speedIndex: tireDimensions.speedIndex
+      },
+      tireDimensionsFront: workshop.isMixedTires ? tireDimensionsFront : null,
+      tireDimensionsRear: workshop.isMixedTires ? tireDimensionsRear : null,
+      selectedTire: selectedRec,
+      selectedFrontTire: workshop.isMixedTires ? selectedFrontRec : null,
+      selectedRearTire: workshop.isMixedTires ? selectedRearRec : null,
+      selectedPackages: selectedPackages
+    }
+    
+    // Save tire data to sessionStorage for workshop page
+    if (tireBookingData.hasTires) {
+      sessionStorage.setItem('tireBookingData', JSON.stringify(tireBookingData))
+    }
+    
     // Navigate to workshop detail page with all workshop data as URL params
     const params = new URLSearchParams({
       name: workshop.name,

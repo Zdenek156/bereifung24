@@ -628,7 +628,7 @@ export async function POST(request: NextRequest) {
                   // Sort by price
                   allBrandCombinations.sort((a, b) => a.price - b.price)
                   
-                  // Select best options: Günstigster, Premium (if available), Mittelklasse (if available)
+                  // Select best options: Günstigster, Testsieger (Premium), Beliebt (Quality)
                   let selectedCombination = null
                   
                   // Always use cheapest as default
@@ -652,10 +652,10 @@ export async function POST(request: NextRequest) {
                     price: selectedCombination.price
                   })
                   
-                  // 2. Premium (if different from cheapest)
+                  // 2. Testsieger (Premium - if different from cheapest)
                   if (premiumOption && premiumOption.brand !== selectedCombination.brand) {
                     brandOptions.push({
-                      label: 'Premium',
+                      label: 'Testsieger',
                       brand: premiumOption.brand,
                       front: premiumOption.front.recommendations[0],
                       rear: premiumOption.rear.recommendations[0],
@@ -663,11 +663,11 @@ export async function POST(request: NextRequest) {
                     })
                   }
                   
-                  // 3. Mittelklasse (if different from both)
+                  // 3. Beliebt (Quality - if different from both)
                   if (qualityOption && qualityOption.brand !== selectedCombination.brand && 
                       (!premiumOption || qualityOption.brand !== premiumOption.brand)) {
                     brandOptions.push({
-                      label: 'Mittelklasse',
+                      label: 'Beliebt',
                       brand: qualityOption.brand,
                       front: qualityOption.front.recommendations[0],
                       rear: qualityOption.rear.recommendations[0],

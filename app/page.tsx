@@ -1,4 +1,4 @@
-'use client'
+'use client' // v5.0 Cache Bust 2026-02-14
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'

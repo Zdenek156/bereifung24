@@ -487,6 +487,61 @@ export async function POST(request: NextRequest) {
                 
                 let frontRecsResult: any = null
                 let rearRecsResult: any = null
+                let matchingBrands: string[] | undefined = undefined
+                
+                // If sameBrand filter is active AND we're searching both sizes, find matching brands first
+                if (sameBrand && searchFront && searchRear) {
+                  console.log(`🔍 [sameBrand Pre-Filter] Workshop ${workshop.id}: Finding matching brands...`)
+                  
+                  // Query for brands available in front size
+                  const frontBrandsResult = await prisma.workshopInventory.findMany({
+                    where: {
+                      workshopId: workshop.id,
+                      width: String(widthFront),
+                      height: String(heightFront),
+                      diameter: String(diameterFront),
+                      season: seasonFilter === 'all' ? undefined : seasonFilter,
+                      stock: { gte: frontTireCount }
+                    },
+                    select: { brand: true },
+                    distinct: ['brand']
+                  })
+                  
+                  // Query for brands available in rear size
+                  const rearBrandsResult = await prisma.workshopInventory.findMany({
+                    where: {
+                      workshopId: workshop.id,
+                      width: String(widthRear),
+                      height: String(heightRear),
+                      diameter: String(diameterRear),
+                      season: seasonFilter === 'all' ? undefined : seasonFilter,
+                      stock: { gte: rearTireCount }
+                    },
+                    select: { brand: true },
+                    distinct: ['brand']
+                  })
+                  
+                  const frontBrands = frontBrandsResult.map(r => r.brand.toLowerCase())
+                  const rearBrands = rearBrandsResult.map(r => r.brand.toLowerCase())
+                  
+                  // Find intersection - brands available in both sizes
+                  matchingBrands = frontBrandsResult
+                    .filter(fb => rearBrands.includes(fb.brand.toLowerCase()))
+                    .map(fb => fb.brand)
+                  
+                  console.log(`🏷️ [sameBrand Pre-Filter] Workshop ${workshop.id}:`, {
+                    frontBrandsCount: frontBrands.length,
+                    rearBrandsCount: rearBrands.length,
+                    matchingBrandsCount: matchingBrands.length,
+                    matchingBrands: matchingBrands
+                  })
+                  
+                  // If no matching brands, skip this workshop entirely
+                  if (matchingBrands.length === 0) {
+                    console.log(`❌ [sameBrand Pre-Filter] Workshop ${workshop.id}: No matching brands found, skipping`)
+                    return null
+                  }
+                }
                 
                 // Search for front tires if needed
                 if (searchFront) {
@@ -506,7 +561,8 @@ export async function POST(request: NextRequest) {
                     threePMSF: tireFilters?.threePMSF,
                     runFlat: requireRunFlat || undefined,
                     minLoadIndex: loadIndexFront,
-                    minSpeedIndex: speedIndexFront
+                    minSpeedIndex: speedIndexFront,
+                    brands: matchingBrands // Filter by matching brands if sameBrand is active
                   },
                     frontTireCount,
                     0,
@@ -532,7 +588,8 @@ export async function POST(request: NextRequest) {
                     threePMSF: tireFilters?.threePMSF,
                     runFlat: requireRunFlat || undefined,
                     minLoadIndex: loadIndexRear,
-                    minSpeedIndex: speedIndexRear
+                    minSpeedIndex: speedIndexRear,
+                    brands: matchingBrands // Filter by matching brands if sameBrand is active
                   },
                     rearTireCount,
                     0,
@@ -545,38 +602,20 @@ export async function POST(request: NextRequest) {
                 const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
                 if (frontAvailable && rearAvailable) {
-                  let brandsMismatch = false
-                  
-                  // Apply same brand filter if requested (only for 4 tires)
+                  // Validate sameBrand filter result (should always match now due to pre-filtering)
                   if (sameBrand && searchFront && searchRear) {
                     const frontRec = frontRecsResult.recommendations[0]
                     const rearRec = rearRecsResult.recommendations[0]
                     
-                    console.log(`🏷️ [sameBrand Filter] Workshop ${workshop.id}:`, {
+                    console.log(`✅ [sameBrand Validation] Workshop ${workshop.id}:`, {
                       frontBrand: frontRec.tire.brand,
                       rearBrand: rearRec.tire.brand,
-                      match: frontRec.tire.brand.toLowerCase() === rearRec.tire.brand.toLowerCase(),
-                      allRearBrands: rearRecsResult.recommendations.map((r: any) => r.tire.brand)
+                      match: frontRec.tire.brand.toLowerCase() === rearRec.tire.brand.toLowerCase()
                     })
                     
-                    // Check if brands match
+                    // Brands should match due to pre-filtering
                     if (frontRec.tire.brand.toLowerCase() !== rearRec.tire.brand.toLowerCase()) {
-                      // Try to find matching brand in rear recommendations
-                      const matchingRearRec = rearRecsResult.recommendations.find(
-                        (rec: any) => rec.tire.brand.toLowerCase() === frontRec.tire.brand.toLowerCase()
-                      )
-                      
-                      if (matchingRearRec) {
-                        console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Found matching rear tire: ${matchingRearRec.tire.brand} ${matchingRearRec.tire.model}`)
-                        // Use matching rear tire
-                        rearRecsResult.recommendations[0] = matchingRearRec
-                      } else {
-                        // No matching brand found - KEEP workshop but flag it
-                        console.log(`⚠️ [sameBrand Filter] Workshop ${workshop.id}: No matching brand, showing anyway with warning`)
-                        brandsMismatch = true
-                      }
-                    } else {
-                      console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Brands already match!`)
+                      console.error(`⚠️ [sameBrand Validation] Workshop ${workshop.id}: Brand mismatch despite pre-filtering!`)
                     }
                   }
                   

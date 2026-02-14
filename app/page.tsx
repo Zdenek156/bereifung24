@@ -1946,6 +1946,20 @@ export default function NewHomePage() {
                         return colors[grade.toUpperCase()] || 'bg-gray-200 text-gray-700'
                       }
                       
+                      const getNoiseColor = (noise: number | null | undefined) => {
+                        if (!noise) return 'bg-gray-200 text-gray-700'
+                        if (noise <= 68) return 'bg-green-600 text-white'
+                        if (noise <= 71) return 'bg-yellow-400 text-gray-900'
+                        return 'bg-red-500 text-white'
+                      }
+                      
+                      const getNoiseWaves = (noise: number | null | undefined) => {
+                        if (!noise) return ''
+                        if (noise <= 68) return '🔈' // Leise (1 Welle)
+                        if (noise <= 71) return '🔉' // Mittel (2 Wellen)
+                        return '🔊' // Laut (3 Wellen)
+                      }
+                      
                       return (
                         <div
                           key={workshop.id}
@@ -2087,6 +2101,11 @@ export default function NewHomePage() {
                                               {rec.labelWetGrip}
                                             </span>
                                           )}
+                                          {rec.labelNoise && (
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getNoiseColor(rec.labelNoise)}`} title={`Lautstärke: ${rec.labelNoise} dB`}>
+                                              {getNoiseWaves(rec.labelNoise)} {rec.labelNoise}
+                                            </span>
+                                          )}
                                         </div>
                                       </button>
                                     ))}
@@ -2160,6 +2179,11 @@ export default function NewHomePage() {
                                               {rec.tire.labelWetGrip}
                                             </span>
                                           )}
+                                          {rec.tire.labelNoise && (
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getNoiseColor(rec.tire.labelNoise)}`} title={`Lautstärke: ${rec.tire.labelNoise} dB`}>
+                                              {getNoiseWaves(rec.tire.labelNoise)} {rec.tire.labelNoise}
+                                            </span>
+                                          )}
                                         </div>
                                         <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
                                       </button>
@@ -2197,6 +2221,11 @@ export default function NewHomePage() {
                                           {rec.tire.labelWetGrip && (
                                             <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
                                               {rec.tire.labelWetGrip}
+                                            </span>
+                                          )}
+                                          {rec.tire.labelNoise && (
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getNoiseColor(rec.tire.labelNoise)}`} title={`Lautstärke: ${rec.tire.labelNoise} dB`}>
+                                              {getNoiseWaves(rec.tire.labelNoise)} {rec.tire.labelNoise}
                                             </span>
                                           )}
                                         </div>

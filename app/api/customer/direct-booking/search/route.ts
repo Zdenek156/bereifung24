@@ -569,6 +569,7 @@ export async function POST(request: NextRequest) {
                         minFuelEfficiency: tireFilters?.fuelEfficiency,
                         minWetGrip: tireFilters?.wetGrip,
                         threePMSF: tireFilters?.threePMSF,
+                        showDOTTires: tireFilters?.showDOTTires,
                         runFlat: requireRunFlat || undefined,
                         minLoadIndex: loadIndexFront,
                         minSpeedIndex: speedIndexFront,
@@ -594,6 +595,7 @@ export async function POST(request: NextRequest) {
                         minFuelEfficiency: tireFilters?.fuelEfficiency,
                         minWetGrip: tireFilters?.wetGrip,
                         threePMSF: tireFilters?.threePMSF,
+                        showDOTTires: tireFilters?.showDOTTires,
                         runFlat: requireRunFlat || undefined,
                         minLoadIndex: loadIndexRear,
                         minSpeedIndex: speedIndexRear,
@@ -702,6 +704,7 @@ export async function POST(request: NextRequest) {
                       minFuelEfficiency: tireFilters?.fuelEfficiency,
                       minWetGrip: tireFilters?.wetGrip,
                       threePMSF: tireFilters?.threePMSF,
+                      showDOTTires: tireFilters?.showDOTTires,
                       runFlat: requireRunFlat || undefined,
                       minLoadIndex: loadIndexFront,
                       minSpeedIndex: speedIndexFront
@@ -728,6 +731,7 @@ export async function POST(request: NextRequest) {
                       minFuelEfficiency: tireFilters?.fuelEfficiency,
                       minWetGrip: tireFilters?.wetGrip,
                       threePMSF: tireFilters?.threePMSF,
+                      showDOTTires: tireFilters?.showDOTTires,
                       runFlat: requireRunFlat || undefined,
                       minLoadIndex: loadIndexRear,
                       minSpeedIndex: speedIndexRear
@@ -843,6 +847,7 @@ export async function POST(request: NextRequest) {
                   minFuelEfficiency: tireFilters?.fuelEfficiency,
                   minWetGrip: tireFilters?.wetGrip,
                   threePMSF: tireFilters?.threePMSF,
+                  showDOTTires: tireFilters?.showDOTTires,
                   runFlat: requireRunFlat || undefined,
                   minLoadIndex: loadIndex,
                   minSpeedIndex: speedIndex

@@ -414,10 +414,55 @@ export default function NewHomePage() {
     const vehicle = customerVehicles.find(v => v.id === vehicleId)
     if (!vehicle) return
 
+    // Check if current season is available for this vehicle
+    let currentSeason = selectedSeason || 's' // Default to summer
+    const availableSeasons = (vehicle as any).availableSeasons
+    
+    if (availableSeasons) {
+      // Map season codes to available flags
+      const seasonMap: { [key: string]: boolean } = {
+        's': availableSeasons.summer,
+        'w': availableSeasons.winter,
+        'g': availableSeasons.allSeason
+      }
+      
+      // If current season not available, auto-select first available season
+      if (!seasonMap[currentSeason]) {
+        console.log(`⚠️ [handleVehicleSelect] Current season "${currentSeason}" not available for ${vehicle.make} ${vehicle.model}`)
+        
+        // Find first available season
+        if (availableSeasons.summer) {
+          currentSeason = 's'
+          setSelectedSeason('s')
+          console.log('✅ Auto-switched to summer tires')
+        } else if (availableSeasons.winter) {
+          currentSeason = 'w'
+          setSelectedSeason('w')
+          console.log('✅ Auto-switched to winter tires')
+        } else if (availableSeasons.allSeason) {
+          currentSeason = 'g'
+          setSelectedSeason('g')
+          console.log('✅ Auto-switched to all-season tires')
+        } else {
+          // No seasons available at all - show error
+          setMissingSeasonError({
+            message: 'Für dieses Fahrzeug sind keine Reifendaten hinterlegt. Bitte ergänzen Sie die Reifendaten in der Fahrzeugverwaltung.',
+            seasonName: 'Reifendaten'
+          })
+          setTireDimensions({ width: '', height: '', diameter: '' })
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+          setWorkshops([])
+          setHasSearched(false)
+          return
+        }
+      }
+    }
+
     // Try to get tire dimensions from vehicle data
     // Fetch based on selected season (summer/winter/allseason)
     try {
-      const currentSeason = selectedSeason || 's' // Default to summer
       const response = await fetch(`/api/customer/vehicles/${vehicleId}/tire-dimensions?season=${currentSeason}`)
       
       // Handle HTTP errors (404, 401, etc.)

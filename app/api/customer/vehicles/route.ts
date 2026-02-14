@@ -17,6 +17,22 @@ export async function GET(req: NextRequest) {
       where: { userId: session.user.id },
       include: {
         vehicles: {
+          select: {
+            id: true,
+            vehicleType: true,
+            make: true,
+            model: true,
+            year: true,
+            licensePlate: true,
+            vin: true,
+            nextInspectionDate: true,
+            inspectionReminder: true,
+            inspectionReminderDays: true,
+            createdAt: true,
+            summerTires: true,
+            winterTires: true,
+            allSeasonTires: true
+          },
           orderBy: { createdAt: 'desc' }
         }
       }
@@ -28,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     const vehicles = customer.vehicles
 
-    // Transform data to match expected format
+    // Transform data to match expected format with available seasons info
     const transformedVehicles = vehicles.map((vehicle: any) => ({
       id: vehicle.id,
       vehicleType: vehicle.vehicleType || 'CAR',
@@ -41,6 +57,12 @@ export async function GET(req: NextRequest) {
       inspectionReminder: vehicle.inspectionReminder || false,
       inspectionReminderDays: vehicle.inspectionReminderDays || 30,
       createdAt: vehicle.createdAt ? vehicle.createdAt.toISOString() : new Date().toISOString(),
+      // Include which tire seasons are available (boolean flags)
+      availableSeasons: {
+        summer: !!vehicle.summerTires,
+        winter: !!vehicle.winterTires,
+        allSeason: !!vehicle.allSeasonTires
+      }
     }))
 
     return NextResponse.json({ success: true, vehicles: transformedVehicles })

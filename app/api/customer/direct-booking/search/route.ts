@@ -545,6 +545,8 @@ export async function POST(request: NextRequest) {
                 const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
                 if (frontAvailable && rearAvailable) {
+                  let brandsMismatch = false
+                  
                   // Apply same brand filter if requested (only for 4 tires)
                   if (sameBrand && searchFront && searchRear) {
                     const frontRec = frontRecsResult.recommendations[0]
@@ -564,15 +566,15 @@ export async function POST(request: NextRequest) {
                         (rec: any) => rec.tire.brand.toLowerCase() === frontRec.tire.brand.toLowerCase()
                       )
                       
-                      if (!matchingRearRec) {
-                        // No matching brand found, exclude this workshop
-                        console.log(`❌ [sameBrand Filter] Workshop ${workshop.id} EXCLUDED: No matching brand found`)
-                        return null
+                      if (matchingRearRec) {
+                        console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Found matching rear tire: ${matchingRearRec.tire.brand} ${matchingRearRec.tire.model}`)
+                        // Use matching rear tire
+                        rearRecsResult.recommendations[0] = matchingRearRec
+                      } else {
+                        // No matching brand found - KEEP workshop but flag it
+                        console.log(`⚠️ [sameBrand Filter] Workshop ${workshop.id}: No matching brand, showing anyway with warning`)
+                        brandsMismatch = true
                       }
-                      
-                      console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Found matching rear tire: ${matchingRearRec.tire.brand} ${matchingRearRec.tire.model}`)
-                      // Use matching rear tire
-                      rearRecsResult.recommendations[0] = matchingRearRec
                     } else {
                       console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Brands already match!`)
                     }
@@ -603,6 +605,7 @@ export async function POST(request: NextRequest) {
                     ...workshop,
                     // Mixed tire data
                     isMixedTires: true,
+                    brandsMismatch, // Flag if user wanted same brand but we couldn't provide it
                     tirePrice: combinedTirePrice,
                     ...(frontRec && {
                       tireFront: {

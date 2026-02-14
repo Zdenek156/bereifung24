@@ -176,14 +176,71 @@ export default function NewHomePage() {
   }, [])
   
   // Reload tire dimensions when season changes (if vehicle selected)
-  // Trigger search when season changes manually (without re-validating vehicle)
-  useEffect(() => {
-    if (selectedVehicleId && includeTires && selectedService === 'TIRE_CHANGE' && location) {
-      // User manually changed season - search directly without handleVehicleSelect
-      // to avoid triggering auto-switch logic
-      searchWorkshops(location)
+  // Handle season change (fetch tire dimensions for new season)
+  const handleSeasonChange = async (newSeason: string) => {
+    if (!selectedVehicleId) return
+    
+    setSelectedSeason(newSeason)
+    
+    // Fetch tire dimensions for the new season
+    try {
+      const response = await fetch(`/api/customer/vehicles/${selectedVehicleId}/tire-dimensions?season=${newSeason}`)
+      
+      // Handle HTTP errors (404, 401, etc.)
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: 'Fehler beim Laden der Reifendaten' }))
+        
+        // Check if season-specific data is missing
+        if (data.missingSeasonData) {
+          setMissingSeasonError({
+            message: data.error,
+            seasonName: data.seasonName || 'Reifendaten'
+          })
+          setTireDimensions({ width: '', height: '', diameter: '' })
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+          setWorkshops([])
+          setHasSearched(false)
+          return
+        }
+        
+        console.error('API error:', data)
+        return
+      }
+      
+      const data = await response.json()
+      
+      // Clear missing season error if data is found
+      setMissingSeasonError(null)
+      
+      if (data.success && data.dimensions) {
+        setTireDimensions({
+          width: data.dimensions.width.toString(),
+          height: data.dimensions.height.toString(),
+          diameter: data.dimensions.diameter.toString()
+        })
+        
+        // Set mixed tire dimensions if available
+        if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+          setHasMixedTires(true)
+          setTireDimensionsFront(data.dimensionsFront.formatted)
+          setTireDimensionsRear(data.dimensionsRear.formatted)
+        } else {
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+        }
+        
+        // Now search workshops with the new tire dimensions
+        if (hasSearched && customerLocation) {
+          searchWorkshops(customerLocation, newSeason)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching tire dimensions for season change:', error)
     }
-  }, [selectedSeason])
+  }
   
   // Close user menu when clicking outside
   useEffect(() => {
@@ -1555,13 +1612,7 @@ export default function NewHomePage() {
                                     type="radio"
                                     name="tireSeason"
                                     checked={selectedSeason === 's'}
-                                    onChange={() => {
-                                      const newSeason = 's'
-                                      setSelectedSeason(newSeason)
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                        searchWorkshops(customerLocation, newSeason)
-                                      }
-                                    }}
+                                    onChange={() => handleSeasonChange('s')}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                                   />
                                   <span className="text-sm">☀️ Sommerreifen</span>
@@ -1571,13 +1622,7 @@ export default function NewHomePage() {
                                     type="radio"
                                     name="tireSeason"
                                     checked={selectedSeason === 'w'}
-                                    onChange={() => {
-                                      const newSeason = 'w'
-                                      setSelectedSeason(newSeason)
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                        searchWorkshops(customerLocation, newSeason)
-                                      }
-                                    }}
+                                    onChange={() => handleSeasonChange('w')}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                                   />
                                   <span className="text-sm">❄️ Winterreifen</span>
@@ -1587,13 +1632,7 @@ export default function NewHomePage() {
                                     type="radio"
                                     name="tireSeason"
                                     checked={selectedSeason === 'g'}
-                                    onChange={() => {
-                                      const newSeason = 'g'
-                                      setSelectedSeason(newSeason)
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                        searchWorkshops(customerLocation, newSeason)
-                                      }
-                                    }}
+                                    onChange={() => handleSeasonChange('g')}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                                   />
                                   <span className="text-sm">🔄 Ganzjahresreifen</span>

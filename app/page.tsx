@@ -493,10 +493,18 @@ export default function NewHomePage() {
     location: { lat: number; lon: number }, 
     overrideSeason?: string,
     // CRITICAL: Accept tire dimensions directly to avoid async state issues
-    overrideMixedTires?: { hasMixed: boolean; front?: string; rear?: string }
+    overrideMixedTires?: { hasMixed: boolean; front?: string; rear?: string },
+    overrideSameBrand?: boolean // Override for immediate use when checkbox changes
   ) => {
     const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
     const mixedTiresData = overrideMixedTires || { hasMixed: hasMixedTires, front: tireDimensionsFront, rear: tireDimensionsRear }
+    const sameBrandValue = overrideSameBrand !== undefined ? overrideSameBrand : requireSameBrand
+    
+    console.log('🎯 [sameBrand] Using value:', {
+      override: overrideSameBrand,
+      state: requireSameBrand,
+      final: sameBrandValue
+    })
     
     // DEBUG: Log all values before API call
     console.log('🔍 [searchWorkshops] Values:', {
@@ -546,14 +554,14 @@ export default function NewHomePage() {
             threePMSF: require3PMSF || undefined
           } : undefined,
           // Same brand filter (only for mixed 4 tires)
-          sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? requireSameBrand : false
+          sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? sameBrandValue : false
         })
       })
 
       console.log('📤 [API Request] Sending sameBrand:', {
         condition: selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires'),
-        requireSameBrand,
-        finalValue: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? requireSameBrand : false
+        sameBrandValue,
+        finalValue: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? sameBrandValue : false
       })
 
       const result = await response.json()
@@ -1693,9 +1701,9 @@ export default function NewHomePage() {
                                     const newValue = e.target.checked
                                     console.log('🏷️ [SameBrand] Checkbox toggled:', newValue)
                                     setRequireSameBrand(newValue)
-                                    // Trigger immediate re-search with new filter
+                                    // Trigger immediate re-search with new filter value
                                     if (customerLocation) {
-                                      setTimeout(() => searchWorkshops(customerLocation), 100)
+                                      searchWorkshops(customerLocation, undefined, undefined, newValue)
                                     }
                                   }}
                                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"

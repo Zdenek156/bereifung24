@@ -642,18 +642,12 @@ export default function NewHomePage() {
           }
         }
         
-        // Automatically trigger search if location is set and user has searched before
-        if (hasSearched && customerLocation) {
-          // Pass tire dimensions directly to avoid async state issues
-          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
-            searchWorkshops(customerLocation, undefined, {
-              hasMixed: true,
-              front: data.dimensionsFront.formatted,
-              rear: data.dimensionsRear.formatted
-            })
-          } else {
-            searchWorkshops(customerLocation)
-          }
+        // CRITICAL: Enable auto-search by setting hasSearched=true when location available
+        // This allows the useEffect (lines 263-281) to automatically trigger search
+        // when tire dimensions change after vehicle selection
+        if (customerLocation) {
+          console.log('✅ [handleVehicleSelect] Enabling auto-search (hasSearched=true)')
+          setHasSearched(true)
         }
       }
     } catch (error) {
@@ -1490,22 +1484,31 @@ export default function NewHomePage() {
                                   )}
                                   {selectedVehicleId && tireDimensions.width && (
                                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                                      <p className="text-xs text-green-800">
-                                        ✅ Reifengröße: {(() => {
-                                          // Show appropriate tire size based on selection
-                                          if (hasMixedTires) {
-                                            if (selectedPackages.includes('front_two_tires')) {
-                                              return `${tireDimensionsFront} (Vorderachse)`
-                                            } else if (selectedPackages.includes('rear_two_tires')) {
-                                              return `${tireDimensionsRear} (Hinterachse)`
-                                            } else if (selectedPackages.includes('mixed_four_tires')) {
-                                              return `${tireDimensionsFront} (vorne) + ${tireDimensionsRear} (hinten)`
-                                            }
-                                          }
-                                          // Standard tires
-                                          return `${tireDimensions.width}/${tireDimensions.height} R${tireDimensions.diameter}`
-                                        })()}
-                                      </p>
+                                      <div className="text-xs text-green-800">
+                                        {/* Mixed tires - show front and/or rear based on selection */}
+                                        {hasMixedTires && tireDimensionsFront && tireDimensionsRear ? (
+                                          <>
+                                            {selectedPackages.includes('front_two_tires') && (
+                                              <p>✅ Reifengröße: {tireDimensionsFront} (Vorderachse)</p>
+                                            )}
+                                            {selectedPackages.includes('rear_two_tires') && (
+                                              <p>✅ Reifengröße: {tireDimensionsRear} (Hinterachse)</p>
+                                            )}
+                                            {selectedPackages.includes('mixed_four_tires') && (
+                                              <>
+                                                <p>✅ Vorne: {tireDimensionsFront}</p>
+                                                <p>✅ Hinten: {tireDimensionsRear}</p>
+                                              </>
+                                            )}
+                                          </>
+                                        ) : (
+                                          /* Standard tires - single size for all wheels */
+                                          <p>
+                                            ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                            {tireDimensions.loadIndex && tireDimensions.speedIndex ? ` ${tireDimensions.loadIndex}${tireDimensions.speedIndex}` : ''}
+                                          </p>
+                                        )}
+                                      </div>
                                     </div>
                                   )}
                                   

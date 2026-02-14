@@ -1530,7 +1530,7 @@ export default function NewHomePage() {
                                     checked={tireQuality === 'premium'}
                                     onChange={() => {
                                       setTireQuality('premium')
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                      if (hasSearched && customerLocation) {
                                         searchWorkshops(customerLocation)
                                       }
                                     }}
@@ -1545,7 +1545,7 @@ export default function NewHomePage() {
                                     checked={tireQuality === 'quality'}
                                     onChange={() => {
                                       setTireQuality('quality')
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                      if (hasSearched && customerLocation) {
                                         searchWorkshops(customerLocation)
                                       }
                                     }}
@@ -1560,7 +1560,7 @@ export default function NewHomePage() {
                                     checked={tireQuality === 'budget'}
                                     onChange={() => {
                                       setTireQuality('budget')
-                                      if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
+                                      if (hasSearched && customerLocation) {
                                         searchWorkshops(customerLocation)
                                       }
                                     }}
@@ -2131,6 +2131,18 @@ export default function NewHomePage() {
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
                                         <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <div className="flex gap-1 mb-1.5">
+                                          {rec.tire.labelFuelEfficiency && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                              {rec.tire.labelFuelEfficiency}
+                                            </span>
+                                          )}
+                                          {rec.tire.labelWetGrip && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
+                                              {rec.tire.labelWetGrip}
+                                            </span>
+                                          )}
+                                        </div>
                                         <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
                                       </button>
                                     ))}
@@ -2158,6 +2170,18 @@ export default function NewHomePage() {
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
                                         <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <div className="flex gap-1 mb-1.5">
+                                          {rec.tire.labelFuelEfficiency && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                              {rec.tire.labelFuelEfficiency}
+                                            </span>
+                                          )}
+                                          {rec.tire.labelWetGrip && (
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
+                                              {rec.tire.labelWetGrip}
+                                            </span>
+                                          )}
+                                        </div>
                                         <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
                                       </button>
                                     ))}

@@ -458,7 +458,7 @@ export default function CustomerAppointments() {
                         <p className="text-gray-700 dark:text-gray-300 text-sm">{booking.review.comment}</p>
                       )}
                     </div>
-                  ) : (booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' || booking.status === 'PENDING') ? (
+                  ) : (activeTab === 'past' && booking.status === 'COMPLETED') ? (
                     <button
                       onClick={() => handleOpenReviewModal(booking)}
                       className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"

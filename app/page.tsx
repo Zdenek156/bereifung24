@@ -2051,6 +2051,9 @@ export default function NewHomePage() {
 
                     {/* Workshop Cards */}
                     {sortedWorkshops.map((workshop) => {
+                      // Hide tires if season data is missing (safety feature - prevent wrong tire orders)
+                      const showTires = includeTires && !missingSeasonError
+                      
                       const isFavorite = favorites.includes(workshop.id)
                       const tireIdx = selectedTireIndices[workshop.id] ?? 0
                       const selectedRec = workshop.tireRecommendations?.[tireIdx]
@@ -2238,7 +2241,7 @@ export default function NewHomePage() {
                               })()}
 
                               {/* Tire Recommendations Panel */}
-                              {includeTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (
+                              {showTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
                                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                                     Reifen auswählen · {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
@@ -2281,7 +2284,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Brand Selector (for sameBrand filter with multiple options) */}
-                              {includeTires && workshop.isMixedTires && workshop.brandOptions && workshop.brandOptions.length > 1 && (
+                              {showTires && workshop.isMixedTires && workshop.brandOptions && workshop.brandOptions.length > 1 && (
                                 <div className="bg-blue-50 rounded-xl border-2 border-blue-300 p-3 mb-3">
                                   <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                     🏷️ Hersteller wählen
@@ -2316,7 +2319,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {includeTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (
+                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
                                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                                     🔹 Vorderachse · {workshop.tireFront?.dimensions}
@@ -2360,7 +2363,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {includeTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (
+                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
                                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                                     🔸 Hinterachse · {workshop.tireRear?.dimensions}
@@ -2404,7 +2407,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Tire not available warning */}
-                              {includeTires && !workshop.tireAvailable && (
+                              {showTires && !workshop.tireAvailable && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
                                   <p className="text-sm text-yellow-800">⚠️ Keine passenden Reifen verfügbar</p>
                                 </div>
@@ -2413,7 +2416,7 @@ export default function NewHomePage() {
                               {/* Bottom Row: Price Info + CTA */}
                               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-auto gap-3">
                                 <div className="w-full sm:w-auto">
-                                  {includeTires && workshop.tireAvailable && (selectedRec || workshop.isMixedTires) ? (
+                                  {showTires && workshop.tireAvailable && (selectedRec || workshop.isMixedTires) ? (
                                     <>
                                       {/* Price breakdown */}
                                       <div className="space-y-0.5 text-sm text-gray-600 mb-2">

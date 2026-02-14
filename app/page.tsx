@@ -89,6 +89,7 @@ export default function NewHomePage() {
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [missingSeasonError, setMissingSeasonError] = useState<{ message: string; seasonName: string } | null>(null)
   const [customerLocation, setCustomerLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [scrollPosition, setScrollPosition] = useState(0)
   
@@ -422,13 +423,21 @@ export default function NewHomePage() {
       
       // Check if season-specific data is missing
       if (data.missingSeasonData) {
-        alert(`⚠️ ${data.error}\n\nBitte wählen Sie eine andere Reifenart oder hinterlegen Sie die Reifengröße in der Fahrzeugverwaltung.`)
+        setMissingSeasonError({
+          message: data.error,
+          seasonName: data.seasonName || 'Reifendaten'
+        })
         setTireDimensions({ width: '', height: '', diameter: '' })
         setHasMixedTires(false)
         setTireDimensionsFront('')
         setTireDimensionsRear('')
+        setWorkshops([])
+        setHasSearched(false)
         return
       }
+      
+      // Clear missing season error if data is found
+      setMissingSeasonError(null)
       
       if (data.success && data.dimensions) {
         setTireDimensions({
@@ -1840,8 +1849,36 @@ export default function NewHomePage() {
                   </div>
                 )}
 
+                {/* Missing Season Data Error */}
+                {missingSeasonError && !loading && (
+                  <div className="bg-yellow-50 border border-yellow-300 rounded-xl shadow-sm p-8 text-center max-w-2xl mx-auto">
+                    <div className="text-6xl mb-4">⚠️</div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      {missingSeasonError.seasonName} nicht hinterlegt
+                    </h3>
+                    <p className="text-gray-700 mb-6">
+                      {missingSeasonError.message}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link
+                        href="/dashboard?tab=vehicles"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                      >
+                        <Car className="w-5 h-5" />
+                        Zur Fahrzeugverwaltung
+                      </Link>
+                      <button
+                        onClick={() => setMissingSeasonError(null)}
+                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                      >
+                        Schließen
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error State */}
-                {error && !loading && (
+                {error && !loading && !missingSeasonError && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                     <p className="text-red-800">{error}</p>
                   </div>

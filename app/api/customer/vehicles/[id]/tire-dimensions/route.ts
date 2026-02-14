@@ -66,7 +66,7 @@ export async function GET(
 
     // 2. Check JSON tire strings based on season
     if (!dimensions) {
-      // Select tire source based on season - try season-specific first
+      // Select tire source based on season
       let primaryTireJson = null
       let seasonName = ''
       
@@ -81,7 +81,7 @@ export async function GET(
         seasonName = 'Ganzjahresreifen'
       }
       
-      // Try primary season first
+      // Try to parse the selected season's tire data
       if (primaryTireJson) {
         try {
           const parsed = typeof primaryTireJson === 'string' ? JSON.parse(primaryTireJson) : primaryTireJson
@@ -95,16 +95,18 @@ export async function GET(
             }
           }
         } catch (e) {
-          // Ignore parse errors
+          console.error(`Error parsing ${seasonName} data:`, e)
         }
       }
       
-      // If no dimensions found for selected season, return error
+      // If no dimensions found for selected season, return clear error
       if (!dimensions) {
         return NextResponse.json({ 
           success: false, 
-          error: `Für dieses Fahrzeug sind keine ${seasonName} hinterlegt.`,
-          missingSeasonData: true
+          error: `Für dieses Fahrzeug sind keine ${seasonName} hinterlegt. Bitte ergänzen Sie die Reifendaten in der Fahrzeugverwaltung.`,
+          missingSeasonData: true,
+          selectedSeason: season,
+          seasonName
         }, { status: 404 })
       }
     }

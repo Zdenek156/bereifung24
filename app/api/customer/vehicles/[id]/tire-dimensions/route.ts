@@ -116,23 +116,27 @@ export async function GET(
         
         if (parsed.hasDifferentSizes && parsed.rearWidth && parsed.rearAspectRatio && parsed.rearDiameter) {
           // Front dimensions
+          const frontLoadIndex = parsed.loadIndex?.toString() || ''
+          const frontSpeedIndex = parsed.speedIndex || parsed.speedRating || ''
           dimensionsFront = {
             width: parsed.width,
             height: parsed.aspectRatio,
             diameter: parsed.diameter,
-            loadIndex: parsed.loadIndex?.toString(),
-            speedIndex: parsed.speedIndex || parsed.speedRating,
-            formatted: `${parsed.width}/${parsed.aspectRatio} R${parsed.diameter}`
+            loadIndex: frontLoadIndex,
+            speedIndex: frontSpeedIndex,
+            formatted: `${parsed.width}/${parsed.aspectRatio} R${parsed.diameter}${frontLoadIndex && frontSpeedIndex ? ' ' + frontLoadIndex + frontSpeedIndex : ''}`
           }
           
           // Rear dimensions
+          const rearLoadIndex = parsed.rearLoadIndex?.toString() || parsed.loadIndex?.toString() || ''
+          const rearSpeedIndex = parsed.rearSpeedIndex || parsed.speedIndex || parsed.speedRating || ''
           dimensionsRear = {
             width: parsed.rearWidth,
             height: parsed.rearAspectRatio,
             diameter: parsed.rearDiameter,
-            loadIndex: parsed.rearLoadIndex?.toString() || parsed.loadIndex?.toString(),
-            speedIndex: parsed.rearSpeedIndex || parsed.speedIndex || parsed.speedRating,
-            formatted: `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}`
+            loadIndex: rearLoadIndex,
+            speedIndex: rearSpeedIndex,
+            formatted: `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}${rearLoadIndex && rearSpeedIndex ? ' ' + rearLoadIndex + rearSpeedIndex : ''}`
           }
           
           hasMixedTires = true

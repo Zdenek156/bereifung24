@@ -580,16 +580,8 @@ export default function NewHomePage() {
           console.log('💰 [priceRange] Auto-adjusted max price to:', newMaxPrice)
         }
         
-        // Save search to URL (for browser back button)
-        const params = new URLSearchParams()
-        params.set('results', encodeURIComponent(JSON.stringify(workshops)))
-        params.set('service', selectedService)
-        params.set('postalCode', postalCode)
-        params.set('radius', radiusKm.toString())
-        params.set('lat', location.lat.toString())
-        params.set('lon', location.lon.toString())
-        params.set('packages', JSON.stringify(selectedPackages))
-        window.history.replaceState({}, '', `?${params.toString()}`)
+        // Note: Do NOT save workshop results to URL - causes 431 error (URL too long)
+        // Browser back/forward will simply re-trigger the search via useEffect
         console.log('✅ [searchWorkshops] Search completed successfully, workshops:', workshops.length)
       } else {
         setWorkshops([])

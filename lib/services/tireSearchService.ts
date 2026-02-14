@@ -296,8 +296,16 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   // Speed index hierarchy (slowest to fastest) for post-filtering
   const SPEED_INDEX_ORDER = ['L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'H', 'V', 'W', 'Y', 'ZR']
 
+  console.log(`🔍 [Tire Search] FILTER REQUIREMENTS:`, {
+    minLoadIndex: filters.minLoadIndex || 'NONE',
+    minSpeedIndex: filters.minSpeedIndex || 'NONE',
+    willFilterByLoad: !!filters.minLoadIndex,
+    willFilterBySpeed: !!filters.minSpeedIndex
+  })
+
   // Calculate selling prices and apply filters
   const results: TireSearchResult[] = []
+  let filteredOutCount = 0
 
   for (const tire of tires) {
     // CRITICAL: Load Index filter (must be >= vehicle's load index)
@@ -306,6 +314,7 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       const minLoad = parseInt(filters.minLoadIndex)
       if (!isNaN(tireLoad) && !isNaN(minLoad) && tireLoad < minLoad) {
         console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Load Index ${tire.loadIndex} < required ${filters.minLoadIndex}`)
+        filteredOutCount++
         continue
       }
     }
@@ -320,6 +329,7 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       const minSpeedIdx = SPEED_INDEX_ORDER.indexOf(filters.minSpeedIndex)
       if (tireSpeedIdx !== -1 && minSpeedIdx !== -1 && tireSpeedIdx < minSpeedIdx) {
         console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Speed Index ${tire.speedIndex} < required ${filters.minSpeedIndex}`)
+        filteredOutCount++
         continue
       }
     }
@@ -370,7 +380,7 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     })
   }
   
-  console.log(`✅ [Tire Search] After filters: ${results.length} tires available${filters.minLoadIndex ? ` (Load ≥${filters.minLoadIndex})` : ''}${filters.minSpeedIndex ? ` (Speed ≥${filters.minSpeedIndex})` : ''}`)
+  console.log(`✅ [Tire Search] After filters: ${results.length} tires available, ${filteredOutCount} tires filtered out${filters.minLoadIndex ? ` (Load ≥${filters.minLoadIndex})` : ''}${filters.minSpeedIndex ? ` (Speed ≥${filters.minSpeedIndex})` : ''}`)
 
   return results
 }

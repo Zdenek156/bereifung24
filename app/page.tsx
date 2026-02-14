@@ -1543,23 +1543,9 @@ export default function NewHomePage() {
                           <div className="p-4 border-b border-gray-200">
                             {(() => {
                               // Create custom config for mixed tires
-                              // CRITICAL FIX: Logic runs in page.tsx, not in cached ServiceFilters component!
-                              console.log('🔍 [DEBUG] ServiceFilters condition check:', {
-                                hasMixedTires,
-                                tireDimensionsFront,
-                                tireDimensionsRear,
-                                areDifferent: tireDimensionsFront !== tireDimensionsRear,
-                                allFilled: !!(hasMixedTires && tireDimensionsFront && tireDimensionsRear)
-                              })
-                              
                               let customConfig = undefined
                               
                               if (hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear) {
-                                console.log('✅ [page.tsx v4.0] Creating MIXED tire config:', {
-                                  front: tireDimensionsFront,
-                                  rear: tireDimensionsRear
-                                })
-                                
                                 customConfig = {
                                   groups: [
                                     {
@@ -1602,8 +1588,6 @@ export default function NewHomePage() {
                                     }
                                   ]
                                 }
-                              } else {
-                                console.log('📋 [page.tsx v4.0] Using STANDARD tire config')
                               }
                               
                               return (

@@ -2084,22 +2084,29 @@ export default function NewHomePage() {
                                     <span className="text-xs font-normal normal-case text-blue-600">· {workshop.brandOptions.length} Optionen verfügbar</span>
                                   </p>
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {workshop.brandOptions.map((brandOpt: any, idx: number) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => setSelectedBrandOptionIndices(prev => ({...prev, [workshop.id]: idx}))}
-                                        className={`text-left p-3 rounded-lg border-2 transition-all ${
-                                          brandOptionIdx === idx
-                                            ? 'border-blue-500 bg-white shadow-md'
-                                            : 'border-transparent bg-white hover:border-blue-300'
-                                        }`}
-                                      >
-                                        <p className="text-xs font-bold text-blue-600 mb-1">{brandOpt.label}</p>
-                                        <p className="text-sm font-bold text-gray-900 mb-0.5">{brandOpt.brand}</p>
-                                        <p className="text-xs text-gray-600 mb-2">Vorne + Hinten</p>
-                                        <p className="text-lg font-bold text-primary-600">{formatEUR(brandOpt.price)}</p>
-                                      </button>
-                                    ))}
+                                    {workshop.brandOptions.map((brandOpt: any, idx: number) => {
+                                      // Color based on label
+                                      const labelColor = brandOpt.label === 'Günstigster' ? 'text-green-600' :
+                                                        brandOpt.label === 'Testsieger' ? 'text-purple-600' :
+                                                        'text-blue-600'
+                                      
+                                      return (
+                                        <button
+                                          key={idx}
+                                          onClick={() => setSelectedBrandOptionIndices(prev => ({...prev, [workshop.id]: idx}))}
+                                          className={`text-left p-3 rounded-lg border-2 transition-all ${
+                                            brandOptionIdx === idx
+                                              ? 'border-blue-500 bg-white shadow-md'
+                                              : 'border-transparent bg-white hover:border-blue-300'
+                                          }`}
+                                        >
+                                          <p className={`text-xs font-bold mb-1 ${labelColor}`}>{brandOpt.label}</p>
+                                          <p className="text-sm font-bold text-gray-900 mb-0.5">{brandOpt.brand}</p>
+                                          <p className="text-xs text-gray-600 mb-2">Vorne + Hinten</p>
+                                          <p className="text-lg font-bold text-primary-600">{formatEUR(brandOpt.price)}</p>
+                                        </button>
+                                      )
+                                    })}
                                   </div>
                                 </div>
                               )}

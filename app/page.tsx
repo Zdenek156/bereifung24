@@ -200,7 +200,7 @@ export default function NewHomePage() {
           setHasMixedTires(false)
           setTireDimensionsFront('')
           setTireDimensionsRear('')
-          setWorkshops([])
+          // Don't clear workshops - keep previous results visible for user reference
           // Keep hasSearched = true for auto-search on next vehicle change
           return
         }
@@ -535,7 +535,7 @@ export default function NewHomePage() {
           setHasMixedTires(false)
           setTireDimensionsFront('')
           setTireDimensionsRear('')
-          setWorkshops([])
+          // Don't clear workshops - keep previous results visible
           // Keep hasSearched = true
           return
         }
@@ -561,7 +561,7 @@ export default function NewHomePage() {
           setHasMixedTires(false)
           setTireDimensionsFront('')
           setTireDimensionsRear('')
-          setWorkshops([])
+          // Don't clear workshops - keep previous results visible
           // Keep hasSearched = true for auto-search on next vehicle change
           return
         }
@@ -583,7 +583,7 @@ export default function NewHomePage() {
         setHasMixedTires(false)
         setTireDimensionsFront('')
         setTireDimensionsRear('')
-        setWorkshops([])
+        // Don't clear workshops - keep previous results visible
         // Keep hasSearched = true
         return
       }
@@ -1498,6 +1498,30 @@ export default function NewHomePage() {
                                       </p>
                                     </div>
                                   )}
+                                  
+                                  {/* Missing Season Data Warning - shown under vehicle dropdown */}
+                                  {missingSeasonError && selectedVehicleId && (
+                                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-yellow-600 text-lg flex-shrink-0">⚠️</span>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium text-yellow-900 mb-1">
+                                            {missingSeasonError.seasonName} nicht gespeichert
+                                          </p>
+                                          <p className="text-xs text-yellow-800 mb-2">
+                                            Für dieses Fahrzeug sind keine {missingSeasonError.seasonName} in der Fahrzeugverwaltung hinterlegt.
+                                          </p>
+                                          <a
+                                            href="/dashboard?tab=vehicles"
+                                            className="inline-flex items-center gap-1 text-xs font-medium text-yellow-900 hover:text-yellow-700 underline"
+                                          >
+                                            <Car className="w-3 h-3" />
+                                            Zur Fahrzeugverwaltung
+                                          </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
                                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1983,36 +2007,8 @@ export default function NewHomePage() {
                   </div>
                 )}
 
-                {/* Missing Season Data Error */}
-                {missingSeasonError && !loading && (
-                  <div className="bg-yellow-50 border border-yellow-300 rounded-xl shadow-sm p-8 text-center max-w-2xl mx-auto">
-                    <div className="text-6xl mb-4">⚠️</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      {missingSeasonError.seasonName} nicht hinterlegt
-                    </h3>
-                    <p className="text-gray-700 mb-6">
-                      {missingSeasonError.message}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Link
-                        href="/dashboard?tab=vehicles"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-                      >
-                        <Car className="w-5 h-5" />
-                        Zur Fahrzeugverwaltung
-                      </Link>
-                      <button
-                        onClick={() => setMissingSeasonError(null)}
-                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Schließen
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 {/* Error State */}
-                {error && !loading && !missingSeasonError && (
+                {error && !loading && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                     <p className="text-red-800">{error}</p>
                   </div>

@@ -233,7 +233,8 @@ export default function NewHomePage() {
         }
         
         // Now search workshops with the new tire dimensions
-        if (hasSearched && customerLocation) {
+        // Only search if we have a location (user has searched before)
+        if (customerLocation) {
           searchWorkshops(customerLocation, newSeason)
         }
       }
@@ -611,7 +612,8 @@ export default function NewHomePage() {
         }
         
         // Automatically trigger search if location is set
-        if (hasSearched && customerLocation) {
+        // Search on vehicle selection if user has searched before OR if they came from "Suchen" button
+        if (customerLocation) {
           // Pass tire dimensions directly to avoid async state issues
           if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
             searchWorkshops(customerLocation, undefined, {

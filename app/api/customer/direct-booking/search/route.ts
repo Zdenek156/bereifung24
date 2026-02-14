@@ -644,7 +644,6 @@ export async function POST(request: NextRequest) {
                     ...workshop,
                     // Mixed tire data
                     isMixedTires: true,
-                    brandsMismatch, // Flag if user wanted same brand but we couldn't provide it
                     tirePrice: combinedTirePrice,
                     ...(frontRec && {
                       tireFront: {

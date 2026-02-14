@@ -310,12 +310,19 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   for (const tire of tires) {
     // CRITICAL: Load Index filter (must be >= vehicle's load index)
     if (filters.minLoadIndex && tire.loadIndex) {
-      const tireLoad = parseInt(tire.loadIndex)
+      // Extract numeric load index from strings like "(91Y) (Z)" or "91" or "91Y"
+      const loadIndexMatch = tire.loadIndex.match(/(\d+)/)
+      const tireLoad = loadIndexMatch ? parseInt(loadIndexMatch[1]) : NaN
       const minLoad = parseInt(filters.minLoadIndex)
+      
       if (!isNaN(tireLoad) && !isNaN(minLoad) && tireLoad < minLoad) {
-        console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Load Index ${tire.loadIndex} < required ${filters.minLoadIndex}`)
+        console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Load Index ${tireLoad} (from "${tire.loadIndex}") < required ${filters.minLoadIndex}`)
         filteredOutCount++
         continue
+      }
+      
+      if (isNaN(tireLoad)) {
+        console.log(`⚠️ [TIRE FILTER] WARNING: ${tire.brand} ${tire.model} has UNPARSEABLE loadIndex "${tire.loadIndex}" (required: ${filters.minLoadIndex})`)
       }
     }
     // WARNING: If tire has no load index in database, it won't be filtered
@@ -353,6 +360,15 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       continue
     }
 
+    // Clean up load index - extract just the number from strings like "(91Y) (Z)"
+    let cleanLoadIndex = tire.loadIndex
+    if (cleanLoadIndex) {
+      const match = cleanLoadIndex.match(/(\d+)/)
+      if (match) {
+        cleanLoadIndex = match[1]
+      }
+    }
+
     results.push({
       id: tire.id,
       articleNumber: tire.articleNumber,
@@ -363,7 +379,7 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       height: tire.height || height,
       diameter: tire.diameter || diameter,
       season: tire.season || '?',
-      loadIndex: tire.loadIndex || undefined,
+      loadIndex: cleanLoadIndex || undefined,
       speedIndex: tire.speedIndex || undefined,
       runFlat: tire.runFlat,
       threePMSF: tire.threePMSF,

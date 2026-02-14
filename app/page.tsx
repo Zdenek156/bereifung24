@@ -419,9 +419,34 @@ export default function NewHomePage() {
     try {
       const currentSeason = selectedSeason || 's' // Default to summer
       const response = await fetch(`/api/customer/vehicles/${vehicleId}/tire-dimensions?season=${currentSeason}`)
+      
+      // Handle HTTP errors (404, 401, etc.)
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: 'Fehler beim Laden der Reifendaten' }))
+        
+        // Check if season-specific data is missing
+        if (data.missingSeasonData) {
+          setMissingSeasonError({
+            message: data.error,
+            seasonName: data.seasonName || 'Reifendaten'
+          })
+          setTireDimensions({ width: '', height: '', diameter: '' })
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+          setWorkshops([])
+          setHasSearched(false)
+          return
+        }
+        
+        // Other error (e.g., unauthorized)
+        console.error('API error:', data)
+        return
+      }
+      
       const data = await response.json()
       
-      // Check if season-specific data is missing
+      // Check if season-specific data is missing (belt and braces check)
       if (data.missingSeasonData) {
         setMissingSeasonError({
           message: data.error,

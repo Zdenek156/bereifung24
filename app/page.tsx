@@ -257,6 +257,27 @@ export default function NewHomePage() {
     }
   }, [showUserMenu])
   
+  // Auto-search after vehicle selection if user has already searched
+  useEffect(() => {
+    // Only trigger if:
+    // 1. User has searched before (hasSearched = true)
+    // 2. Location is available (customerLocation not null)
+    // 3. Service is TIRE_CHANGE with tires included
+    // 4. We have valid tire dimensions
+    if (
+      hasSearched && 
+      customerLocation && 
+      selectedService === 'TIRE_CHANGE' && 
+      includeTires && 
+      selectedVehicleId &&
+      tireDimensions.width && 
+      tireDimensions.diameter
+    ) {
+      console.log('🔄 [Auto-Search] Triggering search after vehicle change')
+      searchWorkshops(customerLocation)
+    }
+  }, [selectedVehicleId, tireDimensions.width, tireDimensions.diameter])
+  
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
     if (typeof window !== 'undefined') {

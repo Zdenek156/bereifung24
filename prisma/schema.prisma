@@ -850,8 +850,13 @@ model Booking {
 
 model Review {
   id         String   @id @default(cuid())
-  bookingId  String   @unique
-  booking    Booking  @relation(fields: [bookingId], references: [id])
+  
+  // Support BOTH old bookings and new direct bookings
+  bookingId        String?        @unique
+  booking          Booking?       @relation(fields: [bookingId], references: [id])
+  directBookingId  String?        @unique
+  directBooking    DirectBooking? @relation(fields: [directBookingId], references: [id])
+  
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id])
   workshopId String
@@ -5583,6 +5588,9 @@ model DirectBooking {
   // Booking
   bookingId String?  @unique @map("booking_id")
   booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  // Review (one-to-one optional)
+  review Review?
 
   // Metadata
   createdAt DateTime @default(now()) @map("created_at")

@@ -147,31 +147,61 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify booking belongs to customer and is completed
-    const booking = await prisma.booking.findUnique({
+    // Try to find booking in BOTH tables (old booking and new direct booking)
+    let bookingRecord = null
+    let isDirectBooking = false
+    let workshopId = null
+    let existingReview = null
+
+    // 1. Check old booking table
+    const oldBooking = await prisma.booking.findUnique({
       where: { id: validatedData.bookingId },
       include: { review: true }
     })
 
-    if (!booking) {
-      return NextResponse.json(
-        { error: 'Termin nicht gefunden' },
-        { status: 404 }
-      )
-    }
+    if (oldBooking) {
+      if (oldBooking.customerId !== customer.id) {
+        return NextResponse.json(
+          { error: 'Keine Berechtigung' },
+          { status: 403 }
+        )
+      }
+      bookingRecord = oldBooking
+      workshopId = oldBooking.workshopId
+      existingReview = oldBooking.review
+      isDirectBooking = false
+    } else {
+      // 2. Check new direct booking table
+      const directBooking = await prisma.directBooking.findUnique({
+        where: { id: validatedData.bookingId },
+        include: { review: true }
+      })
 
-    if (booking.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'Keine Berechtigung' },
-        { status: 403 }
-      )
+      if (!directBooking) {
+        return NextResponse.json(
+          { error: 'Termin nicht gefunden' },
+          { status: 404 }
+        )
+      }
+
+      if (directBooking.customerId !== customer.id) {
+        return NextResponse.json(
+          { error: 'Keine Berechtigung' },
+          { status: 403 }
+        )
+      }
+
+      bookingRecord = directBooking
+      workshopId = directBooking.workshopId
+      existingReview = directBooking.review
+      isDirectBooking = true
     }
 
     // Check if review already exists
-    if (booking.review) {
+    if (existingReview) {
       // Update existing review
       const updatedReview = await prisma.review.update({
-        where: { id: booking.review.id },
+        where: { id: existingReview.id },
         data: {
           rating: validatedData.rating,
           comment: validatedData.comment || null,
@@ -183,9 +213,12 @@ export async function POST(req: NextRequest) {
       // Create new review
       const newReview = await prisma.review.create({
         data: {
-          bookingId: validatedData.bookingId,
+          ...(isDirectBooking 
+            ? { directBookingId: validatedData.bookingId }
+            : { bookingId: validatedData.bookingId }
+          ),
           customerId: customer.id,
-          workshopId: booking.workshopId,
+          workshopId: workshopId!,
           rating: validatedData.rating,
           comment: validatedData.comment || null,
         }

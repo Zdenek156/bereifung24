@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
           where: {
             OR: [
               { review: { isNot: null } },
-              { tireRating: { not: null } }
+              { tireRating: { gt: 0 } } // Greater than 0 means not null
             ]
           },
           select: {

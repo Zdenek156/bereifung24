@@ -605,25 +605,36 @@ export async function POST(request: NextRequest) {
                 const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
                 if (frontAvailable && rearAvailable) {
-                  // Validate sameBrand filter result (should always match now due to pre-filtering)
+                  let frontRec = frontRecsResult?.recommendations?.[0]
+                  let rearRec = rearRecsResult?.recommendations?.[0]
+                  
+                  // If sameBrand is active, find matching brand combination
                   if (sameBrand && searchFront && searchRear) {
-                    const frontRec = frontRecsResult.recommendations[0]
-                    const rearRec = rearRecsResult.recommendations[0]
+                    let bestMatchingCombination = null
+                    let bestMatchingPrice = Infinity
                     
-                    console.log(`✅ [sameBrand Validation] Workshop ${workshop.id}:`, {
-                      frontBrand: frontRec.tire.brand,
-                      rearBrand: rearRec.tire.brand,
-                      match: frontRec.tire.brand.toLowerCase() === rearRec.tire.brand.toLowerCase()
-                    })
+                    // Try to find cheapest combination with same brand
+                    for (const fRec of frontRecsResult.recommendations) {
+                      for (const rRec of rearRecsResult.recommendations) {
+                        if (fRec.tire.brand.toLowerCase() === rRec.tire.brand.toLowerCase()) {
+                          const combinedPrice = fRec.totalPrice + rRec.totalPrice
+                          if (combinedPrice < bestMatchingPrice) {
+                            bestMatchingPrice = combinedPrice
+                            bestMatchingCombination = { front: fRec, rear: rRec }
+                          }
+                        }
+                      }
+                    }
                     
-                    // Brands should match due to pre-filtering
-                    if (frontRec.tire.brand.toLowerCase() !== rearRec.tire.brand.toLowerCase()) {
-                      console.error(`⚠️ [sameBrand Validation] Workshop ${workshop.id}: Brand mismatch despite pre-filtering!`)
+                    if (bestMatchingCombination) {
+                      frontRec = bestMatchingCombination.front
+                      rearRec = bestMatchingCombination.rear
+                      console.log(`✅ [sameBrand Match] Workshop ${workshop.id}: Found matching brand combination: ${frontRec.tire.brand} (${bestMatchingPrice}€)`)
+                    } else {
+                      console.log(`❌ [sameBrand Match] Workshop ${workshop.id}: No matching brand combination found, skipping`)
+                      return null
                     }
                   }
-                  
-                  const frontRec = frontRecsResult?.recommendations?.[0]
-                  const rearRec = rearRecsResult?.recommendations?.[0]
                   
                   // Calculate combined price
                   let combinedTirePrice = 0

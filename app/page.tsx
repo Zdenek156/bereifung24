@@ -580,7 +580,8 @@ export default function NewHomePage() {
         setMissingSeasonError({
           message: data.error,
           seasonName: data.seasonName || 'Reifendaten'
-        })        setTireDimensions({ width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
+        })
+        setTireDimensions({ width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
         setHasMixedTires(false)
         setTireDimensionsFront('')
         setTireDimensionsRear('')

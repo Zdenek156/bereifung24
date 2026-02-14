@@ -29,8 +29,10 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Get all bookings with related data
-    const bookings = await prisma.booking.findMany({
+    // Get all bookings from BOTH tables
+    
+    // 1. Old bookings (via tire request/offer workflow)
+    const oldBookings = await prisma.booking.findMany({
       where: { customerId: customer.id },
       include: {
         workshop: {
@@ -97,14 +99,47 @@ export async function GET(req: NextRequest) {
             comment: true,
           }
         }
-      },
-      orderBy: {
-        appointmentDate: 'desc'
       }
     })
 
-    // Format response
-    const formattedBookings = bookings.map((booking: any) => {
+    // 2. New direct bookings
+    const directBookings = await prisma.directBooking.findMany({
+      where: {
+        customerId: customer.id,
+        status: {
+          in: ['CONFIRMED', 'COMPLETED']
+        }
+      },
+      include: {
+        workshop: {
+          select: {
+            id: true,
+            companyName: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                phone: true,
+                street: true,
+                zipCode: true,
+                city: true
+              }
+            }
+          }
+        },
+        vehicle: {
+          select: {
+            make: true,
+            model: true,
+            year: true,
+            licensePlate: true
+          }
+        }
+      }
+    })
+
+    // Format OLD bookings (from tire request workflow)
+    const formattedOldBookings = oldBookings.map((booking: any) => {
       // Convert UTC date to Europe/Berlin timezone for correct display
       const berlinDate = new Date(booking.appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
       const berlinTime = berlinDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -116,6 +151,7 @@ export async function GET(req: NextRequest) {
       
       return {
         id: booking.id,
+        type: 'OLD_BOOKING', // Internal flag to distinguish booking types
         tireRequestId: booking.tireRequestId, // CRITICAL: Needed to check if booking exists for request
         appointmentDate: booking.appointmentDate.toISOString(),
         appointmentTime: berlinTime,
@@ -125,33 +161,96 @@ export async function GET(req: NextRequest) {
         paymentStatus: booking.paymentStatus,
         paymentMethod: booking.paymentMethod,
         paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
-      workshop: {
-        companyName: booking.workshop.companyName,
-        street: booking.workshop.user.street || '',
-        zipCode: booking.workshop.user.zipCode || '',
-        city: booking.workshop.user.city || '',
-        phone: booking.workshop.user.phone || '',
-      },
-      tireRequest: {
-        season: booking.tireRequest.season,
-        width: booking.tireRequest.width,
-        aspectRatio: booking.tireRequest.aspectRatio,
-        diameter: booking.tireRequest.diameter,
-        quantity: booking.tireRequest.quantity,
-        additionalNotes: booking.tireRequest.additionalNotes,
-        vehicle: booking.tireRequest.vehicle
-      },
-      selectedTireOption: booking.selectedTireOption,
-      selectedTireOptions: selectedTireOptions, // NEW: For brake service with multiple packages
-      review: booking.review ? {
-        id: booking.review.id,
-        rating: booking.review.rating,
-        comment: booking.review.comment,
-      } : null
+        workshop: {
+          companyName: booking.workshop.companyName,
+          street: booking.workshop.user.street || '',
+          zipCode: booking.workshop.user.zipCode || '',
+          city: booking.workshop.user.city || '',
+          phone: booking.workshop.user.phone || '',
+        },
+        tireRequest: {
+          season: booking.tireRequest.season,
+          width: booking.tireRequest.width,
+          aspectRatio: booking.tireRequest.aspectRatio,
+          diameter: booking.tireRequest.diameter,
+          quantity: booking.tireRequest.quantity,
+          additionalNotes: booking.tireRequest.additionalNotes,
+          vehicle: booking.tireRequest.vehicle
+        },
+        selectedTireOption: booking.selectedTireOption,
+        selectedTireOptions: selectedTireOptions, // NEW: For brake service with multiple packages
+        review: booking.review ? {
+          id: booking.review.id,
+          rating: booking.review.rating,
+          comment: booking.review.comment,
+        } : null
       }
     })
 
-    return NextResponse.json(formattedBookings)
+    // Format NEW direct bookings
+    const formattedDirectBookings = directBookings.map((booking: any) => {
+      const appointmentDate = new Date(booking.date)
+      const berlinDate = new Date(appointmentDate.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
+      const berlinTime = booking.time || berlinDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
+      
+      // Parse tire dimensions for display
+      let tireDimensions = booking.tireDimensions
+      let width = '', aspectRatio = '', diameter = ''
+      if (tireDimensions) {
+        const match = tireDimensions.match(/(\d+)\/(\d+)\s*R\s*(\d+)/)
+        if (match) {
+          width = match[1]
+          aspectRatio = match[2]
+          diameter = match[3]
+        }
+      }
+
+      // Map season code to German name
+      const seasonMap: Record<string, string> = {
+        's': 'Sommerreifen',
+        'w': 'Winterreifen',
+        'g': 'Ganzjahresreifen'
+      }
+
+      return {
+        id: booking.id,
+        type: 'DIRECT_BOOKING', // Internal flag
+        appointmentDate: appointmentDate.toISOString(),
+        appointmentTime: berlinTime,
+        estimatedDuration: booking.duration || 60,
+        status: booking.status,
+        // Payment information
+        paymentStatus: booking.paymentStatus,
+        paymentMethod: booking.paymentMethod,
+        paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
+        workshop: {
+          companyName: booking.workshop.companyName,
+          street: booking.workshop.user.street || '',
+          zipCode: booking.workshop.user.zipCode || '',
+          city: booking.workshop.user.city || '',
+          phone: booking.workshop.user.phone || '',
+        },
+        tireRequest: {
+          season: seasonMap[booking.season || 's'] || 'Sommerreifen',
+          width: width,
+          aspectRatio: aspectRatio,
+          diameter: diameter,
+          quantity: booking.quantity || 4,
+          additionalNotes: booking.notes || '',
+          vehicle: booking.vehicle
+        },
+        selectedTireOption: null, // Direct bookings don't have pre-selected tire options
+        selectedTireOptions: [],
+        review: null // Reviews for direct bookings not yet implemented
+      }
+    })
+
+    // Combine and sort all bookings by date (newest first)
+    const allBookings = [...formattedOldBookings, ...formattedDirectBookings].sort((a, b) => {
+      return new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
+    })
+
+    return NextResponse.json(allBookings)
   } catch (error) {
     console.error('Bookings GET error:', error)
     return NextResponse.json(

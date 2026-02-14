@@ -770,6 +770,8 @@ export async function POST(request: NextRequest) {
                     // Mixed tire data
                     isMixedTires: true,
                     tirePrice: combinedTirePrice,
+                    // Brand options for sameBrand filter (if active)
+                    ...(sameBrand && workshop.brandOptions && { brandOptions: workshop.brandOptions }),
                     ...(frontRec && {
                       tireFront: {
                         brand: frontRec.tire.brand,

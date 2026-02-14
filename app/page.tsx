@@ -154,6 +154,7 @@ export default function NewHomePage() {
   const [selectedTireIndices, setSelectedTireIndices] = useState<Record<string, number>>({}) // workshopId -> tire index
   const [selectedTireFrontIndices, setSelectedTireFrontIndices] = useState<Record<string, number>>({}) // workshopId -> front tire index (mixed tires)
   const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
+  const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
   
   // Load reviews on page load
   useEffect(() => {
@@ -1869,11 +1870,32 @@ export default function NewHomePage() {
                       const tireIdx = selectedTireIndices[workshop.id] ?? 0
                       const selectedRec = workshop.tireRecommendations?.[tireIdx]
                       
-                      // Mixed tire indices
-                      const tireFrontIdx = selectedTireFrontIndices[workshop.id] ?? 0
-                      const tireRearIdx = selectedTireRearIndices[workshop.id] ?? 0
-                      const selectedFrontRec = workshop.tireFrontRecommendations?.[tireFrontIdx]
-                      const selectedRearRec = workshop.tireRearRecommendations?.[tireRearIdx]
+                      // Brand option handling (for sameBrand filter)
+                      const brandOptionIdx = selectedBrandOptionIndices[workshop.id] ?? 0
+                      const selectedBrandOption = workshop.brandOptions?.[brandOptionIdx]
+                      
+                      // Mixed tire indices - use brandOption if available
+                      let tireFrontIdx, tireRearIdx, selectedFrontRec, selectedRearRec
+                      
+                      if (selectedBrandOption) {
+                        // Use tires from selected brand option
+                        selectedFrontRec = {
+                          ...selectedBrandOption.front,
+                          tire: selectedBrandOption.front.tire,
+                          quantity: selectedBrandOption.front.quantity
+                        }
+                        selectedRearRec = {
+                          ...selectedBrandOption.rear,
+                          tire: selectedBrandOption.rear.tire,
+                          quantity: selectedBrandOption.rear.quantity
+                        }
+                      } else {
+                        // Use default selections from tire indices
+                        tireFrontIdx = selectedTireFrontIndices[workshop.id] ?? 0
+                        tireRearIdx = selectedTireRearIndices[workshop.id] ?? 0
+                        selectedFrontRec = workshop.tireFrontRecommendations?.[tireFrontIdx]
+                        selectedRearRec = workshop.tireRearRecommendations?.[tireRearIdx]
+                      }
                       
                       // Use workshop.totalPrice from backend (includes disposal fee)
                       // If a different tire is selected, adjust the price by the difference
@@ -2054,8 +2076,36 @@ export default function NewHomePage() {
                                 </div>
                               )}
 
+                              {/* Brand Selector (for sameBrand filter with multiple options) */}
+                              {includeTires && workshop.isMixedTires && workshop.brandOptions && workshop.brandOptions.length > 1 && (
+                                <div className="bg-blue-50 rounded-xl border-2 border-blue-300 p-3 mb-3">
+                                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    🏷️ Hersteller wählen
+                                    <span className="text-xs font-normal normal-case text-blue-600">· {workshop.brandOptions.length} Optionen verfügbar</span>
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {workshop.brandOptions.map((brandOpt: any, idx: number) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => setSelectedBrandOptionIndices(prev => ({...prev, [workshop.id]: idx}))}
+                                        className={`text-left p-3 rounded-lg border-2 transition-all ${
+                                          brandOptionIdx === idx
+                                            ? 'border-blue-500 bg-white shadow-md'
+                                            : 'border-transparent bg-white hover:border-blue-300'
+                                        }`}
+                                      >
+                                        <p className="text-xs font-bold text-blue-600 mb-1">{brandOpt.label}</p>
+                                        <p className="text-sm font-bold text-gray-900 mb-0.5">{brandOpt.brand}</p>
+                                        <p className="text-xs text-gray-600 mb-2">Vorne + Hinten</p>
+                                        <p className="text-lg font-bold text-primary-600">{formatEUR(brandOpt.price)}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {includeTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (
+                              {includeTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
                                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                                     🔹 Vorderachse · {workshop.tireFront?.dimensions}
@@ -2082,7 +2132,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {includeTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (
+                              {includeTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
                                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                                     🔸 Hinterachse · {workshop.tireRear?.dimensions}

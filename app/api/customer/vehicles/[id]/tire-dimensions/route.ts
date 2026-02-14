@@ -32,16 +32,7 @@ export async function GET(
         vehicleType: true,
         summerTires: true,
         winterTires: true,
-        allSeasonTires: true,
-        currentTires: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: {
-            width: true,
-            aspectRatio: true,
-            diameter: true
-          }
-        }
+        allSeasonTires: true
       }
     })
 
@@ -49,66 +40,52 @@ export async function GET(
       return NextResponse.json({ error: 'Fahrzeug nicht gefunden' }, { status: 404 })
     }
 
-    // Try to extract tire dimensions from various sources
+    // ALWAYS check season-specific tire data first for season-based searches
+    // Do NOT fallback to currentTires, as user expects season-specific dimensions
     let dimensions = null
-
-    // 1. Check currentTires (preferred)
-    if (vehicle.currentTires && vehicle.currentTires.length > 0) {
-      const tire = vehicle.currentTires[0]
-      dimensions = {
-        width: tire.width,
-        height: tire.aspectRatio,
-        diameter: tire.diameter,
-        loadIndex: tire.loadIndex?.toString(),
-        speedIndex: tire.speedRating
+    let primaryTireJson = null
+    let seasonName = ''
+    
+    // Select tire source based on season
+    if (season === 's') {
+      primaryTireJson = vehicle.summerTires
+      seasonName = 'Sommerreifen'
+    } else if (season === 'w') {
+      primaryTireJson = vehicle.winterTires
+      seasonName = 'Winterreifen'
+    } else if (season === 'g') {
+      primaryTireJson = vehicle.allSeasonTires
+      seasonName = 'Ganzjahresreifen'
+    }
+    
+    // Try to parse the selected season's tire data
+    if (primaryTireJson) {
+      try {
+        const parsed = typeof primaryTireJson === 'string' ? JSON.parse(primaryTireJson) : primaryTireJson
+        if (parsed.width && parsed.aspectRatio && parsed.diameter) {
+          dimensions = {
+            width: parsed.width,
+            height: parsed.aspectRatio,
+            diameter: parsed.diameter,
+            loadIndex: parsed.loadIndex?.toString(),
+            speedIndex: parsed.speedIndex || parsed.speedRating
+          }
+        }
+      } catch (e) {
+        console.error(`Error parsing ${seasonName} data:`, e)
       }
     }
-
-    // 2. Check JSON tire strings based on season
+    
+    // If no dimensions found for selected season, return clear error
+    // Do NOT use currentTires as fallback for season-specific searches
     if (!dimensions) {
-      // Select tire source based on season
-      let primaryTireJson = null
-      let seasonName = ''
-      
-      if (season === 's') {
-        primaryTireJson = vehicle.summerTires
-        seasonName = 'Sommerreifen'
-      } else if (season === 'w') {
-        primaryTireJson = vehicle.winterTires
-        seasonName = 'Winterreifen'
-      } else if (season === 'g') {
-        primaryTireJson = vehicle.allSeasonTires
-        seasonName = 'Ganzjahresreifen'
-      }
-      
-      // Try to parse the selected season's tire data
-      if (primaryTireJson) {
-        try {
-          const parsed = typeof primaryTireJson === 'string' ? JSON.parse(primaryTireJson) : primaryTireJson
-          if (parsed.width && parsed.aspectRatio && parsed.diameter) {
-            dimensions = {
-              width: parsed.width,
-              height: parsed.aspectRatio,
-              diameter: parsed.diameter,
-              loadIndex: parsed.loadIndex?.toString(),
-              speedIndex: parsed.speedIndex || parsed.speedRating
-            }
-          }
-        } catch (e) {
-          console.error(`Error parsing ${seasonName} data:`, e)
-        }
-      }
-      
-      // If no dimensions found for selected season, return clear error
-      if (!dimensions) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `Für dieses Fahrzeug sind keine ${seasonName} hinterlegt. Bitte ergänzen Sie die Reifendaten in der Fahrzeugverwaltung.`,
-          missingSeasonData: true,
-          selectedSeason: season,
-          seasonName
-        }, { status: 404 })
-      }
+      return NextResponse.json({ 
+        success: false, 
+        error: `Für dieses Fahrzeug sind keine ${seasonName} hinterlegt. Bitte ergänzen Sie die Reifendaten in der Fahrzeugverwaltung.`,
+        missingSeasonData: true,
+        selectedSeason: season,
+        seasonName
+      }, { status: 404 })
     }
 
     // Check for mixed tire setup from JSON data (hasDifferentSizes flag) - season specific

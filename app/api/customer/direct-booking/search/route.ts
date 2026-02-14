@@ -126,7 +126,10 @@ export async function POST(request: NextRequest) {
         },
         bookings: {
           where: {
-            review: { isNot: null }
+            OR: [
+              { review: { isNot: null } },
+              { tireRating: { not: null } }
+            ]
           },
           select: {
             tireRating: true,
@@ -337,6 +340,13 @@ export async function POST(request: NextRequest) {
               return sum + rating
             }, 0) / reviews.length
           : 0
+        
+        console.log(`⭐ [${workshop.companyName}] Rating calculation:`, {
+          bookingsTotal: workshop.bookings.length,
+          reviewsWithRating: reviews.length,
+          avgRating,
+          ratings: reviews.map(b => b.review?.rating || b.tireRating || 0)
+        })
 
         // MwSt-Logik: Für öffentliche Suche immer Preise inkl. MwSt anzeigen
         // "zzgl. MwSt." nur bei eingeloggten B2B-Kunden (später implementieren)

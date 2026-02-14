@@ -176,9 +176,12 @@ export default function NewHomePage() {
   }, [])
   
   // Reload tire dimensions when season changes (if vehicle selected)
+  // Trigger search when season changes manually (without re-validating vehicle)
   useEffect(() => {
-    if (selectedVehicleId && includeTires && selectedService === 'TIRE_CHANGE') {
-      handleVehicleSelect(selectedVehicleId)
+    if (selectedVehicleId && includeTires && selectedService === 'TIRE_CHANGE' && location) {
+      // User manually changed season - search directly without handleVehicleSelect
+      // to avoid triggering auto-switch logic
+      searchWorkshops(location)
     }
   }, [selectedSeason])
   

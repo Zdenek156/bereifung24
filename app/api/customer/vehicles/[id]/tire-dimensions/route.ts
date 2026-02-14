@@ -70,6 +70,13 @@ export async function GET(
             loadIndex: parsed.loadIndex?.toString(),
             speedIndex: parsed.speedIndex || parsed.speedRating
           }
+          
+          console.log(`🔒 [VEHICLE API] Returning tire data for vehicle ${vehicleId}:`, {
+            dimensions: `${dimensions.width}/${dimensions.height} R${dimensions.diameter}`,
+            loadIndex: dimensions.loadIndex || '❌ MISSING',
+            speedIndex: dimensions.speedIndex || '❌ MISSING',
+            season: seasonName
+          })
         }
       } catch (e) {
         console.error(`Error parsing ${seasonName} data:`, e)

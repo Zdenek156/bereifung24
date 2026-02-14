@@ -544,11 +544,14 @@ export async function POST(request: NextRequest) {
                     return null
                   }
                   
-                  // For sameBrand: Find cheapest combination for each brand
-                  let bestBrandCombination = null
-                  let bestBrandPrice = Infinity
+                  // For sameBrand: Find all valid brand combinations
+                  const allBrandCombinations = []
                   
                   console.log(`🔍 [sameBrand Search] Workshop ${workshop.id}: Testing ${matchingBrands.length} brands...`)
+                  
+                  // Premium brands for prioritization
+                  const premiumBrands = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
+                  const qualityBrands = ['Hankook', 'Kumho', 'Yokohama', 'Toyo', 'Falken', 'BFGoodrich', 'Cooper', 'Nokian']
                   
                   for (const brand of matchingBrands) {
                     // Search front with this specific brand
@@ -606,27 +609,80 @@ export async function POST(request: NextRequest) {
                         rearResult?.available && rearResult?.recommendations?.length > 0) {
                       const combinedPrice = frontResult.recommendations[0].totalPrice + rearResult.recommendations[0].totalPrice
                       
-                      if (combinedPrice < bestBrandPrice) {
-                        bestBrandPrice = combinedPrice
-                        bestBrandCombination = {
-                          brand,
-                          front: frontResult,
-                          rear: rearResult
-                        }
-                      }
+                      allBrandCombinations.push({
+                        brand,
+                        front: frontResult,
+                        rear: rearResult,
+                        price: combinedPrice,
+                        isPremium: premiumBrands.includes(brand),
+                        isQuality: qualityBrands.includes(brand)
+                      })
                     }
                   }
                   
-                  if (!bestBrandCombination) {
+                  if (allBrandCombinations.length === 0) {
                     console.log(`❌ [sameBrand Search] Workshop ${workshop.id}: No valid brand combination found`)
                     return null
                   }
                   
-                  console.log(`✅ [sameBrand Search] Workshop ${workshop.id}: Best combination: ${bestBrandCombination.brand} (${bestBrandPrice.toFixed(2)}€)`)
+                  // Sort by price
+                  allBrandCombinations.sort((a, b) => a.price - b.price)
                   
-                  // Use the best combination
-                  frontRecsResult = bestBrandCombination.front
-                  rearRecsResult = bestBrandCombination.rear
+                  // Select best options: Günstigster, Premium (if available), Mittelklasse (if available)
+                  let selectedCombination = null
+                  
+                  // Always use cheapest as default
+                  selectedCombination = allBrandCombinations[0]
+                  
+                  // Try to find premium brand
+                  const premiumOption = allBrandCombinations.find(c => c.isPremium)
+                  
+                  // Try to find quality brand
+                  const qualityOption = allBrandCombinations.find(c => c.isQuality)
+                  
+                  // Create combined recommendations with multiple brand options
+                  const brandOptions = []
+                  
+                  // 1. Günstigster (always available)
+                  brandOptions.push({
+                    label: 'Günstigster',
+                    brand: selectedCombination.brand,
+                    front: selectedCombination.front.recommendations[0],
+                    rear: selectedCombination.rear.recommendations[0],
+                    price: selectedCombination.price
+                  })
+                  
+                  // 2. Premium (if different from cheapest)
+                  if (premiumOption && premiumOption.brand !== selectedCombination.brand) {
+                    brandOptions.push({
+                      label: 'Premium',
+                      brand: premiumOption.brand,
+                      front: premiumOption.front.recommendations[0],
+                      rear: premiumOption.rear.recommendations[0],
+                      price: premiumOption.price
+                    })
+                  }
+                  
+                  // 3. Mittelklasse (if different from both)
+                  if (qualityOption && qualityOption.brand !== selectedCombination.brand && 
+                      (!premiumOption || qualityOption.brand !== premiumOption.brand)) {
+                    brandOptions.push({
+                      label: 'Mittelklasse',
+                      brand: qualityOption.brand,
+                      front: qualityOption.front.recommendations[0],
+                      rear: qualityOption.rear.recommendations[0],
+                      price: qualityOption.price
+                    })
+                  }
+                  
+                  console.log(`✅ [sameBrand Search] Workshop ${workshop.id}: Found ${allBrandCombinations.length} combinations, showing ${brandOptions.length} options: ${brandOptions.map(o => o.brand).join(', ')}`)
+                  
+                  // Use the cheapest combination as default (can be changed later to show all options)
+                  frontRecsResult = selectedCombination.front
+                  rearRecsResult = selectedCombination.rear
+                  
+                  // Store all brand options for potential future use
+                  workshop.brandOptions = brandOptions
                 } else {
                   // Normal search without sameBrand filter
                   // Search for front tires if needed

@@ -1430,6 +1430,32 @@ export default function NewHomePage() {
                             })()}
                           </div>
 
+                          {/* Same Brand filter - only for mixed 4 tires */}
+                          {includeTires && hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
+                            <div className="p-4 border-b border-gray-200">
+                              <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors bg-blue-50/50 border border-blue-200">
+                                <input
+                                  type="checkbox"
+                                  checked={requireSameBrand}
+                                  onChange={(e) => {
+                                    const newValue = e.target.checked
+                                    console.log('🏷️ [SameBrand] Checkbox toggled:', newValue)
+                                    setRequireSameBrand(newValue)
+                                    // Trigger immediate re-search with new filter value
+                                    if (customerLocation) {
+                                      searchWorkshops(customerLocation, undefined, undefined, newValue)
+                                    }
+                                  }}
+                                  className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                />
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">🏷️ Gleicher Hersteller</div>
+                                  <div className="text-xs text-gray-600 mt-0.5">Nur Kombinationen mit identischer Marke vorne und hinten anzeigen</div>
+                                </div>
+                              </label>
+                            </div>
+                          )}
+
                           {/* 4. Saison (only if includeTires) */}
                           {includeTires && (
                             <div className="p-4 border-b border-gray-200">
@@ -1691,26 +1717,6 @@ export default function NewHomePage() {
                               />
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
                             </label>
-                            {/* Same Brand filter - only for mixed 4 tires */}
-                            {hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
-                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input
-                                  type="checkbox"
-                                  checked={requireSameBrand}
-                                  onChange={(e) => {
-                                    const newValue = e.target.checked
-                                    console.log('🏷️ [SameBrand] Checkbox toggled:', newValue)
-                                    setRequireSameBrand(newValue)
-                                    // Trigger immediate re-search with new filter value
-                                    if (customerLocation) {
-                                      searchWorkshops(customerLocation, undefined, undefined, newValue)
-                                    }
-                                  }}
-                                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm">🏷️ Gleicher Hersteller für alle 4 Reifen</span>
-                              </label>
-                            )}
                           </div>
                         </div>
                       )}

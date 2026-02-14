@@ -1673,23 +1673,18 @@ export default function NewHomePage() {
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
                             </label>
                             {/* Same Brand filter - only for mixed 4 tires */}
-                            {(() => {
-                              console.log('🏷️ [DEBUG] Same Brand Checkbox condition:', {
-                                hasMixedTires,
-                                selectedPackages,
-                                includesMixedFourTires: selectedPackages.includes('mixed_four_tires'),
-                                shouldShow: hasMixedTires && selectedPackages.includes('mixed_four_tires')
-                              })
-                              return hasMixedTires && selectedPackages.includes('mixed_four_tires')
-                            })() && (
+                            {hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
                               <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                 <input
                                   type="checkbox"
                                   checked={requireSameBrand}
                                   onChange={(e) => {
-                                    setRequireSameBrand(e.target.checked)
-                                    if (hasSearched && customerLocation) {
-                                      searchWorkshops(customerLocation)
+                                    const newValue = e.target.checked
+                                    console.log('🏷️ [SameBrand] Checkbox toggled:', newValue)
+                                    setRequireSameBrand(newValue)
+                                    // Trigger immediate re-search with new filter
+                                    if (customerLocation) {
+                                      setTimeout(() => searchWorkshops(customerLocation), 100)
                                     }
                                   }}
                                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -1951,7 +1946,7 @@ export default function NewHomePage() {
                               
                               <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
                                 {/* Stars */}
-                                {workshop.rating && workshop.rating > 0 && (
+                                {workshop.rating && workshop.rating > 0 ? (
                                   <>
                                     <div className="flex items-center gap-1">
                                       {[...Array(5)].map((_, i) => (
@@ -1965,13 +1960,13 @@ export default function NewHomePage() {
                                         />
                                       ))}
                                       <span className="font-semibold text-gray-900 ml-0.5">{workshop.rating.toFixed(1)}</span>
-                                      {workshop.reviewCount > 0 && (
+                                      {workshop.reviewCount && workshop.reviewCount > 0 && (
                                         <span className="text-gray-500">({workshop.reviewCount})</span>
                                       )}
                                     </div>
                                     <span className="text-gray-400">·</span>
                                   </>
-                                )}
+                                ) : null}
                                 <span className="flex items-center gap-1 text-gray-600">
                                   <MapPin className="w-3.5 h-3.5 text-red-400" />
                                   {workshop.distance.toFixed(1)} km
@@ -2143,12 +2138,19 @@ export default function NewHomePage() {
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
                                           </div>
                                         )}
-                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (
-                                          <div className="flex justify-between gap-4">
-                                            <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec?.quantity || 0}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec?.quantity || 4))})</span>
-                                            <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
-                                          </div>
-                                        )}
+                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (() => {
+                                          const tireCount = workshop.isMixedTires ? 4 : (selectedRec?.quantity || 0)
+                                          // Only show disposal fee if there are actually tires selected
+                                          if (tireCount > 0) {
+                                            return (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Entsorgung ({tireCount}× {formatEUR(workshop.disposalFeeApplied / tireCount)})</span>
+                                                <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
+                                              </div>
+                                            )
+                                          }
+                                          return null
+                                        })()}
                                         <div className="border-t border-gray-200 pt-1 mt-1"></div>
                                       </div>
                                       {/* Total price */}

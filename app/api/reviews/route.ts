@@ -123,9 +123,11 @@ export async function GET(req: NextRequest) {
 // POST /api/reviews - Create or update a review
 export async function POST(req: NextRequest) {
   try {
+    console.log('[REVIEW API] Starting review submission')
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
+      console.log('[REVIEW API] No session found')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
@@ -133,14 +135,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    console.log('[REVIEW API] Received data:', body)
     const validatedData = reviewSchema.parse(body)
+    console.log('[REVIEW API] Validated data:', validatedData)
 
     // Get customer ID
     const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     })
+    console.log('[REVIEW API] Customer found:', customer?.id)
 
     if (!customer) {
+      console.log('[REVIEW API] Customer not found for userId:', session.user.id)
       return NextResponse.json(
         { error: 'Kunde nicht gefunden' },
         { status: 404 }
@@ -160,7 +166,9 @@ export async function POST(req: NextRequest) {
     })
 
     if (oldBooking) {
+      console.log('[REVIEW API] Found old booking:', oldBooking.id, 'customerId:', oldBooking.customerId)
       if (oldBooking.customerId !== customer.id) {
+        console.log('[REVIEW API] Permission denied - booking customer:', oldBooking.customerId, 'vs user customer:', customer.id)
         return NextResponse.json(
           { error: 'Keine Berechtigung' },
           { status: 403 }
@@ -170,14 +178,18 @@ export async function POST(req: NextRequest) {
       workshopId = oldBooking.workshopId
       existingReview = oldBooking.review
       isDirectBooking = false
+      console.log('[REVIEW API] Using old booking, existing review:', existingReview?.id)
     } else {
       // 2. Check new direct booking table
+      console.log('[REVIEW API] Old booking not found, checking direct booking')
       const directBooking = await prisma.directBooking.findUnique({
         where: { id: validatedData.bookingId },
         include: { review: true }
       })
+      console.log('[REVIEW API] Direct booking found:', directBooking?.id)
 
       if (!directBooking) {
+        console.log('[REVIEW API] Booking not found in either table:', validatedData.bookingId)
         return NextResponse.json(
           { error: 'Termin nicht gefunden' },
           { status: 404 }
@@ -185,6 +197,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (directBooking.customerId !== customer.id) {
+        console.log('[REVIEW API] Permission denied - direct booking customer:', directBooking.customerId, 'vs user customer:', customer.id)
         return NextResponse.json(
           { error: 'Keine Berechtigung' },
           { status: 403 }
@@ -195,11 +208,13 @@ export async function POST(req: NextRequest) {
       workshopId = directBooking.workshopId
       existingReview = directBooking.review
       isDirectBooking = true
+      console.log('[REVIEW API] Using direct booking, existing review:', existingReview?.id)
     }
 
     // Check if review already exists
     if (existingReview) {
       // Update existing review
+      console.log('[REVIEW API] Updating existing review:', existingReview.id)
       const updatedReview = await prisma.review.update({
         where: { id: existingReview.id },
         data: {
@@ -208,24 +223,30 @@ export async function POST(req: NextRequest) {
           updatedAt: new Date(),
         }
       })
+      console.log('[REVIEW API] Review updated successfully:', updatedReview.id)
       return NextResponse.json(updatedReview)
     } else {
       // Create new review
+      console.log('[REVIEW API] Creating new review for', isDirectBooking ? 'direct' : 'old', 'booking')
+      const reviewData = {
+        ...(isDirectBooking 
+          ? { directBookingId: validatedData.bookingId }
+          : { bookingId: validatedData.bookingId }
+        ),
+        customerId: customer.id,
+        workshopId: workshopId!,
+        rating: validatedData.rating,
+        comment: validatedData.comment || null,
+      }
+      console.log('[REVIEW API] Review data:', reviewData)
       const newReview = await prisma.review.create({
-        data: {
-          ...(isDirectBooking 
-            ? { directBookingId: validatedData.bookingId }
-            : { bookingId: validatedData.bookingId }
-          ),
-          customerId: customer.id,
-          workshopId: workshopId!,
-          rating: validatedData.rating,
-          comment: validatedData.comment || null,
-        }
+        data: reviewData
       })
+      console.log('[REVIEW API] Review created successfully:', newReview.id)
       return NextResponse.json(newReview)
     }
   } catch (error) {
+    console.error('[REVIEW API] Error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Ungültige Daten', details: error.errors },

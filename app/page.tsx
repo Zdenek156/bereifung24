@@ -1541,67 +1541,59 @@ export default function NewHomePage() {
 
                           {/* 3. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
-                            {(() => {
-                              // Create custom config for mixed tires
-                              let customConfig = undefined
-                              
-                              if (hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear) {
-                                customConfig = {
-                                  groups: [
-                                    {
-                                      label: 'Anzahl Reifen',
-                                      multiSelect: false,
-                                      options: [
+                            <ServiceFilters
+                              key={`tire-change-${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}`}
+                              selectedService={selectedService}
+                              selectedPackages={selectedPackages}
+                              onFiltersChange={(packages) => setSelectedPackages(packages)}
+                              customConfig={
+                                hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
+                                  ? {
+                                      groups: [
                                         {
-                                          packageType: 'front_two_tires',
-                                          label: '2 Reifen Vorderachse',
-                                          info: `Wechsel der Vorderachse (${tireDimensionsFront})`
+                                          label: 'Anzahl Reifen',
+                                          multiSelect: false,
+                                          options: [
+                                            {
+                                              packageType: 'front_two_tires',
+                                              label: '2 Reifen Vorderachse',
+                                              info: `Wechsel der Vorderachse (${tireDimensionsFront})`
+                                            },
+                                            {
+                                              packageType: 'rear_two_tires',
+                                              label: '2 Reifen Hinterachse',
+                                              info: `Wechsel der Hinterachse (${tireDimensionsRear})`
+                                            },
+                                            {
+                                              packageType: 'mixed_four_tires',
+                                              label: '4 Reifen Komplettsatz',
+                                              info: `Alle 4 Reifen (2× ${tireDimensionsFront} vorne + 2× ${tireDimensionsRear} hinten)`
+                                            }
+                                          ]
                                         },
                                         {
-                                          packageType: 'rear_two_tires',
-                                          label: '2 Reifen Hinterachse',
-                                          info: `Wechsel der Hinterachse (${tireDimensionsRear})`
-                                        },
-                                        {
-                                          packageType: 'mixed_four_tires',
-                                          label: '4 Reifen Komplettsatz',
-                                          info: `Alle 4 Reifen (2× ${tireDimensionsFront} vorne + 2× ${tireDimensionsRear} hinten)`
-                                        }
-                                      ]
-                                    },
-                                    // Add Zusatzleistungen group
-                                    {
-                                      label: 'Zusatzleistungen',
-                                      multiSelect: true,
-                                      options: [
-                                        { 
-                                          packageType: 'with_disposal', 
-                                          label: 'Mit Entsorgung', 
-                                          info: 'Fachgerechte Entsorgung der alten Reifen inklusive'
-                                        },
-                                        { 
-                                          packageType: 'runflat', 
-                                          label: 'Runflat-Reifen', 
-                                          info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad)'
+                                          label: 'Zusatzleistungen',
+                                          multiSelect: true,
+                                          options: [
+                                            { 
+                                              packageType: 'with_disposal', 
+                                              label: 'Mit Entsorgung', 
+                                              info: 'Fachgerechte Entsorgung der alten Reifen inklusive'
+                                            },
+                                            { 
+                                              packageType: 'runflat', 
+                                              label: 'Runflat-Reifen', 
+                                              info: 'Spezieller Service für Runflat-Reifen (notlauftauglich, ohne Notrad)'
+                                            }
+                                          ]
                                         }
                                       ]
                                     }
-                                  ]
-                                }
+                                  : undefined
                               }
-                              
-                              return (
-                                <ServiceFilters
-                                  key={`tire-change-${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}`}
-                                  selectedService={selectedService}
-                                  selectedPackages={selectedPackages}
-                                  onFiltersChange={(packages) => setSelectedPackages(packages)}
-                                  customConfig={customConfig}
-                                  tireDimensionsFront={tireDimensionsFront}
-                                  tireDimensionsRear={tireDimensionsRear}
-                                />
-                              )
-                            })()}
+                              tireDimensionsFront={tireDimensionsFront}
+                              tireDimensionsRear={tireDimensionsRear}
+                            />
                           </div>
 
                           {/* Same Brand filter - only for mixed 4 tires */}

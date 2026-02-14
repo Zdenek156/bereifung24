@@ -125,12 +125,7 @@ export async function POST(request: NextRequest) {
           }
         },
         bookings: {
-          where: {
-            OR: [
-              { review: { isNot: null } },
-              { tireRating: { gt: 0 } } // Greater than 0 means not null
-            ]
-          },
+          // Load ALL bookings, filter in code (Prisma nullable field limitations)
           select: {
             tireRating: true,
             review: {

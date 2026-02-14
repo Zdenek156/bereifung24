@@ -233,19 +233,6 @@ export default function ServiceFilters({
 }: ServiceFiltersProps) {
   // Use customConfig if provided (for mixed tires), otherwise use default
   const config = customConfig || FILTER_CONFIG[selectedService]
-  
-  // Log for debugging - VERSION 4.0 MOVED LOGIC TO PAGE.TSX
-  useEffect(() => {
-    console.log('🎯 [ServiceFilters v4.0] Rendered:', {
-      selectedService,
-      selectedPackages,
-      hasCustomConfig: !!customConfig,
-      configGroups: config?.groups.length || 0,
-      firstGroupOptions: config?.groups[0]?.options.length || 0,
-      tireDimensionsFront,
-      tireDimensionsRear
-    })
-  }, [selectedService, selectedPackages, customConfig, config, tireDimensionsFront, tireDimensionsRear])
 
   const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
@@ -262,7 +249,6 @@ export default function ServiceFilters({
       newSelection.push(packageType)
     }
     
-    console.log('🔄 [ServiceFilters] toggling package:', packageType, '→', newSelection)
     onFiltersChange(newSelection)
   }
 

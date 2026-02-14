@@ -559,7 +559,12 @@ export default function NewHomePage() {
       
       // Debug: Log first workshop totalPrice
       if (result.workshops?.[0]) {
-        console.log('💰 [Frontend] First workshop totalPrice:', result.workshops[0].totalPrice, 'Workshop:', result.workshops[0].workshopName)
+        console.log('💰 [Frontend] First workshop:', {
+          name: result.workshops[0].name,
+          totalPrice: result.workshops[0].totalPrice,
+          rating: result.workshops[0].rating,
+          reviewCount: result.workshops[0].reviewCount
+        })
       }
 
       if (response.ok && result.success) {
@@ -1676,7 +1681,15 @@ export default function NewHomePage() {
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
                             </label>
                             {/* Same Brand filter - only for mixed 4 tires */}
-                            {hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
+                            {(() => {
+                              console.log('🏷️ [DEBUG] Same Brand Checkbox condition:', {
+                                hasMixedTires,
+                                selectedPackages,
+                                includesMixedFourTires: selectedPackages.includes('mixed_four_tires'),
+                                shouldShow: hasMixedTires && selectedPackages.includes('mixed_four_tires')
+                              })
+                              return hasMixedTires && selectedPackages.includes('mixed_four_tires')
+                            })() && (
                               <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                 <input
                                   type="checkbox"
@@ -1947,24 +1960,26 @@ export default function NewHomePage() {
                               <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
                                 {/* Stars */}
                                 {workshop.rating && workshop.rating > 0 && (
-                                  <div className="flex items-center gap-1">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        className={`w-4 h-4 ${
-                                          i < Math.round(workshop.rating)
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'fill-gray-200 text-gray-200'
-                                        }`}
-                                      />
-                                    ))}
-                                    <span className="font-semibold text-gray-900 ml-0.5">{workshop.rating.toFixed(1)}</span>
-                                    {workshop.reviewCount > 0 && (
-                                      <span className="text-gray-500">({workshop.reviewCount})</span>
-                                    )}
-                                  </div>
+                                  <>
+                                    <div className="flex items-center gap-1">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`w-4 h-4 ${
+                                            i < Math.round(workshop.rating)
+                                              ? 'fill-yellow-400 text-yellow-400'
+                                              : 'fill-gray-200 text-gray-200'
+                                          }`}
+                                        />
+                                      ))}
+                                      <span className="font-semibold text-gray-900 ml-0.5">{workshop.rating.toFixed(1)}</span>
+                                      {workshop.reviewCount > 0 && (
+                                        <span className="text-gray-500">({workshop.reviewCount})</span>
+                                      )}
+                                    </div>
+                                    <span className="text-gray-400">·</span>
+                                  </>
                                 )}
-                                <span className="text-gray-400">·</span>
                                 <span className="flex items-center gap-1 text-gray-600">
                                   <MapPin className="w-3.5 h-3.5 text-red-400" />
                                   {workshop.distance.toFixed(1)} km

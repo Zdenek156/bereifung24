@@ -234,6 +234,7 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   // Brand filter (overrides quality if both specified)
   if (brands && brands.length > 0) {
     where.brand = { in: brands }
+    console.log(`🎨 [Brand Filter] Filtering by ${brands.length} brands:`, brands.slice(0, 5))  // Log first 5 brands
   }
 
   // EU Label filters

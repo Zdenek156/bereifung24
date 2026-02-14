@@ -533,7 +533,7 @@ export async function POST(request: NextRequest) {
                     frontBrandsCount: frontBrands.length,
                     rearBrandsCount: rearBrands.length,
                     matchingBrandsCount: matchingBrands.length,
-                    matchingBrands: matchingBrands
+                    matchingBrands: matchingBrands.slice(0, 10) // Only log first 10 to avoid truncation
                   })
                   
                   // If no matching brands, skip this workshop entirely

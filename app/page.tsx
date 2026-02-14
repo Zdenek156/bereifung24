@@ -2212,9 +2212,9 @@ export default function NewHomePage() {
                               </div>
 
                               {/* Service Tags */}
-                              {workshop.availableServices && workshop.availableServices.length > 0 ? (() => {
+                              {workshop.availableServices && workshop.availableServices.length > 0 && (() => {
                                 const additionalServices = workshop.availableServices.filter((s: string) => s !== selectedService)
-                                return additionalServices.length > 0 ? (
+                                return additionalServices.length > 0 && (
                                   <div className="flex flex-wrap gap-1.5 mb-3">
                                     {additionalServices.slice(0, 5).map((serviceType: string) => {
                                       const service = SERVICES.find(s => s.id === serviceType)
@@ -2226,8 +2226,8 @@ export default function NewHomePage() {
                                       )
                                     })}
                                   </div>
-                                ) : null
-                              })() : null}
+                                )
+                              })()}
 
                               {/* Tire Recommendations Panel */}
                               {showTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (
@@ -2474,19 +2474,16 @@ export default function NewHomePage() {
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
                                           </div>
                                         ) : null}
-                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) ? (() => {
+                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (() => {
                                           const tireCount = workshop.isMixedTires ? 4 : (selectedRec?.quantity || 0)
                                           // Only show disposal fee if there are actually tires selected
-                                          if (tireCount > 0) {
-                                            return (
-                                              <div className="flex justify-between gap-4">
-                                                <span>Entsorgung ({tireCount}× {formatEUR(workshop.disposalFeeApplied / tireCount)})</span>
-                                                <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
-                                              </div>
-                                            )
-                                          }
-                                          return null
-                                        })() : null}
+                                          return tireCount > 0 && (
+                                            <div className="flex justify-between gap-4">
+                                              <span>Entsorgung ({tireCount}× {formatEUR(workshop.disposalFeeApplied / tireCount)})</span>
+                                              <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
+                                            </div>
+                                          )
+                                        })()}
                                         <div className="border-t border-gray-200 pt-1 mt-1"></div>
                                       </div>
                                       {/* Total price */}

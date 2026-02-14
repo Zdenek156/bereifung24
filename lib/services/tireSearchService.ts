@@ -305,9 +305,13 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       const tireLoad = parseInt(tire.loadIndex)
       const minLoad = parseInt(filters.minLoadIndex)
       if (!isNaN(tireLoad) && !isNaN(minLoad) && tireLoad < minLoad) {
-        console.log(`🔒 [Tire Filter] Skipping ${tire.brand} ${tire.model}: Load Index ${tire.loadIndex} < required ${filters.minLoadIndex}`)
+        console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Load Index ${tire.loadIndex} < required ${filters.minLoadIndex}`)
         continue
       }
+    }
+    // WARNING: If tire has no load index in database, it won't be filtered
+    if (filters.minLoadIndex && !tire.loadIndex) {
+      console.log(`⚠️ [TIRE FILTER] WARNING: ${tire.brand} ${tire.model} has NO loadIndex in database (required: ${filters.minLoadIndex})`)
     }
 
     // CRITICAL: Speed Index filter (must be >= vehicle's speed rating)
@@ -315,9 +319,13 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       const tireSpeedIdx = SPEED_INDEX_ORDER.indexOf(tire.speedIndex)
       const minSpeedIdx = SPEED_INDEX_ORDER.indexOf(filters.minSpeedIndex)
       if (tireSpeedIdx !== -1 && minSpeedIdx !== -1 && tireSpeedIdx < minSpeedIdx) {
-        console.log(`🔒 [Tire Filter] Skipping ${tire.brand} ${tire.model}: Speed Index ${tire.speedIndex} < required ${filters.minSpeedIndex}`)
+        console.log(`❌🔒 [TIRE FILTER] Skipping ${tire.brand} ${tire.model}: Speed Index ${tire.speedIndex} < required ${filters.minSpeedIndex}`)
         continue
       }
+    }
+    // WARNING: If tire has no speed index in database, it won't be filtered
+    if (filters.minSpeedIndex && !tire.speedIndex) {
+      console.log(`⚠️ [TIRE FILTER] WARNING: ${tire.brand} ${tire.model} has NO speedIndex in database (required: ${filters.minSpeedIndex})`)
     }
 
     const { sellingPrice, markup } = await calculateSellingPrice(

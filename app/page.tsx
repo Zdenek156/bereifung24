@@ -2132,7 +2132,7 @@ export default function NewHomePage() {
                                             </div>
                                           </>
                                         ) : null}
-                                        {workshop.basePrice && workshop.basePrice > 0 && (
+                                        {workshop.basePrice > 0 && (
                                           <div className="flex justify-between gap-4">
                                             <span>Montage</span>
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>

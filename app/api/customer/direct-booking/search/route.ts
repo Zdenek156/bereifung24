@@ -339,8 +339,9 @@ export async function POST(request: NextRequest) {
         console.log(`⭐ [${workshop.companyName}] Rating calculation:`, {
           bookingsTotal: workshop.bookings.length,
           reviewsWithRating: reviews.length,
-          avgRating,
-          ratings: reviews.map(b => b.review?.rating || b.tireRating || 0)
+          avgRating: Math.round(avgRating * 10) / 10,
+          ratings: reviews.map(b => b.review?.rating || b.tireRating || 0),
+          willShowRating: avgRating > 0 && reviews.length > 0
         })
 
         // MwSt-Logik: Für öffentliche Suche immer Preise inkl. MwSt anzeigen
@@ -539,6 +540,13 @@ export async function POST(request: NextRequest) {
                     const frontRec = frontRecsResult.recommendations[0]
                     const rearRec = rearRecsResult.recommendations[0]
                     
+                    console.log(`🏷️ [sameBrand Filter] Workshop ${workshop.id}:`, {
+                      frontBrand: frontRec.tire.brand,
+                      rearBrand: rearRec.tire.brand,
+                      match: frontRec.tire.brand.toLowerCase() === rearRec.tire.brand.toLowerCase(),
+                      allRearBrands: rearRecsResult.recommendations.map((r: any) => r.tire.brand)
+                    })
+                    
                     // Check if brands match
                     if (frontRec.tire.brand.toLowerCase() !== rearRec.tire.brand.toLowerCase()) {
                       // Try to find matching brand in rear recommendations
@@ -548,11 +556,15 @@ export async function POST(request: NextRequest) {
                       
                       if (!matchingRearRec) {
                         // No matching brand found, exclude this workshop
+                        console.log(`❌ [sameBrand Filter] Workshop ${workshop.id} EXCLUDED: No matching brand found`)
                         return null
                       }
                       
+                      console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Found matching rear tire: ${matchingRearRec.tire.brand} ${matchingRearRec.tire.model}`)
                       // Use matching rear tire
                       rearRecsResult.recommendations[0] = matchingRearRec
+                    } else {
+                      console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Brands already match!`)
                     }
                   }
                   

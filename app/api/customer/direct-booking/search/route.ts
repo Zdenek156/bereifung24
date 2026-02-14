@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
       tireFilters,
       sameBrand = false // For mixed 4 tires: require same brand for front and rear
     } = body
+    
+    console.log('🔍 [API] Received sameBrand parameter:', { sameBrand, type: typeof sameBrand })
 
     // Determine tire count from packageTypes (for tire pricing)
     // CRITICAL: Check mixed tire packages FIRST, but ONLY if dimensions are provided
@@ -404,6 +406,14 @@ export async function POST(request: NextRequest) {
           serviceData: {
             disposalFee: service.disposalFee ? Number(service.disposalFee) : 0,
             runFlatSurcharge: service.runFlatSurcharge ? Number(service.runFlatSurcharge) : 0,
+          },
+          
+          // Debug pricing
+          _debug_pricing: {
+            workshopId: workshop.id,
+            basePrice,
+            totalPrice,
+            serviceName: service.serviceType
           },
           
           // VAT

@@ -548,6 +548,12 @@ export default function NewHomePage() {
           // Same brand filter (only for mixed 4 tires)
           sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? requireSameBrand : false
         })
+        
+        console.log('📤 [API Request] Sending sameBrand:', {
+          condition: selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires'),
+          requireSameBrand,
+          finalValue: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? requireSameBrand : false
+        })
       })
 
       const result = await response.json()
@@ -569,6 +575,11 @@ export default function NewHomePage() {
 
       if (response.ok && result.success) {
         const workshops = result.workshops || []
+        console.log('🔍 [DEBUG] First workshop pricing:', {
+          basePrice: workshops[0]?.basePrice,
+          totalPrice: workshops[0]?.totalPrice,
+          _debug_pricing: workshops[0]?._debug_pricing
+        })
         setWorkshops(workshops)
         setError(null)
         

@@ -1946,7 +1946,7 @@ export default function NewHomePage() {
                               
                               <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
                                 {/* Stars */}
-                                {workshop.rating > 0 && (
+                                {workshop.rating && workshop.rating > 0 && (
                                   <div className="flex items-center gap-1">
                                     {[...Array(5)].map((_, i) => (
                                       <Star
@@ -2136,7 +2136,7 @@ export default function NewHomePage() {
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
                                           </div>
                                         )}
-                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (
+                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (
                                           <div className="flex justify-between gap-4">
                                             <span>Entsorgung ({workshop.isMixedTires ? '4' : selectedRec?.quantity || 0}× {formatEUR(workshop.disposalFeeApplied / (workshop.isMixedTires ? 4 : selectedRec?.quantity || 4))})</span>
                                             <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>

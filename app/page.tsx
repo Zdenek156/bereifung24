@@ -701,14 +701,16 @@ export default function NewHomePage() {
           // Mixed tire dimensions (if vehicle has different front/rear sizes)
           tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.front) ? 
             (() => {
-              const match = mixedTiresData.front.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              // Regex accepts optional load/speed index: "245/35 R21" or "245/35 R21 96Y"
+              const match = mixedTiresData.front.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
               const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
               console.log('🎯 [searchWorkshops] Parsing front dimensions:', mixedTiresData.front, '→', parsed);
               return parsed;
             })() : undefined,
           tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.rear) ? 
             (() => {
-              const match = mixedTiresData.rear.match(/^(\d+)\/(\d+)\s*R(\d+)$/);
+              // Regex accepts optional load/speed index: "275/30 R21" or "275/30 R21 98Y"
+              const match = mixedTiresData.rear.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
               const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
               console.log('🎯 [searchWorkshops] Parsing rear dimensions:', mixedTiresData.rear, '→', parsed);
               return parsed;
@@ -2477,12 +2479,15 @@ export default function NewHomePage() {
                                         {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (() => {
                                           const tireCount = workshop.isMixedTires ? 4 : (selectedRec?.quantity || 0)
                                           // Only show disposal fee if there are actually tires selected
-                                          return tireCount > 0 && (
-                                            <div className="flex justify-between gap-4">
-                                              <span>Entsorgung ({tireCount}× {formatEUR(workshop.disposalFeeApplied / tireCount)})</span>
-                                              <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
-                                            </div>
-                                          )
+                                          if (tireCount > 0) {
+                                            return (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Entsorgung ({tireCount}× {formatEUR(workshop.disposalFeeApplied / tireCount)})</span>
+                                                <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
+                                              </div>
+                                            )
+                                          }
+                                          return null
                                         })()}
                                         <div className="border-t border-gray-200 pt-1 mt-1"></div>
                                       </div>

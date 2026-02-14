@@ -821,6 +821,12 @@ export async function POST(request: NextRequest) {
         // Standard single tire size search
         const { width, height, diameter, loadIndex, speedIndex } = tireDimensions
         
+        console.log(`🔒 [TIRE SAFETY CHECK] Received dimensions:`, {
+          width, height, diameter,
+          loadIndex: loadIndex || 'MISSING ⚠️',
+          speedIndex: speedIndex || 'MISSING ⚠️'
+        })
+        
         if (width && height && diameter) {
         // Fetch tire recommendations for each workshop
         workshopsWithTires = await Promise.all(
@@ -908,6 +914,8 @@ export async function POST(request: NextRequest) {
                     pricePerTire: rec.pricePerTire,
                     totalPrice: rec.totalPrice,
                     quantity: rec.quantity,
+                    loadIndex: rec.tire.loadIndex || null,
+                    speedIndex: rec.tire.speedIndex || null,
                     labelFuelEfficiency: rec.tire.labelFuelEfficiency || null,
                     labelWetGrip: rec.tire.labelWetGrip || null,
                     labelNoise: rec.tire.labelNoise || null,

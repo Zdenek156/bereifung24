@@ -137,7 +137,9 @@ export default function NewHomePage() {
   const [tireDimensions, setTireDimensions] = useState({
     width: '',
     height: '',
-    diameter: ''
+    diameter: '',
+    loadIndex: '',
+    speedIndex: ''
   })
   const [hasMixedTires, setHasMixedTires] = useState(false)
   const [tireDimensionsFront, setTireDimensionsFront] = useState<string>('')
@@ -578,8 +580,7 @@ export default function NewHomePage() {
         setMissingSeasonError({
           message: data.error,
           seasonName: data.seasonName || 'Reifendaten'
-        })
-        setTireDimensions({ width: '', height: '', diameter: '' })
+        })        setTireDimensions({ width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
         setHasMixedTires(false)
         setTireDimensionsFront('')
         setTireDimensionsRear('')
@@ -595,7 +596,15 @@ export default function NewHomePage() {
         setTireDimensions({
           width: data.dimensions.width.toString(),
           height: data.dimensions.height.toString(),
-          diameter: data.dimensions.diameter.toString()
+          diameter: data.dimensions.diameter.toString(),
+          loadIndex: data.dimensions.loadIndex?.toString() || '',
+          speedIndex: data.dimensions.speedIndex || ''
+        })
+
+        console.log('🔒 [SAFETY CHECK] Tire dimensions loaded:', {
+          dimensions: `${data.dimensions.width}/${data.dimensions.height} R${data.dimensions.diameter}`,
+          loadIndex: data.dimensions.loadIndex || 'NOT SET ⚠️',
+          speedIndex: data.dimensions.speedIndex || 'NOT SET ⚠️'
         })
 
         // DEBUG: Log what API returned
@@ -2235,7 +2244,15 @@ export default function NewHomePage() {
                                       >
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.brand}</p>
-                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.model}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-0.5">{rec.model}</p>
+                                        {/* Safety: Show Load & Speed Index */}
+                                        {(rec.loadIndex || rec.speedIndex) && (
+                                          <p className="text-xs text-gray-600 font-medium mb-1.5">
+                                            {rec.loadIndex && <span className="text-green-700">{rec.loadIndex}</span>}
+                                            {rec.loadIndex && rec.speedIndex && <span className="text-gray-400 mx-0.5">/</span>}
+                                            {rec.speedIndex && <span className="text-blue-700">{rec.speedIndex}</span>}
+                                          </p>
+                                        )}
                                         <div className="flex gap-1">
                                           {rec.labelFuelEfficiency && (
                                             <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
@@ -2313,7 +2330,15 @@ export default function NewHomePage() {
                                       >
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
-                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-0.5">{rec.tire.model}</p>
+                                        {/* Safety: Show Load & Speed Index */}
+                                        {(rec.tire.loadIndex || rec.tire.speedIndex) && (
+                                          <p className="text-xs text-gray-600 font-medium mb-1.5">
+                                            {rec.tire.loadIndex && <span className="text-green-700">{rec.tire.loadIndex}</span>}
+                                            {rec.tire.loadIndex && rec.tire.speedIndex && <span className="text-gray-400 mx-0.5">/</span>}
+                                            {rec.tire.speedIndex && <span className="text-blue-700">{rec.tire.speedIndex}</span>}
+                                          </p>
+                                        )}
                                         <div className="flex gap-1 mb-1.5">
                                           {rec.tire.labelFuelEfficiency && (
                                             <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
@@ -2357,7 +2382,15 @@ export default function NewHomePage() {
                                       >
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
-                                        <p className="text-xs text-gray-500 truncate mb-1.5">{rec.tire.model}</p>
+                                        <p className="text-xs text-gray-500 truncate mb-0.5">{rec.tire.model}</p>
+                                        {/* Safety: Show Load & Speed Index */}
+                                        {(rec.tire.loadIndex || rec.tire.speedIndex) && (
+                                          <p className="text-xs text-gray-600 font-medium mb-1.5">
+                                            {rec.tire.loadIndex && <span className="text-green-700">{rec.tire.loadIndex}</span>}
+                                            {rec.tire.loadIndex && rec.tire.speedIndex && <span className="text-gray-400 mx-0.5">/</span>}
+                                            {rec.tire.speedIndex && <span className="text-blue-700">{rec.tire.speedIndex}</span>}
+                                          </p>
+                                        )}
                                         <div className="flex gap-1 mb-1.5">
                                           {rec.tire.labelFuelEfficiency && (
                                             <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">

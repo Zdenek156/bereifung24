@@ -832,6 +832,17 @@ export async function POST(request: NextRequest) {
               
               const seasonFilter = tireFilters?.seasons?.[0] || 'all'
               console.log(`🔍 [Season Filter] Workshop ${workshop.id}: tireFilters.seasons=${JSON.stringify(tireFilters?.seasons)}, using season="${seasonFilter}"`)
+              console.log(`🔍 [DEBUG Tire Search] Workshop ${workshop.id}:`, {
+                width: String(width),
+                height: String(height),
+                diameter: String(diameter),
+                season: seasonFilter,
+                vehicleType: 'PKW',
+                requestedTireCount,
+                runFlat: requireRunFlat || undefined,
+                showDOTTires: tireFilters?.showDOTTires,
+                quality: tireFilters?.quality
+              })
               
               const recsResult = await findTireRecommendations(
                 workshop.id,
@@ -856,6 +867,17 @@ export async function POST(request: NextRequest) {
                 0, // disposalFee NOT added to tire price
                 requireRunFlat ? runFlatSurcharge : 0 // Pass runflat surcharge per tire
               )
+
+              console.log(`📊 [DEBUG Tire Result] Workshop ${workshop.id}:`, {
+                available: recsResult.available,
+                recommendationsCount: recsResult.recommendations?.length || 0,
+                firstRec: recsResult.recommendations?.[0] ? {
+                  brand: recsResult.recommendations[0].brand,
+                  model: recsResult.recommendations[0].model,
+                  price: recsResult.recommendations[0].pricePerTire,
+                  totalPrice: recsResult.recommendations[0].totalPrice
+                } : null
+              })
 
               if (recsResult.available && recsResult.recommendations.length > 0) {
                 const defaultRec = recsResult.recommendations[0] // cheapest

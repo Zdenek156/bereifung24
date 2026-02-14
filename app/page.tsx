@@ -148,6 +148,7 @@ export default function NewHomePage() {
   const [fuelEfficiency, setFuelEfficiency] = useState<string>('') // A-G or ''
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
   const [require3PMSF, setRequire3PMSF] = useState(false)
+  const [showDOTTires, setShowDOTTires] = useState(false) // Default: DOT tires hidden
   const [requireSameBrand, setRequireSameBrand] = useState(false) // For mixed 4 tires: same brand
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
@@ -495,11 +496,13 @@ export default function NewHomePage() {
     overrideSeason?: string,
     // CRITICAL: Accept tire dimensions directly to avoid async state issues
     overrideMixedTires?: { hasMixed: boolean; front?: string; rear?: string },
-    overrideSameBrand?: boolean // Override for immediate use when checkbox changes
+    overrideSameBrand?: boolean, // Override for immediate use when checkbox changes
+    overrideQuality?: string // Override for quality filter (premium/quality/budget)
   ) => {
     const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
     const mixedTiresData = overrideMixedTires || { hasMixed: hasMixedTires, front: tireDimensionsFront, rear: tireDimensionsRear }
     const sameBrandValue = overrideSameBrand !== undefined ? overrideSameBrand : requireSameBrand
+    const qualityValue = overrideQuality !== undefined ? overrideQuality : tireQuality
     
     console.log('🎯 [sameBrand] Using value:', {
       override: overrideSameBrand,
@@ -549,10 +552,11 @@ export default function NewHomePage() {
             minPrice: tireBudgetMin,
             maxPrice:tireBudgetMax,
             seasons: seasonToUse ? [seasonToUse] : [],
-            quality: tireQuality || undefined,
+            quality: qualityValue || undefined,
             fuelEfficiency: fuelEfficiency || undefined,
             wetGrip: wetGrip || undefined,
-            threePMSF: require3PMSF || undefined
+            threePMSF: require3PMSF || undefined,
+            showDOTTires: showDOTTires // Default false = hide DOT tires
           } : undefined,
           // Same brand filter (only for mixed 4 tires)
           sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? sameBrandValue : false
@@ -1531,7 +1535,7 @@ export default function NewHomePage() {
                                     onChange={() => {
                                       setTireQuality('premium')
                                       if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation)
+                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'premium')
                                       }
                                     }}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
@@ -1546,7 +1550,7 @@ export default function NewHomePage() {
                                     onChange={() => {
                                       setTireQuality('quality')
                                       if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation)
+                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'quality')
                                       }
                                     }}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
@@ -1561,7 +1565,7 @@ export default function NewHomePage() {
                                     onChange={() => {
                                       setTireQuality('budget')
                                       if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation)
+                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'budget')
                                       }
                                     }}
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
@@ -1717,6 +1721,20 @@ export default function NewHomePage() {
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                               />
                               <span className="text-sm">❄️ 3PMSF (Schneeflocke)</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={showDOTTires}
+                                onChange={(e) => {
+                                  setShowDOTTires(e.target.checked)
+                                  if (hasSearched && customerLocation) {
+                                    searchWorkshops(customerLocation)
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              <span className="text-sm">🏷️ DOT-Reifen anzeigen</span>
                             </label>
                           </div>
                         </div>

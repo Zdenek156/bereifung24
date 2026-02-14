@@ -28,6 +28,7 @@ export interface TireSearchFilters {
   // Features
   runFlat?: boolean
   threePMSF?: boolean
+  showDOTTires?: boolean // Default false = hide DOT tires (models with "DOT" in name)
   // Sorting
   sortBy?: 'price' | 'brand' | 'fuel' | 'wetGrip' | 'noise'
   sortOrder?: 'asc' | 'desc'
@@ -254,6 +255,20 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   }
   if (threePMSF !== undefined) {
     where.threePMSF = threePMSF
+  }
+
+  // DOT tire filter (default: hide DOT tires)
+  // Always exclude DEMO tires
+  const modelFilters: any[] = [
+    { NOT: { model: { contains: 'DEMO', mode: 'insensitive' } } }
+  ]
+  
+  if (!filters.showDOTTires) {
+    modelFilters.push({ NOT: { model: { contains: 'DOT', mode: 'insensitive' } } })
+  }
+  
+  if (modelFilters.length > 0) {
+    where.AND = modelFilters
   }
 
   // Fetch matching tires

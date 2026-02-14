@@ -68,6 +68,9 @@ export default function WorkshopDetailPage() {
   const [basePrice, setBasePrice] = useState(0)
   const [baseDuration, setBaseDuration] = useState(60)
   
+  // Tire booking data from previous page
+  const [tireBookingData, setTireBookingData] = useState<any>(null)
+  
   // Handle image load errors globally
   useEffect(() => {
     const handleImageError = (e: Event) => {
@@ -208,6 +211,22 @@ export default function WorkshopDetailPage() {
     loadWorkshop()
   }, [workshopId])
 
+  // Load tire booking data from sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedData = sessionStorage.getItem('tireBookingData')
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData)
+          console.log('📦 [WORKSHOP] Loaded tire booking data:', data)
+          setTireBookingData(data)
+        } catch (e) {
+          console.error('Error parsing tire booking data:', e)
+        }
+      }
+    }
+  }, [])
+
   // Fetch available slots when month changes
   useEffect(() => {
     if (!workshopId) return
@@ -247,6 +266,35 @@ export default function WorkshopDetailPage() {
       style: 'currency',
       currency: 'EUR',
     }).format(amount)
+  }
+
+  // EU Label color helpers for tire display
+  const getLabelColor = (grade: string | null | undefined) => {
+    if (!grade) return 'bg-gray-200 text-gray-700'
+    const colors: Record<string, string> = {
+      'A': 'bg-green-600 text-white',
+      'B': 'bg-green-500 text-white',
+      'C': 'bg-yellow-400 text-gray-900',
+      'D': 'bg-orange-400 text-white',
+      'E': 'bg-red-500 text-white',
+      'F': 'bg-red-700 text-white',
+      'G': 'bg-red-900 text-white',
+    }
+    return colors[grade.toUpperCase()] || 'bg-gray-200 text-gray-700'
+  }
+
+  const getNoiseColor = (noise: number | null | undefined) => {
+    if (!noise) return 'bg-gray-200 text-gray-700'
+    if (noise < 68) return 'bg-green-600 text-white'
+    if (noise <= 72) return 'bg-yellow-400 text-gray-900'
+    return 'bg-red-600 text-white'
+  }
+
+  const getNoiseWaves = (noise: number | null | undefined) => {
+    if (!noise) return '🔇'
+    if (noise < 68) return '🔈'
+    if (noise <= 72) return '🔉'
+    return '🔊'
   }
 
   const getDaysInMonth = (date: Date) => {
@@ -821,6 +869,207 @@ export default function WorkshopDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Selected Tires Card */}
+          {tireBookingData && tireBookingData.hasTires && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewählte Reifen
+              </h3>
+              
+              {/* Mixed Tires */}
+              {tireBookingData.isMixedTires ? (
+                <div className="space-y-4">
+                  {/* Front Tires */}
+                  {tireBookingData.selectedFrontTire && tireBookingData.selectedPackages?.includes('front_two_tires') && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-primary-600 mb-2">
+                        Vorderachse · {tireBookingData.tireDimensionsFront?.formatted || `${tireBookingData.tireDimensionsFront?.width}/${tireBookingData.tireDimensionsFront?.height} R${tireBookingData.tireDimensionsFront?.diameter}`}
+                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedFrontTire.label}</p>
+                          <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedFrontTire.brand}</p>
+                          <p className="text-sm text-gray-600">{tireBookingData.selectedFrontTire.model}</p>
+                          
+                          {/* Load & Speed Index */}
+                          {(tireBookingData.selectedFrontTire.loadIndex || tireBookingData.selectedFrontTire.speedIndex) && (
+                            <p className="text-sm text-gray-700 font-medium mt-2">
+                              {tireBookingData.selectedFrontTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedFrontTire.loadIndex}</span>}
+                              {tireBookingData.selectedFrontTire.loadIndex && tireBookingData.selectedFrontTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                              {tireBookingData.selectedFrontTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedFrontTire.speedIndex}</span>}
+                            </p>
+                          )}
+                          
+                          {/* EU Labels */}
+                          <div className="flex gap-2 mt-3">
+                            {tireBookingData.selectedFrontTire.labelFuelEfficiency && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedFrontTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                  {tireBookingData.selectedFrontTire.labelFuelEfficiency}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedFrontTire.labelWetGrip && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedFrontTire.labelWetGrip)}`} title="Nasshaftung">
+                                  {tireBookingData.selectedFrontTire.labelWetGrip}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedFrontTire.labelNoise && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedFrontTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedFrontTire.labelNoise} dB`}>
+                                  {getNoiseWaves(tireBookingData.selectedFrontTire.labelNoise)} {tireBookingData.selectedFrontTire.labelNoise}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            {tireBookingData.selectedFrontTire.quantity || 2}× à {formatEUR(tireBookingData.selectedFrontTire.pricePerTire || 0)}
+                          </p>
+                          <p className="text-2xl font-bold text-primary-600">
+                            {formatEUR(tireBookingData.selectedFrontTire.totalPrice || 0)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Rear Tires */}
+                  {tireBookingData.selectedRearTire && (tireBookingData.selectedPackages?.includes('rear_two_tires') || tireBookingData.selectedPackages?.includes('mixed_four_tires')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-primary-600 mb-2">
+                        Hinterachse · {tireBookingData.tireDimensionsRear?.formatted || `${tireBookingData.tireDimensionsRear?.width}/${tireBookingData.tireDimensionsRear?.height} R${tireBookingData.tireDimensionsRear?.diameter}`}
+                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedRearTire.label}</p>
+                          <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedRearTire.brand}</p>
+                          <p className="text-sm text-gray-600">{tireBookingData.selectedRearTire.model}</p>
+                          
+                          {/* Load & Speed Index */}
+                          {(tireBookingData.selectedRearTire.loadIndex || tireBookingData.selectedRearTire.speedIndex) && (
+                            <p className="text-sm text-gray-700 font-medium mt-2">
+                              {tireBookingData.selectedRearTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedRearTire.loadIndex}</span>}
+                              {tireBookingData.selectedRearTire.loadIndex && tireBookingData.selectedRearTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                              {tireBookingData.selectedRearTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedRearTire.speedIndex}</span>}
+                            </p>
+                          )}
+                          
+                          {/* EU Labels */}
+                          <div className="flex gap-2 mt-3">
+                            {tireBookingData.selectedRearTire.labelFuelEfficiency && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedRearTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                  {tireBookingData.selectedRearTire.labelFuelEfficiency}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedRearTire.labelWetGrip && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedRearTire.labelWetGrip)}`} title="Nasshaftung">
+                                  {tireBookingData.selectedRearTire.labelWetGrip}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedRearTire.labelNoise && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedRearTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedRearTire.labelNoise} dB`}>
+                                  {getNoiseWaves(tireBookingData.selectedRearTire.labelNoise)} {tireBookingData.selectedRearTire.labelNoise}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            {tireBookingData.selectedRearTire.quantity || 2}× à {formatEUR(tireBookingData.selectedRearTire.pricePerTire || 0)}
+                          </p>
+                          <p className="text-2xl font-bold text-primary-600">
+                            {formatEUR(tireBookingData.selectedRearTire.totalPrice || 0)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Standard Tires */
+                tireBookingData.selectedTire && (
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-primary-600 mb-2">
+                      {tireBookingData.tireDimensions && `${tireBookingData.tireDimensions.width}/${tireBookingData.tireDimensions.height} R${tireBookingData.tireDimensions.diameter}`}
+                      {tireBookingData.tireDimensions?.loadIndex && tireBookingData.tireDimensions?.speedIndex && ` ${tireBookingData.tireDimensions.loadIndex}${tireBookingData.tireDimensions.speedIndex}`}
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedTire.label}</p>
+                        <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedTire.brand}</p>
+                        <p className="text-sm text-gray-600">{tireBookingData.selectedTire.model}</p>
+                        
+                        {/* Load & Speed Index */}
+                        {(tireBookingData.selectedTire.loadIndex || tireBookingData.selectedTire.speedIndex) && (
+                          <p className="text-sm text-gray-700 font-medium mt-2">
+                            {tireBookingData.selectedTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedTire.loadIndex}</span>}
+                            {tireBookingData.selectedTire.loadIndex && tireBookingData.selectedTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                            {tireBookingData.selectedTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedTire.speedIndex}</span>}
+                          </p>
+                        )}
+                        
+                        {/* EU Labels */}
+                        <div className="flex gap-2 mt-3">
+                          {tireBookingData.selectedTire.labelFuelEfficiency && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                {tireBookingData.selectedTire.labelFuelEfficiency}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.labelWetGrip && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedTire.labelWetGrip)}`} title="Nasshaftung">
+                                {tireBookingData.selectedTire.labelWetGrip}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.labelNoise && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedTire.labelNoise} dB`}>
+                                {getNoiseWaves(tireBookingData.selectedTire.labelNoise)} {tireBookingData.selectedTire.labelNoise}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          {tireBookingData.selectedTire.quantity || 4}× à {formatEUR(tireBookingData.selectedTire.pricePerTire || 0)}
+                        </p>
+                        <p className="text-2xl font-bold text-primary-600">
+                          {formatEUR(tireBookingData.selectedTire.totalPrice || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
           {/* Workshop Description */}
           {workshop.description && (

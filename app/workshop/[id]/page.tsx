@@ -471,10 +471,6 @@ export default function WorkshopDetailPage() {
 
   const canBook = selectedDate && selectedSlot && selectedVehicle
 
-  const handleAdditionalServicesSelected = (services: any[]) => {
-    setAdditionalServices(services)
-  }
-
   const handleBooking = () => {
     if (!canBook) return
     

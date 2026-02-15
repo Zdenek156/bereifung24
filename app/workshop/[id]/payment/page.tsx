@@ -24,15 +24,13 @@ export default function PaymentPage() {
   const { data: session, status } = useSession()
 
   const workshopId = params.id as string
-  const serviceType = searchParams?.get('service') || 'WHEEL_CHANGE'
   const date = searchParams?.get('date') || ''
   const time = searchParams?.get('time') || ''
   const vehicleId = searchParams?.get('vehicleId') || ''
 
   const [loading, setLoading] = useState(true)
+  const [bookingData, setBookingData] = useState<any>(null)
   const [workshop, setWorkshop] = useState<any>(null)
-  const [vehicle, setVehicle] = useState<any>(null)
-  const [servicePricing, setServicePricing] = useState<any>(null)
   const [processing, setProcessing] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments' | null>(null)
 
@@ -50,12 +48,12 @@ export default function PaymentPage() {
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
-      const currentUrl = `/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`
+      const currentUrl = `/workshop/${workshopId}/payment?date=${date}&time=${time}&vehicleId=${vehicleId}`
       router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
     }
-  }, [session, status, router])
+  }, [session, status, router, workshopId, date, time, vehicleId])
 
-  // Load all data
+  // Load booking data from sessionStorage and workshop from API
   useEffect(() => {
     const loadData = async () => {
       if (!session) return
@@ -63,26 +61,21 @@ export default function PaymentPage() {
       try {
         setLoading(true)
 
-        // Load workshop details
+        // Load booking data from sessionStorage
+        const savedBookingData = sessionStorage.getItem('bookingData')
+        if (savedBookingData) {
+          const parsed = JSON.parse(savedBookingData)
+          console.log('📦 [PAYMENT] Loaded booking data from sessionStorage:', parsed)
+          setBookingData(parsed)
+        } else {
+          console.warn('[PAYMENT] No booking data found in sessionStorage!')
+        }
+
+        // Load workshop details from API for payment provider settings
         const workshopRes = await fetch(`/api/workshops/${workshopId}`)
         if (workshopRes.ok) {
           const data = await workshopRes.json()
           setWorkshop(data.workshop)
-        }
-
-        // Load vehicle details
-        const vehicleRes = await fetch(`/api/customer/vehicles`)
-        if (vehicleRes.ok) {
-          const data = await vehicleRes.json()
-          const foundVehicle = data.vehicles?.find((v: any) => v.id === vehicleId)
-          setVehicle(foundVehicle)
-        }
-
-        // Load service pricing
-        const pricingRes = await fetch(`/api/workshop/${workshopId}/services/${serviceType}`)
-        if (pricingRes.ok) {
-          const data = await pricingRes.json()
-          setServicePricing(data)
         }
       } catch (error) {
         console.error('Error loading data:', error)
@@ -92,10 +85,10 @@ export default function PaymentPage() {
     }
 
     loadData()
-  }, [session, workshopId, serviceType, vehicleId])
+  }, [session, workshopId])
 
   const handlePayment = async (method: 'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments') => {
-    if (!workshop || !vehicle || !servicePricing) return
+    if (!workshop || !bookingData) return
 
     setProcessing(true)
     try {
@@ -106,16 +99,16 @@ export default function PaymentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workshopId,
-          vehicleId,
-          serviceType,
+          vehicleId: bookingData.vehicle.id,
+          serviceType: bookingData.service.type,
           date,
           time,
-          basePrice: servicePricing.basePrice || servicePricing.price,
+          basePrice: bookingData.pricing.servicePrice,
           balancingPrice: 0,
           storagePrice: 0,
           hasBalancing: false,
           hasStorage: false,
-          totalPrice: servicePricing.price || servicePricing.basePrice
+          totalPrice: bookingData.pricing.totalPrice
         })
       })
 
@@ -136,17 +129,17 @@ export default function PaymentPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             workshopId,
-            vehicleId,
-            serviceType,
+            vehicleId: bookingData.vehicle.id,
+            serviceType: bookingData.service.type,
             date,
             time,
-            amount: servicePricing.price || servicePricing.basePrice,
-            description: `${serviceLabels[serviceType] || serviceType} bei ${workshop.name}`,
+            amount: bookingData.pricing.totalPrice,
+            description: `${serviceLabels[bookingData.service.type] || bookingData.service.type} bei ${workshop.name}`,
             workshopName: workshop.name,
             customerName: session?.user?.name,
             customerEmail: session?.user?.email,
             installments: method === 'paypal-installments',
-            reservationId: reserveData.reservationId // Pass reservation ID to include in success URL
+            reservationId: reserveData.reservationId
           })
         })
 
@@ -159,21 +152,20 @@ export default function PaymentPage() {
         }
       } else {
         // Stripe - Create Checkout Session with specific payment method
-        // For bank-transfer, use 'customer_balance' payment method
         const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             workshopId,
-            vehicleId,
-            serviceType,
+            vehicleId: bookingData.vehicle.id,
+            serviceType: bookingData.service.type,
             date,
             time,
-            totalPrice: servicePricing.price || servicePricing.basePrice,
+            totalPrice: bookingData.pricing.totalPrice,
             workshopName: workshop.name,
-            serviceName: serviceLabels[serviceType] || serviceType,
-            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method, // Use customer_balance for bank transfer
-            reservationId: reserveData.reservationId // Pass reservation ID to include in success URL
+            serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
+            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method,
+            reservationId: reserveData.reservationId
           })
         })
 
@@ -224,11 +216,11 @@ export default function PaymentPage() {
     )
   }
 
-  if (!workshop || !vehicle || !servicePricing) {
+  if (!workshop || !bookingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Fehler beim Laden der Daten</p>
+          <p className="text-gray-600 mb-4">Fehler beim Laden der Buchungsdaten</p>
           <Link
             href={`/workshop/${workshopId}`}
             className="text-primary-600 hover:underline"
@@ -240,7 +232,7 @@ export default function PaymentPage() {
     )
   }
 
-  const totalPrice = servicePricing.price || servicePricing.basePrice || 0
+  const totalPrice = bookingData.pricing.totalPrice
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -289,7 +281,7 @@ export default function PaymentPage() {
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                       <Image
                         src={workshop.logoUrl}
-                        alt={workshop.name}
+                        alt={bookingData.workshop.name}
                         width={64}
                         height={64}
                         className="object-cover"
@@ -297,10 +289,10 @@ export default function PaymentPage() {
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="font-bold text-lg text-gray-900">{workshop.name}</p>
+                    <p className="font-bold text-lg text-gray-900">{bookingData.workshop.name}</p>
                     <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{workshop.street}, {workshop.postalCode} {workshop.city}</span>
+                      <span>{bookingData.workshop.city} • {bookingData.workshop.distance.toFixed(1)} km entfernt</span>
                     </div>
                   </div>
                 </div>
@@ -310,14 +302,57 @@ export default function PaymentPage() {
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Service</h3>
                 <div className="bg-primary-50 rounded-lg p-4">
-                  <p className="font-bold text-lg text-primary-900">
-                    {serviceLabels[serviceType] || serviceType}
-                  </p>
-                  {servicePricing.packageName && (
-                    <p className="text-sm text-primary-700 mt-1">{servicePricing.packageName}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-bold text-lg text-primary-900">
+                      {serviceLabels[bookingData.service.type] || bookingData.service.type}
+                    </p>
+                    <p className="font-semibold text-primary-900">
+                      {formatPrice(bookingData.pricing.servicePrice)}
+                    </p>
+                  </div>
+                  
+                  {/* Additional Services */}
+                  {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-primary-200">
+                      <p className="text-sm font-medium text-primary-800 mb-2">Zusatzleistungen:</p>
+                      {bookingData.additionalServices.map((service: any, index: number) => (
+                        <div key={index} className="flex items-center justify-between text-sm text-primary-700 mb-1">
+                          <span>+ {service.name}</span>
+                          <span className="font-medium">{formatPrice(service.price)}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
+
+              {/* Tire Info (if available) */}
+              {bookingData.tireBooking?.selectedTire && (
+                <div className="mb-6 pb-6 border-b border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Reifen</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="text-xs text-primary-600 font-medium mb-1">
+                          {bookingData.tireBooking.selectedTire.label}
+                        </p>
+                        <p className="font-bold text-gray-900">
+                          {bookingData.tireBooking.selectedTire.brand}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {bookingData.tireBooking.selectedTire.model}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {bookingData.tireBooking.selectedTire.quantity || 4}× à {formatPrice(bookingData.tireBooking.selectedTire.pricePerTire || 0)}
+                        </p>
+                      </div>
+                      <p className="font-bold text-lg text-gray-900">
+                        {formatPrice(bookingData.pricing.tirePrice)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Appointment Info */}
               <div className="mb-6 pb-6 border-b border-gray-200">
@@ -342,10 +377,10 @@ export default function PaymentPage() {
                     <Car className="w-5 h-5 text-gray-600" />
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {vehicle.make} {vehicle.model}
+                        {bookingData.vehicle.make} {bookingData.vehicle.model}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {vehicle.licensePlate} • {vehicle.year}
+                        {bookingData.vehicle.licensePlate} • {bookingData.vehicle.year}
                       </p>
                     </div>
                   </div>
@@ -361,10 +396,36 @@ export default function PaymentPage() {
 
               {/* Price Summary */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Service</span>
-                  <span className="font-semibold">{formatPrice(totalPrice)}</span>
+                <div className="space-y-2">
+                  {/* Service Price */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">
+                      {serviceLabels[bookingData.service.type] || bookingData.service.type}
+                    </span>
+                    <span className="font-semibold">{formatPrice(bookingData.pricing.servicePrice)}</span>
+                  </div>
+                  
+                  {/* Additional Services */}
+                  {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
+                    bookingData.additionalServices.map((service: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">+ {service.name}</span>
+                        <span className="font-medium">{formatPrice(service.price)}</span>
+                      </div>
+                    ))
+                  )}
+                  
+                  {/* Tire Price */}
+                  {bookingData.tireBooking?.selectedTire && bookingData.pricing.tirePrice > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">
+                        Reifen ({bookingData.tireBooking.selectedTire.quantity || 4}×)
+                      </span>
+                      <span className="font-semibold">{formatPrice(bookingData.pricing.tirePrice)}</span>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="border-t border-gray-200 mt-3 pt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Gesamt</span>

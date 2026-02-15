@@ -526,9 +526,51 @@ export default function WorkshopDetailPage() {
     const day = String(selectedDate.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
-    // URL für neue Payment-Seite mit allen Parametern
+    // Find selected vehicle details
+    const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle)
+    
+    // Save complete booking data to sessionStorage (secure, not in URL)
+    const bookingData = {
+      workshop: {
+        id: workshopId,
+        name: workshop.name,
+        city: workshop.city,
+        distance: workshop.distance,
+        rating: workshop.rating,
+        reviewCount: workshop.reviewCount,
+      },
+      service: {
+        type: serviceType,
+        basePrice: basePrice,
+        baseDuration: baseDuration,
+      },
+      additionalServices: additionalServices,
+      tireBooking: tireBookingData || null,
+      vehicle: selectedVehicleData ? {
+        id: selectedVehicleData.id,
+        make: selectedVehicleData.make,
+        model: selectedVehicleData.model,
+        year: selectedVehicleData.year,
+        licensePlate: selectedVehicleData.licensePlate,
+      } : null,
+      appointment: {
+        date: dateStr,
+        time: selectedSlot.time,
+      },
+      pricing: {
+        servicePrice: basePrice,
+        tirePrice: tireBookingData?.selectedTire?.totalPrice || 0,
+        additionalServicesPrice: additionalServices.reduce((sum, s) => sum + s.price, 0),
+        totalPrice: calculateTotalPrice(),
+      },
+      timestamp: Date.now(),
+    }
+    
+    sessionStorage.setItem('bookingData', JSON.stringify(bookingData))
+    console.log('💾 [BOOKING] Saved booking data to sessionStorage:', bookingData)
+    
+    // Navigate with minimal URL parameters (only IDs needed for API calls)
     const paymentUrl = `/workshop/${workshopId}/payment?` +
-      `service=${serviceType}&` +
       `date=${dateStr}&` +
       `time=${selectedSlot.time}&` +
       `vehicleId=${selectedVehicle}`

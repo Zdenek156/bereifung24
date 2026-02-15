@@ -956,47 +956,6 @@ export default function WorkshopDetailPage() {
             </div>
           )}
 
-          {/* Selected Vehicle Card */}
-          {tireBookingData?.selectedVehicle && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                🚗 Ausgewähltes Fahrzeug
-              </h3>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <p className="text-xl font-bold text-gray-900">
-                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
-                  </p>
-                  <p className="text-gray-600">
-                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
-                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
-                  </p>
-                  
-                  {/* License Plate */}
-                  {tireBookingData.selectedVehicle.licensePlate && (
-                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
-                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <circle cx="5" cy="8" r="1.5"/>
-                          <circle cx="12" cy="5" r="1.5"/>
-                          <circle cx="19" cy="8" r="1.5"/>
-                          <circle cx="5" cy="16" r="1.5"/>
-                          <circle cx="12" cy="19" r="1.5"/>
-                          <circle cx="19" cy="16" r="1.5"/>
-                        </svg>
-                        <span className="text-xs font-bold">D</span>
-                      </div>
-                      <div className="px-3 py-1 text-gray-900">
-                        {tireBookingData.selectedVehicle.licensePlate}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Selected Tires Card */}
           {tireBookingData && tireBookingData.hasTires && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -1195,6 +1154,47 @@ export default function WorkshopDetailPage() {
                   </div>
                 )
               )}
+            </div>
+          )}
+
+          {/* Selected Vehicle Card */}
+          {tireBookingData?.selectedVehicle && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewähltes Fahrzeug
+              </h3>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <p className="text-xl font-bold text-gray-900">
+                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
+                  </p>
+                  <p className="text-gray-600">
+                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
+                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
+                  </p>
+                  
+                  {/* License Plate */}
+                  {tireBookingData.selectedVehicle.licensePlate && (
+                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
+                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="5" cy="8" r="1.5"/>
+                          <circle cx="12" cy="5" r="1.5"/>
+                          <circle cx="19" cy="8" r="1.5"/>
+                          <circle cx="5" cy="16" r="1.5"/>
+                          <circle cx="12" cy="19" r="1.5"/>
+                          <circle cx="19" cy="16" r="1.5"/>
+                        </svg>
+                        <span className="text-xs font-bold">D</span>
+                      </div>
+                      <div className="px-3 py-1 text-gray-900">
+                        {tireBookingData.selectedVehicle.licensePlate}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

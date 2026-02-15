@@ -70,16 +70,17 @@ export default function WorkshopDetailPage() {
   const [tireBookingData, setTireBookingData] = useState<any>(null)
   const [availableServices, setAvailableServices] = useState<any[]>([])
 
-  // Fetch available slots when month changes
+  // Fetch available slots when component mounts
   useEffect(() => {
     if (!workshopId) return
     fetchAvailableSlots()
-  }, [workshopId, currentMonth])
+  }, [workshopId])
 
   const fetchAvailableSlots = async () => {
     try {
-      const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-      const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 2, 0)
+      const today = new Date()
+      const startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+      const endDate = new Date(today.getFullYear(), today.getMonth() + 2, 0)
       
       const response = await fetch(
         `/api/customer/direct-booking/${workshopId}/available-slots?` +

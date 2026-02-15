@@ -283,6 +283,40 @@ export default function NewHomePage() {
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // First try to restore from sessionStorage (back navigation from workshop)
+      const savedSearchState = sessionStorage.getItem('lastSearchState')
+      if (savedSearchState) {
+        try {
+          const searchState = JSON.parse(savedSearchState)
+          // Only restore if saved within last 30 minutes
+          if (Date.now() - searchState.timestamp < 30 * 60 * 1000) {
+            console.log('🔍 [Back Navigation] Restoring search from sessionStorage...', searchState)
+            setWorkshops(searchState.workshops || [])
+            setHasSearched(searchState.hasSearched || false)
+            setSelectedService(searchState.selectedService || 'WHEEL_CHANGE')
+            setPostalCode(searchState.postalCode || '')
+            setRadiusKm(searchState.radiusKm || 25)
+            setCustomerLocation(searchState.customerLocation || null)
+            setSelectedVehicleId(searchState.selectedVehicleId || '')
+            setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
+            setSelectedPackages(searchState.selectedPackages || [])
+            setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
+            // Restore scroll position
+            if (searchState.scrollPosition) {
+              setTimeout(() => window.scrollTo(0, searchState.scrollPosition), 100)
+            }
+            console.log('✅ [Back Navigation] Search restored successfully')
+            return // Don't try URL restore if sessionStorage worked
+          } else {
+            console.log('⚠️ [Back Navigation] Saved state too old, clearing...')
+            sessionStorage.removeItem('lastSearchState')
+          }
+        } catch (e) {
+          console.error('Error restoring search from sessionStorage:', e)
+        }
+      }
+      
+      // Fallback: Try URL parameters (hard refresh)
       const searchParams = new URLSearchParams(window.location.search)
       const savedWorkshops = searchParams.get('results')
       const savedService = searchParams.get('service')
@@ -1035,6 +1069,23 @@ export default function NewHomePage() {
       servicePrice: workshop.totalPrice || 0
     }
     sessionStorage.setItem('serviceBookingData', JSON.stringify(serviceData))
+    
+    // CRITICAL: Save complete search state for back navigation
+    const searchState = {
+      workshops,
+      hasSearched,
+      selectedService,
+      postalCode,
+      radiusKm,
+      customerLocation,
+      selectedVehicleId,
+      tireDimensions,
+      selectedPackages,
+      includeTires,
+      scrollPosition: window.scrollY,
+      timestamp: Date.now()
+    }
+    sessionStorage.setItem('lastSearchState', JSON.stringify(searchState))
     
     // Navigate to workshop detail page with all workshop data as URL params
     const params = new URLSearchParams({

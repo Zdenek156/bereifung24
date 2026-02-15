@@ -211,27 +211,8 @@ export default function WorkshopDetailPage() {
     loadWorkshop()
   }, [workshopId])
 
-  // Save referrer URL for back navigation
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const referrer = document.referrer
-      if (referrer && referrer.includes(window.location.origin)) {
-        sessionStorage.setItem('workshop_referrer', referrer)
-      }
-    }
-  }, [])
-
-  // Get back URL with preserved search parameters
-  const getBackUrl = () => {
-    if (typeof window !== 'undefined') {
-      const savedReferrer = sessionStorage.getItem('workshop_referrer')
-      if (savedReferrer && savedReferrer.includes(window.location.origin)) {
-        const url = new URL(savedReferrer)
-        return url.pathname + url.search
-      }
-    }
-    return '/'
-  }
+  // Back navigation - always go to homepage which restores search from sessionStorage
+  const getBackUrl = () => '/'
 
   // Load tire booking data from sessionStorage
   useEffect(() => {
@@ -898,6 +879,16 @@ export default function WorkshopDetailPage() {
             </div>
           </div>
 
+          {/* Workshop Description */}
+          {workshop?.description && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">📜 Über die Werkstatt</h3>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {workshop?.description}
+              </p>
+            </div>
+          )}
+
           {/* Selected Service Card */}
           {tireBookingData && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -1195,16 +1186,6 @@ export default function WorkshopDetailPage() {
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Workshop Description */}
-          {workshop?.description && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">📜 Über die Werkstatt</h3>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                {workshop?.description}
-              </p>
             </div>
           )}
 

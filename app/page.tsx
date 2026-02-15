@@ -2589,21 +2589,86 @@ export default function NewHomePage() {
                               )}
 
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (
-                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    🔹 Vorderachse · {workshop.tireFront?.dimensions}
-                                  </p>
-                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {workshop.tireFrontRecommendations.map((rec: any, idx: number) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => setSelectedTireFrontIndices(prev => ({...prev, [workshop.id]: idx}))}
-                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
-                                          (selectedTireFrontIndices[workshop.id] ?? 0) === idx
-                                            ? 'border-primary-500 bg-white shadow-sm'
-                                            : 'border-transparent bg-white hover:border-gray-300'
-                                        }`}
+                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (() => {
+                                const workshopKey = `${workshop.id}-front`
+                                const filteredTires = filterAndSortTires(workshop.tireFrontRecommendations, workshopKey)
+                                const isExpanded = expandedTireWorkshops[workshopKey] || false
+                                const displayedTires = isExpanded ? filteredTires : filteredTires.slice(0, 3)
+                                const hasMoreTires = filteredTires.length > 3
+                                const currentFilter = tireQualityFilter[workshopKey] || 'all'
+                                const currentSort = tireSortBy[workshopKey] || 'price'
+
+                                return (
+                                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                    {/* Header with tire count */}
+                                    <div className="flex items-center justify-between mb-2">
+                                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        🔹 Vorderachse · {workshop.tireFront?.dimensions} <span className="text-gray-400">({filteredTires.length} Reifen)</span>
+                                      </p>
+                                    </div>
+
+                                    {/* Quick Filters + Sorting */}
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                                      {/* Quality filter buttons */}
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'all'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'all' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          🔍 Alle
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'budget'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'budget' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          💰 Budget
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'quality'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'quality' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          ✓ Qualität
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'premium' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          ⭐ Premium
+                                        </button>
+                                      </div>
+
+                                      {/* Sort dropdown */}
+                                      <select
+                                        value={currentSort}
+                                        onChange={(e) => setTireSortBy(prev => ({...prev, [workshopKey]: e.target.value as 'price' | 'brand' | 'label'}))}
+                                        className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                      >
+                                        <option value="price">Preis ↑</option>
+                                        <option value="brand">Marke A-Z</option>
+                                        <option value="label">EU-Label</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      {displayedTires.map((rec: any, idx: number) => {
+                                        const originalIdx = workshop.tireFrontRecommendations.findIndex((r: any) => r === rec)
+                                        return (
+                                        <button
+                                          key={idx}
+                                          onClick={() => setSelectedTireFrontIndices(prev => ({...prev, [workshop.id]: originalIdx}))}
+                                          className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                            (selectedTireFrontIndices[workshop.id] ?? 0) === originalIdx
+                                              ? 'border-primary-500 bg-white shadow-sm'
+                                              : 'border-transparent bg-white hover:border-gray-300'
+                                          }`}
                                       >
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
@@ -2635,27 +2700,104 @@ export default function NewHomePage() {
                                         </div>
                                         <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
                                       </button>
-                                    ))}
+                                      )})
+                                    }
+                                    </div>
+
+                                    {/* Show more button */}
+                                    {hasMoreTires && (
+                                      <button
+                                        onClick={() => setExpandedTireWorkshops(prev => ({...prev, [workshopKey]: !isExpanded}))}
+                                        className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
+                                      >
+                                        {isExpanded ? 'Weniger anzeigen' : `${filteredTires.length - 3} weitere Reifen anzeigen`}
+                                      </button>
+                                    )}
                                   </div>
-                                </div>
-                              )}
+                                )
+                              })()}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (
-                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    🔸 Hinterachse · {workshop.tireRear?.dimensions}
-                                  </p>
-                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {workshop.tireRearRecommendations.map((rec: any, idx: number) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => setSelectedTireRearIndices(prev => ({...prev, [workshop.id]: idx}))}
-                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
-                                          (selectedTireRearIndices[workshop.id] ?? 0) === idx
-                                            ? 'border-primary-500 bg-white shadow-sm'
-                                            : 'border-transparent bg-white hover:border-gray-300'
-                                        }`}
+                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (() => {
+                                const workshopKey = `${workshop.id}-rear`
+                                const filteredTires = filterAndSortTires(workshop.tireRearRecommendations, workshopKey)
+                                const isExpanded = expandedTireWorkshops[workshopKey] || false
+                                const displayedTires = isExpanded ? filteredTires : filteredTires.slice(0, 3)
+                                const hasMoreTires = filteredTires.length > 3
+                                const currentFilter = tireQualityFilter[workshopKey] || 'all'
+                                const currentSort = tireSortBy[workshopKey] || 'price'
+
+                                return (
+                                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                    {/* Header with tire count */}
+                                    <div className="flex items-center justify-between mb-2">
+                                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        🔸 Hinterachse · {workshop.tireRear?.dimensions} <span className="text-gray-400">({filteredTires.length} Reifen)</span>
+                                      </p>
+                                    </div>
+
+                                    {/* Quick Filters + Sorting */}
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                                      {/* Quality filter buttons */}
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'all'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'all' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          🔍 Alle
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'budget'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'budget' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          💰 Budget
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'quality'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'quality' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          ✓ Qualität
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}
+                                          className={`px-2 py-1 text-xs rounded-md transition ${
+                                            currentFilter === 'premium' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          ⭐ Premium
+                                        </button>
+                                      </div>
+
+                                      {/* Sort dropdown */}
+                                      <select
+                                        value={currentSort}
+                                        onChange={(e) => setTireSortBy(prev => ({...prev, [workshopKey]: e.target.value as 'price' | 'brand' | 'label'}))}
+                                        className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                      >
+                                        <option value="price">Preis ↑</option>
+                                        <option value="brand">Marke A-Z</option>
+                                        <option value="label">EU-Label</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      {displayedTires.map((rec: any, idx: number) => {
+                                        const originalIdx = workshop.tireRearRecommendations.findIndex((r: any) => r === rec)
+                                        return (
+                                        <button
+                                          key={idx}
+                                          onClick={() => setSelectedTireRearIndices(prev => ({...prev, [workshop.id]: originalIdx}))}
+                                          className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                            (selectedTireRearIndices[workshop.id] ?? 0) === originalIdx
+                                              ? 'border-primary-500 bg-white shadow-sm'
+                                              : 'border-transparent bg-white hover:border-gray-300'
+                                          }`}
                                       >
                                         <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
                                         <p className="text-sm font-bold text-gray-900 truncate">{rec.tire.brand}</p>
@@ -2687,10 +2829,22 @@ export default function NewHomePage() {
                                         </div>
                                         <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.pricePerTire)} × {rec.quantity}</p>
                                       </button>
-                                    ))}
+                                      )})
+                                    }
+                                    </div>
+
+                                    {/* Show more button */}
+                                    {hasMoreTires && (
+                                      <button
+                                        onClick={() => setExpandedTireWorkshops(prev => ({...prev, [workshopKey]: !isExpanded}))}
+                                        className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
+                                      >
+                                        {isExpanded ? 'Weniger anzeigen' : `${filteredTires.length - 3} weitere Reifen anzeigen`}
+                                      </button>
+                                    )}
                                   </div>
-                                </div>
-                              )}
+                                )
+                              })()}
 
                               {/* Tire not available warning - only for TIRE_CHANGE service */}
                               {selectedService === 'TIRE_CHANGE' && showTires && !workshop.tireAvailable && (

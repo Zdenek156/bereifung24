@@ -870,6 +870,69 @@ export default function WorkshopDetailPage() {
             </div>
           </div>
 
+          {/* Selected Service Card */}
+          {tireBookingData && (
+            <div className="bg-gradient-to-r from-blue-50 to-primary-50 rounded-xl shadow-sm border-2 border-primary-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🔧 Gewählter Service
+              </h3>
+              
+              <div className="space-y-3">
+                {/* Main Service */}
+                <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-primary-200">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {tireBookingData.serviceName === 'TIRE_CHANGE' ? '🔄 Reifenmontage' : 
+                       tireBookingData.serviceName === 'WHEEL_CHANGE' ? '⚙️ Räderwechsel' :
+                       tireBookingData.serviceName === 'ALIGNMENT_BOTH' ? '📐 Achsvermessung' :
+                       '🔧 Service'}
+                    </p>
+                    {tireBookingData.tireCount > 0 && (
+                      <p className="text-sm text-gray-600">
+                        {tireBookingData.tireCount} Reifen
+                      </p>
+                    )}
+                  </div>
+                  {tireBookingData.servicePrice && (
+                    <p className="text-lg font-bold text-primary-600">
+                      {formatEUR(tireBookingData.servicePrice)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Disposal Service */}
+                {tireBookingData.hasDisposal && tireBookingData.disposalPrice > 0 && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-green-200">
+                    <div>
+                      <p className="font-semibold text-gray-900">♻️ Entsorgung</p>
+                      <p className="text-sm text-gray-600">
+                        Fachgerechte Entsorgung ({tireBookingData.tireCount}× {formatEUR(tireBookingData.disposalPrice / tireBookingData.tireCount)})
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-green-600">
+                      {formatEUR(tireBookingData.disposalPrice)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Runflat Service */}
+                {tireBookingData.hasRunflat && tireBookingData.runflatPrice > 0 && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-orange-200">
+                    <div>
+                      <p className="font-semibold text-gray-900">⚠️ Runflat-Reifen</p>
+                      <p className="text-sm text-gray-600">
+                        Spezialmontage für notlauftaugliche Reifen
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-orange-600">
+                      {formatEUR(tireBookingData.runflatPrice)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Selected Tires Card */}
           {tireBookingData && tireBookingData.hasTires && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

@@ -1005,13 +1005,34 @@ export default function NewHomePage() {
       selectedTire: selectedRec,
       selectedFrontTire: workshop.isMixedTires ? selectedFrontRec : null,
       selectedRearTire: workshop.isMixedTires ? selectedRearRec : null,
-      selectedPackages: selectedPackages
+      selectedPackages: selectedPackages,
+      // Service information
+      serviceName: selectedService,
+      servicePrice: workshop.servicePrice || basePrice,
+      // Additional services with prices
+      hasDisposal: selectedPackages.includes('with_disposal'),
+      disposalPrice: workshop.disposalFeeApplied || 0,
+      hasRunflat: selectedPackages.includes('runflat'),
+      runflatPrice: workshop.runflatSurcharge || 0,
+      // Tire count for per-tire calculations
+      tireCount: workshop.isMixedTires ? 4 : (
+        selectedPackages.includes('two_tires') ? 2 :
+        selectedPackages.includes('four_tires') ? 4 : 0
+      )
     }
     
-    // Save tire data to sessionStorage for workshop page
+    // Save tire and service data to sessionStorage for workshop page
     if (tireBookingData.hasTires) {
       sessionStorage.setItem('tireBookingData', JSON.stringify(tireBookingData))
     }
+    
+    // Also save service data separately for non-tire services
+    const serviceData = {
+      serviceName: selectedService,
+      selectedPackages: selectedPackages,
+      servicePrice: workshop.totalPrice || 0
+    }
+    sessionStorage.setItem('serviceBookingData', JSON.stringify(serviceData))
     
     // Navigate to workshop detail page with all workshop data as URL params
     const params = new URLSearchParams({

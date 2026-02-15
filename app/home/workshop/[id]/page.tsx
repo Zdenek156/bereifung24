@@ -220,6 +220,12 @@ export default function WorkshopDetailPage() {
           const data = JSON.parse(savedData)
           console.log('📦 [WORKSHOP] Loaded tire booking data:', data)
           setTireBookingData(data)
+          
+          // Auto-select vehicle if provided
+          if (data.selectedVehicle?.id) {
+            console.log('🚗 [WORKSHOP] Auto-selecting vehicle:', data.selectedVehicle.id)
+            setSelectedVehicle(data.selectedVehicle.id)
+          }
         } catch (e) {
           console.error('Error parsing tire booking data:', e)
         }
@@ -878,7 +884,7 @@ export default function WorkshopDetailPage() {
               </h3>
               
               <div className="space-y-3">
-                {/* Main Service */}
+                {/* Main Service - WITHOUT tire info */}
                 <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-primary-200">
                   <div>
                     <p className="font-semibold text-gray-900">
@@ -887,11 +893,6 @@ export default function WorkshopDetailPage() {
                        tireBookingData.serviceName === 'ALIGNMENT_BOTH' ? '📐 Achsvermessung' :
                        '🔧 Service'}
                     </p>
-                    {tireBookingData.tireCount > 0 && (
-                      <p className="text-sm text-gray-600">
-                        {tireBookingData.tireCount} Reifen
-                      </p>
-                    )}
                   </div>
                   {tireBookingData.servicePrice && (
                     <p className="text-lg font-bold text-primary-600">
@@ -929,6 +930,47 @@ export default function WorkshopDetailPage() {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Selected Vehicle Card */}
+          {tireBookingData?.selectedVehicle && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewähltes Fahrzeug
+              </h3>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <p className="text-xl font-bold text-gray-900">
+                    {tireBookingData.selectedVehicle.manufacturer} {tireBookingData.selectedVehicle.model}
+                  </p>
+                  <p className="text-gray-600">
+                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
+                    {tireBookingData.selectedVehicle.modelYear && <span>Bj. {tireBookingData.selectedVehicle.modelYear}</span>}
+                  </p>
+                  
+                  {/* License Plate */}
+                  {tireBookingData.selectedVehicle.licensePlate && (
+                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
+                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="5" cy="8" r="1.5"/>
+                          <circle cx="12" cy="5" r="1.5"/>
+                          <circle cx="19" cy="8" r="1.5"/>
+                          <circle cx="5" cy="16" r="1.5"/>
+                          <circle cx="12" cy="19" r="1.5"/>
+                          <circle cx="19" cy="16" r="1.5"/>
+                        </svg>
+                        <span className="text-xs font-bold">D</span>
+                      </div>
+                      <div className="px-3 py-1 text-gray-900">
+                        {tireBookingData.selectedVehicle.licensePlate}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1334,8 +1376,8 @@ export default function WorkshopDetailPage() {
             </div>
           )}
 
-          {/* Vehicle Selection */}
-          {selectedSlot && session && (
+          {/* Vehicle Selection - Only show if no vehicle already selected from previous page */}
+          {selectedSlot && session && !tireBookingData?.selectedVehicle && (
             <div ref={vehicleSelectionRef} className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">

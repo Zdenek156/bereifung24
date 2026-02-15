@@ -26,7 +26,7 @@ export async function GET(
             phone: true
           }
         },
-        services: {
+        workshopServices: {
           select: {
             id: true,
             type: true,
@@ -79,7 +79,7 @@ export async function GET(
           description: workshop.description || null,
           website: workshop.website || null
         },
-        services: workshop.services || []
+        services: workshop.workshopServices || []
       }
     })
   } catch (error) {

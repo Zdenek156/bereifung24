@@ -1383,8 +1383,8 @@ export default function NewHomePage() {
           {/* Search Card - Improved UX with Visible Service Tabs */}
           <div className="max-w-5xl mx-auto">
             {/* Service Tabs - Visible above search card */}
-            <div className="mb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
-              <div className="flex gap-2 min-w-max pb-2">
+            <div className="mb-3 overflow-x-auto md:overflow-visible scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
+              <div className="flex gap-2 min-w-max md:min-w-0 md:justify-center pb-2">
                 {SERVICES.slice(0, 5).map((service) => {
                   const Icon = service.icon
                   const isActive = selectedService === service.id
@@ -1392,7 +1392,7 @@ export default function NewHomePage() {
                     <button
                       key={service.id}
                       onClick={() => handleServiceChange(service.id)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${
                         isActive
                           ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
                           : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'

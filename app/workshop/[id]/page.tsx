@@ -471,6 +471,10 @@ export default function WorkshopDetailPage() {
 
   const canBook = selectedDate && selectedSlot && selectedVehicle
 
+  const handleAdditionalServicesSelected = (services: any[]) => {
+    setAdditionalServices(services)
+  }
+
   const handleBooking = () => {
     if (!canBook) return
     
@@ -1264,9 +1268,9 @@ export default function WorkshopDetailPage() {
         <AddServicesModal
           isOpen={showServicesModal}
           onClose={() => setShowServicesModal(false)}
-          onConfirm={handleAdditionalServicesSelected}
+          onServicesSelected={handleAdditionalServicesSelected}
           workshopId={workshopId}
-          selectedServices={additionalServices}
+          selectedServiceType={serviceType}
         />
       )}
 

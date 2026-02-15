@@ -166,6 +166,11 @@ export default function NewHomePage() {
   const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
   const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
   
+  // Expanded tire selection states
+  const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, boolean>>({}) // workshopId -> expanded
+  const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'budget' | 'quality' | 'premium'>>({}) // workshopId -> filter
+  const [tireSortBy, setTireSortBy] = useState<Record<string, 'price' | 'brand' | 'label'>>({}) // workshopId -> sort
+  
   // Ref for scrolling to search results
   const searchResultsRef = useRef<HTMLElement>(null)
   
@@ -1112,6 +1117,47 @@ export default function NewHomePage() {
       service: selectedService,
     })
     router.push(`/workshop/${workshop.id}?${params.toString()}`)
+  }
+
+  // Helper function to filter and sort tire recommendations
+  const filterAndSortTires = (tires: any[], workshopId: string) => {
+    if (!tires || tires.length === 0) return []
+    
+    const qualityFilter = tireQualityFilter[workshopId] || 'all'
+    const sortBy = tireSortBy[workshopId] || 'price'
+    
+    // Filter by quality
+    let filtered = [...tires]
+    if (qualityFilter !== 'all') {
+      filtered = filtered.filter((tire: any) => {
+        const label = tire.label?.toLowerCase() || ''
+        if (qualityFilter === 'budget') return label.includes('günstig') || label.includes('budget')
+        if (qualityFilter === 'quality') return label.includes('qualität') || label.includes('quality')
+        if (qualityFilter === 'premium') return label.includes('premium') || label.includes('testsieger')
+        return true
+      })
+    }
+    
+    // Sort
+    filtered.sort((a: any, b: any) => {
+      if (sortBy === 'price') {
+        const priceA = a.totalPrice || a.pricePerTire || 0
+        const priceB = b.totalPrice || b.pricePerTire || 0
+        return priceA - priceB
+      } else if (sortBy === 'brand') {
+        const brandA = a.brand || a.tire?.brand || ''
+        const brandB = b.brand || b.tire?.brand || ''
+        return brandA.localeCompare(brandB)
+      } else if (sortBy === 'label') {
+        // Sort by EU label (A is best)
+        const labelA = a.labelFuelEfficiency || a.tire?.labelFuelEfficiency || 'Z'
+        const labelB = b.labelFuelEfficiency || b.tire?.labelFuelEfficiency || 'Z'
+        return labelA.localeCompare(labelB)
+      }
+      return 0
+    })
+    
+    return filtered
   }
 
   return (
@@ -2387,56 +2433,131 @@ export default function NewHomePage() {
                                 return null
                               })()}
 
-                              {/* Tire Recommendations Panel */}
-                              {showTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (
-                                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Reifen auswählen · {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
-                                  </p>
-                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {workshop.tireRecommendations.map((rec: any, idx: number) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => setSelectedTireIndices(prev => ({...prev, [workshop.id]: idx}))}
-                                        className={`text-left p-2.5 rounded-lg border-2 transition-all ${
-                                          tireIdx === idx
-                                            ? 'border-primary-500 bg-white shadow-sm'
-                                            : 'border-transparent bg-white hover:border-gray-300'
-                                        }`}
+                              {/* Tire Recommendations Panel - Enhanced with Expandable Grid */}
+                              {showTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (() => {
+                                const isExpanded = expandedTireWorkshops[workshop.id] || false
+                                const allTires = filterAndSortTires(workshop.tireRecommendations, workshop.id)
+                                const displayedTires = isExpanded ? allTires : allTires.slice(0, 3)
+                                const remainingCount = allTires.length - 3
+                                const currentFilter = tireQualityFilter[workshop.id] || 'all'
+                                const currentSort = tireSortBy[workshop.id] || 'price'
+                                
+                                return (
+                                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                    {/* Header with dimension */}
+                                    <div className="flex items-center justify-between mb-3">
+                                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Reifen auswählen · {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                      </p>
+                                      <span className="text-xs text-gray-500">{allTires.length} verfügbar</span>
+                                    </div>
+                                    
+                                    {/* Quick Filters & Sort */}
+                                    <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                                      {/* Quality Filter Buttons */}
+                                      <div className="flex gap-1 flex-wrap">
+                                        {[
+                                          { id: 'all', label: 'Alle', icon: '🔍' },
+                                          { id: 'budget', label: 'Budget', icon: '💰' },
+                                          { id: 'quality', label: 'Qualität', icon: '✓' },
+                                          { id: 'premium', label: 'Premium', icon: '⭐' },
+                                        ].map((filter) => (
+                                          <button
+                                            key={filter.id}
+                                            onClick={() => setTireQualityFilter(prev => ({ ...prev, [workshop.id]: filter.id as any }))}
+                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                                              currentFilter === filter.id
+                                                ? 'bg-primary-600 text-white shadow-sm'
+                                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                            }`}
+                                          >
+                                            {filter.icon} {filter.label}
+                                          </button>
+                                        ))}
+                                      </div>
+                                      
+                                      {/* Sort Dropdown */}
+                                      <select
+                                        value={currentSort}
+                                        onChange={(e) => setTireSortBy(prev => ({ ...prev, [workshop.id]: e.target.value as any }))}
+                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                                       >
-                                        <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
-                                        <p className="text-sm font-bold text-gray-900 truncate">{rec.brand}</p>
-                                        <p className="text-xs text-gray-500 truncate mb-0.5">{rec.model}</p>
-                                        {/* Safety: Show Load & Speed Index */}
-                                        {(rec.loadIndex || rec.speedIndex) && (
-                                          <p className="text-xs text-gray-600 font-medium mb-1.5">
-                                            {rec.loadIndex && <span className="text-green-700">{rec.loadIndex}</span>}
-                                            {rec.loadIndex && rec.speedIndex && <span className="text-gray-400 mx-0.5">/</span>}
-                                            {rec.speedIndex && <span className="text-blue-700">{rec.speedIndex}</span>}
-                                          </p>
+                                        <option value="price">Preis ↑</option>
+                                        <option value="brand">Marke A-Z</option>
+                                        <option value="label">EU-Label</option>
+                                      </select>
+                                    </div>
+                                    
+                                    {/* Tire Grid */}
+                                    <div className={`grid grid-cols-1 ${isExpanded ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-3'} gap-2 mb-2`}>
+                                      {displayedTires.map((rec: any, idx: number) => {
+                                        const originalIdx = allTires.indexOf(rec)
+                                        return (
+                                          <button
+                                            key={idx}
+                                            onClick={() => setSelectedTireIndices(prev => ({...prev, [workshop.id]: originalIdx}))}
+                                            className={`text-left p-2.5 rounded-lg border-2 transition-all ${
+                                              tireIdx === originalIdx
+                                                ? 'border-primary-500 bg-white shadow-md ring-2 ring-primary-200'
+                                                : 'border-transparent bg-white hover:border-gray-300'
+                                            }`}
+                                          >
+                                            <p className="text-xs font-bold text-primary-600 mb-0.5">{rec.label}</p>
+                                            <p className="text-sm font-bold text-gray-900 truncate">{rec.brand}</p>
+                                            <p className="text-xs text-gray-500 truncate mb-0.5">{rec.model}</p>
+                                            {/* Safety: Show Load & Speed Index */}
+                                            {(rec.loadIndex || rec.speedIndex) && (
+                                              <p className="text-xs text-gray-600 font-medium mb-1.5">
+                                                {rec.loadIndex && <span className="text-green-700">{rec.loadIndex}</span>}
+                                                {rec.loadIndex && rec.speedIndex && <span className="text-gray-400 mx-0.5">/</span>}
+                                                {rec.speedIndex && <span className="text-blue-700">{rec.speedIndex}</span>}
+                                              </p>
+                                            )}
+                                            <div className="flex gap-1 mb-1.5">
+                                              {rec.labelFuelEfficiency && (
+                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                                  {rec.labelFuelEfficiency}
+                                                </span>
+                                              )}
+                                              {rec.labelWetGrip && (
+                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelWetGrip)}`} title="Nasshaftung">
+                                                  {rec.labelWetGrip}
+                                                </span>
+                                              )}
+                                              {rec.labelNoise && (
+                                                <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getNoiseColor(rec.labelNoise)}`} title={`Lautstärke: ${rec.labelNoise} dB`}>
+                                                  {getNoiseWaves(rec.labelNoise)} {rec.labelNoise}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-900">{formatEUR(rec.totalPrice || rec.pricePerTire || 0)}</p>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                    
+                                    {/* Show More / Less Button */}
+                                    {allTires.length > 3 && (
+                                      <button
+                                        onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: !isExpanded }))}
+                                        className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-primary-600 font-semibold text-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 transition-all flex items-center justify-center gap-2"
+                                      >
+                                        {isExpanded ? (
+                                          <>
+                                            <ChevronUp className="w-4 h-4" />
+                                            Weniger anzeigen
+                                          </>
+                                        ) : (
+                                          <>
+                                            <ChevronDown className="w-4 h-4" />
+                                            {remainingCount} weitere Reifen anzeigen
+                                          </>
                                         )}
-                                        <div className="flex gap-1">
-                                          {rec.labelFuelEfficiency && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
-                                              {rec.labelFuelEfficiency}
-                                            </span>
-                                          )}
-                                          {rec.labelWetGrip && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelWetGrip)}`} title="Nasshaftung">
-                                              {rec.labelWetGrip}
-                                            </span>
-                                          )}
-                                          {rec.labelNoise && (
-                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getNoiseColor(rec.labelNoise)}`} title={`Lautstärke: ${rec.labelNoise} dB`}>
-                                              {getNoiseWaves(rec.labelNoise)} {rec.labelNoise}
-                                            </span>
-                                          )}
-                                        </div>
                                       </button>
-                                    ))}
+                                    )}
                                   </div>
-                                </div>
-                              )}
+                                )
+                              })()}
 
                               {/* Brand Selector (for sameBrand filter with multiple options) */}
                               {showTires && workshop.isMixedTires && workshop.brandOptions && workshop.brandOptions.length > 1 && (

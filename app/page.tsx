@@ -153,7 +153,7 @@ export default function NewHomePage() {
   const [tireBudgetMin, setTireBudgetMin] = useState<number>(50)
   const [tireBudgetMax, setTireBudgetMax] = useState<number>(500)
   const [selectedSeason, setSelectedSeason] = useState<string>('s') // 's', 'w', 'g', or '' - Default to Summer
-  const [tireQuality, setTireQuality] = useState<string>('quality') // 'premium', 'quality', 'budget', or ''
+  const [tireQuality, setTireQuality] = useState<string>('') // Removed from global filters - card-level filtering only
   const [fuelEfficiency, setFuelEfficiency] = useState<string>('') // A-G or ''
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
   const [require3PMSF, setRequire3PMSF] = useState(false)
@@ -1873,62 +1873,6 @@ export default function NewHomePage() {
                                     className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                                   />
                                   <span className="text-sm">🔄 Ganzjahresreifen</span>
-                                </label>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 5. Qualitätsstufe (only if includeTires) */}
-                          {includeTires && (
-                            <div className="p-4 border-b border-gray-200">
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                🏆 Qualitätsstufe
-                              </h4>
-                              <div className="space-y-1">
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireQuality"
-                                    checked={tireQuality === 'premium'}
-                                    onChange={() => {
-                                      setTireQuality('premium')
-                                      if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'premium')
-                                      }
-                                    }}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">⭐ Premium-Reifen</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireQuality"
-                                    checked={tireQuality === 'quality'}
-                                    onChange={() => {
-                                      setTireQuality('quality')
-                                      if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'quality')
-                                      }
-                                    }}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">✓ Qualitäts-Reifen</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireQuality"
-                                    checked={tireQuality === 'budget'}
-                                    onChange={() => {
-                                      setTireQuality('budget')
-                                      if (hasSearched && customerLocation) {
-                                        searchWorkshops(customerLocation, undefined, undefined, undefined, 'budget')
-                                      }
-                                    }}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">💰 Budget-Reifen</span>
                                 </label>
                               </div>
                             </div>

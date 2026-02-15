@@ -1008,7 +1008,7 @@ export default function NewHomePage() {
       selectedPackages: selectedPackages,
       // Service information
       serviceName: selectedService,
-      servicePrice: workshop.totalPrice || 0,
+      servicePrice: workshop.basePrice || 0,
       // Additional services with prices
       hasDisposal: selectedPackages.includes('with_disposal'),
       disposalPrice: workshop.disposalFeeApplied || 0,

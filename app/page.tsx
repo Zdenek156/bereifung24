@@ -1126,7 +1126,7 @@ export default function NewHomePage() {
     const qualityFilter = tireQualityFilter[workshopId] || 'all'
     const sortBy = tireSortBy[workshopId] || 'price'
     
-    // Helper: Determine quality category based on EU labels (strict: all 3 must match)
+    // Helper: Determine quality category based on EU labels (flexible: 2 of 3 must match)
     const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' | null => {
       // Extract EU label values
       const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
@@ -1154,20 +1154,19 @@ export default function NewHomePage() {
       const wetCategory = (['A', 'B'].includes(wetGrip.toUpperCase())) ? 'premium' :
                          (['B', 'C'].includes(wetGrip.toUpperCase())) ? 'quality' : 'budget'
       
-      // All 3 criteria must match the same category (strict)
-      if (fuelCategory === 'premium' && wetCategory === 'premium' && noiseCategory === 'premium') {
-        return 'premium'
-      } else if (fuelCategory === 'quality' && wetCategory === 'quality' && noiseCategory === 'quality') {
-        return 'quality'
-      } else if (fuelCategory === 'budget' && wetCategory === 'budget' && noiseCategory === 'budget') {
-        return 'budget'
-      }
-      
-      // Mixed categories: assign to lowest common denominator
+      // Count how many criteria match each category
       const categories = [fuelCategory, wetCategory, noiseCategory]
-      if (categories.includes('budget')) return 'budget'
-      if (categories.includes('quality')) return 'quality'
-      return 'premium'
+      const premiumCount = categories.filter(c => c === 'premium').length
+      const qualityCount = categories.filter(c => c === 'quality').length
+      const budgetCount = categories.filter(c => c === 'budget').length
+      
+      // Assign to category if at least 2 of 3 criteria match
+      if (premiumCount >= 2) return 'premium'
+      if (qualityCount >= 2) return 'quality'
+      if (budgetCount >= 2) return 'budget'
+      
+      // Edge case: all different (1 premium, 1 quality, 1 budget) → assign to middle (quality)
+      return 'quality'
     }
     
     // Filter: Remove tires without complete EU labels

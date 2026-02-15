@@ -2567,6 +2567,10 @@ export default function NewHomePage() {
                                                         brandOpt.label === 'Testsieger' ? 'text-purple-600' :
                                                         'text-blue-600'
                                       
+                                      // Calculate total price including service costs
+                                      const brandOptionTirePrice = (brandOpt.front?.totalPrice ?? 0) + (brandOpt.rear?.totalPrice ?? 0)
+                                      const brandOptionTotalPrice = (workshop.totalPrice || 0) - defaultTirePrice + brandOptionTirePrice
+                                      
                                       return (
                                         <button
                                           key={idx}
@@ -2580,7 +2584,7 @@ export default function NewHomePage() {
                                           <p className={`text-xs font-bold mb-1 ${labelColor}`}>{brandOpt.label}</p>
                                           <p className="text-sm font-bold text-gray-900 mb-0.5">{brandOpt.brand}</p>
                                           <p className="text-xs text-gray-600 mb-2">Vorne + Hinten</p>
-                                          <p className="text-lg font-bold text-primary-600">{formatEUR(brandOpt.price)}</p>
+                                          <p className="text-lg font-bold text-primary-600">{formatEUR(brandOptionTotalPrice)}</p>
                                         </button>
                                       )
                                     })}

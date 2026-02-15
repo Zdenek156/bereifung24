@@ -68,6 +68,7 @@ export default function WorkshopDetailPage() {
   const [baseDuration, setBaseDuration] = useState(60)
   
   const [tireBookingData, setTireBookingData] = useState<any>(null)
+  const [availableServices, setAvailableServices] = useState<any[]>([])
 
   // Fetch available slots when month changes
   useEffect(() => {
@@ -207,28 +208,26 @@ export default function WorkshopDetailPage() {
     }
   }
 
-  // Service highlights based on service type
-  const getServiceHighlights = () => {
-    switch (serviceType) {
-      case 'TIRE_CHANGE':
-        return [
-          { icon: <Wrench className="w-5 h-5" />, text: 'Modernste Montiergeräte' },
-          { icon: <Shield className="w-5 h-5" />, text: 'RDKS-Service inklusive' },
-          { icon: <Award className="w-5 h-5" />, text: 'Zertifizierte Mechaniker' },
-        ]
-      case 'WHEEL_CHANGE':
-        return [
-          { icon: <Package className="w-5 h-5" />, text: 'Professionelle Einlagerung' },
-          { icon: <Wrench className="w-5 h-5" />, text: 'Schneller Räderwechsel' },
-          { icon: <Shield className="w-5 h-5" />, text: 'Sichtprüfung inklusive' },
-        ]
-      default:
-        return [
-          { icon: <Wrench className="w-5 h-5" />, text: 'Professioneller Service' },
-          { icon: <Shield className="w-5 h-5" />, text: 'Qualitätsgarantie' },
-          { icon: <Award className="w-5 h-5" />, text: 'Fachkundiges Personal' },
-        ]
+  // Get service icon and name
+  const getServiceInfo = (serviceType: string) => {
+    const serviceMap: Record<string, { icon: JSX.Element, name: string }> = {
+      'TIRE_CHANGE': { icon: <Wrench className="w-5 h-5" />, name: 'Reifenwechsel' },
+      'WHEEL_CHANGE': { icon: <Package className="w-5 h-5" />, name: 'Räderwechsel' },
+      'ALIGNMENT_BOTH': { icon: <SlidersHorizontal className="w-5 h-5" />, name: 'Achsvermessung' },
+      'TIRE_REPAIR': { icon: <Wrench className="w-5 h-5" />, name: 'Reifenreparatur' },
+      'CLIMATE_SERVICE': { icon: <Cloud className="w-5 h-5" />, name: 'Klimaservice' },
+      'MOTORCYCLE_TIRE': { icon: <Wrench className="w-5 h-5" />, name: 'Motorradreifen' },
     }
+    return serviceMap[serviceType] || { icon: <Wrench className="w-5 h-5" />, name: serviceType }
+  }
+
+  // Get available workshop services (excluding current service, wheel change, and motorcycle)
+  const getAvailableServices = () => {
+    return availableServices.filter((s: any) => 
+      s.serviceType !== serviceType && 
+      s.serviceType !== 'WHEEL_CHANGE' && 
+      s.serviceType !== 'MOTORCYCLE_TIRE'
+    ).slice(0, 3)
   }
 
   const formatEUR = (cents: number) => {
@@ -339,6 +338,7 @@ export default function WorkshopDetailPage() {
             }
             
             if (data.workshop.services) {
+              setAvailableServices(data.workshop.services)
               const serviceData = data.workshop.services.find((s: any) => s.serviceType === service)
               if (serviceData && serviceData.servicePackages && serviceData.servicePackages.length > 0) {
                 let selectedPackage = null
@@ -683,16 +683,22 @@ export default function WorkshopDetailPage() {
                   </button>
                 </div>
 
-                {/* Service Highlights */}
+                {/* Available Services */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">💡 Service Highlights</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">🔧 Zusätzliche Services</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {getServiceHighlights().map((highlight, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                        <div className="text-primary-600">{highlight.icon}</div>
-                        <span>{highlight.text}</span>
-                      </div>
-                    ))}
+                    {getAvailableServices().map((service) => {
+                      const info = getServiceInfo(service.serviceType)
+                      return (
+                        <div key={service.id} className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="text-primary-600 text-lg">{info.icon}</div>
+                          <span>{info.name}</span>
+                        </div>
+                      )
+                    })}
+                    {getAvailableServices().length === 0 && (
+                      <p className="text-sm text-gray-500 col-span-3">Keine weiteren Services verfügbar</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -712,11 +718,106 @@ export default function WorkshopDetailPage() {
             {tireBookingData && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 Gewählter Service</h2>
-                {/* Service details here */}
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p><strong>Service:</strong> {tireBookingData.serviceName}</p>
+                
+                <div className="space-y-4">
+                  {/* Service Type */}
+                  <div className="pb-4 border-b border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Serviceart</p>
+                    <p className="text-base font-semibold text-gray-900">{tireBookingData.serviceName}</p>
+                  </div>
+
+                  {/* Tire Details */}
                   {tireBookingData.selectedTire && (
-                    <p><strong>Reifen:</strong> {tireBookingData.selectedTire.brand}</p>
+                    <>
+                      {/* Tire Basic Info */}
+                      <div className="pb-4 border-b border-gray-200">
+                        <p className="text-sm text-gray-600 mb-2">Ausgewählte Reifen</p>
+                        <p className="text-base font-semibold text-gray-900 mb-1">
+                          {tireBookingData.selectedTire.brand}
+                        </p>
+                        {tireBookingData.selectedTire.model && (
+                          <p className="text-sm text-gray-600">{tireBookingData.selectedTire.model}</p>
+                        )}
+                      </div>
+
+                      {/* Tire Specifications */}
+                      <div className="pb-4 border-b border-gray-200">
+                        <p className="text-sm text-gray-600 mb-3">Reifenspezifikation</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {tireBookingData.selectedTire.dimension && (
+                            <div>
+                              <p className="text-xs text-gray-500">Dimension</p>
+                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.dimension}</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.loadIndex && (
+                            <div>
+                              <p className="text-xs text-gray-500">Tragfähigkeit</p>
+                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.loadIndex}</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.speedIndex && (
+                            <div>
+                              <p className="text-xs text-gray-500">Geschwindigkeitsindex</p>
+                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.speedIndex}</p>
+                            </div>
+                          )}
+                          {tireBookingData.tireCount && (
+                            <div>
+                              <p className="text-xs text-gray-500">Anzahl</p>
+                              <p className="text-sm font-medium text-gray-900">{tireBookingData.tireCount} Reifen</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* EU Labels */}
+                      {(tireBookingData.selectedTire.fuelEfficiency || tireBookingData.selectedTire.wetGrip || tireBookingData.selectedTire.noise) && (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-3">EU-Reifenlabel</p>
+                          <div className="grid grid-cols-3 gap-3">
+                            {/* Fuel Efficiency */}
+                            {tireBookingData.selectedTire.fuelEfficiency && (
+                              <div className="text-center">
+                                <p className="text-xs text-gray-500 mb-2">Kraftstoff-<br />effizienz</p>
+                                <div className={`inline-flex items-center justify-center w-10 h-10 rounded font-bold text-lg ${getLabelColor(tireBookingData.selectedTire.fuelEfficiency)}`}>
+                                  {tireBookingData.selectedTire.fuelEfficiency}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Wet Grip */}
+                            {tireBookingData.selectedTire.wetGrip && (
+                              <div className="text-center">
+                                <p className="text-xs text-gray-500 mb-2">Nasshaftung</p>
+                                <div className={`inline-flex items-center justify-center w-10 h-10 rounded font-bold text-lg ${getLabelColor(tireBookingData.selectedTire.wetGrip)}`}>
+                                  {tireBookingData.selectedTire.wetGrip}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Noise */}
+                            {tireBookingData.selectedTire.noise && (
+                              <div className="text-center">
+                                <p className="text-xs text-gray-500 mb-2">Geräusch</p>
+                                <div className={`inline-flex items-center justify-center px-2 h-10 rounded font-bold text-base ${getNoiseColor(tireBookingData.selectedTire.noise)}`}>
+                                  <span className="mr-1">{getNoiseWaves(tireBookingData.selectedTire.noise)}</span>
+                                  <span className="text-xs">{tireBookingData.selectedTire.noise}dB</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tire Price */}
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Reifen Gesamt</span>
+                          <span className="text-lg font-bold text-primary-600">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -907,8 +1008,24 @@ export default function WorkshopDetailPage() {
 
                   {/* Vehicle Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fahrzeug wählen</label>
-                    {session ? (
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Ausgewähltes Fahrzeug</label>
+                    {tireBookingData?.selectedVehicle ? (
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <Car className="w-5 h-5 text-primary-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
+                            </p>
+                            {tireBookingData.selectedVehicle.year && (
+                              <p className="text-xs text-gray-500">
+                                {tireBookingData.selectedVehicle.year} · {tireBookingData.selectedVehicle.licensePlate}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : session ? (
                       <select
                         value={selectedVehicle || ''}
                         onChange={(e) => setSelectedVehicle(e.target.value)}

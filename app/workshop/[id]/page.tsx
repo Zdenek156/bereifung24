@@ -199,12 +199,12 @@ export default function WorkshopDetailPage() {
             // Get base service price from workshop data
             if (data.workshop.services) {
               console.log('💰 [WORKSHOP] Available services:', data.workshop.services)
-              const serviceData = data.workshop.services.find((s: any) => s.type === service)
+              const serviceData = data.workshop.services.find((s: any) => s.serviceType === service)
               console.log('✅ [WORKSHOP] Found service:', serviceData)
               if (serviceData) {
                 workshopData.totalPrice = serviceData.basePrice || 0
-                workshopData.estimatedDuration = serviceData.estimatedDuration || 60
-                console.log('💵 [WORKSHOP] Service basePrice:', serviceData.basePrice, 'duration:', serviceData.estimatedDuration)
+                workshopData.estimatedDuration = serviceData.durationMinutes || 60
+                console.log('💵 [WORKSHOP] Service basePrice:', serviceData.basePrice, 'duration:', serviceData.durationMinutes)
               } else {
                 console.warn('⚠️ [WORKSHOP] Service not found for type:', service)
               }

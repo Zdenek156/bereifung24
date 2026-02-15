@@ -1126,15 +1126,58 @@ export default function NewHomePage() {
     const qualityFilter = tireQualityFilter[workshopId] || 'all'
     const sortBy = tireSortBy[workshopId] || 'price'
     
-    // Filter by quality
-    let filtered = [...tires]
+    // Helper: Determine quality category based on EU labels (strict: all 3 must match)
+    const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' | null => {
+      // Extract EU label values
+      const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
+      const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
+      const noise = tire.labelNoise || tire.tire?.labelNoise
+      
+      // If any EU label is missing, exclude tire (don't show)
+      if (!fuelEff || !wetGrip || !noise) return null
+      
+      // Convert noise (dB) to category
+      let noiseCategory: 'premium' | 'quality' | 'budget'
+      if (noise <= 68) {
+        noiseCategory = 'premium' // A-B equivalent
+      } else if (noise <= 71) {
+        noiseCategory = 'quality' // B-C equivalent
+      } else {
+        noiseCategory = 'budget' // C-E equivalent
+      }
+      
+      // Map fuel efficiency letter to category
+      const fuelCategory = (['A', 'B'].includes(fuelEff.toUpperCase())) ? 'premium' :
+                          (['B', 'C'].includes(fuelEff.toUpperCase())) ? 'quality' : 'budget'
+      
+      // Map wet grip letter to category
+      const wetCategory = (['A', 'B'].includes(wetGrip.toUpperCase())) ? 'premium' :
+                         (['B', 'C'].includes(wetGrip.toUpperCase())) ? 'quality' : 'budget'
+      
+      // All 3 criteria must match the same category (strict)
+      if (fuelCategory === 'premium' && wetCategory === 'premium' && noiseCategory === 'premium') {
+        return 'premium'
+      } else if (fuelCategory === 'quality' && wetCategory === 'quality' && noiseCategory === 'quality') {
+        return 'quality'
+      } else if (fuelCategory === 'budget' && wetCategory === 'budget' && noiseCategory === 'budget') {
+        return 'budget'
+      }
+      
+      // Mixed categories: assign to lowest common denominator
+      const categories = [fuelCategory, wetCategory, noiseCategory]
+      if (categories.includes('budget')) return 'budget'
+      if (categories.includes('quality')) return 'quality'
+      return 'premium'
+    }
+    
+    // Filter: Remove tires without complete EU labels
+    let filtered = tires.filter((tire: any) => getTireQualityCategory(tire) !== null)
+    
+    // Filter by quality category
     if (qualityFilter !== 'all') {
       filtered = filtered.filter((tire: any) => {
-        const label = tire.label?.toLowerCase() || ''
-        if (qualityFilter === 'budget') return label.includes('günstig') || label.includes('budget')
-        if (qualityFilter === 'quality') return label.includes('qualität') || label.includes('quality')
-        if (qualityFilter === 'premium') return label.includes('premium') || label.includes('testsieger')
-        return true
+        const category = getTireQualityCategory(tire)
+        return category === qualityFilter
       })
     }
     

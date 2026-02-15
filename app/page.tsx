@@ -1018,7 +1018,9 @@ export default function NewHomePage() {
       tireCount: workshop.isMixedTires ? 4 : (
         selectedPackages.includes('two_tires') ? 2 :
         selectedPackages.includes('four_tires') ? 4 : 0
-      )
+      ),
+      // Selected vehicle
+      selectedVehicle: customerVehicles.find(v => v.id === selectedVehicleId) || null
     }
     
     // Save tire and service data to sessionStorage for workshop page

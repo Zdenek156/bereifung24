@@ -32,7 +32,8 @@ import {
   CalendarDays,
   Wrench,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
@@ -1110,7 +1111,7 @@ export default function NewHomePage() {
       <LiveChat />
       
       {/* Top Navigation - Blue like current homepage */}
-      <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm">
+      <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm shadow-lg">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -1379,31 +1380,44 @@ export default function NewHomePage() {
             </p>
           </div>
 
-          {/* Search Card - Booking.com Style: One Line */}
+          {/* Search Card - Improved UX with Visible Service Tabs */}
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-3">
-              <div className="flex flex-col md:flex-row gap-2">
-                {/* Service Dropdown */}
-                <div className="flex-1">
-                  <select
-                    name="service"
-                    value={selectedService}
-                    onChange={(e) => handleServiceChange(e.target.value)}
-                    className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
-                    aria-label="Service auswählen"
-                  >
-                    {SERVICES.map((service) => (
-                      <option key={service.id} value={service.id}>
-                        {service.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* Service Tabs - Visible above search card */}
+            <div className="mb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
+              <div className="flex gap-2 min-w-max pb-2">
+                {SERVICES.slice(0, 5).map((service) => {
+                  const Icon = service.icon
+                  const isActive = selectedService === service.id
+                  return (
+                    <button
+                      key={service.id}
+                      onClick={() => handleServiceChange(service.id)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${
+                        isActive
+                          ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
+                          : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                      }`}
+                      aria-label={service.label}
+                      aria-pressed={isActive}
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="whitespace-nowrap">{service.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
-                {/* Location Input */}
+            <div className="bg-white rounded-2xl shadow-2xl p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+
+                {/* Location Input with Label and Integrated GPS */}
                 <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 px-1">
+                    Dein Ort
+                  </label>
                   {!useGeolocation ? (
-                    <div className="relative h-16">
+                    <div className="relative h-14">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
@@ -1412,71 +1426,72 @@ export default function NewHomePage() {
                         onChange={(e) => setPostalCode(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="PLZ oder Ort"
-                        className="w-full h-full pl-12 pr-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
+                        className="w-full h-full pl-12 pr-12 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
                         aria-label="Postleitzahl oder Ort eingeben"
                       />
+                      {/* GPS Button Integrated */}
+                      <button
+                        onClick={requestGeolocation}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Standort nutzen"
+                        aria-label="Standort nutzen"
+                      >
+                        <Navigation className="w-5 h-5 text-gray-500" />
+                      </button>
                     </div>
                   ) : (
-                    <div className="h-16 px-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-2">
-                      <Navigation className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span className="text-green-700 font-semibold text-sm">Standort aktiv</span>
+                    <div className="relative h-14">
+                      <div className="h-full px-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-2">
+                        <Navigation className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <span className="text-green-700 font-semibold text-sm">Standort aktiv</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setUseGeolocation(false)
+                          setCustomerLocation(null)
+                          setHasSearched(false)
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Standort deaktivieren"
+                        aria-label="Standort deaktivieren"
+                      >
+                        <X className="w-5 h-5 text-red-500" />
+                      </button>
                     </div>
                   )}
                 </div>
 
-                {/* Radius + Geolocation Row (side by side on mobile) */}
-                <div className="flex gap-2 w-full md:w-auto">
-                  {/* Radius Dropdown */}
-                  <div className="flex-1 md:w-32">
-                    <select
-                      name="radius"
-                      value={radiusKm}
-                      onChange={(e) => setRadiusKm(Number(e.target.value))}
-                      className="w-full h-16 px-4 border-2 border-gray-200 rounded-xl text-gray-900 font-semibold focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
-                      aria-label="Umkreis auswählen"
-                    >
-                      {RADIUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Geolocation Button - Only Icon */}
-                  <button
-                    onClick={() => {
-                      if (useGeolocation) {
-                        setUseGeolocation(false)
-                        setCustomerLocation(null)
-                        setHasSearched(false)
-                      } else {
-                        requestGeolocation()
-                      }
-                    }}
-                    className={`w-16 h-16 flex-shrink-0 rounded-xl font-semibold transition-all flex items-center justify-center ${
-                      useGeolocation
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
-                    title={useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
+                {/* Radius Dropdown - Smaller and Less Prominent */}
+                <div className="w-full md:w-28">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 px-1">
+                    Umkreis
+                  </label>
+                  <select
+                    name="radius"
+                    value={radiusKm}
+                    onChange={(e) => setRadiusKm(Number(e.target.value))}
+                    className="w-full h-14 px-3 border-2 border-gray-200 rounded-xl text-gray-900 text-sm font-semibold focus:border-primary-600 focus:ring-2 focus:ring-primary-100 outline-none transition-all cursor-pointer hover:border-gray-300"
+                    aria-label="Umkreis auswählen"
                   >
-                    <Navigation className="w-6 h-6" />
-                    <span className="sr-only">
-                      {useGeolocation ? 'Standort deaktivieren' : 'Standort nutzen'}
-                    </span>
-                  </button>
+                    {RADIUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Search Button */}
-                <button
-                  onClick={handleSearch}
-                  className="w-full md:w-auto h-16 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <Search className="w-5 h-5" />
-                  <span className="hidden md:inline">Jetzt Festpreise vergleichen</span>
-                  <span className="md:hidden">Vergleichen</span>
-                </button>
+                <div className="w-full md:w-auto md:pt-6">
+                  <button
+                    onClick={handleSearch}
+                    className="w-full md:w-auto h-14 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    <span className="hidden lg:inline">Jetzt Festpreise vergleichen</span>
+                    <span className="lg:hidden">Vergleichen</span>
+                  </button>
+                </div>
               </div>
             </div>
             

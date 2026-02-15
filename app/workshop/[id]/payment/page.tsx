@@ -50,7 +50,7 @@ export default function PaymentPage() {
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
-      const currentUrl = `/home/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`
+      const currentUrl = `/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`
       router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
     }
   }, [session, status, router])
@@ -230,7 +230,7 @@ export default function PaymentPage() {
         <div className="text-center">
           <p className="text-gray-600 mb-4">Fehler beim Laden der Daten</p>
           <Link
-            href={`/home/workshop/${workshopId}`}
+            href={`/workshop/${workshopId}`}
             className="text-primary-600 hover:underline"
           >
             Zurück zur Werkstatt

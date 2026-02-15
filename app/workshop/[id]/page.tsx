@@ -823,60 +823,84 @@ export default function WorkshopDetailPage() {
             </div>
 
             {/* Calendar Section - Desktop Only */}
-            <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div id="calendar-section" className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">📅 Verfügbare Termine</h2>
               <p className="text-sm text-gray-600 mb-4">Wählen Sie einen verfügbaren Termin für Ihren Service</p>
               
-              {/* Calendar Navigation */}
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={prevMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={currentMonth.getTime() <= new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <div className="text-center">
-                  <span className="text-sm font-semibold">
-                    {currentMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
-                  </span>
-                </div>
-                
-                <button
-                  onClick={nextMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={currentMonth.getTime() >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Calendar Grid */}
-              <div className="mb-4">
-                <div className="grid grid-cols-7 gap-1">
-                  {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-                    <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
-                      {day}
+              {/* Two Months Side by Side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Current Month */}
+                <div>
+                  <div className="text-center mb-3">
+                    <span className="text-sm font-semibold">
+                      {currentMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
+                  
+                  {/* Calendar Grid for Current Month */}
+                  <div className="mb-3">
+                    <div className="grid grid-cols-7 gap-1">
+                      {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+                        <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
+                          {day}
+                        </div>
+                      ))}
+                      {getDaysInMonth(currentMonth).map((date, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleDateClick(date)}
+                          disabled={!date || isDatePast(date) || !isDateAvailable(date)}
+                          className={`
+                            aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
+                            ${!date ? 'invisible' : ''}
+                            ${isDatePast(date) ? 'text-gray-300 cursor-not-allowed' : ''}
+                            ${isDateAvailable(date) ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-semibold' : ''}
+                            ${!isDateAvailable(date) && !isDatePast(date) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
+                            ${selectedDate && date && selectedDate.toDateString() === date.toDateString() ? 'ring-2 ring-primary-500 bg-primary-100' : ''}
+                          `}
+                        >
+                          {date ? date.getDate() : ''}
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                  {getDaysInMonth(currentMonth).map((date, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleDateClick(date)}
-                      disabled={!date || isDatePast(date) || !isDateAvailable(date)}
-                      className={`
-                        aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
-                        ${!date ? 'invisible' : ''}
-                        ${isDatePast(date) ? 'text-gray-300 cursor-not-allowed' : ''}
-                        ${isDateAvailable(date) ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-semibold' : ''}
-                        ${!isDateAvailable(date) && !isDatePast(date) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
-                        ${selectedDate && date && selectedDate.toDateString() === date.toDateString() ? 'ring-2 ring-primary-500 bg-primary-100' : ''}
-                      `}
-                    >
-                      {date ? date.getDate() : ''}
-                    </button>
-                  ))}
+                  </div>
+                </div>
+
+                {/* Next Month */}
+                <div>
+                  <div className="text-center mb-3">
+                    <span className="text-sm font-semibold">
+                      {new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
+                  
+                  {/* Calendar Grid for Next Month */}
+                  <div className="mb-3">
+                    <div className="grid grid-cols-7 gap-1">
+                      {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+                        <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
+                          {day}
+                        </div>
+                      ))}
+                      {getDaysInMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)).map((date, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleDateClick(date)}
+                          disabled={!date || isDatePast(date) || !isDateAvailable(date)}
+                          className={`
+                            aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
+                            ${!date ? 'invisible' : ''}
+                            ${isDatePast(date) ? 'text-gray-300 cursor-not-allowed' : ''}
+                            ${isDateAvailable(date) ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-semibold' : ''}
+                            ${!isDateAvailable(date) && !isDatePast(date) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
+                            ${selectedDate && date && selectedDate.toDateString() === date.toDateString() ? 'ring-2 ring-primary-500 bg-primary-100' : ''}
+                          `}
+                        >
+                          {date ? date.getDate() : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -965,22 +989,31 @@ export default function WorkshopDetailPage() {
                   {/* Date Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Termin wählen</label>
-                    <button 
-                      onClick={() => document.getElementById('calendar-section')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left hover:border-primary-500 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                          {selectedDate ? selectedDate.toLocaleDateString('de-DE') : 'Datum auswählen'}
-                        </span>
-                        <Calendar className="w-5 h-5 text-gray-400" />
+                    {!selectedDate ? (
+                      <button 
+                        onClick={() => document.getElementById('calendar-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left hover:border-primary-500 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Datum auswählen</span>
+                          <Calendar className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </button>
+                    ) : (
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {selectedDate.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                            {selectedSlot && (
+                              <p className="text-xs text-gray-600 mt-1">{selectedSlot.time} Uhr</p>
+                            )}
+                          </div>
+                          <Calendar className="w-5 h-5 text-primary-600" />
+                        </div>
                       </div>
-                      {selectedSlot && (
-                        <span className="text-sm font-medium text-gray-900 mt-1 block">
-                          {selectedSlot.time} Uhr
-                        </span>
-                      )}
-                    </button>
+                    )}
                   </div>
 
                   {/* Vehicle Selection */}

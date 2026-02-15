@@ -166,6 +166,9 @@ export default function NewHomePage() {
   const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
   const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
   
+  // Ref for scrolling to search results
+  const searchResultsRef = useRef<HTMLElement>(null)
+  
   // Load reviews on page load
   useEffect(() => {
     async function loadReviews() {
@@ -814,6 +817,11 @@ export default function NewHomePage() {
         // Note: Do NOT save workshop results to URL - causes 431 error (URL too long)
         // Browser back/forward will simply re-trigger the search via useEffect
         console.log('✅ [searchWorkshops] Search completed successfully, workshops:', workshops.length)
+        
+        // Auto-scroll to results after search completes
+        setTimeout(() => {
+          searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
       } else {
         setWorkshops([])
         setError(result.error || 'Keine Werkstätten gefunden')
@@ -1541,7 +1549,7 @@ export default function NewHomePage() {
 
       {/* Search Results Section */}
       {hasSearched && (
-        <section className="py-8 bg-gray-50">
+        <section ref={searchResultsRef} className="py-8 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left Sidebar - Filters */}
@@ -2572,7 +2580,14 @@ export default function NewHomePage() {
                               {/* Tire not available warning */}
                               {showTires && !workshop.tireAvailable && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                                  <p className="text-sm text-yellow-800">⚠️ Keine passenden Reifen verfügbar</p>
+                                  {!selectedVehicleId ? (
+                                    <div>
+                                      <p className="text-sm text-yellow-800 font-semibold mb-1">⚠️ Fahrzeug auswählen</p>
+                                      <p className="text-xs text-yellow-700">Bitte wählen Sie links unter "Fahrzeug wählen" Ihr Fahrzeug aus, um passende Reifen anzuzeigen.</p>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-yellow-800">⚠️ Keine passenden Reifen verfügbar</p>
+                                  )}
                                 </div>
                               )}
 

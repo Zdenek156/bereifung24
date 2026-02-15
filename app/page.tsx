@@ -1128,6 +1128,14 @@ export default function NewHomePage() {
     
     // Helper: Determine quality category based on EU labels (flexible: 2 of 3 must match)
     const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' | null => {
+      // Premium brands are always Premium, regardless of EU labels
+      const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
+      const tireBrand = tire.brand || tire.tire?.brand || ''
+      
+      if (premiumBrands.some(brand => tireBrand.toLowerCase().includes(brand.toLowerCase()))) {
+        return 'premium'
+      }
+      
       // Extract EU label values
       const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
       const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip

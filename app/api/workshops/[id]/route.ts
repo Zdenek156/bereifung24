@@ -29,13 +29,13 @@ export async function GET(
         workshopServices: {
           select: {
             id: true,
-            type: true,
+            serviceType: true,
             basePrice: true,
-            estimatedDuration: true,
-            isActive: true
+            durationMinutes: true,
+            allowsDirectBooking: true
           },
           where: {
-            isActive: true
+            allowsDirectBooking: true
           }
         },
         _count: {

@@ -33,7 +33,12 @@ import {
   Wrench,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  RefreshCw,
+  RotateCw,
+  Bike,
+  Ruler,
+  Snowflake
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
@@ -41,12 +46,12 @@ import LiveChat from '@/components/LiveChat'
 import LoginModal from '@/components/LoginModal'
 
 const SERVICES = [
-  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: '🔄', description: 'Sommer-/Winterreifen wechseln' },
-  { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: '🚗', description: 'Reifen montieren/demontieren' },
-  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '🔧', description: 'Reifen flicken und abdichten' },
-  { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifen', icon: '🏍️', description: 'Motorradreifen-Service' },
-  { id: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '📏', description: 'Vorder- und Hinterachse vermessen' },
-  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '❄️', description: 'Klimaanlage warten & prüfen' },
+  { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: RefreshCw, description: 'Reifen montieren/demontieren' },
+  { id: 'WHEEL_CHANGE', label: 'Räderwechsel', icon: RotateCw, description: 'Sommer-/Winterreifen wechseln' },
+  { id: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: Wrench, description: 'Reifen flicken und abdichten' },
+  { id: 'MOTORCYCLE_TIRE', label: 'Motorradreifenwechsel', icon: Bike, description: 'Motorradreifen-Service' },
+  { id: 'ALIGNMENT_BOTH', label: 'Achsvermessung', icon: Ruler, description: 'Vorder- und Hinterachse vermessen' },
+  { id: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: Snowflake, description: 'Klimaanlage warten & prüfen' },
 ]
 
 const RADIUS_OPTIONS = [
@@ -1392,7 +1397,7 @@ export default function NewHomePage() {
                     <button
                       key={service.id}
                       onClick={() => handleServiceChange(service.id)}
-                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all min-h-[48px] ${
                         isActive
                           ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
                           : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
@@ -1401,7 +1406,7 @@ export default function NewHomePage() {
                       aria-pressed={isActive}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="whitespace-nowrap">{service.label}</span>
+                      <span className="whitespace-nowrap leading-none">{service.label}</span>
                     </button>
                   )
                 })}
@@ -2361,9 +2366,10 @@ export default function NewHomePage() {
                                       {additionalServices.slice(0, 5).map((serviceType: string) => {
                                         const service = SERVICES.find(s => s.id === serviceType)
                                         if (!service) return null
+                                        const ServiceIcon = service.icon
                                         return (
                                           <span key={serviceType} className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200" title={service.description}>
-                                            <span className="text-xs">{service.icon}</span> {service.label}
+                                            <ServiceIcon className="w-3 h-3" /> {service.label}
                                           </span>
                                         )
                                       })}

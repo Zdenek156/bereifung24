@@ -870,6 +870,7 @@ export default function WorkshopDetailPage() {
                 <button
                   onClick={nextMonth}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={currentMonth >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -1060,7 +1061,7 @@ export default function WorkshopDetailPage() {
                       : 'bg-gray-300 cursor-not-allowed'
                   }`}
                 >
-                  {canBook ? 'Jetzt verbindlich buchen' : 'Termin & Fahrzeug wählen'}
+                  {canBook ? 'Jetzt verbindlich buchen' : 'Termin auswählen'}
                 </button>
 
                 {canBook && (
@@ -1116,6 +1117,7 @@ export default function WorkshopDetailPage() {
             <button
               onClick={nextMonth}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={currentMonth >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)}
             >
               <ChevronRight className="w-5 h-5" />
             </button>

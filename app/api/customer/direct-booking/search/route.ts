@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { findCheapestTire, findTireRecommendations } from '@/lib/services/tireSearchService'
+import { findCheapestTire, findTireRecommendations, searchTires } from '@/lib/services/tireSearchService'
 
 /**
  * POST /api/customer/direct-booking/search
@@ -874,9 +874,32 @@ export async function POST(request: NextRequest) {
                 requireRunFlat ? runFlatSurcharge : 0 // Pass runflat surcharge per tire
               )
 
+              // Also get ALL tires for user selection (not just top 3 recommendations)
+              const allTiresResult = await searchTires({
+                workshopId: workshop.id,
+                width: String(width),
+                height: String(height),
+                diameter: String(diameter),
+                season: seasonFilter,
+                minStock: requestedTireCount,
+                minPrice: tireFilters?.minPrice,
+                maxPrice: tireFilters?.maxPrice,
+                quality: tireFilters?.quality,
+                minFuelEfficiency: tireFilters?.fuelEfficiency,
+                minWetGrip: tireFilters?.wetGrip,
+                threePMSF: tireFilters?.threePMSF,
+                showDOTTires: tireFilters?.showDOTTires,
+                runFlat: requireRunFlat || undefined,
+                minLoadIndex: loadIndex,
+                minSpeedIndex: speedIndex,
+                sortBy: 'price',
+                sortOrder: 'asc'
+              })
+
               console.log(`📊 [DEBUG Tire Result] Workshop ${workshop.id}:`, {
                 available: recsResult.available,
                 recommendationsCount: recsResult.recommendations?.length || 0,
+                allTiresCount: allTiresResult?.length || 0,
                 firstRec: recsResult.recommendations?.[0] ? {
                   brand: recsResult.recommendations[0].brand,
                   model: recsResult.recommendations[0].model,
@@ -906,22 +929,46 @@ export async function POST(request: NextRequest) {
                   tireAvailable: true,
                   // Price breakdown for display
                   disposalFeeApplied: disposalFeeTotal,
-                  // All recommendations for display
-                  tireRecommendations: recsResult.recommendations.map(rec => ({
-                    label: rec.label,
-                    brand: rec.tire.brand,
-                    model: rec.tire.model,
-                    pricePerTire: rec.pricePerTire,
-                    totalPrice: rec.totalPrice,
-                    quantity: rec.quantity,
-                    loadIndex: rec.tire.loadIndex || null,
-                    speedIndex: rec.tire.speedIndex || null,
-                    labelFuelEfficiency: rec.tire.labelFuelEfficiency || null,
-                    labelWetGrip: rec.tire.labelWetGrip || null,
-                    labelNoise: rec.tire.labelNoise || null,
-                    threePMSF: rec.tire.threePMSF,
-                    runFlat: rec.tire.runFlat,
-                  })),
+                  // All recommendations for display (top 3 + all available tires)
+                  tireRecommendations: [
+                    // First add the 3 recommendations (Günstigster, Testsieger, Beliebt)
+                    ...recsResult.recommendations.map(rec => ({
+                      label: rec.label,
+                      brand: rec.tire.brand,
+                      model: rec.tire.model,
+                      pricePerTire: rec.pricePerTire,
+                      totalPrice: rec.totalPrice,
+                      quantity: rec.quantity,
+                      loadIndex: rec.tire.loadIndex || null,
+                      speedIndex: rec.tire.speedIndex || null,
+                      labelFuelEfficiency: rec.tire.labelFuelEfficiency || null,
+                      labelWetGrip: rec.tire.labelWetGrip || null,
+                      labelNoise: rec.tire.labelNoise || null,
+                      threePMSF: rec.tire.threePMSF,
+                      runFlat: rec.tire.runFlat,
+                    })),
+                    // Then add all other tires (exclude duplicates already in recommendations)
+                    ...allTiresResult
+                      .filter(tire => !recsResult.recommendations.some(rec => rec.tire.id === tire.id))
+                      .map(tire => {
+                        const pricePerTire = tire.sellingPrice + (tire.runFlat ? runFlatSurcharge : 0)
+                        return {
+                          label: '', // No label for non-recommendation tires
+                          brand: tire.brand,
+                          model: tire.model,
+                          pricePerTire: parseFloat(pricePerTire.toFixed(2)),
+                          totalPrice: parseFloat((pricePerTire * requestedTireCount).toFixed(2)),
+                          quantity: requestedTireCount,
+                          loadIndex: tire.loadIndex || null,
+                          speedIndex: tire.speedIndex || null,
+                          labelFuelEfficiency: tire.labelFuelEfficiency || null,
+                          labelWetGrip: tire.labelWetGrip || null,
+                          labelNoise: tire.labelNoise || null,
+                          threePMSF: tire.threePMSF,
+                          runFlat: tire.runFlat,
+                        }
+                      })
+                  ],
                   // Update total price (service + disposal + cheapest tires)
                   totalPrice: newTotalPrice,
                 }

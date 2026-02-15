@@ -2577,8 +2577,8 @@ export default function NewHomePage() {
                                 </div>
                               )}
 
-                              {/* Tire not available warning */}
-                              {showTires && !workshop.tireAvailable && (
+                              {/* Tire not available warning - only for TIRE_CHANGE service */}
+                              {selectedService === 'TIRE_CHANGE' && showTires && !workshop.tireAvailable && (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
                                   {!selectedVehicleId ? (
                                     <div>

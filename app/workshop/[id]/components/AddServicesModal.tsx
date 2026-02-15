@@ -34,8 +34,7 @@ interface AddServicesModalProps {
   onClose: () => void
   workshopId: string
   onServicesSelected: (services: SelectedService[]) => void
-  selectedServiceType?: string // The main service from URL (e.g. 'WHEEL_CHANGE')
-  additionalSelectedServices?: string[] // Array of service IDs already selected
+  selectedServiceType?: string // The main service from URL (e.g. 'TIRE_CHANGE')
 }
 
 const SERVICE_TYPE_LABELS: Record<string, string> = {
@@ -53,7 +52,6 @@ export default function AddServicesModal({
   workshopId,
   onServicesSelected,
   selectedServiceType,
-  additionalSelectedServices = [],
 }: AddServicesModalProps) {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,23 +66,46 @@ export default function AddServicesModal({
   const fetchServices = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/workshop/${workshopId}/services/all`)
+      const response = await fetch(`/api/workshops/${workshopId}`)
       if (response.ok) {
         const data = await response.json()
-        // Filter out already selected services
-        const allServices = data.services || []
-        const filteredServices = allServices.filter((service: Service) => {
-          // Exclude main service from URL
-          if (selectedServiceType && service.type === selectedServiceType) {
-            return false
-          }
-          // Exclude additional selected services
-          if (additionalSelectedServices.includes(service.id)) {
-            return false
-          }
-          return true
-        })
-        setServices(filteredServices)
+        if (data.success && data.workshop && data.workshop.services) {
+          const allServices = data.workshop.services || []
+          
+          // Filter services based on main service type
+          let filteredServices = allServices.filter((service: any) => {
+            // Exclude main service from URL
+            if (selectedServiceType && service.serviceType === selectedServiceType) {
+              return false
+            }
+            // Exclude WHEEL_CHANGE and MOTORCYCLE_TIRE
+            if (service.serviceType === 'WHEEL_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') {
+              return false
+            }
+            // If main service is TIRE_CHANGE, only show CLIMATE_SERVICE and ALIGNMENT_BOTH
+            if (selectedServiceType === 'TIRE_CHANGE') {
+              return service.serviceType === 'CLIMATE_SERVICE' || service.serviceType === 'ALIGNMENT_BOTH'
+            }
+            return true
+          })
+          
+          // Map to Service format
+          const mappedServices = filteredServices.map((service: any) => ({
+            id: service.id,
+            type: service.serviceType,
+            name: SERVICE_TYPE_LABELS[service.serviceType] || service.serviceType,
+            packages: (service.servicePackages || []).map((pkg: any) => ({
+              id: pkg.id,
+              type: pkg.packageType,
+              name: pkg.name,
+              price: pkg.price,
+              duration: pkg.durationMinutes,
+              description: pkg.description
+            }))
+          }))
+          
+          setServices(mappedServices)
+        }
       }
     } catch (error) {
       console.error('Error fetching services:', error)

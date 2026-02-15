@@ -1612,101 +1612,7 @@ export default function NewHomePage() {
                             </div>
                           </div>
 
-                          {/* 2. Fahrzeug wählen (always show - helps with tire dimensions) */}
-                          <div className="p-4 border-b border-gray-200">
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              🚙 Fahrzeug wählen {!includeTires && <span className="text-xs text-gray-500">(Optional)</span>}
-                            </h4>
-                              {session ? (
-                                <div className="space-y-2">
-                                  <select
-                                    value={selectedVehicleId}
-                                    onChange={(e) => handleVehicleSelect(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                                  >
-                                    <option value="">Fahrzeug auswählen...</option>
-                                    {customerVehicles.map(vehicle => (
-                                      <option key={vehicle.id} value={vehicle.id}>
-                                        {vehicle.make} {vehicle.model} ({vehicle.year})
-                                      </option>
-                                    ))}
-                                  </select>
-                                  {customerVehicles.length === 0 && (
-                                    <p className="text-xs text-gray-500 mt-2">
-                                      Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
-                                    </p>
-                                  )}
-                                  {selectedVehicleId && tireDimensions.width && (
-                                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                                      <div className="text-xs text-green-800">
-                                        {/* Mixed tires - show front and/or rear based on selection */}
-                                        {hasMixedTires && tireDimensionsFront && tireDimensionsRear ? (
-                                          <>
-                                            {selectedPackages.includes('front_two_tires') && (
-                                              <p>✅ Reifengröße: {tireDimensionsFront} (Vorderachse)</p>
-                                            )}
-                                            {selectedPackages.includes('rear_two_tires') && (
-                                              <p>✅ Reifengröße: {tireDimensionsRear} (Hinterachse)</p>
-                                            )}
-                                            {selectedPackages.includes('mixed_four_tires') && (
-                                              <>
-                                                <p>✅ Vorne: {tireDimensionsFront}</p>
-                                                <p>✅ Hinten: {tireDimensionsRear}</p>
-                                              </>
-                                            )}
-                                          </>
-                                        ) : (
-                                          /* Standard tires - single size for all wheels */
-                                          <p>
-                                            ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
-                                            {tireDimensions.loadIndex && tireDimensions.speedIndex ? ` ${tireDimensions.loadIndex}${tireDimensions.speedIndex}` : ''}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Missing Season Data Warning - shown under vehicle dropdown */}
-                                  {missingSeasonError && selectedVehicleId && (
-                                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                      <div className="flex items-start gap-2">
-                                        <span className="text-yellow-600 text-lg flex-shrink-0">⚠️</span>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-xs font-medium text-yellow-900 mb-1">
-                                            {missingSeasonError.seasonName} nicht gespeichert
-                                          </p>
-                                          <p className="text-xs text-yellow-800 mb-2">
-                                            Für dieses Fahrzeug sind keine {missingSeasonError.seasonName} in der Fahrzeugverwaltung hinterlegt.
-                                          </p>
-                                          <a
-                                            href="/dashboard?tab=vehicles"
-                                            className="inline-flex items-center gap-1 text-xs font-medium text-yellow-900 hover:text-yellow-700 underline"
-                                          >
-                                            <Car className="w-3 h-3" />
-                                            Zur Fahrzeugverwaltung
-                                          </a>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                  <p className="text-sm text-yellow-900 mb-2">
-                                    ⚠️ Bitte melden Sie sich an, um Ihr Fahrzeug auszuwählen
-                                  </p>
-                                  <button
-                                    onClick={() => setShowLoginModal(true)}
-                                    className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                                  >
-                                    Jetzt anmelden
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 3. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
+                          {/* 2. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
                             <ServiceFilters
                               key={`tire-change-${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}`}
@@ -1947,6 +1853,100 @@ export default function NewHomePage() {
                       )}
 
                       {/* === GENERAL FILTERS (for all services) === */}
+
+                      {/* Fahrzeug wählen (for all services) */}
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          🚙 Fahrzeug wählen
+                        </h4>
+                          {session ? (
+                            <div className="space-y-2">
+                              <select
+                                value={selectedVehicleId}
+                                onChange={(e) => handleVehicleSelect(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                              >
+                                <option value="">Fahrzeug auswählen...</option>
+                                {customerVehicles.map(vehicle => (
+                                  <option key={vehicle.id} value={vehicle.id}>
+                                    {vehicle.make} {vehicle.model} ({vehicle.year})
+                                  </option>
+                                ))}
+                              </select>
+                              {customerVehicles.length === 0 && (
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
+                                </p>
+                              )}
+                              {/* Show tire dimensions only for TIRE_CHANGE service */}
+                              {selectedService === 'TIRE_CHANGE' && selectedVehicleId && tireDimensions.width && (
+                                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                  <div className="text-xs text-green-800">
+                                    {/* Mixed tires - show front and/or rear based on selection */}
+                                    {hasMixedTires && tireDimensionsFront && tireDimensionsRear ? (
+                                      <>
+                                        {selectedPackages.includes('front_two_tires') && (
+                                          <p>✅ Reifengröße: {tireDimensionsFront} (Vorderachse)</p>
+                                        )}
+                                        {selectedPackages.includes('rear_two_tires') && (
+                                          <p>✅ Reifengröße: {tireDimensionsRear} (Hinterachse)</p>
+                                        )}
+                                        {selectedPackages.includes('mixed_four_tires') && (
+                                          <>
+                                            <p>✅ Vorne: {tireDimensionsFront}</p>
+                                            <p>✅ Hinten: {tireDimensionsRear}</p>
+                                          </>
+                                        )}
+                                      </>
+                                    ) : (
+                                      /* Standard tires - single size for all wheels */
+                                      <p>
+                                        ✅ Reifengröße: {tireDimensions.width}/{tireDimensions.height} R{tireDimensions.diameter}
+                                        {tireDimensions.loadIndex && tireDimensions.speedIndex ? ` ${tireDimensions.loadIndex}${tireDimensions.speedIndex}` : ''}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Missing Season Data Warning - only for TIRE_CHANGE */}
+                              {selectedService === 'TIRE_CHANGE' && missingSeasonError && selectedVehicleId && (
+                                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-yellow-600 text-lg flex-shrink-0">⚠️</span>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-yellow-900 mb-1">
+                                        {missingSeasonError.seasonName} nicht gespeichert
+                                      </p>
+                                      <p className="text-xs text-yellow-800 mb-2">
+                                        Für dieses Fahrzeug sind keine {missingSeasonError.seasonName} in der Fahrzeugverwaltung hinterlegt.
+                                      </p>
+                                      <a
+                                        href="/dashboard?tab=vehicles"
+                                        className="inline-flex items-center gap-1 text-xs font-medium text-yellow-900 hover:text-yellow-700 underline"
+                                      >
+                                        <Car className="w-3 h-3" />
+                                        Zur Fahrzeugverwaltung
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <p className="text-sm text-yellow-900 mb-2">
+                                ⚠️ Bitte melden Sie sich an, um Ihr Fahrzeug auszuwählen
+                              </p>
+                              <button
+                                onClick={() => setShowLoginModal(true)}
+                                className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                              >
+                                Jetzt anmelden
+                              </button>
+                            </div>
+                          )}
+                        </div>
 
                       {/* Service-Specific Package Filters (for non-TIRE_CHANGE services) */}
                       {selectedService !== 'TIRE_CHANGE' && (

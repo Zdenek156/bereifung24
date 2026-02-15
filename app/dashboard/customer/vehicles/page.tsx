@@ -167,17 +167,36 @@ export default function VehiclesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vehicles.map(vehicle => (
-              <div key={vehicle.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-transparent dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Vehicle Header */}
-                <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="text-3xl">
-                      {vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '🚗'}
+              <div key={vehicle.id} className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+                {/* Vehicle Header with Icons */}
+                <div className="p-6 pb-4">
+                  <div className="flex justify-between items-start mb-4">
+                    {/* Icon Badges */}
+                    <div className="flex gap-2">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2.5">
+                        <span className="text-2xl">
+                          {vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '🚗'}
+                        </span>
+                      </div>
+                      {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2.5">
+                          <span className="text-xl">
+                            {(vehicle as any).fuelType === 'PETROL' && '⛽'}
+                            {(vehicle as any).fuelType === 'DIESEL' && '⛽'}
+                            {(vehicle as any).fuelType === 'ELECTRIC' && '⚡'}
+                            {(vehicle as any).fuelType === 'HYBRID' && '🔋'}
+                            {(vehicle as any).fuelType === 'PLUGIN_HYBRID' && '🔌'}
+                            {(vehicle as any).fuelType === 'LPG' && '💨'}
+                            {(vehicle as any).fuelType === 'CNG' && '💨'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex space-x-2">
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setEditingVehicle(vehicle)}
-                        className="text-white/80 hover:text-white transition-colors"
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-2 transition-colors"
                         title="Bearbeiten"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +205,7 @@ export default function VehiclesPage() {
                       </button>
                       <button
                         onClick={() => deleteVehicle(vehicle.id)}
-                        className="text-white/80 hover:text-white transition-colors"
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-2 transition-colors"
                         title="Löschen"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,41 +214,67 @@ export default function VehiclesPage() {
                       </button>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold">{vehicle.make} {vehicle.model}</h3>
-                  <p className="text-white/80">Baujahr {vehicle.year}</p>
-                  {vehicle.licensePlate && (
-                    <p className="text-white/90 font-mono mt-2 text-sm">
-                      {vehicle.licensePlate}
-                    </p>
-                  )}
+
+                  {/* Vehicle Name */}
+                  <h3 className="text-3xl font-bold text-white mb-3">
+                    {vehicle.make} {vehicle.model}
+                  </h3>
+
+                  {/* License Plate and Year Badges */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {vehicle.licensePlate && (
+                      <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                        <span className="text-primary-700 font-bold font-mono text-sm">
+                          {vehicle.licensePlate}
+                        </span>
+                      </div>
+                    )}
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                      <span className="text-primary-700 font-semibold text-sm">
+                        Baujahr {vehicle.year}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Tire Sizes */}
-                <div className="p-6 space-y-4">
+                <div className="px-6 pb-6 space-y-3">
                   {vehicle.summerTires && (
-                    <div className="border-l-4 border-yellow-400 pl-4">
-                      <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">{vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}</span>
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">
+                          {vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
+                        </span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900 dark:text-white">
+                      <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (
                           <>
-                            <span className="text-sm text-gray-600">Vorne: </span>
-                            {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                            {vehicle.summerTires.loadIndex && ` ${vehicle.summerTires.loadIndex}`}
-                            {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
-                            <br />
-                            <span className="text-sm text-gray-600">Hinten: </span>
-                            {vehicle.summerTires.rearWidth}/{vehicle.summerTires.rearAspectRatio} R{vehicle.summerTires.rearDiameter}
-                            {vehicle.summerTires.rearLoadIndex && ` ${vehicle.summerTires.rearLoadIndex}`}
-                            {vehicle.summerTires.rearSpeedRating && vehicle.summerTires.rearSpeedRating}
+                            <span className="block mb-1">
+                              {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
+                              {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
+                            </span>
+                            <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
+                            <span className="block">
+                              {vehicle.summerTires.rearWidth}/{vehicle.summerTires.rearAspectRatio} R{vehicle.summerTires.rearDiameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.summerTires.rearLoadIndex && ` ${vehicle.summerTires.rearLoadIndex}`}
+                              {vehicle.summerTires.rearSpeedRating && vehicle.summerTires.rearSpeedRating}
+                            </span>
                           </>
                         ) : (
                           <>
-                            {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                            {vehicle.summerTires.loadIndex && ` ${vehicle.summerTires.loadIndex}`}
-                            {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
+                            <span className="block mb-1">
+                              {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
+                              {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
+                            </span>
                           </>
                         )}
                       </p>
@@ -237,29 +282,39 @@ export default function VehiclesPage() {
                   )}
 
                   {vehicle.winterTires && (
-                    <div className="border-l-4 border-blue-400 pl-4">
-                      <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">❄️</span>
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">Winterreifen</span>
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">❄️</span>
+                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">Winterreifen</span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900 dark:text-white">
+                      <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.winterTires.hasDifferentSizes ? (
                           <>
-                            <span className="text-sm text-gray-600">Vorne: </span>
-                            {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                            {vehicle.winterTires.loadIndex && ` ${vehicle.winterTires.loadIndex}`}
-                            {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
-                            <br />
-                            <span className="text-sm text-gray-600">Hinten: </span>
-                            {vehicle.winterTires.rearWidth}/{vehicle.winterTires.rearAspectRatio} R{vehicle.winterTires.rearDiameter}
-                            {vehicle.winterTires.rearLoadIndex && ` ${vehicle.winterTires.rearLoadIndex}`}
-                            {vehicle.winterTires.rearSpeedRating && vehicle.winterTires.rearSpeedRating}
+                            <span className="block mb-1">
+                              {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
+                              {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
+                            </span>
+                            <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
+                            <span className="block">
+                              {vehicle.winterTires.rearWidth}/{vehicle.winterTires.rearAspectRatio} R{vehicle.winterTires.rearDiameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.winterTires.rearLoadIndex && ` ${vehicle.winterTires.rearLoadIndex}`}
+                              {vehicle.winterTires.rearSpeedRating && vehicle.winterTires.rearSpeedRating}
+                            </span>
                           </>
                         ) : (
                           <>
-                            {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                            {vehicle.winterTires.loadIndex && ` ${vehicle.winterTires.loadIndex}`}
-                            {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
+                            <span className="block mb-1">
+                              {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
+                              {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
+                            </span>
                           </>
                         )}
                       </p>
@@ -267,29 +322,39 @@ export default function VehiclesPage() {
                   )}
 
                   {vehicle.allSeasonTires && (
-                    <div className="border-l-4 border-green-400 pl-4">
-                      <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">🌤️</span>
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">Ganzjahresreifen</span>
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">🌤️</span>
+                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">Ganzjahresreifen</span>
                       </div>
-                      <p className="text-lg font-mono text-gray-900 dark:text-white">
+                      <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.allSeasonTires.hasDifferentSizes ? (
                           <>
-                            <span className="text-sm text-gray-600">Vorne: </span>
-                            {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                            {vehicle.allSeasonTires.loadIndex && ` ${vehicle.allSeasonTires.loadIndex}`}
-                            {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
-                            <br />
-                            <span className="text-sm text-gray-600">Hinten: </span>
-                            {vehicle.allSeasonTires.rearWidth}/{vehicle.allSeasonTires.rearAspectRatio} R{vehicle.allSeasonTires.rearDiameter}
-                            {vehicle.allSeasonTires.rearLoadIndex && ` ${vehicle.allSeasonTires.rearLoadIndex}`}
-                            {vehicle.allSeasonTires.rearSpeedRating && vehicle.allSeasonTires.rearSpeedRating}
+                            <span className="block mb-1">
+                              {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
+                              {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
+                            </span>
+                            <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
+                            <span className="block">
+                              {vehicle.allSeasonTires.rearWidth}/{vehicle.allSeasonTires.rearAspectRatio} R{vehicle.allSeasonTires.rearDiameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.allSeasonTires.rearLoadIndex && ` ${vehicle.allSeasonTires.rearLoadIndex}`}
+                              {vehicle.allSeasonTires.rearSpeedRating && vehicle.allSeasonTires.rearSpeedRating}
+                            </span>
                           </>
                         ) : (
                           <>
-                            {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                            {vehicle.allSeasonTires.loadIndex && ` ${vehicle.allSeasonTires.loadIndex}`}
-                            {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
+                            <span className="block mb-1">
+                              {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
+                            </span>
+                            <span className="text-lg font-normal text-gray-700">
+                              {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
+                              {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
+                            </span>
                           </>
                         )}
                       </p>
@@ -297,7 +362,7 @@ export default function VehiclesPage() {
                   )}
 
                   {!vehicle.summerTires && !vehicle.winterTires && !vehicle.allSeasonTires && (
-                    <p className="text-gray-500 text-sm italic">
+                    <p className="text-white/70 text-sm italic text-center py-4">
                       {vehicle.vehicleType === 'MOTORCYCLE'
                         ? 'Noch keine Motorrad-Reifengrößen hinterlegt'
                         : 'Noch keine Reifengrößen hinterlegt'}
@@ -306,17 +371,45 @@ export default function VehiclesPage() {
 
                   {/* VIN Display */}
                   {vehicle.vin && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="mt-2 pt-3 border-t border-white/20">
+                      <p className="text-sm text-white/60">
                         <span className="font-semibold">VIN:</span> {vehicle.vin}
                       </p>
                     </div>
                   )}
 
+                  {/* Inspection Date Display as Badge */}
+                  {vehicle.nextInspectionDate && (
+                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-2 pt-3 border-t border-white/20'}`}>
+                      <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-lg p-3">
+                        <div>
+                          <p className="text-xs text-gray-600 font-semibold">Nächster TÜV:</p>
+                          <p className="text-sm font-bold text-gray-900">
+                            {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                        {(() => {
+                          const today = new Date()
+                          const inspectionDate = new Date(vehicle.nextInspectionDate)
+                          const daysUntil = Math.floor((inspectionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                          return (
+                            <div className={`${daysUntil <= 30 ? 'bg-yellow-400' : 'bg-green-400'} rounded-lg px-3 py-1.5`}>
+                              <p className="text-xs font-bold text-gray-900">⚠️ {daysUntil > 0 ? daysUntil : 0}</p>
+                              <p className="text-xs font-semibold text-gray-900">Tage</p>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Fuel Type Display */}
                   {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
-                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'}`}>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className={`${vehicle.vin || vehicle.nextInspectionDate ? 'mt-2' : 'mt-2 pt-3 border-t border-white/20'}`}>
+                      <p className="text-sm text-white/70">
                         <span className="font-semibold">⛽ Kraftstoff:</span>{' '}
                         {(vehicle as any).fuelType === 'PETROL' && 'Benzin'}
                         {(vehicle as any).fuelType === 'DIESEL' && 'Diesel'}
@@ -333,24 +426,6 @@ export default function VehiclesPage() {
                         {(vehicle as any).electricConsumption && (
                           <span className="ml-1">
                             ({(vehicle as any).electricConsumption} kWh/100km)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Inspection Date Display */}
-                  {vehicle.nextInspectionDate && (
-                    <div className={`${vehicle.vin || ((vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN') ? 'mt-2' : 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'}`}>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-semibold">Nächster TÜV:</span>{' '}
-                        {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                        {vehicle.inspectionReminder && (
-                          <span className="ml-2 text-xs text-primary-600">
-                            🔔 {vehicle.inspectionReminderDays} Tage Erinnerung
                           </span>
                         )}
                       </p>

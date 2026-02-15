@@ -181,6 +181,7 @@ export default function WorkshopDetailPage() {
       
       // Extract service type from URL
       const service = searchParams.get('service') || 'WHEEL_CHANGE'
+      console.log('🔧 [WORKSHOP] Service type from URL:', service)
       setServiceType(service)
       
       // Fetch full workshop details including description and pricing
@@ -188,6 +189,7 @@ export default function WorkshopDetailPage() {
         const response = await fetch(`/api/workshops/${workshopId}`)
         if (response.ok) {
           const data = await response.json()
+          console.log('🏪 [WORKSHOP] API response:', data)
           if (data.success && data.workshop) {
             // Safely extract description
             const desc = data.workshop.companySettings?.description
@@ -196,10 +198,18 @@ export default function WorkshopDetailPage() {
             }
             // Get base service price from workshop data
             if (data.workshop.services) {
+              console.log('💰 [WORKSHOP] Available services:', data.workshop.services)
               const serviceData = data.workshop.services.find((s: any) => s.type === service)
+              console.log('✅ [WORKSHOP] Found service:', serviceData)
               if (serviceData) {
                 workshopData.totalPrice = serviceData.basePrice || 0
+                workshopData.estimatedDuration = serviceData.estimatedDuration || 60
+                console.log('💵 [WORKSHOP] Service basePrice:', serviceData.basePrice, 'duration:', serviceData.estimatedDuration)
+              } else {
+                console.warn('⚠️ [WORKSHOP] Service not found for type:', service)
               }
+            } else {
+              console.warn('⚠️ [WORKSHOP] No services found in API response')
             }
           }
         } else {
@@ -209,6 +219,7 @@ export default function WorkshopDetailPage() {
         console.error('Error loading workshop details:', error)
       }
       
+      console.log('📊 [WORKSHOP] Final workshopData:', workshopData)
       setWorkshop(workshopData)
       setBasePrice(workshopData.totalPrice)
       setBaseDuration(workshopData.estimatedDuration)

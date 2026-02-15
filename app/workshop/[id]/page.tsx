@@ -198,7 +198,12 @@ export default function WorkshopDetailPage() {
   }
 
   const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+    const today = new Date()
+    const maxMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+    if (newMonth.getTime() <= maxMonth.getTime()) {
+      setCurrentMonth(newMonth)
+    }
   }
 
   const prevMonth = () => {
@@ -738,26 +743,8 @@ export default function WorkshopDetailPage() {
                           {tireBookingData.selectedTire.brand}
                           {tireBookingData.selectedTire.model && ` ${tireBookingData.selectedTire.model}`}
                           {tireBookingData.selectedTire.dimension && ` ${tireBookingData.selectedTire.dimension}`}
+                          {(tireBookingData.selectedTire.loadIndex || tireBookingData.selectedTire.speedIndex) && ` ${tireBookingData.selectedTire.loadIndex || ''}${tireBookingData.selectedTire.speedIndex || ''}`}
                         </p>
-                      </div>
-
-                      {/* Tire Specifications */}
-                      <div className="pb-4 border-b border-gray-200">
-                        <p className="text-sm text-gray-600 mb-3">Reifenspezifikation</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          {tireBookingData.selectedTire.loadIndex && (
-                            <div>
-                              <p className="text-xs text-gray-500">Tragfähigkeit</p>
-                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.loadIndex}</p>
-                            </div>
-                          )}
-                          {tireBookingData.selectedTire.speedIndex && (
-                            <div>
-                              <p className="text-xs text-gray-500">Geschwindigkeitsindex</p>
-                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.speedIndex}</p>
-                            </div>
-                          )}
-                        </div>
                       </div>
 
                       {/* EU Labels */}
@@ -845,7 +832,7 @@ export default function WorkshopDetailPage() {
                 <button
                   onClick={prevMonth}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={currentMonth <= new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+                  disabled={currentMonth.getTime() <= new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -859,7 +846,7 @@ export default function WorkshopDetailPage() {
                 <button
                   onClick={nextMonth}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={currentMonth >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)}
+                  disabled={currentMonth.getTime() >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -1092,7 +1079,7 @@ export default function WorkshopDetailPage() {
             <button
               onClick={prevMonth}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              disabled={currentMonth <= new Date(new Date().getFullYear(), new Date().getMonth(), 1)}
+              disabled={currentMonth.getTime() <= new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -1106,7 +1093,7 @@ export default function WorkshopDetailPage() {
             <button
               onClick={nextMonth}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              disabled={currentMonth >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)}
+              disabled={currentMonth.getTime() >= new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).getTime()}
             >
               <ChevronRight className="w-5 h-5" />
             </button>

@@ -211,6 +211,30 @@ export default function WorkshopDetailPage() {
     loadWorkshop()
   }, [workshopId])
 
+  // Save referrer URL for back navigation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const referrer = document.referrer
+      if (referrer && referrer.includes(window.location.origin)) {
+        // Save referrer if it's from our domain
+        sessionStorage.setItem('workshop_referrer', referrer)
+      }
+    }
+  }, [])
+
+  // Get back URL (referrer or homepage)
+  const getBackUrl = () => {
+    if (typeof window !== 'undefined') {
+      const savedReferrer = sessionStorage.getItem('workshop_referrer')
+      if (savedReferrer && savedReferrer.includes(window.location.origin)) {
+        // Extract path from full URL
+        const url = new URL(savedReferrer)
+        return url.pathname + url.search
+      }
+    }
+    return '/'
+  }
+
   // Load tire booking data from sessionStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -755,15 +779,15 @@ export default function WorkshopDetailPage() {
         </div>
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back to Search Button - uses browser history */}
+          {/* Back to Search Button - returns to home with preserved search */}
           <div className="absolute top-0 left-4 sm:left-6 lg:left-8">
-            <button 
-              onClick={() => router.back()}
+            <Link 
+              href={getBackUrl()}
               className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Zurück zur Suche</span>
-            </button>
+            </Link>
           </div>
 
           <div className="max-w-4xl mx-auto text-center">
@@ -774,7 +798,7 @@ export default function WorkshopDetailPage() {
               Wähle deinen Wunschtermin und buche direkt online
             </p>
             <Link
-              href="/home"
+              href={getBackUrl()}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all shadow-lg"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -930,47 +954,6 @@ export default function WorkshopDetailPage() {
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Selected Vehicle Card */}
-          {tireBookingData?.selectedVehicle && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                🚗 Ausgewähltes Fahrzeug
-              </h3>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <p className="text-xl font-bold text-gray-900">
-                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
-                  </p>
-                  <p className="text-gray-600">
-                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
-                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
-                  </p>
-                  
-                  {/* License Plate */}
-                  {tireBookingData.selectedVehicle.licensePlate && (
-                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
-                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <circle cx="5" cy="8" r="1.5"/>
-                          <circle cx="12" cy="5" r="1.5"/>
-                          <circle cx="19" cy="8" r="1.5"/>
-                          <circle cx="5" cy="16" r="1.5"/>
-                          <circle cx="12" cy="19" r="1.5"/>
-                          <circle cx="19" cy="16" r="1.5"/>
-                        </svg>
-                        <span className="text-xs font-bold">D</span>
-                      </div>
-                      <div className="px-3 py-1 text-gray-900">
-                        {tireBookingData.selectedVehicle.licensePlate}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           )}
@@ -1176,7 +1159,48 @@ export default function WorkshopDetailPage() {
             </div>
           )}
 
-          {/* Workshop Description */}
+          {/* Selected Vehicle Card */}
+          {tireBookingData?.selectedVehicle && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewähltes Fahrzeug
+              </h3>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <p className="text-xl font-bold text-gray-900">
+                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
+                  </p>
+                  <p className="text-gray-600">
+                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
+                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
+                  </p>
+                  
+                  {/* License Plate */}
+                  {tireBookingData.selectedVehicle.licensePlate && (
+                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
+                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="5" cy="8" r="1.5"/>
+                          <circle cx="12" cy="5" r="1.5"/>
+                          <circle cx="19" cy="8" r="1.5"/>
+                          <circle cx="5" cy="16" r="1.5"/>
+                          <circle cx="12" cy="19" r="1.5"/>
+                          <circle cx="19" cy="16" r="1.5"/>
+                        </svg>
+                        <span className="text-xs font-bold">D</span>
+                      </div>
+                      <div className="px-3 py-1 text-gray-900">
+                        {tireBookingData.selectedVehicle.licensePlate}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Workshop Description */
           {workshop.description && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
               <h3 className="text-lg font-bold text-gray-900 mb-3">📜 Über die Werkstatt</h3>

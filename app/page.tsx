@@ -1126,8 +1126,8 @@ export default function NewHomePage() {
     const qualityFilter = tireQualityFilter[workshopId] || 'all'
     const sortBy = tireSortBy[workshopId] || 'price'
     
-    // Helper: Determine quality category based on EU labels (flexible: 2 of 3 must match)
-    const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' | null => {
+    // Helper: Determine quality category based on EU labels or brand (inclusive: always categorize)
+    const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' => {
       // Premium brands are always Premium, regardless of EU labels
       const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
       const tireBrand = tire.brand || tire.tire?.brand || ''
@@ -1141,46 +1141,54 @@ export default function NewHomePage() {
       const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
       const noise = tire.labelNoise || tire.tire?.labelNoise
       
-      // If any EU label is missing, exclude tire (don't show)
-      if (!fuelEff || !wetGrip || !noise) return null
+      // If EU labels are missing, default to 'quality' (neutral category)
+      if (!fuelEff && !wetGrip && !noise) return 'quality'
       
-      // Convert noise (dB) to category
-      let noiseCategory: 'premium' | 'quality' | 'budget'
-      if (noise <= 68) {
-        noiseCategory = 'premium' // A-B equivalent
-      } else if (noise <= 71) {
-        noiseCategory = 'quality' // B-C equivalent
-      } else {
-        noiseCategory = 'budget' // C-E equivalent
+      // Categorize based on available labels
+      const categories: ('premium' | 'quality' | 'budget')[] = []
+      
+      // Fuel efficiency
+      if (fuelEff) {
+        if (['A', 'B'].includes(fuelEff.toUpperCase())) categories.push('premium')
+        else if (['C', 'D'].includes(fuelEff.toUpperCase())) categories.push('quality')
+        else categories.push('budget')
       }
       
-      // Map fuel efficiency letter to category
-      const fuelCategory = (['A', 'B'].includes(fuelEff.toUpperCase())) ? 'premium' :
-                          (['B', 'C'].includes(fuelEff.toUpperCase())) ? 'quality' : 'budget'
+      // Wet grip
+      if (wetGrip) {
+        if (['A', 'B'].includes(wetGrip.toUpperCase())) categories.push('premium')
+        else if (['C', 'D'].includes(wetGrip.toUpperCase())) categories.push('quality')
+        else categories.push('budget')
+      }
       
-      // Map wet grip letter to category
-      const wetCategory = (['A', 'B'].includes(wetGrip.toUpperCase())) ? 'premium' :
-                         (['B', 'C'].includes(wetGrip.toUpperCase())) ? 'quality' : 'budget'
+      // Noise
+      if (noise) {
+        if (noise <= 68) categories.push('premium')
+        else if (noise <= 71) categories.push('quality')
+        else categories.push('budget')
+      }
       
-      // Count how many criteria match each category
-      const categories = [fuelCategory, wetCategory, noiseCategory]
+      // No labels available? Default to quality
+      if (categories.length === 0) return 'quality'
+      
+      // Count categories
       const premiumCount = categories.filter(c => c === 'premium').length
       const qualityCount = categories.filter(c => c === 'quality').length
       const budgetCount = categories.filter(c => c === 'budget').length
       
-      // Assign to category if at least 2 of 3 criteria match
-      if (premiumCount >= 2) return 'premium'
-      if (qualityCount >= 2) return 'quality'
-      if (budgetCount >= 2) return 'budget'
+      // Assign based on majority (at least 2 out of 3, or best available)
+      if (premiumCount >= 2 || (premiumCount >= 1 && categories.length === 1)) return 'premium'
+      if (budgetCount >= 2 || (budgetCount >= 1 && categories.length === 1)) return 'budget'
+      if (qualityCount >= 1) return 'quality'
       
-      // Edge case: all different (1 premium, 1 quality, 1 budget) → assign to middle (quality)
+      // Default fallback
       return 'quality'
     }
     
-    // Filter: Remove tires without complete EU labels
-    let filtered = tires.filter((tire: any) => getTireQualityCategory(tire) !== null)
+    // Start with all tires (no longer exclude tires without labels)
+    let filtered = [...tires]
     
-    // Filter by quality category
+    // Filter by quality category if not 'all'
     if (qualityFilter !== 'all') {
       filtered = filtered.filter((tire: any) => {
         const category = getTireQualityCategory(tire)

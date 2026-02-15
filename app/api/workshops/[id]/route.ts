@@ -26,6 +26,18 @@ export async function GET(
             phone: true
           }
         },
+        services: {
+          select: {
+            id: true,
+            type: true,
+            basePrice: true,
+            estimatedDuration: true,
+            isActive: true
+          },
+          where: {
+            isActive: true
+          }
+        },
         _count: {
           select: {
             reviews: true
@@ -66,7 +78,8 @@ export async function GET(
         companySettings: {
           description: workshop.description || null,
           website: workshop.website || null
-        }
+        },
+        services: workshop.services || []
       }
     })
   } catch (error) {

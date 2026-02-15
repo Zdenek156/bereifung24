@@ -32,7 +32,20 @@ export async function GET(
             serviceType: true,
             basePrice: true,
             durationMinutes: true,
-            allowsDirectBooking: true
+            allowsDirectBooking: true,
+            servicePackages: {
+              select: {
+                id: true,
+                packageType: true,
+                name: true,
+                price: true,
+                durationMinutes: true,
+                description: true
+              },
+              where: {
+                isActive: true
+              }
+            }
           },
           where: {
             allowsDirectBooking: true

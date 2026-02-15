@@ -201,10 +201,45 @@ export default function WorkshopDetailPage() {
               console.log('💰 [WORKSHOP] Available services:', data.workshop.services)
               const serviceData = data.workshop.services.find((s: any) => s.serviceType === service)
               console.log('✅ [WORKSHOP] Found service:', serviceData)
-              if (serviceData) {
+              if (serviceData && serviceData.servicePackages && serviceData.servicePackages.length > 0) {
+                // Find the correct package based on tire booking data
+                let selectedPackage = null
+                
+                // Check if we have tire booking data with selected packages
+                const savedTireData = sessionStorage.getItem('tireBookingData')
+                if (savedTireData) {
+                  try {
+                    const tireData = JSON.parse(savedTireData)
+                    console.log('📦 [WORKSHOP] Tire booking data:', tireData)
+                    
+                    // Find matching package from selectedPackages
+                    if (tireData.selectedPackages && tireData.selectedPackages.length > 0) {
+                      const packageType = tireData.selectedPackages[0] // e.g., "two_tires", "four_tires"
+                      selectedPackage = serviceData.servicePackages.find((p: any) => p.packageType === packageType)
+                      console.log(`🎯 [WORKSHOP] Looking for package type '${packageType}':`, selectedPackage)
+                    }
+                    
+                    // Fallback: use tireCount to determine package
+                    if (!selectedPackage && tireData.tireCount) {
+                      const packageType = tireData.tireCount === 4 ? 'four_tires' : 'two_tires'
+                      selectedPackage = serviceData.servicePackages.find((p: any) => p.packageType === packageType)
+                      console.log(`🎯 [WORKSHOP] Fallback to tireCount ${tireData.tireCount}, package type '${packageType}':`, selectedPackage)
+                    }
+                  } catch (e) {
+                    console.error('Error parsing tire booking data:', e)
+                  }
+                }
+                
+                // Use selected package or fall back to first package
+                const packageToUse = selectedPackage || serviceData.servicePackages[0]
+                workshopData.totalPrice = packageToUse.price || 0
+                workshopData.estimatedDuration = packageToUse.durationMinutes || 60
+                console.log('💵 [WORKSHOP] Using package:', packageToUse.name, 'Price:', packageToUse.price, 'Duration:', packageToUse.durationMinutes)
+              } else if (serviceData) {
+                // Fallback to basePrice if no packages
                 workshopData.totalPrice = serviceData.basePrice || 0
                 workshopData.estimatedDuration = serviceData.durationMinutes || 60
-                console.log('💵 [WORKSHOP] Service basePrice:', serviceData.basePrice, 'duration:', serviceData.durationMinutes)
+                console.log('💵 [WORKSHOP] No packages, using basePrice:', serviceData.basePrice, 'duration:', serviceData.durationMinutes)
               } else {
                 console.warn('⚠️ [WORKSHOP] Service not found for type:', service)
               }

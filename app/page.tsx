@@ -2493,7 +2493,8 @@ export default function NewHomePage() {
                                     {/* Tire Grid */}
                                     <div className={`grid grid-cols-1 ${isExpanded ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-3'} gap-2 mb-2`}>
                                       {displayedTires.map((rec: any, idx: number) => {
-                                        const originalIdx = allTires.indexOf(rec)
+                                        // FIX: Find index in ORIGINAL array, not filtered array
+                                        const originalIdx = workshop.tireRecommendations.indexOf(rec)
                                         return (
                                           <button
                                             key={idx}

@@ -1347,16 +1347,16 @@ export default function NewHomePage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <Link
                     href="/register/customer"
-                    className="px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap"
                   >
                     Registrieren
                   </Link>
                   <button
                     onClick={() => setShowLoginModal(true)}
-                    className="px-5 py-2.5 text-sm font-medium bg-white text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium bg-white text-primary-600 hover:bg-gray-100 rounded-lg transition-colors whitespace-nowrap"
                   >
                     Anmelden
                   </button>

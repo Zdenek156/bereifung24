@@ -878,14 +878,14 @@ export default function WorkshopDetailPage() {
 
           {/* Selected Service Card */}
           {tireBookingData && (
-            <div className="bg-gradient-to-r from-blue-50 to-primary-50 rounded-xl shadow-sm border-2 border-primary-200 p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 🔧 Gewählter Service
               </h3>
               
               <div className="space-y-3">
                 {/* Main Service - WITHOUT tire info */}
-                <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-primary-200">
+                <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
                   <div>
                     <p className="font-semibold text-gray-900">
                       {tireBookingData.serviceName === 'TIRE_CHANGE' ? '🔄 Reifenmontage' : 
@@ -944,11 +944,11 @@ export default function WorkshopDetailPage() {
               <div className="flex items-start gap-4">
                 <div className="flex-1">
                   <p className="text-xl font-bold text-gray-900">
-                    {tireBookingData.selectedVehicle.manufacturer} {tireBookingData.selectedVehicle.model}
+                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
                   </p>
                   <p className="text-gray-600">
                     {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
-                    {tireBookingData.selectedVehicle.modelYear && <span>Bj. {tireBookingData.selectedVehicle.modelYear}</span>}
+                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
                   </p>
                   
                   {/* License Plate */}

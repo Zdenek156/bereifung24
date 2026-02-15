@@ -1087,18 +1087,17 @@ export default function NewHomePage() {
     }
     sessionStorage.setItem('lastSearchState', JSON.stringify(searchState))
     
-    // Navigate to workshop detail page with all workshop data as URL params
+    // Navigate to workshop detail page with basic info (prices loaded from DB)
     const params = new URLSearchParams({
       name: workshop.name,
       city: workshop.city || '',
       distance: workshop.distance.toString(),
       rating: workshop.rating.toString(),
       reviewCount: workshop.reviewCount.toString(),
-      totalPrice: workshop.totalPrice.toString(),
       duration: workshop.estimatedDuration?.toString() || '60',
-      service: selectedService, // Add service type for checkout
+      service: selectedService,
     })
-    router.push(`/home/workshop/${workshop.id}?${params.toString()}`)
+    router.push(`/workshop/${workshop.id}?${params.toString()}`)
   }
 
   return (

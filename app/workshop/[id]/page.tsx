@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { 
   ChevronLeft, 
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import AddServicesModal from './components/AddServicesModal'
+import LoginModal from '@/components/LoginModal'
 
 export default function WorkshopDetailPage() {
   const params = useParams()
@@ -35,7 +36,13 @@ export default function WorkshopDetailPage() {
 
   const { data: session, status } = useSession()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  
+  // Refs for auto-scroll
+  const timeSlotsRef = useRef<HTMLDivElement>(null)
+  const vehicleSelectionRef = useRef<HTMLDivElement>(null)
+  const bookingButtonRef = useRef<HTMLDivElement>(null)
 
   const [workshop, setWorkshop] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -60,6 +67,9 @@ export default function WorkshopDetailPage() {
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
   const [basePrice, setBasePrice] = useState(0)
   const [baseDuration, setBaseDuration] = useState(60)
+  
+  // Tire booking data from previous page
+  const [tireBookingData, setTireBookingData] = useState<any>(null)
   
   // Handle image load errors globally
   useEffect(() => {
@@ -164,7 +174,7 @@ export default function WorkshopDetailPage() {
         distance: parseFloat(searchParams.get('distance') || '0'),
         rating: parseFloat(searchParams.get('rating') || '0'),
         reviewCount: parseInt(searchParams.get('reviewCount') || '0'),
-        totalPrice: parseFloat(searchParams.get('totalPrice') || '0'),
+        totalPrice: 0, // Will be calculated from tireBookingData or loaded from DB
         estimatedDuration: parseInt(searchParams.get('duration') || '60'),
         description: '',
       }
@@ -173,7 +183,7 @@ export default function WorkshopDetailPage() {
       const service = searchParams.get('service') || 'WHEEL_CHANGE'
       setServiceType(service)
       
-      // Fetch full workshop details including description
+      // Fetch full workshop details including description and pricing
       try {
         const response = await fetch(`/api/workshops/${workshopId}`)
         if (response.ok) {
@@ -183,6 +193,13 @@ export default function WorkshopDetailPage() {
             const desc = data.workshop.companySettings?.description
             if (desc && desc.trim()) {
               workshopData.description = desc
+            }
+            // Get base service price from workshop data
+            if (data.workshop.services) {
+              const serviceData = data.workshop.services.find((s: any) => s.type === service)
+              if (serviceData) {
+                workshopData.totalPrice = serviceData.basePrice || 0
+              }
             }
           }
         } else {
@@ -200,6 +217,31 @@ export default function WorkshopDetailPage() {
     
     loadWorkshop()
   }, [workshopId])
+
+  // Back navigation - always go to homepage which restores search from sessionStorage
+  const getBackUrl = () => '/'
+
+  // Load tire booking data from sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedData = sessionStorage.getItem('tireBookingData')
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData)
+          console.log('📦 [WORKSHOP] Loaded tire booking data:', data)
+          setTireBookingData(data)
+          
+          // Auto-select vehicle if provided
+          if (data.selectedVehicle?.id) {
+            console.log('🚗 [WORKSHOP] Auto-selecting vehicle:', data.selectedVehicle.id)
+            setSelectedVehicle(data.selectedVehicle.id)
+          }
+        } catch (e) {
+          console.error('Error parsing tire booking data:', e)
+        }
+      }
+    }
+  }, [])
 
   // Fetch available slots when month changes
   useEffect(() => {
@@ -240,6 +282,35 @@ export default function WorkshopDetailPage() {
       style: 'currency',
       currency: 'EUR',
     }).format(amount)
+  }
+
+  // EU Label color helpers for tire display
+  const getLabelColor = (grade: string | null | undefined) => {
+    if (!grade) return 'bg-gray-200 text-gray-700'
+    const colors: Record<string, string> = {
+      'A': 'bg-green-600 text-white',
+      'B': 'bg-green-500 text-white',
+      'C': 'bg-yellow-400 text-gray-900',
+      'D': 'bg-orange-400 text-white',
+      'E': 'bg-red-500 text-white',
+      'F': 'bg-red-700 text-white',
+      'G': 'bg-red-900 text-white',
+    }
+    return colors[grade.toUpperCase()] || 'bg-gray-200 text-gray-700'
+  }
+
+  const getNoiseColor = (noise: number | null | undefined) => {
+    if (!noise) return 'bg-gray-200 text-gray-700'
+    if (noise < 68) return 'bg-green-600 text-white'
+    if (noise <= 72) return 'bg-yellow-400 text-gray-900'
+    return 'bg-red-600 text-white'
+  }
+
+  const getNoiseWaves = (noise: number | null | undefined) => {
+    if (!noise) return '🔇'
+    if (noise < 68) return '🔈'
+    if (noise <= 72) return '🔉'
+    return '🔊'
   }
 
   const getDaysInMonth = (date: Date) => {
@@ -398,10 +469,24 @@ export default function WorkshopDetailPage() {
     console.log(`[CUSTOMER CALENDAR] Selected date: ${dateStr}`)
     console.log(`[CUSTOMER CALENDAR] Busy slots:`, busySlots[dateStr] || [])
     console.log(`[CUSTOMER CALENDAR] All busy slots:`, busySlots)
+    
+    // Auto-scroll to time slots after selection
+    setTimeout(() => {
+      timeSlotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 
   const handleSlotSelect = (slot: any) => {
     setSelectedSlot(slot)
+    
+    // Auto-scroll to vehicle selection (if logged in) or booking button (if not logged in)
+    setTimeout(() => {
+      if (session) {
+        vehicleSelectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else {
+        bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 
   const handleAdditionalServicesSelected = (services: any[]) => {
@@ -410,9 +495,17 @@ export default function WorkshopDetailPage() {
 
   const calculateTotalPrice = () => {
     let total = basePrice
+    
+    // Add tire price if available from previous page
+    if (tireBookingData?.selectedTire?.totalPrice) {
+      total += tireBookingData.selectedTire.totalPrice
+    }
+    
+    // Add additional services
     additionalServices.forEach(service => {
       total += service.price
     })
+    
     return total
   }
 
@@ -434,7 +527,7 @@ export default function WorkshopDetailPage() {
     const dateStr = `${year}-${month}-${day}`
     
     // URL für neue Payment-Seite mit allen Parametern
-    const paymentUrl = `/home/workshop/${workshopId}/payment?` +
+    const paymentUrl = `/workshop/${workshopId}/payment?` +
       `service=${serviceType}&` +
       `date=${dateStr}&` +
       `time=${selectedSlot.time}&` +
@@ -601,8 +694,44 @@ export default function WorkshopDetailPage() {
                       <button
                         onClick={async () => {
                           setShowUserMenu(false)
-                          await fetch('/api/auth/signout', { method: 'POST' })
-                          window.location.href = '/'
+                          
+                          try {
+                            // Save cookie consent before clearing storage
+                            const cookieConsent = localStorage.getItem('cookieConsent')
+                            const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+                            const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
+                            
+                            // Step 1: Call NextAuth signout first
+                            await signOut({ redirect: false })
+                            
+                            // Step 2: Call custom logout endpoint to force cookie deletion
+                            await fetch('/api/logout', {
+                              method: 'POST',
+                              credentials: 'include'
+                            })
+                            
+                            // Step 3: Clear all client storage
+                            localStorage.clear()
+                            sessionStorage.clear()
+                            
+                            // Restore cookie consent
+                            if (cookieConsent) {
+                              localStorage.setItem('cookieConsent', cookieConsent)
+                            }
+                            if (bereifung24Consent) {
+                              localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+                            }
+                            if (bereifung24ConsentDate) {
+                              localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+                            }
+                            
+                            // Step 4: Force page reload
+                            window.location.href = '/'
+                          } catch (error) {
+                            console.error('[LOGOUT] Error during logout:', error)
+                            // Force reload anyway
+                            window.location.href = '/'
+                          }
                         }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
@@ -620,12 +749,12 @@ export default function WorkshopDetailPage() {
                   >
                     Registrieren
                   </Link>
-                  <Link
-                    href="/login"
+                  <button
+                    onClick={() => setShowLoginModal(true)}
                     className="px-4 py-2 text-sm font-medium bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     Anmelden
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -644,15 +773,15 @@ export default function WorkshopDetailPage() {
         </div>
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back to Search Button - uses browser history */}
+          {/* Back to Search Button - returns to home with preserved search */}
           <div className="absolute top-0 left-4 sm:left-6 lg:left-8">
-            <button 
-              onClick={() => router.back()}
+            <Link 
+              href={getBackUrl()}
               className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Zurück zur Suche</span>
-            </button>
+            </Link>
           </div>
 
           <div className="max-w-4xl mx-auto text-center">
@@ -663,7 +792,7 @@ export default function WorkshopDetailPage() {
               Wähle deinen Wunschtermin und buche direkt online
             </p>
             <Link
-              href="/"
+              href={getBackUrl()}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all shadow-lg"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -766,12 +895,312 @@ export default function WorkshopDetailPage() {
           </div>
 
           {/* Workshop Description */}
-          {workshop.description && (
+          {workshop?.description && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
               <h3 className="text-lg font-bold text-gray-900 mb-3">📜 Über die Werkstatt</h3>
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                {workshop.description}
+                {workshop?.description}
               </p>
+            </div>
+          )}
+
+          {/* Selected Service Card */}
+          {tireBookingData && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🔧 Gewählter Service
+              </h3>
+              
+              <div className="space-y-3">
+                {/* Main Service - WITHOUT tire info */}
+                <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {tireBookingData.serviceName === 'TIRE_CHANGE' ? '🔄 Reifenmontage' : 
+                       tireBookingData.serviceName === 'WHEEL_CHANGE' ? '⚙️ Räderwechsel' :
+                       tireBookingData.serviceName === 'ALIGNMENT_BOTH' ? '📐 Achsvermessung' :
+                       '🔧 Service'}
+                    </p>
+                  </div>
+                  {tireBookingData.servicePrice && (
+                    <p className="text-lg font-bold text-primary-600">
+                      {formatEUR(tireBookingData.servicePrice)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Disposal Service */}
+                {tireBookingData.hasDisposal && tireBookingData.disposalPrice > 0 && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-green-200">
+                    <div>
+                      <p className="font-semibold text-gray-900">♻️ Entsorgung</p>
+                      <p className="text-sm text-gray-600">
+                        Fachgerechte Entsorgung ({tireBookingData.tireCount}× {formatEUR(tireBookingData.disposalPrice / tireBookingData.tireCount)})
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-green-600">
+                      {formatEUR(tireBookingData.disposalPrice)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Runflat Service */}
+                {tireBookingData.hasRunflat && tireBookingData.runflatPrice > 0 && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-orange-200">
+                    <div>
+                      <p className="font-semibold text-gray-900">⚠️ Runflat-Reifen</p>
+                      <p className="text-sm text-gray-600">
+                        Spezialmontage für notlauftaugliche Reifen
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-orange-600">
+                      {formatEUR(tireBookingData.runflatPrice)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Selected Tires Card */}
+          {tireBookingData && tireBookingData.hasTires && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewählte Reifen
+              </h3>
+              
+              {/* Mixed Tires */}
+              {tireBookingData.isMixedTires ? (
+                <div className="space-y-4">
+                  {/* Front Tires */}
+                  {tireBookingData.selectedFrontTire && tireBookingData.selectedPackages?.includes('front_two_tires') && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-primary-600 mb-2">
+                        Vorderachse · {tireBookingData.tireDimensionsFront?.formatted || `${tireBookingData.tireDimensionsFront?.width}/${tireBookingData.tireDimensionsFront?.height} R${tireBookingData.tireDimensionsFront?.diameter}`}
+                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedFrontTire.label}</p>
+                          <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedFrontTire.brand}</p>
+                          <p className="text-sm text-gray-600">{tireBookingData.selectedFrontTire.model}</p>
+                          
+                          {/* Load & Speed Index */}
+                          {(tireBookingData.selectedFrontTire.loadIndex || tireBookingData.selectedFrontTire.speedIndex) && (
+                            <p className="text-sm text-gray-700 font-medium mt-2">
+                              {tireBookingData.selectedFrontTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedFrontTire.loadIndex}</span>}
+                              {tireBookingData.selectedFrontTire.loadIndex && tireBookingData.selectedFrontTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                              {tireBookingData.selectedFrontTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedFrontTire.speedIndex}</span>}
+                            </p>
+                          )}
+                          
+                          {/* EU Labels */}
+                          <div className="flex gap-2 mt-3">
+                            {tireBookingData.selectedFrontTire.labelFuelEfficiency && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedFrontTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                  {tireBookingData.selectedFrontTire.labelFuelEfficiency}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedFrontTire.labelWetGrip && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedFrontTire.labelWetGrip)}`} title="Nasshaftung">
+                                  {tireBookingData.selectedFrontTire.labelWetGrip}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedFrontTire.labelNoise && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedFrontTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedFrontTire.labelNoise} dB`}>
+                                  {getNoiseWaves(tireBookingData.selectedFrontTire.labelNoise)} {tireBookingData.selectedFrontTire.labelNoise}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            {tireBookingData.selectedFrontTire.quantity || 2}× à {formatEUR(tireBookingData.selectedFrontTire.pricePerTire || 0)}
+                          </p>
+                          <p className="text-2xl font-bold text-primary-600">
+                            {formatEUR(tireBookingData.selectedFrontTire.totalPrice || 0)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Rear Tires */}
+                  {tireBookingData.selectedRearTire && (tireBookingData.selectedPackages?.includes('rear_two_tires') || tireBookingData.selectedPackages?.includes('mixed_four_tires')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-primary-600 mb-2">
+                        Hinterachse · {tireBookingData.tireDimensionsRear?.formatted || `${tireBookingData.tireDimensionsRear?.width}/${tireBookingData.tireDimensionsRear?.height} R${tireBookingData.tireDimensionsRear?.diameter}`}
+                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedRearTire.label}</p>
+                          <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedRearTire.brand}</p>
+                          <p className="text-sm text-gray-600">{tireBookingData.selectedRearTire.model}</p>
+                          
+                          {/* Load & Speed Index */}
+                          {(tireBookingData.selectedRearTire.loadIndex || tireBookingData.selectedRearTire.speedIndex) && (
+                            <p className="text-sm text-gray-700 font-medium mt-2">
+                              {tireBookingData.selectedRearTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedRearTire.loadIndex}</span>}
+                              {tireBookingData.selectedRearTire.loadIndex && tireBookingData.selectedRearTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                              {tireBookingData.selectedRearTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedRearTire.speedIndex}</span>}
+                            </p>
+                          )}
+                          
+                          {/* EU Labels */}
+                          <div className="flex gap-2 mt-3">
+                            {tireBookingData.selectedRearTire.labelFuelEfficiency && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedRearTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                  {tireBookingData.selectedRearTire.labelFuelEfficiency}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedRearTire.labelWetGrip && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedRearTire.labelWetGrip)}`} title="Nasshaftung">
+                                  {tireBookingData.selectedRearTire.labelWetGrip}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                              </div>
+                            )}
+                            {tireBookingData.selectedRearTire.labelNoise && (
+                              <div className="text-center">
+                                <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedRearTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedRearTire.labelNoise} dB`}>
+                                  {getNoiseWaves(tireBookingData.selectedRearTire.labelNoise)} {tireBookingData.selectedRearTire.labelNoise}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            {tireBookingData.selectedRearTire.quantity || 2}× à {formatEUR(tireBookingData.selectedRearTire.pricePerTire || 0)}
+                          </p>
+                          <p className="text-2xl font-bold text-primary-600">
+                            {formatEUR(tireBookingData.selectedRearTire.totalPrice || 0)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Standard Tires */
+                tireBookingData.selectedTire && (
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-primary-600 mb-2">
+                      {tireBookingData.tireDimensions && `${tireBookingData.tireDimensions.width}/${tireBookingData.tireDimensions.height} R${tireBookingData.tireDimensions.diameter}`}
+                      {tireBookingData.tireDimensions?.loadIndex && tireBookingData.tireDimensions?.speedIndex && ` ${tireBookingData.tireDimensions.loadIndex}${tireBookingData.tireDimensions.speedIndex}`}
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-xs text-primary-600 font-medium mb-1">{tireBookingData.selectedTire.label}</p>
+                        <p className="text-lg font-bold text-gray-900">{tireBookingData.selectedTire.brand}</p>
+                        <p className="text-sm text-gray-600">{tireBookingData.selectedTire.model}</p>
+                        
+                        {/* Load & Speed Index */}
+                        {(tireBookingData.selectedTire.loadIndex || tireBookingData.selectedTire.speedIndex) && (
+                          <p className="text-sm text-gray-700 font-medium mt-2">
+                            {tireBookingData.selectedTire.loadIndex && <span className="text-green-700">Tragfähigkeit: {tireBookingData.selectedTire.loadIndex}</span>}
+                            {tireBookingData.selectedTire.loadIndex && tireBookingData.selectedTire.speedIndex && <span className="text-gray-400 mx-1">·</span>}
+                            {tireBookingData.selectedTire.speedIndex && <span className="text-blue-700">Speed: {tireBookingData.selectedTire.speedIndex}</span>}
+                          </p>
+                        )}
+                        
+                        {/* EU Labels */}
+                        <div className="flex gap-2 mt-3">
+                          {tireBookingData.selectedTire.labelFuelEfficiency && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedTire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                {tireBookingData.selectedTire.labelFuelEfficiency}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Effizienz</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.labelWetGrip && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center w-10 h-10 rounded text-sm font-bold ${getLabelColor(tireBookingData.selectedTire.labelWetGrip)}`} title="Nasshaftung">
+                                {tireBookingData.selectedTire.labelWetGrip}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Nässe</p>
+                            </div>
+                          )}
+                          {tireBookingData.selectedTire.labelNoise && (
+                            <div className="text-center">
+                              <span className={`inline-flex items-center justify-center px-2 h-10 rounded text-sm font-bold ${getNoiseColor(tireBookingData.selectedTire.labelNoise)}`} title={`Lautstärke: ${tireBookingData.selectedTire.labelNoise} dB`}>
+                                {getNoiseWaves(tireBookingData.selectedTire.labelNoise)} {tireBookingData.selectedTire.labelNoise}
+                              </span>
+                              <p className="text-xs text-gray-500 mt-1">Lautstärke</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          {tireBookingData.selectedTire.quantity || 4}× à {formatEUR(tireBookingData.selectedTire.pricePerTire || 0)}
+                        </p>
+                        <p className="text-2xl font-bold text-primary-600">
+                          {formatEUR(tireBookingData.selectedTire.totalPrice || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Selected Vehicle Card */}
+          {tireBookingData?.selectedVehicle && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                🚗 Ausgewähltes Fahrzeug
+              </h3>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <p className="text-xl font-bold text-gray-900">
+                    {tireBookingData.selectedVehicle.make} {tireBookingData.selectedVehicle.model}
+                  </p>
+                  <p className="text-gray-600">
+                    {tireBookingData.selectedVehicle.variant && <span>{tireBookingData.selectedVehicle.variant} · </span>}
+                    {tireBookingData.selectedVehicle.year && <span>Bj. {tireBookingData.selectedVehicle.year}</span>}
+                  </p>
+                  
+                  {/* License Plate */}
+                  {tireBookingData.selectedVehicle.licensePlate && (
+                    <div className="mt-3 inline-flex items-center bg-white border-2 border-gray-800 rounded-md overflow-hidden font-mono text-lg font-bold">
+                      <div className="bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="5" cy="8" r="1.5"/>
+                          <circle cx="12" cy="5" r="1.5"/>
+                          <circle cx="19" cy="8" r="1.5"/>
+                          <circle cx="5" cy="16" r="1.5"/>
+                          <circle cx="12" cy="19" r="1.5"/>
+                          <circle cx="19" cy="16" r="1.5"/>
+                        </svg>
+                        <span className="text-xs font-bold">D</span>
+                      </div>
+                      <div className="px-3 py-1 text-gray-900">
+                        {tireBookingData.selectedVehicle.licensePlate}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -924,7 +1353,7 @@ export default function WorkshopDetailPage() {
 
           {/* Time Slots */}
           {selectedDate && (
-            <div className="border-t pt-6">
+            <div ref={timeSlotsRef} className="border-t pt-6">
               <h4 className="text-lg font-bold mb-4">
                 Verfügbare Zeiten am {selectedDate.toLocaleDateString('de-DE', { 
                   weekday: 'long', 
@@ -965,9 +1394,9 @@ export default function WorkshopDetailPage() {
             </div>
           )}
 
-          {/* Vehicle Selection */}
-          {selectedSlot && session && (
-            <div className="border-t mt-6 pt-6">
+          {/* Vehicle Selection - Only show if no vehicle already selected from previous page */}
+          {selectedSlot && session && !tireBookingData?.selectedVehicle && (
+            <div ref={vehicleSelectionRef} className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">
                   <strong>📅 Ausgewählter Termin:</strong>
@@ -1010,34 +1439,82 @@ export default function WorkshopDetailPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {vehicles.map((vehicle: any) => (
                       <button
                         key={vehicle.id}
-                        onClick={() => setSelectedVehicle(vehicle.id)}
+                        onClick={() => {
+                          setSelectedVehicle(vehicle.id)
+                          // Auto-scroll to booking button after vehicle selection
+                          setTimeout(() => {
+                            bookingButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                          }, 100)
+                        }}
                         className={`
-                          w-full p-4 rounded-lg border-2 text-left transition-all
+                          group relative w-full p-5 rounded-xl text-left transition-all duration-300
                           ${selectedVehicle === vehicle.id
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                            ? 'border-2 border-primary-500 bg-gradient-to-br from-primary-50 to-blue-50 shadow-lg scale-[1.02]'
+                            : 'border-2 border-gray-200 hover:border-primary-300 hover:shadow-md hover:scale-[1.01] bg-white'
                           }
                         `}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {vehicle.make} {vehicle.model}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {vehicle.licensePlate} • {vehicle.year}
-                            </p>
+                        <div className="flex items-start gap-4">
+                          {/* Car Icon */}
+                          <div className={`
+                            flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all
+                            ${selectedVehicle === vehicle.id
+                              ? 'bg-primary-600 shadow-lg'
+                              : 'bg-gray-100 group-hover:bg-primary-100'
+                            }
+                          `}>
+                            <Car className={`w-7 h-7 ${selectedVehicle === vehicle.id ? 'text-white' : 'text-gray-600 group-hover:text-primary-600'}`} />
                           </div>
-                          {selectedVehicle === vehicle.id && (
-                            <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
+                          
+                          {/* Vehicle Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h5 className="text-lg font-bold text-gray-900 truncate">
+                                {vehicle.make} {vehicle.model}
+                              </h5>
+                              {selectedVehicle === vehicle.id && (
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md">
+                                  <Check className="w-4 h-4 text-white" />
+                                </div>
+                              )}
                             </div>
-                          )}
+                            
+                            <div className="flex flex-wrap items-center gap-3">
+                              {/* German License Plate */}
+                              <div className="inline-flex items-stretch h-9 rounded-sm overflow-hidden shadow-md border-2 border-black font-mono font-bold">
+                                {/* Blue EU strip */}
+                                <div className="flex flex-col items-center justify-center bg-[#003399] px-1.5 text-white">
+                                  <div className="text-xs leading-none font-bold">D</div>
+                                </div>
+                                {/* White plate with black text */}
+                                <div className="flex items-center bg-white px-2.5 text-black text-base tracking-[0.15em]">
+                                  {vehicle.licensePlate}
+                                </div>
+                              </div>
+                              
+                              {/* Year Badge */}
+                              <span className={`
+                                inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium
+                                ${selectedVehicle === vehicle.id
+                                  ? 'bg-white/60 text-gray-700'
+                                  : 'bg-gray-50 text-gray-600 group-hover:bg-gray-100'
+                                }
+                              `}>
+                                <Calendar className="w-3.5 h-3.5" />
+                                {vehicle.year}
+                              </span>
+                            </div>
+                          </div>
                         </div>
+                        
+                        {/* Selected Indicator Bar */}
+                        {selectedVehicle === vehicle.id && (
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-blue-500 rounded-b-xl"></div>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1048,7 +1525,7 @@ export default function WorkshopDetailPage() {
 
           {/* Booking Button for non-logged in users */}
           {selectedSlot && !session && (
-            <div className="border-t mt-6 pt-6">
+            <div ref={bookingButtonRef} className="border-t mt-6 pt-6">
               <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4 mb-4">
                 <p className="text-xs text-gray-600 mb-1">
                   <strong>📅 Ausgewählter Termin:</strong>
@@ -1079,7 +1556,7 @@ export default function WorkshopDetailPage() {
 
           {/* Booking Button for logged in users */}
           {selectedSlot && session && selectedVehicle && (
-            <div className="mt-4">
+            <div ref={bookingButtonRef} className="mt-4">
               <button
                 onClick={handleBooking}
                 className="w-full px-8 py-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-xl transition-all text-xl shadow-lg hover:shadow-xl"
@@ -1203,6 +1680,12 @@ export default function WorkshopDetailPage() {
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   )
 }

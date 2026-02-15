@@ -723,7 +723,7 @@ export default function WorkshopDetailPage() {
                   {/* Service Type */}
                   <div className="pb-4 border-b border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Serviceart</p>
-                    <p className="text-base font-semibold text-gray-900">{tireBookingData.serviceName}</p>
+                    <p className="text-base font-semibold text-gray-900">{getServiceInfo(serviceType).name}</p>
                   </div>
 
                   {/* Tire Details */}
@@ -733,23 +733,17 @@ export default function WorkshopDetailPage() {
                       <div className="pb-4 border-b border-gray-200">
                         <p className="text-sm text-gray-600 mb-2">Ausgewählte Reifen</p>
                         <p className="text-base font-semibold text-gray-900 mb-1">
+                          {tireBookingData.tireCount && `${tireBookingData.tireCount}x `}
                           {tireBookingData.selectedTire.brand}
+                          {tireBookingData.selectedTire.model && ` ${tireBookingData.selectedTire.model}`}
+                          {tireBookingData.selectedTire.dimension && ` ${tireBookingData.selectedTire.dimension}`}
                         </p>
-                        {tireBookingData.selectedTire.model && (
-                          <p className="text-sm text-gray-600">{tireBookingData.selectedTire.model}</p>
-                        )}
                       </div>
 
                       {/* Tire Specifications */}
                       <div className="pb-4 border-b border-gray-200">
                         <p className="text-sm text-gray-600 mb-3">Reifenspezifikation</p>
                         <div className="grid grid-cols-2 gap-3">
-                          {tireBookingData.selectedTire.dimension && (
-                            <div>
-                              <p className="text-xs text-gray-500">Dimension</p>
-                              <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.dimension}</p>
-                            </div>
-                          )}
                           {tireBookingData.selectedTire.loadIndex && (
                             <div>
                               <p className="text-xs text-gray-500">Tragfähigkeit</p>
@@ -760,12 +754,6 @@ export default function WorkshopDetailPage() {
                             <div>
                               <p className="text-xs text-gray-500">Geschwindigkeitsindex</p>
                               <p className="text-sm font-medium text-gray-900">{tireBookingData.selectedTire.speedIndex}</p>
-                            </div>
-                          )}
-                          {tireBookingData.tireCount && (
-                            <div>
-                              <p className="text-xs text-gray-500">Anzahl</p>
-                              <p className="text-sm font-medium text-gray-900">{tireBookingData.tireCount} Reifen</p>
                             </div>
                           )}
                         </div>

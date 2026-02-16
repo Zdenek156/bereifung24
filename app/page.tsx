@@ -168,7 +168,7 @@ export default function NewHomePage() {
   
   // Expanded tire selection states
   const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, boolean>>({}) // workshopId -> expanded
-  const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'budget' | 'quality' | 'premium'>>({}) // workshopId -> filter
+  const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'cheap' | 'best' | 'premium'>>({}) // workshopId -> filter
   const [tireSortBy, setTireSortBy] = useState<Record<string, 'price' | 'brand' | 'label'>>({}) // workshopId -> sort
   
   // Ref for scrolling to search results
@@ -1126,77 +1126,65 @@ export default function NewHomePage() {
     const qualityFilter = tireQualityFilter[workshopId] || 'all'
     const sortBy = tireSortBy[workshopId] || 'price'
     
-    // Helper: Determine quality category based on EU labels or brand (inclusive: always categorize)
-    const getTireQualityCategory = (tire: any): 'premium' | 'quality' | 'budget' => {
-      // Premium brands are always Premium, regardless of EU labels
+    // Calculate price threshold for "cheap" category (bottom 33%)
+    const prices = tires.map((t: any) => t.totalPrice || t.pricePerTire || 0).filter((p: number) => p > 0).sort((a: number, b: number) => a - b)
+    const cheapThreshold = prices.length > 0 ? prices[Math.floor(prices.length * 0.33)] : 0
+    
+    console.log(`🏷️ [Filter ${workshopId}] Cheap threshold (33%): €${cheapThreshold.toFixed(2)} of ${prices.length} tires`)
+    
+    // Helper: Determine quality category
+    const getTireQualityCategory = (tire: any): 'premium' | 'best' | 'cheap' => {
+      // 1. Premium brands are always Premium
       const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
       const tireBrand = tire.brand || tire.tire?.brand || ''
       
       if (premiumBrands.some(brand => tireBrand.toLowerCase().includes(brand.toLowerCase()))) {
+        console.log(`  ⭐ ${tireBrand}: Premium (brand)`)
         return 'premium'
       }
       
-      // Extract EU label values
+      // 2. Beste Eigenschaften: ALL 3 labels are A or B
       const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
       const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
       const noise = tire.labelNoise || tire.tire?.labelNoise
       
-      // If EU labels are missing, default to 'quality' (neutral category)
-      if (!fuelEff && !wetGrip && !noise) return 'quality'
+      const hasAllLabels = fuelEff && wetGrip && noise
+      const isFuelGood = fuelEff && ['A', 'B'].includes(fuelEff.toUpperCase())
+      const isWetGood = wetGrip && ['A', 'B'].includes(wetGrip.toUpperCase())
+      const isNoiseGood = noise && noise <= 68 // A or B noise level
       
-      // Categorize based on available labels
-      const categories: ('premium' | 'quality' | 'budget')[] = []
-      
-      // Fuel efficiency
-      if (fuelEff) {
-        if (['A', 'B'].includes(fuelEff.toUpperCase())) categories.push('premium')
-        else if (['C', 'D'].includes(fuelEff.toUpperCase())) categories.push('quality')
-        else categories.push('budget')
+      if (hasAllLabels && isFuelGood && isWetGood && isNoiseGood) {
+        console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (3/3 A-B labels: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
+        return 'best'
       }
       
-      // Wet grip
-      if (wetGrip) {
-        if (['A', 'B'].includes(wetGrip.toUpperCase())) categories.push('premium')
-        else if (['C', 'D'].includes(wetGrip.toUpperCase())) categories.push('quality')
-        else categories.push('budget')
+      // 3. Günstige: Bottom 33% by price
+      const tirePrice = tire.totalPrice || tire.pricePerTire || 0
+      if (tirePrice > 0 && tirePrice <= cheapThreshold) {
+        console.log(`  💰 ${tireBrand}: Günstige (€${tirePrice.toFixed(2)} ≤ €${cheapThreshold.toFixed(2)})`)
+        return 'cheap'
       }
       
-      // Noise
-      if (noise) {
-        if (noise <= 68) categories.push('premium')
-        else if (noise <= 71) categories.push('quality')
-        else categories.push('budget')
-      }
-      
-      // No labels available? Default to quality
-      if (categories.length === 0) return 'quality'
-      
-      // Count categories
-      const premiumCount = categories.filter(c => c === 'premium').length
-      const qualityCount = categories.filter(c => c === 'quality').length
-      const budgetCount = categories.filter(c => c === 'budget').length
-      
-      // Assign based on majority (at least 2 out of 3, or best available)
-      if (premiumCount >= 2 || (premiumCount >= 1 && categories.length === 1)) return 'premium'
-      if (budgetCount >= 2 || (budgetCount >= 1 && categories.length === 1)) return 'budget'
-      if (qualityCount >= 1) return 'quality'
-      
-      // Default fallback
-      return 'quality'
+      // Default: Doesn't fit any category (will be shown only in "Alle")
+      console.log(`  ➖ ${tireBrand}: Kein Filter (Price: €${tirePrice.toFixed(2)}, Labels: Fuel=${fuelEff||'N/A'} Wet=${wetGrip||'N/A'} Noise=${noise||'N/A'})`)
+      return 'best' // Fallback to best to not hide tires
     }
     
-    // Start with all tires (no longer exclude tires without labels)
+    // Start with all tires
     let filtered = [...tires]
     
-    // Filter by quality category if not 'all'
+    // Filter by category if not 'all'
     if (qualityFilter !== 'all') {
+      console.log(`\n🔍 [Filter ${workshopId}] Applying filter: ${qualityFilter}`)
       filtered = filtered.filter((tire: any) => {
         const category = getTireQualityCategory(tire)
         return category === qualityFilter
       })
+      console.log(`✅ [Filter ${workshopId}] Result: ${filtered.length} tires match "${qualityFilter}" filter\n`)
     }
     
     // Sort
+    console.log(`📊 [SORT] Sortierung: ${sortBy}`)
     filtered.sort((a: any, b: any) => {
       if (sortBy === 'price') {
         const priceA = a.totalPrice || a.pricePerTire || 0
@@ -1214,6 +1202,13 @@ export default function NewHomePage() {
       }
       return 0
     })
+    
+    // Log first 3 sorted tires for debugging
+    console.log(`🎯 [SORT RESULT] Erste 3 Reifen:`, filtered.slice(0, 3).map(t => ({
+      brand: t.brand || t.tire?.brand,
+      model: t.model || t.tire?.model,
+      price: t.totalPrice || t.pricePerTire
+    })))
     
     return filtered
   }
@@ -2460,8 +2455,8 @@ export default function NewHomePage() {
                                       <div className="flex gap-1 flex-wrap">
                                         {[
                                           { id: 'all', label: 'Alle', icon: '🔍' },
-                                          { id: 'budget', label: 'Budget', icon: '💰' },
-                                          { id: 'quality', label: 'Qualität', icon: '✓' },
+                                          { id: 'cheap', label: 'Günstige', icon: '💰' },
+                                          { id: 'best', label: 'Beste Eigenschaften', icon: '🏆' },
                                           { id: 'premium', label: 'Premium', icon: '⭐' },
                                         ].map((filter) => (
                                           <button
@@ -2633,20 +2628,20 @@ export default function NewHomePage() {
                                           🔍 Alle
                                         </button>
                                         <button
-                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'budget'}))}
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'cheap'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
-                                            currentFilter === 'budget' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                            currentFilter === 'cheap' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                           }`}
                                         >
-                                          💰 Budget
+                                          💰 Günstige
                                         </button>
                                         <button
-                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'quality'}))}
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'best'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
-                                            currentFilter === 'quality' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                            currentFilter === 'best' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                           }`}
                                         >
-                                          ✓ Qualität
+                                          🏆 Beste Eigenschaften
                                         </button>
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}
@@ -2762,20 +2757,20 @@ export default function NewHomePage() {
                                           🔍 Alle
                                         </button>
                                         <button
-                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'budget'}))}
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'cheap'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
-                                            currentFilter === 'budget' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                            currentFilter === 'cheap' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                           }`}
                                         >
-                                          💰 Budget
+                                          💰 Günstige
                                         </button>
                                         <button
-                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'quality'}))}
+                                          onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'best'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
-                                            currentFilter === 'quality' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                            currentFilter === 'best' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                           }`}
                                         >
-                                          ✓ Qualität
+                                          🏆 Beste Eigenschaften
                                         </button>
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}

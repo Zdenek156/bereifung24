@@ -747,6 +747,58 @@ export async function POST(request: NextRequest) {
                 const frontAvailable = !searchFront || (frontRecsResult?.available && frontRecsResult?.recommendations?.length > 0)
                 const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
+                // Get ALL available tires for front and rear (not just top 3 recommendations)
+                let allFrontTiresResult: any[] = []
+                let allRearTiresResult: any[] = []
+                
+                if (frontAvailable && searchFront) {
+                  allFrontTiresResult = await searchTires({
+                    workshopId: workshop.id,
+                    width: String(widthFront),
+                    height: String(heightFront),
+                    diameter: String(diameterFront),
+                    season: seasonFilter,
+                    minStock: frontTireCount,
+                    minPrice: tireFilters?.minPrice,
+                    maxPrice: tireFilters?.maxPrice,
+                    quality: tireFilters?.quality,
+                    minFuelEfficiency: tireFilters?.fuelEfficiency,
+                    minWetGrip: tireFilters?.wetGrip,
+                    threePMSF: tireFilters?.threePMSF,
+                    showDOTTires: tireFilters?.showDOTTires,
+                    runFlat: requireRunFlat || undefined,
+                    minLoadIndex: loadIndexFront,
+                    minSpeedIndex: speedIndexFront,
+                    sortBy: 'price',
+                    sortOrder: 'asc'
+                  })
+                  console.log(`📊 [FRONT All Tires] Workshop ${workshop.id}: Found ${allFrontTiresResult.length} total front tires`)
+                }
+                
+                if (rearAvailable && searchRear) {
+                  allRearTiresResult = await searchTires({
+                    workshopId: workshop.id,
+                    width: String(widthRear),
+                    height: String(heightRear),
+                    diameter: String(diameterRear),
+                    season: seasonFilter,
+                    minStock: rearTireCount,
+                    minPrice: tireFilters?.minPrice,
+                    maxPrice: tireFilters?.maxPrice,
+                    quality: tireFilters?.quality,
+                    minFuelEfficiency: tireFilters?.fuelEfficiency,
+                    minWetGrip: tireFilters?.wetGrip,
+                    threePMSF: tireFilters?.threePMSF,
+                    showDOTTires: tireFilters?.showDOTTires,
+                    runFlat: requireRunFlat || undefined,
+                    minLoadIndex: loadIndexRear,
+                    minSpeedIndex: speedIndexRear,
+                    sortBy: 'price',
+                    sortOrder: 'asc'
+                  })
+                  console.log(`📊 [REAR All Tires] Workshop ${workshop.id}: Found ${allRearTiresResult.length} total rear tires`)
+                }
+                
                 if (frontAvailable && rearAvailable) {
                   const frontRec = frontRecsResult?.recommendations?.[0]
                   const rearRec = rearRecsResult?.recommendations?.[0]
@@ -785,7 +837,30 @@ export async function POST(request: NextRequest) {
                         quantity: frontTireCount,
                         dimensions: `${widthFront}/${heightFront} R${diameterFront}`
                       },
-                      tireFrontRecommendations: frontRecsResult.recommendations // All 3 options for badges
+                      // Include top 3 recommendations PLUS all other available tires
+                      tireFrontRecommendations: [
+                        // First add the 3 recommendations (Günstigster, Testsieger, Beliebt)
+                        ...frontRecsResult.recommendations.map((rec: any) => ({
+                          label: rec.label,
+                          tire: rec.tire,
+                          pricePerTire: rec.pricePerTire,
+                          totalPrice: rec.totalPrice,
+                          quantity: rec.quantity
+                        })),
+                        // Then add all other tires (exclude duplicates already in recommendations)
+                        ...allFrontTiresResult
+                          .filter(tire => !frontRecsResult.recommendations.some((rec: any) => rec.tire.id === tire.id))
+                          .map(tire => {
+                            const pricePerTire = tire.sellingPrice + (tire.runFlat ? runFlatSurcharge : 0)
+                            return {
+                              label: '', // No label for non-recommendation tires
+                              tire: tire,
+                              pricePerTire: parseFloat(pricePerTire.toFixed(2)),
+                              totalPrice: parseFloat((pricePerTire * frontTireCount).toFixed(2)),
+                              quantity: frontTireCount
+                            }
+                          })
+                      ]
                     }),
                     ...(rearRec && {
                       tireRear: {
@@ -796,7 +871,30 @@ export async function POST(request: NextRequest) {
                         quantity: rearTireCount,
                         dimensions: `${widthRear}/${heightRear} R${diameterRear}`
                       },
-                      tireRearRecommendations: rearRecsResult.recommendations // All 3 options for badges
+                      // Include top 3 recommendations PLUS all other available tires
+                      tireRearRecommendations: [
+                        // First add the 3 recommendations (Günstigster, Testsieger, Beliebt)
+                        ...rearRecsResult.recommendations.map((rec: any) => ({
+                          label: rec.label,
+                          tire: rec.tire,
+                          pricePerTire: rec.pricePerTire,
+                          totalPrice: rec.totalPrice,
+                          quantity: rec.quantity
+                        })),
+                        // Then add all other tires (exclude duplicates already in recommendations)
+                        ...allRearTiresResult
+                          .filter(tire => !rearRecsResult.recommendations.some((rec: any) => rec.tire.id === tire.id))
+                          .map(tire => {
+                            const pricePerTire = tire.sellingPrice + (tire.runFlat ? runFlatSurcharge : 0)
+                            return {
+                              label: '', // No label for non-recommendation tires
+                              tire: tire,
+                              pricePerTire: parseFloat(pricePerTire.toFixed(2)),
+                              totalPrice: parseFloat((pricePerTire * rearTireCount).toFixed(2)),
+                              quantity: rearTireCount
+                            }
+                          })
+                      ]
                     }),
                     tireQuantity: totalTireCount,
                     tireAvailable: true,

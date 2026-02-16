@@ -487,260 +487,11 @@ export async function POST(request: NextRequest) {
                 
                 let frontRecsResult: any = null
                 let rearRecsResult: any = null
-                let matchingBrands: string[] | undefined = undefined
                 
-                // If sameBrand filter is active AND we're searching both sizes, find matching brands first
-                if (sameBrand && searchFront && searchRear) {
-                  console.log(`🔍 [sameBrand Pre-Filter] Workshop ${workshop.id}: Finding matching brands...`)
-                  
-                  // Query for brands available in front size
-                  const frontBrandsResult = await prisma.workshopInventory.findMany({
-                    where: {
-                      workshopId: workshop.id,
-                      width: String(widthFront),
-                      height: String(heightFront),
-                      diameter: String(diameterFront),
-                      season: seasonFilter === 'all' ? undefined : seasonFilter,
-                      stock: { gte: frontTireCount }
-                    },
-                    select: { brand: true },
-                    distinct: ['brand']
-                  })
-                  
-                  // Query for brands available in rear size
-                  const rearBrandsResult = await prisma.workshopInventory.findMany({
-                    where: {
-                      workshopId: workshop.id,
-                      width: String(widthRear),
-                      height: String(heightRear),
-                      diameter: String(diameterRear),
-                      season: seasonFilter === 'all' ? undefined : seasonFilter,
-                      stock: { gte: rearTireCount }
-                    },
-                    select: { brand: true },
-                    distinct: ['brand']
-                  })
-                  
-                  const frontBrands = frontBrandsResult.map(r => r.brand.toLowerCase())
-                  const rearBrands = rearBrandsResult.map(r => r.brand.toLowerCase())
-                  
-                  // Find intersection - brands available in both sizes
-                  matchingBrands = frontBrandsResult
-                    .filter(fb => rearBrands.includes(fb.brand.toLowerCase()))
-                    .map(fb => fb.brand)
-                  
-                  console.log(`🏷️ [sameBrand Pre-Filter] Workshop ${workshop.id}:`, {
-                    frontBrandsCount: frontBrands.length,
-                    rearBrandsCount: rearBrands.length,
-                    matchingBrandsCount: matchingBrands.length,
-                    matchingBrands: matchingBrands.slice(0, 10) // Only log first 10 to avoid truncation
-                  })
-                  
-                  console.log(`📋 [DEBUG] matchingBrands array:`, JSON.stringify(matchingBrands.slice(0, 5)))
-                  
-                  // If no matching brands, skip this workshop entirely
-                  if (matchingBrands.length === 0) {
-                    console.log(`❌ [sameBrand Pre-Filter] Workshop ${workshop.id}: No matching brands found, skipping`)
-                    return null
-                  }
-                  
-                  // For sameBrand: Find all valid brand combinations
-                  const allBrandCombinations = []
-                  
-                  console.log(`🔍 [sameBrand Search] Workshop ${workshop.id}: Testing ${matchingBrands.length} brands...`)
-                  
-                  for (const brand of matchingBrands) {
-                    // Search front with this specific brand
-                    const frontResult = await findTireRecommendations(
-                      workshop.id,
-                      String(widthFront),
-                      String(heightFront),
-                      String(diameterFront),
-                      seasonFilter,
-                      'PKW',
-                      {
-                        minPrice: tireFilters?.minPrice,
-                        maxPrice: tireFilters?.maxPrice,
-                        quality: tireFilters?.quality,
-                        minFuelEfficiency: tireFilters?.fuelEfficiency,
-                        minWetGrip: tireFilters?.wetGrip,
-                        threePMSF: tireFilters?.threePMSF,
-                        showDOTTires: tireFilters?.showDOTTires,
-                        runFlat: requireRunFlat || undefined,
-                        minLoadIndex: loadIndexFront,
-                        minSpeedIndex: speedIndexFront,
-                        brands: [brand] // Single brand
-                      },
-                      frontTireCount,
-                      0,
-                      requireRunFlat ? runFlatSurcharge : 0
-                    )
-                    
-                    // Search rear with same brand
-                    const rearResult = await findTireRecommendations(
-                      workshop.id,
-                      String(widthRear),
-                      String(heightRear),
-                      String(diameterRear),
-                      seasonFilter,
-                      'PKW',
-                      {
-                        minPrice: tireFilters?.minPrice,
-                        maxPrice: tireFilters?.maxPrice,
-                        quality: tireFilters?.quality,
-                        minFuelEfficiency: tireFilters?.fuelEfficiency,
-                        minWetGrip: tireFilters?.wetGrip,
-                        threePMSF: tireFilters?.threePMSF,
-                        showDOTTires: tireFilters?.showDOTTires,
-                        runFlat: requireRunFlat || undefined,
-                        minLoadIndex: loadIndexRear,
-                        minSpeedIndex: speedIndexRear,
-                        brands: [brand] // Same brand
-                      },
-                      rearTireCount,
-                      0,
-                      requireRunFlat ? runFlatSurcharge : 0
-                    )
-                    
-                    // Check if both searches found tires
-                    if (frontResult?.available && frontResult?.recommendations?.length > 0 &&
-                        rearResult?.available && rearResult?.recommendations?.length > 0) {
-                      const combinedPrice = frontResult.recommendations[0].totalPrice + rearResult.recommendations[0].totalPrice
-                      
-                      allBrandCombinations.push({
-                        brand,
-                        front: frontResult,
-                        rear: rearResult,
-                        price: combinedPrice
-                      })
-                    }
-                  }
-                  
-                  if (allBrandCombinations.length === 0) {
-                    console.log(`❌ [sameBrand Search] Workshop ${workshop.id}: No valid brand combination found`)
-                    return null
-                  }
-                  
-                  // Sort by price
-                  allBrandCombinations.sort((a, b) => a.price - b.price)
-                  
-                  // Select best options: Günstige (33%), Beste Eigenschaften (labels), Premium (brands)
-                  let selectedCombination = null
-                  
-                  // Always use cheapest as default
-                  selectedCombination = allBrandCombinations[0]
-                  
-                  // Calculate 33% price threshold for "Günstige"
-                  const prices = allBrandCombinations.map(c => c.price).sort((a, b) => a - b)
-                  const cheapThreshold = prices[Math.floor(prices.length * 0.33)]
-                  
-                  // Premium brands (new definition: 6 brands)
-                  const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
-                  
-                  // Helper: Check if tire has "Beste Eigenschaften" (good labels)
-                  const hasBesteEigenschaften = (tire: any): boolean => {
-                    const { fuelEfficiency, wetGrip, noiseDb } = tire
-                    if (!fuelEfficiency || !wetGrip || !noiseDb) return false
-                    
-                    let greenCount = 0
-                    let redCount = 0
-                    
-                    // Fuel efficiency: A-B = green, E+ = red
-                    if (['A', 'B'].includes(fuelEfficiency.toUpperCase())) greenCount++
-                    else if (!['C', 'D'].includes(fuelEfficiency.toUpperCase())) redCount++
-                    
-                    // Wet grip: A-B = green, E+ = red
-                    if (['A', 'B'].includes(wetGrip.toUpperCase())) greenCount++
-                    else if (!['C', 'D'].includes(wetGrip.toUpperCase())) redCount++
-                    
-                    // Noise: ≤68dB = green, ≥72dB = red
-                    if (noiseDb <= 68) greenCount++
-                    else if (noiseDb >= 72) redCount++
-                    
-                    return greenCount >= 2 && redCount === 0
-                  }
-                  
-                  // Check if combination has "Beste Eigenschaften" (both front and rear)
-                  const hasBestLabels = (combination: any): boolean => {
-                    const frontTire = combination.front.recommendations[0]?.tire
-                    const rearTire = combination.rear.recommendations[0]?.tire
-                    return frontTire && rearTire && hasBesteEigenschaften(frontTire) && hasBesteEigenschaften(rearTire)
-                  }
-                  
-                  // Try to find premium brand
-                  const premiumOption = allBrandCombinations.find(c => 
-                    premiumBrands.some(brand => c.brand.toLowerCase().includes(brand.toLowerCase()))
-                  )
-                  
-                  // Try to find "Beste Eigenschaften" option
-                  const bestLabelsOption = allBrandCombinations.find(c => hasBestLabels(c))
-                  
-                  // Try to find "Günstige" option (bottom 33%)
-                  const cheapOption = allBrandCombinations.find(c => c.price <= cheapThreshold)
-                  
-                  // Create combined recommendations with multiple brand options
-                  const brandOptions = []
-                  
-                  // 1. Günstige (bottom 33% - if exists and different from others)
-                  if (cheapOption) {
-                    brandOptions.push({
-                      label: 'Günstige',
-                      brand: cheapOption.brand,
-                      front: cheapOption.front.recommendations[0],
-                      rear: cheapOption.rear.recommendations[0],
-                      price: cheapOption.price
-                    })
-                  }
-                  
-                  // 2. Beste Eigenschaften (good labels - if different from cheap)
-                  if (bestLabelsOption && (!cheapOption || bestLabelsOption.brand !== cheapOption.brand)) {
-                    brandOptions.push({
-                      label: 'Beste Eigenschaften',
-                      brand: bestLabelsOption.brand,
-                      front: bestLabelsOption.front.recommendations[0],
-                      rear: bestLabelsOption.rear.recommendations[0],
-                      price: bestLabelsOption.price
-                    })
-                  }
-                  
-                  // 3. Premium/Testsieger (Premium brands - if different from both)
-                  if (premiumOption && 
-                      (!cheapOption || premiumOption.brand !== cheapOption.brand) &&
-                      (!bestLabelsOption || premiumOption.brand !== bestLabelsOption.brand)) {
-                    brandOptions.push({
-                      label: 'Premium',
-                      brand: premiumOption.brand,
-                      front: premiumOption.front.recommendations[0],
-                      rear: premiumOption.rear.recommendations[0],
-                      price: premiumOption.price
-                    })
-                  }
-                  
-                  // Fallback: If no options selected, use cheapest
-                  if (brandOptions.length === 0) {
-                    brandOptions.push({
-                      label: 'Günstigster',
-                      brand: selectedCombination.brand,
-                      front: selectedCombination.front.recommendations[0],
-                      rear: selectedCombination.rear.recommendations[0],
-                      price: selectedCombination.price
-                    })
-                  }
-                  
-                  console.log(`✅ [sameBrand Search] Workshop ${workshop.id}: Found ${allBrandCombinations.length} combinations, showing ${brandOptions.length} options: ${brandOptions.map(o => o.brand).join(', ')}`)
-                  
-                  // Use the cheapest combination as default (can be changed later to show all options)
-                  frontRecsResult = selectedCombination.front
-                  rearRecsResult = selectedCombination.rear
-                  
-                  // Store all brand options for potential future use
-                  workshop.brandOptions = brandOptions
-                } else {
-                  // Normal search without sameBrand filter
-                  // Search for front tires if needed
-                  if (searchFront) {
-                    console.log(`🎯 [FRONT Search] Workshop ${workshop.id}: width=${widthFront}, brands=NO FILTER`)
-                    frontRecsResult = await findTireRecommendations(
+                // Search for front tires if needed
+                if (searchFront) {
+                  console.log(`🎯 [FRONT Search] Workshop ${workshop.id}: width=${widthFront}`)
+                  frontRecsResult = await findTireRecommendations(
                     workshop.id,
                     String(widthFront),
                     String(heightFront),
@@ -759,15 +510,16 @@ export async function POST(request: NextRequest) {
                       minLoadIndex: loadIndexFront,
                       minSpeedIndex: speedIndexFront
                     },
-                      frontTireCount,
-                      0,
-                      requireRunFlat ? runFlatSurcharge : 0
-                    )
-                  }
-                  
-                  // Search for rear tires if needed
-                  if (searchRear) {
-                    rearRecsResult = await findTireRecommendations(
+                    frontTireCount,
+                    0,
+                    requireRunFlat ? runFlatSurcharge : 0
+                  )
+                }
+                
+                // Search for rear tires if needed
+                if (searchRear) {
+                  console.log(`🎯 [REAR Search] Workshop ${workshop.id}: width=${widthRear}`)
+                  rearRecsResult = await findTireRecommendations(
                     workshop.id,
                     String(widthRear),
                     String(heightRear),
@@ -786,11 +538,10 @@ export async function POST(request: NextRequest) {
                       minLoadIndex: loadIndexRear,
                       minSpeedIndex: speedIndexRear
                     },
-                      rearTireCount,
-                      0,
-                      requireRunFlat ? runFlatSurcharge : 0
-                    )
-                  }
+                    rearTireCount,
+                    0,
+                    requireRunFlat ? runFlatSurcharge : 0
+                  )
                 }
                 
                 // Check if required searches found tires
@@ -849,6 +600,28 @@ export async function POST(request: NextRequest) {
                   console.log(`📊 [REAR All Tires] Workshop ${workshop.id}: Found ${allRearTiresResult.length} total rear tires`)
                 }
                 
+                // If sameBrand filter is active, filter both lists to only matching brands
+                if (sameBrand && searchFront && searchRear && allFrontTiresResult.length > 0 && allRearTiresResult.length > 0) {
+                  const frontBrands = new Set(allFrontTiresResult.map(t => t.brand.toLowerCase()))
+                  const rearBrands = new Set(allRearTiresResult.map(t => t.brand.toLowerCase()))
+                  
+                  // Find matching brands (available in both)
+                  const matchingBrands = Array.from(frontBrands).filter(brand => rearBrands.has(brand))
+                  
+                  console.log(`🏷️ [sameBrand Filter] Workshop ${workshop.id}: ${frontBrands.size} front brands, ${rearBrands.size} rear brands, ${matchingBrands.length} matching`)
+                  
+                  if (matchingBrands.length > 0) {
+                    // Filter both lists to only tires from matching brands
+                    allFrontTiresResult = allFrontTiresResult.filter(t => matchingBrands.includes(t.brand.toLowerCase()))
+                    allRearTiresResult = allRearTiresResult.filter(t => matchingBrands.includes(t.brand.toLowerCase()))
+                    
+                    console.log(`✅ [sameBrand Filter] Workshop ${workshop.id}: Filtered to ${allFrontTiresResult.length} front, ${allRearTiresResult.length} rear tires`)
+                  } else {
+                    console.log(`❌ [sameBrand Filter] Workshop ${workshop.id}: No matching brands found, skipping workshop`)
+                    return null
+                  }
+                }
+                
                 if (frontAvailable && rearAvailable) {
                   const frontRec = frontRecsResult?.recommendations?.[0]
                   const rearRec = rearRecsResult?.recommendations?.[0]
@@ -876,8 +649,6 @@ export async function POST(request: NextRequest) {
                     // Mixed tire data
                     isMixedTires: true,
                     tirePrice: combinedTirePrice,
-                    // Brand options for sameBrand filter (if active)
-                    ...(sameBrand && workshop.brandOptions && { brandOptions: workshop.brandOptions }),
                     ...(frontRec && {
                       tireFront: {
                         brand: frontRec.tire.brand,

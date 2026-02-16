@@ -2431,6 +2431,9 @@ export default function NewHomePage() {
                         return '🔊' // Laut (3 Wellen)
                       }
                       
+                      const getFuelEfficiencyIcon = () => '⛽' // Kraftstoffeffizienz
+                      const getWetGripIcon = () => '💧' // Nasshaftung
+                      
                       return (
                         <div
                           key={workshop.id}
@@ -2628,13 +2631,13 @@ export default function NewHomePage() {
                                             )}
                                             <div className="flex gap-1 mb-1.5">
                                               {rec.labelFuelEfficiency && (
-                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
-                                                  {rec.labelFuelEfficiency}
+                                                <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                                  {getFuelEfficiencyIcon()} {rec.labelFuelEfficiency}
                                                 </span>
                                               )}
                                               {rec.labelWetGrip && (
-                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelWetGrip)}`} title="Nasshaftung">
-                                                  {rec.labelWetGrip}
+                                                <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.labelWetGrip)}`} title="Nasshaftung">
+                                                  {getWetGripIcon()} {rec.labelWetGrip}
                                                 </span>
                                               )}
                                               {rec.labelNoise && (
@@ -2663,7 +2666,7 @@ export default function NewHomePage() {
                                         }}
                                         className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-primary-600 font-semibold text-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 transition-all flex items-center justify-center gap-2"
                                       >
-                                        {visibleAdditionalCount > 0 && remainingCount === 0 ? (
+                                        {visibleAdditionalCount > 0 ? (
                                           <>
                                             <ChevronUp className="w-4 h-4" />
                                             Weniger anzeigen
@@ -2775,13 +2778,13 @@ export default function NewHomePage() {
                                         )}
                                         <div className="flex gap-1 mb-1.5">
                                           {rec.tire.labelFuelEfficiency && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
-                                              {rec.tire.labelFuelEfficiency}
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                              {getFuelEfficiencyIcon()} {rec.tire.labelFuelEfficiency}
                                             </span>
                                           )}
                                           {rec.tire.labelWetGrip && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
-                                              {rec.tire.labelWetGrip}
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
+                                              {getWetGripIcon()} {rec.tire.labelWetGrip}
                                             </span>
                                           )}
                                           {rec.tire.labelNoise && (
@@ -2797,10 +2800,10 @@ export default function NewHomePage() {
                                     </div>
 
                                     {/* Show more button */}
-                                    {remainingCount > 0 && (
+                                    {filteredTires.length > 3 && (
                                       <button
                                         onClick={() => {
-                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
+                                          if (visibleAdditionalCount > 0) {
                                             setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
                                           } else {
                                             setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
@@ -2808,7 +2811,7 @@ export default function NewHomePage() {
                                         }}
                                         className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
                                       >
-                                        {visibleAdditionalCount > 0 && remainingCount === 0 
+                                        {visibleAdditionalCount > 0
                                           ? 'Weniger anzeigen' 
                                           : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
                                       </button>
@@ -2912,13 +2915,13 @@ export default function NewHomePage() {
                                         )}
                                         <div className="flex gap-1 mb-1.5">
                                           {rec.tire.labelFuelEfficiency && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
-                                              {rec.tire.labelFuelEfficiency}
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelFuelEfficiency)}`} title="Kraftstoffeffizienz">
+                                              {getFuelEfficiencyIcon()} {rec.tire.labelFuelEfficiency}
                                             </span>
                                           )}
                                           {rec.tire.labelWetGrip && (
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
-                                              {rec.tire.labelWetGrip}
+                                            <span className={`inline-flex items-center justify-center px-1.5 h-6 rounded text-xs font-bold ${getLabelColor(rec.tire.labelWetGrip)}`} title="Nasshaftung">
+                                              {getWetGripIcon()} {rec.tire.labelWetGrip}
                                             </span>
                                           )}
                                           {rec.tire.labelNoise && (
@@ -2934,10 +2937,10 @@ export default function NewHomePage() {
                                     </div>
 
                                     {/* Show more button */}
-                                    {remainingCount > 0 && (
+                                    {filteredTires.length > 3 && (
                                       <button
                                         onClick={() => {
-                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
+                                          if (visibleAdditionalCount > 0) {
                                             setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
                                           } else {
                                             setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
@@ -2945,7 +2948,7 @@ export default function NewHomePage() {
                                         }}
                                         className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
                                       >
-                                        {visibleAdditionalCount > 0 && remainingCount === 0 
+                                        {visibleAdditionalCount > 0
                                           ? 'Weniger anzeigen' 
                                           : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
                                       </button>

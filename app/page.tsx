@@ -2652,32 +2652,28 @@ export default function NewHomePage() {
                                       })}
                                     </div>
                                     
-                                    {/* Show More / Less Button */}
+                                    {/* Show More / Less Buttons */}
                                     {allTires.length > 3 && (
-                                      <button
-                                        onClick={() => {
-                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
-                                            // Collapse back to 3
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: 0 }))
-                                          } else {
-                                            // Show 9 more
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: (prev[workshop.id] || 0) + 9 }))
-                                          }
-                                        }}
-                                        className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-primary-600 font-semibold text-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 transition-all flex items-center justify-center gap-2"
-                                      >
-                                        {visibleAdditionalCount > 0 ? (
-                                          <>
-                                            <ChevronUp className="w-4 h-4" />
-                                            Weniger anzeigen
-                                          </>
-                                        ) : (
-                                          <>
+                                      <div className="flex gap-2">
+                                        {remainingCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: (prev[workshop.id] || 0) + 9 }))}
+                                            className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-50 text-primary-600 font-semibold text-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 transition-all flex items-center justify-center gap-2"
+                                          >
                                             <ChevronDown className="w-4 h-4" />
                                             {Math.min(remainingCount, 9)} weitere Reifen anzeigen
-                                          </>
+                                          </button>
                                         )}
-                                      </button>
+                                        {visibleAdditionalCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: 0 }))}
+                                            className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-600 font-semibold text-sm rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-all flex items-center justify-center gap-2"
+                                          >
+                                            <ChevronUp className="w-4 h-4" />
+                                            Weniger anzeigen
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 )
@@ -2799,22 +2795,26 @@ export default function NewHomePage() {
                                     }
                                     </div>
 
-                                    {/* Show more button */}
+                                    {/* Show more/less buttons */}
                                     {filteredTires.length > 3 && (
-                                      <button
-                                        onClick={() => {
-                                          if (visibleAdditionalCount > 0) {
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
-                                          } else {
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
-                                          }
-                                        }}
-                                        className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
-                                      >
-                                        {visibleAdditionalCount > 0
-                                          ? 'Weniger anzeigen' 
-                                          : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
-                                      </button>
+                                      <div className="flex gap-2 mt-2">
+                                        {remainingCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))}
+                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
+                                          >
+                                            {Math.min(remainingCount, 9)} weitere Reifen anzeigen
+                                          </button>
+                                        )}
+                                        {visibleAdditionalCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))}
+                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                          >
+                                            Weniger anzeigen
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 )
@@ -2936,22 +2936,26 @@ export default function NewHomePage() {
                                     }
                                     </div>
 
-                                    {/* Show more button */}
+                                    {/* Show more/less buttons */}
                                     {filteredTires.length > 3 && (
-                                      <button
-                                        onClick={() => {
-                                          if (visibleAdditionalCount > 0) {
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
-                                          } else {
-                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
-                                          }
-                                        }}
-                                        className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
-                                      >
-                                        {visibleAdditionalCount > 0
-                                          ? 'Weniger anzeigen' 
-                                          : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
-                                      </button>
+                                      <div className="flex gap-2 mt-2">
+                                        {remainingCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))}
+                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
+                                          >
+                                            {Math.min(remainingCount, 9)} weitere Reifen anzeigen
+                                          </button>
+                                        )}
+                                        {visibleAdditionalCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))}
+                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                          >
+                                            Weniger anzeigen
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 )

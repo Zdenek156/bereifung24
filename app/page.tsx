@@ -2115,7 +2115,7 @@ export default function NewHomePage() {
                                 onChange={(e) => {
                                   setFuelEfficiency(e.target.value)
                                   if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
+                                    setTimeout(() => searchWorkshops(customerLocation), 0)
                                   }
                                 }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -2135,7 +2135,7 @@ export default function NewHomePage() {
                                 onChange={(e) => {
                                   setWetGrip(e.target.value)
                                   if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    searchWorkshops(customerLocation)
+                                    setTimeout(() => searchWorkshops(customerLocation), 0)
                                   }
                                 }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -2180,7 +2180,7 @@ export default function NewHomePage() {
                                 onChange={(e) => {
                                   setShowDOTTires(e.target.checked)
                                   if (hasSearched && customerLocation) {
-                                    searchWorkshops(customerLocation)
+                                    setTimeout(() => searchWorkshops(customerLocation), 0)
                                   }
                                 }}
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"

@@ -116,6 +116,34 @@ export default function NewHomePage() {
     console.log('🎯 [page.tsx] Service changed to:', newService)
     setSelectedService(newService)
     
+    // Check if current vehicle is compatible with new service
+    if (selectedVehicleId && customerVehicles.length > 0) {
+      const currentVehicle = customerVehicles.find(v => v.id === selectedVehicleId)
+      if (currentVehicle) {
+        let shouldClearVehicle = false
+        
+        // For car tire/wheel services: clear if motorcycle selected
+        if ((newService === 'TIRE_CHANGE' || newService === 'WHEEL_CHANGE') && currentVehicle.vehicleType === 'MOTORCYCLE') {
+          shouldClearVehicle = true
+          console.log('⚠️ [Service Change] Clearing motorcycle - not compatible with car tire service')
+        }
+        
+        // For motorcycle tire service: clear if car/trailer selected
+        if (newService === 'MOTORCYCLE_TIRE' && currentVehicle.vehicleType !== 'MOTORCYCLE') {
+          shouldClearVehicle = true
+          console.log('⚠️ [Service Change] Clearing car/trailer - not compatible with motorcycle service')
+        }
+        
+        if (shouldClearVehicle) {
+          setSelectedVehicleId('')
+          setTireDimensions({ width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
+          setHasMixedTires(false)
+          setTireDimensionsFront('')
+          setTireDimensionsRear('')
+        }
+      }
+    }
+    
     // Immediately set packages for TIRE_CHANGE
     if (newService === 'TIRE_CHANGE') {
       console.log('✅ [page.tsx] Setting default: four_tires')
@@ -1724,17 +1752,50 @@ export default function NewHomePage() {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                               >
                                 <option value="">Fahrzeug auswählen...</option>
-                                {customerVehicles.map(vehicle => (
-                                  <option key={vehicle.id} value={vehicle.id}>
-                                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                                  </option>
-                                ))}
+                                {(() => {
+                                  // Filter vehicles based on selected service
+                                  let filteredVehicles = customerVehicles
+                                  
+                                  if (selectedService === 'TIRE_CHANGE' || selectedService === 'WHEEL_CHANGE') {
+                                    // For car tire/wheel services: show only cars and trailers (no motorcycles)
+                                    filteredVehicles = customerVehicles.filter(v => v.vehicleType !== 'MOTORCYCLE')
+                                  } else if (selectedService === 'MOTORCYCLE_TIRE') {
+                                    // For motorcycle tire service: show only motorcycles
+                                    filteredVehicles = customerVehicles.filter(v => v.vehicleType === 'MOTORCYCLE')
+                                  }
+                                  // For other services (alignment, climate, tire repair): show all vehicles
+                                  
+                                  return filteredVehicles.map(vehicle => (
+                                    <option key={vehicle.id} value={vehicle.id}>
+                                      {vehicle.make} {vehicle.model} ({vehicle.year})
+                                    </option>
+                                  ))
+                                })()}
                               </select>
                               {customerVehicles.length === 0 && (
                                 <p className="text-xs text-gray-500 mt-2">
                                   Noch keine Fahrzeuge in der <a href="/dashboard/customer/vehicles" className="text-primary-600 hover:underline">Fahrzeugverwaltung</a> hinterlegt.
                                 </p>
                               )}
+                              {(() => {
+                                // Show message if no vehicles match the filter
+                                const filteredCount = selectedService === 'MOTORCYCLE_TIRE' 
+                                  ? customerVehicles.filter(v => v.vehicleType === 'MOTORCYCLE').length
+                                  : selectedService === 'TIRE_CHANGE' || selectedService === 'WHEEL_CHANGE'
+                                  ? customerVehicles.filter(v => v.vehicleType !== 'MOTORCYCLE').length
+                                  : customerVehicles.length
+                                
+                                if (customerVehicles.length > 0 && filteredCount === 0) {
+                                  return (
+                                    <p className="text-xs text-amber-600 mt-2">
+                                      {selectedService === 'MOTORCYCLE_TIRE' 
+                                        ? 'Keine Motorräder in Ihrer Fahrzeugverwaltung. Bitte fügen Sie ein Motorrad hinzu.'
+                                        : 'Keine passenden Fahrzeuge (Auto/Anhänger) in Ihrer Fahrzeugverwaltung.'}
+                                    </p>
+                                  )
+                                }
+                                return null
+                              })()}
                               {/* Show tire dimensions only for TIRE_CHANGE service */}
                               {selectedService === 'TIRE_CHANGE' && selectedVehicleId && tireDimensions.width && (
                                 <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">

@@ -55,6 +55,9 @@ export interface TireSearchResult {
   labelNoise?: number
   labelNoiseClass?: string
   eprelUrl?: string
+  // DOT Info
+  isDOT?: boolean
+  dotInfo?: string // e.g. "DOT2021" or "DOT 48/2021"
   // Pricing
   purchasePrice: number // EK (Einkaufspreis)
   sellingPrice: number // VK (Verkaufspreis) - calculated with workshop markup
@@ -238,15 +241,29 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     console.log(`🎨 [Brand Filter] Filtering by ${brands.length} brands:`, brands.slice(0, 5))  // Log first 5 brands
   }
 
-  // EU Label filters
+  // EU Label filters (A=best, G=worst)
+  // User selects "minimum acceptable quality" - e.g., "at least B" means A or B
   if (minFuelEfficiency) {
-    where.labelFuelEfficiency = { lte: minFuelEfficiency } // A < B < C...
+    const labelHierarchy = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    const minIndex = labelHierarchy.indexOf(minFuelEfficiency)
+    if (minIndex !== -1) {
+      const acceptableLabels = labelHierarchy.slice(0, minIndex + 1)
+      where.labelFuelEfficiency = { in: acceptableLabels }
+      console.log(`🏷️ [Fuel Filter] Minimum ${minFuelEfficiency} → Accepting:`, acceptableLabels)
+    }
   }
   if (minWetGrip) {
-    where.labelWetGrip = { lte: minWetGrip }
+    const labelHierarchy = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    const minIndex = labelHierarchy.indexOf(minWetGrip)
+    if (minIndex !== -1) {
+      const acceptableLabels = labelHierarchy.slice(0, minIndex + 1)
+      where.labelWetGrip = { in: acceptableLabels }
+      console.log(`🏷️ [Wet Grip Filter] Minimum ${minWetGrip} → Accepting:`, acceptableLabels)
+    }
   }
   if (maxNoise) {
     where.labelNoise = { lte: maxNoise }
+    console.log(`🔇 [Noise Filter] Maximum ${maxNoise}dB`)
   }
 
   // Feature filters
@@ -257,14 +274,22 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     where.threePMSF = threePMSF
   }
 
-  // Model exclusions: Always exclude DEMO, optionally exclude DOT
+  // Model exclusions: Always exclude DEMO
   const modelExclusions: any[] = [
     { NOT: { model: { contains: 'DEMO', mode: 'insensitive' } } }
   ]
   
-  // Only exclude DOT if showDOTTires is false (default behavior)
-  if (filters.showDOTTires !== true) {
+  // DOT filter logic:
+  // - showDOTTires = false (default): Exclude DOT tires
+  // - showDOTTires = true: ONLY show DOT tires (exclude non-DOT)
+  if (filters.showDOTTires === true) {
+    // Show ONLY DOT tires
+    modelExclusions.push({ model: { contains: 'DOT', mode: 'insensitive' } })
+    console.log('🔴 [DOT Filter] Showing ONLY DOT tires (older stock)')
+  } else {
+    // Default: Exclude DOT tires (show only fresh stock)
     modelExclusions.push({ NOT: { model: { contains: 'DOT', mode: 'insensitive' } } })
+    console.log('✅ [DOT Filter] Excluding DOT tires (fresh stock only)')
   }
   
   // Add model exclusions to AND clause
@@ -354,9 +379,13 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
 
     // Apply price filters (on selling price)
     if (minPrice && sellingPrice < minPrice) {
+      console.log(`💰 [Price Filter] Skipping ${tire.brand} ${tire.model}: €${sellingPrice.toFixed(2)} < min €${minPrice}`)
+      filteredOutCount++
       continue
     }
     if (maxPrice && sellingPrice > maxPrice) {
+      console.log(`💰 [Price Filter] Skipping ${tire.brand} ${tire.model}: €${sellingPrice.toFixed(2)} > max €${maxPrice}`)
+      filteredOutCount++
       continue
     }
 
@@ -366,6 +395,19 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       const match = cleanLoadIndex.match(/(\d+)/)
       if (match) {
         cleanLoadIndex = match[1]
+      }
+    }
+
+    // Extract DOT information from model name
+    const isDOT = tire.model?.toUpperCase().includes('DOT') || false
+    let dotInfo: string | undefined
+    if (isDOT && tire.model) {
+      // Try to extract DOT date from model name (e.g., "DOT2021", "DOT 48/2021", "DOT 2019")
+      const dotMatch = tire.model.match(/DOT\s*([0-9\/\s]+)/i)
+      if (dotMatch) {
+        dotInfo = `DOT ${dotMatch[1].trim()}`
+      } else {
+        dotInfo = 'DOT'
       }
     }
 
@@ -388,6 +430,8 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
       labelNoise: tire.labelNoise || undefined,
       labelNoiseClass: tire.labelNoiseClass || undefined,
       eprelUrl: tire.eprelUrl || undefined,
+      isDOT,
+      dotInfo,
       purchasePrice: tire.price,
       sellingPrice,
       markup,

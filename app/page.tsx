@@ -796,8 +796,8 @@ export default function NewHomePage() {
             maxPrice:tireBudgetMax,
             seasons: seasonToUse ? [seasonToUse] : [],
             quality: qualityValue || undefined,
-            fuelEfficiency: fuelEfficiency || undefined,
-            wetGrip: wetGrip || undefined,
+            minFuelEfficiency: fuelEfficiency || undefined,
+            minWetGrip: wetGrip || undefined,
             threePMSF: require3PMSF || undefined,
             showDOTTires: showDOTTires // Default false = hide DOT tires
           } : undefined,

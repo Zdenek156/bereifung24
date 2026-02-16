@@ -2603,10 +2603,41 @@ export default function NewHomePage() {
                                   </p>
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     {workshop.brandOptions.map((brandOpt: any, idx: number) => {
-                                      // Color based on label
-                                      const labelColor = brandOpt.label === 'Günstigster' ? 'text-green-600' :
-                                                        brandOpt.label === 'Testsieger' ? 'text-purple-600' :
-                                                        'text-blue-600'
+                                      // Color and icon based on label (new categorization)
+                                      const getLabelStyle = (label: string) => {
+                                        if (label === 'Günstige' || label === 'Günstigster') {
+                                          return {
+                                            color: 'text-green-600',
+                                            bg: 'bg-green-50',
+                                            border: 'border-green-200',
+                                            icon: '💰'
+                                          }
+                                        }
+                                        if (label === 'Beste Eigenschaften') {
+                                          return {
+                                            color: 'text-amber-600',
+                                            bg: 'bg-amber-50',
+                                            border: 'border-amber-200',
+                                            icon: '🏆'
+                                          }
+                                        }
+                                        if (label === 'Premium' || label === 'Testsieger') {
+                                          return {
+                                            color: 'text-purple-600',
+                                            bg: 'bg-purple-50',
+                                            border: 'border-purple-200',
+                                            icon: '⭐'
+                                          }
+                                        }
+                                        return {
+                                          color: 'text-blue-600',
+                                          bg: 'bg-blue-50',
+                                          border: 'border-blue-200',
+                                          icon: '🔵'
+                                        }
+                                      }
+                                      
+                                      const labelStyle = getLabelStyle(brandOpt.label)
                                       
                                       // Calculate total price including service costs
                                       const brandOptionTirePrice = (brandOpt.front?.totalPrice ?? 0) + (brandOpt.rear?.totalPrice ?? 0)
@@ -2618,11 +2649,14 @@ export default function NewHomePage() {
                                           onClick={() => setSelectedBrandOptionIndices(prev => ({...prev, [workshop.id]: idx}))}
                                           className={`text-left p-3 rounded-lg border-2 transition-all ${
                                             brandOptionIdx === idx
-                                              ? 'border-blue-500 bg-white shadow-md'
-                                              : 'border-transparent bg-white hover:border-blue-300'
+                                              ? `${labelStyle.border} ${labelStyle.bg} shadow-md`
+                                              : 'border-transparent bg-white hover:border-gray-300'
                                           }`}
                                         >
-                                          <p className={`text-xs font-bold mb-1 ${labelColor}`}>{brandOpt.label}</p>
+                                          <div className="flex items-center gap-1.5 mb-1">
+                                            <span>{labelStyle.icon}</span>
+                                            <p className={`text-xs font-bold ${labelStyle.color}`}>{brandOpt.label}</p>
+                                          </div>
                                           <p className="text-sm font-bold text-gray-900 mb-0.5">{brandOpt.brand}</p>
                                           <p className="text-xs text-gray-600 mb-2">Vorne + Hinten</p>
                                           <p className="text-lg font-bold text-primary-600">{formatEUR(brandOptionTotalPrice)}</p>

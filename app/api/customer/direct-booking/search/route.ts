@@ -615,9 +615,7 @@ export async function POST(request: NextRequest) {
                         brand,
                         front: frontResult,
                         rear: rearResult,
-                        price: combinedPrice,
-                        isPremium: premiumBrands.includes(brand),
-                        isQuality: qualityBrands.includes(brand)
+                        price: combinedPrice
                       })
                     }
                   }
@@ -630,34 +628,91 @@ export async function POST(request: NextRequest) {
                   // Sort by price
                   allBrandCombinations.sort((a, b) => a.price - b.price)
                   
-                  // Select best options: Günstigster, Testsieger (Premium), Beliebt (Quality)
+                  // Select best options: Günstige (33%), Beste Eigenschaften (labels), Premium (brands)
                   let selectedCombination = null
                   
                   // Always use cheapest as default
                   selectedCombination = allBrandCombinations[0]
                   
-                  // Try to find premium brand
-                  const premiumOption = allBrandCombinations.find(c => c.isPremium)
+                  // Calculate 33% price threshold for "Günstige"
+                  const prices = allBrandCombinations.map(c => c.price).sort((a, b) => a - b)
+                  const cheapThreshold = prices[Math.floor(prices.length * 0.33)]
                   
-                  // Try to find quality brand
-                  const qualityOption = allBrandCombinations.find(c => c.isQuality)
+                  // Premium brands (new definition: 6 brands)
+                  const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
+                  
+                  // Helper: Check if tire has "Beste Eigenschaften" (good labels)
+                  const hasBesteEigenschaften = (tire: any): boolean => {
+                    const { fuelEfficiency, wetGrip, noiseDb } = tire
+                    if (!fuelEfficiency || !wetGrip || !noiseDb) return false
+                    
+                    let greenCount = 0
+                    let redCount = 0
+                    
+                    // Fuel efficiency: A-B = green, E+ = red
+                    if (['A', 'B'].includes(fuelEfficiency.toUpperCase())) greenCount++
+                    else if (!['C', 'D'].includes(fuelEfficiency.toUpperCase())) redCount++
+                    
+                    // Wet grip: A-B = green, E+ = red
+                    if (['A', 'B'].includes(wetGrip.toUpperCase())) greenCount++
+                    else if (!['C', 'D'].includes(wetGrip.toUpperCase())) redCount++
+                    
+                    // Noise: ≤68dB = green, ≥72dB = red
+                    if (noiseDb <= 68) greenCount++
+                    else if (noiseDb >= 72) redCount++
+                    
+                    return greenCount >= 2 && redCount === 0
+                  }
+                  
+                  // Check if combination has "Beste Eigenschaften" (both front and rear)
+                  const hasBestLabels = (combination: any): boolean => {
+                    const frontTire = combination.front.recommendations[0]?.tire
+                    const rearTire = combination.rear.recommendations[0]?.tire
+                    return frontTire && rearTire && hasBesteEigenschaften(frontTire) && hasBesteEigenschaften(rearTire)
+                  }
+                  
+                  // Try to find premium brand
+                  const premiumOption = allBrandCombinations.find(c => 
+                    premiumBrands.some(brand => c.brand.toLowerCase().includes(brand.toLowerCase()))
+                  )
+                  
+                  // Try to find "Beste Eigenschaften" option
+                  const bestLabelsOption = allBrandCombinations.find(c => hasBestLabels(c))
+                  
+                  // Try to find "Günstige" option (bottom 33%)
+                  const cheapOption = allBrandCombinations.find(c => c.price <= cheapThreshold)
                   
                   // Create combined recommendations with multiple brand options
                   const brandOptions = []
                   
-                  // 1. Günstigster (always available)
-                  brandOptions.push({
-                    label: 'Günstigster',
-                    brand: selectedCombination.brand,
-                    front: selectedCombination.front.recommendations[0],
-                    rear: selectedCombination.rear.recommendations[0],
-                    price: selectedCombination.price
-                  })
-                  
-                  // 2. Testsieger (Premium - if different from cheapest)
-                  if (premiumOption && premiumOption.brand !== selectedCombination.brand) {
+                  // 1. Günstige (bottom 33% - if exists and different from others)
+                  if (cheapOption) {
                     brandOptions.push({
-                      label: 'Testsieger',
+                      label: 'Günstige',
+                      brand: cheapOption.brand,
+                      front: cheapOption.front.recommendations[0],
+                      rear: cheapOption.rear.recommendations[0],
+                      price: cheapOption.price
+                    })
+                  }
+                  
+                  // 2. Beste Eigenschaften (good labels - if different from cheap)
+                  if (bestLabelsOption && (!cheapOption || bestLabelsOption.brand !== cheapOption.brand)) {
+                    brandOptions.push({
+                      label: 'Beste Eigenschaften',
+                      brand: bestLabelsOption.brand,
+                      front: bestLabelsOption.front.recommendations[0],
+                      rear: bestLabelsOption.rear.recommendations[0],
+                      price: bestLabelsOption.price
+                    })
+                  }
+                  
+                  // 3. Premium/Testsieger (Premium brands - if different from both)
+                  if (premiumOption && 
+                      (!cheapOption || premiumOption.brand !== cheapOption.brand) &&
+                      (!bestLabelsOption || premiumOption.brand !== bestLabelsOption.brand)) {
+                    brandOptions.push({
+                      label: 'Premium',
                       brand: premiumOption.brand,
                       front: premiumOption.front.recommendations[0],
                       rear: premiumOption.rear.recommendations[0],
@@ -665,15 +720,14 @@ export async function POST(request: NextRequest) {
                     })
                   }
                   
-                  // 3. Beliebt (Quality - if different from both)
-                  if (qualityOption && qualityOption.brand !== selectedCombination.brand && 
-                      (!premiumOption || qualityOption.brand !== premiumOption.brand)) {
+                  // Fallback: If no options selected, use cheapest
+                  if (brandOptions.length === 0) {
                     brandOptions.push({
-                      label: 'Beliebt',
-                      brand: qualityOption.brand,
-                      front: qualityOption.front.recommendations[0],
-                      rear: qualityOption.rear.recommendations[0],
-                      price: qualityOption.price
+                      label: 'Günstigster',
+                      brand: selectedCombination.brand,
+                      front: selectedCombination.front.recommendations[0],
+                      rear: selectedCombination.rear.recommendations[0],
+                      price: selectedCombination.price
                     })
                   }
                   

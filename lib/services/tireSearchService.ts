@@ -279,17 +279,17 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
     { NOT: { model: { contains: 'DEMO', mode: 'insensitive' } } }
   ]
   
-  // DOT filter logic:
-  // - showDOTTires = false (default): Exclude DOT tires
-  // - showDOTTires = true: ONLY show DOT tires (exclude non-DOT)
+  // DOT filter logic (INVERTED - was backwards):
+  // - showDOTTires = true: ONLY show DOT tires (older stock)
+  // - showDOTTires = false (default): Exclude DOT tires (fresh stock)
   if (filters.showDOTTires === true) {
-    // Show ONLY DOT tires
-    modelExclusions.push({ model: { contains: 'DOT', mode: 'insensitive' } })
-    console.log('🔴 [DOT Filter] Showing ONLY DOT tires (older stock)')
-  } else {
     // Default: Exclude DOT tires (show only fresh stock)
     modelExclusions.push({ NOT: { model: { contains: 'DOT', mode: 'insensitive' } } })
     console.log('✅ [DOT Filter] Excluding DOT tires (fresh stock only)')
+  } else {
+    // Show ONLY DOT tires
+    modelExclusions.push({ model: { contains: 'DOT', mode: 'insensitive' } })
+    console.log('🔴 [DOT Filter] Showing ONLY DOT tires (older stock)')
   }
   
   // Add model exclusions to AND clause

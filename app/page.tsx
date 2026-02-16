@@ -2441,26 +2441,29 @@ export default function NewHomePage() {
                         >
                           <div className="flex flex-col sm:flex-row">
                             {/* Left: Logo + Badge */}
-                            <div className="relative flex-shrink-0 w-full sm:w-44 h-44 sm:h-auto bg-gradient-to-br from-slate-100 to-slate-200">
+                            <div className="relative flex-shrink-0 w-full sm:w-44 h-44 sm:h-auto bg-gradient-to-br from-primary-500 to-primary-700">
                               {workshop.logoUrl ? (
                                 <img 
                                   src={workshop.logoUrl} 
                                   alt={`${workshop.name} Logo`}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain p-4"
                                   onError={(e) => {
                                     const parent = e.currentTarget.parentElement
                                     if (parent) {
                                       e.currentTarget.remove()
-                                      const span = document.createElement('span')
-                                      span.className = 'text-5xl absolute inset-0 flex items-center justify-center'
-                                      span.textContent = '🔧'
-                                      parent.appendChild(span)
+                                      // Fallback to initial letter
+                                      const initial = '${workshop.name}'.charAt(0).toUpperCase()
+                                      const div = document.createElement('div')
+                                      div.className = 'absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700'
+                                      div.innerHTML = `<span class="text-7xl font-bold text-white">${initial}</span><span class="text-white/60 text-xs mt-2">🔧</span>`
+                                      parent.appendChild(div)
                                     }
                                   }}
                                 />
                               ) : (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-5xl">🔧</span>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700">
+                                  <span className="text-7xl font-bold text-white">{workshop.name.charAt(0).toUpperCase()}</span>
+                                  <span className="text-white/60 text-xs mt-2">🔧</span>
                                 </div>
                               )}
                               {/* BELIEBT Badge */}

@@ -2668,7 +2668,7 @@ export default function NewHomePage() {
                               )}
 
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && !workshop.brandOptions && (() => {
+                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-front`
                                 const filteredTires = filterAndSortTires(workshop.tireFrontRecommendations, workshopKey)
                                 const isExpanded = expandedTireWorkshops[workshopKey] || false
@@ -2797,7 +2797,7 @@ export default function NewHomePage() {
                               })()}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && !workshop.brandOptions && (() => {
+                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-rear`
                                 const filteredTires = filterAndSortTires(workshop.tireRearRecommendations, workshopKey)
                                 const isExpanded = expandedTireWorkshops[workshopKey] || false

@@ -2185,7 +2185,7 @@ export default function NewHomePage() {
                                 }}
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                               />
-                              <span className="text-sm">🏷️ DOT-Reifen anzeigen</span>
+                              <span className="text-sm">🏷️ Nur DOT-Reifen anzeigen</span>
                             </label>
                           </div>
                         </div>

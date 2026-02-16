@@ -1143,19 +1143,39 @@ export default function NewHomePage() {
         return 'premium'
       }
       
-      // 2. Beste Eigenschaften: ALL 3 labels MUST be A or B
+      // 2. Beste Eigenschaften: Min. 2 von 3 Labels A-B (grün), dritte C-D (gelb), KEINE roten!
       const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
       const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
       const noise = tire.labelNoise || tire.tire?.labelNoise
       
       const hasAllLabels = fuelEff && wetGrip && noise
-      const isFuelGood = fuelEff && ['A', 'B'].includes(fuelEff.toUpperCase())
-      const isWetGood = wetGrip && ['A', 'B'].includes(wetGrip.toUpperCase())
-      const isNoiseGood = noise && noise <= 68 // A or B noise level
       
-      if (hasAllLabels && isFuelGood && isWetGood && isNoiseGood) {
-        console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (3/3 A-B: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
-        return 'best'
+      if (hasAllLabels) {
+        // Kategorisierung: grün (A-B), gelb (C-D), rot (E+)
+        let greenCount = 0
+        let yellowCount = 0
+        let redCount = 0
+        
+        // Fuel efficiency
+        if (['A', 'B'].includes(fuelEff.toUpperCase())) greenCount++
+        else if (['C', 'D'].includes(fuelEff.toUpperCase())) yellowCount++
+        else redCount++ // E+
+        
+        // Wet grip
+        if (['A', 'B'].includes(wetGrip.toUpperCase())) greenCount++
+        else if (['C', 'D'].includes(wetGrip.toUpperCase())) yellowCount++
+        else redCount++ // E+
+        
+        // Noise
+        if (noise <= 68) greenCount++ // A-B level (grün)
+        else if (noise <= 71) yellowCount++ // C-D level (gelb)
+        else redCount++ // E+ level (rot, ≥72dB)
+        
+        // Beste Eigenschaften: Min. 2 grün, keine roten
+        if (greenCount >= 2 && redCount === 0) {
+          console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (${greenCount} grün, ${yellowCount} gelb, 0 rot: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
+          return 'best'
+        }
       }
       
       // 3. Günstige: Bottom 33% by price

@@ -283,8 +283,8 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   // - showDOTTires = false (default): Show ALL tires (no DOT filtering)
   // - showDOTTires = true: ONLY show DOT tires (older stock)
   if (filters.showDOTTires === true) {
-    // Show ONLY DOT tires (older stock)
-    modelExclusions.push({ model: { contains: 'DOT', mode: 'insensitive' } })
+    // Show ONLY DOT tires (set WHERE condition, not exclusion!)
+    where.model = { contains: 'DOT', mode: 'insensitive' }
     console.log('🔴 [DOT Filter] Showing ONLY DOT tires (older stock)')
   }
   // else: Default - no DOT filtering, show all tires

@@ -2992,7 +2992,7 @@ export default function NewHomePage() {
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
                                           </div>
                                         ) : null}
-                                        {workshop.disposalFeeApplied && workshop.disposalFeeApplied > 0 && (selectedRec || workshop.isMixedTires) && (() => {
+                                        {((workshop.disposalFeeApplied || 0) > 0) && (selectedRec || workshop.isMixedTires) && (() => {
                                           const tireCount = workshop.isMixedTires ? 4 : (selectedRec?.quantity || 0)
                                           // Only show disposal fee if there are actually tires selected
                                           if (tireCount > 0) {

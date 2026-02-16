@@ -280,14 +280,17 @@ export async function searchTires(filters: TireSearchFilters): Promise<TireSearc
   ]
   
   // DOT filter logic:
-  // - showDOTTires = false (default): Show ALL tires (no DOT filtering)
+  // - showDOTTires = false (default): Exclude DOT tires (fresh stock only)
   // - showDOTTires = true: ONLY show DOT tires (older stock)
   if (filters.showDOTTires === true) {
     // Show ONLY DOT tires (set WHERE condition, not exclusion!)
     where.model = { contains: 'DOT', mode: 'insensitive' }
     console.log('🔴 [DOT Filter] Showing ONLY DOT tires (older stock)')
+  } else {
+    // Default: Exclude DOT tires (fresh stock only)
+    modelExclusions.push({ NOT: { model: { contains: 'DOT', mode: 'insensitive' } } })
+    console.log('✅ [DOT Filter] Excluding DOT tires (fresh stock only)')
   }
-  // else: Default - no DOT filtering, show all tires
   
   // Add model exclusions to AND clause
   if (!where.AND) {

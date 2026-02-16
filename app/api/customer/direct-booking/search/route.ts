@@ -549,10 +549,6 @@ export async function POST(request: NextRequest) {
                   
                   console.log(`🔍 [sameBrand Search] Workshop ${workshop.id}: Testing ${matchingBrands.length} brands...`)
                   
-                  // Premium brands for prioritization
-                  const premiumBrands = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
-                  const qualityBrands = ['Hankook', 'Kumho', 'Yokohama', 'Toyo', 'Falken', 'BFGoodrich', 'Cooper', 'Nokian']
-                  
                   for (const brand of matchingBrands) {
                     // Search front with this specific brand
                     const frontResult = await findTireRecommendations(

@@ -168,7 +168,7 @@ export default function NewHomePage() {
   
   // Expanded tire selection states
   const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, boolean>>({}) // workshopId -> expanded
-  const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'cheap' | 'best' | 'premium'>>({}) // workshopId -> filter
+  const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'cheap' | 'best' | 'premium'>>({}) // workshopId -> filter (internal: also 'standard' for unmatched tires)
   const [tireSortBy, setTireSortBy] = useState<Record<string, 'price' | 'brand' | 'label'>>({}) // workshopId -> sort
   
   // Ref for scrolling to search results
@@ -1133,7 +1133,7 @@ export default function NewHomePage() {
     console.log(`🏷️ [Filter ${workshopId}] Cheap threshold (33%): €${cheapThreshold.toFixed(2)} of ${prices.length} tires`)
     
     // Helper: Determine quality category
-    const getTireQualityCategory = (tire: any): 'premium' | 'best' | 'cheap' => {
+    const getTireQualityCategory = (tire: any): 'premium' | 'best' | 'cheap' | 'standard' => {
       // 1. Premium brands are always Premium
       const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
       const tireBrand = tire.brand || tire.tire?.brand || ''
@@ -1143,7 +1143,7 @@ export default function NewHomePage() {
         return 'premium'
       }
       
-      // 2. Beste Eigenschaften: ALL 3 labels are A or B
+      // 2. Beste Eigenschaften: ALL 3 labels MUST be A or B
       const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
       const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
       const noise = tire.labelNoise || tire.tire?.labelNoise
@@ -1154,7 +1154,7 @@ export default function NewHomePage() {
       const isNoiseGood = noise && noise <= 68 // A or B noise level
       
       if (hasAllLabels && isFuelGood && isWetGood && isNoiseGood) {
-        console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (3/3 A-B labels: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
+        console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (3/3 A-B: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
         return 'best'
       }
       
@@ -1165,9 +1165,9 @@ export default function NewHomePage() {
         return 'cheap'
       }
       
-      // Default: Doesn't fit any category (will be shown only in "Alle")
-      console.log(`  ➖ ${tireBrand}: Kein Filter (Price: €${tirePrice.toFixed(2)}, Labels: Fuel=${fuelEff||'N/A'} Wet=${wetGrip||'N/A'} Noise=${noise||'N/A'})`)
-      return 'best' // Fallback to best to not hide tires
+      // 4. Standard: Doesn't fit premium, best or cheap (shown only in "Alle" filter)
+      console.log(`  ➖ ${tireBrand}: Standard/Mittelklasse (nicht premium/best/cheap)`)
+      return 'standard'
     }
     
     // Start with all tires

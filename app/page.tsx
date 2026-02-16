@@ -738,12 +738,25 @@ export default function NewHomePage() {
     // CRITICAL: Accept tire dimensions directly to avoid async state issues
     overrideMixedTires?: { hasMixed: boolean; front?: string; rear?: string },
     overrideSameBrand?: boolean, // Override for immediate use when checkbox changes
-    overrideQuality?: string // Override for quality filter (premium/quality/budget)
+    overrideQuality?: string, // Override for quality filter (premium/quality/budget)
+    // Override for EU label filters to avoid async state issues
+    overrideFuelEfficiency?: string,
+    overrideWetGrip?: string,
+    overrideShowDOTTires?: boolean,
+    overrideThreePMSF?: boolean,
+    overrideTireBudgetMin?: number,
+    overrideTireBudgetMax?: number
   ) => {
     const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
     const mixedTiresData = overrideMixedTires || { hasMixed: hasMixedTires, front: tireDimensionsFront, rear: tireDimensionsRear }
     const sameBrandValue = overrideSameBrand !== undefined ? overrideSameBrand : requireSameBrand
     const qualityValue = overrideQuality !== undefined ? overrideQuality : tireQuality
+    const fuelEfficiencyValue = overrideFuelEfficiency !== undefined ? overrideFuelEfficiency : fuelEfficiency
+    const wetGripValue = overrideWetGrip !== undefined ? overrideWetGrip : wetGrip
+    const showDOTTiresValue = overrideShowDOTTires !== undefined ? overrideShowDOTTires : showDOTTires
+    const threePMSFValue = overrideThreePMSF !== undefined ? overrideThreePMSF : require3PMSF
+    const tireBudgetMinValue = overrideTireBudgetMin !== undefined ? overrideTireBudgetMin : tireBudgetMin
+    const tireBudgetMaxValue = overrideTireBudgetMax !== undefined ? overrideTireBudgetMax : tireBudgetMax
     
     console.log('🎯 [sameBrand] Using value:', {
       override: overrideSameBrand,
@@ -792,14 +805,14 @@ export default function NewHomePage() {
               return parsed;
             })() : undefined,
           tireFilters: (selectedService === 'TIRE_CHANGE' && includeTires) ? {
-            minPrice: tireBudgetMin,
-            maxPrice:tireBudgetMax,
+            minPrice: tireBudgetMinValue,
+            maxPrice: tireBudgetMaxValue,
             seasons: seasonToUse ? [seasonToUse] : [],
             quality: qualityValue || undefined,
-            minFuelEfficiency: fuelEfficiency || undefined,
-            minWetGrip: wetGrip || undefined,
-            threePMSF: require3PMSF || undefined,
-            showDOTTires: showDOTTires // Default false = hide DOT tires
+            minFuelEfficiency: fuelEfficiencyValue || undefined,
+            minWetGrip: wetGripValue || undefined,
+            threePMSF: threePMSFValue || undefined,
+            showDOTTires: showDOTTiresValue
           } : undefined,
           // Same brand filter (only for mixed 4 tires)
           sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? sameBrandValue : false
@@ -2055,7 +2068,7 @@ export default function NewHomePage() {
                                         if (newMin <= tireBudgetMax) {
                                           setTireBudgetMin(newMin)
                                           if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                            setTimeout(() => searchWorkshops(customerLocation), 0)
+                                            searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newMin)
                                           }
                                         }
                                       }}
@@ -2075,7 +2088,7 @@ export default function NewHomePage() {
                                         if (newMax >= tireBudgetMin) {
                                           setTireBudgetMax(newMax)
                                           if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                            setTimeout(() => searchWorkshops(customerLocation), 0)
+                                            searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newMax)
                                           }
                                         }
                                       }}
@@ -2113,9 +2126,10 @@ export default function NewHomePage() {
                               <select
                                 value={fuelEfficiency}
                                 onChange={(e) => {
-                                  setFuelEfficiency(e.target.value)
+                                  const newValue = e.target.value
+                                  setFuelEfficiency(newValue)
                                   if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    setTimeout(() => searchWorkshops(customerLocation), 0)
+                                    searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, newValue)
                                   }
                                 }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -2133,9 +2147,10 @@ export default function NewHomePage() {
                               <select
                                 value={wetGrip}
                                 onChange={(e) => {
-                                  setWetGrip(e.target.value)
+                                  const newValue = e.target.value
+                                  setWetGrip(newValue)
                                   if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    setTimeout(() => searchWorkshops(customerLocation), 0)
+                                    searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, undefined, newValue)
                                   }
                                 }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -2164,9 +2179,10 @@ export default function NewHomePage() {
                                 type="checkbox"
                                 checked={require3PMSF}
                                 onChange={(e) => {
-                                  setRequire3PMSF(e.target.checked)
+                                  const newValue = e.target.checked
+                                  setRequire3PMSF(newValue)
                                   if (hasSearched && customerLocation && tireDimensions.width && tireDimensions.height && tireDimensions.diameter) {
-                                    setTimeout(() => searchWorkshops(customerLocation), 0)
+                                    searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newValue)
                                   }
                                 }}
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -2178,9 +2194,10 @@ export default function NewHomePage() {
                                 type="checkbox"
                                 checked={showDOTTires}
                                 onChange={(e) => {
-                                  setShowDOTTires(e.target.checked)
+                                  const newValue = e.target.checked
+                                  setShowDOTTires(newValue)
                                   if (hasSearched && customerLocation) {
-                                    setTimeout(() => searchWorkshops(customerLocation), 0)
+                                    searchWorkshops(customerLocation, undefined, undefined, undefined, undefined, undefined, undefined, newValue)
                                   }
                                 }}
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"

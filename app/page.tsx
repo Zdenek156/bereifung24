@@ -195,7 +195,7 @@ export default function NewHomePage() {
   const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
   
   // Expanded tire selection states
-  const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, boolean>>({}) // workshopId -> expanded
+  const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, number>>({}) // workshopId -> number of additional tires to show (0 = collapsed, 9, 18, 27...)
   const [tireQualityFilter, setTireQualityFilter] = useState<Record<string, 'all' | 'cheap' | 'best' | 'premium'>>({}) // workshopId -> filter (internal: also 'standard' for unmatched tires)
   const [tireSortBy, setTireSortBy] = useState<Record<string, 'price' | 'brand' | 'label'>>({}) // workshopId -> sort
   
@@ -2547,10 +2547,10 @@ export default function NewHomePage() {
 
                               {/* Tire Recommendations Panel - Enhanced with Expandable Grid */}
                               {showTires && workshop.tireAvailable && workshop.tireRecommendations?.length > 0 && (() => {
-                                const isExpanded = expandedTireWorkshops[workshop.id] || false
+                                const visibleAdditionalCount = expandedTireWorkshops[workshop.id] || 0
                                 const allTires = filterAndSortTires(workshop.tireRecommendations, workshop.id)
-                                const displayedTires = isExpanded ? allTires : allTires.slice(0, 3)
-                                const remainingCount = allTires.length - 3
+                                const displayedTires = allTires.slice(0, 3 + visibleAdditionalCount)
+                                const remainingCount = allTires.length - displayedTires.length
                                 const currentFilter = tireQualityFilter[workshop.id] || 'all'
                                 const currentSort = tireSortBy[workshop.id] || 'price'
                                 
@@ -2601,7 +2601,7 @@ export default function NewHomePage() {
                                     </div>
                                     
                                     {/* Tire Grid */}
-                                    <div className={`grid grid-cols-1 ${isExpanded ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-3'} gap-2 mb-2`}>
+                                    <div className={`grid grid-cols-1 ${visibleAdditionalCount > 0 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-3'} gap-2 mb-2`}>
                                       {displayedTires.map((rec: any, idx: number) => {
                                         // FIX: Find index in ORIGINAL array, not filtered array
                                         const originalIdx = workshop.tireRecommendations.indexOf(rec)
@@ -2652,10 +2652,18 @@ export default function NewHomePage() {
                                     {/* Show More / Less Button */}
                                     {allTires.length > 3 && (
                                       <button
-                                        onClick={() => setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: !isExpanded }))}
+                                        onClick={() => {
+                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
+                                            // Collapse back to 3
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: 0 }))
+                                          } else {
+                                            // Show 9 more
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshop.id]: (prev[workshop.id] || 0) + 9 }))
+                                          }
+                                        }}
                                         className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-primary-600 font-semibold text-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 transition-all flex items-center justify-center gap-2"
                                       >
-                                        {isExpanded ? (
+                                        {visibleAdditionalCount > 0 && remainingCount === 0 ? (
                                           <>
                                             <ChevronUp className="w-4 h-4" />
                                             Weniger anzeigen
@@ -2663,7 +2671,7 @@ export default function NewHomePage() {
                                         ) : (
                                           <>
                                             <ChevronDown className="w-4 h-4" />
-                                            {remainingCount} weitere Reifen anzeigen
+                                            {Math.min(remainingCount, 9)} weitere Reifen anzeigen
                                           </>
                                         )}
                                       </button>
@@ -2676,9 +2684,9 @@ export default function NewHomePage() {
                               {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-front`
                                 const filteredTires = filterAndSortTires(workshop.tireFrontRecommendations, workshopKey)
-                                const isExpanded = expandedTireWorkshops[workshopKey] || false
-                                const displayedTires = isExpanded ? filteredTires : filteredTires.slice(0, 3)
-                                const hasMoreTires = filteredTires.length > 3
+                                const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0
+                                const displayedTires = filteredTires.slice(0, 3 + visibleAdditionalCount)
+                                const remainingCount = filteredTires.length - displayedTires.length
                                 const currentFilter = tireQualityFilter[workshopKey] || 'all'
                                 const currentSort = tireSortBy[workshopKey] || 'price'
 
@@ -2789,12 +2797,20 @@ export default function NewHomePage() {
                                     </div>
 
                                     {/* Show more button */}
-                                    {hasMoreTires && (
+                                    {remainingCount > 0 && (
                                       <button
-                                        onClick={() => setExpandedTireWorkshops(prev => ({...prev, [workshopKey]: !isExpanded}))}
+                                        onClick={() => {
+                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
+                                          } else {
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
+                                          }
+                                        }}
                                         className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
                                       >
-                                        {isExpanded ? 'Weniger anzeigen' : `${filteredTires.length - 3} weitere Reifen anzeigen`}
+                                        {visibleAdditionalCount > 0 && remainingCount === 0 
+                                          ? 'Weniger anzeigen' 
+                                          : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
                                       </button>
                                     )}
                                   </div>
@@ -2805,9 +2821,9 @@ export default function NewHomePage() {
                               {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-rear`
                                 const filteredTires = filterAndSortTires(workshop.tireRearRecommendations, workshopKey)
-                                const isExpanded = expandedTireWorkshops[workshopKey] || false
-                                const displayedTires = isExpanded ? filteredTires : filteredTires.slice(0, 3)
-                                const hasMoreTires = filteredTires.length > 3
+                                const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0
+                                const displayedTires = filteredTires.slice(0, 3 + visibleAdditionalCount)
+                                const remainingCount = filteredTires.length - displayedTires.length
                                 const currentFilter = tireQualityFilter[workshopKey] || 'all'
                                 const currentSort = tireSortBy[workshopKey] || 'price'
 
@@ -2918,12 +2934,20 @@ export default function NewHomePage() {
                                     </div>
 
                                     {/* Show more button */}
-                                    {hasMoreTires && (
+                                    {remainingCount > 0 && (
                                       <button
-                                        onClick={() => setExpandedTireWorkshops(prev => ({...prev, [workshopKey]: !isExpanded}))}
+                                        onClick={() => {
+                                          if (visibleAdditionalCount > 0 && remainingCount === 0) {
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: 0 }))
+                                          } else {
+                                            setExpandedTireWorkshops(prev => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))
+                                          }
+                                        }}
                                         className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition"
                                       >
-                                        {isExpanded ? 'Weniger anzeigen' : `${filteredTires.length - 3} weitere Reifen anzeigen`}
+                                        {visibleAdditionalCount > 0 && remainingCount === 0 
+                                          ? 'Weniger anzeigen' 
+                                          : `${Math.min(remainingCount, 9)} weitere Reifen anzeigen`}
                                       </button>
                                     )}
                                   </div>
@@ -3048,7 +3072,7 @@ export default function NewHomePage() {
                                   onClick={() => handleBooking(workshop)}
                                   className="flex-shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md"
                                 >
-                                  Termin buchen →
+                                  {includeTires ? 'Reifen & Montage buchen →' : 'Montage buchen →'}
                                 </button>
                               </div>
                             </div>

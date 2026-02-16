@@ -83,7 +83,7 @@ export default function NewHomePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const [selectedService, setSelectedService] = useState('WHEEL_CHANGE')
+  const [selectedService, setSelectedService] = useState('TIRE_CHANGE')
   const [postalCode, setPostalCode] = useState('')
   const [radiusKm, setRadiusKm] = useState(25)
   const [useGeolocation, setUseGeolocation] = useState(false)

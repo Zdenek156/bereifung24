@@ -1132,50 +1132,56 @@ export default function NewHomePage() {
     
     console.log(`🏷️ [Filter ${workshopId}] Cheap threshold (33%): €${cheapThreshold.toFixed(2)} of ${prices.length} tires`)
     
-    // Helper: Determine quality category
+    // Helper: Check if tire has "Beste Eigenschaften" (good labels)
+    const hasBesteEigenschaften = (tire: any): boolean => {
+      const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
+      const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
+      const noise = tire.labelNoise || tire.tire?.labelNoise
+      
+      const hasAllLabels = fuelEff && wetGrip && noise
+      if (!hasAllLabels) return false
+      
+      let greenCount = 0
+      let yellowCount = 0
+      let redCount = 0
+      
+      // Fuel efficiency
+      if (['A', 'B'].includes(fuelEff.toUpperCase())) greenCount++
+      else if (['C', 'D'].includes(fuelEff.toUpperCase())) yellowCount++
+      else redCount++ // E+
+      
+      // Wet grip
+      if (['A', 'B'].includes(wetGrip.toUpperCase())) greenCount++
+      else if (['C', 'D'].includes(wetGrip.toUpperCase())) yellowCount++
+      else redCount++ // E+
+      
+      // Noise
+      if (noise <= 68) greenCount++ // A-B level (grün)
+      else if (noise <= 71) yellowCount++ // C-D level (gelb)
+      else redCount++ // E+ level (rot, ≥72dB)
+      
+      // Beste Eigenschaften: Min. 2 grün, keine roten
+      return greenCount >= 2 && redCount === 0
+    }
+    
+    // Helper: Determine quality category (for display and default "Alle" filter)
     const getTireQualityCategory = (tire: any): 'premium' | 'best' | 'cheap' | 'standard' => {
-      // 1. Premium brands are always Premium
-      const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
       const tireBrand = tire.brand || tire.tire?.brand || ''
       
+      // 1. Premium brands are always Premium (for category display)
+      const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
       if (premiumBrands.some(brand => tireBrand.toLowerCase().includes(brand.toLowerCase()))) {
         console.log(`  ⭐ ${tireBrand}: Premium (brand)`)
         return 'premium'
       }
       
       // 2. Beste Eigenschaften: Min. 2 von 3 Labels A-B (grün), dritte C-D (gelb), KEINE roten!
-      const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
-      const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
-      const noise = tire.labelNoise || tire.tire?.labelNoise
-      
-      const hasAllLabels = fuelEff && wetGrip && noise
-      
-      if (hasAllLabels) {
-        // Kategorisierung: grün (A-B), gelb (C-D), rot (E+)
-        let greenCount = 0
-        let yellowCount = 0
-        let redCount = 0
-        
-        // Fuel efficiency
-        if (['A', 'B'].includes(fuelEff.toUpperCase())) greenCount++
-        else if (['C', 'D'].includes(fuelEff.toUpperCase())) yellowCount++
-        else redCount++ // E+
-        
-        // Wet grip
-        if (['A', 'B'].includes(wetGrip.toUpperCase())) greenCount++
-        else if (['C', 'D'].includes(wetGrip.toUpperCase())) yellowCount++
-        else redCount++ // E+
-        
-        // Noise
-        if (noise <= 68) greenCount++ // A-B level (grün)
-        else if (noise <= 71) yellowCount++ // C-D level (gelb)
-        else redCount++ // E+ level (rot, ≥72dB)
-        
-        // Beste Eigenschaften: Min. 2 grün, keine roten
-        if (greenCount >= 2 && redCount === 0) {
-          console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (${greenCount} grün, ${yellowCount} gelb, 0 rot: Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
-          return 'best'
-        }
+      if (hasBesteEigenschaften(tire)) {
+        const fuelEff = tire.labelFuelEfficiency || tire.tire?.labelFuelEfficiency
+        const wetGrip = tire.labelWetGrip || tire.tire?.labelWetGrip
+        const noise = tire.labelNoise || tire.tire?.labelNoise
+        console.log(`  🏆 ${tireBrand}: Beste Eigenschaften (Fuel=${fuelEff}, Wet=${wetGrip}, Noise=${noise}dB)`)
+        return 'best'
       }
       
       // 3. Günstige: Bottom 33% by price
@@ -1197,8 +1203,19 @@ export default function NewHomePage() {
     if (qualityFilter !== 'all') {
       console.log(`\n🔍 [Filter ${workshopId}] Applying filter: ${qualityFilter}`)
       filtered = filtered.filter((tire: any) => {
-        const category = getTireQualityCategory(tire)
-        return category === qualityFilter
+        const tireBrand = tire.brand || tire.tire?.brand || ''
+        const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
+        const isPremium = premiumBrands.some(brand => tireBrand.toLowerCase().includes(brand.toLowerCase()))
+        
+        if (qualityFilter === 'premium') {
+          return isPremium
+        } else if (qualityFilter === 'best') {
+          // Show ALL tires with good labels (including premium brands)
+          return hasBesteEigenschaften(tire)
+        } else if (qualityFilter === 'cheap') {
+          return getTireQualityCategory(tire) === 'cheap'
+        }
+        return false
       })
       console.log(`✅ [Filter ${workshopId}] Result: ${filtered.length} tires match "${qualityFilter}" filter\n`)
     }

@@ -405,7 +405,7 @@ export default function PaymentPage() {
                 <div className="bg-primary-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-bold text-lg text-primary-900">
-                      {bookingData.tireBooking?.tireCount
+                      {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
                         ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
                         : serviceLabels[bookingData.service.type] || bookingData.service.type
                       }
@@ -430,8 +430,8 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* Tire Info (if available) */}
-              {bookingData.tireBooking?.selectedTire && (
+              {/* Tire Info (only for TIRE_CHANGE service) */}
+              {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.selectedTire && (
                 <div className="mb-6 pb-6 border-b border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Reifen</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -522,7 +522,7 @@ export default function PaymentPage() {
                   {/* Service Price */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">
-                      {bookingData.tireBooking?.tireCount
+                      {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
                         ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
                         : serviceLabels[bookingData.service.type] || bookingData.service.type
                       }
@@ -540,8 +540,8 @@ export default function PaymentPage() {
                     ))
                   )}
                   
-                  {/* Tire Price */}
-                  {bookingData.tireBooking?.selectedTire && bookingData.pricing.tirePrice > 0 && (
+                  {/* Tire Price - Only for TIRE_CHANGE */}
+                  {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.selectedTire && bookingData.pricing.tirePrice > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
                         {bookingData.tireBooking.selectedTire.quantity || 4}× Reifen

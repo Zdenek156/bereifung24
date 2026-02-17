@@ -33,6 +33,12 @@ export default function PaymentPage() {
   const [workshop, setWorkshop] = useState<any>(null)
   const [processing, setProcessing] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments' | null>(null)
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [couponError, setCouponError] = useState('')
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
 
   // Service labels
   const serviceLabels: Record<string, string> = {
@@ -205,6 +211,58 @@ export default function PaymentPage() {
     }).format(price)
   }
 
+  // Validate and apply coupon code
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Bitte gib einen Gutscheincode ein')
+      return
+    }
+
+    setIsValidatingCoupon(true)
+    setCouponError('')
+
+    try {
+      // TODO: Replace with real API call when coupon system is implemented
+      // const response = await fetch('/api/coupons/validate', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ code: couponCode, amount: bookingData.pricing.totalPrice })
+      // })
+      // const data = await response.json()
+      
+      // Mock validation for now (remove this when API is ready)
+      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
+      
+      // Mock: Accept codes that start with "SAVE"
+      if (couponCode.toUpperCase().startsWith('SAVE')) {
+        const mockDiscount = couponCode.toUpperCase() === 'SAVE10' ? 10 : 
+                           couponCode.toUpperCase() === 'SAVE20' ? 20 : 5
+        setAppliedCoupon({
+          code: couponCode.toUpperCase(),
+          type: 'percentage',
+          value: mockDiscount,
+          description: `${mockDiscount}% Rabatt`
+        })
+        setCouponError('')
+      } else {
+        setCouponError('Ungültiger Gutscheincode')
+        setAppliedCoupon(null)
+      }
+    } catch (error) {
+      console.error('Error validating coupon:', error)
+      setCouponError('Fehler bei der Validierung. Bitte versuche es erneut.')
+      setAppliedCoupon(null)
+    } finally {
+      setIsValidatingCoupon(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponError('')
+  }
+
   if (loading || status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -232,7 +290,14 @@ export default function PaymentPage() {
     )
   }
 
-  const totalPrice = bookingData.pricing.totalPrice
+  // Calculate total price with coupon discount
+  const subtotal = bookingData.pricing.totalPrice
+  const discount = appliedCoupon 
+    ? appliedCoupon.type === 'percentage' 
+      ? Math.round(subtotal * (appliedCoupon.value / 100))
+      : appliedCoupon.value
+    : 0
+  const totalPrice = subtotal - discount
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -426,12 +491,102 @@ export default function PaymentPage() {
                   )}
                 </div>
                 
-                <div className="border-t border-gray-200 mt-3 pt-3">
+                {/* Subtotal (if coupon applied) */}
+                {appliedCoupon && (
+                  <div className="border-t border-gray-200 mt-3 pt-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Zwischensumme</span>
+                      <span className="text-gray-900">{formatPrice(subtotal)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Discount */}
+                {appliedCoupon && (
+                  <div className="mt-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-green-600 font-medium">Rabatt ({appliedCoupon.description})</span>
+                      <span className="text-green-600 font-semibold">-{formatPrice(discount)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className={`${appliedCoupon ? 'mt-2' : 'border-t border-gray-200 mt-3'} pt-3`}>
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Gesamt</span>
                     <span className="text-2xl font-bold text-primary-600">{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Coupon Code */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                  </svg>
+                  Gutscheincode einlösen
+                </h3>
+                
+                {!appliedCoupon ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase())
+                          setCouponError('')
+                        }}
+                        onKeyPress={(e) => e.key === 'Enter' && validateCoupon()}
+                        placeholder="Code eingeben..."
+                        disabled={isValidatingCoupon}
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
+                      />
+                      <button
+                        onClick={validateCoupon}
+                        disabled={isValidatingCoupon || !couponCode.trim()}
+                        className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                      >
+                        {isValidatingCoupon ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Prüfen...
+                          </>
+                        ) : (
+                          'Einlösen'
+                        )}
+                      </button>
+                    </div>
+                    
+                    {couponError && (
+                      <p className="text-xs text-red-600 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        {couponError}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <div>
+                          <p className="text-sm font-semibold text-green-900">{appliedCoupon.code}</p>
+                          <p className="text-xs text-green-700">{appliedCoupon.description} angewendet</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-xs text-green-700 hover:text-green-900 underline"
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Payment Method Selection */}

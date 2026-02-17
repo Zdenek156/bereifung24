@@ -1241,22 +1241,13 @@ export default function WorkshopDetailPage() {
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
                     </div>
                   )}
-                  {additionalServices
-                    .filter(service => {
-                      // For WHEEL_CHANGE, exclude balancing and storage (they're part of main service)
-                      const serviceName = (service.serviceName || service.name || '').toLowerCase()
-                      if (serviceType === 'WHEEL_CHANGE') {
-                        return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
-                      }
-                      return true
-                    })
-                    .map((service, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
-                        <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
-                      </div>
-                    ))
-                  }
+                  {/* Additional Services / Leistungen */}
+                  {additionalServices.map((service, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
+                      <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Quick Selectors */}

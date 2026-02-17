@@ -1049,6 +1049,29 @@ export default function NewHomePage() {
     }
   }, [selectedPackages])
 
+  // Update sessionStorage whenever critical search parameters change
+  useEffect(() => {
+    if (hasSearched && workshops.length > 0 && typeof window !== 'undefined') {
+      const searchState = {
+        workshops,
+        hasSearched,
+        selectedService,
+        postalCode,
+        radiusKm,
+        customerLocation,
+        selectedVehicleId,
+        tireDimensions,
+        selectedPackages,
+        includeTires,
+        hasMixedTires,
+        scrollPosition: window.scrollY,
+        timestamp: Date.now()
+      }
+      sessionStorage.setItem('lastSearchState', JSON.stringify(searchState))
+      console.log('💾 [sessionStorage] Updated with current filters:', { selectedPackages, selectedService })
+    }
+  }, [selectedPackages, selectedService, selectedVehicleId, hasMixedTires, hasSearched, workshops.length])
+
   // Apply filters
   const filteredWorkshops = workshops.filter((w) => {
     // Price range filter

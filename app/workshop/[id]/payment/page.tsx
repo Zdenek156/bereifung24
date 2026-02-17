@@ -39,6 +39,10 @@ export default function PaymentPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
   const [couponError, setCouponError] = useState('')
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
+  
+  // VAT state
+  const [isSmallBusiness, setIsSmallBusiness] = useState(false)
+  const [isBusinessCustomer, setIsBusinessCustomer] = useState(false)
 
   // Service labels
   const serviceLabels: Record<string, string> = {
@@ -82,6 +86,26 @@ export default function PaymentPage() {
         if (workshopRes.ok) {
           const data = await workshopRes.json()
           setWorkshop(data.workshop)
+          
+          // Check if workshop is small business (Kleinunternehmer)
+          if (data.workshop.taxMode === 'KLEINUNTERNEHMER') {
+            setIsSmallBusiness(true)
+          }
+        }
+        
+        // Check if user is business customer
+        if (session?.user?.id) {
+          try {
+            const userRes = await fetch(`/api/user/profile`)
+            if (userRes.ok) {
+              const userData = await userRes.json()
+              if (userData.customerType === 'BUSINESS') {
+                setIsBusinessCustomer(true)
+              }
+            }
+          } catch (error) {
+            console.error('Error checking business customer:', error)
+          }
         }
       } catch (error) {
         console.error('Error loading data:', error)
@@ -265,6 +289,16 @@ export default function PaymentPage() {
     setCouponError('')
   }
 
+  const getTaxLabel = () => {
+    if (isSmallBusiness) {
+      return 'gemäß §19 UStG wird die MwSt. nicht ausgewiesen'
+    }
+    if (isBusinessCustomer) {
+      return 'zzgl. MwSt.'
+    }
+    return 'inkl. MwSt.'
+  }
+
   if (loading || status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -371,7 +405,10 @@ export default function PaymentPage() {
                 <div className="bg-primary-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-bold text-lg text-primary-900">
-                      {serviceLabels[bookingData.service.type] || bookingData.service.type}
+                      {bookingData.tireBooking?.tireCount
+                        ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
+                        : serviceLabels[bookingData.service.type] || bookingData.service.type
+                      }
                     </p>
                     <p className="font-semibold text-primary-900">
                       {formatPrice(bookingData.pricing.servicePrice)}
@@ -507,7 +544,7 @@ export default function PaymentPage() {
                   {bookingData.tireBooking?.selectedTire && bookingData.pricing.tirePrice > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
-                        Reifen ({bookingData.tireBooking.selectedTire.quantity || 4}×)
+                        {bookingData.tireBooking.selectedTire.quantity || 4}× Reifen
                       </span>
                       <span className="font-semibold">{formatPrice(bookingData.pricing.tirePrice)}</span>
                     </div>
@@ -539,6 +576,7 @@ export default function PaymentPage() {
                     <span className="text-lg font-bold text-gray-900">Gesamt</span>
                     <span className="text-2xl font-bold text-primary-600">{formatPrice(totalPrice)}</span>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1 text-right">{getTaxLabel()}</p>
                 </div>
               </div>
 
@@ -564,17 +602,17 @@ export default function PaymentPage() {
                         onKeyPress={(e) => e.key === 'Enter' && validateCoupon()}
                         placeholder="Code eingeben..."
                         disabled={isValidatingCoupon}
-                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
+                        className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
                       />
                       <button
                         onClick={validateCoupon}
                         disabled={isValidatingCoupon || !couponCode.trim()}
-                        className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                        className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm whitespace-nowrap shrink-0"
                       >
                         {isValidatingCoupon ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Prüfen...
+                            <span className="hidden sm:inline">Prüfen...</span>
                           </>
                         ) : (
                           'Einlösen'

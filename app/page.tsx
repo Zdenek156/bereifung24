@@ -605,6 +605,28 @@ export default function NewHomePage() {
     loadVehicles()
   }, [session])
 
+  // Restore filters after vehicles are loaded (for back navigation)
+  useEffect(() => {
+    if (customerVehicles.length > 0 && typeof window !== 'undefined') {
+      const savedSearchState = sessionStorage.getItem('lastSearchState')
+      if (savedSearchState) {
+        try {
+          const searchState = JSON.parse(savedSearchState)
+          // Only restore if saved within last 30 minutes
+          if (Date.now() - searchState.timestamp < 30 * 60 * 1000) {
+            // Check if filters need to be restored (they're empty but should have values)
+            if (searchState.selectedPackages && searchState.selectedPackages.length > 0 && selectedPackages.length === 0) {
+              console.log('🔄 [After Vehicle Load] Restoring filters:', searchState.selectedPackages)
+              setSelectedPackages(searchState.selectedPackages)
+            }
+          }
+        } catch (e) {
+          console.error('Error restoring filters after vehicle load:', e)
+        }
+      }
+    }
+  }, [customerVehicles.length])
+
   // Handle vehicle selection
   const handleVehicleSelect = async (vehicleId: string) => {
     setSelectedVehicleId(vehicleId)

@@ -305,7 +305,18 @@ export default function WorkshopDetailPage() {
           const response = await fetch('/api/customer/vehicles')
           if (response.ok) {
             const data = await response.json()
-            setVehicles(data.vehicles || [])
+            const userVehicles = data.vehicles || []
+            setVehicles(userVehicles)
+            
+            // Auto-select first vehicle if none selected yet and no vehicle in tireBookingData
+            if (userVehicles.length > 0) {
+              // Check if vehicle was already selected from tireBookingData
+              const hasTireVehicle = sessionStorage.getItem('tireBookingData')
+              if (!hasTireVehicle) {
+                console.log('🚗 [WORKSHOP] Auto-selecting first vehicle:', userVehicles[0].make, userVehicles[0].model)
+                setSelectedVehicle(userVehicles[0].id)
+              }
+            }
           }
         } catch (error) {
           console.error('Error loading vehicles:', error)
@@ -1218,10 +1229,10 @@ export default function WorkshopDetailPage() {
                     <div key={idx} className="flex items-center justify-between text-sm group">
                       <span className="text-gray-600 flex-1 pr-2">{removeEmojis(service.serviceName || service.name)}</span>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
+                        <span className="font-medium text-gray-900 w-20 text-right">{formatEUR(service.price)}</span>
                         <button
                           onClick={() => removeAdditionalService(idx)}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 rounded transition-all"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 rounded transition-all w-4 h-4 flex items-center justify-center"
                           title="Entfernen"
                         >
                           <X className="w-3 h-3 text-red-600" />

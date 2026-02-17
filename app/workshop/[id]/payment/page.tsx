@@ -73,10 +73,11 @@ export default function PaymentPage() {
 
         // Load booking data from sessionStorage
         const savedBookingData = sessionStorage.getItem('bookingData')
+        let parsedBookingData = null
+        
         if (savedBookingData) {
-          const parsed = JSON.parse(savedBookingData)
-          console.log('📦 [PAYMENT] Loaded booking data from sessionStorage:', parsed)
-          setBookingData(parsed)
+          parsedBookingData = JSON.parse(savedBookingData)
+          console.log('📦 [PAYMENT] Loaded booking data from sessionStorage:', parsedBookingData)
         } else {
           console.warn('[PAYMENT] No booking data found in sessionStorage!')
         }
@@ -92,6 +93,32 @@ export default function PaymentPage() {
             setIsSmallBusiness(true)
           }
         }
+        
+        // Load vehicle details if missing in bookingData
+        if (parsedBookingData && vehicleId && !parsedBookingData.vehicle) {
+          console.log('🚗 [PAYMENT] Loading vehicle data from API...')
+          try {
+            const vehiclesRes = await fetch('/api/customer/vehicles')
+            if (vehiclesRes.ok) {
+              const vehiclesData = await vehiclesRes.json()
+              const selectedVehicle = vehiclesData.vehicles?.find((v: any) => v.id === vehicleId)
+              if (selectedVehicle) {
+                parsedBookingData.vehicle = {
+                  id: selectedVehicle.id,
+                  make: selectedVehicle.make,
+                  model: selectedVehicle.model,
+                  year: selectedVehicle.year,
+                  licensePlate: selectedVehicle.licensePlate,
+                }
+                console.log('✅ [PAYMENT] Vehicle loaded:', parsedBookingData.vehicle)
+              }
+            }
+          } catch (error) {
+            console.error('Error loading vehicle:', error)
+          }
+        }
+        
+        setBookingData(parsedBookingData)
         
         // Check if user is business customer
         if (session?.user?.id) {
@@ -115,7 +142,7 @@ export default function PaymentPage() {
     }
 
     loadData()
-  }, [session, workshopId])
+  }, [session, workshopId, vehicleId])
 
   const handlePayment = async (method: 'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments') => {
     if (!workshop || !bookingData) return
@@ -421,7 +448,7 @@ export default function PaymentPage() {
                       <p className="text-sm font-medium text-primary-800 mb-2">Zusatzleistungen:</p>
                       {bookingData.additionalServices.map((service: any, index: number) => (
                         <div key={index} className="flex items-center justify-between text-sm text-primary-700 mb-1">
-                          <span>+ {service.name}</span>
+                          <span>+ {service.serviceName || service.name || service.packageName}</span>
                           <span className="font-medium">{formatPrice(service.price)}</span>
                         </div>
                       ))}
@@ -495,17 +522,23 @@ export default function PaymentPage() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Fahrzeug</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <Car className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {bookingData.vehicle.make} {bookingData.vehicle.model}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {bookingData.vehicle.licensePlate} • {bookingData.vehicle.year}
-                      </p>
+                  {bookingData.vehicle ? (
+                    <div className="flex items-center gap-3">
+                      <Car className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {bookingData.vehicle.make} {bookingData.vehicle.model}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {bookingData.vehicle.licensePlate} • {bookingData.vehicle.year}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-sm text-gray-600">
+                      <p>Kein Fahrzeug ausgewählt</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -534,7 +567,7 @@ export default function PaymentPage() {
                   {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
                     bookingData.additionalServices.map((service: any, index: number) => (
                       <div key={index} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">+ {service.name}</span>
+                        <span className="text-gray-600">+ {service.serviceName || service.name || service.packageName}</span>
                         <span className="font-medium">{formatPrice(service.price)}</span>
                       </div>
                     ))

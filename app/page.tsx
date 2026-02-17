@@ -1250,6 +1250,7 @@ export default function NewHomePage() {
       reviewCount: workshop.reviewCount.toString(),
       duration: workshop.estimatedDuration?.toString() || '60',
       service: selectedService,
+      t: Date.now().toString(), // Force page reload on filter change
     })
     router.push(`/workshop/${workshop.id}?${params.toString()}`)
   }

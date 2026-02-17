@@ -72,6 +72,7 @@ export default function WorkshopDetailPage() {
   const [availableServices, setAvailableServices] = useState<any[]>([])
   const [isSmallBusiness, setIsSmallBusiness] = useState(false)
   const [isBusinessCustomer, setIsBusinessCustomer] = useState(false)
+  const [lastLoadTimestamp, setLastLoadTimestamp] = useState<number>(0)
 
   // Fetch available slots when component mounts
   useEffect(() => {
@@ -527,6 +528,93 @@ export default function WorkshopDetailPage() {
       loadBookingData()
     }
   }, [availableServices])
+
+  // Reload booking data when URL timestamp changes (user clicked workshop again after changing filters)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const urlTimestamp = searchParams.get('t')
+    
+    if (urlTimestamp && availableServices.length > 0) {
+      const timestamp = parseInt(urlTimestamp)
+      if (timestamp > lastLoadTimestamp) {
+        console.log('🔄 [WORKSHOP] URL timestamp changed, reloading booking data...')
+        setLastLoadTimestamp(timestamp)
+        
+        // Reload booking data from sessionStorage
+        const loadBookingData = async () => {
+          if (typeof window === 'undefined') return
+          
+          // Clear previous additional services
+          setAdditionalServices([])
+          
+          // Load service booking data (from homepage filters)
+          const savedServiceData = sessionStorage.getItem('serviceBookingData')
+          if (savedServiceData && availableServices.length > 0) {
+            try {
+              const serviceData = JSON.parse(savedServiceData)
+              console.log('📦 [WORKSHOP] Reloaded service booking data:', serviceData)
+              
+              if (serviceData.selectedPackages && serviceData.selectedPackages.length > 0) {
+                // Convert selectedPackages to additionalServices
+                const servicesFromFilters: any[] = []
+                
+                const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+                
+                for (const packageType of serviceData.selectedPackages) {
+                  if (mainServicePackages.includes(packageType)) {
+                    console.log(`⏭️ [WORKSHOP] Skipping main service package: ${packageType}`)
+                    continue
+                  }
+                  
+                  let serviceName = ''
+                  let servicePrice = 0
+                  
+                  for (const service of availableServices) {
+                    const pkg = service.servicePackages?.find((p: any) => p.packageType === packageType)
+                    if (pkg) {
+                      serviceName = pkg.name
+                      servicePrice = pkg.price
+                      break
+                    }
+                  }
+                  
+                  if (!serviceName) {
+                    if (packageType === 'with_balancing') {
+                      serviceName = 'Auswuchten'
+                      servicePrice = 1000
+                    } else if (packageType === 'with_storage') {
+                      serviceName = 'Einlagerung'
+                      servicePrice = 5000
+                    }
+                  }
+                  
+                  if (serviceName) {
+                    servicesFromFilters.push({
+                      serviceName,
+                      packageName: serviceName,
+                      name: serviceName,
+                      price: servicePrice,
+                      duration: 0
+                    })
+                  }
+                }
+                
+                if (servicesFromFilters.length > 0) {
+                  console.log('✅ [WORKSHOP] Reloaded services from filters:', servicesFromFilters)
+                  setAdditionalServices(servicesFromFilters)
+                  sessionStorage.setItem('additionalServices', JSON.stringify(servicesFromFilters))
+                }
+              }
+            } catch (e) {
+              console.error('Error reloading service booking data:', e)
+            }
+          }
+        }
+        
+        loadBookingData()
+      }
+    }
+  }, [availableServices, lastLoadTimestamp])
 
   // Check if customer is business customer
   useEffect(() => {

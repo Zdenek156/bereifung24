@@ -789,14 +789,14 @@ export default function WorkshopDetailPage() {
                   <div className="pb-4 border-b border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Serviceart</p>
                     <p className="text-base font-semibold text-gray-900">
-                      {tireBookingData.hasTires && tireBookingData.tireCount
+                      {serviceType === 'TIRE_CHANGE' && tireBookingData.tireCount
                         ? `Reifenwechsel für ${tireBookingData.tireCount} Reifen`
                         : getServiceInfo(serviceType).name
                       }
                     </p>
                     
-                    {/* Additional services */}
-                    {(tireBookingData.hasDisposal || tireBookingData.hasRunflat) && (
+                    {/* Additional services for TIRE_CHANGE */}
+                    {serviceType === 'TIRE_CHANGE' && (tireBookingData.hasDisposal || tireBookingData.hasRunflat) && (
                       <div className="mt-3 space-y-1">
                         {tireBookingData.hasDisposal && (
                           <p className="text-sm text-gray-600">+ Reifenentsorgung</p>
@@ -808,8 +808,8 @@ export default function WorkshopDetailPage() {
                     )}
                   </div>
 
-                  {/* Tire Details */}
-                  {tireBookingData.selectedTire && (
+                  {/* Tire Details - Only show for TIRE_CHANGE service */}
+                  {serviceType === 'TIRE_CHANGE' && tireBookingData.selectedTire && (
                     <>
                       {/* Tire Basic Info */}
                       <div className="pb-4 border-b border-gray-200">

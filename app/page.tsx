@@ -3084,7 +3084,12 @@ export default function NewHomePage() {
                                   onClick={() => handleBooking(workshop)}
                                   className="flex-shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md"
                                 >
-                                  {includeTires ? 'Reifen & Montage buchen →' : 'Montage buchen →'}
+                                  {selectedService === 'WHEEL_CHANGE' 
+                                    ? 'Räderwechsel buchen →'
+                                    : selectedService === 'TIRE_CHANGE' && includeTires 
+                                    ? 'Reifen & Montage buchen →'
+                                    : 'Montage buchen →'
+                                  }
                                 </button>
                               </div>
                             </div>

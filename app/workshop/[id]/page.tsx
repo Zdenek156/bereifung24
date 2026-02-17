@@ -444,7 +444,17 @@ export default function WorkshopDetailPage() {
             // Convert selectedPackages (e.g. ['with_balancing', 'with_storage']) to additionalServices
             const servicesFromFilters: any[] = []
             
+            // IMPORTANT: Exclude main service packages (two_tires, four_tires, etc.)
+            // These are NOT additional services, they define the main service type
+            const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+            
             for (const packageType of serviceData.selectedPackages) {
+              // Skip main service packages
+              if (mainServicePackages.includes(packageType)) {
+                console.log(`⏭️ [WORKSHOP] Skipping main service package: ${packageType}`)
+                continue
+              }
+              
               // Map packageType to service info
               let serviceName = ''
               let servicePrice = 0

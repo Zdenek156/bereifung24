@@ -338,6 +338,12 @@ export default function WorkshopDetailPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.workshop) {
+            // Merge API data into workshopData
+            workshopData.street = data.workshop.street || ''
+            workshopData.postalCode = data.workshop.postalCode || ''
+            workshopData.phone = data.workshop.phone || ''
+            workshopData.website = data.workshop.companySettings?.website || ''
+            
             const desc = data.workshop.companySettings?.description
             if (desc && desc.trim()) {
               workshopData.description = desc
@@ -1078,6 +1084,47 @@ export default function WorkshopDetailPage() {
                     ✓ Kostenlose Stornierung bis 24h vorher
                   </p>
                 )}
+              </div>
+
+              {/* Workshop Location Map */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary-600" />
+                  Standort
+                </h3>
+                
+                {/* Google Maps Static Image */}
+                <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-3">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBvxhXA7Lx5Qz6F3DVhLPJZ9V-JoKHGQSM'}&q=${encodeURIComponent(`${workshop?.name || ''}, ${workshop?.street || ''}, ${workshop?.city || ''}`)}&zoom=15`}
+                    allowFullScreen
+                  />
+                </div>
+
+                {/* Workshop Address */}
+                <div className="text-xs text-gray-600 mb-3 space-y-1">
+                  <p className="font-medium text-gray-900">{workshop?.name}</p>
+                  {workshop?.street && <p>{workshop.street}</p>}
+                  {(workshop?.city || workshop?.postalCode) && (
+                    <p>{workshop?.postalCode} {workshop?.city}</p>
+                  )}
+                </div>
+
+                {/* Open in Maps Button */}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${workshop?.name || ''}, ${workshop?.street || ''}, ${workshop?.city || ''}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  In Google Maps öffnen
+                </a>
               </div>
 
               {/* Trust Badges */}

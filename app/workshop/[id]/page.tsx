@@ -790,7 +790,7 @@ export default function WorkshopDetailPage() {
             )}
 
             {/* Selected Service Info */}
-            {tireBookingData && (
+            {(tireBookingData || additionalServices.length > 0) && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 Gewählter Service</h2>
                 
@@ -799,19 +799,19 @@ export default function WorkshopDetailPage() {
                   <div className="pb-4 border-b border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Serviceart</p>
                     <p className="text-base font-semibold text-gray-900">
-                      {serviceType === 'TIRE_CHANGE' && tireBookingData.tireCount
+                      {serviceType === 'TIRE_CHANGE' && tireBookingData?.tireCount
                         ? `Reifenwechsel für ${tireBookingData.tireCount} Reifen`
                         : getServiceInfo(serviceType).name
                       }
                     </p>
                     
                     {/* Additional services for TIRE_CHANGE */}
-                    {serviceType === 'TIRE_CHANGE' && (tireBookingData.hasDisposal || tireBookingData.hasRunflat) && (
+                    {serviceType === 'TIRE_CHANGE' && (tireBookingData?.hasDisposal || tireBookingData?.hasRunflat) && (
                       <div className="mt-3 space-y-1">
-                        {tireBookingData.hasDisposal && (
+                        {tireBookingData?.hasDisposal && (
                           <p className="text-sm text-gray-600">+ Reifenentsorgung</p>
                         )}
-                        {tireBookingData.hasRunflat && (
+                        {tireBookingData?.hasRunflat && (
                           <p className="text-sm text-gray-600">+ Runflatzuschlag</p>
                         )}
                       </div>
@@ -830,7 +830,7 @@ export default function WorkshopDetailPage() {
                   </div>
 
                   {/* Tire Details - Only show for TIRE_CHANGE service */}
-                  {serviceType === 'TIRE_CHANGE' && tireBookingData.selectedTire && (
+                  {serviceType === 'TIRE_CHANGE' && tireBookingData?.selectedTire && (
                     <>
                       {/* Tire Basic Info */}
                       <div className="pb-4 border-b border-gray-200">
@@ -838,7 +838,7 @@ export default function WorkshopDetailPage() {
                         
                         {/* Brand, Model and Full Specs in one line */}
                         <p className="text-base font-semibold text-gray-900">
-                          {tireBookingData.tireCount && `${tireBookingData.tireCount}x `}
+                          {tireBookingData?.tireCount && `${tireBookingData.tireCount}x `}
                           {tireBookingData.selectedTire.brand}
                           {tireBookingData.selectedTire.model && ` ${tireBookingData.selectedTire.model}`}
                           {/* Dimension */}

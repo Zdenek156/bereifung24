@@ -403,9 +403,12 @@ export default function WorkshopDetailPage() {
     loadWorkshop()
   }, [workshopId])
 
-  // Load tire booking data
+  // Load tire booking data and service booking data
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const loadBookingData = async () => {
+      if (typeof window === 'undefined') return
+      
+      // Load tire booking data
       const savedData = sessionStorage.getItem('tireBookingData')
       if (savedData) {
         try {
@@ -429,8 +432,80 @@ export default function WorkshopDetailPage() {
           console.error('Error loading additional services:', e)
         }
       }
+      
+      // Load service booking data (from homepage filters)
+      const savedServiceData = sessionStorage.getItem('serviceBookingData')
+      if (savedServiceData && availableServices.length > 0) {
+        try {
+          const serviceData = JSON.parse(savedServiceData)
+          console.log('📦 [WORKSHOP] Loaded service booking data:', serviceData)
+          
+          if (serviceData.selectedPackages && serviceData.selectedPackages.length > 0) {
+            // Convert selectedPackages (e.g. ['with_balancing', 'with_storage']) to additionalServices
+            const servicesFromFilters: any[] = []
+            
+            for (const packageType of serviceData.selectedPackages) {
+              // Map packageType to service info
+              let serviceName = ''
+              let servicePrice = 0
+              
+              // Find matching service package in availableServices
+              for (const service of availableServices) {
+                const pkg = service.servicePackages?.find((p: any) => p.packageType === packageType)
+                if (pkg) {
+                  serviceName = pkg.name
+                  servicePrice = pkg.price
+                  break
+                }
+              }
+              
+              // Fallback: Use packageType to determine service name
+              if (!serviceName) {
+                if (packageType === 'with_balancing') {
+                  serviceName = 'Auswuchten'
+                  servicePrice = 1000 // 10.00 EUR fallback
+                } else if (packageType === 'with_storage') {
+                  serviceName = 'Einlagerung'
+                  servicePrice = 5000 // 50.00 EUR fallback
+                }
+              }
+              
+              if (serviceName) {
+                servicesFromFilters.push({
+                  serviceName,
+                  packageName: serviceName,
+                  name: serviceName,
+                  price: servicePrice,
+                  duration: 0
+                })
+              }
+            }
+            
+            if (servicesFromFilters.length > 0) {
+              console.log('✅ [WORKSHOP] Auto-added services from filters:', servicesFromFilters)
+              setAdditionalServices(prev => {
+                // Merge with existing services, avoid duplicates
+                const existing = prev.map(s => s.serviceName || s.name)
+                const newServices = servicesFromFilters.filter(s => 
+                  !existing.includes(s.serviceName || s.name)
+                )
+                const merged = [...prev, ...newServices]
+                // Save to sessionStorage
+                sessionStorage.setItem('additionalServices', JSON.stringify(merged))
+                return merged
+              })
+            }
+          }
+        } catch (e) {
+          console.error('Error loading service booking data:', e)
+        }
+      }
     }
-  }, [])
+    
+    if (availableServices.length > 0) {
+      loadBookingData()
+    }
+  }, [availableServices])
 
   // Check if customer is business customer
   useEffect(() => {

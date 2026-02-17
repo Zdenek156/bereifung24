@@ -341,13 +341,17 @@ export default function NewHomePage() {
             setCustomerLocation(searchState.customerLocation || null)
             setSelectedVehicleId(searchState.selectedVehicleId || '')
             setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
-            setSelectedPackages(searchState.selectedPackages || [])
+            // IMPORTANT: Restore selected packages (filters)
+            if (searchState.selectedPackages && searchState.selectedPackages.length > 0) {
+              console.log('✅ [Back Navigation] Restoring filters:', searchState.selectedPackages)
+              setSelectedPackages(searchState.selectedPackages)
+            }
             setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
             // Restore scroll position
             if (searchState.scrollPosition) {
               setTimeout(() => window.scrollTo(0, searchState.scrollPosition), 100)
             }
-            console.log('✅ [Back Navigation] Search restored successfully')
+            console.log('✅ [Back Navigation] Search restored successfully (Service:', searchState.selectedService, ', Packages:', searchState.selectedPackages, ')')
             return // Don't try URL restore if sessionStorage worked
           } else {
             console.log('⚠️ [Back Navigation] Saved state too old, clearing...')

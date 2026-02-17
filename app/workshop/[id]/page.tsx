@@ -456,13 +456,22 @@ export default function WorkshopDetailPage() {
             const servicesFromFilters: any[] = []
             
             // IMPORTANT: Exclude main service packages (two_tires, four_tires, etc.)
-            // These are NOT additional services, they define the main service type
+            // AND exclude balancing/storage for WHEEL_CHANGE as they are part of the main service
             const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+            
+            // For WHEEL_CHANGE, balancing and storage are part of the main service, not additional
+            const excludeForWheelChange = serviceType === 'WHEEL_CHANGE' ? ['with_balancing', 'with_storage'] : []
             
             for (const packageType of serviceData.selectedPackages) {
               // Skip main service packages
               if (mainServicePackages.includes(packageType)) {
                 console.log(`⏭️ [WORKSHOP] Skipping main service package: ${packageType}`)
+                continue
+              }
+              
+              // Skip balancing/storage for WHEEL_CHANGE (they're included in main service)
+              if (excludeForWheelChange.includes(packageType)) {
+                console.log(`⏭️ [WORKSHOP] Skipping ${packageType} for WHEEL_CHANGE (included in main service)`)
                 continue
               }
               
@@ -480,7 +489,7 @@ export default function WorkshopDetailPage() {
                 }
               }
               
-              // Fallback: Use packageType to determine service name
+              // Fallback: Use packageType to determine service name (for legacy data)
               if (!serviceName) {
                 if (packageType === 'with_balancing') {
                   serviceName = 'Auswuchten'

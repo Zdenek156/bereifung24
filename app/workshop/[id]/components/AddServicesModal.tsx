@@ -82,8 +82,8 @@ export default function AddServicesModal({
             if (service.serviceType === 'WHEEL_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') {
               return false
             }
-            // If main service is TIRE_CHANGE, only show CLIMATE_SERVICE and ALIGNMENT_BOTH
-            if (selectedServiceType === 'TIRE_CHANGE') {
+            // If main service is TIRE_CHANGE or WHEEL_CHANGE, only show CLIMATE_SERVICE and ALIGNMENT_BOTH
+            if (selectedServiceType === 'TIRE_CHANGE' || selectedServiceType === 'WHEEL_CHANGE') {
               return service.serviceType === 'CLIMATE_SERVICE' || service.serviceType === 'ALIGNMENT_BOTH'
             }
             return true
@@ -101,7 +101,10 @@ export default function AddServicesModal({
               price: pkg.price,
               duration: pkg.durationMinutes,
               description: pkg.description
-            }))
+            })).filter((pkg: any) => {
+              // Exclude balancing and storage packages as they are already part of the main service
+              return pkg.type !== 'with_balancing' && pkg.type !== 'with_storage'
+            })
           }))
           
           setServices(mappedServices)

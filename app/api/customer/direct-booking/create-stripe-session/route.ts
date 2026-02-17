@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Map payment method types to Stripe payment_method_types
     const paymentMethodMap: Record<string, string[]> = {
-      'card': ['card'],
+      'card': ['card', 'link'], // Card + Stripe Link (Apple Pay & Google Pay appear automatically)
       'customer_balance': ['customer_balance'], // Bank Transfer (Überweisung)
       'klarna': ['klarna'],
       'paypal': ['paypal'], // PayPal via Stripe

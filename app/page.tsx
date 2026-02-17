@@ -83,9 +83,31 @@ export default function NewHomePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const [selectedService, setSelectedService] = useState('TIRE_CHANGE')
-  const [postalCode, setPostalCode] = useState('')
-  const [radiusKm, setRadiusKm] = useState(25)
+  
+  // RESTORE STATE IMMEDIATELY from sessionStorage (for back navigation)
+  const getInitialState = () => {
+    if (typeof window !== 'undefined') {
+      const savedSearchState = sessionStorage.getItem('lastSearchState')
+      if (savedSearchState) {
+        try {
+          const searchState = JSON.parse(savedSearchState)
+          if (Date.now() - searchState.timestamp < 30 * 60 * 1000) {
+            console.log('⚡ [INIT] Restoring state immediately from sessionStorage')
+            return searchState
+          }
+        } catch (e) {
+          console.error('Error parsing savedSearchState:', e)
+        }
+      }
+    }
+    return null
+  }
+  
+  const initialState = getInitialState()
+  
+  const [selectedService, setSelectedService] = useState(initialState?.selectedService || 'TIRE_CHANGE')
+  const [postalCode, setPostalCode] = useState(initialState?.postalCode || '')
+  const [radiusKm, setRadiusKm] = useState(initialState?.radiusKm || 25)
   const [useGeolocation, setUseGeolocation] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -108,8 +130,24 @@ export default function NewHomePage() {
     bookingCount: 0
   })
   
-  // Service-specific package filters
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  // Service-specific package filters - RESTORE FROM sessionStorage IMMEDIATELY
+  const [selectedPackages, setSelectedPackages] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedSearchState = sessionStorage.getItem('lastSearchState')
+      if (savedSearchState) {
+        try {
+          const searchState = JSON.parse(savedSearchState)
+          if (Date.now() - searchState.timestamp < 30 * 60 * 1000 && searchState.selectedPackages) {
+            console.log('⚡ [INIT] Restoring filters immediately:', searchState.selectedPackages)
+            return searchState.selectedPackages
+          }
+        } catch (e) {
+          console.error('Error restoring filters in useState init:', e)
+        }
+      }
+    }
+    return []
+  })
   
   // Handler to change service and set default packages
   const handleServiceChange = (newService: string) => {
@@ -175,7 +213,7 @@ export default function NewHomePage() {
     loadIndex: '',
     speedIndex: ''
   })
-  const [hasMixedTires, setHasMixedTires] = useState(false)
+  const [hasMixedTires, setHasMixedTires] = useState(initialState?.hasMixedTires || false)
   const [tireDimensionsFront, setTireDimensionsFront] = useState<string>('')
   const [tireDimensionsRear, setTireDimensionsRear] = useState<string>('')
   const [tireBudgetMin, setTireBudgetMin] = useState<number>(50)
@@ -187,7 +225,7 @@ export default function NewHomePage() {
   const [require3PMSF, setRequire3PMSF] = useState(false)
   const [showDOTTires, setShowDOTTires] = useState(false) // Default: DOT tires hidden
   const [requireSameBrand, setRequireSameBrand] = useState(false) // For mixed 4 tires: same brand
-  const [selectedVehicleId, setSelectedVehicleId] = useState('')
+  const [selectedVehicleId, setSelectedVehicleId] = useState(initialState?.selectedVehicleId || '')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
   const [selectedTireIndices, setSelectedTireIndices] = useState<Record<string, number>>({}) // workshopId -> tire index
   const [selectedTireFrontIndices, setSelectedTireFrontIndices] = useState<Record<string, number>>({}) // workshopId -> front tire index (mixed tires)
@@ -332,20 +370,12 @@ export default function NewHomePage() {
           const searchState = JSON.parse(savedSearchState)
           // Only restore if saved within last 30 minutes
           if (Date.now() - searchState.timestamp < 30 * 60 * 1000) {
-            console.log('🔍 [Back Navigation] Restoring search from sessionStorage...', searchState)
+            console.log('🔍 [Back Navigation] Restoring workshops and additional state from sessionStorage...', searchState)
             setWorkshops(searchState.workshops || [])
             setHasSearched(searchState.hasSearched || false)
-            setSelectedService(searchState.selectedService || 'WHEEL_CHANGE')
-            setPostalCode(searchState.postalCode || '')
-            setRadiusKm(searchState.radiusKm || 25)
+            // selectedService, postalCode, radiusKm, selectedVehicleId, hasMixedTires, selectedPackages are already restored in initial state
             setCustomerLocation(searchState.customerLocation || null)
-            setSelectedVehicleId(searchState.selectedVehicleId || '')
             setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
-            // IMPORTANT: Restore selected packages (filters)
-            if (searchState.selectedPackages && searchState.selectedPackages.length > 0) {
-              console.log('✅ [Back Navigation] Restoring filters:', searchState.selectedPackages)
-              setSelectedPackages(searchState.selectedPackages)
-            }
             setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
             // Restore scroll position
             if (searchState.scrollPosition) {
@@ -417,22 +447,15 @@ export default function NewHomePage() {
             const searchState = JSON.parse(savedSearchState)
             // Only restore if saved within last 30 minutes and has workshops
             if (Date.now() - searchState.timestamp < 30 * 60 * 1000 && searchState.workshops && searchState.workshops.length > 0) {
-              console.log('🔄 [Page Visible] Restoring filters and vehicle...', searchState)
+              console.log('🔄 [Page Visible] Restoring workshops and additional state...', searchState)
               // Only restore if we don't already have search results (to avoid overwriting current search)
               if (!hasSearched || workshops.length === 0) {
                 setWorkshops(searchState.workshops || [])
                 setHasSearched(true)
               }
-              setSelectedService(searchState.selectedService || 'WHEEL_CHANGE')
-              setPostalCode(searchState.postalCode || '')
-              setRadiusKm(searchState.radiusKm || 25)
+              // selectedService, postalCode, radiusKm, selectedVehicleId, hasMixedTires, selectedPackages are already restored in initial state
               setCustomerLocation(searchState.customerLocation || null)
-              setSelectedVehicleId(searchState.selectedVehicleId || '')
               setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
-              if (searchState.selectedPackages && searchState.selectedPackages.length > 0) {
-                console.log('✅ [Page Visible] Restoring filters:', searchState.selectedPackages)
-                setSelectedPackages(searchState.selectedPackages)
-              }
               setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
             }
           } catch (e) {
@@ -604,28 +627,6 @@ export default function NewHomePage() {
 
     loadVehicles()
   }, [session])
-
-  // Restore filters after vehicles are loaded (for back navigation)
-  useEffect(() => {
-    if (customerVehicles.length > 0 && typeof window !== 'undefined') {
-      const savedSearchState = sessionStorage.getItem('lastSearchState')
-      if (savedSearchState) {
-        try {
-          const searchState = JSON.parse(savedSearchState)
-          // Only restore if saved within last 30 minutes
-          if (Date.now() - searchState.timestamp < 30 * 60 * 1000) {
-            // Check if filters need to be restored (they're empty but should have values)
-            if (searchState.selectedPackages && searchState.selectedPackages.length > 0 && selectedPackages.length === 0) {
-              console.log('🔄 [After Vehicle Load] Restoring filters:', searchState.selectedPackages)
-              setSelectedPackages(searchState.selectedPackages)
-            }
-          }
-        } catch (e) {
-          console.error('Error restoring filters after vehicle load:', e)
-        }
-      }
-    }
-  }, [customerVehicles.length])
 
   // Handle vehicle selection
   const handleVehicleSelect = async (vehicleId: string) => {

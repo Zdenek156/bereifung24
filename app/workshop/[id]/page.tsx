@@ -30,7 +30,8 @@ import {
   Shield,
   Wrench,
   Package,
-  Award
+  Award,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import AddServicesModal from './components/AddServicesModal'
@@ -446,6 +447,10 @@ export default function WorkshopDetailPage() {
     setAdditionalServices(services)
   }
 
+  const removeAdditionalService = (index: number) => {
+    setAdditionalServices(prev => prev.filter((_, i) => i !== index))
+  }
+
   const calculateTotalPrice = () => {
     let total = basePrice
     if (tireBookingData?.selectedTire?.totalPrice) {
@@ -847,9 +852,23 @@ export default function WorkshopDetailPage() {
               {additionalServices.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {additionalServices.map((service, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-900">{service.name}</span>
-                      <span className="text-sm font-semibold text-primary-600">{formatEUR(service.price)}</span>
+                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-gray-900">{service.serviceName || service.name}</span>
+                        {service.packageName && (
+                          <span className="text-xs text-gray-500 ml-2">({service.packageName})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-primary-600">{formatEUR(service.price)}</span>
+                        <button
+                          onClick={() => removeAdditionalService(idx)}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                          title="Service entfernen"
+                        >
+                          <X className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1011,9 +1030,23 @@ export default function WorkshopDetailPage() {
                     </div>
                   )}
                   {additionalServices.map((service, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{service.name}</span>
-                      <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
+                    <div key={idx} className="flex items-center justify-between text-sm group hover:bg-gray-50 -mx-1 px-1 py-1 rounded transition-colors">
+                      <div className="flex-1">
+                        <span className="text-gray-600">{service.serviceName || service.name}</span>
+                        {service.packageName && (
+                          <span className="text-xs text-gray-400 ml-2">({service.packageName})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
+                        <button
+                          onClick={() => removeAdditionalService(idx)}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 rounded transition-all"
+                          title="Entfernen"
+                        >
+                          <X className="w-3 h-3 text-red-600" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

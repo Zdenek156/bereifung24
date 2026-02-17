@@ -18,6 +18,7 @@ export async function GET(
         description: true,
         website: true,
         stripeEnabled: true,
+        taxMode: true,
         user: {
           select: {
             city: true,
@@ -88,6 +89,7 @@ export async function GET(
         rating: avgRating,
         reviewCount: workshop._count.reviews,
         stripeEnabled: workshop.stripeEnabled || false,
+        taxMode: workshop.taxMode || 'STANDARD',
         companySettings: {
           description: workshop.description || null,
           website: workshop.website || null

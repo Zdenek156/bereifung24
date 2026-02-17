@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [],
+  "routes": [],
+  "github": {
+    "enabled": false,
+    "silent": true
+  }
+}

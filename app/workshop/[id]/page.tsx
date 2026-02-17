@@ -522,10 +522,20 @@ export default function WorkshopDetailPage() {
     if (!date || isDatePast(date) || !isDateAvailable(date)) return
     setSelectedDate(date)
     setSelectedSlot(null)
+    
+    // Scroll to time slots section
+    setTimeout(() => {
+      document.getElementById('time-slots-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 
   const handleSlotSelect = (slot: any) => {
     setSelectedSlot(slot)
+    
+    // Scroll to booking button
+    setTimeout(() => {
+      document.getElementById('booking-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 
   const canBook = selectedDate && selectedSlot && selectedVehicle
@@ -1019,7 +1029,7 @@ export default function WorkshopDetailPage() {
 
               {/* Time Slots */}
               {selectedDate && (
-                <div className="border-t pt-4">
+                <div id="time-slots-section" className="border-t pt-4">
                   <h4 className="text-sm font-bold mb-3">
                     Zeiten am {selectedDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' })}
                   </h4>
@@ -1065,11 +1075,20 @@ export default function WorkshopDetailPage() {
 
                 {/* Service Summary */}
                 <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Service</span>
-                    <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
-                  </div>
-                  {tireBookingData?.selectedTire && (
+                  {/* Service Price - Only show label for TIRE_CHANGE */}
+                  {serviceType === 'TIRE_CHANGE' ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Service</span>
+                      <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{getServiceInfo(serviceType).name}</span>
+                      <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
+                    </div>
+                  )}
+                  {/* Tire Price - Only for TIRE_CHANGE */}
+                  {serviceType === 'TIRE_CHANGE' && tireBookingData?.selectedTire && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Reifen</span>
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
@@ -1170,6 +1189,7 @@ export default function WorkshopDetailPage() {
 
                 {/* Booking Button */}
                 <button
+                  id="booking-button"
                   onClick={handleBooking}
                   disabled={!canBook}
                   className={`w-full mt-6 px-6 py-4 rounded-lg font-semibold text-white transition-all ${

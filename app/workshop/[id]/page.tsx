@@ -1226,18 +1226,9 @@ export default function WorkshopDetailPage() {
                     </div>
                   )}
                   {additionalServices.map((service, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm group">
-                      <span className="text-gray-600 flex-1 pr-2">{removeEmojis(service.serviceName || service.name)}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-medium text-gray-900 w-20 text-right">{formatEUR(service.price)}</span>
-                        <button
-                          onClick={() => removeAdditionalService(idx)}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 rounded transition-all w-4 h-4 flex items-center justify-center"
-                          title="Entfernen"
-                        >
-                          <X className="w-3 h-3 text-red-600" />
-                        </button>
-                      </div>
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
+                      <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
                     </div>
                   ))}
                 </div>
@@ -1294,19 +1285,35 @@ export default function WorkshopDetailPage() {
                         </div>
                       </div>
                     ) : session ? (
-                      <select
-                        value={selectedVehicle || ''}
-                        onChange={(e) => setSelectedVehicle(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        disabled={loadingVehicles}
-                      >
-                        <option value="">Fahrzeug auswählen</option>
-                        {vehicles.map(v => (
-                          <option key={v.id} value={v.id}>
-                            {v.make} {v.model} ({v.licensePlate})
-                          </option>
-                        ))}
-                      </select>
+                      selectedVehicle && vehicles.find(v => v.id === selectedVehicle) ? (
+                        <div className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex items-center gap-2">
+                            <Car className="w-5 h-5 text-primary-600" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {vehicles.find(v => v.id === selectedVehicle)?.make} {vehicles.find(v => v.id === selectedVehicle)?.model}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {vehicles.find(v => v.id === selectedVehicle)?.year} · {vehicles.find(v => v.id === selectedVehicle)?.licensePlate}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedVehicle || ''}
+                          onChange={(e) => setSelectedVehicle(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          disabled={loadingVehicles}
+                        >
+                          <option value="">Fahrzeug auswählen</option>
+                          {vehicles.map(v => (
+                            <option key={v.id} value={v.id}>
+                              {v.make} {v.model} ({v.licensePlate})
+                            </option>
+                          ))}
+                        </select>
+                      )
                     ) : (
                       <button
                         onClick={() => setShowLoginModal(true)}

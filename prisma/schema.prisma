@@ -234,28 +234,9 @@ model Workshop {
   isVerified Boolean   @default(false)
   verifiedAt DateTime?
 
-  // Banking (SEPA)
-  iban            String?
-  accountHolder   String?
-  sepaMandateRef  String?   @unique // B24-timestamp-random
-  sepaMandateDate DateTime?
-
-  // PayPal
-  paypalEmail String?
-
-  // Stripe
-  stripeAccountId String? @map("stripe_account_id") // Stripe Connected Account ID (für Direct Charges)
+  // Stripe Connect (All payments handled via Stripe)
+  stripeAccountId String? @map("stripe_account_id") // Stripe Connected Account ID
   stripeEnabled   Boolean @default(false) @map("stripe_enabled") // Ob Stripe-Zahlungen akzeptiert werden
-
-  // GoCardless Integration
-  gocardlessCustomerId       String?   @unique // GoCardless Customer ID
-  gocardlessMandateId        String?   @unique // GoCardless Mandate ID
-  gocardlessMandateStatus    String? // pending_submission, submitted, active, cancelled, failed, expired
-  gocardlessMandateRef       String?   @unique // Eindeutige Mandate Reference
-  gocardlessMandateCreatedAt DateTime?
-  gocardlessBankAccountId    String? // GoCardless Bank Account ID
-  gocardlessSessionToken     String?   @map("gocardless_session_token") // Temporary session token for redirect flow
-  gocardlessRedirectFlowId   String?   @map("gocardless_redirect_flow_id") // Temporary redirect flow ID
 
   // Payment Methods (JSON String)
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}

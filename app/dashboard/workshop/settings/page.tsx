@@ -26,10 +26,6 @@ interface WorkshopProfile {
   openingHours: string | null
   isVerified: boolean
   verifiedAt: string | null
-  iban: string | null
-  accountHolder: string | null
-  sepaMandateRef: string | null
-  sepaMandateDate: string | null
   emailNotifyRequests: boolean
   emailNotifyOfferAccepted: boolean
   emailNotifyBookings: boolean
@@ -724,7 +720,7 @@ export default function WorkshopSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'sepa' | 'notifications' | 'terminplanung' | 'suppliers'>('contact')
+  const [activeTab, setActiveTab] = useState<'contact' | 'hours' | 'payment' | 'notifications' | 'terminplanung' | 'suppliers'>('contact')
   
   // Scheduling state
   const [calendarMode, setCalendarMode] = useState<'workshop' | 'employees'>('workshop')
@@ -748,12 +744,6 @@ export default function WorkshopSettings() {
   const [showAddEmployee, setShowAddEmployee] = useState(false)
   const [newEmployee, setNewEmployee] = useState({ name: '', email: '' })
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null)
-  
-  // SEPA Mandate state
-  const [mandate, setMandate] = useState<any>(null)
-  const [mandateLoading, setMandateLoading] = useState(true)
-  const [creating, setCreating] = useState(false)
-  const [mandateError, setMandateError] = useState('')
   
   // Logo upload state
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -832,13 +822,6 @@ export default function WorkshopSettings() {
     fetchProfile()
   }, [session, status, router])
 
-  // Fetch SEPA mandate status when SEPA tab is active
-  useEffect(() => {
-    if (activeTab === 'sepa' && session?.user?.role === 'WORKSHOP') {
-      fetchMandateStatus()
-    }
-  }, [activeTab, session])
-
   // Check URL parameters for tab and success message
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -849,8 +832,6 @@ export default function WorkshopSettings() {
 
     if (tab === 'terminplanung') {
       setActiveTab('terminplanung')
-    } else if (tab === 'sepa') {
-      setActiveTab('sepa')
     }
 
     if (success === 'calendar_connected') {
@@ -1045,49 +1026,6 @@ export default function WorkshopSettings() {
       }
     } catch (error) {
       console.error('[Stripe] Error checking account status:', error)
-    }
-  }
-
-  const fetchMandateStatus = async () => {
-    try {
-      setMandateLoading(true)
-      const response = await fetch('/api/workshop/sepa-mandate/status')
-      if (response.ok) {
-        const data = await response.json()
-        setMandate(data)
-      } else {
-        console.error('Failed to fetch mandate status')
-      }
-    } catch (error) {
-      console.error('Error fetching mandate status:', error)
-    } finally {
-      setMandateLoading(false)
-    }
-  }
-
-  const createMandate = async () => {
-    try {
-      setCreating(true)
-      setMandateError('')
-
-      const response = await fetch('/api/workshop/sepa-mandate/create', {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Session token is now stored in database, just redirect
-        window.location.href = data.redirectUrl
-      } else {
-        const errorData = await response.json()
-        setMandateError(errorData.error || 'Fehler beim Erstellen des Mandats')
-      }
-    } catch (error) {
-      console.error('Error creating mandate:', error)
-      setMandateError('Netzwerkfehler beim Erstellen des Mandats')
-    } finally {
-      setCreating(false)
     }
   }
 
@@ -1418,7 +1356,6 @@ export default function WorkshopSettings() {
               <option value="contact">Kontakt & Unternehmen</option>
               <option value="hours">Öffnungszeiten</option>
               <option value="payment">Zahlungsmöglichkeiten</option>
-              <option value="sepa">Bankverbindung & SEPA</option>
               <option value="notifications">Benachrichtigungen</option>
               <option value="terminplanung">Terminplanung</option>
               <option value="suppliers">Lieferanten</option>
@@ -1460,17 +1397,6 @@ export default function WorkshopSettings() {
                 }`}
               >
                 Zahlungsmöglichkeiten
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('sepa')}
-                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === 'sepa'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
-              >
-                Bankverbindung & SEPA
               </button>
               <button
                 type="button"
@@ -1982,43 +1908,6 @@ export default function WorkshopSettings() {
                 </div>
               </div>
 
-              {/* PayPal */}
-              <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div className="flex items-start gap-3 mb-3">
-                  <input
-                    type="checkbox"
-                    checked={paymentMethods.paypal}
-                    onChange={(e) => setPaymentMethods({ ...paymentMethods, paypal: e.target.checked })}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
-                      💳 PayPal
-                    </label>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Der Kunde zahlt per PayPal
-                    </p>
-                  </div>
-                </div>
-                {paymentMethods.paypal && (
-                  <div className="ml-7 mt-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      PayPal E-Mail-Adresse
-                    </label>
-                    <input
-                      type="email"
-                      value={paymentMethods.paypalEmail}
-                      onChange={(e) => setPaymentMethods({ ...paymentMethods, paypalEmail: e.target.value })}
-                      placeholder="ihre-werkstatt@paypal.com"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Diese E-Mail wird dem Kunden für PayPal-Zahlungen angezeigt
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* Stripe Payment Option */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <div className="flex items-start gap-3">
@@ -2219,284 +2108,6 @@ export default function WorkshopSettings() {
                 )}
               </div>
             </div>
-            </div>
-          )}
-
-          {/* Tab: Bankverbindung & SEPA */}
-          {activeTab === 'sepa' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bankverbindung & SEPA-Mandat</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                Für die automatische Einziehung Ihrer Provisionen (4,9% pro Auftrag)
-              </p>
-
-              {mandateLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <svg className="animate-spin h-8 w-8 text-primary-600" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                </div>
-              ) : mandate?.configured ? (
-                <div>
-                  {/* Configured State */}
-                  <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-7 h-7 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-green-900 dark:text-green-300 mb-1">
-                          SEPA-Mandat aktiv
-                        </h3>
-                        <p className="text-green-700 dark:text-green-400">
-                          Ihre Provisionen werden automatisch monatlich eingezogen
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-6 mb-6">
-                    {/* Status Badge */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          mandate.status === 'active' 
-                            ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' 
-                            : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300'
-                        }`}>
-                          <span className={`w-2 h-2 rounded-full mr-2 ${
-                            mandate.status === 'active' 
-                              ? 'bg-green-600' 
-                              : 'bg-yellow-600'
-                          }`}></span>
-                          {mandate.status === 'active' ? 'Aktiv' : 
-                           mandate.status === 'pending_submission' ? 'Wird eingereicht' :
-                           mandate.status === 'submitted' ? 'Eingereicht' :
-                           mandate.status}
-                        </span>
-                      </div>
-                      {mandate.status !== 'active' && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          <p className="flex items-start gap-2">
-                            <svg className="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            <span>
-                              Ihr Mandat wurde erfolgreich eingerichtet und wird bei der <strong>ersten Provisionsabbuchung automatisch aktiviert</strong>. 
-                              Sie werden per E-Mail benachrichtigt, sobald das Mandat aktiv ist.
-                            </span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Mandate Reference */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mandatsreferenz</h3>
-                      <p className="font-mono text-base text-gray-900 dark:text-white">{mandate.reference}</p>
-                    </div>
-
-                    {/* Mandate Created Date */}
-                    {mandate.createdAt && (
-                      <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mandat erteilt am</h3>
-                        <p className="text-base text-gray-900 dark:text-white">
-                          {new Date(mandate.createdAt).toLocaleDateString('de-DE', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Next Charge Date */}
-                    {mandate.nextChargeDate && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                          </svg>
-                          <div>
-                            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">Nächste Abbuchung</h3>
-                            <p className="text-base text-blue-700 dark:text-blue-300">
-                              {new Date(mandate.nextChargeDate).toLocaleDateString('de-DE', {
-                                day: '2-digit',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mandat ersetzen/ändern Button */}
-                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
-                          Bankverbindung geändert?
-                        </h3>
-                        <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
-                          Wenn Sie Ihre IBAN geändert haben oder ein neues Bankkonto verwenden möchten, 
-                          müssen Sie ein neues SEPA-Mandat einrichten. Das alte Mandat wird automatisch ersetzt.
-                        </p>
-                        <button
-                          onClick={createMandate}
-                          disabled={creating}
-                          className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                        >
-                          {creating ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                              </svg>
-                              Wird erstellt...
-                            </span>
-                          ) : (
-                            'Neues Mandat einrichten (ersetzt das aktuelle)'
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Info Box */}
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Wichtige Informationen</h3>
-                    <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                      <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span>Die Provisionsrechnung wird am <strong>1. des Monats</strong> erstellt und per E-Mail zugestellt</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span>Die Abbuchung erfolgt <strong>3-5 Werktage nach Rechnungsstellung</strong> automatisch per SEPA-Lastschrift</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span>Sie können SEPA-Lastschriften bis zu <strong>8 Wochen nach Abbuchung bei Ihrer Bank widerrufen</strong></span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <span>Bei Bankwechsel richten Sie einfach ein neues Mandat ein - das alte wird automatisch ersetzt</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {/* Not Configured State */}
-                  {mandateError && (
-                    <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
-                      <p className="text-sm text-red-700 dark:text-red-300">{mandateError}</p>
-                    </div>
-                  )}
-
-                  <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      <div>
-                        <h3 className="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">
-                          Kein SEPA-Mandat eingerichtet
-                        </h3>
-                        <p className="text-yellow-700 dark:text-yellow-300">
-                          Um Provisionen automatisch abbuchen zu können, benötigen wir ein SEPA-Lastschriftmandat
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Was ist ein SEPA-Lastschriftmandat?</h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Mit einem SEPA-Lastschriftmandat autorisieren Sie Bereifung24, fällige Provisionen 
-                      automatisch von Ihrem Bankkonto abzubuchen. Dies vereinfacht die monatliche Abrechnung 
-                      erheblich.
-                    </p>
-
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Vorteile:</h4>
-                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Automatische monatliche Abrechnung
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Transparente Rechnungsstellung
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Keine vergessenen Zahlungen
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Jederzeit widerrufbar
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                      <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Ablauf:</h4>
-                      <ol className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
-                        <li>1. Klicken Sie auf "SEPA-Mandat einrichten"</li>
-                        <li>2. Sie werden zu GoCardless weitergeleitet (unser Zahlungsdienstleister)</li>
-                        <li>3. Geben Sie Ihre Bankdaten ein und bestätigen Sie das Mandat</li>
-                        <li>4. Nach Bestätigung werden Sie zurück zu Bereifung24 geleitet</li>
-                      </ol>
-                    </div>
-
-                    <button
-                      onClick={createMandate}
-                      disabled={creating}
-                      className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {creating ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Wird erstellt...
-                        </span>
-                      ) : (
-                        'SEPA-Mandat einrichten'
-                      )}
-                    </button>
-
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Sichere Verbindung über GoCardless • Zertifizierter Zahlungsdienstleister
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

@@ -532,9 +532,9 @@ export default function WorkshopDetailPage() {
   const handleSlotSelect = (slot: any) => {
     setSelectedSlot(slot)
     
-    // Scroll to booking button
+    // Scroll to top to see sticky bar completely
     setTimeout(() => {
-      document.getElementById('booking-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }, 100)
   }
 
@@ -814,6 +814,17 @@ export default function WorkshopDetailPage() {
                         {tireBookingData.hasRunflat && (
                           <p className="text-sm text-gray-600">+ Runflatzuschlag</p>
                         )}
+                      </div>
+                    )}
+                    
+                    {/* Additional services from modal (for all service types) */}
+                    {additionalServices.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        {additionalServices.map((service, idx) => (
+                          <p key={idx} className="text-sm text-gray-600">
+                            + {removeEmojis(service.serviceName || service.name)}
+                          </p>
+                        ))}
                       </div>
                     )}
                   </div>

@@ -949,11 +949,21 @@ export default function WorkshopDetailPage() {
                     {/* Additional services from modal (for all service types) */}
                     {additionalServices.length > 0 && (
                       <div className="mt-3 space-y-1">
-                        {additionalServices.map((service, idx) => (
-                          <p key={idx} className="text-sm text-gray-600">
-                            + {removeEmojis(service.serviceName || service.name)}
-                          </p>
-                        ))}
+                        {additionalServices
+                          .filter(service => {
+                            // For WHEEL_CHANGE, exclude balancing and storage (they're part of main service)
+                            const serviceName = (service.serviceName || service.name || '').toLowerCase()
+                            if (serviceType === 'WHEEL_CHANGE') {
+                              return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                            }
+                            return true
+                          })
+                          .map((service, idx) => (
+                            <p key={idx} className="text-sm text-gray-600">
+                              + {removeEmojis(service.serviceName || service.name)}
+                            </p>
+                          ))
+                        }
                       </div>
                     )}
                   </div>
@@ -1047,9 +1057,25 @@ export default function WorkshopDetailPage() {
                 Services auswählen
               </button>
               
-              {additionalServices.length > 0 && (
+              {additionalServices.filter(service => {
+                // For WHEEL_CHANGE, exclude balancing and storage (they're additional LEISTUNGEN, not SERVICES)
+                const serviceName = (service.serviceName || service.name || '').toLowerCase()
+                if (serviceType === 'WHEEL_CHANGE') {
+                  return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                }
+                return true
+              }).length > 0 && (
                 <div className="mt-4 space-y-2">
-                  {additionalServices.map((service, idx) => (
+                  {additionalServices
+                    .filter(service => {
+                      // For WHEEL_CHANGE, exclude balancing and storage (they're additional LEISTUNGEN, not SERVICES)
+                      const serviceName = (service.serviceName || service.name || '').toLowerCase()
+                      if (serviceType === 'WHEEL_CHANGE') {
+                        return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                      }
+                      return true
+                    })
+                    .map((service, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
                         <span className="text-sm font-medium text-gray-900">{removeEmojis(service.serviceName || service.name)}</span>
@@ -1234,12 +1260,22 @@ export default function WorkshopDetailPage() {
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
                     </div>
                   )}
-                  {additionalServices.map((service, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
-                      <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
-                    </div>
-                  ))}
+                  {additionalServices
+                    .filter(service => {
+                      // For WHEEL_CHANGE, exclude balancing and storage (they're part of main service)
+                      const serviceName = (service.serviceName || service.name || '').toLowerCase()
+                      if (serviceType === 'WHEEL_CHANGE') {
+                        return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                      }
+                      return true
+                    })
+                    .map((service, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
+                        <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
+                      </div>
+                    ))
+                  }
                 </div>
 
                 {/* Quick Selectors */}

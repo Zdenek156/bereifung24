@@ -418,6 +418,17 @@ export default function WorkshopDetailPage() {
           console.error('Error loading tire booking data:', e)
         }
       }
+      
+      // Load additional services
+      const savedServices = sessionStorage.getItem('additionalServices')
+      if (savedServices) {
+        try {
+          const services = JSON.parse(savedServices)
+          setAdditionalServices(services)
+        } catch (e) {
+          console.error('Error loading additional services:', e)
+        }
+      }
     }
   }, [])
 
@@ -472,10 +483,23 @@ export default function WorkshopDetailPage() {
 
   const handleAdditionalServicesSelected = (services: any[]) => {
     setAdditionalServices(services)
+    // Save to sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('additionalServices', JSON.stringify(services))
+    }
   }
 
   const removeAdditionalService = (index: number) => {
-    setAdditionalServices(prev => prev.filter((_, i) => i !== index))
+    const updated = additionalServices.filter((_, i) => i !== index)
+    setAdditionalServices(updated)
+    // Update sessionStorage
+    if (typeof window !== 'undefined') {
+      if (updated.length > 0) {
+        sessionStorage.setItem('additionalServices', JSON.stringify(updated))
+      } else {
+        sessionStorage.removeItem('additionalServices')
+      }
+    }
   }
 
   const removeEmojis = (text: string) => {

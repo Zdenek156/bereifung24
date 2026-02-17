@@ -128,8 +128,9 @@ export default function PaymentPage() {
       console.log('[PAYMENT] Reservation created:', reserveData.reservationId, 'expires at:', reserveData.expiresAt)
       
       // STEP 2: Proceed with payment
-      if (method === 'paypal' || method === 'paypal-installments') {
-        // Create PayPal Order
+      // PayPal Installments (Ratenzahlung) - noch über separate PayPal API
+      if (method === 'paypal-installments') {
+        // Create PayPal Order with installments
         const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -144,7 +145,7 @@ export default function PaymentPage() {
             workshopName: workshop.name,
             customerName: session?.user?.name,
             customerEmail: session?.user?.email,
-            installments: method === 'paypal-installments',
+            installments: true,
             reservationId: reserveData.reservationId
           })
         })
@@ -157,7 +158,8 @@ export default function PaymentPage() {
           alert('Fehler beim Erstellen der PayPal-Zahlung: ' + (data.error || 'Unbekannter Fehler'))
         }
       } else {
-        // Stripe - Create Checkout Session with specific payment method
+        // ALL OTHER PAYMENT METHODS via STRIPE (card, klarna, bank-transfer, paypal)
+        // PayPal (regular) now runs through Stripe for unified commission tracking (6.9%)
         const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -170,7 +172,7 @@ export default function PaymentPage() {
             totalPrice: bookingData.pricing.totalPrice,
             workshopName: workshop.name,
             serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
-            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method,
+            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method, // 'card', 'klarna', 'paypal', or 'customer_balance'
             reservationId: reserveData.reservationId
           })
         })
@@ -402,12 +404,30 @@ export default function PaymentPage() {
                           {bookingData.tireBooking.selectedTire.label}
                         </p>
                         <p className="font-bold text-gray-900">
+                          {bookingData.tireBooking.tireCount && `${bookingData.tireBooking.tireCount}× `}
                           {bookingData.tireBooking.selectedTire.brand}
+                          {bookingData.tireBooking.selectedTire.model && ` ${bookingData.tireBooking.selectedTire.model}`}
+                          {/* Dimension */}
+                          {(bookingData.tireBooking.tireDimensions || bookingData.tireBooking.selectedTire.dimension) && (
+                            <span>
+                              {' '}
+                              {bookingData.tireBooking.tireDimensions 
+                                ? `${bookingData.tireBooking.tireDimensions.width}/${bookingData.tireBooking.tireDimensions.height} R${bookingData.tireBooking.tireDimensions.diameter}`
+                                : bookingData.tireBooking.selectedTire.dimension
+                              }
+                            </span>
+                          )}
+                          {/* Load and Speed Index */}
+                          {((bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex) ||
+                            (bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex)) && (
+                            <span>
+                              {' '}
+                              {bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || ''}
+                              {bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || ''}
+                            </span>
+                          )}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          {bookingData.tireBooking.selectedTire.model}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 mt-2">
                           {bookingData.tireBooking.selectedTire.quantity || 4}× à {formatPrice(bookingData.tireBooking.selectedTire.pricePerTire || 0)}
                         </p>
                       </div>
@@ -465,7 +485,10 @@ export default function PaymentPage() {
                   {/* Service Price */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">
-                      {serviceLabels[bookingData.service.type] || bookingData.service.type}
+                      {bookingData.tireBooking?.tireCount
+                        ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
+                        : serviceLabels[bookingData.service.type] || bookingData.service.type
+                      }
                     </span>
                     <span className="font-semibold">{formatPrice(bookingData.pricing.servicePrice)}</span>
                   </div>
@@ -714,7 +737,7 @@ export default function PaymentPage() {
                           />
                         </div>
                         <div className="text-left">
-                          <p className="text-xs text-gray-500">Schnell & sicher</p>
+                          <p className="text-xs text-gray-500">Schnell & sicher via Stripe</p>
                         </div>
                       </div>
                       {selectedPaymentMethod === 'paypal' && (
@@ -754,6 +777,21 @@ export default function PaymentPage() {
                     </div>
                   </button>
                 </div>
+              </div>
+
+              {/* Terms acceptance notice */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-600 text-center">
+                  Mit der Buchung akzeptieren Sie unsere{' '}
+                  <a href="/agb" target="_blank" className="text-primary-600 hover:text-primary-700 underline">
+                    AGB
+                  </a>
+                  {' '}und{' '}
+                  <a href="/datenschutz" target="_blank" className="text-primary-600 hover:text-primary-700 underline">
+                    Datenschutzerklärung
+                  </a>
+                  .
+                </p>
               </div>
 
               {/* Pay Button */}

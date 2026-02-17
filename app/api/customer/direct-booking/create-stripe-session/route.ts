@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
       'card': ['card'],
       'customer_balance': ['customer_balance'], // Bank Transfer (Überweisung)
       'klarna': ['klarna'],
+      'paypal': ['paypal'], // PayPal via Stripe
     }
 
     // Determine which payment methods to enable
@@ -62,8 +63,20 @@ export async function POST(request: NextRequest) {
       ? paymentMethodMap[paymentMethodType]
       : ['card'] // Default to card if not specified
 
-    // Create Stripe Checkout Session with Direct Charges to Workshop
-    // Payment goes 100% to workshop (no platform fee)
+    // Create Stripe Checkout Session with Application Fee (6.9% commission)
+    // Customer pays total → Platform takes 6.9% → Stripe fees deducted from platform fee → Workshop gets 93.1%
+    // Example: 100€ → Platform: 6.9€ - Stripe fees → Workshop: 93.10€
+    
+    // Calculate application fee (6.9% commission for platform)
+    const PLATFORM_COMMISSION_RATE = 0.069 // 6.9%
+    const applicationFeeAmount = Math.round(totalPrice * 100 * PLATFORM_COMMISSION_RATE) // in cents
+    
+    console.log('[STRIPE] Payment breakdown:', {
+      totalPrice: totalPrice,
+      platformCommission: `${(totalPrice * PLATFORM_COMMISSION_RATE).toFixed(2)}€`,
+      workshopReceives: `${(totalPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)}€`,
+      note: 'Stripe fees will be deducted from platform commission'
+    })
     
     // For customer_balance, we need to create or retrieve a Stripe Customer
     let stripeCustomerId: string | undefined = undefined
@@ -136,8 +149,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Special configuration for different payment methods with Stripe Connect
-    // Note: Klarna and customer_balance (bank transfer) don't support on_behalf_of
-    // They only work with transfer_data (direct charges)
+    // Using application_fee_amount to take 6.9% commission
+    // Note: Different payment methods have different requirements
     if (enabledPaymentMethods.includes('customer_balance')) {
       // Bank Transfer requires customer_balance configuration
       sessionConfig.payment_method_options = {
@@ -148,23 +161,35 @@ export async function POST(request: NextRequest) {
           },
         },
       }
-      // For bank transfer, only use transfer_data
+      // For bank transfer with application fee
       sessionConfig.payment_intent_data = {
+        application_fee_amount: applicationFeeAmount,
         transfer_data: {
           destination: workshop.stripeAccountId,
         },
       }
     } else if (enabledPaymentMethods.includes('klarna')) {
-      // Klarna only works with transfer_data (no on_behalf_of)
-      // Note: Klarna also requires the connected account to have Klarna capabilities enabled
+      // Klarna with application fee
+      // Note: Klarna requires the connected account to have Klarna capabilities enabled
       sessionConfig.payment_intent_data = {
+        application_fee_amount: applicationFeeAmount,
+        transfer_data: {
+          destination: workshop.stripeAccountId,
+        },
+      }
+    } else if (enabledPaymentMethods.includes('paypal')) {
+      // PayPal via Stripe with application fee
+      // Note: PayPal requires additional configuration in Stripe Dashboard
+      sessionConfig.payment_intent_data = {
+        application_fee_amount: applicationFeeAmount,
         transfer_data: {
           destination: workshop.stripeAccountId,
         },
       }
     } else {
-      // For card payment methods, use both on_behalf_of and transfer_data
+      // For card payment methods with application fee
       sessionConfig.payment_intent_data = {
+        application_fee_amount: applicationFeeAmount,
         on_behalf_of: workshop.stripeAccountId,
         transfer_data: {
           destination: workshop.stripeAccountId,

@@ -407,6 +407,50 @@ export default function NewHomePage() {
     }
   }, [])
 
+  // Listen for back navigation - restore filters when returning from workshop page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && typeof window !== 'undefined') {
+        const savedSearchState = sessionStorage.getItem('lastSearchState')
+        if (savedSearchState) {
+          try {
+            const searchState = JSON.parse(savedSearchState)
+            // Only restore if saved within last 30 minutes and has workshops
+            if (Date.now() - searchState.timestamp < 30 * 60 * 1000 && searchState.workshops && searchState.workshops.length > 0) {
+              console.log('🔄 [Page Visible] Restoring filters and vehicle...', searchState)
+              // Only restore if we don't already have search results (to avoid overwriting current search)
+              if (!hasSearched || workshops.length === 0) {
+                setWorkshops(searchState.workshops || [])
+                setHasSearched(true)
+              }
+              setSelectedService(searchState.selectedService || 'WHEEL_CHANGE')
+              setPostalCode(searchState.postalCode || '')
+              setRadiusKm(searchState.radiusKm || 25)
+              setCustomerLocation(searchState.customerLocation || null)
+              setSelectedVehicleId(searchState.selectedVehicleId || '')
+              setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
+              if (searchState.selectedPackages && searchState.selectedPackages.length > 0) {
+                console.log('✅ [Page Visible] Restoring filters:', searchState.selectedPackages)
+                setSelectedPackages(searchState.selectedPackages)
+              }
+              setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
+            }
+          } catch (e) {
+            console.error('Error restoring on page visible:', e)
+          }
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleVisibilityChange)
+    }
+  }, [hasSearched, workshops.length])
+
   // Favorites
   const [favorites, setFavorites] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {

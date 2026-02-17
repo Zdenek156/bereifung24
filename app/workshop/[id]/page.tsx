@@ -451,6 +451,11 @@ export default function WorkshopDetailPage() {
     setAdditionalServices(prev => prev.filter((_, i) => i !== index))
   }
 
+  const removeEmojis = (text: string) => {
+    // Remove emojis and icons from service names
+    return text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+  }
+
   const calculateTotalPrice = () => {
     let total = basePrice
     if (tireBookingData?.selectedTire?.totalPrice) {
@@ -854,7 +859,7 @@ export default function WorkshopDetailPage() {
                   {additionalServices.map((service, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-gray-900">{service.serviceName || service.name}</span>
+                        <span className="text-sm font-medium text-gray-900">{removeEmojis(service.serviceName || service.name)}</span>
                         {service.packageName && (
                           <span className="text-xs text-gray-500 ml-2">({service.packageName})</span>
                         )}
@@ -1031,12 +1036,7 @@ export default function WorkshopDetailPage() {
                   )}
                   {additionalServices.map((service, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm group hover:bg-gray-50 -mx-1 px-1 py-1 rounded transition-colors">
-                      <div className="flex-1">
-                        <span className="text-gray-600">{service.serviceName || service.name}</span>
-                        {service.packageName && (
-                          <span className="text-xs text-gray-400 ml-2">({service.packageName})</span>
-                        )}
-                      </div>
+                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
                         <button

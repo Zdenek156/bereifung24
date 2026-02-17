@@ -735,7 +735,24 @@ export default function WorkshopDetailPage() {
                   {/* Service Type */}
                   <div className="pb-4 border-b border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Serviceart</p>
-                    <p className="text-base font-semibold text-gray-900">{getServiceInfo(serviceType).name}</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {tireBookingData.hasTires && tireBookingData.tireCount
+                        ? `Reifenwechsel für ${tireBookingData.tireCount} Reifen`
+                        : getServiceInfo(serviceType).name
+                      }
+                    </p>
+                    
+                    {/* Additional services */}
+                    {(tireBookingData.hasDisposal || tireBookingData.hasRunflat) && (
+                      <div className="mt-3 space-y-1">
+                        {tireBookingData.hasDisposal && (
+                          <p className="text-sm text-gray-600">+ Reifenentsorgung</p>
+                        )}
+                        {tireBookingData.hasRunflat && (
+                          <p className="text-sm text-gray-600">+ Runflatzuschlag</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Tire Details */}
@@ -745,58 +762,31 @@ export default function WorkshopDetailPage() {
                       <div className="pb-4 border-b border-gray-200">
                         <p className="text-sm text-gray-600 mb-2">Ausgewählte Reifen</p>
                         
-                        {/* Brand and Model */}
-                        <p className="text-base font-semibold text-gray-900 mb-2">
+                        {/* Brand, Model and Full Specs in one line */}
+                        <p className="text-base font-semibold text-gray-900">
                           {tireBookingData.tireCount && `${tireBookingData.tireCount}x `}
                           {tireBookingData.selectedTire.brand}
                           {tireBookingData.selectedTire.model && ` ${tireBookingData.selectedTire.model}`}
-                        </p>
-                        
-                        {/* Tire Size Details */}
-                        <div className="flex flex-wrap gap-2 items-center">
-                          {/* Main dimension from tireDimensions or fallback to tire.dimension */}
+                          {/* Dimension */}
                           {(tireBookingData.tireDimensions || tireBookingData.selectedTire.dimension) && (
-                            <div className="inline-flex items-center bg-gray-100 px-3 py-1.5 rounded-lg">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {tireBookingData.tireDimensions 
-                                  ? `${tireBookingData.tireDimensions.width}/${tireBookingData.tireDimensions.height} R${tireBookingData.tireDimensions.diameter}`
-                                  : tireBookingData.selectedTire.dimension
-                                }
-                              </span>
-                            </div>
+                            <span>
+                              {' '}
+                              {tireBookingData.tireDimensions 
+                                ? `${tireBookingData.tireDimensions.width}/${tireBookingData.tireDimensions.height} R${tireBookingData.tireDimensions.diameter}`
+                                : tireBookingData.selectedTire.dimension
+                              }
+                            </span>
                           )}
-                          
                           {/* Load and Speed Index */}
                           {((tireBookingData.tireDimensions?.loadIndex || tireBookingData.selectedTire.loadIndex) ||
                             (tireBookingData.tireDimensions?.speedIndex || tireBookingData.selectedTire.speedIndex)) && (
-                            <div className="inline-flex items-center bg-primary-50 px-3 py-1.5 rounded-lg">
-                              <span className="text-sm font-semibold text-primary-900">
-                                {tireBookingData.tireDimensions?.loadIndex || tireBookingData.selectedTire.loadIndex || ''}
-                                {tireBookingData.tireDimensions?.speedIndex || tireBookingData.selectedTire.speedIndex || ''}
-                              </span>
-                            </div>
+                            <span>
+                              {' '}
+                              {tireBookingData.tireDimensions?.loadIndex || tireBookingData.selectedTire.loadIndex || ''}
+                              {tireBookingData.tireDimensions?.speedIndex || tireBookingData.selectedTire.speedIndex || ''}
+                            </span>
                           )}
-                          
-                          {/* Season indicator if available */}
-                          {tireBookingData.selectedTire.season && (
-                            <div className="inline-flex items-center bg-blue-50 px-3 py-1.5 rounded-lg">
-                              <span className="text-sm font-medium text-blue-900">
-                                {tireBookingData.selectedTire.season === 's' ? '☀️ Sommer' :
-                                 tireBookingData.selectedTire.season === 'w' ? '❄️ Winter' :
-                                 tireBookingData.selectedTire.season === 'g' ? '🌤️ Ganzjahres' : ''}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* RunFlat indicator if available */}
-                          {tireBookingData.selectedTire.runflat && (
-                            <div className="inline-flex items-center bg-orange-50 px-3 py-1.5 rounded-lg">
-                              <span className="text-sm font-medium text-orange-900">
-                                🛡️ RunFlat
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        </p>
                       </div>
 
                       {/* EU Labels */}
@@ -837,14 +827,6 @@ export default function WorkshopDetailPage() {
                           </div>
                         </div>
                       )}
-
-                      {/* Tire Price */}
-                      <div className="pt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Reifen Gesamt</span>
-                          <span className="text-lg font-bold text-primary-600">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
-                        </div>
-                      </div>
                     </>
                   )}
                 </div>

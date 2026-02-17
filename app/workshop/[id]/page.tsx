@@ -940,21 +940,11 @@ export default function WorkshopDetailPage() {
                     {/* Additional services from modal (for all service types) */}
                     {additionalServices.length > 0 && (
                       <div className="mt-3 space-y-1">
-                        {additionalServices
-                          .filter(service => {
-                            // For WHEEL_CHANGE, exclude balancing and storage (they're part of main service)
-                            const serviceName = (service.serviceName || service.name || '').toLowerCase()
-                            if (serviceType === 'WHEEL_CHANGE') {
-                              return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
-                            }
-                            return true
-                          })
-                          .map((service, idx) => (
-                            <p key={idx} className="text-sm text-gray-600">
-                              + {removeEmojis(service.serviceName || service.name)}
-                            </p>
-                          ))
-                        }
+                        {additionalServices.map((service, idx) => (
+                          <p key={idx} className="text-sm text-gray-600">
+                            + {removeEmojis(service.serviceName || service.name)}
+                          </p>
+                        ))}
                       </div>
                     )}
                   </div>

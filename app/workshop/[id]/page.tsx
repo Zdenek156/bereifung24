@@ -347,8 +347,8 @@ export default function WorkshopDetailPage() {
             workshopData.phone = data.workshop.phone || ''
             workshopData.website = data.workshop.companySettings?.website || ''
             
-            // Check if workshop is small business
-            if (data.workshop.companySettings?.isSmallBusiness) {
+            // Check if workshop is small business (Kleinunternehmer)
+            if (data.workshop.taxMode === 'KLEINUNTERNEHMER') {
               setIsSmallBusiness(true)
             }
             

@@ -1991,7 +1991,7 @@ export default function NewHomePage() {
                           {/* 2. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
                             <ServiceFilters
-                              key={`tire-change-${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}`}
+                              key={`${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}-${selectedPackages.join(',')}`}
                               selectedService={selectedService}
                               selectedPackages={selectedPackages}
                               onFiltersChange={(packages) => setSelectedPackages(packages)}

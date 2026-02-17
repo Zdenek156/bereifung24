@@ -70,6 +70,8 @@ export default function WorkshopDetailPage() {
   
   const [tireBookingData, setTireBookingData] = useState<any>(null)
   const [availableServices, setAvailableServices] = useState<any[]>([])
+  const [isSmallBusiness, setIsSmallBusiness] = useState(false)
+  const [isBusinessCustomer, setIsBusinessCustomer] = useState(false)
 
   // Fetch available slots when component mounts
   useEffect(() => {
@@ -345,6 +347,11 @@ export default function WorkshopDetailPage() {
             workshopData.phone = data.workshop.phone || ''
             workshopData.website = data.workshop.companySettings?.website || ''
             
+            // Check if workshop is small business
+            if (data.workshop.companySettings?.isSmallBusiness) {
+              setIsSmallBusiness(true)
+            }
+            
             const desc = data.workshop.companySettings?.description
             if (desc && desc.trim()) {
               workshopData.description = desc
@@ -414,6 +421,26 @@ export default function WorkshopDetailPage() {
     }
   }, [])
 
+  // Check if customer is business customer
+  useEffect(() => {
+    const checkBusinessCustomer = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch('/api/user/profile')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.customerType === 'BUSINESS') {
+              setIsBusinessCustomer(true)
+            }
+          }
+        } catch (error) {
+          console.error('Error checking business customer:', error)
+        }
+      }
+    }
+    checkBusinessCustomer()
+  }, [session])
+
   // Load favorites
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -464,7 +491,23 @@ export default function WorkshopDetailPage() {
     additionalServices.forEach(service => {
       total += service.price
     })
+    
+    // If workshop is normal (not small business) and customer is business customer, show net price
+    if (!isSmallBusiness && isBusinessCustomer) {
+      return total / 1.19 // Remove VAT
+    }
+    
     return total
+  }
+
+  const getTaxLabel = () => {
+    if (isSmallBusiness) {
+      return 'gemäß §19 UStG wird die MwSt. nicht ausgewiesen'
+    }
+    if (isBusinessCustomer) {
+      return 'zzgl. MwSt.'
+    }
+    return 'inkl. MwSt.'
   }
 
   const calculateTotalDuration = () => {
@@ -1017,9 +1060,7 @@ export default function WorkshopDetailPage() {
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
                   <p className="text-3xl font-bold text-gray-900">{formatEUR(calculateTotalPrice())}</p>
-                  {tireBookingData?.selectedTire && (
-                    <p className="text-xs text-gray-500 mt-1">inkl. Reifen & Service</p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">{getTaxLabel()}</p>
                 </div>
 
                 {/* Service Summary */}
@@ -1035,9 +1076,9 @@ export default function WorkshopDetailPage() {
                     </div>
                   )}
                   {additionalServices.map((service, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm group hover:bg-gray-50 -mx-1 px-1 py-1 rounded transition-colors">
-                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
-                      <div className="flex items-center gap-2">
+                    <div key={idx} className="flex items-center justify-between text-sm group">
+                      <span className="text-gray-600 flex-1 pr-2">{removeEmojis(service.serviceName || service.name)}</span>
+                      <div className="flex items-center gap-2 shrink-0">
                         <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
                         <button
                           onClick={() => removeAdditionalService(idx)}

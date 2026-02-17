@@ -121,6 +121,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     if (existingBooking) {
       console.log('ℹ️  DirectBooking already exists, updating payment status')
+      
+      // Calculate commission breakdown (6.9% platform commission)
+      const PLATFORM_COMMISSION_RATE = 0.069
+      const totalPriceNum = totalPrice
+      const platformCommission = totalPriceNum * PLATFORM_COMMISSION_RATE
+      const workshopPayout = totalPriceNum * (1 - PLATFORM_COMMISSION_RATE)
+      const platformCommissionCents = Math.round(platformCommission * 100)
+      
+      // Estimate Stripe fees (1.5% + 0.25€ for EU cards)
+      const stripeFeesEstimate = (totalPriceNum * 0.015) + 0.25
+      const platformNetCommission = platformCommission - stripeFeesEstimate
+      
+      console.log('💰 Payment breakdown:', {
+        total: `${totalPriceNum.toFixed(2)}€`,
+        platformCommission: `${platformCommission.toFixed(2)}€`,
+        workshopPayout: `${workshopPayout.toFixed(2)}€`,
+        stripeFeesEstimate: `${stripeFeesEstimate.toFixed(2)}€`,
+        platformNetCommission: `${platformNetCommission.toFixed(2)}€`
+      })
+      
       await prisma.directBooking.update({
         where: { id: existingBooking.id },
         data: {
@@ -128,11 +148,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           paymentMethod: 'STRIPE',
           stripePaymentId: session.payment_intent as string,
           paidAt: new Date(),
-          status: 'CONFIRMED'
+          status: 'CONFIRMED',
+          platformCommission,
+          platformCommissionCents,
+          workshopPayout,
+          stripeFeesEstimate,
+          platformNetCommission
         }
       })
       console.log('✅ DirectBooking updated:', existingBooking.id)
     } else {
+      // Calculate commission breakdown (6.9% platform commission)
+      const PLATFORM_COMMISSION_RATE = 0.069
+      const totalPriceNum = totalPrice
+      const platformCommission = totalPriceNum * PLATFORM_COMMISSION_RATE
+      const workshopPayout = totalPriceNum * (1 - PLATFORM_COMMISSION_RATE)
+      const platformCommissionCents = Math.round(platformCommission * 100)
+      
+      // Estimate Stripe fees (1.5% + 0.25€ for EU cards)
+      const stripeFeesEstimate = (totalPriceNum * 0.015) + 0.25
+      const platformNetCommission = platformCommission - stripeFeesEstimate
+      
+      console.log('💰 Payment breakdown:', {
+        total: `${totalPriceNum.toFixed(2)}€`,
+        platformCommission: `${platformCommission.toFixed(2)}€`,
+        workshopPayout: `${workshopPayout.toFixed(2)}€`,
+        stripeFeesEstimate: `${stripeFeesEstimate.toFixed(2)}€`,
+        platformNetCommission: `${platformNetCommission.toFixed(2)}€`
+      })
+      
       // Create DirectBooking record
       const booking = await prisma.directBooking.create({
         data: {
@@ -154,7 +198,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           paymentStatus: 'PAID',
           stripeSessionId: session.id,
           stripePaymentId: session.payment_intent as string,
-          paidAt: new Date()
+          paidAt: new Date(),
+          platformCommission,
+          platformCommissionCents,
+          workshopPayout,
+          stripeFeesEstimate,
+          platformNetCommission
         }
       })
 

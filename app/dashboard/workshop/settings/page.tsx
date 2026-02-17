@@ -2053,7 +2053,10 @@ export default function WorkshopSettings() {
                               ✅ Stripe Account verbunden
                             </p>
                             <p className="text-xs text-green-700 dark:text-green-400">
-                              Zahlungen werden direkt auf Ihr Konto überwiesen
+                              Zahlungen werden direkt auf Ihr Konto überwiesen (93,1% nach 6,9% Provision)
+                            </p>
+                            <p className="text-xs text-green-600 dark:text-green-500 mt-1 italic">
+                              💡 Die Stripe-Gebühren werden von der Provision abgezogen, nicht von Ihrer Auszahlung
                             </p>
                           </div>
                         </div>
@@ -2150,8 +2153,11 @@ export default function WorkshopSettings() {
                             <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
                               🚀 Automatisches Stripe Connect Onboarding
                             </p>
-                            <p className="text-xs text-blue-700 dark:text-blue-400">
+                            <p className="text-xs text-blue-700 dark:text-blue-400 mb-1">
                               Zahlungen gehen direkt auf Ihr Konto. Einfaches Setup in 5 Minuten.
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-500 italic">
+                              💰 Sie erhalten 93,1% jeder Zahlung (6,9% Plattformprovision inkl. Stripe-Gebühren)
                             </p>
                           </div>
                         </div>

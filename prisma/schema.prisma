@@ -5570,6 +5570,13 @@ model DirectBooking {
   totalPrice      Decimal  @map("total_price") @db.Decimal(10, 2)
   durationMinutes Int      @map("duration_minutes")
 
+  // Commission & Payout (Platform takes 6.9% commission via Stripe Application Fee)
+  platformCommission       Decimal? @map("platform_commission") @db.Decimal(10, 2) // 6.9% of totalPrice
+  platformCommissionCents  Int?     @map("platform_commission_cents") // Application Fee in cents for Stripe
+  workshopPayout           Decimal? @map("workshop_payout") @db.Decimal(10, 2) // Amount workshop receives (93.1% of totalPrice)
+  stripeFeesEstimate       Decimal? @map("stripe_fees_estimate") @db.Decimal(10, 2) // Estimated Stripe fees (deducted from commission)
+  platformNetCommission    Decimal? @map("platform_net_commission") @db.Decimal(10, 2) // Commission after Stripe fees
+
   // Booking Slot
   date          DateTime  @db.Date
   time          String    @db.VarChar(5)

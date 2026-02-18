@@ -22,7 +22,19 @@ interface Appointment {
   basePrice?: number
   balancingPrice?: number | null
   storagePrice?: number | null
+  disposalFee?: number | null
   serviceType?: string
+  // Direct Booking tire fields
+  tireBrand?: string | null
+  tireModel?: string | null
+  tireSize?: string | null
+  tireLoadIndex?: string | null
+  tireSpeedIndex?: string | null
+  tireEAN?: string | null
+  tireQuantity?: number | null
+  tirePurchasePrice?: number | null
+  tireRunFlat?: boolean
+  tire3PMSF?: boolean
   vehicle?: {
     make: string
     model: string
@@ -781,6 +793,41 @@ export default function WorkshopAppointments() {
                             <p className="text-xs text-green-600 font-medium mt-1">
                               ✓ Bereits bezahlt (PayPal)
                             </p>
+                          </>
+                        )}
+                        {apt.tireBrand && apt.tireModel && (
+                          <>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">🛞 Reifen</h4>
+                            <p className="text-sm text-gray-900 font-medium">
+                              {apt.tireBrand} {apt.tireModel}
+                            </p>
+                            {apt.tireSize && (
+                              <p className="text-sm text-gray-600">
+                                Größe: {apt.tireSize} {apt.tireLoadIndex || ''}{apt.tireSpeedIndex || ''}
+                              </p>
+                            )}
+                            {apt.tireQuantity && (
+                              <p className="text-sm text-gray-600">
+                                Menge: {apt.tireQuantity} Stück
+                              </p>
+                            )}
+                            {apt.tireEAN && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                EAN: {apt.tireEAN}
+                              </p>
+                            )}
+                            <div className="flex gap-2 mt-1">
+                              {apt.tireRunFlat && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  ⚡ RunFlat
+                                </span>
+                              )}
+                              {apt.tire3PMSF && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                  ❄️ Winter
+                                </span>
+                              )}
+                            </div>
                           </>
                         )}
                       </>

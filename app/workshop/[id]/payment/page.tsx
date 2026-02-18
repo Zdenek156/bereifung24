@@ -221,8 +221,33 @@ export default function PaymentPage() {
             date,
             time,
             totalPrice: bookingData.pricing.totalPrice,
+            basePrice: bookingData.pricing.basePrice || bookingData.pricing.totalPrice,
+            balancingPrice: bookingData.pricing.balancingPrice || 0,
+            storagePrice: bookingData.pricing.storagePrice || 0,
+            disposalFee: bookingData.pricing.disposalFee || 0,
+            runFlatSurcharge: bookingData.pricing.runFlatSurcharge || 0,
+            hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
+            hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
+            hasDisposal: bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
             workshopName: workshop.name,
             serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
+          vehicleInfo: `${bookingData.vehicle.make} ${bookingData.vehicle.model}`,
+            // Tire data (for TIRE_CHANGE, TIRE_MOUNT services)
+            ...(bookingData.tireBooking?.selectedTire && {
+              tireBrand: bookingData.tireBooking.selectedTire.brand || '',
+              tireModel: bookingData.tireBooking.selectedTire.model || '',
+              tireSize: bookingData.tireBooking.tireDimensions 
+                ? `${bookingData.tireBooking.tireDimensions.width}/${bookingData.tireBooking.tireDimensions.height} R${bookingData.tireBooking.tireDimensions.diameter}`
+                : (bookingData.tireBooking.selectedTire.dimension || ''),
+              tireLoadIndex: bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || '',
+              tireSpeedIndex: bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || '',
+              tireEAN: bookingData.tireBooking.selectedTire.ean || '',
+              tireQuantity: bookingData.tireBooking.tireCount || 4,
+              tirePurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,
+              totalTirePurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
+              tireRunFlat: bookingData.tireBooking.selectedTire.runflat || bookingData.tireBooking.selectedTire.isRunFlat || false,
+              tire3PMSF: bookingData.tireBooking.selectedTire.winter || bookingData.tireBooking.selectedTire.is3PMSF || false,
+            }),
             paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method, // 'card', 'klarna', 'paypal', or 'customer_balance'
             reservationId: reserveData.reservationId
           })

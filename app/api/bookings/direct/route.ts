@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, createICSFile } from '@/lib/email'
+import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, directBookingNotificationWorkshopEmail } from '@/lib/email'
 import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 
 /**
@@ -137,11 +137,38 @@ export async function POST(req: NextRequest) {
       console.log('[DIRECT BOOKING] New booking created:', directBooking.id)
     }
 
+    // Reload DirectBooking with all fields (including tire data)
+    const completeBooking = await prisma.directBooking.findUnique({
+      where: { id: directBooking.id },
+      include: {
+        customer: {
+          include: { user: true }
+        },
+        workshop: {
+          include: { user: true }
+        },
+        vehicle: true
+      }
+    })
+
+    if (!completeBooking) {
+      console.error('[DIRECT BOOKING] Failed to reload booking:', directBooking.id)
+      return NextResponse.json(
+        { error: 'Buchung konnte nicht geladen werden' },
+        { status: 500 }
+      )
+    }
+
+    console.log('[DIRECT BOOKING] Complete booking loaded with tire data:', {
+      id: completeBooking.id,
+      hasTireData: !!(completeBooking.tireBrand && completeBooking.tireModel)
+    })
+
     // Use DirectBooking's stored date and time (authoritative source)
     // The date from DB is stored as UTC midnight (e.g., "2026-03-13T00:00:00Z")
     // This directly represents the date the user selected, without timezone conversion
-    const bookingDate = directBooking.date // Date object from DB (UTC)
-    const [hours, minutes] = directBooking.time.split(':').map(Number)
+    const bookingDate = completeBooking.date // Date object from DB (UTC)
+    const [hours, minutes] = completeBooking.time.split(':').map(Number)
     
     // Extract date components directly from the UTC midnight timestamp
     // Since we store "2026-03-13T00:00:00Z" for March 13, we can use UTC components
@@ -256,18 +283,8 @@ export async function POST(req: NextRequest) {
         month: 'long',
         year: 'numeric'
       })
-      const workshopAddress = `${workshop.user.street || ''}, ${workshop.user.zipCode || ''} ${workshop.user.city || ''}`
-      const vehicleStr = `${vehicle.make} ${vehicle.model}${vehicle.year ? ` (${vehicle.year})` : ''}${vehicle.licensePlate ? ` - ${vehicle.licensePlate}` : ''}`
-      const priceStr = `${totalPrice.toFixed(2)} €`
-
-      // Get email templates
-      const customerTemplate = await prisma.emailTemplate.findUnique({
-        where: { key: 'BOOKING_CONFIRMATION_CUSTOMER' }
-      })
-
-      const workshopTemplate = await prisma.emailTemplate.findUnique({
-        where: { key: 'BOOKING_CONFIRMATION_WORKSHOP' }
-      })
+      const workshopAddress = `${completeBooking.workshop.user.street || ''}, ${completeBooking.workshop.user.zipCode || ''} ${completeBooking.workshop.user.city || ''}`
+      const vehicleStr = `${completeBooking.vehicle.make} ${completeBooking.vehicle.model}${completeBooking.vehicle.year ? ` (${completeBooking.vehicle.year})` : ''}${completeBooking.vehicle.licensePlate ? ` - ${completeBooking.vehicle.licensePlate}` : ''}`
 
       // Create ICS file for customer
       const appointmentStart = appointmentDateTime
@@ -275,103 +292,176 @@ export async function POST(req: NextRequest) {
       
       // Create detailed description in German
       const icsDescription = [
-        `${serviceName} bei ${workshop.companyName}`,
+        `${serviceName} bei ${completeBooking.workshop.companyName}`,
         '',
-        `📅 Termin: ${formattedDate} um ${time} Uhr`,
+        `📅 Termin: ${formattedDate} um ${completeBooking.time} Uhr`,
         `⏱️ Dauer: ca. ${estimatedDuration} Minuten`,
         `🚗 Fahrzeug: ${vehicleStr}`,
-        `💰 Preis: ${priceStr}`,
+        `💰 Preis: ${Number(completeBooking.totalPrice).toFixed(2)} €`,
         '',
         `📍 Adresse:`,
-        `${workshop.companyName}`,
+        `${completeBooking.workshop.companyName}`,
         workshopAddress,
         '',
-        `📞 Kontakt: ${workshop.user.phone || workshop.user.email}`,
+        `📞 Kontakt: ${completeBooking.workshop.user.phone || completeBooking.workshop.user.email}`,
       ].join('\\n')
       
       const icsContent = createICSFile({
         start: appointmentStart,
         end: appointmentEnd,
-        summary: `Termin: ${serviceName} bei ${workshop.companyName}`,
+        summary: `Termin: ${serviceName} bei ${completeBooking.workshop.companyName}`,
         description: icsDescription,
-        location: `${workshop.companyName}, ${workshopAddress}`,
-        organizerEmail: workshop.user.email,
-        organizerName: workshop.companyName,
-        attendeeEmail: customer.user.email,
-        attendeeName: `${customer.user.firstName} ${customer.user.lastName}`
+        location: `${completeBooking.workshop.companyName}, ${workshopAddress}`,
+        organizerEmail: completeBooking.workshop.user.email,
+        organizerName: completeBooking.workshop.companyName,
+        attendeeEmail: completeBooking.customer.user.email,
+        attendeeName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`
       })
 
-      // Send to customer with ICS attachment
-      if (customerTemplate) {
-        const customerHtml = customerTemplate.htmlContent
-          .replace(/{{customerName}}/g, `${customer.user.firstName} ${customer.user.lastName}`)
-          .replace(/{{workshopName}}/g, workshop.companyName)
-          .replace(/{{workshopAddress}}/g, workshopAddress)
-          .replace(/{{serviceName}}/g, serviceName)
-          .replace(/{{date}}/g, formattedDate)
-          .replace(/{{time}}/g, time)
-          .replace(/{{vehicle}}/g, vehicleStr)
-          .replace(/{{price}}/g, priceStr)
-          .replace(/{{dashboardUrl}}/g, `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/customer/bookings`)
-          .replace(/{{workshopPhone}}/g, workshop.user.phone || 'Nicht angegeben')
-          .replace(/{{workshopEmail}}/g, workshop.user.email)
+      // Extract pricing details
+      const basePrice = completeBooking.basePrice ? Number(completeBooking.basePrice) : 0
+      const balancingPrice = completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined
+      const storagePrice = completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined
+      const disposalFee = completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined
+      const runFlatSurcharge = completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined
+      const totalPrice = completeBooking.totalPrice ? Number(completeBooking.totalPrice) : 0
 
-        try {
-          await sendEmail({
-            to: customer.user.email,
-            subject: customerTemplate.subject.replace(/{{workshopName}}/g, workshop.companyName),
-            html: customerHtml,
-            attachments: [{
-              filename: 'termin.ics',
-              content: icsContent,
-              contentType: 'text/calendar; charset=utf-8; method=REQUEST'
-            }]
-          })
-          console.log('[EMAIL] Customer email sent to:', customer.user.email)
-        } catch (error) {
-          console.error('[EMAIL] Failed to send customer email:', error)
-        }
+      // Tire data for emails
+      const tireSize = completeBooking.tireSize 
+        ? `${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim()
+        : undefined
+
+      // Send customer email with rich tire data
+      const customerEmailData = directBookingConfirmationCustomerEmail({
+        customerName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`,
+        workshopName: completeBooking.workshop.companyName,
+        workshopAddress,
+        workshopPhone: completeBooking.workshop.user.phone || undefined,
+        workshopEmail: completeBooking.workshop.user.email,
+        workshopLogoUrl: completeBooking.workshop.logoUrl || undefined,
+        serviceType: serviceType as any,
+        serviceName,
+        date: formattedDate,
+        time: completeBooking.time,
+        vehicleBrand: completeBooking.vehicle.make,
+        vehicleModel: completeBooking.vehicle.model,
+        vehicleYear: completeBooking.vehicle.year || undefined,
+        vehicleLicensePlate: completeBooking.vehicle.licensePlate || undefined,
+        basePrice,
+        balancingPrice,
+        storagePrice,
+        disposalFee,
+        runFlatSurcharge,
+        totalPrice,
+        paymentMethod: completeBooking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : 'SEPA-Lastschrift',
+        tireBrand: completeBooking.tireBrand || undefined,
+        tireModel: completeBooking.tireModel || undefined,
+        tireSize,
+        tireQuantity: completeBooking.tireQuantity || undefined,
+        tireEAN: completeBooking.tireEAN || undefined,
+        tireRunFlat: completeBooking.tireRunFlat || undefined,
+        tire3PMSF: completeBooking.tire3PMSF || undefined,
+        hasDisposal: completeBooking.hasDisposal || undefined
+      })
+
+      try {
+        await sendEmail({
+          to: completeBooking.customer.user.email,
+          subject: customerEmailData.subject,
+          html: customerEmailData.html,
+          attachments: icsContent ? [{
+            filename: 'termin.ics',
+            content: icsContent,
+            contentType: 'text/calendar; charset=utf-8; method=REQUEST'
+          }] : undefined
+        })
+        console.log('[EMAIL] Customer email sent to:', completeBooking.customer.user.email)
+      } catch (error) {
+        console.error('[EMAIL] Failed to send customer email:', error)
       }
 
-      // Send to workshop
-      if (workshopTemplate) {
-        const workshopHtml = workshopTemplate.htmlContent
-          .replace(/{{workshopName}}/g, workshop.companyName)
-          .replace(/{{customerName}}/g, `${customer.user.firstName} ${customer.user.lastName}`)
-          .replace(/{{customerEmail}}/g, customer.user.email)
-          .replace(/{{customerPhone}}/g, customer.user.phone || 'Nicht angegeben')
-          .replace(/{{serviceName}}/g, serviceName)
-          .replace(/{{date}}/g, formattedDate)
-          .replace(/{{time}}/g, time)
-          .replace(/{{vehicle}}/g, vehicleStr)
-          .replace(/{{licensePlate}}/g, vehicle.licensePlate || 'Nicht angegeben')
-          .replace(/{{price}}/g, priceStr)
-          .replace(/{{dashboardUrl}}/g, `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/workshop/appointments`)
+      // Send workshop email with tire ordering instructions
+      const customerInvoiceAddress = completeBooking.customer.user.street 
+        ? `${completeBooking.customer.user.street}, ${completeBooking.customer.user.zipCode} ${completeBooking.customer.user.city}`
+        : undefined
 
-        try {
-          await sendEmail({
-            to: workshop.user.email,
-            subject: workshopTemplate.subject
-              .replace(/{{serviceName}}/g, serviceName)
-              .replace(/{{date}}/g, formattedDate),
-            html: workshopHtml
+      // Check if workshop has supplier integration
+      const supplier = completeBooking.workshop.supplierId 
+        ? await prisma.tireSupplier.findUnique({ 
+            where: { id: completeBooking.workshop.supplierId },
+            select: { name: true, type: true }
           })
-          console.log('[EMAIL] Workshop email sent to:', workshop.user.email)
-        } catch (error) {
-          console.error('[EMAIL] Failed to send workshop email:', error)
-        }
+        : null
+
+      const workshopEmailData = directBookingNotificationWorkshopEmail({
+        workshopName: completeBooking.workshop.companyName,
+        customerName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`,
+        customerEmail: completeBooking.customer.user.email,
+        customerPhone: completeBooking.customer.user.phone || undefined,
+        customerInvoiceAddress,
+        serviceType: serviceType as any,
+        serviceName,
+        date: formattedDate,
+        time: completeBooking.time,
+        vehicleBrand: completeBooking.vehicle.make,
+        vehicleModel: completeBooking.vehicle.model,
+        vehicleYear: completeBooking.vehicle.year || undefined,
+        vehicleLicensePlate: completeBooking.vehicle.licensePlate || undefined,
+        totalPrice,
+        totalPaid: totalPrice,
+        platformFee: 0, // No commission in test mode
+        workshopPayout: totalPrice,
+        tireBrand: completeBooking.tireBrand || undefined,
+        tireModel: completeBooking.tireModel || undefined,
+        tireSize,
+        tireQuantity: completeBooking.tireQuantity || undefined,
+        tireEAN: completeBooking.tireEAN || undefined,
+        tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
+        totalTirePurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
+        tireRunFlat: completeBooking.tireRunFlat || undefined,
+        tire3PMSF: completeBooking.tire3PMSF || undefined,
+        supplierType: supplier?.type as 'API' | 'CSV' | undefined,
+        supplierName: supplier?.name
+      })
+
+      try {
+        await sendEmail({
+          to: completeBooking.workshop.user.email,
+          subject: workshopEmailData.subject,
+          html: workshopEmailData.html
+        })
+        console.log('[EMAIL] Workshop email sent to:', completeBooking.workshop.user.email)
+      } catch (error) {
+        console.error('[EMAIL] Failed to send workshop email:', error)
       }
     }
 
     return NextResponse.json({
       success: true,
       booking: {
-        id: directBooking.id,
-        appointmentDate: directBooking.date.toISOString(),
-        appointmentTime: directBooking.time,
-        status: directBooking.status,
+        id: completeBooking.id,
+        appointmentDate: completeBooking.date.toISOString(),
+        appointmentTime: completeBooking.time,
+        status: completeBooking.status,
         googleEventId: calendarEventId,
-        paymentStatus: directBooking.paymentStatus
+        paymentStatus: completeBooking.paymentStatus,
+        // Tire data for success page display
+        tireBrand: completeBooking.tireBrand,
+        tireModel: completeBooking.tireModel,
+        tireSize: completeBooking.tireSize,
+        tireLoadIndex: completeBooking.tireLoadIndex,
+        tireSpeedIndex: completeBooking.tireSpeedIndex,
+        tireEAN: completeBooking.tireEAN,
+        tireQuantity: completeBooking.tireQuantity,
+        tireRunFlat: completeBooking.tireRunFlat,
+        tire3PMSF: completeBooking.tire3PMSF,
+        // Pricing details
+        basePrice: completeBooking.basePrice,
+        balancingPrice: completeBooking.balancingPrice,
+        storagePrice: completeBooking.storagePrice,
+        disposalFee: completeBooking.disposalFee,
+        runFlatSurcharge: completeBooking.runFlatSurcharge,
+        totalPrice: completeBooking.totalPrice
       }
     })
 

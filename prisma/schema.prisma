@@ -5543,11 +5543,28 @@ model DirectBooking {
   // Options (for wheel change)
   hasBalancing Boolean @default(false) @map("has_balancing")
   hasStorage   Boolean @default(false) @map("has_storage")
+  hasDisposal  Boolean @default(false) @map("has_disposal")
+
+  // Tire Details (for TIRE_CHANGE, TIRE_MOUNT services)
+  tireBrand             String?  @map("tire_brand")
+  tireModel             String?  @map("tire_model")
+  tireSize              String?  @map("tire_size")
+  tireLoadIndex         String?  @map("tire_load_index")
+  tireSpeedIndex        String?  @map("tire_speed_index")
+  tireEAN               String?  @map("tire_ean")
+  tireQuantity          Int?     @map("tire_quantity")
+  tirePurchasePrice     Decimal? @map("tire_purchase_price") @db.Decimal(10, 2)
+  totalTirePurchasePrice Decimal? @map("total_tire_purchase_price") @db.Decimal(10, 2)
+  tireRunFlat           Boolean  @default(false) @map("tire_runflat")
+  tire3PMSF             Boolean  @default(false) @map("tire_3pmsf")
+  tireData              Json?    @map("tire_data")
 
   // Pricing
   basePrice       Decimal  @map("base_price") @db.Decimal(10, 2)
   balancingPrice  Decimal? @map("balancing_price") @db.Decimal(10, 2)
   storagePrice    Decimal? @map("storage_price") @db.Decimal(10, 2)
+  disposalFee     Decimal? @map("disposal_fee") @db.Decimal(10, 2)
+  runFlatSurcharge Decimal? @map("runflat_surcharge") @db.Decimal(10, 2)
   totalPrice      Decimal  @map("total_price") @db.Decimal(10, 2)
   durationMinutes Int      @map("duration_minutes")
 

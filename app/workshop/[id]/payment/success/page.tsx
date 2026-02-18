@@ -352,7 +352,38 @@ export default function PaymentSuccessPage() {
                 </div>
               </div>
             )}
+
+            {/* Tire Details */}
+            {booking?.tireBrand && booking?.tireModel && (
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth={2}/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20M2 12h20"/>
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900">Reifen</p>
+                  <p className="text-sm text-gray-600">
+                    {booking.tireBrand} {booking.tireModel}<br />
+                    Größe: {booking.tireSize} {booking.tireLoadIndex}{booking.tireSpeedIndex}<br />
+                    Menge: {booking.tireQuantity || 4} Stück
+                    {booking.tireRunFlat && <><br /><span className="text-red-600 font-semibold">⚡ RunFlat-Reifen</span></>}
+                    {booking.tire3PMSF && <><br /><span className="text-blue-600 font-semibold">❄️ Winterreifen (3PMSF)</span></>}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Review Reminder */}
+        <div className="bg-blue-50 rounded-lg p-6 mb-8">
+          <h3 className="font-semibold text-blue-900 mb-2">💬 Ihre Meinung ist wichtig!</h3>
+          <p className="text-sm text-blue-800 mb-3">
+            Nach Ihrem Termin können Sie die Werkstatt bewerten. Ihre Bewertung hilft anderen Kunden bei der Entscheidung für die richtige Werkstatt.
+          </p>
+          <p className="text-xs text-blue-700">
+            Sie erhalten nach dem Termin eine Erinnerung zur Bewertung per E-Mail.
+          </p>
         </div>
 
         {/* Next Steps */}
@@ -367,6 +398,12 @@ export default function PaymentSuccessPage() {
               <span className="text-primary-600 mt-0.5">•</span>
               <span>Die Werkstatt wurde über Ihre Buchung informiert</span>
             </li>
+            {booking?.tireBrand && (
+              <li className="flex items-start gap-2">
+                <span className="text-primary-600 mt-0.5">•</span>
+                <span>Die Werkstatt bestellt Ihre Reifen beim Lieferanten</span>
+              </li>
+            )}
             <li className="flex items-start gap-2">
               <span className="text-primary-600 mt-0.5">•</span>
               <span>Sie können Ihre Buchung im Dashboard verwalten</span>

@@ -11,7 +11,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, hasBalancing, hasStorage, workshopName, serviceName, vehicleInfo, paymentMethodType, reservationId } = await request.json()
+    const { 
+      workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, disposalFee, runFlatSurcharge,
+      hasBalancing, hasStorage, hasDisposal,
+      workshopName, serviceName, vehicleInfo, paymentMethodType, reservationId,
+      // Tire data (for TIRE_CHANGE, TIRE_MOUNT services)
+      tireBrand, tireModel, tireSize, tireLoadIndex, tireSpeedIndex, tireEAN, tireQuantity,
+      tirePurchasePrice, totalTirePurchasePrice, tireRunFlat, tire3PMSF
+    } = await request.json()
 
     // Get Stripe keys from database
     const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
@@ -148,9 +155,24 @@ export async function POST(request: NextRequest) {
         basePrice: basePrice?.toString() || '0',
         balancingPrice: balancingPrice?.toString() || '0',
         storagePrice: storagePrice?.toString() || '0',
+        disposalFee: disposalFee?.toString() || '0',
+        runFlatSurcharge: runFlatSurcharge?.toString() || '0',
         totalPrice: totalPrice.toString(),
         hasBalancing: hasBalancing?.toString() || 'false',
         hasStorage: hasStorage?.toString() || 'false',
+        hasDisposal: hasDisposal?.toString() || 'false',
+        // Tire data
+        tireBrand: tireBrand || '',
+        tireModel: tireModel || '',
+        tireSize: tireSize || '',
+        tireLoadIndex: tireLoadIndex || '',
+        tireSpeedIndex: tireSpeedIndex || '',
+        tireEAN: tireEAN || '',
+        tireQuantity: tireQuantity?.toString() || '0',
+        tirePurchasePrice: tirePurchasePrice?.toString() || '0',
+        totalTirePurchasePrice: totalTirePurchasePrice?.toString() || '0',
+        tireRunFlat: tireRunFlat?.toString() || 'false',
+        tire3PMSF: tire3PMSF?.toString() || 'false',
       },
     }
 

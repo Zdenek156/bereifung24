@@ -1,0 +1,17 @@
+-- Add tire data fields to direct_bookings table
+ALTER TABLE "direct_bookings" 
+ADD COLUMN IF NOT EXISTS "tire_brand" VARCHAR(255),
+ADD COLUMN IF NOT EXISTS "tire_model" VARCHAR(255),
+ADD COLUMN IF NOT EXISTS "tire_size" VARCHAR(100),
+ADD COLUMN IF NOT EXISTS "tire_load_index" VARCHAR(10),
+ADD COLUMN IF NOT EXISTS "tire_speed_index" VARCHAR(10),
+ADD COLUMN IF NOT EXISTS "tire_ean" VARCHAR(50),
+ADD COLUMN IF NOT EXISTS "tire_quantity" INTEGER,
+ADD COLUMN IF NOT EXISTS "tire_purchase_price" DECIMAL(10, 2),
+ADD COLUMN IF NOT EXISTS "total_tire_purchase_price" DECIMAL(10, 2),
+ADD COLUMN IF NOT EXISTS "tire_runflat" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "tire_3pmsf" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "tire_data" JSONB,
+ADD COLUMN IF NOT EXISTS "has_disposal" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "disposal_fee" DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS "runflat_surcharge" DECIMAL(10,2);

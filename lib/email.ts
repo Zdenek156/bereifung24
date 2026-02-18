@@ -1477,6 +1477,580 @@ export function bookingConfirmationWorkshopEmailTemplate(data: {
   }
 }
 
+/**
+ * Enhanced booking confirmation for CUSTOMER after payment
+ * Includes detailed service info, pricing breakdown, and ICS attachment
+ */
+export function directBookingConfirmationCustomerEmail(data: {
+  customerName: string
+  workshopName: string
+  workshopAddress: string
+  workshopPhone: string
+  workshopEmail?: string
+  workshopLogoUrl?: string
+  serviceType: string
+  serviceName: string
+  appointmentDate: string
+  appointmentTime: string
+  durationMinutes: number
+  bookingId: string
+  vehicleBrand?: string
+  vehicleModel?: string
+  vehicleLicensePlate?: string
+  // Tire details (if applicable)
+  tireBrand?: string
+  tireModel?: string
+  tireSize?: string
+  tireQuantity?: number
+  tireRunFlat?: boolean
+  tire3PMSF?: boolean
+  // Pricing
+  basePrice: number
+  balancingPrice?: number
+  storagePrice?: number
+  disposalFee?: number
+  runFlatSurcharge?: number
+  totalPrice: number
+  paymentMethod: string
+  // Options
+  hasBalancing?: boolean
+  hasStorage?: boolean
+  hasDisposal?: boolean
+  customerNotes?: string
+}) {
+  const serviceLabels: Record<string, string> = {
+    'WHEEL_CHANGE': 'Räderwechsel',
+    'TIRE_CHANGE': 'Reifenwechsel',
+    'TIRE_MOUNT': 'Reifenmontage'
+  }
+
+  const serviceLabel = serviceLabels[data.serviceType] || data.serviceName
+
+  return {
+    subject: `✅ Buchung bestätigt - ${serviceLabel} am ${data.appointmentDate}`,
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .logo { max-height: 60px; max-width: 180px; margin-bottom: 15px; }
+        .content { background: white; padding: 30px; }
+        .success-badge { background: #10b981; color: white; display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }
+        .section { margin: 25px 0; padding: 20px; background: #f9fafb; border-radius: 8px; }
+        .section-header { font-size: 18px; font-weight: bold; color: #059669; margin-bottom: 15px; }
+        .detail-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #6b7280; }
+        .detail-value { color: #111827; font-weight: 500; }
+        .price-total { background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
+        .info-box { padding: 15px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 4px; margin: 15px 0; }
+        .warning-box { padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px; margin: 15px 0; }
+        .button { display: inline-block; padding: 15px 30px; background: #10b981; color: white !important; text-decoration: none; border-radius: 8px; margin: 10px 5px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          ${data.workshopLogoUrl ? `<img src="${data.workshopLogoUrl}" alt="${data.workshopName}" class="logo">` : ''}
+          <h1 style="margin: 10px 0;">✅ Buchung bestätigt!</h1>
+          <div class="success-badge">BEZAHLT</div>
+        </div>
+        
+        <div class="content">
+          <p style="font-size: 16px;"><strong>Hallo ${data.customerName},</strong></p>
+          
+          <p>vielen Dank für Ihre Buchung! Ihre Zahlung über <strong>${data.totalPrice.toFixed(2)}€</strong> wurde erfolgreich verarbeitet.</p>
+
+          <!-- Appointment Details -->
+          <div class="section">
+            <div class="section-header">📅 Ihr Termin</div>
+            <div class="detail-row">
+              <span class="detail-label">Datum:</span>
+              <span class="detail-value">${data.appointmentDate}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Uhrzeit:</span>
+              <span class="detail-value">${data.appointmentTime} Uhr</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Dauer:</span>
+              <span class="detail-value">ca. ${data.durationMinutes} Minuten</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Buchungsnummer:</span>
+              <span class="detail-value">#${data.bookingId.substring(0, 8).toUpperCase()}</span>
+            </div>
+          </div>
+
+          <!-- Workshop Details -->
+          <div class="section">
+            <div class="section-header">🏢 Werkstatt</div>
+            <p style="font-size: 18px; font-weight: bold; margin: 5px 0; color: #059669;">${data.workshopName}</p>
+            <p style="margin: 5px 0;">📍 ${data.workshopAddress}</p>
+            <p style="margin: 5px 0;">📞 ${data.workshopPhone}</p>
+            ${data.workshopEmail ? `<p style="margin: 5px 0;">✉️ ${data.workshopEmail}</p>` : ''}
+          </div>
+
+          <!-- Service Details -->
+          <div class="section">
+            <div class="section-header">🔧 Gebuchter Service</div>
+            <p style="font-size: 16px; font-weight: bold; color: #059669;">${serviceLabel}</p>
+            
+            ${data.vehicleBrand || data.vehicleModel ? `
+            <div style="margin-top: 15px;">
+              <strong>Ihr Fahrzeug:</strong><br>
+              ${data.vehicleBrand || ''} ${data.vehicleModel || ''}
+              ${data.vehicleLicensePlate ? `<br>Kennzeichen: ${data.vehicleLicensePlate}` : ''}
+            </div>
+            ` : ''}
+
+            ${data.tireBrand && data.tireModel ? `
+            <div style="margin-top: 15px;">
+              <strong>🛞 Reifen:</strong><br>
+              ${data.tireBrand} ${data.tireModel}<br>
+              Größe: ${data.tireSize || 'nicht angegeben'}<br>
+              Menge: ${data.tireQuantity || 4} Stück
+              ${data.tireRunFlat ? '<br>⚡ <span style="color: #dc2626;">RunFlat-Reifen</span>' : ''}
+              ${data.tire3PMSF ? '<br>❄️ <span style="color: #2563eb;">Winterreifen (3PMSF)</span>' : ''}
+            </div>
+            ` : ''}
+
+            ${data.hasBalancing || data.hasStorage || data.hasDisposal ? `
+            <div style="margin-top: 15px;">
+              <strong>Zusatzleistungen:</strong>
+              <ul style="margin: 5px 0; padding-left: 20px;">
+                ${data.hasBalancing ? `<li>✅ Auswuchtung (+${data.balancingPrice?.toFixed(2) || '0.00'}€)</li>` : ''}
+                ${data.hasStorage ? `<li>✅ Einlagerung (+${data.storagePrice?.toFixed(2) || '0.00'}€)</li>` : ''}
+                ${data.hasDisposal ? `<li>✅ Reifenentsorgung (+${data.disposalFee?.toFixed(2) || '0.00'}€)</li>` : ''}
+                ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<li>✅ RunFlat-Aufschlag (+${data.runFlatSurcharge.toFixed(2)}€)</li>` : ''}
+              </ul>
+            </div>
+            ` : ''}
+          </div>
+
+          <!-- Pricing -->
+          <div class="section">
+            <div class="section-header">💰 Preis-Übersicht</div>
+            <div class="detail-row">
+              <span class="detail-label">Basis-Service:</span>
+              <span class="detail-value">${data.basePrice.toFixed(2)}€</span>
+            </div>
+            ${data.balancingPrice && data.balancingPrice > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">Auswuchtung:</span>
+              <span class="detail-value">+${data.balancingPrice.toFixed(2)}€</span>
+            </div>
+            ` : ''}
+            ${data.storagePrice && data.storagePrice > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">Einlagerung:</span>
+              <span class="detail-value">+${data.storagePrice.toFixed(2)}€</span>
+            </div>
+            ` : ''}
+            ${data.disposalFee && data.disposalFee > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">Entsorgung:</span>
+              <span class="detail-value">+${data.disposalFee.toFixed(2)}€</span>
+            </div>
+            ` : ''}
+            ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">RunFlat-Aufschlag:</span>
+              <span class="detail-value">+${data.runFlatSurcharge.toFixed(2)}€</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="price-total">
+            <div style="font-size: 14px; opacity: 0.9;">Gesamtsumme</div>
+            <div style="font-size: 36px; font-weight: bold; margin: 10px 0;">${data.totalPrice.toFixed(2)}€</div>
+            <div style="font-size: 14px; opacity: 0.9;">✅ BEZAHLT per ${data.paymentMethod}</div>
+          </div>
+
+          ${data.customerNotes ? `
+          <div class="info-box">
+            <strong>💬 Ihre Nachricht an die Werkstatt:</strong><br>
+            "${data.customerNotes}"
+          </div>
+          ` : ''}
+
+          <div class="info-box">
+            <strong>📅 Termin in Kalender importieren</strong><br>
+            Diese Email enthält eine ICS-Kalenderdatei im Anhang. Öffnen Sie den Anhang, 
+            um den Termin automatisch in Ihren Kalender (Google, Outlook, Apple) einzutragen.
+          </div>
+
+          <div class="warning-box">
+            <strong>⏰ Wichtige Hinweise:</strong><br>
+            • Bitte erscheinen Sie pünktlich zum Termin<br>
+            • Bei Verspätung über 15 Min. bitte Werkstatt anrufen<br>
+            • Bei Verhinderung bitte rechtzeitig absagen
+          </div>
+
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer/appointments" class="button">
+              Meine Termine ansehen
+            </a>
+          </center>
+
+          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+            Bei Fragen zu Ihrem Termin wenden Sie sich bitte direkt an die Werkstatt.
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Bereifung24</strong> - Ihre Plattform für Reifenservice</p>
+          <p>Diese Buchung wurde über bereifung24.de abgewickelt</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `
+  }
+}
+
+/**
+ * Enhanced booking notification for WORKSHOP after payment
+ * Includes customer invoice data, tire ordering info, and commission breakdown
+ */
+export function directBookingNotificationWorkshopEmail(data: {
+  workshopName: string
+  bookingId: string
+  serviceName: string
+  serviceType: string
+  appointmentDate: string
+  appointmentTime: string
+  durationMinutes: number
+  // Customer data (for invoice)
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  customerAddress?: string
+  customerNotes?: string
+  // Vehicle
+  vehicleBrand?: string
+  vehicleModel?: string
+  vehicleLicensePlate?: string
+  // Tire details (if applicable)
+  tireBrand?: string
+  tireModel?: string
+  tireSize?: string
+  tireQuantity?: number
+  tireEAN?: string
+  tireRunFlat?: boolean
+  tire3PMSF?: boolean
+  // Supplier info (if applicable)
+  supplierName?: string
+  supplierConnectionType?: 'API' | 'CSV'
+  supplierPhone?: string
+  supplierEmail?: string
+  supplierWebsite?: string
+  supplierOrderId?: string
+  estimatedDeliveryDate?: string
+  // Pricing
+  tirePurchasePrice?: number
+  totalPurchasePrice?: number
+  basePrice: number
+  balancingPrice?: number
+  storagePrice?: number
+  totalPrice: number
+  platformCommission: number
+  workshopPayout: number
+  workshopProfit?: number
+  // Options
+  hasBalancing?: boolean
+  hasStorage?: boolean
+}) {
+  const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT'
+  const isAPISupplier = data.supplierConnectionType === 'API'
+  const isCSVSupplier = data.supplierConnectionType === 'CSV'
+
+  return {
+    subject: `🔔 Neue BEZAHLTE Buchung: ${data.serviceName} am ${data.appointmentDate}`,
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: white; padding: 30px; }
+        .badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 0 5px; }
+        .badge-success { background: #10b981; color: white; }
+        .badge-warning { background: #fbbf24; color: #78350f; }
+        .section { margin: 25px 0; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid ${isTireService ? '#10b981' : '#3b82f6'}; }
+        .section-header { font-size: 18px; font-weight: bold; color: #059669; margin-bottom: 15px; }
+        .detail-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #6b7280; flex: 1; }
+        .detail-value { color: #111827; font-weight: 500; flex: 1; text-align: right; }
+        .order-box { background: ${isAPISupplier ? '#d1fae5' : '#fef3c7'}; border: 2px solid ${isAPISupplier ? '#10b981' : '#f59e0b'}; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .price-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .price-table td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+        .price-table tr:last-child td { border-bottom: 2px solid #059669; font-weight: bold; font-size: 18px; }
+        .button { display: inline-block; padding: 12px 24px; background: #10b981; color: white !important; text-decoration: none; border-radius: 8px; margin: 10px 5px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 10px 0;">🔔 Neue Buchung!</h1>
+          <div>
+            <span class="badge badge-success">✅ BEZAHLT</span>
+            ${isTireService && isAPISupplier ? '<span class="badge badge-success">🛞 REIFEN BESTELLT</span>' : ''}
+            ${isTireService && isCSVSupplier ? '<span class="badge badge-warning">⚠️ REIFEN MANUELL BESTELLEN</span>' : ''}
+          </div>
+        </div>
+        
+        <div class="content">
+          <p style="font-size: 16px;"><strong>Hallo ${data.workshopName},</strong></p>
+          
+          <p>Sie haben eine neue, bestätigte Buchung erhalten. Die Zahlung wurde bereits vom Kunden geleistet.</p>
+
+          <!-- Appointment Details -->
+          <div class="section">
+            <div class="section-header">📅 Termin-Details</div>
+            <div class="detail-row">
+              <span class="detail-label">Datum:</span>
+              <span class="detail-value">${data.appointmentDate}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Uhrzeit:</span>
+              <span class="detail-value">${data.appointmentTime} Uhr</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Dauer:</span>
+              <span class="detail-value">ca. ${data.durationMinutes} Min.</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Service:</span>
+              <span class="detail-value"><strong>${data.serviceName}</strong></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Buchungsnr.:</span>
+              <span class="detail-value">#${data.bookingId.substring(0, 8).toUpperCase()}</span>
+            </div>
+          </div>
+
+          <!-- Customer Info -->
+          <div class="section">
+            <div class="section-header">👤 Kunden-Informationen (für Rechnung)</div>
+            <table style="width: 100%;">
+              <tr>
+                <td style="padding: 5px 0;"><strong>Name:</strong></td>
+                <td style="padding: 5px 0;">${data.customerName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 5px 0;"><strong>Email:</strong></td>
+                <td style="padding: 5px 0;">${data.customerEmail}</td>
+              </tr>
+              <tr>
+                <td style="padding: 5px 0;"><strong>Telefon:</strong></td>
+                <td style="padding: 5px 0;">${data.customerPhone}</td>
+              </tr>
+              ${data.customerAddress ? `
+              <tr>
+                <td style="padding: 5px 0;"><strong>Adresse:</strong></td>
+                <td style="padding: 5px 0;">${data.customerAddress}</td>
+              </tr>
+              ` : ''}
+            </table>
+            <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+              <em>ℹ️ Diese Daten können Sie für die Rechnungsstellung verwenden.</em>
+            </p>
+          </div>
+
+          <!-- Vehicle & Service -->
+          <div class="section">
+            <div class="section-header">🚗 Fahrzeug & Service</div>
+            ${data.vehicleBrand || data.vehicleModel ? `
+            <div class="detail-row">
+              <span class="detail-label">Fahrzeug:</span>
+              <span class="detail-value">${data.vehicleBrand || ''} ${data.vehicleModel || ''}</span>
+            </div>
+            ` : ''}
+            ${data.vehicleLicensePlate ? `
+            <div class="detail-row">
+              <span class="detail-label">Kennzeichen:</span>
+              <span class="detail-value">${data.vehicleLicensePlate}</span>
+            </div>
+            ` : ''}
+            <div class="detail-row">
+              <span class="detail-label">Service:</span>
+              <span class="detail-value"><strong>${data.serviceName}</strong></span>
+            </div>
+            ${data.hasBalancing ? '<div class="detail-row"><span class="detail-label">Auswuchtung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
+            ${data.hasStorage ? '<div class="detail-row"><span class="detail-label">Einlagerung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
+          </div>
+
+          ${isTireService && isAPISupplier ? `
+          <!-- API Supplier: Tires Automatically Ordered -->
+          <div class="order-box">
+            <h3 style="margin-top: 0; color: #059669;">✅ Reifen automatisch bestellt</h3>
+            <p style="margin: 10px 0;">Die Reifen wurden automatisch über <strong>${data.supplierName}</strong> bestellt:</p>
+            
+            <table style="width: 100%; margin: 15px 0; background: white; border-radius: 8px; overflow: hidden;">
+              <tr style="background: #f3f4f6;">
+                <th style="padding: 12px; text-align: left;">Artikel</th>
+                <th style="padding: 12px; text-align: center;">Menge</th>
+                <th style="padding: 12px; text-align: center;">EAN</th>
+                <th style="padding: 12px; text-align: right;">EK-Preis</th>
+              </tr>
+              <tr>
+                <td style="padding: 12px;">
+                  <strong>${data.tireBrand} ${data.tireModel}</strong><br>
+                  <small style="color: #6b7280;">${data.tireSize || ''}</small>
+                  ${data.tireRunFlat ? '<br><span style="color: #dc2626; font-size: 12px;">⚡ RunFlat</span>' : ''}
+                  ${data.tire3PMSF ? '<br><span style="color: #2563eb; font-size: 12px;">❄️ Winter</span>' : ''}
+                </td>
+                <td style="padding: 12px; text-align: center;"><strong>${data.tireQuantity || 4} Stk.</strong></td>
+                <td style="padding: 12px; text-align: center;"><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${data.tireEAN || 'N/A'}</code></td>
+                <td style="padding: 12px; text-align: right;"><strong>${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong></td>
+              </tr>
+              <tr style="background: #f3f4f6; font-weight: bold;">
+                <td colspan="3" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
+                <td style="padding: 12px; text-align: right;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
+              </tr>
+            </table>
+
+            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+              <strong>📦 Lieferung:</strong><br>
+              ${data.supplierOrderId ? `Bestellnummer: <strong>${data.supplierOrderId}</strong><br>` : ''}
+              ${data.estimatedDeliveryDate ? `Voraussichtlich: <strong>${data.estimatedDeliveryDate}</strong>` : 'Liefertermin wird vom Lieferanten bestätigt'}
+            </div>
+          </div>
+          ` : ''}
+
+          ${isTireService && isCSVSupplier ? `
+          <!-- CSV Supplier: Manual Tire Order Required -->
+          <div class="order-box">
+            <h3 style="margin-top: 0; color: #d97706;">⚠️ BITTE REIFEN BESTELLEN</h3>
+            <p style="margin: 10px 0; font-weight: bold;">Sie müssen folgende Reifen SELBST beim Lieferanten bestellen:</p>
+            
+            <table style="width: 100%; margin: 15px 0; background: white; border-radius: 8px; overflow: hidden;">
+              <tr style="background: #fef3c7;">
+                <th style="padding: 12px; text-align: left;">Artikel</th>
+                <th style="padding: 12px; text-align: center;">Menge</th>
+                <th style="padding: 12px; text-align: center;">EAN</th>
+                <th style="padding: 12px; text-align: right;">EK-Preis</th>
+              </tr>
+              <tr>
+                <td style="padding: 12px;">
+                  <strong style="font-size: 16px;">${data.tireBrand} ${data.tireModel}</strong><br>
+                  <span style="color: #6b7280;">Größe: ${data.tireSize || 'nicht angegeben'}</span>
+                  ${data.tireRunFlat ? '<br><span style="color: #dc2626;">⚡ RunFlat-Reifen</span>' : ''}
+                  ${data.tire3PMSF ? '<br><span style="color: #2563eb;">❄️ Winterreifen (3PMSF)</span>' : ''}
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <strong style="font-size: 20px; color: #d97706;">${data.tireQuantity || 4} Stück</strong>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <code style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold;">${data.tireEAN || 'N/A'}</code>
+                </td>
+                <td style="padding: 12px; text-align: right;">
+                  <strong style="font-size: 16px;">${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong>
+                </td>
+              </tr>
+              <tr style="background: #fef3c7; font-weight: bold; font-size: 16px;">
+                <td colspan="3" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
+                <td style="padding: 12px; text-align: right; color: #d97706;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
+              </tr>
+            </table>
+
+            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+              <strong style="font-size: 16px;">📞 Ihr Lieferant:</strong><br>
+              <strong style="font-size: 18px; color: #059669;">${data.supplierName || 'Kein Lieferant konfiguriert'}</strong><br>
+              ${data.supplierPhone ? `Telefon: ${data.supplierPhone}<br>` : ''}
+              ${data.supplierEmail ? `Email: ${data.supplierEmail}<br>` : ''}
+              ${data.supplierWebsite ? `Website: <a href="${data.supplierWebsite}" style="color: #10b981;">${data.supplierWebsite}</a>` : ''}
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Financial Overview -->
+          <div class="section">
+            <div class="section-header">💰 Finanzielle Übersicht</div>
+            <table class="price-table">
+              <tr>
+                <td>Kunde bezahlt:</td>
+                <td style="text-align: right; font-weight: bold;">${data.totalPrice.toFixed(2)}€</td>
+              </tr>
+              <tr>
+                <td style="color: #dc2626;">Platform-Provision (6,9%):</td>
+                <td style="text-align: right; color: #dc2626;">-${data.platformCommission.toFixed(2)}€</td>
+              </tr>
+              <tr>
+                <td style="color: #059669;"><strong>Ihre Auszahlung:</strong></td>
+                <td style="text-align: right; color: #059669; font-weight: bold;">${data.workshopPayout.toFixed(2)}€</td>
+              </tr>
+              ${data.totalPurchasePrice && data.totalPurchasePrice > 0 ? `
+              <tr style="border-top: 1px solid #e5e7eb;">
+                <td style="color: #f59e0b;">Ihre Reifen-Einkaufskosten:</td>
+                <td style="text-align: right; color: #f59e0b;">-${data.totalPurchasePrice.toFixed(2)}€</td>
+              </tr>
+              <tr>
+                <td style="color: #10b981; font-size: 18px;"><strong>Ihr Gewinn (nach EK):</strong></td>
+                <td style="text-align: right; color: #10b981; font-size: 20px; font-weight: bold;">${((data.workshopPayout) - (data.totalPurchasePrice || 0)).toFixed(2)}€</td>
+              </tr>
+              ` : ''}
+            </table>
+            
+            <p style="margin-top: 15px; padding: 12px; background: #dbeafe; border-radius: 6px; font-size: 14px;">
+              ℹ️ Der Betrag von <strong>${data.workshopPayout.toFixed(2)}€</strong> wird automatisch auf Ihr 
+              Stripe-Konto überwiesen (Auszahlung je nach Einstellung: täglich/wöchentlich).
+            </p>
+          </div>
+
+          ${data.customerNotes ? `
+          <div style="padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px; margin: 20px 0;">
+            <strong>💬 Nachricht vom Kunden:</strong><br>
+            "${data.customerNotes}"
+          </div>
+          ` : ''}
+
+          <!-- Next Steps -->
+          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
+            <h3 style="margin-top: 0;">✅ Ihre nächsten Schritte:</h3>
+            <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+              ${isTireService && isCSVSupplier ? `<li><strong style="color: #d97706;">🛒 REIFEN BESTELLEN</strong> beim Lieferanten ${data.supplierName || ''}<br><small style="color: #6b7280;">EAN: ${data.tireEAN || 'siehe oben'}, Menge: ${data.tireQuantity || 4} Stück</small></li>` : ''}
+              ${isTireService && isAPISupplier ? `<li>✅ Reifen sind bestellt - keine Aktion erforderlich</li>` : ''}
+              ${isTireService ? `<li>📦 Liefertermin${isAPISupplier ? ' abwarten' : ' bestätigen lassen'}</li>` : ''}
+              <li>📞 Bei Änderungen Kunden kontaktieren: ${data.customerPhone}</li>
+              <li>🔧 Termin ausführen am ${data.appointmentDate} um ${data.appointmentTime} Uhr</li>
+              <li>🧾 Rechnung an Kunden ausstellen über ${data.totalPrice.toFixed(2)}€</li>
+            </ol>
+          </div>
+
+          <center>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings" class="button">
+              Alle Buchungen ansehen
+            </a>
+          </center>
+
+          <p style="color: #6b7280; font-size: 13px; margin-top: 30px;">
+            <strong>Hinweis:</strong> Der Termin wurde bereits automatisch in Ihrem verbundenen Google Kalender eingetragen.
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Bereifung24</strong> - Partner-Werkstatt-System</p>
+          <p>Bei Fragen: support@bereifung24.de</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `
+  }
+}
+
 export function sepaMandateActivatedEmailTemplate(data: {
   workshopName: string
   companyName: string

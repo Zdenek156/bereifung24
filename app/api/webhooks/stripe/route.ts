@@ -153,7 +153,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           platformCommissionCents,
           workshopPayout,
           stripeFeesEstimate,
-          platformNetCommission
+          platformNetCommission,
+          // Tire data
+          tireBrand: session.metadata?.tireBrand || null,
+          tireModel: session.metadata?.tireModel || null,
+          tireSize: session.metadata?.tireSize || null,
+          tireLoadIndex: session.metadata?.tireLoadIndex || null,
+          tireSpeedIndex: session.metadata?.tireSpeedIndex || null,
+          tireEAN: session.metadata?.tireEAN || null,
+          tireQuantity: session.metadata?.tireQuantity ? parseInt(session.metadata.tireQuantity) : null,
+          tirePurchasePrice: session.metadata?.tirePurchasePrice ? parseFloat(session.metadata.tirePurchasePrice) : null,
+          totalTirePurchasePrice: session.metadata?.totalTirePurchasePrice ? parseFloat(session.metadata.totalTirePurchasePrice) : null,
+          tireRunFlat: session.metadata?.tireRunFlat === 'true',
+          tire3PMSF: session.metadata?.tire3PMSF === 'true',
+          // Additional pricing
+          disposalFee: session.metadata?.disposalFee ? parseFloat(session.metadata.disposalFee) : null,
+          runFlatSurcharge: session.metadata?.runFlatSurcharge ? parseFloat(session.metadata.runFlatSurcharge) : null,
+          hasDisposal: session.metadata?.hasDisposal === 'true',
         }
       })
       console.log('✅ DirectBooking updated:', existingBooking.id)
@@ -189,9 +205,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           basePrice: parseFloat(session.metadata?.basePrice || '0'),
           balancingPrice: session.metadata?.balancingPrice ? parseFloat(session.metadata.balancingPrice) : null,
           storagePrice: session.metadata?.storagePrice ? parseFloat(session.metadata.storagePrice) : null,
+          disposalFee: session.metadata?.disposalFee ? parseFloat(session.metadata.disposalFee) : null,
+          runFlatSurcharge: session.metadata?.runFlatSurcharge ? parseFloat(session.metadata.runFlatSurcharge) : null,
           totalPrice,
           hasBalancing: session.metadata?.hasBalancing === 'true',
           hasStorage: session.metadata?.hasStorage === 'true',
+          hasDisposal: session.metadata?.hasDisposal === 'true',
+          // Tire data
+          tireBrand: session.metadata?.tireBrand || null,
+          tireModel: session.metadata?.tireModel || null,
+          tireSize: session.metadata?.tireSize || null,
+          tireLoadIndex: session.metadata?.tireLoadIndex || null,
+          tireSpeedIndex: session.metadata?.tireSpeedIndex || null,
+          tireEAN: session.metadata?.tireEAN || null,
+          tireQuantity: session.metadata?.tireQuantity ? parseInt(session.metadata.tireQuantity) : null,
+          tirePurchasePrice: session.metadata?.tirePurchasePrice ? parseFloat(session.metadata.tirePurchasePrice) : null,
+          totalTirePurchasePrice: session.metadata?.totalTirePurchasePrice ? parseFloat(session.metadata.totalTirePurchasePrice) : null,
+          tireRunFlat: session.metadata?.tireRunFlat === 'true',
+          tire3PMSF: session.metadata?.tire3PMSF === 'true',
           durationMinutes: 60, // Default
           status: 'CONFIRMED',
           paymentMethod: 'STRIPE',
@@ -294,13 +325,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         vehicleBrand: completeBooking.vehicle?.brand,
         vehicleModel: completeBooking.vehicle?.model,
         vehicleLicensePlate: completeBooking.vehicle?.licensePlate,
+        // Tire details
+        tireBrand: completeBooking.tireBrand || undefined,
+        tireModel: completeBooking.tireModel || undefined,
+        tireSize: completeBooking.tireSize 
+          ? `${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim() 
+          : undefined,
+        tireQuantity: completeBooking.tireQuantity || undefined,
+        tireRunFlat: completeBooking.tireRunFlat,
+        tire3PMSF: completeBooking.tire3PMSF,
+        // Pricing
         basePrice: Number(completeBooking.basePrice),
         balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
         storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        disposalFee: completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined,
+        runFlatSurcharge: completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined,
         totalPrice: Number(completeBooking.totalPrice),
         paymentMethod: 'Stripe',
         hasBalancing: completeBooking.hasBalancing,
         hasStorage: completeBooking.hasStorage,
+        hasDisposal: completeBooking.hasDisposal,
       })
 
       const attachments = icsContent ? [{
@@ -343,14 +387,34 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         vehicleBrand: completeBooking.vehicle?.brand,
         vehicleModel: completeBooking.vehicle?.model,
         vehicleLicensePlate: completeBooking.vehicle?.licensePlate,
+        // Tire details
+        tireBrand: completeBooking.tireBrand || undefined,
+        tireModel: completeBooking.tireModel || undefined,
+        tireSize: completeBooking.tireSize 
+          ? `${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim()
+          : undefined,
+        tireQuantity: completeBooking.tireQuantity || undefined,
+        tireEAN: completeBooking.tireEAN || undefined,
+        tireRunFlat: completeBooking.tireRunFlat,
+        tire3PMSF: completeBooking.tire3PMSF,
+        tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
+        totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
+        // Supplier
         supplierName: workshopSupplier?.name,
         supplierConnectionType: workshopSupplier?.connectionType as 'API' | 'CSV' | undefined,
+        supplierPhone: workshopSupplier?.phone || undefined,
+        supplierEmail: workshopSupplier?.email || undefined,
+        supplierWebsite: workshopSupplier?.website || undefined,
+        // Pricing
         basePrice: Number(completeBooking.basePrice),
         balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
         storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
         totalPrice: Number(completeBooking.totalPrice),
         platformCommission: Number(completeBooking.platformCommission),
         workshopPayout: Number(completeBooking.workshopPayout),
+        workshopProfit: completeBooking.totalTirePurchasePrice 
+          ? Number(completeBooking.workshopPayout) - Number(completeBooking.totalTirePurchasePrice)
+          : undefined,
         hasBalancing: completeBooking.hasBalancing,
         hasStorage: completeBooking.hasStorage,
       })

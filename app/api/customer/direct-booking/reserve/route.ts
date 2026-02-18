@@ -40,9 +40,24 @@ export async function POST(request: NextRequest) {
       basePrice,
       balancingPrice,
       storagePrice,
+      disposalFee,
+      runFlatSurcharge,
       hasBalancing,
       hasStorage,
-      totalPrice
+      hasDisposal,
+      totalPrice,
+      // Tire data
+      tireBrand,
+      tireModel,
+      tireSize,
+      tireLoadIndex,
+      tireSpeedIndex,
+      tireEAN,
+      tireQuantity,
+      tirePurchasePrice,
+      totalTirePurchasePrice,
+      tireRunFlat,
+      tire3PMSF
     } = body
 
     if (!workshopId || !vehicleId || !serviceType || !date || !time || totalPrice === undefined) {
@@ -152,9 +167,24 @@ export async function POST(request: NextRequest) {
         basePrice: basePrice || 0,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,
+        disposalFee: disposalFee || 0,
+        runFlatSurcharge: runFlatSurcharge || 0,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,
+        hasDisposal: hasDisposal || false,
         totalPrice,
+        // Save tire data in reservation
+        tireBrand: tireBrand || null,
+        tireModel: tireModel || null,
+        tireSize: tireSize || null,
+        tireLoadIndex: tireLoadIndex || null,
+        tireSpeedIndex: tireSpeedIndex || null,
+        tireEAN: tireEAN || null,
+        tireQuantity: tireQuantity || null,
+        tirePurchasePrice: tirePurchasePrice || null,
+        totalTirePurchasePrice: totalTirePurchasePrice || null,
+        tireRunFlat: tireRunFlat || false,
+        tire3PMSF: tire3PMSF || false,
         status: 'RESERVED',
         reservedUntil: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
         paymentStatus: 'PENDING'

@@ -161,11 +161,30 @@ export default function PaymentPage() {
           date,
           time,
           basePrice: bookingData.pricing.servicePrice,
-          balancingPrice: 0,
-          storagePrice: 0,
-          hasBalancing: false,
-          hasStorage: false,
-          totalPrice: bookingData.pricing.totalPrice
+          balancingPrice: bookingData.additionalServices?.find((s: any) => s.type === 'BALANCING')?.price || 0,
+          storagePrice: bookingData.additionalServices?.find((s: any) => s.type === 'STORAGE')?.price || 0,
+          disposalFee: bookingData.additionalServices?.find((s: any) => s.type === 'DISPOSAL')?.price || 0,
+          runFlatSurcharge: bookingData.pricing.runFlatSurcharge || 0,
+          hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
+          hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
+          hasDisposal: bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
+          totalPrice: bookingData.pricing.totalPrice,
+          // TIRE DATA - Include tire info in reservation
+          ...(bookingData.tireBooking?.selectedTire && {
+            tireBrand: bookingData.tireBooking.selectedTire.brand || '',
+            tireModel: bookingData.tireBooking.selectedTire.model || '',
+            tireSize: bookingData.tireBooking.tireDimensions 
+              ? `${bookingData.tireBooking.tireDimensions.width}/${bookingData.tireBooking.tireDimensions.height} R${bookingData.tireBooking.tireDimensions.diameter}`
+              : (bookingData.tireBooking.selectedTire.dimension || ''),
+            tireLoadIndex: bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || '',
+            tireSpeedIndex: bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || '',
+            tireEAN: bookingData.tireBooking.selectedTire.ean || '',
+            tireQuantity: bookingData.tireBooking.tireCount || 4,
+            tirePurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,
+            totalTirePurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
+            tireRunFlat: bookingData.tireBooking.selectedTire.runflat || bookingData.tireBooking.selectedTire.isRunFlat || false,
+            tire3PMSF: bookingData.tireBooking.selectedTire.winter || bookingData.tireBooking.selectedTire.is3PMSF || false,
+          })
         })
       })
 

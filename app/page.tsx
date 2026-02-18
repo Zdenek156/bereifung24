@@ -3700,6 +3700,28 @@ export default function NewHomePage() {
                     />
                   </div>
                   
+                  {/* Apple Pay */}
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/apple-pay.svg" 
+                      alt="Apple Pay" 
+                      width={50} 
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  
+                  {/* Google Pay */}
+                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                    <Image 
+                      src="/logos/google-pay.png" 
+                      alt="Google Pay" 
+                      width={60} 
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  
                   {/* SSL Badge */}
                   <div className="bg-gray-800 px-3 py-2 rounded flex items-center gap-1.5 h-10 border border-gray-700">
                     <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">

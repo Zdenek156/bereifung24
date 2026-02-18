@@ -29,15 +29,21 @@ export async function POST(request: NextRequest) {
       select: { stripeAccountId: true, stripeEnabled: true, companyName: true }
     })
 
-    if (!workshop?.stripeEnabled || !workshop?.stripeAccountId) {
-      console.error('[STRIPE] Workshop Stripe not configured:', workshopId)
-      return NextResponse.json({ 
-        error: 'Diese Werkstatt akzeptiert keine Stripe-Zahlungen. Bitte wählen Sie eine andere Zahlungsmethode.' 
-      }, { status: 400 })
+    if (!workshop) {
+      console.error('[STRIPE] Workshop not found:', workshopId)
+      return NextResponse.json({ error: 'Werkstatt nicht gefunden' }, { status: 404 })
     }
 
+    // In test mode, allow payments to go to platform account (for testing without Connect)
+    const isTestMode = stripeMode === 'test'
+    const useConnectAccount = workshop.stripeEnabled && workshop.stripeAccountId && !isTestMode
+
     console.log('[STRIPE] Creating session with mode:', stripeMode)
-    console.log('[STRIPE] Payment goes directly to workshop:', workshop.stripeAccountId)
+    if (useConnectAccount) {
+      console.log('[STRIPE] Payment goes to workshop via Connect:', workshop.stripeAccountId)
+    } else {
+      console.log('[STRIPE] Payment goes to platform account (test mode or no Connect)')
+    }
 
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2024-12-18.acacia',
@@ -151,50 +157,57 @@ export async function POST(request: NextRequest) {
     // Special configuration for different payment methods with Stripe Connect
     // Using application_fee_amount to take 6.9% commission
     // Note: Different payment methods have different requirements
-    if (enabledPaymentMethods.includes('customer_balance')) {
-      // Bank Transfer requires customer_balance configuration
-      sessionConfig.payment_method_options = {
-        customer_balance: {
-          funding_type: 'bank_transfer',
-          bank_transfer: {
-            type: 'eu_bank_transfer', // For European bank transfers
+    // Only use Connect features if workshop has valid Connect account (not in test mode)
+    if (useConnectAccount) {
+      if (enabledPaymentMethods.includes('customer_balance')) {
+        // Bank Transfer requires customer_balance configuration
+        sessionConfig.payment_method_options = {
+          customer_balance: {
+            funding_type: 'bank_transfer',
+            bank_transfer: {
+              type: 'eu_bank_transfer', // For European bank transfers
+            },
           },
-        },
-      }
-      // For bank transfer with application fee
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: {
-          destination: workshop.stripeAccountId,
-        },
-      }
-    } else if (enabledPaymentMethods.includes('klarna')) {
-      // Klarna with application fee
-      // Note: Klarna requires the connected account to have Klarna capabilities enabled
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: {
-          destination: workshop.stripeAccountId,
-        },
-      }
-    } else if (enabledPaymentMethods.includes('paypal')) {
-      // PayPal via Stripe with application fee
-      // Note: PayPal requires additional configuration in Stripe Dashboard
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: {
-          destination: workshop.stripeAccountId,
-        },
+        }
+        // For bank transfer with application fee
+        sessionConfig.payment_intent_data = {
+          application_fee_amount: applicationFeeAmount,
+          transfer_data: {
+            destination: workshop.stripeAccountId!,
+          },
+        }
+      } else if (enabledPaymentMethods.includes('klarna')) {
+        // Klarna with application fee
+        // Note: Klarna requires the connected account to have Klarna capabilities enabled
+        sessionConfig.payment_intent_data = {
+          application_fee_amount: applicationFeeAmount,
+          transfer_data: {
+            destination: workshop.stripeAccountId!,
+          },
+        }
+      } else if (enabledPaymentMethods.includes('paypal')) {
+        // PayPal via Stripe with application fee
+        // Note: PayPal requires additional configuration in Stripe Dashboard
+        sessionConfig.payment_intent_data = {
+          application_fee_amount: applicationFeeAmount,
+          transfer_data: {
+            destination: workshop.stripeAccountId!,
+          },
+        }
+      } else {
+        // For card payment methods with application fee
+        sessionConfig.payment_intent_data = {
+          application_fee_amount: applicationFeeAmount,
+          on_behalf_of: workshop.stripeAccountId!,
+          transfer_data: {
+            destination: workshop.stripeAccountId!,
+          },
+        }
       }
     } else {
-      // For card payment methods with application fee
-      sessionConfig.payment_intent_data = {
-        application_fee_amount: applicationFeeAmount,
-        on_behalf_of: workshop.stripeAccountId,
-        transfer_data: {
-          destination: workshop.stripeAccountId,
-        },
-      }
+      // TEST MODE: No Connect account splitting - payment goes directly to platform
+      // This allows testing without setting up Stripe Connect
+      console.log('[STRIPE] Test mode: Skipping Connect account splitting')
     }
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionConfig)

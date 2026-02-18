@@ -333,6 +333,7 @@ export async function POST(req: NextRequest) {
 
       // Send customer email with rich tire data
       const customerEmailData = directBookingConfirmationCustomerEmail({
+        bookingId: completeBooking.id,
         customerName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`,
         workshopName: completeBooking.workshop.companyName,
         workshopAddress,
@@ -394,6 +395,7 @@ export async function POST(req: NextRequest) {
         : null
 
       const workshopEmailData = directBookingNotificationWorkshopEmail({
+        bookingId: completeBooking.id,
         workshopName: completeBooking.workshop.companyName,
         customerName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`,
         customerEmail: completeBooking.customer.user.email,

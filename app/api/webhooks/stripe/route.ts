@@ -208,9 +208,166 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       })
 
       console.log('✅ DirectBooking created:', booking.id)
-
-      // TODO: Send confirmation emails to customer and workshop
     }
+
+    // Load complete booking data with relations for email
+    const bookingId = existingBooking?.id || undefined
+    if (!bookingId) {
+      console.error('❌ No booking ID found after create/update')
+      return
+    }
+
+    const completeBooking = await prisma.directBooking.findUnique({
+      where: { id: bookingId },
+      include: {
+        customer: {
+          include: {
+            user: true
+          }
+        },
+        workshop: {
+          include: {
+            user: true
+          }
+        },
+        vehicle: true
+      }
+    })
+
+    if (!completeBooking) {
+      console.error('❌ Could not load complete booking data')
+      return
+    }
+
+    // Load workshop supplier info (if applicable)
+    const workshopSupplier = await prisma.workshopSupplier.findFirst({
+      where: { workshopId: completeBooking.workshopId }
+    })
+
+    // Format date
+    const { format } = await import('date-fns')
+    const { de } = await import('date-fns/locale')
+    const appointmentDateFormatted = format(completeBooking.date, 'dd.MM.yyyy', { locale: de })
+
+    // Service labels
+    const serviceLabels: Record<string, string> = {
+      'WHEEL_CHANGE': 'Räderwechsel',
+      'TIRE_CHANGE': 'Reifenwechsel',
+      'TIRE_MOUNT': 'Reifenmontage'
+    }
+    const serviceName = serviceLabels[completeBooking.serviceType] || completeBooking.serviceType
+
+    // Generate ICS file for customer
+    const { generateICSFile, getServiceLabel } = await import('@/lib/calendar')
+    const icsContent = generateICSFile({
+      bookingId: completeBooking.id,
+      serviceName: serviceName,
+      workshopName: completeBooking.workshop.companyName || completeBooking.workshop.user.name || 'Werkstatt',
+      workshopAddress: `${completeBooking.workshop.user.street}, ${completeBooking.workshop.user.zipCode} ${completeBooking.workshop.user.city}`,
+      workshopPhone: completeBooking.workshop.user.phone || '',
+      workshopEmail: completeBooking.workshop.user.email,
+      date: completeBooking.date,
+      time: completeBooking.time,
+      durationMinutes: completeBooking.durationMinutes,
+      customerName: completeBooking.customer.user.name || 'Kunde',
+      customerEmail: completeBooking.customer.user.email,
+      customerPhone: completeBooking.customer.user.phone,
+    })
+
+    // Send customer confirmation email
+    try {
+      const { sendTemplateEmail, directBookingConfirmationCustomerEmail } = await import('@/lib/email')
+      
+      const customerEmailData = directBookingConfirmationCustomerEmail({
+        customerName: completeBooking.customer.user.name || 'Kunde',
+        workshopName: completeBooking.workshop.companyName || completeBooking.workshop.user.name || 'Werkstatt',
+        workshopAddress: `${completeBooking.workshop.user.street}, ${completeBooking.workshop.user.zipCode} ${completeBooking.workshop.user.city}`,
+        workshopPhone: completeBooking.workshop.user.phone || '',
+        workshopEmail: completeBooking.workshop.user.email,
+        workshopLogoUrl: completeBooking.workshop.logoUrl || undefined,
+        serviceType: completeBooking.serviceType,
+        serviceName: serviceName,
+        appointmentDate: appointmentDateFormatted,
+        appointmentTime: completeBooking.time,
+        durationMinutes: completeBooking.durationMinutes,
+        bookingId: completeBooking.id,
+        vehicleBrand: completeBooking.vehicle?.brand,
+        vehicleModel: completeBooking.vehicle?.model,
+        vehicleLicensePlate: completeBooking.vehicle?.licensePlate,
+        basePrice: Number(completeBooking.basePrice),
+        balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
+        storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        totalPrice: Number(completeBooking.totalPrice),
+        paymentMethod: 'Stripe',
+        hasBalancing: completeBooking.hasBalancing,
+        hasStorage: completeBooking.hasStorage,
+      })
+
+      const attachments = icsContent ? [{
+        filename: 'termin.ics',
+        content: icsContent,
+        contentType: 'text/calendar; charset=utf-8; method=REQUEST'
+      }] : []
+
+      await sendTemplateEmail(
+        'BOOKING_CONFIRMATION_CUSTOMER_PAID',
+        completeBooking.customer.user.email,
+        {},
+        attachments,
+        customerEmailData
+      )
+
+      console.log('✅ Customer confirmation email sent')
+    } catch (error) {
+      console.error('❌ Error sending customer email:', error)
+    }
+
+    // Send workshop notification email
+    try {
+      const { sendTemplateEmail, directBookingNotificationWorkshopEmail } = await import('@/lib/email')
+      
+      const workshopEmailData = directBookingNotificationWorkshopEmail({
+        workshopName: completeBooking.workshop.companyName || completeBooking.workshop.user.name || 'Werkstatt',
+        bookingId: completeBooking.id,
+        serviceName: serviceName,
+        serviceType: completeBooking.serviceType,
+        appointmentDate: appointmentDateFormatted,
+        appointmentTime: completeBooking.time,
+        durationMinutes: completeBooking.durationMinutes,
+        customerName: completeBooking.customer.user.name || 'Kunde',
+        customerEmail: completeBooking.customer.user.email,
+        customerPhone: completeBooking.customer.user.phone || '',
+        customerAddress: completeBooking.customer.user.street 
+          ? `${completeBooking.customer.user.street}, ${completeBooking.customer.user.zipCode} ${completeBooking.customer.user.city}`
+          : undefined,
+        vehicleBrand: completeBooking.vehicle?.brand,
+        vehicleModel: completeBooking.vehicle?.model,
+        vehicleLicensePlate: completeBooking.vehicle?.licensePlate,
+        supplierName: workshopSupplier?.name,
+        supplierConnectionType: workshopSupplier?.connectionType as 'API' | 'CSV' | undefined,
+        basePrice: Number(completeBooking.basePrice),
+        balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
+        storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        totalPrice: Number(completeBooking.totalPrice),
+        platformCommission: Number(completeBooking.platformCommission),
+        workshopPayout: Number(completeBooking.workshopPayout),
+        hasBalancing: completeBooking.hasBalancing,
+        hasStorage: completeBooking.hasStorage,
+      })
+
+      await sendTemplateEmail(
+        'BOOKING_NOTIFICATION_WORKSHOP_PAID',
+        completeBooking.workshop.user.email,
+        {},
+        undefined,
+        workshopEmailData
+      )
+
+      console.log('✅ Workshop notification email sent')
+    } catch (error) {
+      console.error('❌ Error sending workshop email:', error)
+    }
+
   } catch (error) {
     console.error('❌ Error handling checkout completion:', error)
     throw error

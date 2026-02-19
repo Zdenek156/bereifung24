@@ -407,22 +407,30 @@ export default function BookingDetailsPage() {
       <Card className="p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
-          {booking.tireQuantity && booking.tireQuantity > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                {booking.tireQuantity && `${booking.tireQuantity}x `}
-                {booking.tireBrand && `${booking.tireBrand} `}
-                {booking.tireModel && `${booking.tireModel} `}
-                {booking.tireSize}
-                {booking.tireLoadIndex && booking.tireSpeedIndex && ` ${booking.tireLoadIndex}${booking.tireSpeedIndex}`}
-              </span>
-              <span className="font-semibold">
-                {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 
-                  ? `${booking.totalTirePurchasePrice.toFixed(2)} €` 
-                  : 'Im Gesamtpreis enthalten'}
-              </span>
-            </div>
-          )}
+          {booking.tireQuantity && booking.tireQuantity > 0 && (() => {
+            // Calculate tire price if not stored in DB (for old bookings)
+            let tirePrice = booking.totalTirePurchasePrice;
+            if (!tirePrice || tirePrice === 0) {
+              tirePrice = booking.totalPrice - booking.basePrice;
+              if (booking.balancingPrice) tirePrice -= booking.balancingPrice;
+              if (booking.storagePrice) tirePrice -= booking.storagePrice;
+              if (booking.disposalFee) tirePrice -= booking.disposalFee;
+              if (booking.runFlatSurcharge) tirePrice -= booking.runFlatSurcharge;
+            }
+            
+            return (
+              <div className="flex justify-between">
+                <span className="text-gray-600">
+                  {booking.tireQuantity && `${booking.tireQuantity}x `}
+                  {booking.tireBrand && `${booking.tireBrand} `}
+                  {booking.tireModel && `${booking.tireModel} `}
+                  {booking.tireSize}
+                  {booking.tireLoadIndex && booking.tireSpeedIndex && ` ${booking.tireLoadIndex}${booking.tireSpeedIndex}`}
+                </span>
+                <span className="font-semibold">{tirePrice.toFixed(2)} €</span>
+              </div>
+            );
+          })()}
           <div className="flex justify-between">
             <span className="text-gray-600">Reifenwechsel:</span>
             <span className="font-semibold">{booking.basePrice.toFixed(2)} €</span>

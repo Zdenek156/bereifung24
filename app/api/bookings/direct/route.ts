@@ -81,15 +81,17 @@ export async function POST(req: NextRequest) {
     const existingDirectBookings = await prisma.directBooking.findMany({
       where: {
         workshopId,
-        date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
+        date: new Date(`${dateOnly}T00:00:00Z`), // Parse as UTC midnight (same as reservation API)
         time,
-        status: { in: ['CONFIRMED', 'COMPLETED'] }
+        status: { in: ['CONFIRMED', 'COMPLETED'] },
+        // Exclude the current reservation if updating an existing one
+        NOT: reservationId ? { id: reservationId } : undefined
       }
     })
 
     if (existingDirectBookings.length > 0) {
       return NextResponse.json(
-        { error: 'Dieser Termin wurde bereits gebucht. Bitte wählen Sie einen anderen Termin.' },
+        { error: 'Dieser Termin wurde bereits von einem anderen Kunden gebucht. Bitte wählen Sie einen anderen Termin.' },
         { status: 409 }
       )
     }
@@ -120,7 +122,7 @@ export async function POST(req: NextRequest) {
           workshopId,
           vehicleId,
           serviceType,
-          date: new Date(`${dateOnly}T00:00:00+01:00`), // Parse in Europe/Berlin timezone
+          date: new Date(`${dateOnly}T00:00:00Z`), // Parse as UTC midnight (same as reservation API)
           time,
           durationMinutes: estimatedDuration,
           basePrice: totalPrice,

@@ -1752,6 +1752,7 @@ export function directBookingNotificationWorkshopEmail(data: {
   tireSize?: string
   tireQuantity?: number
   tireEAN?: string
+  tireArticleId?: string
   tireRunFlat?: boolean
   tire3PMSF?: boolean
   // Supplier info (if applicable)
@@ -1912,6 +1913,7 @@ export function directBookingNotificationWorkshopEmail(data: {
                 <th style="padding: 12px; text-align: left;">Artikel</th>
                 <th style="padding: 12px; text-align: center;">Menge</th>
                 <th style="padding: 12px; text-align: center;">EAN</th>
+                <th style="padding: 12px; text-align: center;">Artikel-Nr.</th>
                 <th style="padding: 12px; text-align: right;">EK-Preis</th>
               </tr>
               <tr>
@@ -1922,14 +1924,23 @@ export function directBookingNotificationWorkshopEmail(data: {
                   ${data.tire3PMSF ? '<br><span style="color: #2563eb; font-size: 12px;">❄️ Winter</span>' : ''}
                 </td>
                 <td style="padding: 12px; text-align: center;"><strong>${data.tireQuantity || 4} Stk.</strong></td>
-                <td style="padding: 12px; text-align: center;"><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${data.tireEAN || 'N/A'}</code></td>
+                <td style="padding: 12px; text-align: center;"><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${data.tireEAN || 'N/A'}</code></td>
+                <td style="padding: 12px; text-align: center;"><code style="background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #1e40af;">${data.tireArticleId || 'N/A'}</code></td>
                 <td style="padding: 12px; text-align: right;"><strong>${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong></td>
               </tr>
               <tr style="background: #f3f4f6; font-weight: bold;">
-                <td colspan="3" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
+                <td colspan="4" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
                 <td style="padding: 12px; text-align: right;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
               </tr>
             </table>
+
+            ${data.tireArticleId ? `
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="https://www.tyresystem.de/s?suche=id${data.tireArticleId}" target="_blank" style="display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                🛒 Direkt bei Tyresystem bestellen
+              </a>
+            </div>
+            ` : ''}
 
             <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
               <strong>📦 Lieferung:</strong><br>
@@ -1950,6 +1961,7 @@ export function directBookingNotificationWorkshopEmail(data: {
                 <th style="padding: 12px; text-align: left;">Artikel</th>
                 <th style="padding: 12px; text-align: center;">Menge</th>
                 <th style="padding: 12px; text-align: center;">EAN</th>
+                <th style="padding: 12px; text-align: center;">Artikel-Nr.</th>
                 <th style="padding: 12px; text-align: right;">EK-Preis</th>
               </tr>
               <tr>
@@ -1965,15 +1977,27 @@ export function directBookingNotificationWorkshopEmail(data: {
                 <td style="padding: 12px; text-align: center;">
                   <code style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold;">${data.tireEAN || 'N/A'}</code>
                 </td>
+                <td style="padding: 12px; text-align: center;">
+                  <code style="background: #dbeafe; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #1e40af;">${data.tireArticleId || 'N/A'}</code>
+                </td>
                 <td style="padding: 12px; text-align: right;">
                   <strong style="font-size: 16px;">${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong>
                 </td>
               </tr>
               <tr style="background: #fef3c7; font-weight: bold; font-size: 16px;">
-                <td colspan="3" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
+                <td colspan="4" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
                 <td style="padding: 12px; text-align: right; color: #d97706;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
               </tr>
             </table>
+
+            ${data.tireArticleId ? `
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="https://www.tyresystem.de/s?suche=id${data.tireArticleId}" target="_blank" style="display: inline-block; background: #f59e0b; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                🛒 Jetzt bei Tyresystem bestellen »
+              </a>
+              <p style="margin-top: 10px; font-size: 13px; color: #6b7280;">Klicken Sie hier für direkten Zugriff auf den Reifen</p>
+            </div>
+            ` : ''}
 
             <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
               <strong style="font-size: 16px;">📞 Ihr Lieferant:</strong><br>

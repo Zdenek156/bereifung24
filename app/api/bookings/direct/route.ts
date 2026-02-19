@@ -424,6 +424,7 @@ export async function POST(req: NextRequest) {
         tireSize,
         tireQuantity: completeBooking.tireQuantity || undefined,
         tireEAN: completeBooking.tireEAN || undefined,
+        tireArticleId: completeBooking.tireArticleId || undefined,
         tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
         totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         tireRunFlat: completeBooking.tireRunFlat || undefined,

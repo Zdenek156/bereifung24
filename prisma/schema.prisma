@@ -5552,6 +5552,7 @@ model DirectBooking {
   tireLoadIndex         String?  @map("tire_load_index")
   tireSpeedIndex        String?  @map("tire_speed_index")
   tireEAN               String?  @map("tire_ean")
+  tireArticleId         String?  @map("tire_article_id") // Tyresystem article ID for direct ordering
   tireQuantity          Int?     @map("tire_quantity")
   tirePurchasePrice     Decimal? @map("tire_purchase_price") @db.Decimal(10, 2)
   totalTirePurchasePrice Decimal? @map("total_tire_purchase_price") @db.Decimal(10, 2)

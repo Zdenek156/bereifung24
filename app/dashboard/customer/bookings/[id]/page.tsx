@@ -136,6 +136,76 @@ export default function BookingDetailsPage() {
     }
   }
 
+  const handleAddToCalendar = () => {
+    if (!booking) return
+
+    // Parse date and time
+    const bookingDate = new Date(booking.date)
+    const [hours, minutes] = booking.time.split(':').map(Number)
+    bookingDate.setHours(hours, minutes, 0, 0)
+
+    // Calculate end time (add duration)
+    const endDate = new Date(bookingDate.getTime() + booking.durationMinutes * 60000)
+
+    // Format dates for ICS (YYYYMMDDTHHMMSS)
+    const formatICSDate = (date: Date) => {
+      const pad = (n: number) => String(n).padStart(2, '0')
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+    }
+
+    const startDateStr = formatICSDate(bookingDate)
+    const endDateStr = formatICSDate(endDate)
+
+    // Create ICS content
+    const serviceLabel = serviceTypeLabels[booking.serviceType] || booking.serviceType
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Bereifung24//Booking//DE',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `DTSTART:${startDateStr}`,
+      `DTEND:${endDateStr}`,
+      `DTSTAMP:${formatICSDate(new Date())}`,
+      `UID:${booking.id}@bereifung24.de`,
+      `SUMMARY:${serviceLabel} - ${booking.workshop.companyName}`,
+      `DESCRIPTION:Buchungsnummer: ${bookingNumber}\\nFahrzeug: ${booking.vehicle.make} ${booking.vehicle.model}\\nPreis: ${booking.totalPrice.toFixed(2)} €`,
+      `LOCATION:${booking.workshop.user.street || ''}, ${booking.workshop.user.zipCode || ''} ${booking.workshop.user.city || ''}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT24H',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Erinnerung an Ihren Termin morgen',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n')
+
+    // Create download
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `bereifung24-termin-${bookingNumber}.ics`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
+
+  const getPaymentMethodLabel = (method: string | null) => {
+    if (!method) return 'Unbekannt'
+    switch (method) {
+      case 'STRIPE':
+        return 'Kreditkarte'
+      case 'PAYPAL':
+        return 'PayPal'
+      default:
+        return method
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -338,9 +408,29 @@ export default function BookingDetailsPage() {
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
           {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Reifen:</span>
-              <span className="font-semibold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
+            <div className="border-b pb-3 mb-3">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-900 font-semibold">Reifen:</span>
+                <span className="font-bold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
+              </div>
+              {(booking.tireBrand || booking.tireModel) && (
+                <div className="text-sm text-gray-600 ml-4">
+                  {booking.tireBrand} {booking.tireModel}
+                </div>
+              )}
+              {booking.tireSize && (
+                <div className="text-sm text-gray-600 ml-4">
+                  Größe: {booking.tireSize}
+                  {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
+                    <span> ({booking.tireLoadIndex || '-'}/{booking.tireSpeedIndex || '-'})</span>
+                  )}
+                </div>
+              )}
+              {booking.tireQuantity && booking.tirePurchasePrice && (
+                <div className="text-sm text-gray-600 ml-4">
+                  {booking.tireQuantity} Stück × {booking.tirePurchasePrice.toFixed(2)} €
+                </div>
+              )}
             </div>
           )}
           <div className="flex justify-between">
@@ -382,7 +472,7 @@ export default function BookingDetailsPage() {
           <div className="flex justify-between text-sm pt-2">
             <span className="text-gray-600">Zahlungsmethode:</span>
             <span className="font-semibold">
-              {booking.paymentMethod === 'PAYPAL' ? 'PayPal' : booking.paymentMethod}
+              {getPaymentMethodLabel(booking.paymentMethod)}
             </span>
           </div>
           <div className="flex items-center justify-center mt-4 p-3 bg-green-50 rounded-lg">
@@ -396,10 +486,7 @@ export default function BookingDetailsPage() {
       <div className="flex gap-4 justify-center">
         <Button
           variant="outline"
-          onClick={() => {
-            // TODO: Add calendar export functionality
-            alert('Kalenderfunktion folgt in Kürze')
-          }}
+          onClick={handleAddToCalendar}
         >
           <Calendar className="h-4 w-4 mr-2" />
           Zu Kalender hinzufügen

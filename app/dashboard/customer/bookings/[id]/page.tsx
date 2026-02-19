@@ -79,16 +79,6 @@ export default function BookingDetailsPage() {
         const response = await fetch(`/api/customer/direct-booking/${params.id}`)
         if (response.ok) {
           const data = await response.json()
-          console.log('Booking data:', data)
-          console.log('Tire fields:', {
-            totalTirePurchasePrice: data.totalTirePurchasePrice,
-            tireQuantity: data.tireQuantity,
-            tireBrand: data.tireBrand,
-            tireModel: data.tireModel,
-            tireSize: data.tireSize,
-            tireLoadIndex: data.tireLoadIndex,
-            tireSpeedIndex: data.tireSpeedIndex
-          })
           setBooking(data)
         } else {
           console.error('Failed to fetch booking')
@@ -417,7 +407,7 @@ export default function BookingDetailsPage() {
       <Card className="p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
-          {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
+          {booking.tireQuantity && booking.tireQuantity > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">
                 {booking.tireQuantity && `${booking.tireQuantity}x `}
@@ -426,7 +416,11 @@ export default function BookingDetailsPage() {
                 {booking.tireSize}
                 {booking.tireLoadIndex && booking.tireSpeedIndex && ` ${booking.tireLoadIndex}${booking.tireSpeedIndex}`}
               </span>
-              <span className="font-semibold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
+              <span className="font-semibold">
+                {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 
+                  ? `${booking.totalTirePurchasePrice.toFixed(2)} €` 
+                  : 'Im Gesamtpreis enthalten'}
+              </span>
             </div>
           )}
           <div className="flex justify-between">

@@ -696,6 +696,12 @@ export default function WorkshopDetailPage() {
     if (tireBookingData?.selectedTire?.totalPrice) {
       total += tireBookingData.selectedTire.totalPrice
     }
+    if (tireBookingData?.hasDisposal && tireBookingData?.disposalPrice) {
+      total += tireBookingData.disposalPrice
+    }
+    if (tireBookingData?.hasRunflat && tireBookingData?.runflatPrice) {
+      total += tireBookingData.runflatPrice
+    }
     additionalServices.forEach(service => {
       total += service.price
     })
@@ -1327,6 +1333,20 @@ export default function WorkshopDetailPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Reifen</span>
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
+                    </div>
+                  )}
+                  {/* Disposal Fee - Only for TIRE_CHANGE */}
+                  {tireBookingData?.hasDisposal && tireBookingData?.disposalPrice > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Reifenentsorgung</span>
+                      <span className="font-medium text-gray-900">{formatEUR(tireBookingData.disposalPrice)}</span>
+                    </div>
+                  )}
+                  {/* Runflat Surcharge - Only for TIRE_CHANGE */}
+                  {tireBookingData?.hasRunflat && tireBookingData?.runflatPrice > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Runflat-Zuschlag</span>
+                      <span className="font-medium text-gray-900">{formatEUR(tireBookingData.runflatPrice)}</span>
                     </div>
                   )}
                   {/* Additional Services / Leistungen */}

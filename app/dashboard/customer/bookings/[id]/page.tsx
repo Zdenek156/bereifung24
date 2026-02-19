@@ -17,8 +17,13 @@ interface Booking {
   basePrice: number
   balancingPrice: number | null
   storagePrice: number | null
+  disposalFee: number | null
+  runFlatSurcharge: number | null
+  totalTirePurchasePrice: number | null
   hasBalancing: boolean
   hasStorage: boolean
+  hasDisposal: boolean
+  tireRunFlat: boolean
   durationMinutes: number
   paymentMethod: string
   createdAt: string
@@ -222,8 +227,14 @@ export default function BookingDetailsPage() {
       <Card className="p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
+          {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Reifen:</span>
+              <span className="font-semibold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
+            </div>
+          )}
           <div className="flex justify-between">
-            <span className="text-gray-600">Basispreis:</span>
+            <span className="text-gray-600">Reifenwechsel:</span>
             <span className="font-semibold">{booking.basePrice.toFixed(2)} €</span>
           </div>
           {booking.hasBalancing && booking.balancingPrice && (
@@ -236,6 +247,18 @@ export default function BookingDetailsPage() {
             <div className="flex justify-between">
               <span className="text-gray-600">Einlagerung:</span>
               <span className="font-semibold">{booking.storagePrice.toFixed(2)} €</span>
+            </div>
+          )}
+          {booking.hasDisposal && booking.disposalFee && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Entsorgung:</span>
+              <span className="font-semibold">{booking.disposalFee.toFixed(2)} €</span>
+            </div>
+          )}
+          {booking.tireRunFlat && booking.runFlatSurcharge && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Runflat-Zuschlag:</span>
+              <span className="font-semibold">{booking.runFlatSurcharge.toFixed(2)} €</span>
             </div>
           )}
           <div className="pt-3 border-t-2 border-gray-300">

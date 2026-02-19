@@ -178,10 +178,19 @@ export async function POST(req: NextRequest) {
     const month = bookingDate.getUTCMonth() + 1 // 0-indexed, so add 1
     const day = bookingDate.getUTCDate()
     
-    // Create local Berlin time for the appointment
-    // The user selected a specific date and time in Berlin timezone
-    // We create a Date object that represents this exact local time
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0)
+    // Create appointment time in Berlin timezone (CET/CEST)
+    // User selected time is in Berlin, we need to create correct Date object
+    // Approach: Create ISO string with explicit offset, then parse
+    // March-October: Check if DST applies (rough approximation)
+    // DST in Europe: Last Sunday of March (02:00 → 03:00) to last Sunday of October (03:00 → 02:00)
+    const isDST = (month > 3 && month < 10) || 
+                  (month === 3 && day > 24) || 
+                  (month === 10 && day <= 24)
+    const berlinOffset = isDST ? '+02:00' : '+01:00'
+    
+    // Create ISO string with explicit Berlin timezone offset
+    const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00${berlinOffset}`
+    const appointmentDateTime = new Date(isoString)
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
@@ -223,7 +232,16 @@ export async function POST(req: NextRequest) {
         if (completeBooking.tireEAN) calendarDescription += `\nEAN: ${completeBooking.tireEAN}`
       }
       
-      calendarDescription += `\n\nGesamtpreis: ${totalPrice.toFixed(2)} €`
+      // Add additional services
+      if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
+        calendarDescription += `\n\nZusatzleistungen:`
+        if (completeBooking.hasBalancing) calendarDescription += `\n✅ Auswuchtung (+${Number(completeBooking.balancingPrice || 0).toFixed(2)}€)`
+        if (completeBooking.hasStorage) calendarDescription += `\n✅ Einlagerung (+${Number(completeBooking.storagePrice || 0).toFixed(2)}€)`
+        if (completeBooking.hasDisposal) calendarDescription += `\n✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`
+        if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) calendarDescription += `\n✅ RunFlat-Aufschlag (+${Number(completeBooking.runFlatSurcharge).toFixed(2)}€)`
+      }
+      
+      calendarDescription += `\n\nGesamtpreis: ${Number(completeBooking.totalPrice || 0).toFixed(2)} €`
       
       const eventDetails = {
         summary: `${serviceName}${completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}`,
@@ -303,20 +321,45 @@ export async function POST(req: NextRequest) {
       const appointmentEnd = new Date(appointmentStart.getTime() + estimatedDuration * 60000)
       
       // Create detailed description in German
-      const icsDescription = [
+      let icsDescriptionParts = [
         `${serviceName} bei ${completeBooking.workshop.companyName}`,
         '',
         `📅 Termin: ${formattedDate} um ${completeBooking.time} Uhr`,
         `⏱️ Dauer: ca. ${estimatedDuration} Minuten`,
         `🚗 Fahrzeug: ${vehicleStr}`,
-        `💰 Preis: ${Number(completeBooking.totalPrice).toFixed(2)} €`,
-        '',
-        `📍 Adresse:`,
-        `${completeBooking.workshop.companyName}`,
-        workshopAddress,
-        '',
-        `📞 Kontakt: ${completeBooking.workshop.user.phone || completeBooking.workshop.user.email}`,
-      ].join('\\n')
+      ]
+      
+      // Add tire info if available
+      if (completeBooking.tireBrand && completeBooking.tireModel) {
+        icsDescriptionParts.push('')
+        icsDescriptionParts.push(`🛞 Reifen: ${completeBooking.tireBrand} ${completeBooking.tireModel}`)
+        if (completeBooking.tireSize) icsDescriptionParts.push(`Größe: ${completeBooking.tireSize}`)
+        icsDescriptionParts.push(`Menge: ${completeBooking.tireQuantity || 4}x`)
+        if (completeBooking.tireEAN) icsDescriptionParts.push(`EAN: ${completeBooking.tireEAN}`)
+      }
+      
+      // Add additional services
+      if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
+        icsDescriptionParts.push('')
+        icsDescriptionParts.push('Zusatzleistungen:')
+        if (completeBooking.hasBalancing) icsDescriptionParts.push(`✅ Auswuchtung (+${Number(completeBooking.balancingPrice || 0).toFixed(2)}€)`)
+        if (completeBooking.hasStorage) icsDescriptionParts.push(`✅ Einlagerung (+${Number(completeBooking.storagePrice || 0).toFixed(2)}€)`)
+        if (completeBooking.hasDisposal) icsDescriptionParts.push(`✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`)
+        if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) {
+          icsDescriptionParts.push(`✅ RunFlat-Aufschlag (+${Number(completeBooking.runFlatSurcharge).toFixed(2)}€)`)
+        }
+      }
+      
+      icsDescriptionParts.push('')
+      icsDescriptionParts.push(`💰 Gesamtpreis: ${Number(completeBooking.totalPrice).toFixed(2)} €`)
+      icsDescriptionParts.push('')
+      icsDescriptionParts.push(`📍 Adresse:`)
+      icsDescriptionParts.push(`${completeBooking.workshop.companyName}`)
+      icsDescriptionParts.push(workshopAddress)
+      icsDescriptionParts.push('')
+      icsDescriptionParts.push(`📞 Kontakt: ${completeBooking.workshop.user.phone || completeBooking.workshop.user.email}`)
+      
+      const icsDescription = icsDescriptionParts.join('\\n')
       
       const icsContent = createICSFile({
         start: appointmentStart,
@@ -410,7 +453,14 @@ export async function POST(req: NextRequest) {
             select: { name: true, type: true }
           })
         : null
-
+      console.log('[EMAIL] Tire data for workshop email:', {
+        tireBrand: completeBooking.tireBrand,
+        tireModel: completeBooking.tireModel,
+        tireArticleId: completeBooking.tireArticleId,
+        tireEAN: completeBooking.tireEAN,
+        supplierName: supplier?.name,
+        hasTireArticleId: !!completeBooking.tireArticleId
+      })
       const workshopEmailData = directBookingNotificationWorkshopEmail({
         bookingId: completeBooking.id,
         workshopName: completeBooking.workshop.companyName,

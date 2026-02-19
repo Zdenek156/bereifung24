@@ -629,9 +629,7 @@ export default function PaymentPage() {
                   )}
                   
                   {/* Disposal Fee - Check both locations for backwards compatibility */}
-                  {bookingData.tireBooking?.hasDisposal && (
-                    (bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0) > 0
-                  ) && (
+                  {bookingData.tireBooking?.hasDisposal && (bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0) > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">+ Reifenentsorgung</span>
                       <span className="font-medium">{formatPrice(bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0)}</span>
@@ -639,9 +637,7 @@ export default function PaymentPage() {
                   )}
                   
                   {/* Runflat Surcharge - Check both locations for backwards compatibility */}
-                  {bookingData.tireBooking?.hasRunflat && (
-                    (bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0) > 0
-                  ) && (
+                  {bookingData.tireBooking?.hasRunflat && (bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0) > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">+ Runflat-Zuschlag</span>
                       <span className="font-medium">{formatPrice(bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0)}</span>

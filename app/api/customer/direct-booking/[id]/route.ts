@@ -89,6 +89,7 @@ export async function GET(
       storagePrice: directBooking.storagePrice ? Number(directBooking.storagePrice) : null,
       disposalFee: directBooking.disposalFee ? Number(directBooking.disposalFee) : null,
       runFlatSurcharge: directBooking.runFlatSurcharge ? Number(directBooking.runFlatSurcharge) : null,
+      tirePurchasePrice: directBooking.tirePurchasePrice ? Number(directBooking.tirePurchasePrice) : null,
       totalTirePurchasePrice: directBooking.totalTirePurchasePrice ? Number(directBooking.totalTirePurchasePrice) : null,
       totalPrice: Number(directBooking.totalPrice)
     }

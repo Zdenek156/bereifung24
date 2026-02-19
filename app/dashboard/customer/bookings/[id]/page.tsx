@@ -27,6 +27,14 @@ interface Booking {
   durationMinutes: number
   paymentMethod: string
   createdAt: string
+  // Tire Details
+  tireBrand: string | null
+  tireModel: string | null
+  tireSize: string | null
+  tireLoadIndex: string | null
+  tireSpeedIndex: string | null
+  tireQuantity: number | null
+  tirePurchasePrice: number | null
   workshop: {
     id: string
     companyName: string
@@ -222,6 +230,62 @@ export default function BookingDetailsPage() {
           <div className="text-gray-600">Baujahr: {booking.vehicle.year}</div>
         </div>
       </Card>
+
+      {/* Tire Details - Only show if tires were purchased */}
+      {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
+        <Card className="p-6 mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <h2 className="text-xl font-bold mb-4">Gekaufte Reifen</h2>
+          <div className="space-y-3">
+            {booking.tireBrand && booking.tireModel && (
+              <div>
+                <div className="font-semibold text-lg text-blue-900">
+                  {booking.tireBrand} {booking.tireModel}
+                </div>
+              </div>
+            )}
+            {booking.tireSize && (
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
+                <div className="font-semibold">{booking.tireSize}</div>
+              </div>
+            )}
+            {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
+                <div className="font-semibold">
+                  {booking.tireLoadIndex || '-'} / {booking.tireSpeedIndex || '-'}
+                </div>
+              </div>
+            )}
+            {booking.tireQuantity && (
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
+                <div className="font-semibold">{booking.tireQuantity} Stück</div>
+              </div>
+            )}
+            {booking.tirePurchasePrice && (
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
+                <div className="font-semibold">{booking.tirePurchasePrice.toFixed(2)} €</div>
+              </div>
+            )}
+            {booking.tireRunFlat && (
+              <div className="flex items-center text-blue-600 mt-2">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Runflat-Reifen
+              </div>
+            )}
+            <div className="pt-3 mt-3 border-t border-blue-300">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
+                <span className="text-xl font-bold text-blue-700">
+                  {booking.totalTirePurchasePrice.toFixed(2)} €
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Payment Details */}
       <Card className="p-6 mb-6">

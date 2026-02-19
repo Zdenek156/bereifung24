@@ -79,6 +79,16 @@ export default function BookingDetailsPage() {
         const response = await fetch(`/api/customer/direct-booking/${params.id}`)
         if (response.ok) {
           const data = await response.json()
+          console.log('Booking data:', data)
+          console.log('Tire fields:', {
+            totalTirePurchasePrice: data.totalTirePurchasePrice,
+            tireQuantity: data.tireQuantity,
+            tireBrand: data.tireBrand,
+            tireModel: data.tireModel,
+            tireSize: data.tireSize,
+            tireLoadIndex: data.tireLoadIndex,
+            tireSpeedIndex: data.tireSpeedIndex
+          })
           setBooking(data)
         } else {
           console.error('Failed to fetch booking')
@@ -221,7 +231,7 @@ export default function BookingDetailsPage() {
       <div className="container mx-auto p-6">
         <Card className="p-12 text-center">
           <h2 className="text-2xl font-bold mb-4">Buchung nicht gefunden</h2>
-          <Button onClick={() => router.push('/dashboard/customer/appointments')}>
+          <Button onClick={() => router.push('/dashboard/customer/bookings')}>
             Zurück zur Übersicht
           </Button>
         </Card>
@@ -241,7 +251,7 @@ export default function BookingDetailsPage() {
     <div className="container mx-auto p-6 max-w-4xl">
       <Button
         variant="ghost"
-        onClick={() => router.push('/dashboard/customer/appointments')}
+        onClick={() => router.push('/dashboard/customer/bookings')}
         className="mb-6"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />

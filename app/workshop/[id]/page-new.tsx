@@ -551,7 +551,8 @@ export default function WorkshopDetailPage() {
                 sessionStorage.removeItem('tireBookingData')
                 sessionStorage.removeItem('searchData')
                 sessionStorage.removeItem('bookingData')
-                router.push('/')
+                sessionStorage.removeItem('lastSearchState')
+                window.location.href = '/'
               }}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
@@ -564,7 +565,8 @@ export default function WorkshopDetailPage() {
                 sessionStorage.removeItem('tireBookingData')
                 sessionStorage.removeItem('searchData')
                 sessionStorage.removeItem('bookingData')
-                router.push('/')
+                sessionStorage.removeItem('lastSearchState')
+                window.location.href = '/'
               }}
               className="absolute left-1/2 transform -translate-x-1/2"
             >
@@ -611,8 +613,9 @@ export default function WorkshopDetailPage() {
                       sessionStorage.removeItem('tireBookingData')
                       sessionStorage.removeItem('searchData')
                       sessionStorage.removeItem('bookingData')
+                      sessionStorage.removeItem('lastSearchState')
                       setShowUserMenu(false)
-                      router.push('/')
+                      window.location.href = '/'
                     }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                   >

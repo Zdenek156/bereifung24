@@ -2425,18 +2425,18 @@ export default function NewHomePage() {
 
                 {/* Results */}
                 {!loading && workshops.length > 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-full">
                     {/* Sort Bar */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
                       <p className="text-sm text-gray-600">
                         <span className="font-semibold text-gray-900">{sortedWorkshops.length}</span> Werkstätten gefunden
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
                         <span className="text-sm text-gray-600 whitespace-nowrap">Sortieren:</span>
                         <select
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as any)}
-                          className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                          className="flex-1 sm:flex-initial px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                         >
                           <option value="distance">Entfernung</option>
                           <option value="price">Preis</option>
@@ -2532,11 +2532,11 @@ export default function NewHomePage() {
                       return (
                         <div
                           key={workshop.id}
-                          className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden"
+                          className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all overflow-hidden w-full"
                         >
                           <div className="flex flex-col sm:flex-row">
                             {/* Left: Logo + Badge */}
-                            <div className="relative flex-shrink-0 w-full sm:w-44 h-44 sm:h-auto bg-gradient-to-br from-primary-500 to-primary-700">
+                            <div className="relative flex-shrink-0 w-full sm:w-40 md:w-44 lg:w-48 h-40 sm:h-auto bg-gradient-to-br from-primary-500 to-primary-700">
                               {workshop.logoUrl ? (
                                 <img 
                                   src={workshop.logoUrl} 

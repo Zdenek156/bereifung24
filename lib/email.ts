@@ -1496,12 +1496,16 @@ export function directBookingConfirmationCustomerEmail(data: {
   bookingId: string
   vehicleBrand?: string
   vehicleModel?: string
+  vehicleYear?: number
   vehicleLicensePlate?: string
+  tireEAN?: string
   // Tire details (if applicable)
   tireBrand?: string
   tireModel?: string
   tireSize?: string
   tireQuantity?: number
+  tirePurchasePrice?: number
+  totalTirePurchasePrice?: number
   tireRunFlat?: boolean
   tire3PMSF?: boolean
   // Pricing
@@ -1640,6 +1644,12 @@ export function directBookingConfirmationCustomerEmail(data: {
               <span class="detail-label">Basis-Service:</span>
               <span class="detail-value">${data.basePrice.toFixed(2)}€</span>
             </div>
+            ${data.totalTirePurchasePrice && data.totalTirePurchasePrice > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">Reifen (${data.tireQuantity || 4}x ${data.tireBrand || ''} ${data.tireModel || ''}):</span>
+              <span class="detail-value">+${data.totalTirePurchasePrice?.toFixed(2) || '0.00'}€</span>
+            </div>
+            ` : ''}
             ${data.balancingPrice && data.balancingPrice > 0 ? `
             <div class="detail-row">
               <span class="detail-label">Auswuchtung:</span>

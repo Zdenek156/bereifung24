@@ -1769,6 +1769,8 @@ export function directBookingNotificationWorkshopEmail(data: {
   basePrice: number
   balancingPrice?: number
   storagePrice?: number
+  disposalFee?: number
+  runFlatSurcharge?: number
   totalPrice: number
   platformCommission: number
   workshopPayout: number
@@ -1776,6 +1778,7 @@ export function directBookingNotificationWorkshopEmail(data: {
   // Options
   hasBalancing?: boolean
   hasStorage?: boolean
+  hasDisposal?: boolean
 }) {
   const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT'
   const isAPISupplier = data.supplierConnectionType === 'API'
@@ -1900,6 +1903,8 @@ export function directBookingNotificationWorkshopEmail(data: {
             </div>
             ${data.hasBalancing ? '<div class="detail-row"><span class="detail-label">Auswuchtung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
             ${data.hasStorage ? '<div class="detail-row"><span class="detail-label">Einlagerung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
+            ${data.hasDisposal ? `<div class="detail-row"><span class="detail-label">Reifenentsorgung:</span><span class="detail-value">✅ Ja (+${data.disposalFee?.toFixed(2) || '0.00'}€)</span></div>` : ''}
+            ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<div class="detail-row"><span class="detail-label">RunFlat-Aufschlag:</span><span class="detail-value">+${data.runFlatSurcharge.toFixed(2)}€</span></div>` : ''}
           </div>
 
           ${isTireService && isAPISupplier ? `

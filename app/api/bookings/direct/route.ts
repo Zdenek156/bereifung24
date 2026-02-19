@@ -178,12 +178,10 @@ export async function POST(req: NextRequest) {
     const month = bookingDate.getUTCMonth() + 1 // 0-indexed, so add 1
     const day = bookingDate.getUTCDate()
     
-    // Create UTC timestamp for the appointment (Berlin time converted to UTC)
-    // Example: User booked 13.03.2026 at 15:00 Berlin
-    // - In winter (CET = UTC+1): 15:00 Berlin = 14:00 UTC
-    // - In summer (CEST = UTC+2): 15:00 Berlin = 13:00 UTC
-    // For simplicity, we use -1 hour offset (CET)
-    const appointmentDateTime = new Date(Date.UTC(year, month - 1, day, hours - 1, minutes, 0))
+    // Create local Berlin time for the appointment
+    // The user selected a specific date and time in Berlin timezone
+    // We create a Date object that represents this exact local time
+    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0)
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
@@ -215,9 +213,21 @@ export async function POST(req: NextRequest) {
       const customerInfo = `${customer.user.firstName} ${customer.user.lastName}\n${customer.user.email}\nTelefon: ${customer.user.phone || 'Nicht angegeben'}`
       const vehicleInfo = `${vehicle.make} ${vehicle.model}${vehicle.year ? ` (${vehicle.year})` : ''}${vehicle.licensePlate ? ` - ${vehicle.licensePlate}` : ''}`
       
+      // Build detailed description with tire info if available
+      let calendarDescription = `${customerInfo}\n\nFahrzeug: ${vehicleInfo}\nService: ${serviceName}`
+      
+      if (completeBooking.tireBrand && completeBooking.tireModel) {
+        calendarDescription += `\n\n🛞 Reifen: ${completeBooking.tireBrand} ${completeBooking.tireModel}`
+        if (completeBooking.tireSize) calendarDescription += ` ${completeBooking.tireSize}`
+        calendarDescription += ` (${completeBooking.tireQuantity || 4}x)`
+        if (completeBooking.tireEAN) calendarDescription += `\nEAN: ${completeBooking.tireEAN}`
+      }
+      
+      calendarDescription += `\n\nGesamtpreis: ${totalPrice.toFixed(2)} €`
+      
       const eventDetails = {
-        summary: serviceName,
-        description: `${customerInfo}\n\nFahrzeug: ${vehicleInfo}\nService: ${serviceName}\nPreis: ${totalPrice.toFixed(2)} €`,
+        summary: `${serviceName}${completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}`,
+        description: calendarDescription,
         start: appointmentStart.toISOString(),
         end: appointmentEnd.toISOString(),
         attendees: [{ email: customer.user.email }]
@@ -418,9 +428,16 @@ export async function POST(req: NextRequest) {
         vehicleYear: completeBooking.vehicle.year || undefined,
         vehicleLicensePlate: completeBooking.vehicle.licensePlate || undefined,
         basePrice: completeBooking.basePrice ? Number(completeBooking.basePrice) : 0,
+        balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
+        storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        disposalFee: completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined,
+        runFlatSurcharge: completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined,
         totalPrice,
         platformCommission: 0, // No commission in test mode
         workshopPayout: totalPrice,
+        hasBalancing: completeBooking.hasBalancing || undefined,
+        hasStorage: completeBooking.hasStorage || undefined,
+        hasDisposal: completeBooking.hasDisposal || undefined,
         tireBrand: completeBooking.tireBrand || undefined,
         tireModel: completeBooking.tireModel || undefined,
         tireSize,

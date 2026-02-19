@@ -52,10 +52,14 @@ export async function GET(
         customer: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true
+              }
+            }
           }
         }
       }

@@ -163,11 +163,11 @@ export default function PaymentPage() {
           basePrice: bookingData.pricing.servicePrice,
           balancingPrice: bookingData.additionalServices?.find((s: any) => s.type === 'BALANCING')?.price || 0,
           storagePrice: bookingData.additionalServices?.find((s: any) => s.type === 'STORAGE')?.price || 0,
-          disposalFee: bookingData.additionalServices?.find((s: any) => s.type === 'DISPOSAL')?.price || 0,
-          runFlatSurcharge: bookingData.pricing.runFlatSurcharge || 0,
+          disposalFee: bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0,
+          runFlatSurcharge: bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0,
           hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
           hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
-          hasDisposal: bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
+          hasDisposal: bookingData.tireBooking?.hasDisposal || false,
           totalPrice: bookingData.pricing.totalPrice,
           // TIRE DATA - Include tire info in reservation
           ...(bookingData.tireBooking?.selectedTire && {
@@ -628,19 +628,23 @@ export default function PaymentPage() {
                     </div>
                   )}
                   
-                  {/* Disposal Fee */}
-                  {bookingData.tireBooking?.hasDisposal && bookingData.pricing.disposalPrice > 0 && (
+                  {/* Disposal Fee - Check both locations for backwards compatibility */}
+                  {bookingData.tireBooking?.hasDisposal && (
+                    (bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0) > 0
+                  ) && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">+ Reifenentsorgung</span>
-                      <span className="font-medium">{formatPrice(bookingData.pricing.disposalPrice)}</span>
+                      <span className="font-medium">{formatPrice(bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0)}</span>
                     </div>
                   )}
                   
-                  {/* Runflat Surcharge */}
-                  {bookingData.tireBooking?.hasRunflat && bookingData.pricing.runflatPrice > 0 && (
+                  {/* Runflat Surcharge - Check both locations for backwards compatibility */}
+                  {bookingData.tireBooking?.hasRunflat && (
+                    (bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0) > 0
+                  ) && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">+ Runflat-Zuschlag</span>
-                      <span className="font-medium">{formatPrice(bookingData.pricing.runflatPrice)}</span>
+                      <span className="font-medium">{formatPrice(bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0)}</span>
                     </div>
                   )}
                 </div>

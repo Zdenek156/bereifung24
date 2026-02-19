@@ -40,8 +40,11 @@ export async function POST(request: NextRequest) {
       basePrice,
       balancingPrice,
       storagePrice,
+      disposalFee,
+      runFlatSurcharge,
       hasBalancing,
       hasStorage,
+      hasDisposal,
       totalPrice,
       // Tire data
       tireBrand,
@@ -165,8 +168,11 @@ export async function POST(request: NextRequest) {
         basePrice: basePrice || 0,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,
+        disposalFee: disposalFee || 0,
+        runFlatSurcharge: runFlatSurcharge || 0,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,
+        hasDisposal: hasDisposal || false,
         totalPrice,
         // Save tire data in reservation
         tireBrand: tireBrand || null,

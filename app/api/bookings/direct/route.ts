@@ -318,12 +318,12 @@ export async function POST(req: NextRequest) {
         attendeeName: `${completeBooking.customer.user.firstName} ${completeBooking.customer.user.lastName}`
       })
 
-      // Extract pricing details
+      // Extract pricing details (use 0 instead of undefined to avoid .toFixed() errors in email templates)
       const basePrice = completeBooking.basePrice ? Number(completeBooking.basePrice) : 0
-      const balancingPrice = completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined
-      const storagePrice = completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined
-      const disposalFee = completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined
-      const runFlatSurcharge = completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined
+      const balancingPrice = completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : 0
+      const storagePrice = completeBooking.storagePrice ? Number(completeBooking.storagePrice) : 0
+      const disposalFee = completeBooking.disposalFee ? Number(completeBooking.disposalFee) : 0
+      const runFlatSurcharge = completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : 0
       const totalPrice = completeBooking.totalPrice ? Number(completeBooking.totalPrice) : 0
 
       // Tire data for emails

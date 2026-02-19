@@ -261,6 +261,7 @@ export default function PaymentPage() {
               tireLoadIndex: bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || '',
               tireSpeedIndex: bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || '',
               tireEAN: bookingData.tireBooking.selectedTire.ean || '',
+              tireArticleId: bookingData.tireBooking.selectedTire.articleId || bookingData.tireBooking.selectedTire.article_id || '',
               tireQuantity: bookingData.tireBooking.tireCount || 4,
               tirePurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,
               totalTirePurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),

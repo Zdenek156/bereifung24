@@ -546,19 +546,35 @@ export default function WorkshopDetailPage() {
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('tireBookingData')
+                sessionStorage.removeItem('searchData')
+                sessionStorage.removeItem('bookingData')
+                router.push('/')
+              }}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
               <span className="text-sm font-medium text-gray-700 hidden sm:inline">Zurück zur Suche</span>
-            </Link>
+            </button>
             
-            <Link href="/" className="absolute left-1/2 transform -translate-x-1/2">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('tireBookingData')
+                sessionStorage.removeItem('searchData')
+                sessionStorage.removeItem('bookingData')
+                router.push('/')
+              }}
+              className="absolute left-1/2 transform -translate-x-1/2"
+            >
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm font-bold">B24</span>
                 </div>
                 <span className="text-lg font-bold text-gray-900 hidden sm:inline">Bereifung24</span>
               </div>
-            </Link>
+            </button>
 
             {/* User Menu */}
             <div className="relative" ref={userMenuRef}>
@@ -590,14 +606,19 @@ export default function WorkshopDetailPage() {
                     <p className="text-xs text-gray-500">{session.user?.email}</p>
                   </div>
                   
-                  <Link
-                    href="/dashboard/customer"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    onClick={() => setShowUserMenu(false)}
+                  <button
+                    onClick={() => {
+                      sessionStorage.removeItem('tireBookingData')
+                      sessionStorage.removeItem('searchData')
+                      sessionStorage.removeItem('bookingData')
+                      setShowUserMenu(false)
+                      router.push('/')
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                   >
                     <Star className="w-4 h-4" />
                     Startseite
-                  </Link>
+                  </button>
                   
                   <Link
                     href="/dashboard/customer/appointments"

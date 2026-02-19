@@ -408,29 +408,15 @@ export default function BookingDetailsPage() {
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
           {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
-            <div className="border-b pb-3 mb-3">
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-900 font-semibold">Reifen:</span>
-                <span className="font-bold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
-              </div>
-              {(booking.tireBrand || booking.tireModel) && (
-                <div className="text-sm text-gray-600 ml-4">
-                  {booking.tireBrand} {booking.tireModel}
-                </div>
-              )}
-              {booking.tireSize && (
-                <div className="text-sm text-gray-600 ml-4">
-                  Größe: {booking.tireSize}
-                  {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
-                    <span> ({booking.tireLoadIndex || '-'}/{booking.tireSpeedIndex || '-'})</span>
-                  )}
-                </div>
-              )}
-              {booking.tireQuantity && booking.tirePurchasePrice && (
-                <div className="text-sm text-gray-600 ml-4">
-                  {booking.tireQuantity} Stück × {booking.tirePurchasePrice.toFixed(2)} €
-                </div>
-              )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {booking.tireQuantity && `${booking.tireQuantity}x `}
+                {booking.tireBrand && `${booking.tireBrand} `}
+                {booking.tireModel && `${booking.tireModel} `}
+                {booking.tireSize}
+                {booking.tireLoadIndex && booking.tireSpeedIndex && ` ${booking.tireLoadIndex}${booking.tireSpeedIndex}`}
+              </span>
+              <span className="font-semibold">{booking.totalTirePurchasePrice.toFixed(2)} €</span>
             </div>
           )}
           <div className="flex justify-between">

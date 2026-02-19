@@ -547,13 +547,7 @@ export default function WorkshopDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button
-              onClick={() => {
-                sessionStorage.removeItem('tireBookingData')
-                sessionStorage.removeItem('searchData')
-                sessionStorage.removeItem('bookingData')
-                sessionStorage.removeItem('lastSearchState')
-                window.location.href = '/'
-              }}
+              onClick={() => router.back()}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />

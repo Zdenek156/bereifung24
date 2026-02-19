@@ -415,9 +415,9 @@ export async function POST(req: NextRequest) {
         vehicleModel: completeBooking.vehicle.model,
         vehicleYear: completeBooking.vehicle.year || undefined,
         vehicleLicensePlate: completeBooking.vehicle.licensePlate || undefined,
+        basePrice: completeBooking.basePrice ? Number(completeBooking.basePrice) : 0,
         totalPrice,
-        totalPaid: totalPrice,
-        platformFee: 0, // No commission in test mode
+        platformCommission: 0, // No commission in test mode
         workshopPayout: totalPrice,
         tireBrand: completeBooking.tireBrand || undefined,
         tireModel: completeBooking.tireModel || undefined,
@@ -425,10 +425,10 @@ export async function POST(req: NextRequest) {
         tireQuantity: completeBooking.tireQuantity || undefined,
         tireEAN: completeBooking.tireEAN || undefined,
         tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
-        totalTirePurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
+        totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         tireRunFlat: completeBooking.tireRunFlat || undefined,
         tire3PMSF: completeBooking.tire3PMSF || undefined,
-        supplierType: supplier?.type as 'API' | 'CSV' | undefined,
+        supplierConnectionType: supplier?.type as 'API' | 'CSV' | undefined,
         supplierName: supplier?.name
       })
 

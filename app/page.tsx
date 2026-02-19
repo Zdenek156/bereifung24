@@ -1462,14 +1462,22 @@ export default function NewHomePage() {
                         ) : (
                           /* Customer users - full menu */
                           <>
-                            <Link
-                              href="/"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
+                            <button
+                              onClick={() => {
+                                // Clear all booking-related sessionStorage
+                                sessionStorage.removeItem('tireBookingData')
+                                sessionStorage.removeItem('serviceBookingData')
+                                sessionStorage.removeItem('bookingData')
+                                sessionStorage.removeItem('lastSearchState')
+                                sessionStorage.removeItem('additionalServices')
+                                setShowUserMenu(false)
+                                window.location.href = '/'
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                             >
                               <Star className="w-4 h-4" />
                               Startseite
-                            </Link>
+                            </button>
                             
                             <Link
                               href="/dashboard/customer"

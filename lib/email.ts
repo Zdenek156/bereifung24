@@ -1740,7 +1740,7 @@ export function directBookingNotificationWorkshopEmail(data: {
   customerName: string
   customerEmail: string
   customerPhone: string
-  customerAddress?: string
+  customerInvoiceAddress?: string
   customerNotes?: string
   // Vehicle
   vehicleBrand?: string
@@ -1867,10 +1867,10 @@ export function directBookingNotificationWorkshopEmail(data: {
                 <td style="padding: 5px 0;"><strong>Telefon:</strong></td>
                 <td style="padding: 5px 0;">${data.customerPhone}</td>
               </tr>
-              ${data.customerAddress ? `
+              ${data.customerInvoiceAddress ? `
               <tr>
                 <td style="padding: 5px 0;"><strong>Adresse:</strong></td>
-                <td style="padding: 5px 0;">${data.customerAddress}</td>
+                <td style="padding: 5px 0;">${data.customerInvoiceAddress}</td>
               </tr>
               ` : ''}
             </table>

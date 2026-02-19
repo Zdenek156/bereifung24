@@ -855,6 +855,8 @@ export async function POST(request: NextRequest) {
                       label: rec.label,
                       brand: rec.tire.brand,
                       model: rec.tire.model,
+                      articleId: rec.tire.articleNumber,
+                      ean: rec.tire.ean || null,
                       pricePerTire: rec.pricePerTire,
                       totalPrice: rec.totalPrice,
                       quantity: rec.quantity,
@@ -875,6 +877,8 @@ export async function POST(request: NextRequest) {
                           label: '', // No label for non-recommendation tires
                           brand: tire.brand,
                           model: tire.model,
+                          articleId: tire.articleNumber,
+                          ean: tire.ean || null,
                           pricePerTire: parseFloat(pricePerTire.toFixed(2)),
                           totalPrice: parseFloat((pricePerTire * requestedTireCount).toFixed(2)),
                           quantity: requestedTireCount,

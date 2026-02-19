@@ -27,6 +27,9 @@ interface Booking {
   durationMinutes: number
   paymentMethod: string
   createdAt: string
+  // Invoice
+  invoiceUrl: string | null
+  invoiceRequestedAt: string | null
   // Tire Details
   tireBrand: string | null
   tireModel: string | null
@@ -67,6 +70,8 @@ export default function BookingDetailsPage() {
   const router = useRouter()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
+  const [requestingInvoice, setRequestingInvoice] = useState(false)
+  const [invoiceRequested, setInvoiceRequested] = useState(false)
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -89,6 +94,47 @@ export default function BookingDetailsPage() {
       fetchBooking()
     }
   }, [params.id])
+
+  const handleInvoiceRequest = async () => {
+    if (!booking) return
+    
+    try {
+      setRequestingInvoice(true)
+      const response = await fetch(`/api/customer/direct-booking/${booking.id}/request-invoice`, {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setInvoiceRequested(true)
+        // Update local state
+        setBooking({
+          ...booking,
+          invoiceRequestedAt: new Date().toISOString()
+        })
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Anfrage fehlgeschlagen'}`)
+      }
+    } catch (error) {
+      console.error('Error requesting invoice:', error)
+      alert('Fehler beim Anfordern der Rechnung')
+    } finally {
+      setRequestingInvoice(false)
+    }
+  }
+
+  const handleInvoiceDownload = () => {
+    if (!booking) return
+    
+    if (booking.invoiceUrl) {
+      // Open invoice in new tab
+      window.open(booking.invoiceUrl, '_blank')
+    } else {
+      // Request invoice if not available
+      handleInvoiceRequest()
+    }
+  }
 
   if (loading) {
     return (
@@ -360,15 +406,34 @@ export default function BookingDetailsPage() {
         </Button>
         <Button
           variant="outline"
-          onClick={() => {
-            // TODO: Add download receipt functionality
-            alert('Download-Funktion folgt in Kürze')
-          }}
+          onClick={handleInvoiceDownload}
+          disabled={requestingInvoice}
         >
           <Download className="h-4 w-4 mr-2" />
-          Rechnung herunterladen
+          {booking.invoiceUrl ? 'Rechnung herunterladen' : 
+           requestingInvoice ? 'Anfrage wird gesendet...' : 
+           'Rechnung anfordern'}
         </Button>
       </div>
+
+      {/* Invoice Request Confirmation */}
+      {(invoiceRequested || booking.invoiceRequestedAt) && !booking.invoiceUrl && (
+        <Card className="p-4 mt-6 bg-orange-50 border-orange-200">
+          <div className="flex items-start">
+            <CheckCircle className="h-5 w-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-orange-900 mb-1">
+                Werkstatt wurde informiert
+              </p>
+              <p className="text-sm text-orange-800">
+                Die Werkstatt wurde über Ihre Rechnungsanforderung informiert und 
+                wird diese in Kürze hochladen. Sie erhalten eine Benachrichtigung, 
+                sobald die Rechnung verfügbar ist.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Email Confirmation Notice */}
       <Card className="p-4 mt-6 bg-blue-50 border-blue-200">

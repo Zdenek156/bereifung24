@@ -7,7 +7,6 @@ import { Calendar, MapPin, Car, Euro, Clock, CheckCircle, XCircle, AlertCircle }
 
 interface DirectBooking {
   id: string
-  bookingNumber: string
   serviceType: string
   date: string
   time: string
@@ -270,7 +269,7 @@ export default function BookingsPage() {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Buchungsnr.: {booking.bookingNumber}
+                        Buchungsnr.: {booking.id.substring(0, 12).toUpperCase()}
                       </p>
                     </div>
                     

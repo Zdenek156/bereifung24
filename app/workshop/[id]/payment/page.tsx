@@ -240,14 +240,14 @@ export default function PaymentPage() {
             date,
             time,
             totalPrice: bookingData.pricing.totalPrice,
-            basePrice: bookingData.pricing.basePrice || bookingData.pricing.totalPrice,
+            basePrice: bookingData.pricing.basePrice || bookingData.pricing.servicePrice || bookingData.pricing.totalPrice,
             balancingPrice: bookingData.pricing.balancingPrice || 0,
             storagePrice: bookingData.pricing.storagePrice || 0,
-            disposalFee: bookingData.pricing.disposalFee || 0,
-            runFlatSurcharge: bookingData.pricing.runFlatSurcharge || 0,
+            disposalFee: bookingData.pricing.disposalPrice || bookingData.pricing.disposalFee || 0,
+            runFlatSurcharge: bookingData.pricing.runflatPrice || bookingData.pricing.runFlatSurcharge || 0,
             hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
             hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
-            hasDisposal: bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
+            hasDisposal: bookingData.tireBooking?.hasDisposal || bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
             workshopName: workshop.name,
             serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
           vehicleInfo: `${bookingData.vehicle.make} ${bookingData.vehicle.model}`,
@@ -625,6 +625,22 @@ export default function PaymentPage() {
                         {bookingData.tireBooking.selectedTire.quantity || 4}× Reifen
                       </span>
                       <span className="font-semibold">{formatPrice(bookingData.pricing.tirePrice)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Disposal Fee */}
+                  {bookingData.tireBooking?.hasDisposal && bookingData.pricing.disposalPrice > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">+ Reifenentsorgung</span>
+                      <span className="font-medium">{formatPrice(bookingData.pricing.disposalPrice)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Runflat Surcharge */}
+                  {bookingData.tireBooking?.hasRunflat && bookingData.pricing.runflatPrice > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">+ Runflat-Zuschlag</span>
+                      <span className="font-medium">{formatPrice(bookingData.pricing.runflatPrice)}</span>
                     </div>
                   )}
                 </div>

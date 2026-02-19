@@ -27,6 +27,10 @@ interface Booking {
   tireRunFlat: boolean
   durationMinutes: number
   paymentMethod: string
+  // Invoice
+  invoiceUrl: string | null
+  invoiceUploadedAt: string | null
+  invoiceRequestedAt: string | null
   // Tire details
   tireBrand: string | null
   tireModel: string | null
@@ -99,6 +103,7 @@ export default function WorkshopBookingsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'RESERVED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'>('all')
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null)
+  const [uploadingInvoice, setUploadingInvoice] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -135,6 +140,35 @@ export default function WorkshopBookingsPage() {
       console.error('Error:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleInvoiceUpload = async (bookingId: string, file: File) => {
+    try {
+      setUploadingInvoice(bookingId)
+      
+      const formData = new FormData()
+      formData.append('invoice', file)
+      
+      const response = await fetch(`/api/workshop/bookings/${bookingId}/upload-invoice`, {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        alert('Rechnung erfolgreich hochgeladen!')
+        // Refresh bookings to show updated invoice status
+        fetchBookings()
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Upload fehlgeschlagen'}`)
+      }
+    } catch (error) {
+      console.error('Error uploading invoice:', error)
+      alert('Fehler beim Hochladen der Rechnung')
+    } finally {
+      setUploadingInvoice(null)
     }
   }
 
@@ -483,6 +517,74 @@ export default function WorkshopBookingsPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Invoice Upload */}
+                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                      <h4 className="font-semibold mb-3">Rechnung</h4>
+                      {booking.invoiceUrl ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <span className="font-medium">Rechnung hochgeladen</span>
+                          </div>
+                          <a 
+                            href={booking.invoiceUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-block text-blue-600 hover:underline text-sm"
+                          >
+                            Rechnung anzeigen
+                          </a>
+                          {booking.invoiceUploadedAt && (
+                            <div className="text-xs text-gray-500">
+                              Hochgeladen: {formatDateTime(booking.invoiceUploadedAt)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {booking.invoiceRequestedAt && (
+                            <div className="flex items-center text-orange-600 mb-2">
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              <span className="text-sm font-medium">
+                                Kunde hat Rechnung angefordert am {formatDateTime(booking.invoiceRequestedAt)}
+                              </span>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block">
+                              <input
+                                type="file"
+                                accept="application/pdf"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    handleInvoiceUpload(booking.id, file)
+                                  }
+                                }}
+                                disabled={uploadingInvoice === booking.id}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const input = document.querySelector(`input[type="file"]`) as HTMLInputElement
+                                  input?.click()
+                                }}
+                                disabled={uploadingInvoice === booking.id}
+                                className="w-full"
+                              >
+                                {uploadingInvoice === booking.id ? 'Lädt hoch...' : 'Rechnung hochladen (PDF)'}
+                              </Button>
+                            </label>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Max. 5MB, nur PDF-Dateien
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Review */}
                     {booking.review && (

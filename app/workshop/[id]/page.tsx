@@ -794,6 +794,8 @@ export default function WorkshopDetailPage() {
       pricing: {
         servicePrice: basePrice,
         tirePrice: tireBookingData?.selectedTire?.totalPrice || 0,
+        disposalPrice: tireBookingData?.hasDisposal ? (tireBookingData?.disposalPrice || 0) : 0,
+        runflatPrice: tireBookingData?.hasRunflat ? (tireBookingData?.runflatPrice || 0) : 0,
         additionalServicesPrice: additionalServices.reduce((sum, s) => sum + s.price, 0),
         totalPrice: calculateTotalPrice(),
       },

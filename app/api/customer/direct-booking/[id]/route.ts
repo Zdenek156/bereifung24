@@ -52,6 +52,7 @@ export async function GET(
         customer: {
           select: {
             id: true,
+            userId: true,
             user: {
               select: {
                 firstName: true,
@@ -72,8 +73,8 @@ export async function GET(
       )
     }
 
-    // Verify ownership
-    if (directBooking.customerId !== session.user.id) {
+    // Verify ownership - check if the booking's customer belongs to the logged-in user
+    if (directBooking.customer?.userId !== session.user.id) {
       return NextResponse.json(
         { error: 'Keine Berechtigung' },
         { status: 403 }

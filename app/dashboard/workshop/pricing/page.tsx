@@ -350,17 +350,17 @@ export default function PricingPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">So funktioniert die Preiskalkulation für Direktbuchungen</h3>
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">So funktioniert die Preiskalkulation für Buchungen</h3>
               <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                <p className="font-medium">Bei der Direktbuchung geben Sie Ihre Einkaufspreise von Ihrem Lieferanten ein. Das System berechnet automatisch den Verkaufspreis für Ihre Kunden basierend auf:</p>
+                <p className="font-medium">Bei Buchungen werden die Einkaufspreise automatisch über Ihre Datenbank oder API-Schnittstelle von Ihrem Großhändler abgerufen. Das System berechnet dann automatisch den Verkaufspreis für Ihre Kunden basierend auf:</p>
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li><strong>Fester Aufschlag:</strong> Fixer Betrag in € der zum Einkaufspreis addiert wird (z.B. 3 € pro Reifen für Handling und Lagerung)</li>
                   <li><strong>Prozentualer Aufschlag:</strong> Ihre Gewinnmarge in % auf den Zwischenpreis (z.B. 7% Marge)</li>
-                  <li><strong>MwSt.:</strong> Optional können die berechneten Preise mit 19% Mehrwertsteuer angezeigt werden</li>
+                  <li><strong>MwSt.:</strong> Wählen Sie diese Option, wenn Ihre Großhändler-Preise bereits MwSt. enthalten oder wenn die Verkaufspreise mit 19% Mehrwertsteuer angezeigt werden sollen</li>
                 </ul>
                 <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mt-3 border border-blue-200 dark:border-blue-700">
                   <p className="font-semibold mb-1">Beispielrechnung:</p>
-                  <p>Ihr Einkaufspreis: <strong>100,00 €</strong></p>
+                  <p>Einkaufspreis (EK vom Großhändler): <strong>100,00 €</strong></p>
                   <p>+ Fester Aufschlag: <strong>3,00 €</strong> = 103,00 €</p>
                   <p>+ Prozentualer Aufschlag 7%: <strong>7,21 €</strong> = 110,21 €</p>
                   <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">Mit MwSt.: 110,21 € × 1,19 = <strong className="text-primary-600">131,15 €</strong></p>

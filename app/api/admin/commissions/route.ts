@@ -12,12 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Load DirectBookings with paid commissions
+    // Load DirectBookings with commissions (all bookings, we calculate commission even if not paid yet)
     const directBookings = await prisma.directBooking.findMany({
       where: {
-        platformCommission: {
-          not: null
-        },
         status: {
           in: ['CONFIRMED', 'COMPLETED']
         }
@@ -57,36 +54,43 @@ export async function GET() {
     })
 
     // Format as commissions for frontend compatibility
-    const formattedCommissions = directBookings.map(booking => ({
-      id: booking.id,
-      bookingId: booking.id,
-      orderTotal: booking.totalPrice,
-      commissionRate: 6.9, // Platform commission rate
-      commissionAmount: booking.platformCommission,
-      platformNetCommission: booking.platformNetCommission,
-      stripeFeesEstimate: booking.stripeFeesEstimate,
-      workshopPayout: booking.workshopPayout,
-      status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : 'PENDING',
-      billedAt: booking.paidAt,
-      collectedAt: booking.paidAt,
-      sepaReference: booking.stripePaymentId,
-      sepaStatus: booking.paymentStatus,
-      notes: `${booking.serviceType} - ${booking.date.toISOString().split('T')[0]} ${booking.time}`,
-      createdAt: booking.createdAt,
-      workshop: {
-        id: booking.workshop.id,
-        companyName: booking.workshop.companyName,
-        contactName: `${booking.workshop.user.firstName} ${booking.workshop.user.lastName}`,
-        email: booking.workshop.user.email,
-        iban: booking.workshop.iban,
-        accountHolder: booking.workshop.accountHolder,
-        stripeAccountId: booking.workshop.stripeAccountId
-      },
-      customer: {
-        name: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
-        email: booking.customer.user.email
+    const formattedCommissions = directBookings.map(booking => {
+      // Calculate commission (6.9% of total price)
+      const totalPrice = Number(booking.totalPrice)
+      const commissionAmount = booking.platformCommission ? Number(booking.platformCommission) : totalPrice * 0.069
+      const netCommission = booking.platformNetCommission ? Number(booking.platformNetCommission) : commissionAmount * 0.81 // Estimated after tax
+      
+      return {
+        id: booking.id,
+        bookingId: booking.id,
+        orderTotal: totalPrice,
+        commissionRate: 6.9, // Platform commission rate
+        commissionAmount: commissionAmount,
+        platformNetCommission: netCommission,
+        stripeFeesEstimate: booking.stripeFeesEstimate ? Number(booking.stripeFeesEstimate) : 0,
+        workshopPayout: booking.workshopPayout ? Number(booking.workshopPayout) : totalPrice * 0.931,
+        status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : booking.paymentStatus === 'PENDING' ? 'PENDING' : 'FAILED',
+        billedAt: booking.paidAt,
+        collectedAt: booking.paymentStatus === 'PAID' ? booking.paidAt : null,
+        sepaReference: booking.stripePaymentId,
+        sepaStatus: booking.paymentStatus,
+        notes: `${booking.serviceType} - ${booking.date.toISOString().split('T')[0]} ${booking.time}`,
+        createdAt: booking.createdAt,
+        workshop: {
+          id: booking.workshop.id,
+          companyName: booking.workshop.companyName,
+          contactName: `${booking.workshop.user.firstName} ${booking.workshop.user.lastName}`,
+          email: booking.workshop.user.email,
+          iban: booking.workshop.iban,
+          accountHolder: booking.workshop.accountHolder,
+          stripeAccountId: booking.workshop.stripeAccountId
+        },
+        customer: {
+          name: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
+          email: booking.customer.user.email
+        }
       }
-    }))
+    })
 
     return NextResponse.json({ commissions: formattedCommissions })
 

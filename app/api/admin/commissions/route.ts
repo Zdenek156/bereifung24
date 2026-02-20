@@ -12,24 +12,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const commissions = await prisma.commission.findMany({
+    // Load DirectBookings with paid commissions
+    const directBookings = await prisma.directBooking.findMany({
+      where: {
+        platformCommission: {
+          not: null
+        },
+        status: {
+          in: ['CONFIRMED', 'COMPLETED']
+        }
+      },
       include: {
-        booking: {
+        customer: {
           include: {
-            customer: {
-              include: {
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true
-                  }
-                }
-              }
-            },
-            offer: {
+            user: {
               select: {
-                price: true
+                firstName: true,
+                lastName: true,
+                email: true
               }
             }
           }
@@ -40,7 +40,7 @@ export async function GET() {
             companyName: true,
             iban: true,
             accountHolder: true,
-            paypalEmail: true,
+            stripeAccountId: true,
             user: {
               select: {
                 firstName: true,
@@ -56,31 +56,35 @@ export async function GET() {
       }
     })
 
-    const formattedCommissions = commissions.map(commission => ({
-      id: commission.id,
-      bookingId: commission.bookingId,
-      orderTotal: commission.orderTotal,
-      commissionRate: commission.commissionRate,
-      commissionAmount: commission.commissionAmount,
-      status: commission.status,
-      billedAt: commission.billedAt,
-      collectedAt: commission.collectedAt,
-      sepaReference: commission.sepaReference,
-      sepaStatus: commission.sepaStatus,
-      notes: commission.notes,
-      createdAt: commission.createdAt,
+    // Format as commissions for frontend compatibility
+    const formattedCommissions = directBookings.map(booking => ({
+      id: booking.id,
+      bookingId: booking.id,
+      orderTotal: booking.totalPrice,
+      commissionRate: 6.9, // Platform commission rate
+      commissionAmount: booking.platformCommission,
+      platformNetCommission: booking.platformNetCommission,
+      stripeFeesEstimate: booking.stripeFeesEstimate,
+      workshopPayout: booking.workshopPayout,
+      status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : 'PENDING',
+      billedAt: booking.paidAt,
+      collectedAt: booking.paidAt,
+      sepaReference: booking.stripePaymentId,
+      sepaStatus: booking.paymentStatus,
+      notes: `${booking.serviceType} - ${booking.date.toISOString().split('T')[0]} ${booking.time}`,
+      createdAt: booking.createdAt,
       workshop: {
-        id: commission.workshop.id,
-        companyName: commission.workshop.companyName,
-        contactName: `${commission.workshop.user.firstName} ${commission.workshop.user.lastName}`,
-        email: commission.workshop.user.email,
-        iban: commission.workshop.iban,
-        accountHolder: commission.workshop.accountHolder,
-        paypalEmail: commission.workshop.paypalEmail
+        id: booking.workshop.id,
+        companyName: booking.workshop.companyName,
+        contactName: `${booking.workshop.user.firstName} ${booking.workshop.user.lastName}`,
+        email: booking.workshop.user.email,
+        iban: booking.workshop.iban,
+        accountHolder: booking.workshop.accountHolder,
+        stripeAccountId: booking.workshop.stripeAccountId
       },
       customer: {
-        name: `${commission.booking.customer.user.firstName} ${commission.booking.customer.user.lastName}`,
-        email: commission.booking.customer.user.email
+        name: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
+        email: booking.customer.user.email
       }
     }))
 

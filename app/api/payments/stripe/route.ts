@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/appointments?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/bookings?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${booking.tireRequestId}/book?offerId=${booking.offerId}&payment=cancelled`,
       customer_email: email,
       ...(street && city && {

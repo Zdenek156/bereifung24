@@ -46,7 +46,6 @@ export default function CustomerNavbar() {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/customer' },
         { id: 'new-request', label: 'Neue Anfrage', icon: Plus, path: '/dashboard/customer/select-service' },
         { id: 'requests', label: 'Meine Anfragen', icon: ClipboardList, path: '/dashboard/customer/requests' },
-        { id: 'appointments', label: 'Termine', icon: Calendar, path: '/dashboard/customer/appointments' },
         { id: 'bookings', label: 'Buchungen', icon: BookOpen, path: '/dashboard/customer/bookings' },
         { id: 'vehicles', label: 'Fahrzeuge', icon: Car, path: '/dashboard/customer/vehicles' },
         { id: 'weather-alert', label: 'Wetter-Erinnerung', icon: Cloud, path: '/dashboard/customer/weather-alert' },

@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         locale: 'de-DE',
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
-        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/appointments?payment=success`,
+        return_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/bookings?payment=success`,
         cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/customer/requests/${booking.tireRequestId}/book?offerId=${booking.offerId}&payment=cancelled`
       }
     }

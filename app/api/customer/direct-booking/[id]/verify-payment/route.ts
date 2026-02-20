@@ -73,16 +73,42 @@ export async function POST(
         apiVersion: '2024-11-20.acacia'
       })
       
-      const stripeSession = await stripe.checkout.sessions.retrieve(sessionId)
+      const stripeSession = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['payment_intent', 'payment_intent.payment_method']
+      })
 
       if (stripeSession.payment_status === 'paid') {
+        // Get payment method details
+        let paymentMethodDetail = 'card' // Default
+        
+        if (stripeSession.payment_intent && typeof stripeSession.payment_intent !== 'string') {
+          const paymentIntent = stripeSession.payment_intent as Stripe.PaymentIntent
+          
+          if (paymentIntent.payment_method && typeof paymentIntent.payment_method !== 'string') {
+            const paymentMethod = paymentIntent.payment_method as Stripe.PaymentMethod
+            paymentMethodDetail = paymentMethod.type // 'card', 'paypal', etc.
+            
+            // More specific for wallets
+            if (paymentMethod.type === 'card' && paymentMethod.card) {
+              if (paymentMethod.card.wallet?.type === 'google_pay') {
+                paymentMethodDetail = 'google_pay'
+              } else if (paymentMethod.card.wallet?.type === 'apple_pay') {
+                paymentMethodDetail = 'apple_pay'
+              }
+            }
+          }
+        }
+
+        console.log(`💳 Payment method detail: ${paymentMethodDetail}`)
+
         // Update DirectBooking
         const updatedBooking = await prisma.directBooking.update({
           where: { id: params.id },
           data: {
             paymentStatus: 'PAID',
             paidAt: new Date(),
-            stripePaymentId: stripeSession.payment_intent as string
+            stripePaymentId: stripeSession.payment_intent as string,
+            paymentMethodDetail: paymentMethodDetail
           },
           include: {
             workshop: true,

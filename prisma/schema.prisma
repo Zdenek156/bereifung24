@@ -5583,13 +5583,14 @@ model DirectBooking {
   reservedUntil DateTime? @map("reserved_until")
 
   // Payment
-  paymentMethod   DirectBookingPaymentMethod? @map("payment_method")
-  paymentStatus   DirectBookingPaymentStatus  @default(PENDING) @map("payment_status")
-  paymentId       String?                     @map("payment_id")
-  stripeSessionId String?                     @map("stripe_session_id")
-  stripePaymentId String?                     @map("stripe_payment_id")
-  paypalOrderId   String?                     @map("paypal_order_id")
-  paidAt          DateTime?                   @map("paid_at")
+  paymentMethod       DirectBookingPaymentMethod? @map("payment_method")
+  paymentMethodDetail String?                     @map("payment_method_detail") // card, google_pay, apple_pay, paypal, etc.
+  paymentStatus       DirectBookingPaymentStatus  @default(PENDING) @map("payment_status")
+  paymentId           String?                     @map("payment_id")
+  stripeSessionId     String?                     @map("stripe_session_id")
+  stripePaymentId     String?                     @map("stripe_payment_id")
+  paypalOrderId       String?                     @map("paypal_order_id")
+  paidAt              DateTime?                   @map("paid_at")
 
   // Invoice
   invoiceUrl        String?   @map("invoice_url") @db.VarChar(500)

@@ -13,6 +13,7 @@ interface Commission {
   billedAt: string | null
   collectedAt: string | null
   paymentMethod: string | null
+  paymentMethodDetail: string | null
   paymentStatus: string | null
   stripePaymentId: string | null
   notes: string | null
@@ -417,20 +418,44 @@ export default function AdminCommissionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {commission.paymentMethod === 'STRIPE' && (
+                          {commission.paymentMethodDetail === 'google_pay' && (
                             <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+                              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
                               </svg>
-                              <span>Stripe</span>
+                              <span>Google Pay</span>
                             </div>
                           )}
-                          {commission.paymentMethod === 'PAYPAL' && (
+                          {commission.paymentMethodDetail === 'apple_pay' && (
+                            <div className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                              </svg>
+                              <span>Apple Pay</span>
+                            </div>
+                          )}
+                          {commission.paymentMethodDetail === 'card' && (
+                            <div className="flex items-center gap-1">
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20 8H4V6h16m0 12H4v-6h16m0-8H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                              </svg>
+                              <span>Kreditkarte</span>
+                            </div>
+                          )}
+                          {commission.paymentMethodDetail === 'paypal' && (
                             <div className="flex items-center gap-1">
                               <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.76-4.852a.932.932 0 0 1 .922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.78-4.461z"/>
                               </svg>
                               <span>PayPal</span>
+                            </div>
+                          )}
+                          {commission.paymentMethod === 'STRIPE' && !commission.paymentMethodDetail && (
+                            <div className="flex items-center gap-1">
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+                              </svg>
+                              <span>Stripe</span>
                             </div>
                           )}
                           {!commission.paymentMethod && (

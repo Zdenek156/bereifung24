@@ -71,6 +71,7 @@ export async function GET() {
         billedAt: booking.paidAt,
         collectedAt: booking.paymentStatus === 'PAID' ? booking.paidAt : null,
         paymentMethod: booking.paymentMethod,
+        paymentMethodDetail: booking.paymentMethodDetail,
         paymentStatus: booking.paymentStatus,
         stripePaymentId: booking.stripePaymentId,
         notes: `${booking.serviceType} - ${booking.date.toISOString().split('T')[0]} ${booking.time}`,

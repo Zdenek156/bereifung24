@@ -292,7 +292,7 @@ export default function WorkshopServicesPage() {
         
         requestBody.packages = wheelPackages
         console.log('✅ [WHEEL_CHANGE] Generated packages:', wheelPackages)
-        requestBody.allowsDirectBooking = packages.directBooking?.active || false
+        requestBody.allowsDirectBooking = true
         
         // Keep legacy fields for backwards compatibility (but packages take priority)
         requestBody.basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
@@ -316,13 +316,13 @@ export default function WorkshopServicesPage() {
         if (disposalFee) {
           requestBody.disposalFee = parseFloat(disposalFee)
         }
-        // Add allowsDirectBooking for TIRE_CHANGE
-        requestBody.allowsDirectBooking = packages.directBooking?.active || false
+        // Add allowsDirectBooking for TIRE_CHANGE (always enabled)
+        requestBody.allowsDirectBooking = true
       }
 
-      // Add allowsDirectBooking for other package-based services
+      // Add allowsDirectBooking for other package-based services (always enabled)
       if (['TIRE_REPAIR', 'MOTORCYCLE_TIRE', 'ALIGNMENT_BOTH', 'CLIMATE_SERVICE'].includes(selectedServiceType)) {
-        requestBody.allowsDirectBooking = packages.directBooking?.active || false
+        requestBody.allowsDirectBooking = true
       }
       
       const response = await fetch(url, {
@@ -558,6 +558,29 @@ export default function WorkshopServicesPage() {
               {editingService ? 'Service bearbeiten' : 'Neuer Service'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Informationsbox */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">Services konfigurieren für direkte Online-Buchungen</h3>
+                    <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                      <p className="font-medium">Alle Services, die Sie hier hinzufügen, werden automatisch für Direktbuchungen aktiviert. Kunden können diese Services direkt online buchen und bezahlen.</p>
+                      <ul className="list-disc ml-6 mt-2 space-y-1">
+                        <li><strong>Wählen Sie einen Service-Typ:</strong> z.B. Reifenwechsel, Klimaservice, Achsvermessung</li>
+                        <li><strong>Konfigurieren Sie die Pakete:</strong> Legen Sie Preise und Dauern für jedes Paket fest</li>
+                        <li><strong>Aktivieren Sie die gewünschten Pakete:</strong> Nur aktivierte Pakete können von Kunden gebucht werden</li>
+                      </ul>
+                      <p className="mt-3 text-xs"><strong>⚡ Vorteil:</strong> Sofortige Zahlungen, keine Angebotserstellung mehr nötig, höhere Conversion-Rate</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Service Type Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -809,29 +832,6 @@ export default function WorkshopServicesPage() {
                     )}
                   </div>
 
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={packages.directBooking?.active !== false}
-                        onChange={(e) => handlePackageChange('directBooking', 'active', e.target.checked)}
-                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          ⚡ Direktbuchung erlauben (Fast-Track)
-                        </h3>
-                        <p className="text-sm text-gray-700">
-                          Kunden können direkt online buchen und bezahlen, ohne Angebot anzufordern.
-                          Sie erscheinen in der <strong>Schnellbuchungs-Suche</strong> und erhalten sofortige Zahlungen.
-                        </p>
-                        <p className="text-xs text-purple-600 mt-1">
-                          💡 Empfohlen: Erhöht Ihre Conversion-Rate und spart Zeit bei der Angebotserstellung!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-900 dark:text-blue-200">
                       <strong>Beispiel-Berechnung:</strong><br/>
@@ -916,32 +916,6 @@ export default function WorkshopServicesPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Direktbuchung erlauben für Services mit Paketen */}
-              {['TIRE_CHANGE', 'TIRE_REPAIR', 'MOTORCYCLE_TIRE', 'ALIGNMENT_BOTH', 'CLIMATE_SERVICE'].includes(selectedServiceType) && (
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={packages.directBooking?.active !== false}
-                      onChange={(e) => handlePackageChange('directBooking', 'active', e.target.checked)}
-                      className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                    />
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        ⚡ Direktbuchung erlauben (Fast-Track)
-                      </h3>
-                      <p className="text-sm text-gray-700">
-                        Kunden können direkt online buchen und bezahlen, ohne Angebot anzufordern.
-                        Sie erscheinen in der <strong>Schnellbuchungs-Suche</strong> und erhalten sofortige Zahlungen.
-                      </p>
-                      <p className="text-xs text-purple-600 mt-1">
-                        💡 Empfohlen: Erhöht Ihre Conversion-Rate und spart Zeit bei der Angebotserstellung!
-                      </p>
-                    </div>
                   </div>
                 </div>
               )}

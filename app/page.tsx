@@ -19,8 +19,6 @@ import {
   ChevronUp,
   User,
   LogOut,
-  Plus,
-  ClipboardList,
   Calendar,
   BookOpen,
   Car,
@@ -1485,33 +1483,6 @@ export default function NewHomePage() {
                             >
                               <LayoutDashboard className="w-4 h-4" />
                               Dashboard
-                            </Link>
-                            
-                            <Link
-                              href="/dashboard/customer/select-service"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <Plus className="w-4 h-4" />
-                              Neue Anfrage
-                            </Link>
-                            
-                            <Link
-                              href="/dashboard/customer/requests"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <ClipboardList className="w-4 h-4" />
-                              Meine Anfragen
-                            </Link>
-                            
-                            <Link
-                              href="/dashboard/customer/bookings"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <Calendar className="w-4 h-4" />
-                              Buchungen
                             </Link>
                             
                             <Link

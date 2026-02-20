@@ -12,28 +12,16 @@ export async function DELETE(
     const authError = await requireAdminOrEmployee()
     if (authError) return authError
 
-    const commissionId = params.id
+    const bookingId = params.id
 
-    // Check if commission exists
-    const commission = await prisma.commission.findUnique({
-      where: { id: commissionId }
-    })
-
-    if (!commission) {
-      return NextResponse.json({ error: 'Commission not found' }, { status: 404 })
-    }
-
-    // Delete the commission
-    await prisma.commission.delete({
-      where: { id: commissionId }
-    })
-
-    console.log(`🗑️ Commission deleted: ${commissionId} (${commission.commissionAmount}€)`)
-
-    return NextResponse.json({
-      success: true,
-      message: 'Commission deleted successfully'
-    })
+    // In the new DirectBooking system, commissions are integral to bookings
+    // Deleting is not recommended as it would affect the booking record
+    // Instead, we could cancel the booking or reset commission fields
+    
+    return NextResponse.json(
+      { error: 'Provisionen können nicht gelöscht werden. Sie sind Teil der Buchungsdaten. Bitte kontaktieren Sie den Administrator, falls eine Stornierung erforderlich ist.' },
+      { status: 400 }
+    )
 
   } catch (error: any) {
     console.error('Error deleting commission:', error)

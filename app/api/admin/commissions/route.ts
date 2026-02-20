@@ -70,8 +70,9 @@ export async function GET() {
         status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : booking.paymentStatus === 'PENDING' ? 'PENDING' : 'FAILED',
         billedAt: booking.paidAt,
         collectedAt: booking.paymentStatus === 'PAID' ? booking.paidAt : null,
-        sepaReference: booking.stripePaymentId,
-        sepaStatus: booking.paymentStatus,
+        paymentMethod: booking.paymentMethod,
+        paymentStatus: booking.paymentStatus,
+        stripePaymentId: booking.stripePaymentId,
         notes: `${booking.serviceType} - ${booking.date.toISOString().split('T')[0]} ${booking.time}`,
         createdAt: booking.createdAt,
         workshop: {

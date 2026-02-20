@@ -35,8 +35,6 @@ export async function GET() {
           select: {
             id: true,
             companyName: true,
-            iban: true,
-            accountHolder: true,
             stripeAccountId: true,
             user: {
               select: {
@@ -81,8 +79,6 @@ export async function GET() {
           companyName: booking.workshop.companyName,
           contactName: `${booking.workshop.user.firstName} ${booking.workshop.user.lastName}`,
           email: booking.workshop.user.email,
-          iban: booking.workshop.iban,
-          accountHolder: booking.workshop.accountHolder,
           stripeAccountId: booking.workshop.stripeAccountId
         },
         customer: {

@@ -115,34 +115,6 @@ export default function CustomerDashboard() {
             </button>
           </div>
         </div>
-
-        {/* Traditional Request Flow */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg shadow-xl p-6">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <div className="text-white flex-1">
-                <h2 className="text-xl font-bold mb-1">Anfrage erstellen</h2>
-                <p className="text-primary-100 text-sm">
-                  Alle Services - Angebote vergleichen & beste Werkstatt wählen
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => router.push('/dashboard/customer/select-service')}
-              className="w-full px-6 py-3 bg-white text-primary-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-            >
-              Service auswählen
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Widgets Grid - All three side by side */}
@@ -178,8 +150,8 @@ export default function CustomerDashboard() {
               So funktioniert Bereifung24
             </h2>
             <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
-              Mit unserem Service erhalten Sie schnell und unkompliziert Angebote von Werkstätten in Ihrer Nähe. 
-              Vergleichen Sie Preise und wählen Sie das beste Angebot für sich aus.
+              Mit unserem Service erhalten Sie schnell und unkompliziert die besten Angebote von Werkstätten in Ihrer Nähe. 
+              Buchen Sie Ihren Termin direkt online und bezahlen Sie bequem per Kreditkarte oder PayPal.
             </p>
             
             <div className="grid md:grid-cols-2 gap-3">
@@ -189,9 +161,9 @@ export default function CustomerDashboard() {
                     1
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Anfrage erstellen</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Fahrzeug anlegen</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Wählen Sie Ihre Reifengröße oder einen anderen Service aus. Die Anfrage ist komplett kostenlos und unverbindlich.
+                      Speichern Sie Ihr Fahrzeug inkl. Reifengröße. Das spart Zeit beim Preisvergleich und bei zukünftigen Buchungen.
                     </p>
                   </div>
                 </div>
@@ -203,9 +175,9 @@ export default function CustomerDashboard() {
                     2
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Angebote erhalten</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Preise vergleichen</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Werkstätten in Ihrer Nähe werden automatisch benachrichtigt und senden Ihnen passende Angebote zu.
+                      Vergleichen Sie in Echtzeit Preise von Werkstätten in Ihrer Nähe inkl. Reifenpreisen und Zusatzleistungen.
                     </p>
                   </div>
                 </div>
@@ -217,9 +189,9 @@ export default function CustomerDashboard() {
                     3
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Vergleichen & auswählen</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Termin buchen</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Schauen Sie sich alle Angebote in Ruhe an und wählen Sie das beste für sich aus.
+                      Wählen Sie einen passenden Termin bei der Werkstatt Ihrer Wahl und buchen Sie direkt online.
                     </p>
                   </div>
                 </div>
@@ -231,9 +203,9 @@ export default function CustomerDashboard() {
                     4
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Termin vereinbaren</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Bequem bezahlen</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Buchen Sie direkt online einen passenden Termin bei der Werkstatt Ihrer Wahl.
+                      Zahlen Sie sicher online mit Kreditkarte oder PayPal – fertig! Ihr Termin ist sofort bestätigt.
                     </p>
                   </div>
                 </div>
@@ -245,19 +217,19 @@ export default function CustomerDashboard() {
                 <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-medium">100% kostenlos</span>
+                <span className="font-medium">Sofort buchbar</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
                 <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-medium">Unverbindlich</span>
+                <span className="font-medium">Transparente Preise</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
                 <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-medium">Schnell & einfach</span>
+                <span className="font-medium">Sichere Zahlung</span>
               </div>
             </div>
           </div>

@@ -100,6 +100,24 @@ export async function POST(req: NextRequest) {
     let directBooking: any
     
     if (reservationId) {
+      // Load existing reservation to get totalPrice
+      const existingReservation = await prisma.directBooking.findUnique({
+        where: { id: reservationId },
+        select: { totalPrice: true }
+      })
+      
+      if (!existingReservation) {
+        return NextResponse.json(
+          { error: 'Reservierung nicht gefunden' },
+          { status: 404 }
+        )
+      }
+      
+      const reservationTotal = Number(existingReservation.totalPrice)
+      const platformCommissionRate = 0.069 // 6.9%
+      const platformCommission = reservationTotal * platformCommissionRate
+      const workshopPayout = reservationTotal - platformCommission
+      
       // Update existing reservation
       directBooking = await prisma.directBooking.update({
         where: { id: reservationId },
@@ -110,11 +128,18 @@ export async function POST(req: NextRequest) {
           paymentId: body.paymentId, // Store Stripe session ID or PayPal order ID
           stripeSessionId: paymentMethod === 'STRIPE' ? body.paymentId : null,
           paypalOrderId: paymentMethod === 'PAYPAL' ? body.paymentId : null,
+          platformCommission: platformCommission,
+          workshopPayout: workshopPayout,
           paidAt: new Date()
         }
       })
-      console.log('[DIRECT BOOKING] Reservation confirmed:', directBooking.id)
+      console.log('[DIRECT BOOKING] Reservation confirmed:', directBooking.id, 'Workshop payout:', workshopPayout.toFixed(2))
     } else {
+      // Calculate platform commission and workshop payout
+      const platformCommissionRate = 0.069 // 6.9%
+      const platformCommission = totalPrice * platformCommissionRate
+      const workshopPayout = totalPrice - platformCommission
+      
       // Create new DirectBooking
       directBooking = await prisma.directBooking.create({
         data: {
@@ -127,6 +152,8 @@ export async function POST(req: NextRequest) {
           durationMinutes: estimatedDuration,
           basePrice: totalPrice,
           totalPrice: totalPrice,
+          platformCommission: platformCommission,
+          workshopPayout: workshopPayout,
           status: 'CONFIRMED',
           paymentMethod: paymentMethod || 'STRIPE',
           paymentStatus: paymentStatus || 'PAID',
@@ -136,7 +163,7 @@ export async function POST(req: NextRequest) {
           paidAt: new Date()
         }
       })
-      console.log('[DIRECT BOOKING] New booking created:', directBooking.id)
+      console.log('[DIRECT BOOKING] New booking created:', directBooking.id, 'Workshop payout:', workshopPayout.toFixed(2))
     }
 
     // Reload DirectBooking with all fields (including tire data)
@@ -483,8 +510,8 @@ export async function POST(req: NextRequest) {
         disposalFee: completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined,
         runFlatSurcharge: completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined,
         totalPrice,
-        platformCommission: 0, // No commission in test mode
-        workshopPayout: totalPrice,
+        platformCommission: completeBooking.platformCommission ? Number(completeBooking.platformCommission) : 0,
+        workshopPayout: completeBooking.workshopPayout ? Number(completeBooking.workshopPayout) : totalPrice,
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
         hasDisposal: completeBooking.hasDisposal || undefined,

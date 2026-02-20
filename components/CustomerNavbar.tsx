@@ -14,7 +14,6 @@ import {
   BookOpen,
   Car,
   Clock,
-  Cloud,
   ChevronDown,
   LayoutDashboard
 } from 'lucide-react'
@@ -46,7 +45,6 @@ export default function CustomerNavbar() {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/customer' },
         { id: 'bookings', label: 'Buchungen', icon: BookOpen, path: '/dashboard/customer/bookings' },
         { id: 'vehicles', label: 'Fahrzeuge', icon: Car, path: '/dashboard/customer/vehicles' },
-        { id: 'weather-alert', label: 'Wetter-Erinnerung', icon: Cloud, path: '/dashboard/customer/weather-alert' },
         { id: 'settings', label: 'Einstellungen', icon: Settings, path: '/dashboard/customer/settings' },
       ]
 

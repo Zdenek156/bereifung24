@@ -42,10 +42,7 @@ const serviceTypeLabels: { [key: string]: string } = {
   TIRE_REPAIR: 'Reifenreparatur',
   MOTORCYCLE_TIRE: 'Motorradreifen',
   ALIGNMENT_BOTH: 'Achsvermessung + Einstellung',
-  CLIMATE_SERVICE: 'Klimaservice',
-  BRAKE_SERVICE: 'Bremsen-Service',
-  BATTERY_SERVICE: 'Batterie-Service',
-  OTHER_SERVICES: 'Sonstige Reifendienste'
+  CLIMATE_SERVICE: 'Klimaservice'
 }
 
 const availableServiceTypes = [
@@ -54,10 +51,7 @@ const availableServiceTypes = [
   { value: 'TIRE_REPAIR', label: 'Reifenreparatur', icon: '', hasPackages: true },
   { value: 'MOTORCYCLE_TIRE', label: 'Motorrad-Reifenwechsel', icon: '', hasPackages: true },
   { value: 'ALIGNMENT_BOTH', label: 'Achsvermessung + Einstellung', icon: '', hasPackages: true },
-  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '', hasPackages: true },
-  { value: 'BRAKE_SERVICE', label: 'Bremsen-Service', icon: '', hasPackages: true },
-  { value: 'BATTERY_SERVICE', label: 'Batterie-Service', icon: '', hasPackages: true },
-  { value: 'OTHER_SERVICES', label: 'Sonstige Reifendienste', icon: '', hasPackages: true }
+  { value: 'CLIMATE_SERVICE', label: 'Klimaservice', icon: '', hasPackages: true }
 ]
 
 // Package configurations for each service type
@@ -97,22 +91,6 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
     { type: 'basic', name: 'Basic Service', description: 'Desinfektion der Klimaanlage' },
     { type: 'comfort', name: 'Comfort Service', description: 'Desinfektion + Pollenfilter wechseln' },
     { type: 'premium', name: 'Premium Service', description: 'Desinfektion + Pollenfilter + Kältemittel auffüllen' }
-  ],
-  BRAKE_SERVICE: [
-    { type: 'front_pads', name: 'Vorderachse - Bremsbeläge', description: 'Wechsel der Bremsbeläge vorne' },
-    { type: 'front_pads_discs', name: 'Vorderachse - Beläge + Scheiben', description: 'Wechsel Bremsbeläge + Bremsscheiben vorne' },
-    { type: 'rear_pads', name: 'Hinterachse - Bremsbeläge', description: 'Wechsel der Bremsbeläge hinten' },
-    { type: 'rear_pads_discs', name: 'Hinterachse - Beläge + Scheiben', description: 'Wechsel Bremsbeläge + Bremsscheiben hinten' },
-    { type: 'rear_pads_discs_handbrake', name: 'Hinterachse - Beläge + Scheiben + Handbremse', description: 'Komplettpaket hinten inkl. Handbremse' }
-  ],
-  BATTERY_SERVICE: [
-    { type: 'replacement', name: 'Batterie-Wechsel', description: 'Ausbau, Einbau und Registrierung der neuen Batterie' }
-  ],
-  OTHER_SERVICES: [
-    { type: 'rdks', name: 'RDKS-Service', description: 'Reifendruckkontrollsystem prüfen/programmieren' },
-    { type: 'valve', name: 'Ventil-Wechsel', description: 'Austausch von Reifenventilen' },
-    { type: 'storage', name: 'Reifen-Einlagerung', description: 'Einlagerung von Reifen/Rädern' },
-    { type: 'tpms', name: 'TPMS-Programmierung', description: 'Reifendrucksensoren programmieren' }
   ]
 }
 

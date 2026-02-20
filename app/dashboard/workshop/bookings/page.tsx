@@ -378,16 +378,10 @@ export default function WorkshopBookingsPage() {
 
                 {/* Price Summary */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center">
                     <span className="font-semibold">Gesamtpreis:</span>
                     <span className="text-xl font-bold text-green-600">{booking.totalPrice.toFixed(2)} €</span>
                   </div>
-                  {booking.workshopPayout !== null && (
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Ihre Auszahlung:</span>
-                      <span className="text-lg font-bold text-primary-600">{booking.workshopPayout.toFixed(2)} €</span>
-                    </div>
-                  )}
                   {booking.paymentMethod && (
                     <div className="text-sm text-gray-600 mt-2">
                       Zahlungsmethode: {booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod}
@@ -508,6 +502,12 @@ export default function WorkshopBookingsPage() {
                           <span>Gesamt:</span>
                           <span className="text-green-600">{booking.totalPrice.toFixed(2)} €</span>
                         </div>
+                        {booking.workshopPayout !== null && (
+                          <div className="flex justify-between pt-2 border-t border-primary-200 mt-2">
+                            <span className="text-primary-700 dark:text-primary-400 font-semibold">Ihre Auszahlung:</span>
+                            <span className="text-primary-600 font-bold">{booking.workshopPayout.toFixed(2)} €</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -20,68 +20,80 @@ export async function GET(request: Request) {
     const month = searchParams.get('month') ? parseInt(searchParams.get('month')!) : null
     const workshopId = searchParams.get('workshopId')
 
-    // Build filter
-    const where: any = {}
-    if (year) where.billingYear = year
-    if (month) where.billingMonth = month
-    if (workshopId) where.workshopId = workshopId
+    // Build filter for DirectBookings
+    const where: any = {
+      platformCommission: { not: null },
+      status: { in: ['CONFIRMED', 'COMPLETED'] }
+    }
+    
+    if (workshopId) {
+      where.workshopId = workshopId
+    }
+    
+    if (year && month) {
+      const startDate = new Date(year, month - 1, 1)
+      const endDate = new Date(year, month, 0, 23, 59, 59)
+      where.paidAt = {
+        gte: startDate,
+        lte: endDate
+      }
+    } else if (year) {
+      const startDate = new Date(year, 0, 1)
+      const endDate = new Date(year, 11, 31, 23, 59, 59)
+      where.paidAt = {
+        gte: startDate,
+        lte: endDate
+      }
+    }
 
-    // Get all commissions
-    const commissions = await prisma.commission.findMany({
+    // Get all DirectBookings with commissions
+    const directBookings = await prisma.directBooking.findMany({
       where,
       include: {
         workshop: {
           select: {
             id: true,
             companyName: true,
-            gocardlessMandateStatus: true,
+            stripeAccountId: true,
             user: {
               select: {
                 email: true
               }
             }
           }
-        },
-        booking: {
-          select: {
-            id: true,
-            appointmentDate: true,
-            offer: {
-              select: {
-                price: true
-              }
-            }
-          }
         }
       },
-      orderBy: [
-        { billingYear: 'desc' },
-        { billingMonth: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
     // Calculate totals
-    const totals = commissions.reduce(
-      (acc, comm) => {
-        acc.grossAmount += comm.grossAmount || comm.commissionAmount
-        acc.netAmount += comm.netAmount || 0
-        acc.taxAmount += comm.taxAmount || 0
+    const totals = directBookings.reduce(
+      (acc, booking) => {
+        const grossAmount = Number(booking.platformCommission || 0)
+        const netAmount = Number(booking.platformNetCommission || 0)
+        const taxAmount = grossAmount - netAmount
+        
+        acc.grossAmount += grossAmount
+        acc.netAmount += netAmount
+        acc.taxAmount += taxAmount
         acc.count += 1
 
-        // Group by status
-        if (!acc.byStatus[comm.status]) {
-          acc.byStatus[comm.status] = {
+        // Group by payment status
+        const status = booking.paymentStatus === 'PAID' ? 'COLLECTED' : booking.paymentStatus
+        if (!acc.byStatus[status]) {
+          acc.byStatus[status] = {
             count: 0,
             grossAmount: 0,
             netAmount: 0,
             taxAmount: 0
           }
         }
-        acc.byStatus[comm.status].count += 1
-        acc.byStatus[comm.status].grossAmount += comm.grossAmount || comm.commissionAmount
-        acc.byStatus[comm.status].netAmount += comm.netAmount || 0
-        acc.byStatus[comm.status].taxAmount += comm.taxAmount || 0
+        acc.byStatus[status].count += 1
+        acc.byStatus[status].grossAmount += grossAmount
+        acc.byStatus[status].netAmount += netAmount
+        acc.byStatus[status].taxAmount += taxAmount
 
         return acc
       },
@@ -95,11 +107,11 @@ export async function GET(request: Request) {
     )
 
     // Group by workshop
-    const byWorkshop = commissions.reduce((acc, comm) => {
-      const workshopId = comm.workshopId
-      if (!acc[workshopId]) {
-        acc[workshopId] = {
-          workshop: comm.workshop,
+    const byWorkshop = directBookings.reduce((acc, booking) => {
+      const wId = booking.workshopId
+      if (!acc[wId]) {
+        acc[wId] = {
+          workshop: booking.workshop,
           commissions: [],
           totals: {
             count: 0,
@@ -111,12 +123,12 @@ export async function GET(request: Request) {
         }
       }
 
-      acc[workshopId].commissions.push(comm)
-      acc[workshopId].totals.count += 1
-      acc[workshopId].totals.grossAmount += comm.grossAmount || comm.commissionAmount
-      acc[workshopId].totals.netAmount += comm.netAmount || 0
-      acc[workshopId].totals.taxAmount += comm.taxAmount || 0
-      acc[workshopId].totals.totalRevenue += comm.booking?.offer?.price || 0
+      acc[wId].commissions.push(booking)
+      acc[wId].totals.count += 1
+      acc[wId].totals.grossAmount += Number(booking.platformCommission || 0)
+      acc[wId].totals.netAmount += Number(booking.platformNetCommission || 0)
+      acc[wId].totals.taxAmount += Number(booking.platformCommission || 0) - Number(booking.platformNetCommission || 0)
+      acc[wId].totals.totalRevenue += Number(booking.totalPrice || 0)
 
       return acc
     }, {} as Record<string, any>)
@@ -125,15 +137,19 @@ export async function GET(request: Request) {
     const workshopStats = Object.values(byWorkshop)
       .sort((a: any, b: any) => b.totals.grossAmount - a.totals.grossAmount)
 
-    // Group by billing period
-    const byPeriod = commissions.reduce((acc, comm) => {
-      if (!comm.billingYear || !comm.billingMonth) return acc
+    // Group by billing period (based on paidAt)
+    const byPeriod = directBookings.reduce((acc, booking) => {
+      if (!booking.paidAt) return acc
 
-      const periodKey = `${comm.billingYear}-${comm.billingMonth.toString().padStart(2, '0')}`
+      const paidDate = new Date(booking.paidAt)
+      const billingYear = paidDate.getFullYear()
+      const billingMonth = paidDate.getMonth() + 1
+
+      const periodKey = `${billingYear}-${billingMonth.toString().padStart(2, '0')}`
       if (!acc[periodKey]) {
         acc[periodKey] = {
-          year: comm.billingYear,
-          month: comm.billingMonth,
+          year: billingYear,
+          month: billingMonth,
           count: 0,
           grossAmount: 0,
           netAmount: 0,
@@ -143,10 +159,10 @@ export async function GET(request: Request) {
       }
 
       acc[periodKey].count += 1
-      acc[periodKey].grossAmount += comm.grossAmount || comm.commissionAmount
-      acc[periodKey].netAmount += comm.netAmount || 0
-      acc[periodKey].taxAmount += comm.taxAmount || 0
-      acc[periodKey].workshopsCount.add(comm.workshopId)
+      acc[periodKey].grossAmount += Number(booking.platformCommission || 0)
+      acc[periodKey].netAmount += Number(booking.platformNetCommission || 0)
+      acc[periodKey].taxAmount += Number(booking.platformCommission || 0) - Number(booking.platformNetCommission || 0)
+      acc[periodKey].workshopsCount.add(booking.workshopId)
 
       return acc
     }, {} as Record<string, any>)
@@ -171,7 +187,7 @@ export async function GET(request: Request) {
       },
       byWorkshop: workshopStats,
       byPeriod: periodStats,
-      commissions: commissions.slice(0, 100) // Limit to latest 100 for performance
+      commissions: directBookings.slice(0, 100) // Limit to latest 100 for performance
     })
 
   } catch (error: any) {

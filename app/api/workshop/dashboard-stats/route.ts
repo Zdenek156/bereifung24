@@ -2,32 +2,16 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { calculateDistance } from '@/lib/geocoding'
 
 export const dynamic = 'force-dynamic'
 
-// Helper function to detect service type from request
-function detectServiceType(request: {
-  additionalNotes?: string | null
-  width: number
-  aspectRatio: number
-  diameter: number
-}): string {
-  const notes = request.additionalNotes || ''
-  
-  if (notes.includes('🏍️ MOTORRADREIFEN')) return 'MOTORCYCLE_TIRE'
-  if (notes.includes('🔧 REIFENREPARATUR')) return 'TIRE_REPAIR'
-  if (notes.includes('ACHSVERMESSUNG')) return 'ALIGNMENT_BOTH'
-  if (notes.includes('BREMSEN-SERVICE')) return 'BRAKE_SERVICE'
-  if (notes.includes('BATTERIE-SERVICE')) return 'BATTERY_SERVICE'
-  if (notes.includes('KLIMASERVICE')) return 'CLIMATE_SERVICE'
-  if (notes.includes('🔧 SONSTIGE REIFENSERVICES')) return 'OTHER_SERVICES'
-  
-  if (request.width === 0 && request.aspectRatio === 0 && request.diameter === 0) {
-    return 'WHEEL_CHANGE'
-  }
-  
-  return 'TIRE_CHANGE'
+const serviceTypeLabels: Record<string, string> = {
+  WHEEL_CHANGE: 'Räderwechsel',
+  TIRE_CHANGE: 'Reifenwechsel',
+  TIRE_REPAIR: 'Reifenreparatur',
+  MOTORCYCLE_TIRE: 'Motorrad-Reifenwechsel',
+  ALIGNMENT_BOTH: 'Achsvermessung',
+  CLIMATE_SERVICE: 'Klimaservice'
 }
 
 export async function GET() {
@@ -56,63 +40,105 @@ export async function GET() {
 
     const workshopId = workshop.id
 
+    // Zeitbereiche definieren
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(todayStart)
+    todayEnd.setDate(todayEnd.getDate() + 1)
+    
+    const sevenDaysAgo = new Date(now)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    
+    const sevenDaysFromNow = new Date(now)
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7)
+
     // Parallelisiere alle Datenbankabfragen für Performance
     const [
-      allOffersCount,
-      pendingOffersCount,
-      acceptedOffersCount,
-      upcomingAppointmentsCount,
-      revenueData,
+      todaysBookingsCount,
+      todaysBookingsList,
+      last7DaysRevenue,
+      upcomingBookingsCount,
       reviewsData,
-      recentActivitiesData
+      recentBookings,
+      recentReviews
     ] = await Promise.all([
-      // Alle Angebote des Workshops (für neue Anfragen)
-      prisma.offer.count({
-        where: {
-          workshopId: workshopId
-        }
-      }),
-
-      // Ausstehende Angebote (von uns gesendet, noch nicht akzeptiert/abgelehnt)
-      prisma.offer.count({
+      // Heute's Buchungen (Anzahl)
+      prisma.directBooking.count({
         where: {
           workshopId: workshopId,
-          status: 'PENDING'
-        }
-      }),
-
-      // Akzeptierte Angebote
-      prisma.offer.count({
-        where: {
-          workshopId: workshopId,
-          status: 'ACCEPTED'
-        }
-      }),
-
-      // Bevorstehende Termine
-      prisma.booking.count({
-        where: {
-          workshopId: workshopId,
-          status: {
-            in: ['CONFIRMED', 'PENDING']
+          date: {
+            gte: todayStart,
+            lt: todayEnd
           },
-          appointmentDate: {
-            gte: new Date()
+          status: {
+            in: ['CONFIRMED', 'COMPLETED']
           }
         }
       }),
 
-      // Umsatz (aus abgeschlossenen Buchungen - über Offers)
-      prisma.offer.aggregate({
+      // Heute's Buchungen (Details für Widget)
+      prisma.directBooking.findMany({
         where: {
           workshopId: workshopId,
-          status: 'ACCEPTED',
-          booking: {
-            status: 'COMPLETED'
+          date: {
+            gte: todayStart,
+            lt: todayEnd
+          },
+          status: {
+            in: ['CONFIRMED', 'COMPLETED']
           }
         },
+        include: {
+          customer: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            }
+          },
+          vehicle: {
+            select: {
+              make: true,
+              model: true
+            }
+          }
+        },
+        orderBy: { time: 'asc' },
+        take: 10
+      }),
+
+      // Umsatz der letzten 7 Tage
+      prisma.directBooking.aggregate({
+        where: {
+          workshopId: workshopId,
+          createdAt: {
+            gte: sevenDaysAgo
+          },
+          paymentStatus: 'PAID'
+        },
         _sum: {
-          price: true
+          totalPrice: true,
+          workshopPayout: true
+        },
+        _count: {
+          id: true
+        }
+      }),
+
+      // Kommende Buchungen (nächste 7 Tage)
+      prisma.directBooking.count({
+        where: {
+          workshopId: workshopId,
+          date: {
+            gte: now,
+            lt: sevenDaysFromNow
+          },
+          status: {
+            in: ['CONFIRMED', 'RESERVED']
+          }
         }
       }),
 
@@ -129,259 +155,96 @@ export async function GET() {
         }
       }),
 
-      // Letzte Aktivitäten (gemischt)
-      Promise.all([
-        // Neueste Anfrage
-        prisma.tireRequest.findFirst({
-          where: {
-            offers: {
-              some: {
-                workshopId: workshopId
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: {
-            id: true,
-            createdAt: true,
-            season: true,
-            width: true,
-            diameter: true,
-            additionalNotes: true
-          }
-        }),
-        // Neuestes akzeptiertes Angebot
-        prisma.offer.findFirst({
-          where: {
-            workshopId: workshopId,
-            status: 'ACCEPTED'
-          },
-          orderBy: { updatedAt: 'desc' },
-          take: 1,
-          select: {
-            id: true,
-            updatedAt: true,
-            tireRequest: {
-              select: {
-                vehicle: {
-                  select: {
-                    make: true,
-                    model: true
-                  }
+      // Neueste Buchungen für Aktivitäten
+      prisma.directBooking.findMany({
+        where: {
+          workshopId: workshopId
+        },
+        include: {
+          customer: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true
                 }
               }
             }
-          }
-        }),
-        // Nächster Termin
-        prisma.booking.findFirst({
-          where: {
-            workshopId: workshopId,
-            status: {
-              in: ['CONFIRMED', 'PENDING']
-            },
-            appointmentDate: {
-              gte: new Date()
-            }
-          },
-          orderBy: { appointmentDate: 'asc' },
-          take: 1,
-          select: {
-            id: true,
-            appointmentDate: true
-          }
-        }),
-        // Neueste Bewertung
-        prisma.review.findFirst({
-          where: {
-            workshopId: workshopId
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: {
-            id: true,
-            rating: true,
-            createdAt: true,
-            customer: {
-              select: {
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true
-                  }
-                }
-              }
-            }
-          }
-        })
-      ])
-    ])
-
-    // Berechne "Neue Anfragen" mit der gleichen Logik wie /api/workshop/tire-requests
-    // Hole Workshop mit Services und Koordinaten
-    const workshopWithServices = await prisma.workshop.findUnique({
-      where: { id: workshopId },
-      include: {
-        user: {
-          select: {
-            latitude: true,
-            longitude: true
           }
         },
-        workshopServices: {
-          where: { isActive: true },
-          include: {
-            servicePackages: {
-              where: { isActive: true }
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      }),
+
+      // Neueste Bewertungen
+      prisma.review.findMany({
+        where: {
+          workshopId: workshopId
+        },
+        include: {
+          customer: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
             }
           }
-        }
-      }
-    })
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 3
+      })
+    ])
 
-    let newRequestsCount = 0
+    // Formatiere Heute's Buchungen für Widget
+    const todaysBookings = todaysBookingsList.map(booking => ({
+      id: booking.id,
+      time: booking.time,
+      customerName: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
+      serviceType: serviceTypeLabels[booking.serviceType] || booking.serviceType,
+      vehicle: `${booking.vehicle.make} ${booking.vehicle.model}`,
+      status: booking.status
+    }))
 
-    if (workshopWithServices && workshopWithServices.user.latitude && workshopWithServices.user.longitude) {
-      // Hole konfigurierte Service-Typen
-      const configuredServiceTypes = workshopWithServices.workshopServices
-        .filter(service => {
-          if (!service.isActive) return false
-          
-          if (service.serviceType === 'WHEEL_CHANGE') {
-            return service.basePrice && service.basePrice > 0 && 
-                   service.durationMinutes && service.durationMinutes > 0
-          }
-          
-          return service.servicePackages.length > 0 &&
-                 service.servicePackages.some(pkg => 
-                   pkg.isActive && 
-                   pkg.price > 0 && 
-                   pkg.durationMinutes > 0
-                 )
-        })
-        .map(service => service.serviceType)
-
-      if (configuredServiceTypes.length > 0) {
-        // Hole alle offenen Anfragen mit Koordinaten
-        const tomorrow = new Date()
-        tomorrow.setHours(0, 0, 0, 0)
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        
-        const allRequests = await prisma.tireRequest.findMany({
-          where: {
-            status: {
-              in: ['PENDING', 'OPEN', 'QUOTED']
-            },
-            needByDate: {
-              gte: tomorrow
-            },
-            // Nur Anfragen MIT Koordinaten
-            latitude: { not: null },
-            longitude: { not: null }
-          },
-          select: {
-            id: true,
-            latitude: true,
-            longitude: true,
-            radiusKm: true,
-            additionalNotes: true,
-            width: true,
-            aspectRatio: true,
-            diameter: true,
-            offers: {
-              where: { workshopId: workshopId },
-              select: { id: true }
-            }
-          }
-        })
-
-        // Filter nach Umkreis und Service-Typ
-        const filteredRequests = allRequests.filter(request => {
-          // Skip wenn bereits Angebot erstellt
-          if (request.offers.length > 0) return false
-
-          // Prüfe Distanz
-          const distance = calculateDistance(
-            workshopWithServices.user.latitude!,
-            workshopWithServices.user.longitude!,
-            request.latitude!,
-            request.longitude!
-          )
-
-          if (distance > request.radiusKm) return false
-
-          // Prüfe Service-Typ
-          const serviceType = detectServiceType({
-            additionalNotes: request.additionalNotes,
-            width: request.width,
-            aspectRatio: request.aspectRatio,
-            diameter: request.diameter
-          })
-
-          return configuredServiceTypes.includes(serviceType)
-        })
-
-        newRequestsCount = filteredRequests.length
-      }
-    }
-
-    // Berechne Konversionsrate
-    const conversionRate = allOffersCount > 0 
-      ? Math.round((acceptedOffersCount / allOffersCount) * 100) 
-      : 0
-
-    // Formatiere Aktivitäten mit Datum für Sortierung
+    // Formatiere Aktivitäten
     const recentActivities = []
     
-    if (recentActivitiesData[0]) {
-      const req = recentActivitiesData[0]
-      // Erkenne Service-Typ aus additionalNotes
-      const isWheelChange = req.additionalNotes?.includes('RÄDER UMSTECKEN')
-      const serviceName = isWheelChange ? 'Räder umstecken' : 'Reifenwechsel'
-      const sizeInfo = isWheelChange ? '' : ` (${req.width}/${req.diameter})`
-      
+    // Neue Buchungen
+    for (const booking of recentBookings.slice(0, 3)) {
+      const serviceName = serviceTypeLabels[booking.serviceType] || booking.serviceType
+      const customerName = `${booking.customer.user.firstName} ${booking.customer.user.lastName}`
       recentActivities.push({
-        id: req.id,
-        type: 'request',
-        message: `Neue Anfrage für ${serviceName}${sizeInfo}`,
-        time: formatTimeAgo(req.createdAt),
-        date: req.createdAt
+        id: `booking-${booking.id}`,
+        type: 'booking',
+        message: `Neue Buchung von ${customerName} - ${serviceName}`,
+        time: formatTimeAgo(booking.createdAt),
+        date: booking.createdAt
       })
     }
 
-    if (recentActivitiesData[1]) {
-      const offer = recentActivitiesData[1]
-      const vehicle = offer.tireRequest.vehicle
-      recentActivities.push({
-        id: offer.id,
-        type: 'offer_accepted',
-        message: `Ihr Angebot wurde angenommen - ${vehicle?.make || 'Fahrzeug'} ${vehicle?.model || ''}`,
-        time: formatTimeAgo(offer.updatedAt),
-        date: offer.updatedAt
-      })
+    // Zahlungen (aus bezahlten Buchungen)
+    for (const booking of recentBookings.slice(0, 2)) {
+      if (booking.paymentStatus === 'PAID' && booking.paidAt) {
+        const amount = booking.workshopPayout ? Number(booking.workshopPayout).toFixed(2) : Number(booking.totalPrice).toFixed(2)
+        recentActivities.push({
+          id: `payment-${booking.id}`,
+          type: 'payment',
+          message: `Zahlung erhalten - ${amount} €`,
+          time: formatTimeAgo(booking.paidAt),
+          date: booking.paidAt
+        })
+      }
     }
 
-    if (recentActivitiesData[2]) {
-      const booking = recentActivitiesData[2]
+    // Bewertungen
+    for (const review of recentReviews) {
+      const customerName = `${review.customer.user.firstName} ${review.customer.user.lastName}`
       recentActivities.push({
-        id: booking.id,
-        type: 'appointment',
-        message: `Termin am ${formatDate(booking.appointmentDate)}`,
-        time: formatTimeAgo(booking.appointmentDate),
-        date: booking.appointmentDate
-      })
-    }
-
-    if (recentActivitiesData[3]) {
-      const review = recentActivitiesData[3]
-      const customerName = review.customer?.user 
-        ? `${review.customer.user.firstName} ${review.customer.user.lastName}`
-        : 'Kunde'
-      recentActivities.push({
-        id: review.id,
+        id: `review-${review.id}`,
         type: 'review',
-        message: `Neue ${review.rating}-Sterne Bewertung von ${customerName}`,
+        message: `${review.rating}-Sterne Bewertung von ${customerName}`,
         time: formatTimeAgo(review.createdAt),
         date: review.createdAt
       })
@@ -391,30 +254,26 @@ export async function GET() {
     recentActivities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     const stats = {
-      newRequests: newRequestsCount,
-      pendingOffers: pendingOffersCount,
-      acceptedOffers: acceptedOffersCount,
-      upcomingAppointments: upcomingAppointmentsCount,
-      totalRevenue: revenueData._sum.price || 0,
+      todaysBookings: todaysBookingsCount,
+      todaysBookingsList: todaysBookings,
+      totalRevenue: last7DaysRevenue._sum.totalPrice ? Number(last7DaysRevenue._sum.totalPrice) : 0,
+      workshopPayout: last7DaysRevenue._sum.workshopPayout ? Number(last7DaysRevenue._sum.workshopPayout) : 0,
+      bookingsCount7Days: last7DaysRevenue._count.id,
+      upcomingBookings: upcomingBookingsCount,
       averageRating: reviewsData._avg.rating || 0,
       totalReviews: reviewsData._count.id,
-      conversionRate: conversionRate,
-      recentActivities: recentActivities
+      recentActivities: recentActivities.slice(0, 6) // Max 6 Aktivitäten
     }
 
     return NextResponse.json(stats)
   } catch (error) {
     console.error('❌ CRITICAL ERROR in dashboard-stats:', error)
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('❌ Error message:', error instanceof Error ? error.message : String(error))
-    console.error('❌ Error type:', typeof error)
-    console.error('❌ Error constructor:', error?.constructor?.name)
     
     return NextResponse.json(
       { 
         error: 'Internal server error', 
-        details: error instanceof Error ? error.message : String(error),
-        type: error?.constructor?.name || typeof error
+        details: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
     )

@@ -24,7 +24,6 @@ import {
   Calendar,
   BookOpen,
   Car,
-  Cloud,
   CreditCard,
   Sunrise,
   Sunset,
@@ -1531,15 +1530,6 @@ export default function NewHomePage() {
                             >
                               <Car className="w-4 h-4" />
                               Fahrzeuge
-                            </Link>
-                            
-                            <Link
-                              href="/dashboard/customer/weather-alert"
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <Cloud className="w-4 h-4" />
-                              Wetter-Erinnerung
                             </Link>
                             
                             <div className="border-t border-gray-200 my-2"></div>

@@ -17,7 +17,6 @@ interface UserProfile {
   customerType: 'PRIVATE' | 'BUSINESS'
   companyName: string
   taxId: string
-  emailNotifyOffers: boolean
 }
 
 export default function CustomerSettings() {
@@ -39,8 +38,7 @@ export default function CustomerSettings() {
     city: '',
     customerType: 'PRIVATE',
     companyName: '',
-    taxId: '',
-    emailNotifyOffers: true
+    taxId: ''
   })
 
   useEffect(() => {
@@ -74,8 +72,7 @@ export default function CustomerSettings() {
           city: data.city || '',
           customerType: data.customerType || 'PRIVATE',
           companyName: data.companyName || '',
-          taxId: data.taxId || '',
-          emailNotifyOffers: data.customer?.emailNotifyOffers ?? true
+          taxId: data.taxId || ''
         })
       }
     } catch (error) {
@@ -435,24 +432,27 @@ export default function CustomerSettings() {
               </div>
             </div>
 
-            {/* Email Notifications */}
+            {/* Quick Links */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">E-Mail-Benachrichtigungen</h3>
-              <div className="space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.emailNotifyOffers}
-                    onChange={(e) => setFormData({ ...formData, emailNotifyOffers: e.target.checked })}
-                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">Angebots-Benachrichtigungen</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Ich möchte per E-Mail benachrichtigt werden, wenn ich ein neues Angebot für meine Reifenafrage erhalte
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Weitere Einstellungen</h3>
+              <div className="space-y-3">
+                <Link
+                  href="/dashboard/customer/weather-alert"
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">Wetter-Erinnerung</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Reifenwechsel-Benachrichtigungen bei Temperaturänderungen</div>
                     </div>
                   </div>
-                </label>
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
             </div>
 

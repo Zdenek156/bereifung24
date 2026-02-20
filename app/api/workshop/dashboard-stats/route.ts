@@ -117,7 +117,9 @@ export async function GET() {
           createdAt: {
             gte: sevenDaysAgo
           },
-          paymentStatus: 'PAID'
+          status: {
+            in: ['CONFIRMED', 'COMPLETED']
+          }
         },
         _sum: {
           totalPrice: true,

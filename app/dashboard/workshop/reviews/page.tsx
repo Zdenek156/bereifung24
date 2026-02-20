@@ -17,12 +17,17 @@ interface Review {
       firstName: string
     }
   }
-  booking: {
+  // Support both old bookings and new direct bookings
+  booking?: {
     appointmentDate: string
     tireRequest: {
       additionalNotes: string | null
     }
-  }
+  } | null
+  directBooking?: {
+    date: Date
+    serviceType: string
+  } | null
 }
 
 interface ReviewsData {
@@ -88,7 +93,22 @@ export default function WorkshopReviews() {
     return 'text-red-600'
   }
 
-  const getServiceName = (additionalNotes: string | null) => {
+  const getServiceName = (review: Review) => {
+    // First check if direct booking (new system)
+    if (review.directBooking?.serviceType) {
+      const serviceTypeMap: Record<string, string> = {
+        'WHEEL_CHANGE': 'Räderwechsel',
+        'TIRE_CHANGE': 'Reifenwechsel',
+        'TIRE_REPAIR': 'Reifenreparatur',
+        'MOTORCYCLE_TIRE': 'Motorradreifen',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
+        'CLIMATE_SERVICE': 'Klimaservice'
+      }
+      return serviceTypeMap[review.directBooking.serviceType] || 'Service'
+    }
+    
+    // Fallback to old booking system
+    const additionalNotes = review.booking?.tireRequest?.additionalNotes
     if (!additionalNotes) return 'Service'
     
     // Extract service type from emoji prefix
@@ -113,6 +133,16 @@ export default function WorkshopReviews() {
     }
     
     return 'Service'
+  }
+
+  const getAppointmentDate = (review: Review) => {
+    if (review.directBooking?.date) {
+      return new Date(review.directBooking.date).toLocaleDateString('de-DE')
+    }
+    if (review.booking?.appointmentDate) {
+      return new Date(review.booking.appointmentDate).toLocaleDateString('de-DE')
+    }
+    return 'Unbekannt'
   }
 
   const filteredReviews = reviewsData?.reviews.filter(review => 
@@ -310,10 +340,10 @@ export default function WorkshopReviews() {
 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="font-medium">Service:</span> {getServiceName(review.booking.tireRequest.additionalNotes)}
+                    <span className="font-medium">Service:</span> {getServiceName(review)}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Termin: {new Date(review.booking.appointmentDate).toLocaleDateString('de-DE')}
+                    Termin: {getAppointmentDate(review)}
                   </p>
                 </div>
 

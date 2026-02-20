@@ -277,7 +277,7 @@ export default function BookAppointmentPage() {
 
       if (response.ok) {
         alert('Termin erfolgreich gebucht!')
-        router.push('/dashboard/customer/appointments')
+        router.push('/dashboard/customer/bookings')
       } else {
         const data = await response.json()
         alert(data.error || 'Fehler bei der Buchung')

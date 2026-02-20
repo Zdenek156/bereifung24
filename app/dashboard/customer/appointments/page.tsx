@@ -1,62 +1,29 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
 
-interface Workshop {
-  companyName: string
-  street: string
-  zipCode: string
-  city: string
-  phone: string
+/**
+ * DEPRECATED: This page redirects to the new bookings system
+ * The old TireRequest/Offer workflow has been replaced with DirectBookings
+ */
+export default function AppointmentsRedirect() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to new bookings page immediately
+    router.replace('/dashboard/customer/bookings')
+  }, [router])
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Weiterleitung zur Buchungsübersicht...</p>
+      </div>
+    </div>
+  )
 }
-
-interface TireOption {
-  id: string
-  brand: string
-  model: string
-  description?: string
-  name: string
-  pricePerTire: number
-  montagePrice: number
-  carTireType?: string
-}
-
-interface Vehicle {
-  make: string
-  model: string
-  year?: number
-  licensePlate?: string
-}
-
-interface Booking {
-  id: string
-  appointmentDate: string
-  appointmentTime: string
-  estimatedDuration: number
-  status: string
-  workshop: Workshop
-  tireRequest: {
-    season: string
-    width: string
-    aspectRatio: string
-    diameter: string
-    quantity: number
-    additionalNotes?: string
-    vehicle?: Vehicle
-  }
-  selectedTireOption?: TireOption
-  selectedTireOptions?: TireOption[] // NEW: For brake service with multiple packages
-  review?: {
-    id: string
-    rating: number
-    comment: string
-  }
-}
-
-export default function CustomerAppointments() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)

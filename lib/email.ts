@@ -1703,8 +1703,8 @@ export function directBookingConfirmationCustomerEmail(data: {
           </div>
 
           <center>
-            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer/appointments" class="button">
-              Meine Termine ansehen
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/customer/bookings" class="button">
+              Meine Buchungen ansehen
             </a>
           </center>
 

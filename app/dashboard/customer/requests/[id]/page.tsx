@@ -1502,7 +1502,7 @@ export default function RequestDetailPage() {
                           workshopStripeEnabled={acceptedOffer.workshop?.stripeEnabled}
                           workshopPaymentMethods={acceptedOffer.workshop?.paymentMethods}
                           onSuccess={() => {
-                            router.push('/dashboard/customer/appointments?payment=success')
+                            router.push('/dashboard/customer/bookings?payment=success')
                           }}
                           onError={(error) => {
                             console.error('Payment error:', error)
@@ -1671,7 +1671,7 @@ export default function RequestDetailPage() {
                   )}
                   {existingBooking && (
                     <Link
-                      href="/dashboard/customer/appointments"
+                      href="/dashboard/customer/bookings"
                       className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
                     >
                       Meine Termine ansehen

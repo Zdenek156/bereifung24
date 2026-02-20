@@ -153,7 +153,7 @@ export default function NotificationBell() {
                 {/* Upcoming Appointments */}
                 <button
                   onClick={() => {
-                    router.push('/dashboard/customer/appointments')
+                    router.push('/dashboard/customer/bookings')
                     setIsOpen(false)
                   }}
                   className="w-full p-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-2"

@@ -356,7 +356,7 @@ export default function PricingPage() {
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li><strong>Fester Aufschlag:</strong> Fixer Betrag in € der zum Einkaufspreis addiert wird (z.B. 3 € pro Reifen für Handling und Lagerung)</li>
                   <li><strong>Prozentualer Aufschlag:</strong> Ihre Gewinnmarge in % auf den Zwischenpreis (z.B. 7% Marge)</li>
-                  <li><strong>MwSt.:</strong> Wählen Sie diese Option, wenn Ihre Großhändler-Preise bereits MwSt. enthalten oder wenn die Verkaufspreise mit 19% Mehrwertsteuer angezeigt werden sollen</li>
+                  <li><strong>MwSt.:</strong> Aktivieren Sie diese Option, wenn Ihr Großhändler die Preise ohne Mehrwertsteuer (netto/EK) bereitstellt, damit 19% MwSt. zum Verkaufspreis hinzugefügt werden</li>
                 </ul>
                 <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mt-3 border border-blue-200 dark:border-blue-700">
                   <p className="font-semibold mb-1">Beispielrechnung:</p>

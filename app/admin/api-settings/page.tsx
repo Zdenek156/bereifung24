@@ -324,7 +324,7 @@ export default function AdminApiSettings() {
           </div>
           <div className="mt-3 pt-3 border-t border-indigo-200">
             <p className="text-xs text-indigo-600">
-              💡 <strong>Zahlungsmethoden:</strong> Stripe unterstützt Kreditkarte, SEPA-Lastschrift, Sofort, Giropay und viele mehr
+              💡 <strong>Zahlungsmethoden:</strong> Stripe unterstützt Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna, SEPA-Lastschrift und viele mehr
             </p>
           </div>
         </div>

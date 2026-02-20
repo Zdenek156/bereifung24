@@ -82,33 +82,29 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* Call-to-Action Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        {/* NEW: Direct Booking - Prominent */}
+      {/* Call-to-Action Card */}
+      <div className="mb-8">
+        {/* Direct Booking - Full Width */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-700 dark:from-green-500 dark:to-emerald-600 rounded-lg shadow-xl p-6">
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-start gap-4 mb-4">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
               <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div className="text-white flex-1">
-                <div className="inline-block bg-yellow-400 text-green-900 text-xs font-bold px-2 py-1 rounded mb-2">
-                  🚀 NEU & SCHNELL
-                </div>
-                <h2 className="text-xl font-bold mb-1">Service direkt buchen</h2>
-                <p className="text-green-100 text-sm">
-                  Werkstatt finden, bezahlen, Termin wählen - in 3 Minuten fertig!
+                <h2 className="text-xl lg:text-2xl font-bold mb-2">Service direkt buchen</h2>
+                <p className="text-green-100 text-sm lg:text-base">
+                  Werkstatt finden, Preise vergleichen, Termin wählen & sicher bezahlen - alles in einem Schritt!
                 </p>
               </div>
             </div>
             <button
               onClick={() => router.push('/home')}
-              className="w-full px-6 py-3 bg-white text-green-700 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+              className="px-8 py-3 bg-white text-green-700 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
             >
-              <span className="text-2xl">🔄</span>
-              Jetzt direkt buchen
+              Jetzt buchen
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -151,7 +147,7 @@ export default function CustomerDashboard() {
             </h2>
             <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
               Mit unserem Service erhalten Sie schnell und unkompliziert die besten Angebote von Werkstätten in Ihrer Nähe. 
-              Buchen Sie Ihren Termin direkt online und bezahlen Sie bequem per Kreditkarte oder PayPal.
+              Buchen Sie Ihren Termin direkt online und bezahlen Sie bequem per Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna oder SEPA-Lastschrift.
             </p>
             
             <div className="grid md:grid-cols-2 gap-3">
@@ -205,7 +201,7 @@ export default function CustomerDashboard() {
                   <div>
                     <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Bequem bezahlen</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Zahlen Sie sicher online mit Kreditkarte oder PayPal – fertig! Ihr Termin ist sofort bestätigt.
+                      Zahlen Sie sicher online: Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna oder Banküberweisung. Ihr Termin ist sofort bestätigt!
                     </p>
                   </div>
                 </div>

@@ -47,6 +47,7 @@ export default function CustomerNavbar() {
         { id: 'bookings', label: 'Buchungen', icon: BookOpen, path: '/dashboard/customer/bookings' },
         { id: 'vehicles', label: 'Fahrzeuge', icon: Car, path: '/dashboard/customer/vehicles' },
         { id: 'weather-alert', label: 'Wetter-Erinnerung', icon: Cloud, path: '/dashboard/customer/weather-alert' },
+        { id: 'settings', label: 'Einstellungen', icon: Settings, path: '/dashboard/customer/settings' },
       ]
 
   // Close dropdown when clicking outside

@@ -28,7 +28,7 @@ export async function GET() {
       )
     }
 
-    // Get all reviews with related data
+    // Get all reviews with related data (support both old bookings and direct bookings)
     const reviews = await prisma.review.findMany({
       where: { workshopId: user.workshop.id },
       include: {
@@ -49,6 +49,12 @@ export async function GET() {
                 additionalNotes: true,
               },
             },
+          },
+        },
+        directBooking: {
+          select: {
+            date: true,
+            serviceType: true,
           },
         },
       },

@@ -1922,7 +1922,7 @@ export default function WorkshopSettings() {
                       💳 Stripe (Kreditkarte, SEPA & mehr)
                     </label>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Kreditkarte, SEPA-Lastschrift, Sofort, Giropay und mehr
+                      Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna, SEPA-Lastschrift und mehr
                     </p>
                   </div>
                 </div>

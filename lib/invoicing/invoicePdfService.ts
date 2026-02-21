@@ -540,7 +540,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       line-height: 1.3;
     }
     
-    /* ═══ FOOTER — Three Columns ═══ */
+    /* ═══ FOOTER — Two Columns ═══ */
     .footer {
       margin-top: 30pt;
       padding-top: 12pt;
@@ -552,7 +552,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .footer-columns {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 20pt;
     }
     
@@ -569,7 +569,6 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- ═══ HEADER ═══ -->
     <div class="header">
       <div class="header-left">
-        <div class="b24-badge">B24</div>
         ${settings.logoUrl 
           ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="company-name-img" onerror="this.outerHTML='<div class=\\'company-name\\'>${settings.companyName || 'Bereifung24'}</div>'">`
           : `<div class="company-name">${settings.companyName || 'Bereifung24'}</div>`
@@ -686,12 +685,6 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
           ${settings.phone || ''}<br>
           ${settings.email || ''}<br>
           ${settings.website || ''}
-        </div>
-        <div class="footer-column">
-          <h4>Bankverbindung</h4>
-          ${settings.bankName || ''}<br>
-          IBAN: ${settings.iban || ''}<br>
-          BIC: ${settings.bic || ''}
         </div>
         <div class="footer-column">
           <h4>Steuern</h4>

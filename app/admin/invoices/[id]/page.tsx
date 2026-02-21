@@ -45,6 +45,7 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [pdfTimestamp, setPdfTimestamp] = useState(Date.now())
 
   useEffect(() => {
     if (params.id) {
@@ -58,6 +59,7 @@ export default function InvoiceDetailPage() {
       if (response.ok) {
         const result = await response.json()
         setInvoice(result.data)
+        setPdfTimestamp(Date.now()) // Update timestamp on fetch
       }
     } catch (error) {
       console.error('Error fetching invoice:', error)
@@ -78,6 +80,7 @@ export default function InvoiceDetailPage() {
       if (response.ok) {
         const result = await response.json()
         setInvoice({ ...invoice, pdfUrl: result.data.pdfUrl })
+        setPdfTimestamp(Date.now()) // Force iframe reload
         alert('PDF erfolgreich generiert!')
       }
     } catch (error) {
@@ -339,7 +342,7 @@ export default function InvoiceDetailPage() {
               <h2 className="text-lg font-bold mb-4">PDF-Vorschau</h2>
               <div className="aspect-[3/4] bg-gray-100 rounded border flex items-center justify-center">
                 <iframe
-                  src={invoice.pdfUrl}
+                  src={`${invoice.pdfUrl}?t=${pdfTimestamp}`}
                   className="w-full h-full rounded"
                   title="PDF Preview"
                 />

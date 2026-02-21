@@ -12,15 +12,15 @@ import { sendInvoiceEmail } from '@/lib/invoicing/invoiceEmailService'
  * Sollte am 1. des Monats um 09:00 Uhr ausgeführt werden
  * 
  * Workflow:
- * 1. Finde alle Workshops mit PENDING Provisionen vom Vormonat
- * 2. Gruppiere Provisionen nach Service-Typ
+ * 1. Finde alle Workshops mit bezahlten DirectBookings (paymentStatus='PAID', commissionBilledAt=null)
+ * 2. Gruppiere nach Service-Typ
  * 3. Erstelle Rechnung mit Line Items
  * 4. Generiere PDF
  * 5. Erstelle Buchhaltungseintrag
  * 6. Versende Email mit Info über automatisch abgezogene Provision
- * 7. Markiere Provisionen als BILLED
+ * 7. Markiere DirectBookings als abgerechnet (commissionBilledAt)
  * 
- * HINWEIS: Provision wurde bereits automatisch von Stripe abgezogen!
+ * HINWEIS: Provision wurde bereits automatisch von Stripe abgezogen (6.9%)!
  * Die Rechnung dient nur der Dokumentation für die Werkstatt.
  */
 export async function POST(request: NextRequest) {
@@ -46,13 +46,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`📅 Period: ${periodStart.toLocaleDateString('de-DE')} - ${periodEnd.toLocaleDateString('de-DE')}`)
 
-    // Get all workshops with PENDING commissions in period
+    // Get all workshops with paid DirectBookings that haven't been billed yet
     const workshops = await prisma.workshop.findMany({
       where: {
-        commissions: {
+        directBookings: {
           some: {
-            status: 'PENDING',
-            createdAt: {
+            paymentStatus: 'PAID',
+            commissionBilledAt: null,
+            paidAt: {
               gte: periodStart,
               lte: periodEnd
             }
@@ -65,18 +66,20 @@ export async function POST(request: NextRequest) {
             email: true
           }
         },
-        commissions: {
+        directBookings: {
           where: {
-            status: 'PENDING',
-            createdAt: {
+            paymentStatus: 'PAID',
+            commissionBilledAt: null,
+            paidAt: {
               gte: periodStart,
               lte: periodEnd
             }
           },
           include: {
-            booking: {
+            vehicle: true,
+            customer: {
               include: {
-                offer: true
+                user: true
               }
             }
           }
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log(`🏪 Found ${workshops.length} workshops with pending commissions`)
+    console.log(`🏪 Found ${workshops.length} workshops with unbilled commissions`)
 
     const results = {
       success: [] as string[],
@@ -96,8 +99,8 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`\n📝 Processing ${workshop.companyName}...`)
 
-        // Group commissions by service type
-        const lineItems = groupCommissionsByServiceType(workshop.commissions)
+        // Group DirectBooking commissions by service type
+        const lineItems = groupDirectBookingsByServiceType(workshop.directBookings)
 
         if (lineItems.length === 0) {
           console.log(`⏭️  No valid commissions for ${workshop.companyName}`)
@@ -109,7 +112,7 @@ export async function POST(request: NextRequest) {
         const vatAmount = subtotal * 0.19 // 19% MwSt
         const totalAmount = subtotal + vatAmount
 
-        console.log(`💰 Total: ${totalAmount.toFixed(2)} EUR (${workshop.commissions.length} commissions)`)
+        console.log(`💰 Total: ${totalAmount.toFixed(2)} EUR (${workshop.directBookings.length} bookings)`)
 
         // Create invoice
         const invoice = await createInvoice({
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
           periodStart,
           periodEnd,
           lineItems,
-          commissionIds: workshop.commissions.map(c => c.id),
+          commissionIds: [], // No commission IDs for DirectBookings
           createdBy: 'SYSTEM',
           notes: `Automatisch generiert am ${new Date().toLocaleDateString('de-DE')}`
         })
@@ -147,21 +150,20 @@ export async function POST(request: NextRequest) {
         const emailResult = await sendInvoiceEmail(invoice.id)
         console.log(`📧 Email sent to ${workshop.user.email}: ${emailResult.success ? 'success' : emailResult.error}`)
 
-        // Note: Commission was already automatically deducted from Stripe payments
+        // Note: Commission was already automatically deducted from Stripe payments (6.9%)
         console.log(`✅ Commission already deducted automatically via Stripe`)
 
-        // Mark commissions as BILLED
-        await prisma.commission.updateMany({
+        // Mark DirectBookings as billed
+        await prisma.directBooking.updateMany({
           where: {
-            id: { in: workshop.commissions.map(c => c.id) }
+            id: { in: workshop.directBookings.map(b => b.id) }
           },
           data: {
-            status: 'BILLED',
-            billedAt: new Date()
+            commissionBilledAt: new Date()
           }
         })
 
-        console.log(`✅ ${workshop.commissions.length} commissions marked as BILLED`)
+        console.log(`✅ ${workshop.directBookings.length} bookings marked as billed`)
 
         results.success.push(workshop.id)
       } catch (error) {
@@ -205,27 +207,29 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Group commissions by service type and create line items
- * Each commission becomes a separate line item with its date
+ * Group DirectBookings by service type and create line items
+ * Each booking's commission becomes a separate line item with its date
  */
-function groupCommissionsByServiceType(commissions: any[]) {
+function groupDirectBookingsByServiceType(directBookings: any[]) {
   const lineItems = []
   let position = 1
 
-  for (const commission of commissions) {
-    const serviceType = commission.booking?.offer?.packageType || 'UNKNOWN'
-    const serviceName = commission.booking?.offer?.packageName || 'Sonstige Leistung'
-    const amount = parseFloat(commission.commissionAmount.toString())
-    const date = commission.booking?.bookingDate || commission.createdAt
+  for (const booking of directBookings) {
+    const serviceType = booking.serviceType
+    const amount = booking.platformCommission ? parseFloat(booking.platformCommission.toString()) : 0
+    const date = booking.paidAt || booking.createdAt
+
+    // Skip if no commission amount
+    if (amount <= 0) continue
 
     lineItems.push({
       position: position++,
-      description: getServiceDescription(serviceType, serviceName),
+      description: getServiceDescription(serviceType, booking),
       quantity: 1,
       unitPrice: amount,
       total: amount,
       vatRate: 19,
-      date: date // Add date for display in invoice
+      date: date
     })
   }
 
@@ -233,21 +237,30 @@ function groupCommissionsByServiceType(commissions: any[]) {
 }
 
 /**
- * Get human-readable service description
+ * Get human-readable service description for DirectBooking
  */
-function getServiceDescription(packageType: string, packageName: string): string {
+function getServiceDescription(serviceType: string, booking: any): string {
   const descriptions: Record<string, string> = {
-    'TIRES_WITH_ASSEMBLY': 'Reifen mit Montage',
-    'WHEEL_CHANGE': 'Räder umstecken',
+    'WHEEL_CHANGE': 'Räderwechsel',
+    'TIRE_CHANGE': 'Reifenwechsel',
+    'TIRE_MOUNT': 'Reifenmontage',
     'TIRE_HOTEL': 'Einlagerung',
     'REPAIR': 'Reparatur',
     'INSPECTION': 'Inspektion',
     'BRAKE_SERVICE': 'Bremsendienst',
-    'OIL_CHANGE': 'Ölwechsel',
-    'UNKNOWN': packageName || 'Sonstige Leistung'
+    'OIL_CHANGE': 'Ölwechsel'
   }
 
-  return descriptions[packageType] || packageName || 'Vermittlungsleistung'
+  let description = descriptions[serviceType] || 'Vermittlungsleistung'
+
+  // Add tire details if available
+  if (booking.tireBrand && booking.tireModel) {
+    description += ` (${booking.tireBrand} ${booking.tireModel})`
+  } else if (booking.tireSize) {
+    description += ` (${booking.tireSize})`
+  }
+
+  return description
 }
 
 /**

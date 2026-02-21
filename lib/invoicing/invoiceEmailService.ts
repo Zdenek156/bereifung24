@@ -95,14 +95,6 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       }).format(amount)
     }
 
-    // Generate commission items HTML
-    const commissionItemsHtml = lineItems.map(item => `
-      <li class="commission-item">
-        <span>${item.description}</span>
-        <strong>${formatEUR(item.total)}</strong>
-      </li>
-    `).join('')
-
     // Replace placeholders in template
     let htmlContent = template.htmlContent
     const placeholders = {
@@ -114,8 +106,6 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       periodEnd: periodEnd.toLocaleDateString('de-DE'),
       commissionCount: lineItems.length.toString(),
       totalAmount: formatEUR(parseFloat(invoice.totalAmount.toString())),
-      sepaReference: invoice.sepaPaymentId || 'Wird bei Abbuchung mitgeteilt',
-      commissionItems: commissionItemsHtml,
       invoiceUrl: `https://www.bereifung24.de${invoice.pdfUrl}`
     }
 

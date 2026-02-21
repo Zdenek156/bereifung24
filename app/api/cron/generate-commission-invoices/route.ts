@@ -4,12 +4,11 @@ import { createInvoice, markInvoiceAsSent, generateInvoiceNumber } from '@/lib/i
 import { createInvoiceBooking } from '@/lib/invoicing/invoiceAccountingService'
 import { generateInvoicePdf } from '@/lib/invoicing/invoicePdfService'
 import { sendInvoiceEmail } from '@/lib/invoicing/invoiceEmailService'
-import { createPayment, formatAmountForGoCardless } from '@/lib/gocardless'
 
 /**
  * POST /api/cron/generate-commission-invoices
  * 
- * Automatische monatliche Rechnungsgenerierung
+ * Automatische monatliche Provisionsabrechnung
  * Sollte am 1. des Monats um 09:00 Uhr ausgeführt werden
  * 
  * Workflow:
@@ -18,9 +17,11 @@ import { createPayment, formatAmountForGoCardless } from '@/lib/gocardless'
  * 3. Erstelle Rechnung mit Line Items
  * 4. Generiere PDF
  * 5. Erstelle Buchhaltungseintrag
- * 6. Versende Email
- * 7. Initiiere SEPA-Zahlung (falls Mandat vorhanden)
- * 8. Markiere Provisionen als BILLED
+ * 6. Versende Email mit Info über automatisch abgezogene Provision
+ * 7. Markiere Provisionen als BILLED
+ * 
+ * HINWEIS: Provision wurde bereits automatisch von Stripe abgezogen!
+ * Die Rechnung dient nur der Dokumentation für die Werkstatt.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -146,40 +147,8 @@ export async function POST(request: NextRequest) {
         const emailResult = await sendInvoiceEmail(invoice.id)
         console.log(`📧 Email sent to ${workshop.user.email}: ${emailResult.success ? 'success' : emailResult.error}`)
 
-        // Initiate SEPA payment if mandate exists
-        // Valid statuses: pending_submission (before first payment), submitted, active (after first payment)
-        const validSepaStatuses = ['pending_submission', 'submitted', 'active']
-        if (workshop.gocardlessMandateId && validSepaStatuses.includes(workshop.gocardlessMandateStatus || '')) {
-          try {
-            console.log(`💳 Initiating SEPA payment (mandate status: ${workshop.gocardlessMandateStatus})...`)
-            const payment = await createPayment({
-              mandateId: workshop.gocardlessMandateId,
-              amount: formatAmountForGoCardless(totalAmount),
-              currency: 'EUR',
-              description: `Provision ${invoice.invoiceNumber}`,
-              metadata: {
-                invoiceId: invoice.id,
-                invoiceNumber: invoice.invoiceNumber,
-                workshopId: workshop.id
-              }
-            })
-
-            await prisma.commissionInvoice.update({
-              where: { id: invoice.id },
-              data: {
-                sepaPaymentId: payment.id,
-                sepaStatus: payment.status
-              }
-            })
-
-            console.log(`✅ SEPA payment initiated: ${payment.id} (status: ${payment.status})`)
-          } catch (sepaError) {
-            console.warn(`⚠️  SEPA payment failed for ${workshop.companyName}:`, sepaError)
-            // Don't fail the whole process - invoice is still sent via email with bank transfer info
-          }
-        } else {
-          console.log(`💰 No active SEPA mandate (status: ${workshop.gocardlessMandateStatus || 'none'}) - using bank transfer`)
-        }
+        // Note: Commission was already automatically deducted from Stripe payments
+        console.log(`✅ Commission already deducted automatically via Stripe`)
 
         // Mark commissions as BILLED
         await prisma.commission.updateMany({

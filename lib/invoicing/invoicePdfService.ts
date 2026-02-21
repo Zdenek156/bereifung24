@@ -216,186 +216,298 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      font-size: 11pt;
-      color: #333;
-      line-height: 1.6;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      color: #0f172a;
+      line-height: 1.5;
+      position: relative;
+    }
+    
+    /* Blue Sidebar */
+    body::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 8pt;
+      height: 100%;
+      background: linear-gradient(to bottom, #0284C7 calc(100% - 75pt), #2BAAE2 calc(100% - 75pt));
     }
     
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 15px;
+      padding: 40pt 40pt 75pt 30pt;
+      position: relative;
     }
     
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #007bff;
+      margin-bottom: 16pt;
+    }
+    
+    .header-left {
+      flex: 1;
     }
     
     .logo {
-      max-width: 200px;
-      max-height: 80px;
+      max-width: 180px;
+      max-height: 60px;
+      margin-bottom: 8pt;
     }
     
-    .company-info {
+    .sender-line {
+      font-size: 7.5pt;
+      color: #64748b;
+      line-height: 1.3;
+    }
+    
+    .header-right {
       text-align: right;
-      font-size: 10pt;
-      line-height: 1.4;
     }
     
-    .company-info strong {
-      font-size: 14pt;
-      color: #007bff;
-      display: block;
-      margin-bottom: 8px;
+    .header-right .invoice-label {
+      font-weight: bold;
+      font-size: 9pt;
+      color: #0f172a;
+      margin-bottom: 4pt;
     }
     
-    .recipient {
-      margin-bottom: 15px;
+    .header-right .invoice-number {
+      font-weight: bold;
+      font-size: 12pt;
+      color: #0f172a;
+      margin-bottom: 4pt;
+    }
+    
+    .header-right .invoice-date {
+      font-size: 9pt;
+      color: #64748b;
+    }
+    
+    .divider {
+      height: 0.5pt;
+      background-color: #e2e8f0;
+      margin: 16pt 0;
+    }
+    
+    /* Two-Column Layout */
+    .two-columns {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20pt;
+    }
+    
+    .recipient-section {
+      flex: 1;
+    }
+    
+    .recipient-label {
+      font-size: 7.5pt;
+      color: #94a3b8;
+      margin-bottom: 6pt;
+    }
+    
+    .recipient-name {
+      font-weight: bold;
+      font-size: 13pt;
+      color: #0f172a;
+      margin-bottom: 4pt;
     }
     
     .recipient-address {
       font-size: 10pt;
-      line-height: 1.4;
+      color: #64748b;
+      line-height: 1.5;
     }
     
-    .invoice-title {
-      font-size: 18pt;
-      font-weight: bold;
-      color: #007bff;
-      margin: 15px 0 10px 0;
+    .metadata-section {
+      text-align: right;
+      min-width: 200pt;
     }
     
-    .invoice-meta {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 5px;
-      margin-bottom: 15px;
-      font-size: 10pt;
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20pt;
+      margin-bottom: 10pt;
+      font-size: 8pt;
     }
     
-    .invoice-meta strong {
-      color: #666;
-    }
-    
-    .invoice-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-    
-    .invoice-table thead {
-      background-color: #007bff;
-      color: white;
-    }
-    
-    .invoice-table th,
-    .invoice-table td {
-      padding: 8px 10px;
+    .meta-row .label {
+      color: #64748b;
       text-align: left;
-      border-bottom: 1px solid #ddd;
     }
     
-    .invoice-table th {
-      font-weight: 600;
-      font-size: 10pt;
-    }
-    
-    .invoice-table td {
-      font-size: 10pt;
-    }
-    
-    .invoice-table .text-right {
+    .meta-row .value {
+      font-weight: bold;
+      color: #0f172a;
       text-align: right;
     }
     
-    .invoice-table .text-center {
+    .intro-text {
+      font-size: 9pt;
+      color: #64748b;
+      margin-bottom: 16pt;
+      line-height: 1.5;
+    }
+    
+    /* Invoice Table - Blue Underline Header */
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16pt 0 20pt 0;
+    }
+    
+    .invoice-table thead th {
+      font-weight: bold;
+      font-size: 8pt;
+      color: #0284C7;
+      text-align: left;
+      padding-bottom: 6pt;
+      border-bottom: 1.5pt solid #0284C7;
+    }
+    
+    .invoice-table thead th.text-right {
+      text-align: right;
+    }
+    
+    .invoice-table tbody tr {
+      border-bottom: 0.3pt solid #f1f5f9;
+    }
+    
+    .invoice-table tbody td {
+      padding: 11pt 4pt;
+      font-size: 9pt;
+      vertical-align: top;
+    }
+    
+    .invoice-table tbody td.text-right {
+      text-align: right;
+    }
+    
+    .invoice-table tbody td.text-center {
       text-align: center;
     }
     
-    .invoice-table tbody tr:hover {
-      background-color: #f8f9fa;
+    .invoice-table tbody td.pos {
+      color: #0f172a;
     }
     
+    .invoice-table tbody td.date {
+      color: #64748b;
+    }
+    
+    .invoice-table tbody td.description {
+      color: #0f172a;
+    }
+    
+    .invoice-table tbody td.quantity {
+      color: #64748b;
+    }
+    
+    .invoice-table tbody td.unit-price {
+      color: #64748b;
+    }
+    
+    .invoice-table tbody td.total {
+      font-weight: bold;
+      color: #0f172a;
+    }
+    
+    /* Totals Section */
     .totals {
-      margin-top: 20px;
-      margin-left: auto;
-      width: 300px;
+      margin: 20pt 0 20pt auto;
+      width: 280pt;
     }
     
     .totals-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      font-size: 10pt;
+      margin-bottom: 10pt;
+      font-size: 9pt;
     }
     
-    .totals-row.subtotal {
-      border-top: 1px solid #ddd;
+    .totals-row .label {
+      color: #64748b;
     }
     
-    .totals-row.total {
-      border-top: 2px solid #333;
+    .totals-row .value {
+      color: #0f172a;
+      text-align: right;
+    }
+    
+    .totals-total {
+      border-top: 1pt solid #0284C7;
+      padding-top: 10pt;
+      margin-top: 10pt;
+    }
+    
+    .totals-total .label {
       font-weight: bold;
-      font-size: 12pt;
-      padding-top: 12px;
-      margin-top: 8px;
+      font-size: 13pt;
+      color: #0284C7;
     }
     
+    .totals-total .value {
+      font-weight: bold;
+      font-size: 13pt;
+      color: #0284C7;
+    }
+    
+    /* Payment Info Box - Light Blue */
     .payment-info {
-      margin-top: 20px;
-      padding: 12px 15px;
-      background-color: #e3f2fd;
-      border: 1px solid #90caf9;
-      border-radius: 4px;
+      background-color: #e0f2fe;
+      border-radius: 8pt;
+      padding: 12pt 15pt;
+      margin: 20pt 0;
     }
     
     .payment-info h3 {
-      color: #007bff;
-      margin-bottom: 8px;
-      font-size: 11pt;
+      font-weight: bold;
+      font-size: 8pt;
+      color: #065986;
+      margin-bottom: 8pt;
     }
     
     .payment-info p {
-      margin: 5px 0;
-      font-size: 9.5pt;
+      font-size: 8pt;
+      color: #64748b;
+      margin: 4pt 0;
+      line-height: 1.4;
     }
     
+    /* ZUGFeRD Note */
+    .zugferd-note {
+      font-size: 7pt;
+      color: #94a3b8;
+      margin: 20pt 0;
+      line-height: 1.3;
+    }
+    
+    /* Footer - Three Columns */
     .footer {
-      margin-top: 25px;
-      padding-top: 12px;
-      border-top: 1px solid #ddd;
-      font-size: 8pt;
-      color: #666;
-      text-align: center;
+      margin-top: 40pt;
+      padding-top: 12pt;
+      border-top: 0.5pt solid #e2e8f0;
+      font-size: 7pt;
+      color: #64748b;
       line-height: 1.4;
     }
     
     .footer-columns {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      text-align: center;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20pt;
     }
     
     .footer-column h4 {
-      font-size: 9pt;
-      color: #333;
-      margin-bottom: 5px;
-    }
-    
-    .notes {
-      margin-top: 15px;
-      padding: 10px 12px;
-      background-color: #fff3cd;
-      border-left: 4px solid #ffc107;
-      font-size: 9.5pt;
+      font-weight: bold;
+      font-size: 7pt;
+      color: #0f172a;
+      margin-bottom: 4pt;
     }
   </style>
 </head>
@@ -403,76 +515,73 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <div>
-        ${settings.logoUrl ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">` : `<h1 style="color: #007bff;">${settings.companyName}</h1>`}
+      <div class="header-left">
+        ${settings.logoUrl ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="logo" onerror="this.style.display='none'">` : `<div style="font-weight: bold; font-size: 20pt; color: #0284C7;">Bereifung24</div>`}
+        <div class="sender-line">
+          ${settings.companyStreet || ''} | ${settings.companyZip || ''} ${settings.companyCity || ''} | Tel: ${settings.phone || ''} | ${settings.email || ''}
+        </div>
       </div>
-      <div class="company-info">
-        <strong>${settings.companyName}</strong>
-        ${settings.companyStreet || ''}<br>
-        ${settings.companyZip || ''} ${settings.companyCity || ''}<br>
-        ${settings.companyCountry || 'Deutschland'}<br>
-        ${settings.taxId ? `USt-IdNr.: ${settings.taxId}<br>` : ''}
-        <br>
-        ${settings.phone ? `Tel: ${settings.phone}<br>` : ''}
-        ${settings.email ? `E-Mail: ${settings.email}<br>` : ''}
-        ${settings.website ? `Web: ${settings.website}` : ''}
+      <div class="header-right">
+        <div class="invoice-label">RECHNUNG</div>
+        <div class="invoice-number">${invoice.invoiceNumber}</div>
+        <div class="invoice-date">Datum: ${invoiceDate}</div>
       </div>
     </div>
 
-    <!-- Recipient -->
-    <div class="recipient">
-      <div style="font-size: 7pt; color: #666; margin-bottom: 8px; line-height: 1.2;">
-        ${settings.companyName} • • ${settings.companyStreet || ''} • ${settings.companyZip || ''} ${settings.companyCity || ''}
+    <div class="divider"></div>
+
+    <!-- Two-Column: Recipient + Metadata -->
+    <div class="two-columns">
+      <div class="recipient-section">
+        <div class="recipient-label">An:</div>
+        <div class="recipient-name">${invoice.workshop.companyName}</div>
+        <div class="recipient-address">
+          ${invoice.workshop.user?.street ? `${invoice.workshop.user.street}<br>` : ''}
+          ${invoice.workshop.user?.zipCode && invoice.workshop.user?.city ? `${invoice.workshop.user.zipCode} ${invoice.workshop.user.city}` : ''}
+        </div>
       </div>
-      <div class="recipient-address">
-        <strong style="font-size: 11pt;">${invoice.workshop.companyName}</strong><br>
-        ${invoice.workshop.user?.street ? `${invoice.workshop.user.street}<br>` : ''}
-        ${invoice.workshop.user?.zipCode && invoice.workshop.user?.city ? `<strong>${invoice.workshop.user.zipCode} ${invoice.workshop.user.city}</strong>` : ''}
+      <div class="metadata-section">
+        <div class="meta-row">
+          <span class="label">Leistungszeitraum:</span>
+          <span class="value">${periodStart} - ${periodEnd}</span>
+        </div>
+        <div class="meta-row">
+          <span class="label">Zahlungsart:</span>
+          <span class="value">Stripe (Automatisch)</span>
+        </div>
+        <div class="meta-row">
+          <span class="label">USt-IdNr:</span>
+          <span class="value">${settings.taxId || 'N/A'}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Invoice Title -->
-    <h1 class="invoice-title">Rechnung ${invoice.invoiceNumber}</h1>
-
-    <!-- Invoice Meta -->
-    <div class="invoice-meta">
-      <strong>Rechnungsdatum:</strong>
-      <span>${invoiceDate}</span>
-      
-      <strong>Leistungszeitraum:</strong>
-      <span>${periodStart} - ${periodEnd}</span>
-      
-      <strong>Zahlung:</strong>
-      <span>Bereits über Stripe abgebucht ✓</span>
+    <!-- Intro Text -->
+    <div class="intro-text">
+      Für die im Leistungszeitraum erbrachten Vermittlungsleistungen stellen wir Ihnen folgende Positionen in Rechnung:
     </div>
-
-    <!-- Introduction -->
-    <p style="margin: 20px 0;">
-      Sehr geehrte Damen und Herren,<br>
-      für die im Leistungszeitraum erbrachten Vermittlungsleistungen stellen wir Ihnen folgende Positionen in Rechnung:
-    </p>
 
     <!-- Invoice Table -->
     <table class="invoice-table">
       <thead>
         <tr>
-          <th style="width: 40px;">Pos.</th>
-          <th style="width: 90px;">Datum</th>
+          <th style="width: 40pt;">Pos.</th>
+          <th style="width: 80pt;">Datum</th>
           <th>Beschreibung</th>
-          <th class="text-center" style="width: 60px;">Menge</th>
-          <th class="text-right" style="width: 90px;">Einzelpreis</th>
-          <th class="text-right" style="width: 90px;">Gesamt</th>
+          <th class="text-right" style="width: 50pt;">Menge</th>
+          <th class="text-right" style="width: 80pt;">Einzelpreis</th>
+          <th class="text-right" style="width: 80pt;">Gesamt</th>
         </tr>
       </thead>
       <tbody>
         ${lineItems.map((item, index) => `
         <tr>
           <td class="text-center">${index + 1}</td>
-          <td style="font-size: 9pt;">${item.date ? new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
-          <td>${item.description || 'Provision für Auftrag'}</td>
-          <td class="text-center">${item.quantity || 1}</td>
-          <td class="text-right">${formatEUR(item.unitPrice || 0)}</td>
-          <td class="text-right">${formatEUR(item.total || 0)}</td>
+          <td class="date">${item.date ? new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
+          <td class="description">${item.description || 'Provision für Auftrag'}</td>
+          <td class="quantity text-right">${item.quantity || 1}</td>
+          <td class="unit-price text-right">${formatEUR(item.unitPrice || 0)}</td>
+          <td class="total text-right">${formatEUR(item.total || 0)}</td>
         </tr>
         `).join('')}
       </tbody>
@@ -480,39 +589,31 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
 
     <!-- Totals -->
     <div class="totals">
-      <div class="totals-row subtotal">
-        <span>Nettobetrag:</span>
-        <strong>${formatEUR(invoice.subtotal)}</strong>
+      <div class="totals-row">
+        <span class="label">Nettobetrag:</span>
+        <span class="value">${formatEUR(invoice.subtotal)}</span>
       </div>
       <div class="totals-row">
-        <span>zzgl. 19% MwSt:</span>
-        <strong>${formatEUR(invoice.vatAmount)}</strong>
+        <span class="label">zzgl. 19% MwSt:</span>
+        <span class="value">${formatEUR(invoice.vatAmount)}</span>
       </div>
-      <div class="totals-row total">
-        <span>Gesamtbetrag:</span>
-        <strong>${formatEUR(invoice.totalAmount)}</strong>
+      <div class="totals-row totals-total">
+        <span class="label">Gesamtbetrag:</span>
+        <span class="value">${formatEUR(invoice.totalAmount)}</span>
       </div>
     </div>
 
     <!-- Payment Info -->
     <div class="payment-info">
-      <h3>Zahlung per Stripe</h3>
+      <h3>Zahlung per Stripe (Automatischer Abzug)</h3>
       <p><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
-      <p style="margin-top: 12px;">Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten. Der Rechnungsbetrag ist bereits beglichen.</p>
-    </div>
-    
-    <div class="e-invoice-note" style="margin-top: 30px; padding: 10px; background: #f0f8ff; border-left: 4px solid #2196F3; font-size: 9pt;">
-      <p><strong>📄 E-Rechnung (ZUGFeRD 2.2)</strong></p>
-      <p>Diese Rechnung enthält strukturierte Daten nach ZUGFeRD 2.2 Standard (EN 16931 konform).</p>
-      <p>Die XML-Daten sind in dieser PDF-Datei eingebettet und können von Ihrer Buchhaltungssoftware automatisch eingelesen werden.</p>
+      <p>Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten. Der Rechnungsbetrag ist bereits beglichen.</p>
     </div>
 
-    ${invoice.notes ? `
-    <div class="notes">
-      <strong>Hinweise:</strong><br>
-      ${invoice.notes}
+    <!-- ZUGFeRD Note -->
+    <div class="zugferd-note">
+      E-Rechnung (ZUGFeRD 2.2) — Strukturierte Daten nach EN 16931 sind in dieser PDF eingebettet.
     </div>
-    ` : ''}
 
     <!-- Footer -->
     <div class="footer">
@@ -524,15 +625,17 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
           ${settings.website || ''}
         </div>
         <div class="footer-column">
+          <h4>Bankverbindung</h4>
+          ${settings.bankName || ''}<br>
+          IBAN: ${settings.iban || ''}<br>
+          BIC: ${settings.bic || ''}
+        </div>
+        <div class="footer-column">
           <h4>Steuern</h4>
           ${settings.taxId ? `USt-IdNr: ${settings.taxId}<br>` : ''}
-          ${settings.taxNumber ? `Steuernr: ${settings.taxNumber}<br>` : ''}
-          ${settings.registerCourt ? `${settings.registerCourt}<br>` : ''}
-          ${settings.registerNumber ? `${settings.registerNumber}` : ''}
+          ${settings.managingDirector ? `Geschäftsführung: ${settings.managingDirector}` : ''}
         </div>
       </div>
-      ${settings.managingDirector ? `<p>Geschäftsführung: ${settings.managingDirector}</p>` : ''}
-      ${settings.footerText ? `<p style="margin-top: 10px;">${settings.footerText}</p>` : ''}
     </div>
   </div>
 </body>

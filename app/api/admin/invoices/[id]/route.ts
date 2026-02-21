@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth'
 import { isAdminOrCEO } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/prisma'
 
+// Force dynamic to prevent caching
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/admin/invoices/[id]
  * Get single invoice with full details

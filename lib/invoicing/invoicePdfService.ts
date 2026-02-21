@@ -350,8 +350,9 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     .payment-info {
       margin-top: 40px;
       padding: 20px;
-      background-color: #f8f9fa;
-      border-left: 4px solid #007bff;
+      background-color: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
     }
     
     .payment-info h3 {
@@ -495,11 +496,9 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
 
     <!-- Payment Info -->
     <div class="payment-info">
-      <h3>Zahlungsinformationen</h3>
-      <p><strong>Zahlungsart:</strong> Stripe (Automatischer Abzug)</p>
-      <p style="margin-top: 10px;"><strong>💳 Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten.</strong></p>
-      <p style="margin-top: 10px;">Diese Rechnung dient ausschließlich zu Ihrer Dokumentation und Buchhaltung.</p>
+      <h3>Zahlung per Stripe</h3>
       <p><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
+      <p style="margin-top: 12px;">Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten. Der Rechnungsbetrag ist bereits beglichen.</p>
     </div>
     
     <div class="e-invoice-note" style="margin-top: 30px; padding: 10px; background: #f0f8ff; border-left: 4px solid #2196F3; font-size: 9pt;">

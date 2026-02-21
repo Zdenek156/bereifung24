@@ -144,7 +144,7 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
         quantity: Number(item?.quantity) || 1,
         unitPrice: Number(item?.unitPrice) || 0,
         netAmount: Number(item?.total) || 0,
-        vatRate: 0.19, // Fixed 19% VAT
+        vatRate: 0.19,
         vatAmount: Number(item?.total) * 0.19 / 1.19 || 0
       })),
       netTotal: parseFloat(invoice.netAmount?.toString() || '0'),
@@ -571,7 +571,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       <div class="header-left">
         <div class="b24-badge">B24</div>
         ${settings.logoUrl 
-          ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="company-name-img" onerror="this.outerHTML='<div class=\'company-name\'>${settings.companyName || 'Bereifung24'}</div>'">`
+          ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="company-name-img" onerror="this.outerHTML='<div class=\\'company-name\\'>${settings.companyName || 'Bereifung24'}</div>'">`
           : `<div class="company-name">${settings.companyName || 'Bereifung24'}</div>`
         }
         <div class="sender-line">

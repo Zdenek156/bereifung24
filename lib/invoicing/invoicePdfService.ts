@@ -442,7 +442,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       <span>${periodStart} - ${periodEnd}</span>
       
       <strong>Zahlung:</strong>
-      <span>Automatisch per SEPA-Lastschrift</span>
+      <span>Bereits über Stripe abgebucht ✓</span>
     </div>
 
     <!-- Introduction -->
@@ -496,14 +496,13 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- Payment Info -->
     <div class="payment-info">
       <h3>Zahlungsinformationen</h3>
-      <p><strong>Zahlungsart:</strong> SEPA-Lastschrift</p>
-      <p style="margin-top: 10px;"><strong>💳 Der Rechnungsbetrag wird automatisch per SEPA-Lastschrift von Ihrem hinterlegten Bankkonto abgebucht.</strong></p>
-      ${settings.bankName ? `<p><strong>Bank:</strong> ${settings.bankName}</p>` : ''}
-      ${settings.iban ? `<p><strong>IBAN:</strong> ${settings.iban}</p>` : ''}
-      ${settings.bic ? `<p><strong>BIC:</strong> ${settings.bic}</p>` : ''}
-      <p><strong>Verwendungszweck:</strong> ${invoice.invoiceNumber}</p>
-      ${invoice.sepaPaymentId ? `<p style="margin-top: 10px; font-size: 9pt; color: #666;">Mandatsreferenz: ${invoice.sepaPaymentId}</p>` : ''}
-      ${settings.gocardlessCreditorId ? `<p style="font-size: 9pt; color: #666;">Gläubiger-ID: ${settings.gocardlessCreditorId}</p>` : ''}
+      <p><strong>Zahlungsart:</strong> Stripe (Automatischer Abzug)</p>
+      <div style="margin-top: 15px; padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+        <p style="margin: 0; color: #2e7d32;"><strong>✅ Provision bereits automatisch abgezogen</strong></p>
+        <p style="margin: 8px 0 0 0; font-size: 9.5pt; color: #555;">Die Provision von <strong>${formatEUR(invoice.totalAmount)}</strong> wurde bereits bei der Stripe-Zahlung des Kunden automatisch einbehalten.</p>
+        <p style="margin: 8px 0 0 0; font-size: 9.5pt; color: #555;">Diese Rechnung dient ausschließlich zu Ihrer Dokumentation und Buchhaltung.</p>
+      </div>
+      <p style="margin-top: 12px; font-size: 9pt; color: #666;"><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
     </div>
     
     <div class="e-invoice-note" style="margin-top: 30px; padding: 10px; background: #f0f8ff; border-left: 4px solid #2196F3; font-size: 9pt;">
@@ -529,17 +528,17 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
           ${settings.website || ''}
         </div>
         <div class="footer-column">
-          <h4>Bankverbindung</h4>
-          ${settings.bankName || ''}<br>
-          IBAN: ${settings.iban || ''}<br>
-          BIC: ${settings.bic || ''}
-        </div>
-        <div class="footer-column">
           <h4>Steuern</h4>
           ${settings.taxId ? `USt-IdNr: ${settings.taxId}<br>` : ''}
           ${settings.taxNumber ? `Steuernr: ${settings.taxNumber}<br>` : ''}
           ${settings.registerCourt ? `${settings.registerCourt}<br>` : ''}
           ${settings.registerNumber ? `${settings.registerNumber}` : ''}
+        </div>
+        <div class="footer-column">
+          <h4>Zahlungsabwicklung</h4>
+          Stripe<br>
+          Provision automatisch<br>
+          bei Zahlung abgezogen
         </div>
       </div>
       ${settings.managingDirector ? `<p>Geschäftsführung: ${settings.managingDirector}</p>` : ''}

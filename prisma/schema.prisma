@@ -5597,6 +5597,9 @@ model DirectBooking {
   invoiceUploadedAt DateTime? @map("invoice_uploaded_at")
   invoiceRequestedAt DateTime? @map("invoice_requested_at")
 
+  // Commission Billing (for monthly commission invoices)
+  commissionBilledAt DateTime? @map("commission_billed_at") // When commission was included in monthly invoice
+
   // Booking
   bookingId String?  @unique @map("booking_id")
   booking   Booking? @relation(fields: [bookingId], references: [id])

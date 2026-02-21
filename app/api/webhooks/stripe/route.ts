@@ -141,12 +141,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         platformNetCommission: `${platformNetCommission.toFixed(2)}€`
       })
       
+      // Get actual Stripe fees from Balance Transaction
+      let stripeFee: number | null = null
+      let paymentMethodDetail: string | null = null
+      
+      try {
+        const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY')
+        if (stripeSecretKey && session.payment_intent) {
+          const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' })
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent.id
+          
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+            expand: ['latest_charge']
+          })
+          
+          const charge = paymentIntent.latest_charge as Stripe.Charge | null
+          
+          if (charge) {
+            // Get payment method detail
+            paymentMethodDetail = charge.payment_method_details?.type || null
+            
+            if (charge.balance_transaction) {
+              const balanceTransactionId = typeof charge.balance_transaction === 'string' 
+                ? charge.balance_transaction 
+                : charge.balance_transaction.id
+              
+              const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId)
+              stripeFee = balanceTransaction.fee / 100
+              
+              console.log('💰 Actual Stripe fee:', {
+                feeInCents: balanceTransaction.fee,
+                feeInEuros: stripeFee,
+                paymentMethodDetail
+              })
+            }
+          }
+        }
+      } catch (feeError) {
+        console.error('⚠️ Error retrieving Stripe fee:', feeError)
+      }
+      
       await prisma.directBooking.update({
         where: { id: existingBooking.id },
         data: {
           paymentStatus: 'PAID',
           paymentMethod: 'STRIPE',
           stripePaymentId: session.payment_intent as string,
+          paymentMethodDetail,
+          ...(stripeFee !== null && { stripeFee }),
           paidAt: new Date(),
           status: 'CONFIRMED',
           platformCommission,
@@ -193,6 +237,48 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         platformNetCommission: `${platformNetCommission.toFixed(2)}€`
       })
       
+      // Get actual Stripe fees from Balance Transaction
+      let stripeFee: number | null = null
+      let paymentMethodDetail: string | null = null
+      
+      try {
+        const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY')
+        if (stripeSecretKey && session.payment_intent) {
+          const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' })
+          const paymentIntentId = typeof session.payment_intent === 'string' 
+            ? session.payment_intent 
+            : session.payment_intent.id
+          
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+            expand: ['latest_charge']
+          })
+          
+          const charge = paymentIntent.latest_charge as Stripe.Charge | null
+          
+          if (charge) {
+            // Get payment method detail
+            paymentMethodDetail = charge.payment_method_details?.type || null
+            
+            if (charge.balance_transaction) {
+              const balanceTransactionId = typeof charge.balance_transaction === 'string' 
+                ? charge.balance_transaction 
+                : charge.balance_transaction.id
+              
+              const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId)
+              stripeFee = balanceTransaction.fee / 100
+              
+              console.log('💰 Actual Stripe fee:', {
+                feeInCents: balanceTransaction.fee,
+                feeInEuros: stripeFee,
+                paymentMethodDetail
+              })
+            }
+          }
+        }
+      } catch (feeError) {
+        console.error('⚠️ Error retrieving Stripe fee:', feeError)
+      }
+      
       // Create DirectBooking record
       const booking = await prisma.directBooking.create({
         data: {
@@ -229,6 +315,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           paymentStatus: 'PAID',
           stripeSessionId: session.id,
           stripePaymentId: session.payment_intent as string,
+          paymentMethodDetail,
+          ...(stripeFee !== null && { stripeFee }),
           paidAt: new Date(),
           platformCommission,
           platformCommissionCents,

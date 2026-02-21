@@ -5591,6 +5591,7 @@ model DirectBooking {
   stripePaymentId     String?                     @map("stripe_payment_id")
   paypalOrderId       String?                     @map("paypal_order_id")
   paidAt              DateTime?                   @map("paid_at")
+  stripeFee           Decimal?                    @map("stripe_fee") @db.Decimal(10, 2) // Actual Stripe fee from Balance Transaction
 
   // Invoice
   invoiceUrl        String?   @map("invoice_url") @db.VarChar(500)

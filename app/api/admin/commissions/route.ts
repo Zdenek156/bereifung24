@@ -57,6 +57,7 @@ export async function GET() {
       const totalPrice = Number(booking.totalPrice)
       const commissionAmount = booking.platformCommission ? Number(booking.platformCommission) : totalPrice * 0.069
       const netCommission = booking.platformNetCommission ? Number(booking.platformNetCommission) : commissionAmount * 0.81 // Estimated after tax
+      const stripeFee = booking.stripeFee ? Number(booking.stripeFee) : null // Actual fee from Stripe
       
       return {
         id: booking.id,
@@ -65,6 +66,7 @@ export async function GET() {
         commissionRate: 6.9, // Platform commission rate
         commissionAmount: commissionAmount,
         platformNetCommission: netCommission,
+        stripeFee: stripeFee, // NEW: Actual Stripe fee
         stripeFeesEstimate: booking.stripeFeesEstimate ? Number(booking.stripeFeesEstimate) : 0,
         workshopPayout: booking.workshopPayout ? Number(booking.workshopPayout) : totalPrice * 0.931,
         status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : booking.paymentStatus === 'PENDING' ? 'PENDING' : 'FAILED',

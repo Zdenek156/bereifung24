@@ -142,7 +142,8 @@ export async function POST(request: NextRequest) {
           periodEnd,
           subtotal,
           vatAmount,
-          totalAmount
+          totalAmount,
+          directBookingIds: workshop.directBookings.map(b => b.id) // NEW: Pass DirectBooking IDs for commission aggregation
         })
         console.log(`📊 Accounting entry created: ${accountingEntryId}`)
 
@@ -218,6 +219,8 @@ function groupDirectBookingsByServiceType(directBookings: any[]) {
     const serviceType = booking.serviceType
     const amount = booking.platformCommission ? parseFloat(booking.platformCommission.toString()) : 0
     const date = booking.paidAt || booking.createdAt
+    const totalAmount = booking.totalAmount ? parseFloat(booking.totalAmount.toString()) : 0
+    const paymentMethod = booking.paymentMethod || 'CARD'
 
     // Skip if no commission amount
     if (amount <= 0) continue
@@ -229,7 +232,10 @@ function groupDirectBookingsByServiceType(directBookings: any[]) {
       unitPrice: amount,
       total: amount,
       vatRate: 19,
-      date: date
+      date: date,
+      paymentMethod: paymentMethod,
+      orderAmount: totalAmount,
+      bookingId: booking.id
     })
   }
 

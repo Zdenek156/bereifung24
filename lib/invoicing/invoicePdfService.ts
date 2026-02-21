@@ -10,6 +10,8 @@ import PDFDocument from 'pdfkit'
  * Invoice PDF Generation Service
  * Uses puppeteer to generate PDF from HTML template
  * ZUGFeRD 2.2 compliant (E-Rechnung Deutschland)
+ * 
+ * Design: "Blue Sidebar" (Variante B)
  */
 
 export interface InvoiceData extends CommissionInvoice {
@@ -92,19 +94,19 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
     const page = await browser.newPage()
     await page.setContent(html, { waitUntil: 'networkidle0' })
     
-    // Generate PDF buffer first
+    // Generate PDF buffer first — margin 0 so sidebar reaches edge
     const tempPdfPath = outputPath + '.temp'
     await page.pdf({
       path: tempPdfPath,
       format: 'A4',
       margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
+        top: '0mm',
+        right: '0mm',
+        bottom: '0mm',
+        left: '0mm'
       },
       printBackground: true,
-      tagged: true, // PDF/A-3 compatible
+      tagged: true,
       displayDocTitle: true
     })
 
@@ -176,6 +178,7 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
 
 /**
  * Generate invoice HTML from template
+ * Design: "Blue Sidebar" (Variante B)
  */
 function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
   const lineItems = invoice.lineItems as any[]
@@ -185,13 +188,16 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
   
   // Period: First day of month to last day of month
   const periodStartDate = new Date(invoice.periodStart)
-  periodStartDate.setDate(1) // First day of month
+  periodStartDate.setDate(1)
   const periodStart = periodStartDate.toLocaleDateString('de-DE')
   
   const periodEndDate = new Date(invoice.periodEnd)
   const lastDay = new Date(periodEndDate.getFullYear(), periodEndDate.getMonth() + 1, 0).getDate()
-  periodEndDate.setDate(lastDay) // Last day of month
+  periodEndDate.setDate(lastDay)
   const periodEnd = periodEndDate.toLocaleDateString('de-DE')
+
+  // Payment method label
+  const paymentLabel = invoice.paymentMethod === 'SEPA' ? 'SEPA-Lastschrift' : 'Stripe (Automatisch)'
 
   // Format amounts
   const formatEUR = (amount: number) => {
@@ -209,6 +215,25 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rechnung ${invoice.invoiceNumber}</title>
   <style>
+    /* ═══════════════════════════════════════════════════════════
+       Bereifung24 — Rechnung "Blue Sidebar" (Variante B)
+       
+       Brand Colors:
+       Primary:      #0284C7
+       Primary Light: #2BAAE2
+       Primary Pale:  #e0f2fe
+       Primary Deep:  #065986
+       Dark:          #0f172a
+       Gray:          #64748b
+       Gray Light:    #94a3b8
+       Gray Line:     #e2e8f0
+       ═══════════════════════════════════════════════════════════ */
+    
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
     * {
       margin: 0;
       padding: 0;
@@ -221,41 +246,68 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       color: #0f172a;
       line-height: 1.5;
       position: relative;
+      width: 210mm;
+      min-height: 297mm;
     }
     
-    /* Blue Sidebar */
+    /* ─── Blue Sidebar (8pt wide, full page height) ─── */
     body::before {
       content: '';
-      position: absolute;
+      position: fixed;
       left: 0;
       top: 0;
       width: 8pt;
       height: 100%;
       background: linear-gradient(to bottom, #0284C7 calc(100% - 75pt), #2BAAE2 calc(100% - 75pt));
+      z-index: 10;
     }
     
+    /* ─── Main Content Area ─── */
     .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40pt 40pt 75pt 30pt;
+      margin-left: 20pt;
+      margin-right: 40pt;
+      padding-top: 40pt;
+      padding-bottom: 30pt;
       position: relative;
     }
     
+    /* ═══ HEADER ═══ */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 16pt;
+      margin-bottom: 14pt;
     }
     
     .header-left {
       flex: 1;
     }
     
-    .logo {
+    /* B24 Logo Badge */
+    .b24-badge {
+      display: inline-block;
+      background: #e0f2fe;
+      border-radius: 5pt;
+      padding: 3pt 8pt;
+      font-weight: bold;
+      font-size: 8pt;
+      color: #0284C7;
+      margin-bottom: 4pt;
+      letter-spacing: -0.3pt;
+    }
+    
+    .company-name {
+      font-weight: bold;
+      font-size: 20pt;
+      color: #0284C7;
+      line-height: 1.2;
+      margin-bottom: 6pt;
+    }
+    
+    .company-name-img {
       max-width: 180px;
-      max-height: 60px;
-      margin-bottom: 8pt;
+      max-height: 50px;
+      margin-bottom: 6pt;
     }
     
     .sender-line {
@@ -266,38 +318,40 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .header-right {
       text-align: right;
+      padding-top: 4pt;
     }
     
-    .header-right .invoice-label {
+    .invoice-label {
       font-weight: bold;
       font-size: 9pt;
       color: #0f172a;
-      margin-bottom: 4pt;
+      margin-bottom: 3pt;
     }
     
-    .header-right .invoice-number {
+    .invoice-number {
       font-weight: bold;
       font-size: 12pt;
       color: #0f172a;
-      margin-bottom: 4pt;
+      margin-bottom: 3pt;
     }
     
-    .header-right .invoice-date {
+    .invoice-date {
       font-size: 9pt;
       color: #64748b;
     }
     
+    /* ═══ DIVIDER ═══ */
     .divider {
       height: 0.5pt;
       background-color: #e2e8f0;
-      margin: 16pt 0;
+      margin: 14pt 0;
     }
     
-    /* Two-Column Layout */
+    /* ═══ TWO-COLUMN: Recipient + Metadata ═══ */
     .two-columns {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20pt;
+      margin-bottom: 18pt;
     }
     
     .recipient-section {
@@ -314,7 +368,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       font-weight: bold;
       font-size: 13pt;
       color: #0f172a;
-      margin-bottom: 4pt;
+      margin-bottom: 3pt;
     }
     
     .recipient-address {
@@ -324,21 +378,19 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     .metadata-section {
-      text-align: right;
-      min-width: 200pt;
+      min-width: 220pt;
     }
     
     .meta-row {
       display: flex;
       justify-content: space-between;
-      gap: 20pt;
-      margin-bottom: 10pt;
+      gap: 16pt;
+      margin-bottom: 8pt;
       font-size: 8pt;
     }
     
     .meta-row .label {
       color: #64748b;
-      text-align: left;
     }
     
     .meta-row .value {
@@ -347,18 +399,19 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       text-align: right;
     }
     
+    /* ═══ INTRO TEXT ═══ */
     .intro-text {
       font-size: 9pt;
       color: #64748b;
-      margin-bottom: 16pt;
+      margin-bottom: 14pt;
       line-height: 1.5;
     }
     
-    /* Invoice Table - Blue Underline Header */
+    /* ═══ INVOICE TABLE — Blue Underline Header ═══ */
     .invoice-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 16pt 0 20pt 0;
+      margin: 0 0 16pt 0;
     }
     
     .invoice-table thead th {
@@ -366,8 +419,9 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       font-size: 8pt;
       color: #0284C7;
       text-align: left;
-      padding-bottom: 6pt;
+      padding: 0 4pt 6pt 4pt;
       border-bottom: 1.5pt solid #0284C7;
+      white-space: nowrap;
     }
     
     .invoice-table thead th.text-right {
@@ -378,8 +432,12 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       border-bottom: 0.3pt solid #f1f5f9;
     }
     
+    .invoice-table tbody tr:last-child {
+      border-bottom: 0.5pt solid #e2e8f0;
+    }
+    
     .invoice-table tbody td {
-      padding: 11pt 4pt;
+      padding: 8pt 4pt;
       font-size: 9pt;
       vertical-align: top;
     }
@@ -388,15 +446,11 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       text-align: right;
     }
     
-    .invoice-table tbody td.text-center {
-      text-align: center;
-    }
-    
     .invoice-table tbody td.pos {
       color: #0f172a;
     }
     
-    .invoice-table tbody td.date {
+    .invoice-table tbody td.date-col {
       color: #64748b;
     }
     
@@ -406,27 +460,30 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .invoice-table tbody td.quantity {
       color: #64748b;
+      text-align: right;
     }
     
     .invoice-table tbody td.unit-price {
       color: #64748b;
+      text-align: right;
     }
     
-    .invoice-table tbody td.total {
+    .invoice-table tbody td.total-col {
       font-weight: bold;
       color: #0f172a;
+      text-align: right;
     }
     
-    /* Totals Section */
+    /* ═══ TOTALS SECTION ═══ */
     .totals {
-      margin: 20pt 0 20pt auto;
-      width: 280pt;
+      margin: 8pt 0 16pt auto;
+      width: 240pt;
     }
     
     .totals-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 10pt;
+      margin-bottom: 8pt;
       font-size: 9pt;
     }
     
@@ -439,62 +496,58 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       text-align: right;
     }
     
+    /* Gesamtbetrag — blue highlight with top border */
     .totals-total {
       border-top: 1pt solid #0284C7;
       padding-top: 10pt;
-      margin-top: 10pt;
+      margin-top: 8pt;
     }
     
-    .totals-total .label {
-      font-weight: bold;
-      font-size: 13pt;
-      color: #0284C7;
-    }
-    
+    .totals-total .label,
     .totals-total .value {
       font-weight: bold;
       font-size: 13pt;
       color: #0284C7;
     }
     
-    /* Payment Info Box - Light Blue */
+    /* ═══ PAYMENT INFO BOX ═══ */
     .payment-info {
       background-color: #e0f2fe;
       border-radius: 8pt;
-      padding: 12pt 15pt;
-      margin: 20pt 0;
+      padding: 12pt 16pt;
+      margin: 16pt 0;
     }
     
     .payment-info h3 {
       font-weight: bold;
       font-size: 8pt;
       color: #065986;
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
     }
     
     .payment-info p {
       font-size: 8pt;
       color: #64748b;
-      margin: 4pt 0;
+      margin: 3pt 0;
       line-height: 1.4;
     }
     
-    /* ZUGFeRD Note */
+    /* ═══ ZUGFERD NOTE ═══ */
     .zugferd-note {
       font-size: 7pt;
       color: #94a3b8;
-      margin: 20pt 0;
+      margin: 16pt 0;
       line-height: 1.3;
     }
     
-    /* Footer - Three Columns */
+    /* ═══ FOOTER — Three Columns ═══ */
     .footer {
-      margin-top: 40pt;
+      margin-top: 30pt;
       padding-top: 12pt;
       border-top: 0.5pt solid #e2e8f0;
       font-size: 7pt;
       color: #64748b;
-      line-height: 1.4;
+      line-height: 1.5;
     }
     
     .footer-columns {
@@ -506,19 +559,23 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     .footer-column h4 {
       font-weight: bold;
       font-size: 7pt;
-      color: #0f172a;
+      color: #64748b;
       margin-bottom: 4pt;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- ═══ HEADER ═══ -->
     <div class="header">
       <div class="header-left">
-        ${settings.logoUrl ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="logo" onerror="this.style.display='none'">` : `<div style="font-weight: bold; font-size: 20pt; color: #0284C7;">Bereifung24</div>`}
+        <div class="b24-badge">B24</div>
+        ${settings.logoUrl 
+          ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="company-name-img" onerror="this.outerHTML='<div class=\'company-name\'>${settings.companyName || 'Bereifung24'}</div>'">`
+          : `<div class="company-name">${settings.companyName || 'Bereifung24'}</div>`
+        }
         <div class="sender-line">
-          ${settings.companyStreet || ''} | ${settings.companyZip || ''} ${settings.companyCity || ''} | Tel: ${settings.phone || ''} | ${settings.email || ''}
+          ${settings.companyStreet || settings.street || ''} | ${settings.companyZip || settings.zip || ''} ${settings.companyCity || settings.city || ''} | Tel: ${settings.phone || ''} | ${settings.email || ''}
         </div>
       </div>
       <div class="header-right">
@@ -530,7 +587,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
 
     <div class="divider"></div>
 
-    <!-- Two-Column: Recipient + Metadata -->
+    <!-- ═══ TWO-COLUMN: Recipient + Metadata ═══ -->
     <div class="two-columns">
       <div class="recipient-section">
         <div class="recipient-label">An:</div>
@@ -547,7 +604,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
         </div>
         <div class="meta-row">
           <span class="label">Zahlungsart:</span>
-          <span class="value">Stripe (Automatisch)</span>
+          <span class="value">${paymentLabel}</span>
         </div>
         <div class="meta-row">
           <span class="label">USt-IdNr:</span>
@@ -556,38 +613,39 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       </div>
     </div>
 
-    <!-- Intro Text -->
+    <!-- ═══ INTRO TEXT ═══ -->
     <div class="intro-text">
-      Für die im Leistungszeitraum erbrachten Vermittlungsleistungen stellen wir Ihnen folgende Positionen in Rechnung:
+      Sehr geehrte Damen und Herren,<br>
+      für die im Leistungszeitraum erbrachten Vermittlungsleistungen stellen wir Ihnen folgende Positionen in Rechnung:
     </div>
 
-    <!-- Invoice Table -->
+    <!-- ═══ POSITIONS TABLE ═══ -->
     <table class="invoice-table">
       <thead>
         <tr>
-          <th style="width: 40pt;">Pos.</th>
-          <th style="width: 80pt;">Datum</th>
+          <th style="width: 35pt;">Pos.</th>
+          <th style="width: 75pt;">Datum</th>
           <th>Beschreibung</th>
-          <th class="text-right" style="width: 50pt;">Menge</th>
-          <th class="text-right" style="width: 80pt;">Einzelpreis</th>
-          <th class="text-right" style="width: 80pt;">Gesamt</th>
+          <th class="text-right" style="width: 45pt;">Menge</th>
+          <th class="text-right" style="width: 75pt;">Einzelpreis</th>
+          <th class="text-right" style="width: 75pt;">Gesamt</th>
         </tr>
       </thead>
       <tbody>
-        ${lineItems.map((item, index) => `
+        ${lineItems.map((item: any, index: number) => `
         <tr>
-          <td class="text-center">${index + 1}</td>
-          <td class="date">${item.date ? new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
+          <td class="pos">${index + 1}</td>
+          <td class="date-col">${item.date ? new Date(item.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</td>
           <td class="description">${item.description || 'Provision für Auftrag'}</td>
-          <td class="quantity text-right">${item.quantity || 1}</td>
-          <td class="unit-price text-right">${formatEUR(item.unitPrice || 0)}</td>
-          <td class="total text-right">${formatEUR(item.total || 0)}</td>
+          <td class="quantity">${item.quantity || 1}</td>
+          <td class="unit-price">${formatEUR(item.unitPrice || 0)}</td>
+          <td class="total-col">${formatEUR(item.total || 0)}</td>
         </tr>
         `).join('')}
       </tbody>
     </table>
 
-    <!-- Totals -->
+    <!-- ═══ TOTALS ═══ -->
     <div class="totals">
       <div class="totals-row">
         <span class="label">Nettobetrag:</span>
@@ -603,19 +661,24 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
       </div>
     </div>
 
-    <!-- Payment Info -->
+    <!-- ═══ PAYMENT INFO ═══ -->
     <div class="payment-info">
-      <h3>Zahlung per Stripe (Automatischer Abzug)</h3>
-      <p><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
-      <p>Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten. Der Rechnungsbetrag ist bereits beglichen.</p>
+      <h3>Zahlung per ${paymentLabel}</h3>
+      ${invoice.paymentMethod === 'SEPA' 
+        ? `<p>IBAN: ${settings.iban || ''} &nbsp;|&nbsp; BIC: ${settings.bic || ''} &nbsp;|&nbsp; Verwendungszweck: ${invoice.invoiceNumber}</p>
+           <p>Der Rechnungsbetrag wird automatisch per SEPA-Lastschrift von Ihrem hinterlegten Bankkonto abgebucht.</p>`
+        : `<p><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
+           <p>Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten. Der Rechnungsbetrag ist bereits beglichen.</p>`
+      }
     </div>
 
-    <!-- ZUGFeRD Note -->
+    <!-- ═══ ZUGFERD NOTE ═══ -->
     <div class="zugferd-note">
       E-Rechnung (ZUGFeRD 2.2) — Strukturierte Daten nach EN 16931 sind in dieser PDF eingebettet.
+      Die XML-Daten können von Ihrer Buchhaltungssoftware automatisch eingelesen werden.
     </div>
 
-    <!-- Footer -->
+    <!-- ═══ FOOTER ═══ -->
     <div class="footer">
       <div class="footer-columns">
         <div class="footer-column">
@@ -666,10 +729,6 @@ export async function deleteInvoicePdf(pdfUrl: string): Promise<void> {
  */
 function embedZugferdXml(pdfBuffer: Buffer, xmlContent: string, invoiceNumber: string): Buffer {
   try {
-    // For now, we'll use a simpler approach:
-    // Just append the XML as metadata/comment to the PDF
-    // Full PDF/A-3 compliance would require pdf-lib or similar
-    
     // Convert XML to buffer
     const xmlBuffer = Buffer.from(xmlContent, 'utf-8')
     
@@ -697,7 +756,6 @@ function embedZugferdXml(pdfBuffer: Buffer, xmlContent: string, invoiceNumber: s
 `
     
     // For a basic implementation, we'll just add a comment with the XML
-    // This makes the PDF readable by humans and some parsers
     const zugferdComment = `
 % ZUGFeRD 2.2 XML Data (embedded)
 % Invoice: ${invoiceNumber}
@@ -717,7 +775,6 @@ ${xmlContent}
     return Buffer.from(newPdfString, 'binary')
   } catch (error) {
     console.error('❌ Error embedding ZUGFeRD XML:', error)
-    // Return original PDF if embedding fails
     return pdfBuffer
   }
 }

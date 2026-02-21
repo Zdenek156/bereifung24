@@ -243,13 +243,19 @@ export async function middleware(request: NextRequest) {
   const isStaticRoute = STATIC_ROUTES.some(route => url.pathname.startsWith(route))
   const isRootPath = url.pathname === '/'
   
+  // If it's a static route, pass through immediately
+  if (isStaticRoute) {
+    console.log('[MIDDLEWARE] Static route, passing through:', url.pathname)
+    return NextResponse.next()
+  }
+  
   // Skip landing page logic for /ratgeber routes (blog pages)
   if (url.pathname.startsWith('/ratgeber')) {
     console.log('[MIDDLEWARE] Blog route, passing through:', url.pathname)
     return NextResponse.next()
   }
   
-  if (!isStaticRoute && !isRootPath && !url.pathname.startsWith('/lp/')) {
+  if (!isRootPath && !url.pathname.startsWith('/lp/')) {
     // This could be a landing page slug, rewrite to /lp/[slug]
     const slug = url.pathname.slice(1) // Remove leading /
     console.log('[MIDDLEWARE] Potential landing page slug:', slug)

@@ -125,7 +125,7 @@ export default function AdminCommissionsPage() {
   }
 
   const handleManualBilling = async () => {
-    if (!confirm('Provisionsrechnungen für alle Werkstätten generieren?\n\nDies erstellt:\n✅ Rechnungen für alle PENDING Provisionen\n✅ PDFs für jede Rechnung\n✅ Buchhaltungseinträge\n✅ Email-Versand an Werkstätten\n✅ SEPA-Abbuchungen (falls Mandat vorhanden)')) {
+    if (!confirm('Provisionsabrechnungen für alle Werkstätten generieren?\n\nDies erstellt:\n✅ Abrechnungen für alle PENDING Provisionen\n✅ PDFs für jede Abrechnung\n✅ Buchhaltungseinträge\n✅ Email-Versand mit Info über bereits abgezogene Provisionen\n\n⚠️ Hinweis: Die Provisionen wurden bereits automatisch von Stripe abgezogen!')) {
       return
     }
 
@@ -180,8 +180,7 @@ export default function AdminCommissionsPage() {
       const endpoints = [
         '/api/admin/invoices/test-create',
         '/api/admin/invoices/test-pdf',
-        '/api/admin/invoices/test-accounting',
-        '/api/admin/invoices/test-sepa'
+        '/api/admin/invoices/test-accounting'
       ]
       
       console.log(`🧪 Starting Test ${step}...`)
@@ -220,9 +219,6 @@ export default function AdminCommissionsPage() {
             <button onClick={() => handleTest(3)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
               3️⃣ Buchhaltung
             </button>
-            <button onClick={() => handleTest(4)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-              4️⃣ SEPA
-            </button>
           </div>
         </div>
 
@@ -246,7 +242,7 @@ export default function AdminCommissionsPage() {
                   </>
                 ) : (
                   <>
-                    📄 Rechnungen generieren & abrechnen ({pendingCommissions.length} Provisionen)
+                    📄 Abrechnungen generieren ({pendingCommissions.length} Provisionen)
                   </>
                 )}
               </button>

@@ -1,22 +1,24 @@
--- Add monthly invoice email template
-INSERT INTO email_templates (
-  id,
-  key,
-  name,
-  description,
-  subject,
-  "htmlContent",
-  placeholders,
-  "isActive",
-  "createdAt",
-  "updatedAt"
-) VALUES (
-  'tpl_monthly_invoice_001',
-  'MONTHLY_INVOICE_WORKSHOP',
-  'Monatliche Provisionsrechnung - Werkstatt',
-  'Monatliche Rechnung mit Provisionszusammenfassung für Werkstätten (wird am 1. des Folgemonats versendet)',
-  'Provisionsabrechnung {{invoiceNumber}} für {{periodMonth}}',
-  '<!DOCTYPE html>
+/**
+ * Update Invoice Email Template - Umstellung von SEPA auf Überweisung
+ * 
+ * Ändert das monatliche Rechnungs-Email-Template:
+ * - Entfernt SEPA-Lastschrift-Hinweis
+ * - Fügt Überweisungsdetails mit IBAN hinzu
+ * - Entfernt sepaReference Platzhalter
+ * 
+ * Kann mehrfach ausgeführt werden (idempotent)
+ */
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function updateInvoiceEmailTemplate() {
+  try {
+    console.log('🔄 Aktualisiere Invoice Email Template...')
+
+    // Neues HTML mit Überweisungsdetails
+    const newHtmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -83,7 +85,7 @@ INSERT INTO email_templates (
       </div>
 
       <div class="payment-notice">
-        <strong>� Zahlung per Überweisung</strong><br>
+        <strong>💰 Zahlung per Überweisung</strong><br>
         Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen auf folgendes Konto:<br><br>
         <strong>Bereifung24 GmbH</strong><br>
         IBAN: DE89 6045 0050 0030 9903 33<br>
@@ -134,17 +136,51 @@ INSERT INTO email_templates (
     </div>
   </div>
 </body>
-</html>',
-  '[{"key":"workshopName","description":"Name der Werkstatt"},{"key":"invoiceNumber","description":"Rechnungsnummer (z.B. B24-INV-2025-0007)"},{"key":"invoiceDate","description":"Datum der Rechnungserstellung"},{"key":"periodMonth","description":"Monat der Abrechnung (z.B. \"Dezember 2025\")"},{"key":"periodStart","description":"Start des Leistungszeitraums (z.B. \"01.12.2025\")"},{"key":"periodEnd","description":"Ende des Leistungszeitraums (z.B. \"31.12.2025\")"},{"key":"commissionCount","description":"Anzahl der abgerechneten Aufträge"},{"key":"totalAmount","description":"Gesamtbetrag inkl. MwSt. (formatiert mit €)"},{"key":"invoiceUrl","description":"URL zum Download der PDF-Rechnung"}]',
-  true,
-  NOW(),
-  NOW()
-)
-ON CONFLICT (key) DO UPDATE SET
-  name = EXCLUDED.name,
-  description = EXCLUDED.description,
-  subject = EXCLUDED.subject,
-  "htmlContent" = EXCLUDED."htmlContent",
-  placeholders = EXCLUDED.placeholders,
-  "isActive" = EXCLUDED."isActive",
-  "updatedAt" = NOW();
+</html>`
+
+    // Aktualisierte Platzhalter (ohne sepaReference)
+    const newPlaceholders = [
+      { key: "workshopName", description: "Name der Werkstatt" },
+      { key: "invoiceNumber", description: "Rechnungsnummer (z.B. B24-INV-2025-0007)" },
+      { key: "invoiceDate", description: "Datum der Rechnungserstellung" },
+      { key: "periodMonth", description: "Monat der Abrechnung (z.B. \"Dezember 2025\")" },
+      { key: "periodStart", description: "Start des Leistungszeitraums (z.B. \"01.12.2025\")" },
+      { key: "periodEnd", description: "Ende des Leistungszeitraums (z.B. \"31.12.2025\")" },
+      { key: "commissionCount", description: "Anzahl der abgerechneten Aufträge" },
+      { key: "totalAmount", description: "Gesamtbetrag inkl. MwSt. (formatiert mit €)" },
+      { key: "commissionItems", description: "HTML-Liste mit Provisions-Positionen" },
+      { key: "invoiceUrl", description: "URL zum Download der PDF-Rechnung" }
+    ]
+
+    const result = await prisma.emailTemplate.update({
+      where: { key: 'MONTHLY_INVOICE_WORKSHOP' },
+      data: {
+        htmlContent: newHtmlContent,
+        placeholders: JSON.stringify(newPlaceholders),
+        updatedAt: new Date()
+      }
+    })
+
+    console.log('✅ Email Template erfolgreich aktualisiert!')
+    console.log(`   Template: ${result.name}`)
+    console.log(`   Key: ${result.key}`)
+    console.log('   Änderungen:')
+    console.log('   ✓ SEPA-Lastschrift-Hinweis entfernt')
+    console.log('   ✓ Überweisungsdetails mit IBAN hinzugefügt')
+    console.log('   ✓ sepaReference Platzhalter entfernt')
+    console.log('   ✓ Zahlungsziel: 14 Tage')
+
+  } catch (error) {
+    if (error.code === 'P2025') {
+      console.error('❌ Email Template "MONTHLY_INVOICE_WORKSHOP" nicht gefunden!')
+      console.log('   Führe zuerst add-invoice-template.sql aus')
+    } else {
+      console.error('❌ Fehler beim Update:', error)
+    }
+    process.exit(1)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+updateInvoiceEmailTemplate()

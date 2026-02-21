@@ -76,9 +76,8 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
     const month = String(invoice.periodEnd.getMonth() + 1).padStart(2, '0')
     const outputDir = path.join(process.cwd(), 'public', 'invoices', String(year), month)
     
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true })
-    }
+    // Ensure directory exists (recursive creates parent dirs if needed)
+    fs.mkdirSync(outputDir, { recursive: true })
 
     // Output file path
     const filename = `${invoice.invoiceNumber.replace(/\//g, '-')}.pdf`

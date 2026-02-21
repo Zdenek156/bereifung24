@@ -225,16 +225,16 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 15px;
     }
     
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 3px solid #007bff;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #007bff;
     }
     
     .logo {
@@ -256,7 +256,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     .recipient {
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     
     .recipient-address {
@@ -265,17 +265,17 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     .invoice-title {
-      font-size: 20pt;
+      font-size: 18pt;
       font-weight: bold;
       color: #007bff;
-      margin: 30px 0 20px 0;
+      margin: 15px 0 10px 0;
     }
     
     .invoice-meta {
       display: grid;
       grid-template-columns: 200px 1fr;
-      gap: 8px;
-      margin-bottom: 30px;
+      gap: 5px;
+      margin-bottom: 15px;
       font-size: 10pt;
     }
     
@@ -286,7 +286,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     .invoice-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 30px 0;
+      margin: 15px 0;
     }
     
     .invoice-table thead {
@@ -296,7 +296,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .invoice-table th,
     .invoice-table td {
-      padding: 12px;
+      padding: 8px 10px;
       text-align: left;
       border-bottom: 1px solid #ddd;
     }
@@ -348,8 +348,8 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     .payment-info {
-      margin-top: 40px;
-      padding: 20px;
+      margin-top: 20px;
+      padding: 12px 15px;
       background-color: #e3f2fd;
       border: 1px solid #90caf9;
       border-radius: 4px;
@@ -357,18 +357,18 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .payment-info h3 {
       color: #007bff;
-      margin-bottom: 12px;
-      font-size: 12pt;
+      margin-bottom: 8px;
+      font-size: 11pt;
     }
     
     .payment-info p {
-      margin: 8px 0;
-      font-size: 10pt;
+      margin: 5px 0;
+      font-size: 9.5pt;
     }
     
     .footer {
-      margin-top: 50px;
-      padding-top: 20px;
+      margin-top: 25px;
+      padding-top: 12px;
       border-top: 1px solid #ddd;
       font-size: 8pt;
       color: #666;
@@ -379,7 +379,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     .footer-columns {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 40px;
+      gap: 20px;
       text-align: center;
       margin-bottom: 15px;
     }
@@ -391,11 +391,11 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     }
     
     .notes {
-      margin-top: 30px;
-      padding: 15px;
+      margin-top: 15px;
+      padding: 10px 12px;
       background-color: #fff3cd;
       border-left: 4px solid #ffc107;
-      font-size: 10pt;
+      font-size: 9.5pt;
     }
   </style>
 </head>

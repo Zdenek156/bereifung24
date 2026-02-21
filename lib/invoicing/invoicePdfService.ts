@@ -377,8 +377,8 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     
     .footer-columns {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
       text-align: center;
       margin-bottom: 15px;
     }
@@ -497,12 +497,9 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <div class="payment-info">
       <h3>Zahlungsinformationen</h3>
       <p><strong>Zahlungsart:</strong> Stripe (Automatischer Abzug)</p>
-      <div style="margin-top: 15px; padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
-        <p style="margin: 0; color: #2e7d32;"><strong>✅ Provision bereits automatisch abgezogen</strong></p>
-        <p style="margin: 8px 0 0 0; font-size: 9.5pt; color: #555;">Die Provision von <strong>${formatEUR(invoice.totalAmount)}</strong> wurde bereits bei der Stripe-Zahlung des Kunden automatisch einbehalten.</p>
-        <p style="margin: 8px 0 0 0; font-size: 9.5pt; color: #555;">Diese Rechnung dient ausschließlich zu Ihrer Dokumentation und Buchhaltung.</p>
-      </div>
-      <p style="margin-top: 12px; font-size: 9pt; color: #666;"><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
+      <p style="margin-top: 10px;"><strong>💳 Die Provision wurde bereits automatisch über Stripe bei der Kundenzahlung einbehalten.</strong></p>
+      <p style="margin-top: 10px;">Diese Rechnung dient ausschließlich zu Ihrer Dokumentation und Buchhaltung.</p>
+      <p><strong>Rechnungsnummer:</strong> ${invoice.invoiceNumber}</p>
     </div>
     
     <div class="e-invoice-note" style="margin-top: 30px; padding: 10px; background: #f0f8ff; border-left: 4px solid #2196F3; font-size: 9pt;">
@@ -533,12 +530,6 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
           ${settings.taxNumber ? `Steuernr: ${settings.taxNumber}<br>` : ''}
           ${settings.registerCourt ? `${settings.registerCourt}<br>` : ''}
           ${settings.registerNumber ? `${settings.registerNumber}` : ''}
-        </div>
-        <div class="footer-column">
-          <h4>Zahlungsabwicklung</h4>
-          Stripe<br>
-          Provision automatisch<br>
-          bei Zahlung abgezogen
         </div>
       </div>
       ${settings.managingDirector ? `<p>Geschäftsführung: ${settings.managingDirector}</p>` : ''}

@@ -9,6 +9,7 @@ interface Commission {
   orderTotal: number
   commissionRate: number
   commissionAmount: number
+  stripeFee: number | null
   status: string
   billedAt: string | null
   collectedAt: string | null
@@ -368,6 +369,9 @@ export default function AdminCommissionsPage() {
                       Provision
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stripe-Gebühren
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Zahlungsmethode
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -411,6 +415,23 @@ export default function AdminCommissionsPage() {
                           })}
                         </div>
                         <div className="text-xs text-gray-500">{commission.commissionRate}%</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {commission.stripeFee !== null ? (
+                          <>
+                            <div className="text-sm font-medium text-red-600">
+                              {commission.stripeFee.toLocaleString('de-DE', {
+                                style: 'currency',
+                                currency: 'EUR'
+                              })}
+                            </div>
+                            <div className="text-xs text-green-600">✓ Echte Gebühr</div>
+                          </>
+                        ) : (
+                          <div className="text-xs text-gray-400">
+                            Noch nicht erfasst
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">

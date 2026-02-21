@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🧪 TEST 3: Create accounting entry')
 
-    // Get latest invoice
+    // Get latest invoice with DirectBooking data
     const invoice = await prisma.commissionInvoice.findFirst({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -26,6 +26,21 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Creating accounting entry for: ${invoice.invoiceNumber}`)
 
+    // Get DirectBooking IDs from the invoice period
+    const directBookings = await prisma.directBooking.findMany({
+      where: {
+        workshopId: invoice.workshopId,
+        paymentStatus: 'PAID',
+        paidAt: {
+          gte: invoice.periodStart,
+          lte: invoice.periodEnd
+        }
+      },
+      select: { id: true }
+    })
+
+    console.log(`📦 Found ${directBookings.length} DirectBookings for this invoice`)
+
     // Create accounting entry
     const accountingEntryId = await createInvoiceBooking({
       invoiceId: invoice.id,
@@ -36,7 +51,8 @@ export async function POST(request: NextRequest) {
       periodEnd: invoice.periodEnd,
       subtotal: invoice.subtotal,
       vatAmount: invoice.vatAmount,
-      totalAmount: invoice.totalAmount
+      totalAmount: invoice.totalAmount,
+      directBookingIds: directBookings.map(b => b.id) // NEW: Pass DirectBooking IDs
     })
 
     console.log(`✅ Accounting entry created: ${accountingEntryId}`)

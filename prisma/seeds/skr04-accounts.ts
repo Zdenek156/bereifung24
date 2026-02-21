@@ -276,6 +276,12 @@ export const skr04Accounts = [
     description: 'Externe Buchhaltung'
   },
   {
+    accountNumber: '6827',
+    accountName: 'Zahlungsverkehrsgebühren',
+    accountType: AccountType.EXPENSE,
+    description: 'Payment-Provider-Gebühren (Stripe, PayPal etc.)'
+  },
+  {
     accountNumber: '6855',
     accountName: 'Geschenke',
     accountType: AccountType.EXPENSE,

@@ -446,16 +446,58 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   try {
     console.log('✅ Payment succeeded:', paymentIntent.id)
 
-    // Update payment record
+    // Get actual Stripe fees from Balance Transaction
+    let stripeFee: number | null = null
+    
+    try {
+      // Get Stripe keys from database
+      const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY')
+      if (!stripeSecretKey) {
+        console.error('❌ No Stripe secret key found')
+      } else {
+        const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' })
+        
+        // Retrieve the full PaymentIntent with charges
+        const fullPaymentIntent = await stripe.paymentIntents.retrieve(paymentIntent.id, {
+          expand: ['latest_charge']
+        })
+        
+        const charge = fullPaymentIntent.latest_charge as Stripe.Charge | null
+        
+        if (charge && charge.balance_transaction) {
+          // Retrieve the balance transaction to get actual fees
+          const balanceTransactionId = typeof charge.balance_transaction === 'string' 
+            ? charge.balance_transaction 
+            : charge.balance_transaction.id
+          
+          const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId)
+          
+          // Fee is in cents, convert to euros
+          stripeFee = balanceTransaction.fee / 100
+          
+          console.log('💰 Actual Stripe fee:', {
+            feeInCents: balanceTransaction.fee,
+            feeInEuros: stripeFee,
+            paymentMethodDetail: charge.payment_method_details?.type
+          })
+        }
+      }
+    } catch (feeError) {
+      console.error('⚠️ Error retrieving Stripe fee:', feeError)
+      // Continue without fee - we'll estimate it later if needed
+    }
+
+    // Update payment record with actual fee
     await prisma.directBooking.updateMany({
       where: { stripePaymentId: paymentIntent.id },
       data: {
         paymentStatus: 'PAID',
-        status: 'CONFIRMED'
+        status: 'CONFIRMED',
+        ...(stripeFee !== null && { stripeFee })
       }
     })
 
-    console.log('✅ Payment confirmed for booking')
+    console.log('✅ Payment confirmed for booking', stripeFee !== null ? `with actual fee: ${stripeFee.toFixed(2)}€` : '')
   } catch (error) {
     console.error('❌ Error handling payment success:', error)
   }

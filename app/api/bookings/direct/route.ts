@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, directBookingNotificationWorkshopEmail } from '@/lib/email'
 import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
+import { createBerlinDate, isDSTInBerlin } from '@/lib/timezone-utils'
 
 /**
  * POST /api/bookings/direct
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    
+    console.log('[DIRECT BOOKING] Full Request Body:', JSON.stringify(body, null, 2))
+    
     const {
       workshopId,
       vehicleId,
@@ -27,10 +31,32 @@ export async function POST(req: NextRequest) {
       paymentStatus,
       sendEmails = false,
       createCalendarEvent: shouldCreateCalendarEvent = false,
-      reservationId // Add reservationId to identify the DirectBooking to update
+      reservationId, // Add reservationId to identify the DirectBooking to update
+      // Tire information from homepage selection
+      tireBrand,
+      tireModel,
+      tireSize,
+      tireLoadIndex,
+      tireSpeedIndex,
+      tireEAN,
+      tireArticleId,
+      tireQuantity,
+      tirePurchasePrice,
+      totalTirePurchasePrice,
+      tireRunFlat,
+      tire3PMSF,
+      // Mixed tires (Mischbereifung)
+      tireBrandFront,
+      tireModelFront,
+      tireSizeFront,
+      tireBrandRear,
+      tireModelRear,
+      tireSizeRear,
+      hasMixedTires
     } = body
 
     console.log('[DIRECT BOOKING] Creating booking:', { workshopId, vehicleId, serviceType, date, time, paymentMethod, reservationId })
+    console.log('[DIRECT BOOKING] Tire Data:', { tireBrand, tireModel, tireSize, hasMixedTires, tireBrandFront, tireBrandRear })
 
     // Validate required fields
     if (!workshopId || !vehicleId || !serviceType || !date || !time) {
@@ -100,10 +126,9 @@ export async function POST(req: NextRequest) {
     let directBooking: any
     
     if (reservationId) {
-      // Load existing reservation to get totalPrice
+      // Load existing reservation WITH ALL DATA including tire data
       const existingReservation = await prisma.directBooking.findUnique({
-        where: { id: reservationId },
-        select: { totalPrice: true }
+        where: { id: reservationId }
       })
       
       if (!existingReservation) {
@@ -118,23 +143,45 @@ export async function POST(req: NextRequest) {
       const platformCommission = reservationTotal * platformCommissionRate
       const workshopPayout = reservationTotal - platformCommission
       
-      // Update existing reservation
+      console.log('[DIRECT BOOKING] Updating reservation with tire data:', {
+        hasTireBrand: !!existingReservation.tireBrand,
+        tireBrand: existingReservation.tireBrand,
+        tireModel: existingReservation.tireModel,
+        tireEAN: existingReservation.tireEAN,
+        tireData: existingReservation.tireData,
+        tireDataType: typeof existingReservation.tireData,
+        hasTireData: !!existingReservation.tireData
+      })
+      
+      // Update existing reservation - KEEP all tire data from reservation!
       directBooking = await prisma.directBooking.update({
         where: { id: reservationId },
         data: {
           status: 'CONFIRMED',
           paymentMethod: paymentMethod || 'STRIPE',
           paymentStatus: paymentStatus || 'PAID',
-          paymentId: body.paymentId, // Store Stripe session ID or PayPal order ID
+          paymentId: body.paymentId,
           stripeSessionId: paymentMethod === 'STRIPE' ? body.paymentId : null,
           paypalOrderId: paymentMethod === 'PAYPAL' ? body.paymentId : null,
           platformCommission: platformCommission,
           workshopPayout: workshopPayout,
           paidAt: new Date()
+          // DON'T update tire data - reservation already has it!
+          // Tire data stays from the original reservation
         }
       })
-      console.log('[DIRECT BOOKING] Reservation confirmed:', directBooking.id, 'Workshop payout:', workshopPayout.toFixed(2))
+      
+      console.log('[DIRECT BOOKING] Reservation updated to CONFIRMED, tire data preserved')
     } else {
+      // No reservation - create new booking with tire data from request body
+      if (tireBrand) {
+        console.log('[DIRECT BOOKING] Creating new booking with tire data from request:', {
+          tireBrand,
+          tireModel,
+          tireEAN
+        })
+      }
+      
       // Calculate platform commission and workshop payout
       const platformCommissionRate = 0.069 // 6.9%
       const platformCommission = totalPrice * platformCommissionRate
@@ -160,7 +207,20 @@ export async function POST(req: NextRequest) {
           paymentId: body.paymentId,
           stripeSessionId: paymentMethod === 'STRIPE' ? body.paymentId : null,
           paypalOrderId: paymentMethod === 'PAYPAL' ? body.paymentId : null,
-          paidAt: new Date()
+          paidAt: new Date(),
+          // Include tire information if provided
+          tireBrand: tireBrand || null,
+          tireModel: tireModel || null,
+          tireSize: tireSize || null,
+          tireLoadIndex: tireLoadIndex || null,
+          tireSpeedIndex: tireSpeedIndex || null,
+          tireEAN: tireEAN || null,
+          tireArticleId: tireArticleId || null,
+          tireQuantity: tireQuantity || null,
+          tirePurchasePrice: tirePurchasePrice ? Number(tirePurchasePrice) : null,
+          totalTirePurchasePrice: totalTirePurchasePrice ? Number(totalTirePurchasePrice) : null,
+          tireRunFlat: tireRunFlat || false,
+          tire3PMSF: tire3PMSF || false
         }
       })
       console.log('[DIRECT BOOKING] New booking created:', directBooking.id, 'Workshop payout:', workshopPayout.toFixed(2))
@@ -190,7 +250,10 @@ export async function POST(req: NextRequest) {
 
     console.log('[DIRECT BOOKING] Complete booking loaded with tire data:', {
       id: completeBooking.id,
-      hasTireData: !!(completeBooking.tireBrand && completeBooking.tireModel)
+      hasTireData: !!(completeBooking.tireBrand && completeBooking.tireModel),
+      tireData: completeBooking.tireData,
+      tireDataType: typeof completeBooking.tireData,
+      isMixedTires: completeBooking.tireData ? (completeBooking.tireData as any)?.isMixedTires : false
     })
 
     // Use DirectBooking's stored date and time (authoritative source)
@@ -205,24 +268,19 @@ export async function POST(req: NextRequest) {
     const month = bookingDate.getUTCMonth() + 1 // 0-indexed, so add 1
     const day = bookingDate.getUTCDate()
     
-    // Create appointment time in Berlin timezone (CET/CEST)
-    // User selected time is in Berlin, we need to create correct Date object
-    // Approach: Create ISO string with explicit offset, then parse
-    // March-October: Check if DST applies (rough approximation)
-    // DST in Europe: Last Sunday of March (02:00 → 03:00) to last Sunday of October (03:00 → 02:00)
-    const isDST = (month > 3 && month < 10) || 
-                  (month === 3 && day > 24) || 
-                  (month === 10 && day <= 24)
+    // Create appointment time in Berlin timezone using centralized timezone utility
+    // Handles DST (Daylight Saving Time) automatically with precise last-Sunday-of-March/October logic
+    const appointmentDateTime = createBerlinDate(year, month, day, hours, minutes)
+    const isDST = isDSTInBerlin(year, month, day)
     const berlinOffset = isDST ? '+02:00' : '+01:00'
-    
-    // Create ISO string with explicit Berlin timezone offset
     const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00${berlinOffset}`
-    const appointmentDateTime = new Date(isoString)
     
     console.log('[DIRECT BOOKING] Appointment datetime:', {
       stored_date: bookingDate.toISOString(),
       time: directBooking.time,
       extracted_date: `${year}-${month}-${day}`,
+      isDST,
+      berlinOffset,
       combined_utc: appointmentDateTime.toISOString(),
       berlin_display: appointmentDateTime.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
     })
@@ -388,6 +446,15 @@ export async function POST(req: NextRequest) {
       
       const icsDescription = icsDescriptionParts.join('\\n')
       
+      // Log for debugging
+      console.log('[ICS GENERATION]', {
+        berlinTime: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`,
+        isDST,
+        offset: berlinOffset,
+        utcStart: appointmentStart.toISOString(),
+        utcEnd: appointmentEnd.toISOString()
+      })
+      
       const icsContent = createICSFile({
         start: appointmentStart,
         end: appointmentEnd,
@@ -442,14 +509,20 @@ export async function POST(req: NextRequest) {
         tireModel: completeBooking.tireModel || undefined,
         tireSize,
         tireQuantity: completeBooking.tireQuantity || undefined,
-        tireEAN: completeBooking.tireEAN || undefined,
         tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
         totalTirePurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         tireRunFlat: completeBooking.tireRunFlat || undefined,
         tire3PMSF: completeBooking.tire3PMSF || undefined,
+        tireData: completeBooking.tireData as any, // Mixed tires data
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
         hasDisposal: completeBooking.hasDisposal || undefined
+      })
+
+      console.log('[DIRECT BOOKING] Customer email data prepared:', {
+        hasTireData: !!customerEmailData,
+        tireDataInEmail: (customerEmailData as any).tireData,
+        isMixedInEmail: (customerEmailData as any).tireData?.isMixedTires
       })
 
       try {
@@ -457,11 +530,12 @@ export async function POST(req: NextRequest) {
           to: completeBooking.customer.user.email,
           subject: customerEmailData.subject,
           html: customerEmailData.html,
+          // Add ICS as attachment for calendar import
           attachments: icsContent ? [{
             filename: 'termin.ics',
             content: icsContent,
             contentType: 'text/calendar; charset=utf-8; method=REQUEST'
-          }] : undefined
+          }] : []
         })
         console.log('[EMAIL] Customer email sent to:', completeBooking.customer.user.email)
       } catch (error) {
@@ -525,15 +599,24 @@ export async function POST(req: NextRequest) {
         totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         tireRunFlat: completeBooking.tireRunFlat || undefined,
         tire3PMSF: completeBooking.tire3PMSF || undefined,
+        tireData: completeBooking.tireData as any, // Mixed tires data
         supplierConnectionType: supplier?.type as 'API' | 'CSV' | undefined,
         supplierName: supplier?.name
+      })
+
+      console.log('[DIRECT BOOKING] Workshop email data prepared:', {
+        tireDataInEmail: (workshopEmailData as any).tireData,
+        isMixedInEmail: (workshopEmailData as any).tireData?.isMixedTires,
+        tireBrand: (workshopEmailData as any).tireBrand,
+        tireEAN: (workshopEmailData as any).tireEAN
       })
 
       try {
         await sendEmail({
           to: completeBooking.workshop.user.email,
           subject: workshopEmailData.subject,
-          html: workshopEmailData.html
+          html: workshopEmailData.html,
+          // Workshop email does not need ICS attachment (only customer email has it)
         })
         console.log('[EMAIL] Workshop email sent to:', completeBooking.workshop.user.email)
       } catch (error) {

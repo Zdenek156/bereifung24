@@ -149,6 +149,17 @@ export default function PaymentPage() {
 
     setProcessing(true)
     try {
+      // DEBUG: Log tire booking data
+      console.log('[PAYMENT] Tire booking data:', {
+        hasTireBooking: !!bookingData.tireBooking,
+        isMixedTires: bookingData.tireBooking?.isMixedTires,
+        selectedTire: bookingData.tireBooking?.selectedTire,
+        selectedFrontTire: bookingData.tireBooking?.selectedFrontTire,
+        selectedRearTire: bookingData.tireBooking?.selectedRearTire,
+        tireDimensionsFront: bookingData.tireBooking?.tireDimensionsFront,
+        tireDimensionsRear: bookingData.tireBooking?.tireDimensionsRear
+      })
+
       // STEP 1: Create reservation first (blocks slot for 10 minutes during payment)
       console.log('[PAYMENT] Creating reservation before payment...')
       const reserveResponse = await fetch('/api/customer/direct-booking/reserve', {
@@ -169,7 +180,7 @@ export default function PaymentPage() {
           hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
           hasDisposal: bookingData.tireBooking?.hasDisposal || false,
           totalPrice: bookingData.pricing.totalPrice,
-          // TIRE DATA - Include tire info in reservation
+          // TIRE DATA - Standard tires OR mixed tires
           ...(bookingData.tireBooking?.selectedTire && {
             tireBrand: bookingData.tireBooking.selectedTire.brand || '',
             tireModel: bookingData.tireBooking.selectedTire.model || '',
@@ -179,11 +190,52 @@ export default function PaymentPage() {
             tireLoadIndex: bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || '',
             tireSpeedIndex: bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || '',
             tireEAN: bookingData.tireBooking.selectedTire.ean || '',
+            tireArticleId: bookingData.tireBooking.selectedTire.articleId || bookingData.tireBooking.selectedTire.article_id || '',
             tireQuantity: bookingData.tireBooking.tireCount || 4,
-            tirePurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,
-            totalTirePurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
+            tirePurchasePrice: bookingData.tireBooking.selectedTire.pricePerTire || bookingData.tireBooking.selectedTire.totalPrice / (bookingData.tireBooking.tireCount || 4) || 0,  // VK-Preis (für Kunde)
+            totalTirePurchasePrice: bookingData.tireBooking.selectedTire.totalPrice || (bookingData.tireBooking.selectedTire.pricePerTire || 0) * (bookingData.tireBooking.tireCount || 4),
+            supplierPurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,  // Echter EK vom Lieferanten (direkt auf Objekt)
+            supplierTotalPurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
             tireRunFlat: bookingData.tireBooking.selectedTire.runflat || bookingData.tireBooking.selectedTire.isRunFlat || false,
             tire3PMSF: bookingData.tireBooking.selectedTire.winter || bookingData.tireBooking.selectedTire.is3PMSF || false,
+          }),
+          // MIXED TIRES - Front tire
+          ...(bookingData.tireBooking?.isMixedTires && bookingData.tireBooking?.selectedFrontTire && {
+            tireBrandFront: bookingData.tireBooking.selectedFrontTire.tire?.brand || '',
+            tireModelFront: bookingData.tireBooking.selectedFrontTire.tire?.model || '',
+            tireSizeFront: bookingData.tireBooking.tireDimensionsFront
+              ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
+              : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || ''),
+            tireLoadIndexFront: bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
+            tireSpeedIndexFront: bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
+            tireEANFront: bookingData.tireBooking.selectedFrontTire.tire?.ean || '',
+            tireArticleIdFront: bookingData.tireBooking.selectedFrontTire.tire?.articleId || bookingData.tireBooking.selectedFrontTire.tire?.article_id || bookingData.tireBooking.selectedFrontTire.tire?.articleNumber || '',
+            tireQuantityFront: bookingData.tireBooking.selectedFrontTire.quantity || 2,
+            tirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.pricePerTire || 0, // VK-Preis (für Kunde)
+            totalTirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.totalPrice || 0, // Gesamt-VK
+            supplierPurchasePriceFront: bookingData.tireBooking.selectedFrontTire.tire?.purchasePrice || bookingData.tireBooking.selectedFrontTire.tire?.price || 0, // Echter EK vom Lieferanten
+            supplierTotalPurchasePriceFront: (bookingData.tireBooking.selectedFrontTire.tire?.purchasePrice || bookingData.tireBooking.selectedFrontTire.tire?.price || 0) * (bookingData.tireBooking.selectedFrontTire.quantity || 2), // Gesamt echter EK
+            tireRunFlatFront: bookingData.tireBooking.selectedFrontTire.tire?.runflat || false,
+            tire3PMSFFront: bookingData.tireBooking.selectedFrontTire.tire?.winter || false,
+          }),
+          // MIXED TIRES - Rear tire
+          ...(bookingData.tireBooking?.isMixedTires && bookingData.tireBooking?.selectedRearTire && {
+            tireBrandRear: bookingData.tireBooking.selectedRearTire.tire?.brand || '',
+            tireModelRear: bookingData.tireBooking.selectedRearTire.tire?.model || '',
+            tireSizeRear: bookingData.tireBooking.tireDimensionsRear
+              ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
+              : (bookingData.tireBooking.selectedRearTire.tire?.dimension || ''),
+            tireLoadIndexRear: bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
+            tireSpeedIndexRear: bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
+            tireEANRear: bookingData.tireBooking.selectedRearTire.tire?.ean || '',
+            tireArticleIdRear: bookingData.tireBooking.selectedRearTire.tire?.articleId || bookingData.tireBooking.selectedRearTire.tire?.article_id || bookingData.tireBooking.selectedRearTire.tire?.articleNumber || '',
+            tireQuantityRear: bookingData.tireBooking.selectedRearTire.quantity || 2,
+            tirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.pricePerTire || 0, // VK-Preis (für Kunde)
+            totalTirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.totalPrice || 0, // Gesamt-VK
+            supplierPurchasePriceRear: bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0, // Echter EK vom Lieferanten
+            supplierTotalPurchasePriceRear: (bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0) * (bookingData.tireBooking.selectedRearTire.quantity || 2), // Gesamt echter EK
+            tireRunFlatRear: bookingData.tireBooking.selectedRearTire.tire?.runflat || false,
+            tire3PMSFRear: bookingData.tireBooking.selectedRearTire.tire?.winter || false,
           })
         })
       })
@@ -197,38 +249,10 @@ export default function PaymentPage() {
 
       console.log('[PAYMENT] Reservation created:', reserveData.reservationId, 'expires at:', reserveData.expiresAt)
       
-      // STEP 2: Proceed with payment
-      // PayPal Installments (Ratenzahlung) - noch über separate PayPal API
-      if (method === 'paypal-installments') {
-        // Create PayPal Order with installments
-        const response = await fetch('/api/customer/direct-booking/create-paypal-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workshopId,
-            vehicleId: bookingData.vehicle.id,
-            serviceType: bookingData.service.type,
-            date,
-            time,
-            amount: bookingData.pricing.totalPrice,
-            description: `${serviceLabels[bookingData.service.type] || bookingData.service.type} bei ${workshop.name}`,
-            workshopName: workshop.name,
-            customerName: session?.user?.name,
-            customerEmail: session?.user?.email,
-            installments: true,
-            reservationId: reserveData.reservationId
-          })
-        })
-
-        const data = await response.json()
-        if (data.orderId && data.approvalUrl) {
-          window.location.href = data.approvalUrl
-        } else {
-          console.error('PayPal error:', data)
-          alert('Fehler beim Erstellen der PayPal-Zahlung: ' + (data.error || 'Unbekannter Fehler'))
-        }
-      } else {
-        // ALL OTHER PAYMENT METHODS via STRIPE (card, klarna, bank-transfer, paypal)
+      // STEP 2: Proceed with payment via STRIPE
+      // ALL PAYMENT METHODS now run through Stripe (card, sofort, amazon_pay, klarna, paypal)
+      {
+        // Stripe Checkout Session for all payment methods
         // PayPal (regular) now runs through Stripe for unified commission tracking (6.9%)
         const response = await fetch('/api/customer/direct-booking/create-stripe-session', {
           method: 'POST',
@@ -251,7 +275,7 @@ export default function PaymentPage() {
             workshopName: workshop.name,
             serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
           vehicleInfo: `${bookingData.vehicle.make} ${bookingData.vehicle.model}`,
-            // Tire data (for TIRE_CHANGE, TIRE_MOUNT services)
+            // TIRE DATA - Standard tires
             ...(bookingData.tireBooking?.selectedTire && {
               tireBrand: bookingData.tireBooking.selectedTire.brand || '',
               tireModel: bookingData.tireBooking.selectedTire.model || '',
@@ -263,12 +287,52 @@ export default function PaymentPage() {
               tireEAN: bookingData.tireBooking.selectedTire.ean || '',
               tireArticleId: bookingData.tireBooking.selectedTire.articleId || bookingData.tireBooking.selectedTire.article_id || bookingData.tireBooking.selectedTire.articleNumber || '',
               tireQuantity: bookingData.tireBooking.tireCount || 4,
-              tirePurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,
-              totalTirePurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
+              tirePurchasePrice: bookingData.tireBooking.selectedTire.pricePerTire || bookingData.tireBooking.selectedTire.totalPrice / (bookingData.tireBooking.tireCount || 4) || 0,  // VK-Preis
+              totalTirePurchasePrice: bookingData.tireBooking.selectedTire.totalPrice || (bookingData.tireBooking.selectedTire.pricePerTire || 0) * (bookingData.tireBooking.tireCount || 4),
+              supplierPurchasePrice: bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0,  // Echter EK vom Lieferanten (direkt auf Objekt)
+              supplierTotalPurchasePrice: (bookingData.tireBooking.selectedTire.purchasePrice || bookingData.tireBooking.selectedTire.price || 0) * (bookingData.tireBooking.tireCount || 4),
               tireRunFlat: bookingData.tireBooking.selectedTire.runflat || bookingData.tireBooking.selectedTire.isRunFlat || false,
               tire3PMSF: bookingData.tireBooking.selectedTire.winter || bookingData.tireBooking.selectedTire.is3PMSF || false,
             }),
-            paymentMethodType: method === 'bank-transfer' ? 'customer_balance' : method, // 'card', 'klarna', 'paypal', or 'customer_balance'
+            // MIXED TIRES - Front tire
+            ...(bookingData.tireBooking?.isMixedTires && bookingData.tireBooking?.selectedFrontTire && {
+              tireBrandFront: bookingData.tireBooking.selectedFrontTire.tire?.brand || '',
+              tireModelFront: bookingData.tireBooking.selectedFrontTire.tire?.model || '',
+              tireSizeFront: bookingData.tireBooking.tireDimensionsFront
+                ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
+                : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || ''),
+              tireLoadIndexFront: bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
+              tireSpeedIndexFront: bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
+              tireEANFront: bookingData.tireBooking.selectedFrontTire.tire?.ean || '',
+              tireArticleIdFront: bookingData.tireBooking.selectedFrontTire.tire?.articleId || bookingData.tireBooking.selectedFrontTire.tire?.article_id || bookingData.tireBooking.selectedFrontTire.tire?.articleNumber || '',
+              tireQuantityFront: bookingData.tireBooking.selectedFrontTire.quantity || 2,
+              tirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.pricePerTire || 0,
+              totalTirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.totalPrice || 0,
+              supplierPurchasePriceFront: bookingData.tireBooking.selectedFrontTire.tire?.purchasePrice || bookingData.tireBooking.selectedFrontTire.tire?.price || 0,
+              supplierTotalPurchasePriceFront: (bookingData.tireBooking.selectedFrontTire.tire?.purchasePrice || bookingData.tireBooking.selectedFrontTire.tire?.price || 0) * (bookingData.tireBooking.selectedFrontTire.quantity || 2),
+              tireRunFlatFront: bookingData.tireBooking.selectedFrontTire.tire?.runflat || false,
+              tire3PMSFFront: bookingData.tireBooking.selectedFrontTire.tire?.winter || false,
+            }),
+            // MIXED TIRES - Rear tire
+            ...(bookingData.tireBooking?.isMixedTires && bookingData.tireBooking?.selectedRearTire && {
+              tireBrandRear: bookingData.tireBooking.selectedRearTire.tire?.brand || '',
+              tireModelRear: bookingData.tireBooking.selectedRearTire.tire?.model || '',
+              tireSizeRear: bookingData.tireBooking.tireDimensionsRear
+                ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
+                : (bookingData.tireBooking.selectedRearTire.tire?.dimension || ''),
+              tireLoadIndexRear: bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
+              tireSpeedIndexRear: bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
+              tireEANRear: bookingData.tireBooking.selectedRearTire.tire?.ean || '',
+              tireArticleIdRear: bookingData.tireBooking.selectedRearTire.tire?.articleId || bookingData.tireBooking.selectedRearTire.tire?.article_id || bookingData.tireBooking.selectedRearTire.tire?.articleNumber || '',
+              tireQuantityRear: bookingData.tireBooking.selectedRearTire.quantity || 2,
+              tirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.pricePerTire || 0,
+              totalTirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.totalPrice || 0,
+              supplierPurchasePriceRear: bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0,
+              supplierTotalPurchasePriceRear: (bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0) * (bookingData.tireBooking.selectedRearTire.quantity || 2),
+              tireRunFlatRear: bookingData.tireBooking.selectedRearTire.tire?.runflat || false,
+              tire3PMSFRear: bookingData.tireBooking.selectedRearTire.tire?.winter || false,
+            }),
+            paymentMethodType: method, // 'card', 'sofort', 'amazon_pay', 'klarna', or 'paypal'
             reservationId: reserveData.reservationId
           })
         })
@@ -502,49 +566,142 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* Tire Info (only for TIRE_CHANGE service) */}
-              {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.selectedTire && (
+              {/* Tire Info (only for TIRE_CHANGE service, including mixed tires) */}
+              {bookingData.service.type === 'TIRE_CHANGE' && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && (
                 <div className="mb-6 pb-6 border-b border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Reifen</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="text-xs text-primary-600 font-medium mb-1">
-                          {bookingData.tireBooking.selectedTire.label}
-                        </p>
-                        <p className="font-bold text-gray-900">
-                          {bookingData.tireBooking.tireCount && `${bookingData.tireBooking.tireCount}× `}
-                          {bookingData.tireBooking.selectedTire.brand}
-                          {bookingData.tireBooking.selectedTire.model && ` ${bookingData.tireBooking.selectedTire.model}`}
-                          {/* Dimension */}
-                          {(bookingData.tireBooking.tireDimensions || bookingData.tireBooking.selectedTire.dimension) && (
-                            <span>
-                              {' '}
-                              {bookingData.tireBooking.tireDimensions 
-                                ? `${bookingData.tireBooking.tireDimensions.width}/${bookingData.tireBooking.tireDimensions.height} R${bookingData.tireBooking.tireDimensions.diameter}`
-                                : bookingData.tireBooking.selectedTire.dimension
-                              }
-                            </span>
-                          )}
-                          {/* Load and Speed Index */}
-                          {((bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex) ||
-                            (bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex)) && (
-                            <span>
-                              {' '}
-                              {bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || ''}
-                              {bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || ''}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {bookingData.tireBooking.selectedTire.quantity || 4}× à {formatPrice(bookingData.tireBooking.selectedTire.pricePerTire || 0)}
+                  
+                  {/* Check if mixed tires (front and rear) */}
+                  {bookingData.tireBooking?.isMixedTires && (bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) ? (
+                    <div className="space-y-3">
+                      {/* Front Tires */}
+                      {bookingData.tireBooking?.selectedFrontTire && (
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <p className="text-xs text-primary-600 font-medium mb-1">
+                                🔹 Vorderachse
+                              </p>
+                              <p className="font-bold text-gray-900">
+                                {bookingData.tireBooking.selectedFrontTire.quantity || 2}× {bookingData.tireBooking.selectedFrontTire.tire?.brand || bookingData.tireBooking.selectedFrontTire.brand}
+                                {(bookingData.tireBooking.selectedFrontTire.tire?.model || bookingData.tireBooking.selectedFrontTire.model) && ` ${bookingData.tireBooking.selectedFrontTire.tire?.model || bookingData.tireBooking.selectedFrontTire.model}`}
+                                {/* Dimension */}
+                                {(bookingData.tireBooking.tireDimensionsFront || bookingData.tireBooking.selectedFrontTire.dimension) && (
+                                  <span>
+                                    {' '}
+                                    {bookingData.tireBooking.tireDimensionsFront 
+                                      ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
+                                      : bookingData.tireBooking.selectedFrontTire.dimension
+                                    }
+                                  </span>
+                                )}
+                                {/* Load and Speed Index */}
+                                {((bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex) ||
+                                  (bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex)) && (
+                                  <span>
+                                    {' '}
+                                    {bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex || ''}
+                                    {bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex || ''}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {bookingData.tireBooking.selectedFrontTire.quantity || 2}× à {formatPrice(bookingData.tireBooking.selectedFrontTire.pricePerTire || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Rear Tires */}
+                      {bookingData.tireBooking?.selectedRearTire && (
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <p className="text-xs text-primary-600 font-medium mb-1">
+                                🔸 Hinterachse
+                              </p>
+                              <p className="font-bold text-gray-900">
+                                {bookingData.tireBooking.selectedRearTire.quantity || 2}× {bookingData.tireBooking.selectedRearTire.tire?.brand || bookingData.tireBooking.selectedRearTire.brand}
+                                {(bookingData.tireBooking.selectedRearTire.tire?.model || bookingData.tireBooking.selectedRearTire.model) && ` ${bookingData.tireBooking.selectedRearTire.tire?.model || bookingData.tireBooking.selectedRearTire.model}`}
+                                {/* Dimension */}
+                                {(bookingData.tireBooking.tireDimensionsRear || bookingData.tireBooking.selectedRearTire.dimension) && (
+                                  <span>
+                                    {' '}
+                                    {bookingData.tireBooking.tireDimensionsRear 
+                                      ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
+                                      : bookingData.tireBooking.selectedRearTire.dimension
+                                    }
+                                  </span>
+                                )}
+                                {/* Load and Speed Index */}
+                                {((bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex) ||
+                                  (bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex)) && (
+                                  <span>
+                                    {' '}
+                                    {bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex || ''}
+                                    {bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex || ''}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {bookingData.tireBooking.selectedRearTire.quantity || 2}× à {formatPrice(bookingData.tireBooking.selectedRearTire.pricePerTire || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Total Price for Mixed Tires */}
+                      <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-primary-900">Reifen Gesamt</span>
+                          <span className="font-bold text-lg text-primary-900">{formatPrice(bookingData.pricing.tirePrice)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : bookingData.tireBooking?.selectedTire && (
+                    /* Standard tires (not mixed) */
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="text-xs text-primary-600 font-medium mb-1">
+                            {bookingData.tireBooking.selectedTire.label}
+                          </p>
+                          <p className="font-bold text-gray-900">
+                            {bookingData.tireBooking.tireCount && `${bookingData.tireBooking.tireCount}× `}
+                            {bookingData.tireBooking.selectedTire.brand}
+                            {bookingData.tireBooking.selectedTire.model && ` ${bookingData.tireBooking.selectedTire.model}`}
+                            {/* Dimension */}
+                            {(bookingData.tireBooking.tireDimensions || bookingData.tireBooking.selectedTire.dimension) && (
+                              <span>
+                                {' '}
+                                {bookingData.tireBooking.tireDimensions 
+                                  ? `${bookingData.tireBooking.tireDimensions.width}/${bookingData.tireBooking.tireDimensions.height} R${bookingData.tireBooking.tireDimensions.diameter}`
+                                  : bookingData.tireBooking.selectedTire.dimension
+                                }
+                              </span>
+                            )}
+                            {/* Load and Speed Index */}
+                            {((bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex) ||
+                              (bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex)) && (
+                              <span>
+                                {' '}
+                                {bookingData.tireBooking.tireDimensions?.loadIndex || bookingData.tireBooking.selectedTire.loadIndex || ''}
+                                {bookingData.tireBooking.tireDimensions?.speedIndex || bookingData.tireBooking.selectedTire.speedIndex || ''}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {bookingData.tireBooking.selectedTire.quantity || 4}× à {formatPrice(bookingData.tireBooking.selectedTire.pricePerTire || 0)}
+                          </p>
+                        </div>
+                        <p className="font-bold text-lg text-gray-900">
+                          {formatPrice(bookingData.pricing.tirePrice)}
                         </p>
                       </div>
-                      <p className="font-bold text-lg text-gray-900">
-                        {formatPrice(bookingData.pricing.tirePrice)}
-                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -618,11 +775,11 @@ export default function PaymentPage() {
                     ))
                   )}
                   
-                  {/* Tire Price - Only for TIRE_CHANGE */}
-                  {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.selectedTire && bookingData.pricing.tirePrice > 0 && (
+                  {/* Tire Price - Only for TIRE_CHANGE (including mixed tires) */}
+                  {bookingData.service.type === 'TIRE_CHANGE' && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && bookingData.pricing.tirePrice > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
-                        {bookingData.tireBooking.selectedTire.quantity || 4}× Reifen
+                        {bookingData.tireBooking.tireCount || bookingData.tireBooking.selectedTire?.quantity || 4}× Reifen
                       </span>
                       <span className="font-semibold">{formatPrice(bookingData.pricing.tirePrice)}</span>
                     </div>
@@ -630,17 +787,17 @@ export default function PaymentPage() {
                   
                   {/* Disposal Fee - Check both locations for backwards compatibility */}
                   {bookingData.tireBooking?.hasDisposal && (bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0) > 0 && (
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">+ Reifenentsorgung</span>
-                      <span className="font-medium">{formatPrice(bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0)}</span>
+                      <span className="font-semibold">{formatPrice(bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0)}</span>
                     </div>
                   )}
                   
                   {/* Runflat Surcharge - Check both locations for backwards compatibility */}
                   {bookingData.tireBooking?.hasRunflat && (bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0) > 0 && (
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">+ Runflat-Zuschlag</span>
-                      <span className="font-medium">{formatPrice(bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0)}</span>
+                      <span className="font-semibold">{formatPrice(bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0)}</span>
                     </div>
                   )}
                 </div>
@@ -779,12 +936,12 @@ export default function PaymentPage() {
                     </div>
                   </button>
 
-                  {/* Bank Transfer (Vorkasse) */}
+                  {/* Amazon Pay */}
                   <button
-                    onClick={() => setSelectedPaymentMethod('bank-transfer')}
+                    onClick={() => setSelectedPaymentMethod('amazon_pay')}
                     disabled={processing}
                     className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedPaymentMethod === 'bank-transfer'
+                      selectedPaymentMethod === 'amazon_pay'
                         ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
                         : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
                     }`}
@@ -792,16 +949,16 @@ export default function PaymentPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">Banküberweisung</p>
-                          <p className="text-xs text-gray-500">Vorkasse - Zahlung per Überweisung</p>
+                          <p className="font-semibold text-gray-900">Amazon Pay <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-2">⚡ Sofort</span></p>
+                          <p className="text-xs text-gray-500">Zahlen mit Amazon-Konto</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {selectedPaymentMethod === 'bank-transfer' && (
+                        {selectedPaymentMethod === 'amazon_pay' && (
                           <Check className="w-5 h-5 text-primary-600" />
                         )}
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.72-2.53 1.23-3.86 1.53-1.33.3-2.68.45-4.05.45-2.27 0-4.46-.35-6.57-1.05-2.11-.7-3.93-1.7-5.46-3-1.53-1.3-2.73-2.82-3.6-4.56-.87-1.74-1.3-3.6-1.3-5.58 0-1.98.43-3.84 1.3-5.58.87-1.74 2.07-3.26 3.6-4.56 1.53-1.3 3.35-2.3 5.46-3C13.54.35 15.73 0 18 0c2.27 0 4.46.35 6.57 1.05 2.11.7 3.93 1.7 5.46 3 1.53 1.3 2.73 2.82 3.6 4.56.87 1.74 1.3 3.6 1.3 5.58 0 1.98-.43 3.84-1.3 5.58-.87 1.74-2.07 3.26-3.6 4.56-1.53 1.3-3.35 2.3-5.46 3-2.11.7-4.3 1.05-6.57 1.05-2.27 0-4.46-.35-6.57-1.05-2.11-.7-3.93-1.7-5.46-3-1.53-1.3-2.73-2.82-3.6-4.56-.435-.87-.74-1.77-.915-2.71 7.563 1.07 13.045.582 16.463-1.435 1.622-1.016 2.145-2.045 1.566-3.065-.276-.505-.82-.857-1.632-.857-1.19 0-2.38.462-3.57 1.386l-.415.315c-.116.096-.232.084-.348-.022-.115-.116-.104-.23.022-.348l.415-.315c1.19-.924 2.49-1.386 3.89-1.386 1.4 0 2.38.462 2.94 1.386.56 1.02-.038 2.045-1.566 3.065-3.418 2.017-8.9 2.506-16.463 1.435-.174-.023-.174-.115 0-.27z"/>
                         </svg>
                       </div>
                     </div>
@@ -873,37 +1030,6 @@ export default function PaymentPage() {
                         </div>
                       </div>
                       {selectedPaymentMethod === 'paypal' && (
-                        <Check className="w-5 h-5 text-primary-600" />
-                      )}
-                    </div>
-                  </button>
-
-                  {/* PayPal Ratenzahlung */}
-                  <button
-                    onClick={() => setSelectedPaymentMethod('paypal-installments')}
-                    disabled={processing}
-                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedPaymentMethod === 'paypal-installments'
-                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
-                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="h-7 flex items-center">
-                          <Image
-                            src="/payment-logos/PayPal_Ratenzahlung_h_farbe.png"
-                            alt="PayPal Ratenzahlung"
-                            width={140}
-                            height={42}
-                            style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
-                          />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs text-gray-500">In bequemen Raten bezahlen</p>
-                        </div>
-                      </div>
-                      {selectedPaymentMethod === 'paypal-installments' && (
                         <Check className="w-5 h-5 text-primary-600" />
                       )}
                     </div>

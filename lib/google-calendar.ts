@@ -2,6 +2,7 @@
 // Handles OAuth, event creation, and availability checking
 
 import { google } from 'googleapis'
+import { createBerlinDate, isDSTInBerlin, getBerlinOffset, toBerlinTimeString } from '@/lib/timezone-utils'
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -99,12 +100,10 @@ export async function createCalendarEvent(
         summary: event.summary,
         description: event.description,
         start: {
-          dateTime: event.start,
-          timeZone: 'Europe/Berlin',
+          dateTime: event.start, // Already in UTC format (ISO 8601 with Z)
         },
         end: {
-          dateTime: event.end,
-          timeZone: 'Europe/Berlin',
+          dateTime: event.end, // Already in UTC format (ISO 8601 with Z)
         },
         attendees: event.attendees,
         reminders: {
@@ -151,12 +150,10 @@ export async function updateCalendarEvent(
     
     if (event.start && event.end) {
       updateData.start = {
-        dateTime: event.start,
-        timeZone: 'Europe/Berlin',
+        dateTime: event.start, // Already in UTC format (ISO 8601 with Z)
       }
       updateData.end = {
-        dateTime: event.end,
-        timeZone: 'Europe/Berlin',
+        dateTime: event.end, // Already in UTC format (ISO 8601 with Z)
       }
     }
     
@@ -213,9 +210,8 @@ export async function getBusySlots(
     
     const response = await calendar.freebusy.query({
       requestBody: {
-        timeMin: timeMin,
-        timeMax: timeMax,
-        timeZone: 'Europe/Berlin',
+        timeMin: timeMin, // UTC format
+        timeMax: timeMax, // UTC format
         items: [{ id: calendarId }],
       },
     })
@@ -250,19 +246,24 @@ export function generateAvailableSlots(
   const [fromHour, fromMinute] = workingHours.from.split(':').map(Number)
   const [toHour, toMinute] = workingHours.to.split(':').map(Number)
   
-  // SIMPLIFIED APPROACH: Work in local time (Europe/Berlin)
-  // Create date objects in local timezone - Date constructor uses local time
+  // Calculate DST for Europe/Berlin using centralized utility
   const year = date.getFullYear()
-  const month = date.getMonth()
+  const month = date.getMonth() + 1 // 1-12
   const day = date.getDate()
+  const isDST = isDSTInBerlin(year, month, day)
+  const berlinOffset = getBerlinOffset(date)
   
-  // Create start/end times in local timezone
-  const startTime = new Date(year, month, day, fromHour, fromMinute, 0, 0)
-  const endTime = new Date(year, month, day, toHour, toMinute, 0, 0)
+  // Create Berlin times as ISO strings, then parse to UTC Date objects
+  const createBerlinTime = (h: number, m: number): Date => {
+    return createBerlinDate(year, month, day, h, m)
+  }
   
-  console.log(`⏰ Working hours: ${fromHour}:${fromMinute} - ${toHour}:${toMinute}`)
-  console.log(`⏰ Start time (local): ${startTime.toISOString()}`)
-  console.log(`⏰ End time (local): ${endTime.toISOString()}`)
+  const startTime = createBerlinTime(fromHour, fromMinute)
+  const endTime = createBerlinTime(toHour, toMinute)
+  
+  console.log(`⏰ Working hours: ${fromHour}:${fromMinute} - ${toHour}:${toMinute} (Berlin time)`)
+  console.log(`⏰ Start time (UTC): ${startTime.toISOString()} (DST: ${isDST})`)
+  console.log(`⏰ End time (UTC): ${endTime.toISOString()}`)
   
   // Parse break times if present
   let breakStart: Date | null = null
@@ -272,8 +273,8 @@ export function generateAvailableSlots(
     const [breakFromHour, breakFromMinute] = workingHours.breakFrom.split(':').map(Number)
     const [breakToHour, breakToMinute] = workingHours.breakTo.split(':').map(Number)
     
-    breakStart = new Date(year, month, day, breakFromHour, breakFromMinute, 0, 0)
-    breakEnd = new Date(year, month, day, breakToHour, breakToMinute, 0, 0)
+    breakStart = createBerlinTime(breakFromHour, breakFromMinute)
+    breakEnd = createBerlinTime(breakToHour, breakToMinute)
   }
   
   // Generate slots
@@ -284,10 +285,9 @@ export function generateAvailableSlots(
     slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration)
     
     // Check if slot is free (not overlapping with busy times)
-    // CRITICAL: Google Calendar returns ISO strings with timezone (e.g., "2026-02-19T14:00:00+01:00")
-    // new Date() correctly parses these to the absolute timestamp
-    // We create local times above, which also get converted to timestamps
-    // The comparison should work if we use timestamps directly
+    // All times are in UTC for accurate comparison
+    // Google Calendar returns ISO UTC strings, we create UTC Date objects
+    // Comparison uses timestamps (milliseconds since epoch) which is timezone-agnostic
     const isFree = !busySlots.some(busy => {
       const busyStart = new Date(busy.start)
       const busyEnd = new Date(busy.end)
@@ -321,14 +321,14 @@ export function generateAvailableSlots(
     )
     
     if (isFree && !isInBreak && slotEnd <= endTime) {
-      const hours = currentTime.getHours().toString().padStart(2, '0')
-      const minutes = currentTime.getMinutes().toString().padStart(2, '0')
-      availableSlots.push(`${hours}:${minutes}`)
-      console.log(`    ✅ Slot available: ${hours}:${minutes}`)
+      // Convert UTC Date back to Berlin time for display using utility
+      const timeString = toBerlinTimeString(currentTime)
+      availableSlots.push(timeString)
+      console.log(`    ✅ Slot available: ${timeString}`)
     } else {
-      const hours = currentTime.getHours().toString().padStart(2, '0')
-      const minutes = currentTime.getMinutes().toString().padStart(2, '0')
-      console.log(`    ⏭️  Slot blocked: ${hours}:${minutes} (busy: ${!isFree}, break: ${isInBreak})`)
+      // Convert UTC Date back to Berlin time for display using utility
+      const timeString = toBerlinTimeString(currentTime)
+      console.log(`    ⏭️  Slot blocked: ${timeString} (busy: ${!isFree}, break: ${isInBreak})`)
     }
     
     // Move to next slot using the increment (not the full duration)

@@ -66,9 +66,9 @@ export async function POST(request: NextRequest) {
     // Map payment method types to Stripe payment_method_types
     const paymentMethodMap: Record<string, string[]> = {
       'card': ['card', 'link'], // Card + Stripe Link (Apple Pay & Google Pay appear automatically)
-      'customer_balance': ['customer_balance'], // Bank Transfer (Überweisung)
-      'klarna': ['klarna'],
-      'paypal': ['paypal'], // PayPal via Stripe
+      'amazon_pay': ['amazon_pay'], // Amazon Pay - INSTANT: Digital wallet for Amazon customers
+      'klarna': ['klarna'], // Klarna - Includes Sofortüberweisung functionality
+      'paypal': ['paypal'], // PayPal via Stripe (includes installments option at PayPal checkout)
     }
 
     // Determine which payment methods to enable
@@ -91,36 +91,6 @@ export async function POST(request: NextRequest) {
       note: 'Stripe fees will be deducted from platform commission'
     })
     
-    // For customer_balance, we need to create or retrieve a Stripe Customer
-    let stripeCustomerId: string | undefined = undefined
-    if (enabledPaymentMethods.includes('customer_balance')) {
-      // Check if customer already has a Stripe Customer ID
-      const customer = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { stripeCustomerId: true }
-      })
-
-      if (customer?.stripeCustomerId) {
-        stripeCustomerId = customer.stripeCustomerId
-      } else {
-        // Create new Stripe Customer
-        const stripeCustomer = await stripe.customers.create({
-          email: session.user.email || undefined,
-          name: session.user.name || undefined,
-          metadata: {
-            userId: session.user.id
-          }
-        })
-        stripeCustomerId = stripeCustomer.id
-
-        // Save Stripe Customer ID to database
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: { stripeCustomerId }
-        })
-      }
-    }
-    
     // Build session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: enabledPaymentMethods,
@@ -138,8 +108,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      customer: stripeCustomerId, // Set customer for customer_balance
-      customer_email: stripeCustomerId ? undefined : (session.user.email || undefined), // Only set if no customer
+      customer_email: session.user.email || undefined,
       
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/workshop/${workshopId}/payment/success?session_id={CHECKOUT_SESSION_ID}&service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}${reservationId ? `&reservationId=${reservationId}` : ''}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/workshop/${workshopId}/payment?service=${serviceType}&date=${date}&time=${time}&vehicleId=${vehicleId}`,
@@ -182,16 +151,7 @@ export async function POST(request: NextRequest) {
     // Only use Connect features if workshop has valid Connect account (not in test mode)
     if (useConnectAccount) {
       if (enabledPaymentMethods.includes('customer_balance')) {
-        // Bank Transfer requires customer_balance configuration
-        sessionConfig.payment_method_options = {
-          customer_balance: {
-            funding_type: 'bank_transfer',
-            bank_transfer: {
-              type: 'eu_bank_transfer', // For European bank transfers
-            },
-          },
-        }
-        // For bank transfer with application fee
+        // Bank Transfer with application fee
         sessionConfig.payment_intent_data = {
           application_fee_amount: applicationFeeAmount,
           transfer_data: {

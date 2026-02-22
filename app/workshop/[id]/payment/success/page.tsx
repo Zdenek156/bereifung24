@@ -353,8 +353,53 @@ export default function PaymentSuccessPage() {
               </div>
             )}
 
-            {/* Tire Details */}
-            {booking?.tireBrand && booking?.tireModel && (
+            {/* Tire Details - Mixed Tires (Mischbereifung) */}
+            {booking?.tireData?.isMixedTires && (
+              <>
+                {/* Front Tires */}
+                {booking.tireData.front && (
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" strokeWidth={2}/>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20M2 12h20"/>
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">Reifen Vorne</p>
+                      <p className="text-sm text-gray-600">
+                        {booking.tireData.front.brand} {booking.tireData.front.model}<br />
+                        Größe: {booking.tireData.front.size} {booking.tireData.front.loadIndex}{booking.tireData.front.speedIndex}<br />
+                        Menge: {booking.tireData.front.quantity || 2} Stück
+                        {booking.tireData.front.runflat && <><br /><span className="text-red-600 font-semibold">⚡ RunFlat-Reifen</span></>}
+                        {booking.tireData.front.winter && <><br /><span className="text-blue-600 font-semibold">❄️ Winterreifen (3PMSF)</span></>}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Rear Tires */}
+                {booking.tireData.rear && (
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" strokeWidth={2}/>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20M2 12h20"/>
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">Reifen Hinten</p>
+                      <p className="text-sm text-gray-600">
+                        {booking.tireData.rear.brand} {booking.tireData.rear.model}<br />
+                        Größe: {booking.tireData.rear.size} {booking.tireData.rear.loadIndex}{booking.tireData.rear.speedIndex}<br />
+                        Menge: {booking.tireData.rear.quantity || 2} Stück
+                        {booking.tireData.rear.runflat && <><br /><span className="text-red-600 font-semibold">⚡ RunFlat-Reifen</span></>}
+                        {booking.tireData.rear.winter && <><br /><span className="text-blue-600 font-semibold">❄️ Winterreifen (3PMSF)</span></>}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Tire Details - Standard (Single Type) */}
+            {!booking?.tireData?.isMixedTires && booking?.tireBrand && booking?.tireModel && (
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth={2}/>
@@ -398,7 +443,7 @@ export default function PaymentSuccessPage() {
               <span className="text-primary-600 mt-0.5">•</span>
               <span>Die Werkstatt wurde über Ihre Buchung informiert</span>
             </li>
-            {booking?.tireBrand && (
+            {(booking?.tireBrand || booking?.tireData?.isMixedTires) && (
               <li className="flex items-start gap-2">
                 <span className="text-primary-600 mt-0.5">•</span>
                 <span>Die Werkstatt bestellt Ihre Reifen beim Lieferanten</span>
@@ -419,12 +464,16 @@ export default function PaymentSuccessPage() {
           >
             Zu meinen Buchungen
           </Link>
-          <Link
-            href="/"
-            className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors text-center font-semibold"
+          <button
+            onClick={() => {
+              // Clear sessionStorage before navigating to homepage
+              sessionStorage.clear()
+              router.push('/')
+            }}
+            className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors text-center font-semibold cursor-pointer"
           >
             Zur Startseite
-          </Link>
+          </button>
         </div>
       </div>
     </div>

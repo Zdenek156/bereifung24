@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       hasStorage,
       hasDisposal,
       totalPrice,
-      // Tire data
+      // Standard Tire data
       tireBrand,
       tireModel,
       tireSize,
@@ -55,11 +55,53 @@ export async function POST(request: NextRequest) {
       tireEAN,
       tireArticleId,
       tireQuantity,
-      tirePurchasePrice,
-      totalTirePurchasePrice,
+      tirePurchasePrice,            // VK-Preis (für Standard-Reifen)
+      totalTirePurchasePrice,       // Gesamt-VK (für Standard-Reifen)
+      supplierPurchasePrice,        // Echter EK vom Lieferanten (Standard-Reifen)
+      supplierTotalPurchasePrice,   // Gesamt echter EK (Standard-Reifen)
       tireRunFlat,
-      tire3PMSF
+      tire3PMSF,
+      // Mixed Tires - Front
+      tireBrandFront,
+      tireModelFront,
+      tireSizeFront,
+      tireLoadIndexFront,
+      tireSpeedIndexFront,
+      tireEANFront,
+      tireArticleIdFront,
+      tireQuantityFront,
+      tirePurchasePriceFront,      // VK-Preis pro Reifen
+      totalTirePurchasePriceFront,  // Gesamt-VK
+      supplierPurchasePriceFront,   // Echter EK vom Lieferanten
+      supplierTotalPurchasePriceFront, // Gesamt echter EK
+      tireRunFlatFront,
+      tire3PMSFFront,
+      // Mixed Tires - Rear
+      tireBrandRear,
+      tireModelRear,
+      tireSizeRear,
+      tireLoadIndexRear,
+      tireSpeedIndexRear,
+      tireEANRear,
+      tireArticleIdRear,
+      tireQuantityRear,
+      tirePurchasePriceRear,        // VK-Preis pro Reifen
+      totalTirePurchasePriceRear,   // Gesamt-VK
+      supplierPurchasePriceRear,    // Echter EK vom Lieferanten
+      supplierTotalPurchasePriceRear,  // Gesamt echter EK
+      tireRunFlatRear,
+      tire3PMSFRear
     } = body
+
+    // Check if mixed tires
+    const hasMixedTires = !!(tireBrandFront || tireBrandRear)
+    console.log('[RESERVE] Tire data received:', {
+      hasStandardTires: !!tireBrand,
+      hasMixedTires,
+      tireBrand,
+      tireBrandFront,
+      tireBrandRear
+    })
 
     if (!workshopId || !vehicleId || !serviceType || !date || !time || totalPrice === undefined) {
       return NextResponse.json(
@@ -96,6 +138,33 @@ export async function POST(request: NextRequest) {
     })
 
     console.log(`🧹 [RESERVE] Deleted ${deleteResult.count} expired reservations`)
+    
+    // SECOND: Delete user's own RESERVED bookings for this exact time slot
+    // This allows users to retry payment if they cancelled the previous attempt
+    const userExistingReservation = await prisma.directBooking.findMany({
+      where: {
+        customerId: customer.id,
+        workshopId,
+        status: 'RESERVED'
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true
+      }
+    })
+    
+    const userReservationToDelete = userExistingReservation.find(booking => {
+      const bookingDateStr = `${booking.date.getFullYear()}-${String(booking.date.getMonth() + 1).padStart(2, '0')}-${String(booking.date.getDate()).padStart(2, '0')}`
+      return bookingDateStr === dateOnly && booking.time === time
+    })
+    
+    if (userReservationToDelete) {
+      await prisma.directBooking.delete({
+        where: { id: userReservationToDelete.id }
+      })
+      console.log(`♻️ [RESERVE] Deleted user's previous reservation for retry: ${userReservationToDelete.id}`)
+    }
     
     // THEN: Fetch all bookings for this workshop and filter in code
     // NOTE: Can't use status: { in: [...] } because Prisma doesn't support it for String fields
@@ -174,19 +243,73 @@ export async function POST(request: NextRequest) {
         hasStorage: hasStorage || false,
         hasDisposal: hasDisposal || false,
         totalPrice,
-        // Save tire data in reservation
-        tireBrand: tireBrand || null,
-        tireModel: tireModel || null,
-        tireSize: tireSize || null,
-        tireLoadIndex: tireLoadIndex || null,
-        tireSpeedIndex: tireSpeedIndex || null,
-        tireEAN: tireEAN || null,
-        tireArticleId: tireArticleId || null,
-        tireQuantity: tireQuantity || null,
-        tirePurchasePrice: tirePurchasePrice || null,
-        totalTirePurchasePrice: totalTirePurchasePrice || null,
-        tireRunFlat: tireRunFlat || false,
-        tire3PMSF: tire3PMSF || false,
+        // Save tire data in standard fields (works for standard tires AND front tire of mixed tires)
+        tireBrand: hasMixedTires ? (tireBrandFront || null) : (tireBrand || null),
+        tireModel: hasMixedTires ? (tireModelFront || null) : (tireModel || null),
+        tireSize: hasMixedTires ? (tireSizeFront || null) : (tireSize || null),
+        tireLoadIndex: hasMixedTires ? (tireLoadIndexFront || null) : (tireLoadIndex || null),
+        tireSpeedIndex: hasMixedTires ? (tireSpeedIndexFront || null) : (tireSpeedIndex || null),
+        tireEAN: hasMixedTires ? (tireEANFront || null) : (tireEAN || null),
+        tireArticleId: hasMixedTires ? (tireArticleIdFront || null) : (tireArticleId || null),
+        tireQuantity: hasMixedTires ? (tireQuantityFront || null) : (tireQuantity || null),
+        tirePurchasePrice: hasMixedTires ? (tirePurchasePriceFront || null) : (tirePurchasePrice || null),
+        totalTirePurchasePrice: hasMixedTires 
+          ? ((tirePurchasePriceFront || 0) * (tireQuantityFront || 2) + (tirePurchasePriceRear || 0) * (tireQuantityRear || 2))
+          : (totalTirePurchasePrice || null),
+        tireRunFlat: hasMixedTires ? (tireRunFlatFront || false) : (tireRunFlat || false),
+        tire3PMSF: hasMixedTires ? (tire3PMSFFront || false) : (tire3PMSF || false),
+        // Save complete tire data in JSON field for mixed tires or additional tire info
+        tireData: hasMixedTires ? {
+          isMixedTires: true,
+          front: {
+            brand: tireBrandFront,
+            model: tireModelFront,
+            size: tireSizeFront,
+            loadIndex: tireLoadIndexFront,
+            speedIndex: tireSpeedIndexFront,
+            ean: tireEANFront,
+            articleId: tireArticleIdFront,
+            quantity: tireQuantityFront || 2,
+            purchasePrice: tirePurchasePriceFront,       // VK-Preis (für Kunde)
+            totalPrice: totalTirePurchasePriceFront,     // Gesamt-VK
+            supplierPrice: supplierPurchasePriceFront,   // Echter EK vom Lieferanten
+            supplierTotal: supplierTotalPurchasePriceFront, // Gesamt echter EK
+            runFlat: tireRunFlatFront || false,
+            threePMSF: tire3PMSFFront || false
+          },
+          rear: {
+            brand: tireBrandRear,
+            model: tireModelRear,
+            size: tireSizeRear,
+            loadIndex: tireLoadIndexRear,
+            speedIndex: tireSpeedIndexRear,
+            ean: tireEANRear,
+            articleId: tireArticleIdRear,
+            quantity: tireQuantityRear || 2,
+            purchasePrice: tirePurchasePriceRear,        // VK-Preis (für Kunde)
+            totalPrice: totalTirePurchasePriceRear,      // Gesamt-VK
+            supplierPrice: supplierPurchasePriceRear,    // Echter EK vom Lieferanten
+            supplierTotal: supplierTotalPurchasePriceRear,  // Gesamt echter EK
+            runFlat: tireRunFlatRear || false,
+            threePMSF: tire3PMSFRear || false
+          }
+        } : (tireEAN ? {
+          isMixedTires: false,
+          brand: tireBrand,
+          model: tireModel,
+          size: tireSize,
+          loadIndex: tireLoadIndex,
+          speedIndex: tireSpeedIndex,
+          ean: tireEAN,
+          articleId: tireArticleId,
+          quantity: tireQuantity || 4,
+          purchasePrice: tirePurchasePrice,           // VK-Preis (für Kunde)
+          totalPrice: totalTirePurchasePrice,         // Gesamt-VK
+          supplierPrice: supplierPurchasePrice,       // Echter EK vom Lieferanten
+          supplierTotal: supplierTotalPurchasePrice,  // Gesamt echter EK
+          runFlat: tireRunFlat || false,
+          threePMSF: tire3PMSF || false
+        } : null),
         status: 'RESERVED',
         reservedUntil: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
         paymentStatus: 'PENDING'

@@ -158,7 +158,18 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     include: {
       workshop: {
         include: {
-          user: true
+          user: true,
+          workshopServices: {
+            where: { isActive: true },
+            select: {
+              serviceType: true,
+              allowsDirectBooking: true,
+              basePrice: true,
+              basePrice4: true,
+              durationMinutes: true,
+              durationMinutes4: true,
+            },
+          },
         }
       }
     }
@@ -356,6 +367,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               initialFixedWorkshopContext={initialFixedWorkshopContext}
               hideHeroHeader
               allowedServiceTypes={allowedServiceTypes}
+              serviceCards={workshopServiceList.map((service) => ({
+                serviceType: service.serviceType,
+                basePrice: service.basePrice,
+                basePrice4: service.basePrice4,
+                durationMinutes: service.durationMinutes,
+                durationMinutes4: service.durationMinutes4,
+              }))}
             />
           </div>
         </section>

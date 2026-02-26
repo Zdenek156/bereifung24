@@ -25,8 +25,39 @@ function parseOpeningHours(openingHoursRaw?: string | null): Array<{ day: string
     return []
   }
 
+  const normalizeTime = (value: unknown): string => {
+    if (!value) return 'Geschlossen'
+
+    if (typeof value === 'string') {
+      return value.trim() || 'Geschlossen'
+    }
+
+    if (typeof value === 'object') {
+      const entry = value as Record<string, unknown>
+      const isClosed = entry.closed === true || entry.working === false
+      if (isClosed) {
+        return 'Geschlossen'
+      }
+
+      const from = typeof entry.from === 'string' ? entry.from : ''
+      const to = typeof entry.to === 'string' ? entry.to : ''
+      const open = typeof entry.open === 'string' ? entry.open : ''
+      const close = typeof entry.close === 'string' ? entry.close : ''
+
+      if (from && to) {
+        return `${from} - ${to}`
+      }
+
+      if (open && close) {
+        return `${open} - ${close}`
+      }
+    }
+
+    return 'Geschlossen'
+  }
+
   try {
-    const parsed = JSON.parse(openingHoursRaw) as Record<string, string>
+    const parsed = JSON.parse(openingHoursRaw) as Record<string, unknown>
     const dayMap: Array<{ key: string; label: string }> = [
       { key: 'monday', label: 'Montag' },
       { key: 'tuesday', label: 'Dienstag' },
@@ -37,9 +68,7 @@ function parseOpeningHours(openingHoursRaw?: string | null): Array<{ day: string
       { key: 'sunday', label: 'Sonntag' },
     ]
 
-    return dayMap
-      .map(({ key, label }) => ({ day: label, time: parsed[key] || 'Geschlossen' }))
-      .filter((entry) => !!entry.time)
+    return dayMap.map(({ key, label }) => ({ day: label, time: normalizeTime(parsed[key]) }))
   } catch {
     return []
   }

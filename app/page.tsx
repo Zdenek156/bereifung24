@@ -140,7 +140,7 @@ export default function NewHomePage({
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [fixedWorkshopContext, setFixedWorkshopContext] = useState<FixedWorkshopContext | null>(() => {
-    if (typeof window === 'undefined') return null
+    if (typeof window === 'undefined') return initialFixedWorkshopContext
 
     const params = new URLSearchParams(window.location.search)
     const landingPageSlug = params.get('landingPageSlug')

@@ -354,18 +354,18 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               initialFixedWorkshopContext={initialFixedWorkshopContext}
               hideHeroHeader
               allowedServiceTypes={allowedServiceTypes}
-              serviceCards={workshopServiceList.map((service) => ({
+              serviceCards={workshopServiceList.map((service) => {
                 const packagePrices = service.servicePackages
                   .map((pkg) => pkg.price)
                   .filter((price) => typeof price === 'number' && price > 0)
                 const minPackagePrice = packagePrices.length > 0 ? Math.min(...packagePrices) : null
 
                 return {
-                serviceType: service.serviceType,
-                basePrice: minPackagePrice ?? service.basePrice,
-                basePrice4: service.basePrice4,
-                durationMinutes: service.durationMinutes,
-                durationMinutes4: service.durationMinutes4,
+                  serviceType: service.serviceType,
+                  basePrice: minPackagePrice ?? service.basePrice,
+                  basePrice4: service.basePrice4,
+                  durationMinutes: service.durationMinutes,
+                  durationMinutes4: service.durationMinutes4,
                 }
               })}
             />

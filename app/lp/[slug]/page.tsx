@@ -84,6 +84,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
   const primaryColor = landingPage.primaryColor || '#7C3AED'
   const accentColor = landingPage.accentColor || '#EC4899'
+  const bookingFlowUrl = `/?landingPageSlug=${encodeURIComponent(landingPage.slug)}&fixedWorkshopId=${encodeURIComponent(landingPage.workshop.id)}&fixedWorkshopName=${encodeURIComponent(landingPage.workshop.companyName)}&fixedWorkshopLat=${encodeURIComponent(String(landingPage.workshop.latitude ?? ''))}&fixedWorkshopLon=${encodeURIComponent(String(landingPage.workshop.longitude ?? ''))}`
 
   return (
     <>
@@ -152,22 +153,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               )}
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-                <Link
-                  href={{
-                    pathname: '/',
-                    query: {
-                      landingPageSlug: landingPage.slug,
-                      fixedWorkshopId: landingPage.workshop.id,
-                      fixedWorkshopName: landingPage.workshop.companyName,
-                      fixedWorkshopLat: landingPage.workshop.latitude,
-                      fixedWorkshopLon: landingPage.workshop.longitude,
-                    }
-                  }}
+                <a
+                  href="#direkt-buchen"
                   className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg text-base sm:text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
                 >
                   Jetzt bei uns buchen
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -310,21 +302,31 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             <p className="text-xl mb-8 opacity-90">
               Buchen Sie direkt bei dieser Werkstatt – ohne Umkreissuche, mit vollem Reifen- und Service-Flow.
             </p>
-            <Link
-              href={{
-                pathname: '/',
-                query: {
-                  landingPageSlug: landingPage.slug,
-                  fixedWorkshopId: landingPage.workshop.id,
-                  fixedWorkshopName: landingPage.workshop.companyName,
-                  fixedWorkshopLat: landingPage.workshop.latitude,
-                  fixedWorkshopLon: landingPage.workshop.longitude,
-                }
-              }}
+            <a
+              href="#direkt-buchen"
               className="inline-block px-10 py-4 bg-white text-gray-900 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
             >
               Jetzt bei uns buchen →
-            </Link>
+            </a>
+          </div>
+        </section>
+
+        <section id="direkt-buchen" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
+              Direkt bei {landingPage.workshop.companyName} buchen
+            </h2>
+            <p className="text-gray-600 text-center mb-8">
+              Die komplette Buchung läuft direkt hier auf der Landingpage.
+            </p>
+            <div className="w-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+              <iframe
+                title={`Buchung bei ${landingPage.workshop.companyName}`}
+                src={bookingFlowUrl}
+                className="w-full h-[1500px]"
+                loading="lazy"
+              />
+            </div>
           </div>
         </section>
 

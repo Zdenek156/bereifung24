@@ -30,6 +30,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/payroll': 'payroll',
   '/admin/files': 'files',
   '/admin/fleet': 'fleet',
+  '/admin/tire-catalog': 'reifenkatalog',
   '/admin/email-templates': 'email-templates',
   '/admin/email-blacklist': 'email-blacklist',
   '/admin/kvp': 'kvp',
@@ -63,6 +64,8 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/eprel': 'eprel',
   '/api/admin/gdpr': 'gdpr',
   '/api/admin/payment-methods': 'payment-methods',
+  '/api/admin/suppliers': 'reifenkatalog',
+  '/api/admin/tire-catalog': 'reifenkatalog',
 }
 
 /**
@@ -231,12 +234,6 @@ export async function middleware(request: NextRequest) {
     }
   }
   
-  // Authenticated user accessing non-protected route
-  if (token) {
-    console.log(`[MIDDLEWARE] Authenticated user accessing ${url.pathname}`)
-    return NextResponse.next()
-  }
-
   // === END PERMISSION CHECKING ===
   
   // Check if this could be a landing page (not a static route)

@@ -88,12 +88,20 @@ interface NewHomePageProps {
   initialFixedWorkshopContext?: FixedWorkshopContext | null
   hideHeroHeader?: boolean
   allowedServiceTypes?: string[]
+  serviceCards?: Array<{
+    serviceType: string
+    basePrice: number
+    basePrice4?: number | null
+    durationMinutes?: number | null
+    durationMinutes4?: number | null
+  }>
 }
 
 export default function NewHomePage({
   initialFixedWorkshopContext = null,
   hideHeroHeader = false,
   allowedServiceTypes,
+  serviceCards = [],
 }: NewHomePageProps = {}) {
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -273,6 +281,21 @@ export default function NewHomePage({
       ? SERVICES.filter((service) => allowedServiceTypes.includes(service.id))
       : SERVICES
     ).slice(0, 5)
+  const useServiceCards = hideHeroHeader && isWorkshopFixed
+  const serviceCardMap = serviceCards.reduce<Record<string, {
+    basePrice: number
+    basePrice4?: number | null
+    durationMinutes?: number | null
+    durationMinutes4?: number | null
+  }>>((acc, service) => {
+    acc[service.serviceType] = {
+      basePrice: service.basePrice,
+      basePrice4: service.basePrice4,
+      durationMinutes: service.durationMinutes,
+      durationMinutes4: service.durationMinutes4,
+    }
+    return acc
+  }, {})
 
     useEffect(() => {
       if (visibleServices.length === 0) return
@@ -1927,35 +1950,101 @@ export default function NewHomePage({
             </div>
           )}
 
-          {/* Search Card - Improved UX with Visible Service Tabs */}
+          {/* Search Card - Improved UX with service cards in landing mode */}
           <div className="max-w-5xl mx-auto">
-            {/* Service Tabs - Visible above search card */}
-            <div className="mb-3 overflow-x-auto md:overflow-visible scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
-              <div className="flex gap-2 min-w-max md:min-w-0 md:justify-center pb-2">
+            {useServiceCards ? (
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {visibleServices.map((service) => {
                   const Icon = service.icon
                   const isActive = selectedService === service.id
+                  const pricing = serviceCardMap[service.id]
+                  const displayPrice = pricing?.basePrice4 ?? pricing?.basePrice
+
                   return (
-                    <button
+                    <div
                       key={service.id}
                       onClick={() => handleServiceChange(service.id)}
-                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all min-h-[48px] ${
+                      className={`rounded-xl border p-4 transition-all cursor-pointer bg-white ${
                         isActive
-                          ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
-                          : hideHeroHeader
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                          ? 'border-primary-500 shadow-md ring-2 ring-primary-200'
+                          : 'border-gray-200 hover:border-primary-300 hover:shadow-sm'
                       }`}
-                      aria-label={service.label}
-                      aria-pressed={isActive}
                     >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="whitespace-nowrap leading-none">{service.label}</span>
-                    </button>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-5 h-5 text-primary-600" />
+                            <h3 className="text-lg font-bold text-gray-900">{service.label}</h3>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                        </div>
+                        {isActive && (
+                          <span className="text-xs font-semibold text-primary-700 bg-primary-50 border border-primary-200 px-2 py-1 rounded-full">
+                            Ausgewählt
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-end justify-between">
+                        <div>
+                          <p className="text-xs text-gray-500">Preis</p>
+                          <p className="text-2xl font-extrabold text-primary-600">
+                            {typeof displayPrice === 'number' ? `ab ${displayPrice.toFixed(2).replace('.', ',')} €` : 'Preis auf Anfrage'}
+                          </p>
+                        </div>
+                        {pricing?.durationMinutes && (
+                          <p className="text-sm text-gray-500">~ {pricing.durationMinutes} Min.</p>
+                        )}
+                      </div>
+
+                      {isActive && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <p className="text-xs text-gray-600 mb-2">
+                            Die passenden Filter zu diesem Service sind jetzt aktiv.
+                          </p>
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleSearch()
+                            }}
+                            className="w-full h-11 px-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-bold transition-all"
+                          >
+                            Jetzt buchen
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )
                 })}
               </div>
-            </div>
+            ) : (
+              <div className="mb-3 overflow-x-auto md:overflow-visible scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
+                <div className="flex gap-2 min-w-max md:min-w-0 md:justify-center pb-2">
+                  {visibleServices.map((service) => {
+                    const Icon = service.icon
+                    const isActive = selectedService === service.id
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => handleServiceChange(service.id)}
+                        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all min-h-[48px] ${
+                          isActive
+                            ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
+                            : hideHeroHeader
+                              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                        }`}
+                        aria-label={service.label}
+                        aria-pressed={isActive}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="whitespace-nowrap leading-none">{service.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl shadow-2xl p-4">
               {isWorkshopFixed && fixedWorkshopContext && (
@@ -2040,6 +2129,7 @@ export default function NewHomePage({
                 )}
 
                 {/* Search Button */}
+                {!useServiceCards && (
                 <div className="w-full md:w-auto md:pt-6">
                   <button
                     onClick={handleSearch}
@@ -2050,6 +2140,7 @@ export default function NewHomePage({
                     <span className="lg:hidden">{isWorkshopFixed ? 'Jetzt buchen' : 'Vergleichen'}</span>
                   </button>
                 </div>
+                )}
               </div>
             </div>
             

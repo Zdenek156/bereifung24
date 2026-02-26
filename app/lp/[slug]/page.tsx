@@ -14,6 +14,70 @@ interface PageProps {
   }
 }
 
+interface LandingServiceItem {
+  title: string
+  description?: string
+  icon?: string
+}
+
+function parseOpeningHours(openingHoursRaw?: string | null): Array<{ day: string; time: string }> {
+  if (!openingHoursRaw) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(openingHoursRaw) as Record<string, string>
+    const dayMap: Array<{ key: string; label: string }> = [
+      { key: 'monday', label: 'Montag' },
+      { key: 'tuesday', label: 'Dienstag' },
+      { key: 'wednesday', label: 'Mittwoch' },
+      { key: 'thursday', label: 'Donnerstag' },
+      { key: 'friday', label: 'Freitag' },
+      { key: 'saturday', label: 'Samstag' },
+      { key: 'sunday', label: 'Sonntag' },
+    ]
+
+    return dayMap
+      .map(({ key, label }) => ({ day: label, time: parsed[key] || 'Geschlossen' }))
+      .filter((entry) => !!entry.time)
+  } catch {
+    return []
+  }
+}
+
+function parseCustomServices(customServicesRaw: unknown): LandingServiceItem[] {
+  if (!Array.isArray(customServicesRaw)) {
+    return []
+  }
+
+  return customServicesRaw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') {
+        return null
+      }
+
+      const service = entry as Record<string, unknown>
+      const title =
+        (typeof service.title === 'string' && service.title) ||
+        (typeof service.name === 'string' && service.name) ||
+        ''
+
+      if (!title) {
+        return null
+      }
+
+      return {
+        title,
+        description:
+          (typeof service.description === 'string' && service.description) ||
+          (typeof service.desc === 'string' && service.desc) ||
+          undefined,
+        icon: typeof service.icon === 'string' ? service.icon : undefined,
+      }
+    })
+    .filter((service): service is LandingServiceItem => service !== null)
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const landingPage = await prisma.workshopLandingPage.findUnique({
     where: { slug: params.slug },
@@ -85,6 +149,23 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
   const primaryColor = landingPage.primaryColor || '#7C3AED'
   const accentColor = landingPage.accentColor || '#EC4899'
+  const displayHeadline = landingPage.heroHeadline || `Willkommen bei ${landingPage.workshop.companyName}`
+  const displaySubline =
+    landingPage.heroSubline ||
+    `${landingPage.workshop.companyName} – Ihr zuverlässiger Partner für Reifenservice.`
+  const displayAboutTitle = landingPage.aboutTitle || `Über ${landingPage.workshop.companyName}`
+  const openingHours = parseOpeningHours(landingPage.workshop.openingHours)
+  const customServices = parseCustomServices(landingPage.customServices)
+  const servicesToShow: LandingServiceItem[] = customServices.length
+    ? customServices
+    : [
+        { icon: '🔄', title: 'Reifenwechsel', description: 'Schneller und professioneller Reifenservice.' },
+        { icon: '🔧', title: 'Räderwechsel', description: 'Sommer- und Winterräder fachgerecht wechseln.' },
+        { icon: '🛠️', title: 'Reifenreparatur', description: 'Sichere Instandsetzung bei kleinen Schäden.' },
+        { icon: '📏', title: 'Achsvermessung', description: 'Präzise Vermessung für sauberen Geradeauslauf.' },
+        { icon: '🏍️', title: 'Motorradreifen', description: 'Reifenservice für Vorder- und Hinterrad.' },
+        { icon: '❄️', title: 'Klimaservice', description: 'Wartung und Service für Ihre Klimaanlage.' },
+      ]
   const initialFixedWorkshopContext: FixedWorkshopContext | null =
     landingPage.workshop.latitude != null && landingPage.workshop.longitude != null
       ? {
@@ -122,56 +203,100 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
       />
 
       <div className="min-h-screen bg-white">
-        {/* Hero Section */}
-        <section 
-          className="relative py-12 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[500px] sm:min-h-[600px] bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: landingPage.heroImage 
-              ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(https://www.bereifung24.de${landingPage.heroImage})`
-              : `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`
-          }}
-        >
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center">
-              {/* Workshop Logo */}
-              {landingPage.showLogo && landingPage.workshop.logoUrl && (
-                <div className="mb-6 sm:mb-8 flex justify-center">
-                  <img 
-                    src={landingPage.workshop.logoUrl} 
-                    alt={`${landingPage.workshop.companyName} Logo`}
-                    className="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-lg"
-                  />
+        <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              {landingPage.showLogo && landingPage.workshop.logoUrl ? (
+                <img
+                  src={landingPage.workshop.logoUrl}
+                  alt={`${landingPage.workshop.companyName} Logo`}
+                  className="h-10 w-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {landingPage.workshop.companyName.slice(0, 2).toUpperCase()}
                 </div>
               )}
-              
-              <h1 
-                className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight ${
-                  landingPage.heroImage ? 'text-white drop-shadow-2xl' : 'text-gray-900'
-                }`}
-              >
-                {landingPage.heroHeadline || `Willkommen bei ${landingPage.workshop.companyName}`}
-              </h1>
-              
-              {landingPage.heroSubline && (
-                <p 
-                  className={`text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-3xl mx-auto text-center leading-relaxed px-2 ${
-                    landingPage.heroImage ? 'text-white/95 drop-shadow-lg' : 'text-gray-600'
-                  }`}
-                >
-                  {landingPage.heroSubline}
-                </p>
-              )}
-              
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-                <a
-                  href="#direkt-buchen"
-                  className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg text-base sm:text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
-                  style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
-                >
-                  Jetzt bei uns buchen
-                </a>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{landingPage.workshop.companyName}</p>
+                <p className="text-xs text-gray-500">{landingPage.workshop.user.city || 'Deutschland'}</p>
               </div>
             </div>
+
+            <nav className="hidden items-center gap-5 text-sm text-gray-600 md:flex">
+              <a href="#direkt-buchen" className="hover:text-gray-900">Buchen</a>
+              <a href="#ueber-uns" className="hover:text-gray-900">Über uns</a>
+              <a href="#leistungen" className="hover:text-gray-900">Leistungen</a>
+              <a href="#kontakt" className="hover:text-gray-900">Kontakt</a>
+            </nav>
+
+            <a
+              href="#direkt-buchen"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+              style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
+            >
+              {landingPage.ctaText || 'Jetzt buchen'}
+            </a>
+          </div>
+        </header>
+
+        <section
+          className="relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
+          style={{
+            backgroundImage: landingPage.heroImage
+              ? `linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.45)), url(https://www.bereifung24.de${landingPage.heroImage})`
+              : `linear-gradient(160deg, ${primaryColor} 0%, ${accentColor} 100%)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <span className="mb-4 inline-flex rounded-full bg-white/20 px-4 py-1 text-xs font-semibold text-white">
+                Werkstatt-Landingpage
+              </span>
+              <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:text-5xl">{displayHeadline}</h1>
+              <p className="mb-6 max-w-2xl text-base text-white/90 sm:text-lg">{displaySubline}</p>
+              <p className="mb-8 text-sm text-white/85">
+                📍 {landingPage.workshop.user.street || ''} {landingPage.workshop.user.zipCode || ''}{' '}
+                {landingPage.workshop.user.city || ''}
+              </p>
+              <div className="flex flex-wrap gap-2 text-xs font-medium text-white/90">
+                <span className="rounded-full bg-white/20 px-3 py-1">Online buchen</span>
+                <span className="rounded-full bg-white/20 px-3 py-1">Werkstattgebundene Angebote</span>
+                <span className="rounded-full bg-white/20 px-3 py-1">Sofort verfügbar</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-xl">
+              <p className="text-lg font-bold text-gray-900">Termin buchen</p>
+              <p className="mb-4 mt-1 text-sm text-gray-600">Direkt bei {landingPage.workshop.companyName}</p>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p>• Reifen- und Serviceauswahl direkt in der Seite</p>
+                <p>• Keine Werkstatt-Suche oder Vergleich in diesem Flow</p>
+                <p>• Login über die vorhandene Leiste im Buchungsbereich</p>
+              </div>
+              <a
+                href="#direkt-buchen"
+                className="mt-5 block rounded-lg px-4 py-3 text-center text-sm font-semibold text-white"
+                style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
+              >
+                {landingPage.ctaText || 'Jetzt buchen'}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-gray-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-gray-600">
+            <span>✓ Geprüfte Werkstatt</span>
+            <span>•</span>
+            <span>✓ Direkte Buchung ohne Umkreissuche</span>
+            <span>•</span>
+            <span>✓ Buchung nur bei {landingPage.workshop.companyName}</span>
           </div>
         </section>
 
@@ -188,14 +313,16 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         </section>
 
         {/* About Section */}
-        {landingPage.aboutTitle && landingPage.aboutText && (
-          <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        {(landingPage.aboutText || landingPage.aboutTitle) && (
+          <section id="ueber-uns" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
-                {landingPage.aboutTitle}
+                {displayAboutTitle}
               </h2>
               <div className="prose prose-base sm:prose-lg max-w-none text-gray-700 text-center">
-                {landingPage.aboutText.split('\n').map((paragraph, idx) => (
+                {(landingPage.aboutText || `${landingPage.workshop.companyName} steht für zuverlässigen Service und faire Beratung.`)
+                  .split('\n')
+                  .map((paragraph, idx) => (
                   paragraph.trim() && <p key={idx} className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">{paragraph}</p>
                 ))}
               </div>
@@ -204,27 +331,22 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         )}
 
         {/* Features Section */}
-        <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <section id="leistungen" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
               Unsere Leistungen
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              {[
-                { icon: '🚗', title: 'Reifenwechsel', desc: 'Professionelle Reifenmontage & Einlagerung' },
-                { icon: '🔧', title: 'Inspektionen', desc: 'Regelmäßige Wartung nach Herstellervorgaben' },
-                { icon: '⚡', title: 'Reparaturen', desc: 'Schnelle Diagnose und fachgerechte Reparatur' },
-                { icon: '🛠️', title: 'Bremsenservice', desc: 'Bremsscheiben, Beläge und Bremsflüssigkeit' },
-                { icon: '🔋', title: 'Klimaservice', desc: 'Klimaanlagen-Wartung und -Reparatur' },
-                { icon: '💡', title: 'Elektrik', desc: 'Fehlerdiagnose und elektrische Reparaturen' }
-              ].map((service, idx) => (
+              {servicesToShow.map((service, idx) => (
                 <div 
                   key={idx}
                   className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
                 >
-                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{service.icon}</div>
+                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{service.icon || '🔧'}</div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{service.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{service.desc}</p>
+                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                    {service.description || 'Leistungsdetails werden von der Werkstatt gepflegt.'}
+                  </p>
                 </div>
               ))}
             </div>
@@ -232,7 +354,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         </section>
 
         {/* Contact Section */}
-        <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        <section id="kontakt" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
               Kontakt & Anfahrt
@@ -248,10 +370,19 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       <span className="text-xl sm:text-2xl mr-2 sm:mr-3 flex-shrink-0">🏢</span>
                       <div>
                         <div className="font-semibold">{landingPage.workshop.companyName}</div>
-                        <div>{landingPage.workshop.user.street}</div>
-                        <div>{landingPage.workshop.user.zipCode} {landingPage.workshop.user.city}</div>
+                        <div>{landingPage.workshop.user.street || 'Adresse wird gepflegt'}</div>
+                        <div>{landingPage.workshop.user.zipCode || ''} {landingPage.workshop.user.city || ''}</div>
                       </div>
                     </div>
+
+                    {landingPage.workshop.user.phone && (
+                      <div className="flex items-center">
+                        <span className="text-xl sm:text-2xl mr-2 sm:mr-3 flex-shrink-0">📞</span>
+                        <a href={`tel:${landingPage.workshop.user.phone}`} className="hover:underline">
+                          {landingPage.workshop.user.phone}
+                        </a>
+                      </div>
+                    )}
                     
                     {landingPage.workshop.website && (
                       <div className="flex items-center">
@@ -273,18 +404,16 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                   <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Öffnungszeiten</h3>
                     <div className="space-y-2 text-sm sm:text-base text-gray-700">
-                      <div className="flex justify-between gap-2">
-                        <span>Montag - Freitag:</span>
-                        <span className="font-semibold">08:00 - 18:00 Uhr</span>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <span>Samstag:</span>
-                        <span className="font-semibold">09:00 - 13:00 Uhr</span>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <span>Sonntag:</span>
-                        <span className="font-semibold">Geschlossen</span>
-                      </div>
+                      {openingHours.length > 0 ? (
+                        openingHours.map((entry) => (
+                          <div className="flex justify-between gap-2" key={entry.day}>
+                            <span>{entry.day}:</span>
+                            <span className="font-semibold">{entry.time}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-600">Öffnungszeiten werden von der Werkstatt gepflegt.</div>
+                      )}
                     </div>
                   </div>
                 )}

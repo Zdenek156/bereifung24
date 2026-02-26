@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import LoginModal from '@/components/LoginModal'
@@ -8,6 +8,11 @@ import LoginModal from '@/components/LoginModal'
 export default function LandingPageHeaderActions() {
   const { data: session } = useSession()
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState<string>('')
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href)
+  }, [])
 
   if (session?.user) {
     const role = session.user.role as string | undefined
@@ -36,13 +41,13 @@ export default function LandingPageHeaderActions() {
           Anmelden
         </button>
         <Link
-          href="/registrieren"
+          href={`/register/customer${currentUrl ? '?returnUrl=' + encodeURIComponent(currentUrl) : ''}`}
           className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
         >
           Registrieren
         </Link>
       </div>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} returnUrl={currentUrl} />
     </>
   )
 }

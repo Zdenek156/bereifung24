@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || ''
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -53,8 +55,8 @@ export default function LoginPage() {
           console.log('Redirecting ADMIN to /admin')
           window.location.href = '/admin'
         } else {
-          console.log('Redirecting to /dashboard')
-          window.location.href = '/dashboard'
+          // CUSTOMER: return to landing page if returnUrl set
+          window.location.href = returnUrl || '/dashboard'
         }
       } else {
         console.error('Unexpected result:', result)
@@ -187,7 +189,7 @@ export default function LoginPage() {
 
           <div className="mt-6">
             <button
-              onClick={() => signIn('google', { callbackUrl: '/dashboard/customer' })}
+              onClick={() => signIn('google', { callbackUrl: returnUrl || '/dashboard/customer' })}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

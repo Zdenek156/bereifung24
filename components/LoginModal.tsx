@@ -8,9 +8,10 @@ import { X, Mail, Lock, Loader2 } from 'lucide-react'
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
+  returnUrl?: string
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, returnUrl }: LoginModalProps) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,7 +71,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/' })
+      await signIn('google', { callbackUrl: returnUrl || '/' })
     } catch (err) {
       setError('Google-Anmeldung fehlgeschlagen')
       setLoading(false)
@@ -209,7 +210,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           {/* Register Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
             Noch kein Konto?{' '}
-            <a href="/register/customer" className="text-blue-600 hover:text-blue-800 font-medium">
+            <a
+              href={`/register/customer${returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''}`}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
               Jetzt registrieren
             </a>
           </div>

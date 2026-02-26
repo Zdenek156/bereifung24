@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function CustomerRegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || ''
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -114,7 +116,7 @@ export default function CustomerRegisterPage() {
 
       // Success - zeige Hinweis
       alert('Registrierung erfolgreich! Bitte überprüfe deine E-Mails und bestätige deine E-Mail-Adresse, bevor du dich anmeldest.')
-      router.push('/login')
+      router.push('/login' + (returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''))
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')
       setLoading(false)
@@ -148,7 +150,7 @@ export default function CustomerRegisterPage() {
           </div>
 
           <button
-            onClick={() => signIn('google', { callbackUrl: '/dashboard/customer' })}
+            onClick={() => signIn('google', { callbackUrl: returnUrl || '/dashboard/customer' })}
             type="button"
             className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium transition-all"
           >

@@ -128,7 +128,12 @@ export default function NewHomePage({
   
   const initialState = getInitialState()
   
-  const [selectedService, setSelectedService] = useState(initialState?.selectedService || 'TIRE_CHANGE')
+  const [selectedService, setSelectedService] = useState(() => {
+    if (hideHeroHeader && initialFixedWorkshopContext) {
+      return ''
+    }
+    return initialState?.selectedService || 'TIRE_CHANGE'
+  })
   const [postalCode, setPostalCode] = useState(initialState?.postalCode || '')
   const [radiusKm, setRadiusKm] = useState(initialState?.radiusKm || 25)
   const [useGeolocation, setUseGeolocation] = useState(false)
@@ -277,11 +282,11 @@ export default function NewHomePage({
   const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
   const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
 
-    const visibleServices = (allowedServiceTypes && allowedServiceTypes.length > 0
-      ? SERVICES.filter((service) => allowedServiceTypes.includes(service.id))
-      : SERVICES
-    ).slice(0, 5)
   const useServiceCards = hideHeroHeader && isWorkshopFixed
+  const filteredServices = allowedServiceTypes && allowedServiceTypes.length > 0
+    ? SERVICES.filter((service) => allowedServiceTypes.includes(service.id))
+    : SERVICES
+  const visibleServices = useServiceCards ? filteredServices : filteredServices.slice(0, 5)
   const serviceCardMap = serviceCards.reduce<Record<string, {
     basePrice: number
     basePrice4?: number | null
@@ -297,12 +302,13 @@ export default function NewHomePage({
     return acc
   }, {})
 
-    useEffect(() => {
-      if (visibleServices.length === 0) return
-      if (!visibleServices.some((service) => service.id === selectedService)) {
-        handleServiceChange(visibleServices[0].id)
-      }
-    }, [selectedService, visibleServices.map((service) => service.id).join(',')])
+  useEffect(() => {
+    if (useServiceCards) return
+    if (visibleServices.length === 0) return
+    if (!visibleServices.some((service) => service.id === selectedService)) {
+      handleServiceChange(visibleServices[0].id)
+    }
+  }, [selectedService, useServiceCards, visibleServices.map((service) => service.id).join(',')])
   
   // Expanded tire selection states
   const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, number>>({}) // workshopId -> number of additional tires to show (0 = collapsed, 9, 18, 27...)
@@ -311,6 +317,7 @@ export default function NewHomePage({
   
   // Ref for scrolling to search results
   const searchResultsRef = useRef<HTMLElement>(null)
+  const serviceDetailsRef = useRef<HTMLDivElement>(null)
   
   // Load reviews on page load
   useEffect(() => {
@@ -1705,6 +1712,7 @@ export default function NewHomePage({
       <LiveChat />
       
       {/* Top Navigation - Blue like current homepage */}
+      {!useServiceCards && (
       <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm shadow-lg">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -1919,6 +1927,7 @@ export default function NewHomePage({
           </div>
         </div>
       </nav>
+      )}
 
       {/* Login Modal */}
       <LoginModal 
@@ -1963,7 +1972,12 @@ export default function NewHomePage({
                   return (
                     <div
                       key={service.id}
-                      onClick={() => handleServiceChange(service.id)}
+                      onClick={() => {
+                        handleServiceChange(service.id)
+                        setTimeout(() => {
+                          serviceDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 100)
+                      }}
                       className={`rounded-xl border p-4 transition-all cursor-pointer bg-white ${
                         isActive
                           ? 'border-primary-500 shadow-md ring-2 ring-primary-200'
@@ -2046,7 +2060,8 @@ export default function NewHomePage({
               </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-2xl p-4">
+            {(!useServiceCards || !!selectedService) && (
+            <div ref={serviceDetailsRef} className="bg-white rounded-2xl shadow-2xl p-4">
               {isWorkshopFixed && fixedWorkshopContext && (
                 <div className="mb-3 px-4 py-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-900 text-sm font-semibold">
                   Du buchst direkt bei {fixedWorkshopContext.workshopName}
@@ -2143,8 +2158,10 @@ export default function NewHomePage({
                 )}
               </div>
             </div>
+            )}
             
             {/* Micro Social Proof under search */}
+            {!useServiceCards && (
             <div className="max-w-5xl mx-auto mt-4 flex flex-wrap items-center justify-center gap-4 text-primary-100 text-sm">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -2161,8 +2178,10 @@ export default function NewHomePage({
                 <span>Bis zu 40% günstiger</span>
               </div>
             </div>
+            )}
 
             {/* Trust Badges */}
+            {!useServiceCards && (
             <div className="max-w-5xl mx-auto mt-6 flex flex-wrap items-center justify-center gap-3 text-primary-100 text-xs">
               <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -2179,6 +2198,7 @@ export default function NewHomePage({
                 <span className="font-medium">Geprüfte Qualität</span>
               </div>
             </div>
+            )}
           </div>
         </div>
       </section>

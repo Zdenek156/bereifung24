@@ -165,6 +165,25 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           </div>
         </section>
 
+        <section id="direkt-buchen" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
+              Direkt bei {landingPage.workshop.companyName} buchen
+            </h2>
+            <p className="text-gray-600 text-center mb-8">
+              Die komplette Buchung läuft direkt hier auf der Landingpage.
+            </p>
+            <div className="w-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+              <iframe
+                title={`Buchung bei ${landingPage.workshop.companyName}`}
+                src={bookingFlowUrl}
+                className="w-full h-[1500px]"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* About Section */}
         {landingPage.aboutTitle && landingPage.aboutText && (
           <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white">
@@ -284,48 +303,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                   />
                 </div>
               )}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section 
-          className="py-16 px-4 sm:px-6 lg:px-8 text-center"
-          style={{
-            background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`
-          }}
-        >
-          <div className="max-w-4xl mx-auto text-white">
-            <h2 className="text-3xl font-bold mb-6">
-              Bereit für Ihre Buchung?
-            </h2>
-            <p className="text-xl mb-8 opacity-90">
-              Buchen Sie direkt bei dieser Werkstatt – ohne Umkreissuche, mit vollem Reifen- und Service-Flow.
-            </p>
-            <a
-              href="#direkt-buchen"
-              className="inline-block px-10 py-4 bg-white text-gray-900 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
-            >
-              Jetzt bei uns buchen →
-            </a>
-          </div>
-        </section>
-
-        <section id="direkt-buchen" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
-              Direkt bei {landingPage.workshop.companyName} buchen
-            </h2>
-            <p className="text-gray-600 text-center mb-8">
-              Die komplette Buchung läuft direkt hier auf der Landingpage.
-            </p>
-            <div className="w-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-              <iframe
-                title={`Buchung bei ${landingPage.workshop.companyName}`}
-                src={bookingFlowUrl}
-                className="w-full h-[1500px]"
-                loading="lazy"
-              />
             </div>
           </div>
         </section>

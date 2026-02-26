@@ -113,7 +113,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     include: {
       workshop: {
         include: {
-          user: true
+          user: true,
+          workshopServices: {
+            where: { isActive: true },
+            select: {
+              serviceType: true,
+              allowsDirectBooking: true,
+            },
+          },
         }
       }
     }
@@ -195,6 +202,11 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         { icon: '🏍️', title: 'Motorradreifen', description: 'Reifenservice für Vorder- und Hinterrad.' },
         { icon: '❄️', title: 'Klimaservice', description: 'Wartung und Service für Ihre Klimaanlage.' },
       ]
+  const directBookableServiceTypes = landingPage.workshop.workshopServices
+    .filter((service) => service.allowsDirectBooking)
+    .map((service) => service.serviceType)
+  const activeServiceTypes = landingPage.workshop.workshopServices.map((service) => service.serviceType)
+  const allowedServiceTypes = directBookableServiceTypes.length > 0 ? directBookableServiceTypes : activeServiceTypes
   const initialFixedWorkshopContext: FixedWorkshopContext | null =
     landingPage.workshop.latitude != null && landingPage.workshop.longitude != null
       ? {
@@ -337,7 +349,11 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             <p className="text-gray-600 text-center mb-8">
               Die komplette Buchung läuft direkt hier auf der Landingpage.
             </p>
-            <NewHomePage initialFixedWorkshopContext={initialFixedWorkshopContext} />
+            <NewHomePage
+              initialFixedWorkshopContext={initialFixedWorkshopContext}
+              hideHeroHeader
+              allowedServiceTypes={allowedServiceTypes}
+            />
           </div>
         </section>
 

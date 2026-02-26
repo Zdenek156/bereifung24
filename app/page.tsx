@@ -86,9 +86,15 @@ export interface FixedWorkshopContext {
 
 interface NewHomePageProps {
   initialFixedWorkshopContext?: FixedWorkshopContext | null
+  hideHeroHeader?: boolean
+  allowedServiceTypes?: string[]
 }
 
-export default function NewHomePage({ initialFixedWorkshopContext = null }: NewHomePageProps = {}) {
+export default function NewHomePage({
+  initialFixedWorkshopContext = null,
+  hideHeroHeader = false,
+  allowedServiceTypes,
+}: NewHomePageProps = {}) {
   const router = useRouter()
   const { data: session, status } = useSession()
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -262,6 +268,18 @@ export default function NewHomePage({ initialFixedWorkshopContext = null }: NewH
   const [selectedTireFrontIndices, setSelectedTireFrontIndices] = useState<Record<string, number>>({}) // workshopId -> front tire index (mixed tires)
   const [selectedTireRearIndices, setSelectedTireRearIndices] = useState<Record<string, number>>({}) // workshopId -> rear tire index (mixed tires)
   const [selectedBrandOptionIndices, setSelectedBrandOptionIndices] = useState<Record<string, number>>({}) // workshopId -> brand option index (for sameBrand filter)
+
+    const visibleServices = (allowedServiceTypes && allowedServiceTypes.length > 0
+      ? SERVICES.filter((service) => allowedServiceTypes.includes(service.id))
+      : SERVICES
+    ).slice(0, 5)
+
+    useEffect(() => {
+      if (visibleServices.length === 0) return
+      if (!visibleServices.some((service) => service.id === selectedService)) {
+        handleServiceChange(visibleServices[0].id)
+      }
+    }, [selectedService, visibleServices.map((service) => service.id).join(',')])
   
   // Expanded tire selection states
   const [expandedTireWorkshops, setExpandedTireWorkshops] = useState<Record<string, number>>({}) // workshopId -> number of additional tires to show (0 = collapsed, 9, 18, 27...)
@@ -1886,31 +1904,35 @@ export default function NewHomePage({ initialFixedWorkshopContext = null }: NewH
       />
 
       {/* Hero Section - Booking.com Style */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32">
+      <section className={`relative ${hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32'}`}>
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-            backgroundSize: '40px 40px'
-          }}></div>
-        </div>
+        {!hideHeroHeader && (
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+              backgroundSize: '40px 40px'
+            }}></div>
+          </div>
+        )}
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-              Reifenservice zum Festpreis – in 2 Minuten gebucht
-            </h2>
-            <p className="text-xl text-primary-100">
-              Vergleiche geprüfte Werkstätten in deiner Nähe und buche direkt online
-            </p>
-          </div>
+          {!hideHeroHeader && (
+            <div className="max-w-4xl mx-auto text-center mb-12">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                Reifenservice zum Festpreis – in 2 Minuten gebucht
+              </h2>
+              <p className="text-xl text-primary-100">
+                Vergleiche geprüfte Werkstätten in deiner Nähe und buche direkt online
+              </p>
+            </div>
+          )}
 
           {/* Search Card - Improved UX with Visible Service Tabs */}
           <div className="max-w-5xl mx-auto">
             {/* Service Tabs - Visible above search card */}
             <div className="mb-3 overflow-x-auto md:overflow-visible scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
               <div className="flex gap-2 min-w-max md:min-w-0 md:justify-center pb-2">
-                {SERVICES.slice(0, 5).map((service) => {
+                {visibleServices.map((service) => {
                   const Icon = service.icon
                   const isActive = selectedService === service.id
                   return (
@@ -1920,7 +1942,9 @@ export default function NewHomePage({ initialFixedWorkshopContext = null }: NewH
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all min-h-[48px] ${
                         isActive
                           ? 'bg-white text-primary-600 shadow-lg ring-2 ring-primary-500'
-                          : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                          : hideHeroHeader
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                       }`}
                       aria-label={service.label}
                       aria-pressed={isActive}

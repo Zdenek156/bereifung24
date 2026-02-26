@@ -76,7 +76,7 @@ interface Stats {
   bookingCount: number
 }
 
-interface FixedWorkshopContext {
+export interface FixedWorkshopContext {
   landingPageSlug: string
   workshopId: string
   workshopName: string
@@ -84,7 +84,11 @@ interface FixedWorkshopContext {
   longitude: number
 }
 
-export default function NewHomePage() {
+interface NewHomePageProps {
+  initialFixedWorkshopContext?: FixedWorkshopContext | null
+}
+
+export default function NewHomePage({ initialFixedWorkshopContext = null }: NewHomePageProps = {}) {
   const router = useRouter()
   const { data: session, status } = useSession()
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -127,7 +131,7 @@ export default function NewHomePage() {
     const lon = params.get('fixedWorkshopLon')
 
     if (!landingPageSlug || !workshopId || !lat || !lon) {
-      return null
+      return initialFixedWorkshopContext
     }
 
     const latitude = Number(lat)
@@ -463,7 +467,7 @@ export default function NewHomePage() {
             longitude,
           })
         }
-      } else {
+      } else if (!initialFixedWorkshopContext) {
         setFixedWorkshopContext(null)
       }
 

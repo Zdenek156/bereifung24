@@ -3917,6 +3917,7 @@ export default function NewHomePage({
       )}
 
       {/* Footer - Reused from current homepage */}
+      {!useServiceCards && (
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
@@ -4107,6 +4108,7 @@ export default function NewHomePage({
           </div>
         </div>
       </footer>
+      )}
     </div>
   )
 }

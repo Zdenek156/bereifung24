@@ -168,6 +168,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               basePrice4: true,
               durationMinutes: true,
               durationMinutes4: true,
+              servicePackages: {
+                where: { isActive: true },
+                select: {
+                  price: true,
+                },
+              },
             },
           },
         }
@@ -349,15 +355,41 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               hideHeroHeader
               allowedServiceTypes={allowedServiceTypes}
               serviceCards={workshopServiceList.map((service) => ({
+                const packagePrices = service.servicePackages
+                  .map((pkg) => pkg.price)
+                  .filter((price) => typeof price === 'number' && price > 0)
+                const minPackagePrice = packagePrices.length > 0 ? Math.min(...packagePrices) : null
+
+                return {
                 serviceType: service.serviceType,
-                basePrice: service.basePrice,
+                basePrice: minPackagePrice ?? service.basePrice,
                 basePrice4: service.basePrice4,
                 durationMinutes: service.durationMinutes,
                 durationMinutes4: service.durationMinutes4,
-              }))}
+                }
+              })}
             />
           </div>
         </section>
+
+        <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-6">
+              <p className="text-gray-400">
+                © {new Date().getFullYear()} {landingPage.workshop.companyName}. Alle Rechte vorbehalten.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                Powered by <Link href="/" className="text-gray-300 hover:text-white">Bereifung24</Link>
+              </p>
+            </div>
+
+            <div className="border-t border-gray-800 pt-6">
+              <p className="text-gray-500 text-xs text-center max-w-4xl mx-auto">
+                <strong className="text-gray-400">Haftungsausschluss:</strong> Die auf dieser Landing Page dargestellten Inhalte, Angebote und Informationen werden von {landingPage.workshop.companyName} eigenverantwortlich bereitgestellt. Bereifung24 übernimmt keine Haftung für die Richtigkeit, Vollständigkeit oder Aktualität der bereitgestellten Informationen. Für alle Inhalte ist ausschließlich der jeweilige Werkstattbetreiber verantwortlich.
+              </p>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   )

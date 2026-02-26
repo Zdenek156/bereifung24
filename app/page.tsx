@@ -1703,7 +1703,7 @@ export default function NewHomePage({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={useServiceCards ? 'bg-transparent' : 'min-h-screen bg-white'}>
       <Suspense fallback={null}>
         <AffiliateTracker />
       </Suspense>
@@ -1936,7 +1936,7 @@ export default function NewHomePage({
       />
 
       {/* Hero Section - Booking.com Style */}
-      <section className={`relative ${hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32'}`}>
+      <section className={`relative ${useServiceCards ? 'bg-transparent text-gray-900 pt-0 pb-0' : hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32'}`}>
         {/* Background Pattern */}
         {!hideHeroHeader && (
           <div className="absolute inset-0 opacity-10">
@@ -1972,13 +1972,7 @@ export default function NewHomePage({
                   return (
                     <div
                       key={service.id}
-                      onClick={() => {
-                        handleServiceChange(service.id)
-                        setTimeout(() => {
-                          serviceDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }, 100)
-                      }}
-                      className={`rounded-xl border p-4 transition-all cursor-pointer bg-white ${
+                      className={`rounded-xl border p-4 transition-all bg-white ${
                         isActive
                           ? 'border-primary-500 shadow-md ring-2 ring-primary-200'
                           : 'border-gray-200 hover:border-primary-300 hover:shadow-sm'
@@ -2011,22 +2005,19 @@ export default function NewHomePage({
                         )}
                       </div>
 
-                      {isActive && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs text-gray-600 mb-2">
-                            Die passenden Filter zu diesem Service sind jetzt aktiv.
-                          </p>
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              handleSearch()
-                            }}
-                            className="w-full h-11 px-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-bold transition-all"
-                          >
-                            Jetzt buchen
-                          </button>
-                        </div>
-                      )}
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            handleServiceChange(service.id)
+                            setTimeout(() => {
+                              serviceDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }, 100)
+                          }}
+                          className="w-full h-11 px-5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-bold transition-all"
+                        >
+                          Jetzt buchen
+                        </button>
+                      </div>
                     </div>
                   )
                 })}
@@ -2204,7 +2195,7 @@ export default function NewHomePage({
       </section>
 
       {/* Search Results Section */}
-      {hasSearched && (
+      {hasSearched && (!useServiceCards || workshops.length > 0) && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row gap-6">

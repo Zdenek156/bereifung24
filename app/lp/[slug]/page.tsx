@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import NewHomePage, { type FixedWorkshopContext } from '@/app/page'
 
 // Force dynamic rendering to always show latest data
 export const dynamic = 'force-dynamic'
@@ -84,7 +85,16 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
 
   const primaryColor = landingPage.primaryColor || '#7C3AED'
   const accentColor = landingPage.accentColor || '#EC4899'
-  const bookingFlowUrl = `/?landingPageSlug=${encodeURIComponent(landingPage.slug)}&fixedWorkshopId=${encodeURIComponent(landingPage.workshop.id)}&fixedWorkshopName=${encodeURIComponent(landingPage.workshop.companyName)}&fixedWorkshopLat=${encodeURIComponent(String(landingPage.workshop.latitude ?? ''))}&fixedWorkshopLon=${encodeURIComponent(String(landingPage.workshop.longitude ?? ''))}`
+  const initialFixedWorkshopContext: FixedWorkshopContext | null =
+    landingPage.workshop.latitude != null && landingPage.workshop.longitude != null
+      ? {
+          landingPageSlug: landingPage.slug,
+          workshopId: landingPage.workshop.id,
+          workshopName: landingPage.workshop.companyName,
+          latitude: Number(landingPage.workshop.latitude),
+          longitude: Number(landingPage.workshop.longitude),
+        }
+      : null
 
   return (
     <>
@@ -173,14 +183,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             <p className="text-gray-600 text-center mb-8">
               Die komplette Buchung läuft direkt hier auf der Landingpage.
             </p>
-            <div className="w-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-              <iframe
-                title={`Buchung bei ${landingPage.workshop.companyName}`}
-                src={bookingFlowUrl}
-                className="w-full h-[1500px]"
-                loading="lazy"
-              />
-            </div>
+            <NewHomePage initialFixedWorkshopContext={initialFixedWorkshopContext} />
           </div>
         </section>
 

@@ -1708,8 +1708,8 @@ export default function NewHomePage({
         <AffiliateTracker />
       </Suspense>
       
-      {/* Live Chat Widget */}
-      <LiveChat />
+      {/* Live Chat Widget - hide on workshop landing pages */}
+      {!useServiceCards && <LiveChat />}
       
       {/* Top Navigation - Blue like current homepage */}
       {!useServiceCards && (

@@ -295,9 +295,9 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                 {landingPage.workshop.user.city || ''}
               </p>
               <div className="flex flex-wrap gap-2 text-xs font-medium text-white/90">
-                <span className="rounded-full bg-white/20 px-3 py-1">Online buchen</span>
-                <span className="rounded-full bg-white/20 px-3 py-1">Werkstattgebundene Angebote</span>
-                <span className="rounded-full bg-white/20 px-3 py-1">Sofort verfügbar</span>
+                <span className="rounded-full bg-white/20 px-3 py-1">🔍 Online Reifen finden</span>
+                <span className="rounded-full bg-white/20 px-3 py-1">📅 Online Termin buchen</span>
+                <span className="rounded-full bg-white/20 px-3 py-1">💳 Online bezahlen</span>
               </div>
             </div>
 

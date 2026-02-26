@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import NewHomePage, { type FixedWorkshopContext } from '@/app/page'
+import LandingPageHeaderActions from '@/components/LandingPageHeaderActions'
 
 // Force dynamic rendering to always show latest data
 export const dynamic = 'force-dynamic'
@@ -271,17 +272,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               </div>
             </div>
 
-            <nav className="hidden items-center gap-5 text-sm text-gray-600 md:flex">
-              <a href="#direkt-buchen" className="hover:text-gray-900">Buchen</a>
-            </nav>
-
-            <a
-              href="#direkt-buchen"
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
-              style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
-            >
-              {landingPage.ctaText || 'Jetzt buchen'}
-            </a>
+            <LandingPageHeaderActions />
           </div>
         </header>
 
@@ -297,9 +288,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         >
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <span className="mb-4 inline-flex rounded-full bg-white/20 px-4 py-1 text-xs font-semibold text-white">
-                Werkstatt-Landingpage
-              </span>
               <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:text-5xl">{displayHeadline}</h1>
               <p className="mb-6 max-w-2xl text-base text-white/90 sm:text-lg">{displaySubline}</p>
               <p className="mb-8 text-sm text-white/85">
@@ -317,9 +305,9 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <p className="text-lg font-bold text-gray-900">Termin buchen</p>
               <p className="mb-4 mt-1 text-sm text-gray-600">Direkt bei {landingPage.workshop.companyName}</p>
               <div className="space-y-2 text-sm text-gray-700">
-                <p>• Reifen- und Serviceauswahl direkt in der Seite</p>
-                <p>• Keine Werkstatt-Suche oder Vergleich in diesem Flow</p>
-                <p>• Login über die vorhandene Leiste im Buchungsbereich</p>
+                <p>• Service &amp; passenden Reifen direkt auswählen</p>
+                <p>• Termin online in Sekunden erstellen</p>
+                <p>• Sichere Online-Bezahlung direkt abschließen</p>
               </div>
               <a
                 href="#direkt-buchen"

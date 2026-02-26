@@ -202,10 +202,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         { icon: '🏍️', title: 'Motorradreifen', description: 'Reifenservice für Vorder- und Hinterrad.' },
         { icon: '❄️', title: 'Klimaservice', description: 'Wartung und Service für Ihre Klimaanlage.' },
       ]
-  const directBookableServiceTypes = landingPage.workshop.workshopServices
+  const workshopServiceList = Array.isArray(landingPage.workshop.workshopServices)
+    ? landingPage.workshop.workshopServices
+    : []
+  const directBookableServiceTypes = workshopServiceList
     .filter((service) => service.allowsDirectBooking)
     .map((service) => service.serviceType)
-  const activeServiceTypes = landingPage.workshop.workshopServices.map((service) => service.serviceType)
+  const activeServiceTypes = workshopServiceList.map((service) => service.serviceType)
   const allowedServiceTypes = directBookableServiceTypes.length > 0 ? directBookableServiceTypes : activeServiceTypes
   const initialFixedWorkshopContext: FixedWorkshopContext | null =
     landingPage.workshop.latitude != null && landingPage.workshop.longitude != null

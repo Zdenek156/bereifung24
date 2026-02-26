@@ -174,11 +174,20 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/dashboard/customer/create-request"
+                  href={{
+                    pathname: '/',
+                    query: {
+                      landingPageSlug: landingPage.slug,
+                      fixedWorkshopId: landingPage.workshop.id,
+                      fixedWorkshopName: landingPage.workshop.companyName,
+                      fixedWorkshopLat: landingPage.workshop.latitude,
+                      fixedWorkshopLon: landingPage.workshop.longitude,
+                    }
+                  }}
                   className="inline-block px-8 py-4 text-white rounded-lg text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
                 >
-                  Jetzt Anfrage stellen
+                  Jetzt bei uns buchen
                 </Link>
                 <a
                   href={`tel:${landingPage.workshop.user.phone}`}

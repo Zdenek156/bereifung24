@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       tireDimensionsFront, // For mixed tires: front axle dimensions
       tireDimensionsRear,  // For mixed tires: rear axle dimensions
       tireFilters,
-      sameBrand = false // For mixed 4 tires: require same brand for front and rear
+      sameBrand = false, // For mixed 4 tires: require same brand for front and rear
+      includeDisposal = true, // Default: include disposal fee
+      forcedWorkshopId,
+      forcedWorkshopSlug
     } = body
     
     console.log('🔍 [API] Received sameBrand parameter:', { sameBrand, type: typeof sameBrand })
@@ -89,8 +92,48 @@ export async function POST(request: NextRequest) {
       tireDimensionsRear 
     })
 
+    const isWorkshopFixedMode = !!forcedWorkshopId || !!forcedWorkshopSlug
+
+    let effectiveCustomerLat = customerLat
+    let effectiveCustomerLon = customerLon
+
+    if (isWorkshopFixedMode) {
+      if (!forcedWorkshopId || !forcedWorkshopSlug) {
+        return NextResponse.json(
+          { error: 'Fehlende Parameter für fixed mode: forcedWorkshopId und forcedWorkshopSlug erforderlich' },
+          { status: 400 }
+        )
+      }
+
+      const landingContext = await prisma.workshopLandingPage.findFirst({
+        where: {
+          slug: forcedWorkshopSlug,
+          isActive: true,
+          workshopId: forcedWorkshopId,
+        },
+        select: {
+          workshop: {
+            select: {
+              latitude: true,
+              longitude: true,
+            },
+          },
+        },
+      })
+
+      if (!landingContext) {
+        return NextResponse.json(
+          { error: 'Ungültiger Landingpage-Kontext für fixed mode' },
+          { status: 403 }
+        )
+      }
+
+      effectiveCustomerLat = landingContext.workshop.latitude
+      effectiveCustomerLon = landingContext.workshop.longitude
+    }
+
     // Validate location parameters only (vehicle not needed for search)
-    if (customerLat === undefined || customerLon === undefined) {
+    if (effectiveCustomerLat === undefined || effectiveCustomerLon === undefined || effectiveCustomerLat === null || effectiveCustomerLon === null) {
       return NextResponse.json(
         { error: 'Fehlende Parameter: customerLat, customerLon erforderlich' },
         { status: 400 }
@@ -101,22 +144,22 @@ export async function POST(request: NextRequest) {
 
     // Vehicle selection happens later in booking flow
 
-    // Find workshops with selected service in radius that allow direct booking
+    // Find workshops with selected service in radius
+    // Direct booking is available if service has active packages
     const workshops = await prisma.workshop.findMany({
       where: {
+        ...(forcedWorkshopId ? { id: forcedWorkshopId } : {}),
         workshopServices: {
           some: {
             serviceType: serviceType,
-            isActive: true,
-            allowsDirectBooking: true
+            isActive: true
           }
         }
       },
       include: {
         workshopServices: {
           where: {
-            isActive: true,
-            allowsDirectBooking: true
+            isActive: true
           },
           include: {
             servicePackages: {
@@ -149,6 +192,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log(`🔍 [API] Found ${workshops.length} workshops with ${serviceType} service`)
+    workshops.forEach(w => {
+      const service = w.workshopServices.find(s => s.serviceType === serviceType)
+      console.log(`  - ${w.companyName}: ${service ? service.servicePackages.length + ' packages' : 'NO SERVICE'}`)
+    })
+
     // Calculate distance and filter by radius
     const workshopsWithDistance = workshops
       .map(workshop => {
@@ -157,8 +206,8 @@ export async function POST(request: NextRequest) {
         if (!service) return null // Skip workshops without the searched service
         
         // Haversine formula for distance calculation
-        const lat1 = customerLat
-        const lon1 = customerLon
+        const lat1 = effectiveCustomerLat
+        const lon1 = effectiveCustomerLon
         const lat2 = workshop.latitude
         const lon2 = workshop.longitude
         
@@ -447,7 +496,7 @@ export async function POST(request: NextRequest) {
         }
       })
       .filter((w): w is NonNullable<typeof w> => w !== null) // Remove null entries
-      .filter(w => radiusKm === undefined || w.distance <= radiusKm)
+      .filter(w => isWorkshopFixedMode || radiusKm === undefined || w.distance <= radiusKm)
       .sort((a, b) => {
         // Sort by: 1. Rating (desc), 2. Distance (asc)
         if (Math.abs(a.rating - b.rating) > 0.5) {

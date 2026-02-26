@@ -76,6 +76,14 @@ interface Stats {
   bookingCount: number
 }
 
+interface FixedWorkshopContext {
+  landingPageSlug: string
+  workshopId: string
+  workshopName: string
+  latitude: number
+  longitude: number
+}
+
 export default function NewHomePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -108,6 +116,35 @@ export default function NewHomePage() {
   const [useGeolocation, setUseGeolocation] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [fixedWorkshopContext, setFixedWorkshopContext] = useState<FixedWorkshopContext | null>(() => {
+    if (typeof window === 'undefined') return null
+
+    const params = new URLSearchParams(window.location.search)
+    const landingPageSlug = params.get('landingPageSlug')
+    const workshopId = params.get('fixedWorkshopId')
+    const workshopName = params.get('fixedWorkshopName')
+    const lat = params.get('fixedWorkshopLat')
+    const lon = params.get('fixedWorkshopLon')
+
+    if (!landingPageSlug || !workshopId || !lat || !lon) {
+      return null
+    }
+
+    const latitude = Number(lat)
+    const longitude = Number(lon)
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      return null
+    }
+
+    return {
+      landingPageSlug,
+      workshopId,
+      workshopName: workshopName || 'Werkstatt',
+      latitude,
+      longitude,
+    }
+  })
+  const isWorkshopFixed = !!fixedWorkshopContext
   
   // Search state
   const [workshops, setWorkshops] = useState<any[]>([])
@@ -127,24 +164,8 @@ export default function NewHomePage() {
     bookingCount: 0
   })
   
-  // Service-specific package filters - RESTORE FROM sessionStorage IMMEDIATELY
-  const [selectedPackages, setSelectedPackages] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedSearchState = sessionStorage.getItem('lastSearchState')
-      if (savedSearchState) {
-        try {
-          const searchState = JSON.parse(savedSearchState)
-          if (Date.now() - searchState.timestamp < 30 * 60 * 1000 && searchState.selectedPackages) {
-            console.log('⚡ [INIT] Restoring filters immediately:', searchState.selectedPackages)
-            return searchState.selectedPackages
-          }
-        } catch (e) {
-          console.error('Error restoring filters in useState init:', e)
-        }
-      }
-    }
-    return []
-  })
+  // Service-specific package filters - Set sensible defaults
+  const [selectedPackages, setSelectedPackages] = useState<string[]>(['tire_installation_only', 'four_tires'])
   
   // Handler to change service and set default packages
   const handleServiceChange = (newService: string) => {
@@ -181,28 +202,37 @@ export default function NewHomePage() {
     
     // Immediately set packages for TIRE_CHANGE
     if (newService === 'TIRE_CHANGE') {
-      console.log('✅ [page.tsx] Setting default: four_tires')
-      setSelectedPackages(['four_tires'])
+      console.log('✅ [page.tsx] Setting default: with_tire_purchase + four_tires')
+      setSelectedPackages(['with_tire_purchase', 'four_tires'])
+    } else if (newService === 'MOTORCYCLE_TIRE') {
+      console.log('✅ [page.tsx] Setting default for MOTORCYCLE_TIRE: motorcycle_tire_installation_only + both')
+      setSelectedPackages(['motorcycle_tire_installation_only', 'both']) // Default: Nur Montage + Beide Reifen
     } else {
       console.log('🔄 [page.tsx] Clearing packages for:', newService)
       setSelectedPackages([])
     }
   }
   
-  // Auto-set default package when user switches to TIRE_CHANGE
+  // Auto-set default package when user switches to TIRE_CHANGE or MOTORCYCLE_TIRE
   useEffect(() => {
     console.log('🔍 [page.tsx] Effect running:', { selectedService, packageCount: selectedPackages.length })
     if (selectedService === 'TIRE_CHANGE' && selectedPackages.length === 0) {
       console.log('🔧 [page.tsx] Auto-setting default for TIRE_CHANGE')
       // Use setTimeout to ensure state update happens after render
       setTimeout(() => {
-        setSelectedPackages(['four_tires'])
+        setSelectedPackages(['with_tire_purchase', 'four_tires'])
+      }, 0)
+    } else if (selectedService === 'MOTORCYCLE_TIRE' && selectedPackages.length === 0) {
+      console.log('🔧 [page.tsx] Auto-setting default for MOTORCYCLE_TIRE: Nur Montage')
+      setTimeout(() => {
+        setSelectedPackages(['motorcycle_tire_installation_only', 'both'])
       }, 0)
     }
   }, [selectedService])
   
   // Tire Search State
   const [includeTires, setIncludeTires] = useState(true)
+  const [includeDisposal, setIncludeDisposal] = useState(true) // For motorcycle disposal fee
   const [tireDimensions, setTireDimensions] = useState({
     width: '',
     height: '',
@@ -254,6 +284,36 @@ export default function NewHomePage() {
     loadReviews()
   }, [])
   
+  // Update includeTires based on selected service type (Nur Montage vs Mit Reifenkauf)
+  useEffect(() => {
+    if (selectedService === 'TIRE_CHANGE') {
+      if (selectedPackages.includes('tire_installation_only')) {
+        console.log('🎯 [page.tsx] Setting includeTires=false (Nur Montage)')
+        setIncludeTires(false)
+      } else if (selectedPackages.includes('with_tire_purchase')) {
+        console.log('🎯 [page.tsx] Setting includeTires=true (Mit Reifenkauf)')
+        setIncludeTires(true)
+      }
+    } else if (selectedService === 'MOTORCYCLE_TIRE') {
+      if (selectedPackages.includes('motorcycle_tire_installation_only')) {
+        console.log('🎯 [page.tsx] Setting includeTires=false (Nur Montage - Motorrad)')
+        setIncludeTires(false)
+      } else if (selectedPackages.includes('motorcycle_with_tire_purchase')) {
+        console.log('🎯 [page.tsx] Setting includeTires=true (Mit Reifenkauf - Motorrad)')
+        setIncludeTires(true)
+      }
+    }
+  }, [selectedPackages, selectedService])
+
+  // CRITICAL: Trigger new search when includeTires changes (if user already searched)
+  // This ensures prices update immediately when switching between "Mit Reifenkauf" and "Nur Montage"
+  useEffect(() => {
+    if (hasSearched && customerLocation && !loading) {
+      console.log('🔄 [includeTires Changed] Re-searching with includeTires:', includeTires)
+      searchWorkshops(customerLocation)
+    }
+  }, [includeTires])
+  
   // Reload tire dimensions when season changes (if vehicle selected)
   // Handle season change (fetch tire dimensions for new season)
   const handleSeasonChange = async (newSeason: string) => {
@@ -297,18 +357,42 @@ export default function NewHomePage() {
         setTireDimensions({
           width: data.dimensions.width.toString(),
           height: data.dimensions.height.toString(),
-          diameter: data.dimensions.diameter.toString()
+          diameter: data.dimensions.diameter.toString(),
+          loadIndex: data.dimensions.loadIndex || '',
+          speedIndex: data.dimensions.speedIndex || ''
         })
         
-        // Set mixed tire dimensions if available
-        if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
-          setHasMixedTires(true)
-          setTireDimensionsFront(data.dimensionsFront.formatted)
-          setTireDimensionsRear(data.dimensionsRear.formatted)
+        // For MOTORCYCLE: Always treat as mixed tires (front/rear can be different)
+        // If API doesn't provide mixed data, use single dimensions for both
+        if (selectedService === 'MOTORCYCLE_TIRE') {
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            // Use provided mixed dimensions
+            setHasMixedTires(true)
+            setTireDimensionsFront(data.dimensionsFront.formatted)
+            setTireDimensionsRear(data.dimensionsRear.formatted)
+            console.log('🏍️ [handleSeasonChange] Motorcycle with DIFFERENT front/rear dimensions:', {
+              front: data.dimensionsFront.formatted,
+              rear: data.dimensionsRear.formatted
+            })
+          } else {
+            // Use same dimensions for both (user can search both same-size tires)
+            setHasMixedTires(true)
+            const formatted = `${data.dimensions.width}/${data.dimensions.height} R${data.dimensions.diameter}${data.dimensions.loadIndex && data.dimensions.speedIndex ? ' ' + data.dimensions.loadIndex + data.dimensions.speedIndex : ''}`
+            setTireDimensionsFront(formatted)
+            setTireDimensionsRear(formatted)
+            console.log('🏍️ [handleSeasonChange] Motorcycle with SAME front/rear dimensions:', formatted)
+          }
         } else {
-          setHasMixedTires(false)
-          setTireDimensionsFront('')
-          setTireDimensionsRear('')
+          // Set mixed tire dimensions if available (PKW only)
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            setHasMixedTires(true)
+            setTireDimensionsFront(data.dimensionsFront.formatted)
+            setTireDimensionsRear(data.dimensionsRear.formatted)
+          } else {
+            setHasMixedTires(false)
+            setTireDimensionsFront('')
+            setTireDimensionsRear('')
+          }
         }
         
         // Now search workshops with the new tire dimensions
@@ -360,6 +444,29 @@ export default function NewHomePage() {
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const fixedParams = new URLSearchParams(window.location.search)
+      const landingPageSlug = fixedParams.get('landingPageSlug')
+      const workshopId = fixedParams.get('fixedWorkshopId')
+      const workshopName = fixedParams.get('fixedWorkshopName')
+      const lat = fixedParams.get('fixedWorkshopLat')
+      const lon = fixedParams.get('fixedWorkshopLon')
+
+      if (landingPageSlug && workshopId && lat && lon) {
+        const latitude = Number(lat)
+        const longitude = Number(lon)
+        if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+          setFixedWorkshopContext({
+            landingPageSlug,
+            workshopId,
+            workshopName: workshopName || 'Werkstatt',
+            latitude,
+            longitude,
+          })
+        }
+      } else {
+        setFixedWorkshopContext(null)
+      }
+
       // First try to restore from sessionStorage (back navigation from workshop)
       const savedSearchState = sessionStorage.getItem('lastSearchState')
       if (savedSearchState) {
@@ -374,6 +481,9 @@ export default function NewHomePage() {
             setCustomerLocation(searchState.customerLocation || null)
             setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
             setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
+            if (searchState.fixedWorkshopContext) {
+              setFixedWorkshopContext(searchState.fixedWorkshopContext)
+            }
             // Restore scroll position
             if (searchState.scrollPosition) {
               setTimeout(() => window.scrollTo(0, searchState.scrollPosition), 100)
@@ -399,6 +509,25 @@ export default function NewHomePage() {
       const savedLon = searchParams.get('lon')
       const savedScroll = searchParams.get('scroll')
       const savedPackages = searchParams.get('packages')
+      const savedLandingPageSlug = searchParams.get('landingPageSlug')
+      const savedFixedWorkshopId = searchParams.get('fixedWorkshopId')
+      const savedFixedWorkshopName = searchParams.get('fixedWorkshopName')
+      const savedFixedWorkshopLat = searchParams.get('fixedWorkshopLat')
+      const savedFixedWorkshopLon = searchParams.get('fixedWorkshopLon')
+
+      if (savedLandingPageSlug && savedFixedWorkshopId && savedFixedWorkshopLat && savedFixedWorkshopLon) {
+        const latitude = Number(savedFixedWorkshopLat)
+        const longitude = Number(savedFixedWorkshopLon)
+        if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+          setFixedWorkshopContext({
+            landingPageSlug: savedLandingPageSlug,
+            workshopId: savedFixedWorkshopId,
+            workshopName: savedFixedWorkshopName || 'Werkstatt',
+            latitude,
+            longitude,
+          })
+        }
+      }
 
       if (savedWorkshops) {
         try {
@@ -434,32 +563,32 @@ export default function NewHomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!fixedWorkshopContext) return
+    if (hasSearched || loading) return
+
+    const location = {
+      lat: fixedWorkshopContext.latitude,
+      lon: fixedWorkshopContext.longitude,
+    }
+
+    setHasSearched(true)
+    setCustomerLocation(location)
+    setLoading(true)
+    setError(null)
+    setWorkshops([])
+    searchWorkshops(location)
+  }, [fixedWorkshopContext])
+
   // Listen for back navigation - restore filters when returning from workshop page
+  // CRITICAL: Disable visibilitychange restore completely - causes more problems than it solves
+  // User can simply re-search if they navigate back
+  // This prevents old sessionStorage data from appearing after tab switches
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && typeof window !== 'undefined') {
-        const savedSearchState = sessionStorage.getItem('lastSearchState')
-        if (savedSearchState) {
-          try {
-            const searchState = JSON.parse(savedSearchState)
-            // Only restore if saved within last 30 minutes and has workshops
-            if (Date.now() - searchState.timestamp < 30 * 60 * 1000 && searchState.workshops && searchState.workshops.length > 0) {
-              console.log('🔄 [Page Visible] Restoring workshops and additional state...', searchState)
-              // Only restore if we don't already have search results (to avoid overwriting current search)
-              if (!hasSearched || workshops.length === 0) {
-                setWorkshops(searchState.workshops || [])
-                setHasSearched(true)
-              }
-              // selectedService, postalCode, radiusKm, selectedVehicleId, hasMixedTires, selectedPackages are already restored in initial state
-              setCustomerLocation(searchState.customerLocation || null)
-              setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
-              setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
-            }
-          } catch (e) {
-            console.error('Error restoring on page visible:', e)
-          }
-        }
-      }
+      // DISABLED: Restoration on tab focus causes stale data issues
+      // Only restore on actual page navigation via browser back button
+      console.log('⏭️ [Page Visible] Visibility changed, but restoration disabled')
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -469,7 +598,7 @@ export default function NewHomePage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleVisibilityChange)
     }
-  }, [hasSearched, workshops.length])
+  }, [])
 
   // Favorites
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -494,63 +623,35 @@ export default function NewHomePage() {
   const [openingHours, setOpeningHours] = useState<string[]>([])
   const [hasMultipleServices, setHasMultipleServices] = useState(false)
 
-  // Rate limiting for Nominatim API (max 1 request per second)
-  let lastNominatimRequest = 0
-  const NOMINATIM_DELAY = 1100 // 1.1 seconds to be safe
-
   // Geocode postal code with rate limiting and retry logic
   const geocodePostalCode = async (input: string, retryCount = 0): Promise<any> => {
     try {
-      // Rate limiting: Wait if last request was too recent
-      const now = Date.now()
-      const timeSinceLastRequest = now - lastNominatimRequest
-      if (timeSinceLastRequest < NOMINATIM_DELAY) {
-        await new Promise(resolve => setTimeout(resolve, NOMINATIM_DELAY - timeSinceLastRequest))
-      }
-      lastNominatimRequest = Date.now()
-
-      // Check if input is a postal code (5 digits) or city name
-      const isPostalCode = /^\d{5}$/.test(input)
+      // Use backend geocoding API to avoid CORS issues
+      const url = `/api/geocode?input=${encodeURIComponent(input)}&retry=${retryCount}`
       
-      let url = ''
-      if (isPostalCode) {
-        url = `https://nominatim.openstreetmap.org/search?format=json&country=Germany&postalcode=${input}`
-      } else {
-        // Search by city name
-        url = `https://nominatim.openstreetmap.org/search?format=json&country=Germany&city=${encodeURIComponent(input)}`
-      }
-      
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Bereifung24.de/1.0 (contact@bereifung24.de)'
-        }
-      })
+      const response = await fetch(url)
 
       // Handle 425 (Too Early) with retry
       if (response.status === 425 && retryCount < 2) {
-        console.warn(`⏱️ Nominatim 425 (Too Early), retry ${retryCount + 1}/2`)
+        console.warn(`⏱️ Geocoding 425 (Too Early), retry ${retryCount + 1}/2`)
         await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
         return geocodePostalCode(input, retryCount + 1)
       }
 
       if (!response.ok) {
-        throw new Error(`Nominatim API error: ${response.status}`)
+        if (response.status === 404) {
+          console.warn('Geocoding: Keine Ergebnisse gefunden')
+          return null
+        }
+        throw new Error(`Geocoding API error: ${response.status}`)
       }
       
       const data = await response.json()
       
-      if (data && data.length > 0) {
-        // Sort results by importance (OSM importance score)
-        // This helps prioritize larger cities when there are multiple matches
-        const sorted = data.sort((a: any, b: any) => {
-          const importanceA = parseFloat(a.importance || '0')
-          const importanceB = parseFloat(b.importance || '0')
-          return importanceB - importanceA
-        })
-        
+      if (data && data.lat && data.lon) {
         return {
-          lat: parseFloat(sorted[0].lat),
-          lon: parseFloat(sorted[0].lon)
+          lat: data.lat,
+          lon: data.lon
         }
       }
       return null
@@ -756,33 +857,60 @@ export default function NewHomePage() {
         console.log('🔍 [handleVehicleSelect] API Response:', {
           hasMixedTires: data.hasMixedTires,
           dimensionsFront: data.dimensionsFront,
-          dimensionsRear: data.dimensionsRear
+          dimensionsRear: data.dimensionsRear,
+          vehicleType: vehicle.vehicleType
         })
 
-        // Set mixed tire dimensions if available
-        if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
-          console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {
-            front: data.dimensionsFront.formatted,
-            rear: data.dimensionsRear.formatted,
-            currentPackages: selectedPackages
-          })
-          setHasMixedTires(true)
-          setTireDimensionsFront(data.dimensionsFront.formatted)
-          setTireDimensionsRear(data.dimensionsRear.formatted)
-          
-          // CRITICAL: Replace all packages with mixed default
-          console.log('🧹 [handleVehicleSelect] Cleaning packages: removing standard, setting mixed_four_tires')
-          setSelectedPackages(['mixed_four_tires'])
+        // For MOTORCYCLE: Always treat as mixed tires (front/rear can be different)
+        // If API doesn't provide mixed data, use single dimensions for both
+        if (vehicle.vehicleType === 'MOTORCYCLE') {
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            // Use provided mixed dimensions
+            setHasMixedTires(true)
+            setTireDimensionsFront(data.dimensionsFront.formatted)
+            setTireDimensionsRear(data.dimensionsRear.formatted)
+            console.log('🏍️ [handleVehicleSelect] Motorcycle with DIFFERENT front/rear dimensions:', {
+              front: data.dimensionsFront.formatted,
+              rear: data.dimensionsRear.formatted
+            })
+          } else {
+            // Use same dimensions for both
+            setHasMixedTires(true)
+            const formatted = `${data.dimensions.width}/${data.dimensions.height} R${data.dimensions.diameter}${data.dimensions.loadIndex && data.dimensions.speedIndex ? ' ' + data.dimensions.loadIndex + data.dimensions.speedIndex : ''}`
+            setTireDimensionsFront(formatted)
+            setTireDimensionsRear(formatted)
+            console.log('🏍️ [handleVehicleSelect] Motorcycle with SAME front/rear dimensions:', formatted)
+          }
+          console.log('✅ [handleVehicleSelect] Motorcycle: keeping existing packages (both/front/rear)')
         } else {
-          console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
-          setHasMixedTires(false)
-          setTireDimensionsFront('')
-          setTireDimensionsRear('')
-          
-          // Set standard package if none selected
-          if (!selectedPackages.some(p => ['two_tires', 'four_tires'].includes(p))) {
-            console.log('🧹 [handleVehicleSelect] Setting standard: four_tires')
-            setSelectedPackages(['four_tires'])
+          // Set mixed tire dimensions if available (PKW only)
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {
+              front: data.dimensionsFront.formatted,
+              rear: data.dimensionsRear.formatted,
+              currentPackages: selectedPackages,
+              vehicleType: vehicle.vehicleType
+            })
+            setHasMixedTires(true)
+            setTireDimensionsFront(data.dimensionsFront.formatted)
+            setTireDimensionsRear(data.dimensionsRear.formatted)
+            
+            // CRITICAL: Only change packages for PKW vehicles
+            if (vehicle.vehicleType !== 'MOTORCYCLE') {
+              console.log('🧹 [handleVehicleSelect] PKW mixed tires: setting mixed_four_tires')
+              setSelectedPackages(['mixed_four_tires'])
+            }
+          } else {
+            console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
+            setHasMixedTires(false)
+            setTireDimensionsFront('')
+            setTireDimensionsRear('')
+            
+            // Set standard package if none selected (PKW only)
+            if (vehicle.vehicleType !== 'MOTORCYCLE' && !selectedPackages.some(p => ['two_tires', 'four_tires', 'with_tire_purchase', 'tire_installation_only'].includes(p))) {
+              console.log('🧹 [handleVehicleSelect] PKW standard: setting with_tire_purchase + four_tires')
+              setSelectedPackages(['with_tire_purchase', 'four_tires'])
+            }
           }
         }
         
@@ -826,6 +954,23 @@ export default function NewHomePage() {
     const tireBudgetMinValue = overrideTireBudgetMin !== undefined ? overrideTireBudgetMin : tireBudgetMin
     const tireBudgetMaxValue = overrideTireBudgetMax !== undefined ? overrideTireBudgetMax : tireBudgetMax
     
+    // CRITICAL: Motorcycles with "Mit Reifenkauf" REQUIRE vehicle selection (for front/rear dimensions for tire search)
+    // For "Nur Montage": No dimensions needed - user can search without vehicle, select later in filter
+    const needsMotorcycleDimensions = selectedService === 'MOTORCYCLE_TIRE' && 
+                                      selectedPackages.includes('motorcycle_with_tire_purchase')
+    
+    if (needsMotorcycleDimensions && (!mixedTiresData.front || !mixedTiresData.rear)) {
+      console.log('⚠️ [searchWorkshops] Motorcycle search with tire purchase requires vehicle selection', {
+        front: mixedTiresData.front,
+        rear: mixedTiresData.rear,
+        hasMixed: mixedTiresData.hasMixed
+      })
+      // Don't show error - just silently wait for vehicle selection
+      setWorkshops([])
+      setLoading(false)
+      return
+    }
+    
     console.log('🎯 [sameBrand] Using value:', {
       override: overrideSameBrand,
       state: requireSameBrand,
@@ -843,15 +988,102 @@ export default function NewHomePage() {
     })
     
     try {
-      const response = await fetch('/api/customer/direct-booking/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceType: selectedService,
-          packageTypes: selectedPackages,
+      // Use motorcycle-search endpoint for MOTORCYCLE_TIRE service
+      const endpoint = selectedService === 'MOTORCYCLE_TIRE' 
+        ? '/api/customer/direct-booking/motorcycle-search'
+        : '/api/customer/direct-booking/search'
+      
+      console.log('📍 [searchWorkshops] Using endpoint:', endpoint)
+      
+      // Build request body based on service type
+      let requestBody: any
+      
+      if (selectedService === 'MOTORCYCLE_TIRE') {
+        // Motorcycle-specific payload
+        // Parse front dimensions (format: "120/70 R17 58W" or "120/70 R17")
+        const parsedFront = mixedTiresData.front ? (() => {
+          const match = mixedTiresData.front.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
+          const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+          console.log('🏍️ [searchWorkshops] Parsing FRONT motorcycle dimensions:', mixedTiresData.front, '→', parsed);
+          return parsed;
+        })() : undefined;
+        
+        // Parse rear dimensions
+        const parsedRear = mixedTiresData.rear ? (() => {
+          const match = mixedTiresData.rear.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
+          const parsed = match ? { width: parseInt(match[1]), height: parseInt(match[2]), diameter: parseInt(match[3]) } : undefined;
+          console.log('🏍️ [searchWorkshops] Parsing REAR motorcycle dimensions:', mixedTiresData.rear, '→', parsed);
+          return parsed;
+        })() : undefined;
+        
+        // Extract disposal and position packages
+        const hasDisposal = selectedPackages.includes('with_disposal')
+        const positionPackages = selectedPackages.filter(p => ['front', 'rear', 'both'].includes(p))
+        const serviceArtPackages = selectedPackages.filter(p => ['motorcycle_with_tire_purchase', 'motorcycle_tire_installation_only'].includes(p))
+        
+        // Combine service-art + position (no need to combine with disposal in packageTypes)
+        const finalPackages = [...serviceArtPackages, ...positionPackages]
+        
+        console.log('🏍️ [searchWorkshops] Package extraction:', {
+          original: selectedPackages,
+          hasDisposal,
+          positionPackages,
+          serviceArtPackages,
+          final: finalPackages
+        })
+        
+        requestBody = {
+          packageTypes: finalPackages,
           radiusKm,
           customerLat: location.lat,
           customerLon: location.lon,
+          forcedWorkshopId: fixedWorkshopContext?.workshopId,
+          forcedWorkshopSlug: fixedWorkshopContext?.landingPageSlug,
+          includeTires: includeTires, // Now controlled by service-art filter
+          includeDisposal: hasDisposal, // Send disposal flag separately
+          tireDimensionsFront: parsedFront,
+          tireDimensionsRear: parsedRear,
+          tireFilters: (includeTires && parsedFront && parsedRear) ? {
+            minPrice: tireBudgetMin,
+            maxPrice: tireBudgetMax,
+            seasons: selectedSeason ? [selectedSeason] : [],
+            quality: tireQuality || undefined,
+            minFuelEfficiency: fuelEfficiency || undefined,
+            minWetGrip: wetGrip || undefined,
+            threePMSF: require3PMSF || undefined,
+            showDOTTires: showDOTTires
+          } : undefined
+        }
+        
+        console.log('🏍️ [searchWorkshops] Motorcycle payload:', {
+          packageTypes: finalPackages,
+          includeTires,
+          hasDimensions: !!parsedFront || !!parsedRear,
+          front: parsedFront,
+          rear: parsedRear,
+          includeDisposal: hasDisposal
+        })
+      } else {
+        // PKW and other services payload
+        // CRITICAL: Filter out frontend-only package markers that don't exist in DB
+        // 'tire_installation_only', 'with_tire_purchase', 'motorcycle_tire_installation_only', 'motorcycle_with_tire_purchase'
+        // These are only used to determine includeTires (true/false), not actual DB package types
+        const frontendMarkers = ['tire_installation_only', 'with_tire_purchase', 'motorcycle_tire_installation_only', 'motorcycle_with_tire_purchase']
+        const dbPackageTypes = selectedPackages.filter(p => !frontendMarkers.includes(p))
+        
+        console.log('🔍 [searchWorkshops] Filtering frontend markers:', {
+          original: selectedPackages,
+          filtered: dbPackageTypes
+        })
+        
+        requestBody = {
+          serviceType: selectedService,
+          packageTypes: dbPackageTypes,
+          radiusKm,
+          customerLat: location.lat,
+          customerLon: location.lon,
+          forcedWorkshopId: fixedWorkshopContext?.workshopId,
+          forcedWorkshopSlug: fixedWorkshopContext?.landingPageSlug,
           // Tire search parameters (only for TIRE_CHANGE service)
           includeTires: selectedService === 'TIRE_CHANGE' ? includeTires : false,
           tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !mixedTiresData.hasMixed) ? tireDimensions : undefined,
@@ -884,7 +1116,13 @@ export default function NewHomePage() {
           } : undefined,
           // Same brand filter (only for mixed 4 tires)
           sameBrand: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && selectedPackages.includes('mixed_four_tires')) ? sameBrandValue : false
-        })
+        }
+      }
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
       })
 
       console.log('📤 [API Request] Sending sameBrand:', {
@@ -951,12 +1189,22 @@ export default function NewHomePage() {
 
   // Handle search
   const handleSearch = async () => {
-    if (!postalCode && !useGeolocation) {
+    if (!isWorkshopFixed && !postalCode && !useGeolocation) {
       alert('Bitte PLZ oder Ort eingeben oder Standort aktivieren')
       return
     }
     
-    // No tire dimension validation - user can search first, then select vehicle in filter
+    // For MOTORCYCLE_TIRE with "Mit Reifenkauf": Validate that vehicle is selected (need dimensions for tire search)
+    // For "Nur Montage": No validation needed - user selects motorcycle in filter after search
+    const needsMotorcycleForSearch = selectedService === 'MOTORCYCLE_TIRE' && 
+                                     selectedPackages.includes('motorcycle_with_tire_purchase')
+    
+    if (needsMotorcycleForSearch && (!tireDimensionsFront || !tireDimensionsRear)) {
+      alert('Bitte wählen Sie zuerst Ihr Motorrad in der linken Filterleiste aus (für Reifengröße).')
+      return
+    }
+    
+    // No tire dimension validation for other services - user can search first, then select vehicle in filter
     
     setLoading(true)
     setError(null)
@@ -965,6 +1213,16 @@ export default function NewHomePage() {
 
     try {
       let location = customerLocation
+
+      if (isWorkshopFixed && fixedWorkshopContext) {
+        location = {
+          lat: fixedWorkshopContext.latitude,
+          lon: fixedWorkshopContext.longitude,
+        }
+        setCustomerLocation(location)
+        await searchWorkshops(location)
+        return
+      }
 
       // Get location from geolocation
       if (useGeolocation) {
@@ -1047,8 +1305,10 @@ export default function NewHomePage() {
   }, [selectedPackages])
 
   // Update sessionStorage whenever critical search parameters change
+  // CRITICAL FIX: Use 'workshops' instead of 'workshops.length' to capture content changes
+  // Only save when NOT loading to avoid saving incomplete/stale data
   useEffect(() => {
-    if (hasSearched && workshops.length > 0 && typeof window !== 'undefined') {
+    if (hasSearched && workshops.length > 0 && !loading && typeof window !== 'undefined') {
       const searchState = {
         workshops,
         hasSearched,
@@ -1061,13 +1321,19 @@ export default function NewHomePage() {
         selectedPackages,
         includeTires,
         hasMixedTires,
+        fixedWorkshopContext,
         scrollPosition: window.scrollY,
         timestamp: Date.now()
       }
       sessionStorage.setItem('lastSearchState', JSON.stringify(searchState))
-      console.log('💾 [sessionStorage] Updated with current filters:', { selectedPackages, selectedService })
+      console.log('💾 [sessionStorage] Updated with current state:', { 
+        workshopsCount: workshops.length, 
+        selectedPackages, 
+        includeTires,
+        loading 
+      })
     }
-  }, [selectedPackages, selectedService, selectedVehicleId, hasMixedTires, hasSearched, workshops.length])
+  }, [selectedPackages, selectedService, selectedVehicleId, hasMixedTires, includeTires, hasSearched, workshops, loading, fixedWorkshopContext])
 
   // Apply filters
   const filteredWorkshops = workshops.filter((w) => {
@@ -1233,6 +1499,7 @@ export default function NewHomePage() {
       tireDimensions,
       selectedPackages,
       includeTires,
+      fixedWorkshopContext,
       scrollPosition: window.scrollY,
       timestamp: Date.now()
     }
@@ -1663,9 +1930,15 @@ export default function NewHomePage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-2xl p-4">
+              {isWorkshopFixed && fixedWorkshopContext && (
+                <div className="mb-3 px-4 py-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-900 text-sm font-semibold">
+                  Du buchst direkt bei {fixedWorkshopContext.workshopName}
+                </div>
+              )}
               <div className="flex flex-col md:flex-row gap-4">
 
                 {/* Location Input with Label and Integrated GPS */}
+                {!isWorkshopFixed && (
                 <div className="flex-1">
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 px-1">
                     Dein Ort
@@ -1714,8 +1987,10 @@ export default function NewHomePage() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Radius Dropdown - Smaller and Less Prominent */}
+                {!isWorkshopFixed && (
                 <div className="w-full md:w-28">
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 px-1">
                     Umkreis
@@ -1734,6 +2009,7 @@ export default function NewHomePage() {
                     ))}
                   </select>
                 </div>
+                )}
 
                 {/* Search Button */}
                 <div className="w-full md:w-auto md:pt-6">
@@ -1742,8 +2018,8 @@ export default function NewHomePage() {
                     className="w-full md:w-auto h-14 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                   >
                     <Search className="w-5 h-5" />
-                    <span className="hidden lg:inline">Jetzt Festpreise vergleichen</span>
-                    <span className="lg:hidden">Vergleichen</span>
+                    <span className="hidden lg:inline">{isWorkshopFixed ? 'Jetzt bei dieser Werkstatt buchen' : 'Jetzt Festpreise vergleichen'}</span>
+                    <span className="lg:hidden">{isWorkshopFixed ? 'Jetzt buchen' : 'Vergleichen'}</span>
                   </button>
                 </div>
               </div>
@@ -1819,8 +2095,20 @@ export default function NewHomePage() {
                       {/* Fahrzeug wählen (for all services) */}
                       <div className="p-4 border-b border-gray-200">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          🚙 Fahrzeug wählen
+                          {selectedService === 'MOTORCYCLE_TIRE' ? '🏍️ Motorrad wählen' : '🚙 Fahrzeug wählen'}
                         </h4>
+                        {/* Special hint for motorcycle "Nur Montage" */}
+                        {selectedService === 'MOTORCYCLE_TIRE' && selectedPackages.includes('motorcycle_tire_installation_only') && (
+                          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                            💡 <strong>Optional:</strong> Wählen Sie Ihr Motorrad für genauere Preise und Details.
+                          </div>
+                        )}
+                        {/* Special hint for motorcycle "Mit Reifenkauf" */}
+                        {selectedService === 'MOTORCYCLE_TIRE' && selectedPackages.includes('motorcycle_with_tire_purchase') && !selectedVehicleId && (
+                          <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                            ⚠️ <strong>Erforderlich:</strong> Bitte wählen Sie Ihr Motorrad für die Reifensuche aus.
+                          </div>
+                        )}
                           {session ? (
                             <div className="space-y-2">
                               <select
@@ -1828,7 +2116,7 @@ export default function NewHomePage() {
                                 onChange={(e) => handleVehicleSelect(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                               >
-                                <option value="">Fahrzeug auswählen...</option>
+                                <option value="">{selectedService === 'MOTORCYCLE_TIRE' ? 'Motorrad auswählen...' : 'Fahrzeug auswählen...'}</option>
                                 {(() => {
                                   // Filter vehicles based on selected service
                                   let filteredVehicles = customerVehicles
@@ -1946,43 +2234,7 @@ export default function NewHomePage() {
                       {/* === TIRE-CHANGE SPECIFIC FILTERS (only for Reifenwechsel) === */}
                       {selectedService === 'TIRE_CHANGE' && (
                         <>
-                          {/* 1. Reifenmontage Art */}
-                          <div className="p-4 border-b border-gray-200">
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              🚗 Reifenmontage
-                            </h4>
-                            <div className="space-y-1">
-                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input
-                                  type="radio"
-                                  name="tireOption"
-                                  checked={!includeTires}
-                                  onChange={() => {
-                                    setIncludeTires(false)
-                                    if (hasSearched && customerLocation) {
-                                      searchWorkshops(customerLocation)
-                                    }
-                                  }}
-                                  className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm font-medium">Nur Montage</span>
-                              </label>
-                              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input
-                                  type="radio"
-                                  name="tireOption"
-                                  checked={includeTires}
-                                  onChange={() => {
-                                    setIncludeTires(true)
-                                  }}
-                                  className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                />
-                                <span className="text-sm font-medium">Reifenmontage mit Reifen</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          {/* 2. Service-Optionen (Anzahl Reifen, Zusatzleistungen) */}
+                          {/* Service-Optionen (Service-Art, Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-4 border-b border-gray-200">
                             <ServiceFilters
                               key={`${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}-${selectedPackages.join(',')}`}
@@ -2065,7 +2317,7 @@ export default function NewHomePage() {
                             </div>
                           )}
 
-                          {/* 4. Saison (only if includeTires) */}
+                          {/* Saison (only if includeTires) */}
                           {includeTires && (
                             <div className="p-4 border-b border-gray-200">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -2106,7 +2358,7 @@ export default function NewHomePage() {
                             </div>
                           )}
 
-                          {/* 6. Reifen-Budget (only if includeTires) */}
+                          {/* Reifen-Budget (only if includeTires) */}
                           {includeTires && (
                             <div className="p-4 border-b border-gray-200">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -3092,8 +3344,20 @@ export default function NewHomePage() {
                                             <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
                                           </div>
                                         ) : null}
-                                        {((workshop.disposalFeeApplied || 0) > 0) && (selectedRec || workshop.isMixedTires) && (() => {
-                                          const tireCount = workshop.isMixedTires ? 4 : (selectedRec?.quantity || 0)
+                                        {((workshop.disposalFeeApplied || 0) > 0) && (selectedRec || workshop.isMixedTires || selectedFrontRec || selectedRearRec) && (() => {
+                                          // Calculate tire count based on service type
+                                          let tireCount = 0
+                                          if (workshop.isMixedTires) {
+                                            tireCount = 4
+                                          } else if (selectedRec) {
+                                            tireCount = selectedRec.quantity || 0
+                                          } else if (selectedFrontRec && selectedRearRec) {
+                                            // Motorcycle: both tires selected
+                                            tireCount = 2
+                                          } else if (selectedFrontRec || selectedRearRec) {
+                                            // Motorcycle: single tire selected
+                                            tireCount = 1
+                                          }
                                           // Only show disposal fee if there are actually tires selected
                                           if (tireCount > 0) {
                                             return (

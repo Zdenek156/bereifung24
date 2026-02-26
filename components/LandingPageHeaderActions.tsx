@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import LoginModal from '@/components/LoginModal'
@@ -9,9 +10,11 @@ export default function LandingPageHeaderActions() {
   const { data: session } = useSession()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [currentUrl, setCurrentUrl] = useState<string>('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setCurrentUrl(window.location.href)
+    setMounted(true)
   }, [])
 
   if (session?.user) {
@@ -47,7 +50,10 @@ export default function LandingPageHeaderActions() {
           Registrieren
         </Link>
       </div>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} returnUrl={currentUrl} />
+      {mounted && createPortal(
+        <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} returnUrl={currentUrl} />,
+        document.body
+      )}
     </>
   )
 }

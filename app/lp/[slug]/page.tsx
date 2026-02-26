@@ -153,11 +153,20 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <Link
-                  href="/dashboard/customer/create-request"
+                  href={{
+                    pathname: '/',
+                    query: {
+                      landingPageSlug: landingPage.slug,
+                      fixedWorkshopId: landingPage.workshop.id,
+                      fixedWorkshopName: landingPage.workshop.companyName,
+                      fixedWorkshopLat: landingPage.workshop.latitude,
+                      fixedWorkshopLon: landingPage.workshop.longitude,
+                    }
+                  }}
                   className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg text-base sm:text-lg font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
                 >
-                  Jetzt Anfrage stellen
+                  Jetzt bei uns buchen
                 </Link>
               </div>
             </div>
@@ -296,16 +305,25 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         >
           <div className="max-w-4xl mx-auto text-white">
             <h2 className="text-3xl font-bold mb-6">
-              Bereit für Ihre Anfrage?
+              Bereit für Ihre Buchung?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Stellen Sie jetzt unverbindlich eine Anfrage und erhalten Sie schnell ein individuelles Angebot.
+              Buchen Sie direkt bei dieser Werkstatt – ohne Umkreissuche, mit vollem Reifen- und Service-Flow.
             </p>
             <Link
-              href="/dashboard/customer/create-request"
+              href={{
+                pathname: '/',
+                query: {
+                  landingPageSlug: landingPage.slug,
+                  fixedWorkshopId: landingPage.workshop.id,
+                  fixedWorkshopName: landingPage.workshop.companyName,
+                  fixedWorkshopLat: landingPage.workshop.latitude,
+                  fixedWorkshopLon: landingPage.workshop.longitude,
+                }
+              }}
               className="inline-block px-10 py-4 bg-white text-gray-900 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
             >
-              Jetzt Anfrage stellen →
+              Jetzt bei uns buchen →
             </Link>
           </div>
         </section>

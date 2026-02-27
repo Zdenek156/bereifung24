@@ -39,11 +39,10 @@ export async function GET() {
 
     const w = user.workshop
 
-    // 1. Calendar: workshop calendar OR at least one employee with calendar
+    // 1. Calendar: workshop calendar OR at least one employee with calendar connected
     const workshopCalendarConnected =
       !!(w.googleCalendarId && w.googleAccessToken)
     const employeeCalendarConnected =
-      w.calendarMode === 'employees' &&
       w.employees.some((e) => e.googleCalendarId && e.googleAccessToken)
     const calendarConnected = workshopCalendarConnected || employeeCalendarConnected
 

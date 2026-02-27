@@ -21,8 +21,12 @@ export async function GET() {
             landingPage: { select: { isActive: true } },
             tirePricingBySizes: { select: { id: true }, take: 1 },
             employees: {
-              where: { isActive: true },
               select: { googleCalendarId: true, googleAccessToken: true },
+            },
+            suppliers: {
+              where: { isActive: true },
+              select: { id: true },
+              take: 1,
             },
           },
         },
@@ -52,7 +56,10 @@ export async function GET() {
     // 4. Tire pricing
     const hasPricing = w.tirePricingBySizes.length > 0
 
-    // 5. Landing page (active)
+    // 5. Supplier connected
+    const hasSupplier = w.suppliers.length > 0
+
+    // 6. Landing page (active)
     const hasLandingPage = !!(w.landingPage?.isActive)
 
     const steps = [
@@ -83,6 +90,13 @@ export async function GET() {
         description: 'Definieren Sie Ihre Aufschläge und Preise für Reifen.',
         done: hasPricing,
         href: '/dashboard/workshop/pricing',
+      },
+      {
+        id: 'supplier',
+        label: 'Lieferant verbinden',
+        description: 'Verbinden Sie mindestens einen Reifenlieferanten (API oder CSV).',
+        done: hasSupplier,
+        href: '/dashboard/workshop/suppliers',
       },
       {
         id: 'landingPage',

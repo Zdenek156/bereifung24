@@ -135,6 +135,19 @@ export default function PricingPage() {
             servicePercentMarkup: data.settings.servicePercentMarkup ?? 0,
             serviceIncludeVat: data.settings.serviceIncludeVat ?? false
           })
+          // Populate templates from saved general settings
+          setAutoTemplate({
+            fixedMarkup: data.settings.autoFixedMarkup ?? 0,
+            percentMarkup: data.settings.autoPercentMarkup ?? 0,
+            includeVat: data.settings.autoIncludeVat ?? false,
+            enabled: true,
+          })
+          setMotoTemplate({
+            fixedMarkup: data.settings.motoFixedMarkup ?? 0,
+            percentMarkup: data.settings.motoPercentMarkup ?? 0,
+            includeVat: data.settings.motoIncludeVat ?? false,
+            enabled: true,
+          })
         }
       }
       
@@ -284,7 +297,12 @@ export default function PricingPage() {
 
   const getTirePricingValue = (vehicleType: 'AUTO' | 'MOTO', rimSize: number) => {
     const key = `${vehicleType}-${rimSize}`
-    return tirePricingForm[key] || { fixedMarkup: 0, percentMarkup: 0, includeVat: false, enabled: true }
+    if (tirePricingForm[key]) return tirePricingForm[key]
+    // Fall back to general template settings when no per-size record exists
+    if (vehicleType === 'AUTO') {
+      return { fixedMarkup: settings.autoFixedMarkup ?? 0, percentMarkup: settings.autoPercentMarkup ?? 0, includeVat: settings.autoIncludeVat ?? false, enabled: true }
+    }
+    return { fixedMarkup: settings.motoFixedMarkup ?? 0, percentMarkup: settings.motoPercentMarkup ?? 0, includeVat: settings.motoIncludeVat ?? false, enabled: true }
   }
 
   const toggleSize = (vehicleType: 'AUTO' | 'MOTO', size: number) => {

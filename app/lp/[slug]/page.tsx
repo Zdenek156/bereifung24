@@ -395,7 +395,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                 className="mt-5 block rounded-lg px-4 py-3 text-center text-sm font-semibold text-white"
                 style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)` }}
               >
-                {landingPage.ctaText || 'Jetzt buchen'}
+                Jetzt buchen
               </a>
             </div>
           </div>
@@ -432,9 +432,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
               Direkt bei {landingPage.workshop.companyName} buchen
             </h2>
-            <p className="text-gray-600 text-center mb-8">
-              Die komplette Buchung läuft direkt hier auf der Landingpage.
-            </p>
             <NewHomePage
               initialFixedWorkshopContext={initialFixedWorkshopContext}
               hideHeroHeader

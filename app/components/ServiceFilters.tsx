@@ -51,22 +51,6 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
         ]
       },
       {
-        label: 'Anzahl Reifen',
-        multiSelect: false, // Radio buttons - nur eine Auswahl
-        options: [
-          { 
-            packageType: 'two_tires', 
-            label: '2 Reifen', 
-            info: 'Wechsel von 2 Reifen (z.B. nur Vorderachse oder nur Hinterachse)'
-          },
-          { 
-            packageType: 'four_tires', 
-            label: '4 Reifen (alle)', 
-            info: 'Kompletter Reifenwechsel für alle 4 Räder'
-          }
-        ]
-      },
-      {
         label: 'Zusatzleistungen',
         multiSelect: true, // Checkboxes - mehrere möglich
         options: [

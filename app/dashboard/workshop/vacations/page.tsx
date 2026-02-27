@@ -27,6 +27,11 @@ function isBetween(day: string, start: string, end: string) {
   return day >= start && day <= end
 }
 
+function addMonths(year: number, month: number, n: number): { year: number; month: number } {
+  const d = new Date(year, month + n, 1)
+  return { year: d.getFullYear(), month: d.getMonth() }
+}
+
 function buildMonthGrid(year: number, month: number): { dateStr: string; currentMonth: boolean }[] {
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
@@ -47,6 +52,89 @@ function buildMonthGrid(year: number, month: number): { dateStr: string; current
   return days
 }
 
+interface MonthGridProps {
+  year: number
+  month: number
+  today: string
+  selStart: string | null
+  selEnd: string | null
+  effectiveEnd: string | null
+  accentLight: string
+  accentTextC: string
+  accentBg: string
+  getVacationForDay: (d: string) => Vacation | undefined
+  onDayClick: (d: string) => void
+  onDayHover: (d: string | null) => void
+  selEndSet: boolean
+}
+
+function MonthGrid({ year, month, today, selStart, selEnd, effectiveEnd, accentLight, accentTextC, accentBg, getVacationForDay, onDayClick, onDayHover, selEndSet }: MonthGridProps) {
+  const days = buildMonthGrid(year, month)
+
+  const isSelected = (dateStr: string) => {
+    if (!selStart) return false
+    const end = effectiveEnd ?? selStart
+    return isBetween(dateStr, selStart, end)
+  }
+  const isEdge = (dateStr: string) =>
+    dateStr === selStart || dateStr === (effectiveEnd ?? selStart)
+
+  return (
+    <div className="flex-1 min-w-0">
+      <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+        {MONTHS[month]} {year}
+      </div>
+      <div className="grid grid-cols-7">
+        {WEEKDAYS.map(d => (
+          <div key={d} className="text-center text-[10px] font-medium text-gray-400 dark:text-gray-500 py-0.5">{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-px bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+        {days.map(({ dateStr, currentMonth }) => {
+          const vacation = getVacationForDay(dateStr)
+          const selected = isSelected(dateStr) && currentMonth
+          const edge = isEdge(dateStr) && selected
+          const isToday = dateStr === today
+
+          let cellBg = 'bg-white dark:bg-gray-800'
+          let textClass = currentMonth ? 'text-gray-800 dark:text-gray-200' : 'text-gray-200 dark:text-gray-700'
+
+          if (selected) {
+            cellBg = accentLight
+            textClass = `${accentTextC} font-semibold`
+          } else if (vacation && currentMonth) {
+            cellBg = 'bg-red-50 dark:bg-red-900/20'
+            textClass = 'text-red-600 dark:text-red-400 font-semibold'
+          }
+
+          return (
+            <div
+              key={dateStr}
+              onClick={() => currentMonth && onDayClick(dateStr)}
+              onMouseEnter={() => !selEndSet && currentMonth && onDayHover(dateStr)}
+              onMouseLeave={() => !selEndSet && onDayHover(null)}
+              className={`${cellBg} relative h-6 flex items-center justify-center ${currentMonth ? 'cursor-pointer hover:opacity-75' : ''} transition-colors`}
+            >
+              {edge && (
+                <div className={`absolute inset-0.5 rounded-full ${accentBg} opacity-25`} />
+              )}
+              {isToday && !selected && (
+                <div className="absolute inset-0.5 rounded-full border border-gray-400 dark:border-gray-500" />
+              )}
+              {vacation && !selected && currentMonth && (
+                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-red-400" />
+              )}
+              <span className={`relative z-10 text-[11px] leading-none select-none ${textClass}`}>
+                {new Date(dateStr + 'T12:00:00').getDate()}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 interface VacationCalendarProps {
   vacations: Vacation[]
   onAdd: (start: string, end: string, reason: string) => Promise<void>
@@ -64,15 +152,15 @@ function VacationCalendar({ vacations, onAdd, onDelete, submitting, accentColor 
   const [hoverDay, setHoverDay] = useState<string | null>(null)
   const [reason, setReason] = useState('')
 
-  const days = buildMonthGrid(calYear, calMonth)
+  const next = addMonths(calYear, calMonth, 1)
 
-  const prevMonth = () => {
-    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
-    else setCalMonth(m => m - 1)
+  const prevPair = () => {
+    const p = addMonths(calYear, calMonth, -1)
+    setCalYear(p.year); setCalMonth(p.month)
   }
-  const nextMonth = () => {
-    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0) }
-    else setCalMonth(m => m + 1)
+  const nextPair = () => {
+    const p = addMonths(calYear, calMonth, 1)
+    setCalYear(p.year); setCalMonth(p.month)
   }
 
   const getVacationForDay = (dateStr: string) =>
@@ -80,23 +168,11 @@ function VacationCalendar({ vacations, onAdd, onDelete, submitting, accentColor 
 
   const effectiveEnd = selEnd ?? (selStart && hoverDay && hoverDay >= selStart ? hoverDay : null)
 
-  const isSelected = (dateStr: string) => {
-    if (!selStart) return false
-    const end = effectiveEnd ?? selStart
-    return isBetween(dateStr, selStart, end)
-  }
-  const isRangeEdge = (dateStr: string) =>
-    dateStr === selStart || dateStr === (effectiveEnd ?? selStart)
-
   const handleDayClick = (dateStr: string) => {
-    if (!selStart) {
-      setSelStart(dateStr); setSelEnd(null); return
-    }
-    if (!selEnd) {
-      if (dateStr < selStart) { setSelStart(dateStr); setSelEnd(null); return }
-      setSelEnd(dateStr); return
-    }
-    setSelStart(dateStr); setSelEnd(null)
+    if (!selStart) { setSelStart(dateStr); setSelEnd(null); return }
+    if (selEnd !== null) { setSelStart(dateStr); setSelEnd(null); return }
+    if (dateStr < selStart) { setSelStart(dateStr); setSelEnd(null); return }
+    setSelEnd(dateStr)
   }
 
   const handleAdd = async () => {
@@ -106,161 +182,118 @@ function VacationCalendar({ vacations, onAdd, onDelete, submitting, accentColor 
     setSelStart(null); setSelEnd(null); setReason('')
   }
 
-  const accentBg      = accentColor === 'blue' ? 'bg-blue-500'            : 'bg-purple-500'
-  const accentLight   = accentColor === 'blue' ? 'bg-blue-100 dark:bg-blue-900/40'   : 'bg-purple-100 dark:bg-purple-900/40'
-  const accentBorderC = accentColor === 'blue' ? 'border-blue-400'         : 'border-purple-400'
-  const accentTextC   = accentColor === 'blue' ? 'text-blue-700 dark:text-blue-300'   : 'text-purple-700 dark:text-purple-300'
+  const accentBg    = accentColor === 'blue' ? 'bg-blue-500'  : 'bg-purple-500'
+  const accentLight = accentColor === 'blue' ? 'bg-blue-100 dark:bg-blue-900/40'  : 'bg-purple-100 dark:bg-purple-900/40'
+  const accentBorderC = accentColor === 'blue' ? 'border-blue-400' : 'border-purple-400'
+  const accentTextC = accentColor === 'blue' ? 'text-blue-700 dark:text-blue-300' : 'text-purple-700 dark:text-purple-300'
+
+  const gridProps = {
+    today, selStart, selEnd, effectiveEnd,
+    accentLight, accentTextC, accentBg,
+    getVacationForDay,
+    onDayClick: handleDayClick,
+    onDayHover: setHoverDay,
+    selEndSet: selEnd !== null,
+  }
 
   return (
     <div>
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-3">
-        <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Month nav + two-month grid */}
+      <div className="flex items-center gap-2 mb-2">
+        <button onClick={prevPair} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="font-semibold text-gray-900 dark:text-white">{MONTHS[calMonth]} {calYear}</span>
-        <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex gap-3 flex-1 min-w-0">
+          <MonthGrid year={calYear} month={calMonth} {...gridProps} />
+          <MonthGrid year={next.year} month={next.month} {...gridProps} />
+        </div>
+        <button onClick={nextPair} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 mb-1">
-        {WEEKDAYS.map(d => (
-          <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{d}</div>
-        ))}
-      </div>
-
-      {/* Day grid */}
-      <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-600 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
-        {days.map(({ dateStr, currentMonth }) => {
-          const vacation = getVacationForDay(dateStr)
-          const selected = isSelected(dateStr)
-          const edge = isRangeEdge(dateStr)
-          const isToday = dateStr === today
-
-          let cellBg = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
-          let textClass = currentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-300 dark:text-gray-600'
-
-          if (selected && currentMonth) {
-            cellBg = accentLight
-            textClass = `${accentTextC} font-semibold`
-          } else if (vacation && currentMonth) {
-            cellBg = 'bg-red-50 dark:bg-red-900/20'
-            textClass = 'text-red-600 dark:text-red-400 font-semibold'
-          }
-
-          return (
-            <div
-              key={dateStr}
-              onClick={() => currentMonth && handleDayClick(dateStr)}
-              onMouseEnter={() => selStart && !selEnd && currentMonth && setHoverDay(dateStr)}
-              onMouseLeave={() => setHoverDay(null)}
-              className={`${cellBg} relative aspect-square flex flex-col items-center justify-center text-xs cursor-pointer transition-colors`}
-            >
-              {edge && selected && (
-                <div className={`absolute inset-1 rounded-full ${accentBg} opacity-30`} />
-              )}
-              {isToday && !selected && (
-                <div className="absolute inset-1 rounded-full border-2 border-gray-300 dark:border-gray-500" />
-              )}
-              {vacation && !selected && currentMonth && (
-                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-400" />
-              )}
-              <span className={`relative z-10 leading-none select-none ${textClass}`}>
-                {new Date(dateStr + 'T12:00:00').getDate()}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700" />
+      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5 rounded bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700" />
           Geschlossen
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className={`inline-block w-3 h-3 rounded ${accentLight} border ${accentBorderC}`} />
+        <span className="flex items-center gap-1">
+          <span className={`inline-block w-2.5 h-2.5 rounded ${accentLight} border ${accentBorderC}`} />
           Auswahl
         </span>
       </div>
 
-      {/* Selection hint / form */}
-      {selStart && !selEnd && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center bg-gray-50 dark:bg-gray-700 rounded-lg py-2 px-3">
-          <strong>{new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit'})}</strong> ausgewählt  klicken Sie ein zweites Datum für einen Zeitraum, oder dasselbe Datum nochmal für einen einzelnen Tag
+      {/* Selection hint */}
+      {selStart && selEnd === null && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center bg-gray-50 dark:bg-gray-700 rounded py-1.5 px-2">
+          <strong>{new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit'})}</strong>  zweiten Tag für Zeitraum wählen, oder gleichen Tag nochmal für 1 Tag
         </p>
       )}
 
+      {/* Add form */}
       {selStart && selEnd !== null && (
-        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="mt-2 p-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {selEnd === selStart
               ? `1 Tag: ${new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })}`
-              : `Zeitraum: ${new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}  ${new Date(selEnd + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}`
+              : `${new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}  ${new Date(selEnd + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}`
             }
           </p>
           <input
             type="text"
             value={reason}
             onChange={e => setReason(e.target.value)}
-            placeholder="Grund (optional, z.B. Betriebsurlaub, Feiertag...)"
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            placeholder="Grund (optional)"
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none"
           />
           <div className="flex gap-2">
-            <button
-              onClick={handleAdd}
-              disabled={submitting}
-              className="flex-1 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
-            >
-              {submitting ? 'Wird gespeichert...' : 'Hinzufügen'}
+            <button onClick={handleAdd} disabled={submitting}
+              className="flex-1 py-1.5 text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50">
+              {submitting ? 'Speichere...' : 'Hinzufügen'}
             </button>
-            <button
-              onClick={() => { setSelStart(null); setSelEnd(null); setReason('') }}
-              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
-            >
-              Abbrechen
+            <button onClick={() => { setSelStart(null); setSelEnd(null); setReason('') }}
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              
             </button>
           </div>
         </div>
       )}
 
       {!selStart && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
-          Einzelnen Tag oder Zeitraum anklicken (1. Klick = Start, 2. Klick = Ende)
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 text-center">
+          Tag anklicken (Einzeltag oder 2 für Zeitraum)
         </p>
       )}
 
       {/* Vacation list */}
-      <div className="mt-5 space-y-2">
+      <div className="mt-3 space-y-1.5">
         {vacations.length === 0 ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">Noch keine Auszeiten eingetragen</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-1">Noch keine Auszeiten eingetragen</p>
         ) : (
           <>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Eingetragene Auszeiten</h4>
+            <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Eingetragen</h4>
             {vacations.map(v => {
               const s = new Date(v.startDate)
               const e = new Date(v.endDate)
               const isSingle = toDateStr(s) === toDateStr(e)
               return (
-                <div key={v.id} className="flex items-center justify-between p-2.5 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <div key={v.id} className="flex items-center justify-between px-2.5 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                   <div>
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                    <p className="text-xs font-medium text-red-800 dark:text-red-300">
                       {isSingle
                         ? s.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })
                         : `${s.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}  ${e.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}`
                       }
                     </p>
-                    {v.reason && <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{v.reason}</p>}
+                    {v.reason && <p className="text-[11px] text-red-500 dark:text-red-400">{v.reason}</p>}
                   </div>
-                  <button onClick={() => onDelete(v.id)} className="p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button onClick={() => onDelete(v.id)} className="p-1 text-red-300 hover:text-red-600 dark:hover:text-red-300 transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -320,8 +353,7 @@ export default function VacationManagementPage() {
     setSubmitting(true)
     try {
       const res = await fetch('/api/workshop/vacations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ startDate: start, endDate: end, reason })
       })
       if (res.ok) { fetchData() }
@@ -340,8 +372,7 @@ export default function VacationManagementPage() {
     setSubmitting(true)
     try {
       const res = await fetch(`/api/workshop/employees/${selectedEmployee}/vacations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ startDate: start, endDate: end, reason })
       })
       if (res.ok) { fetchEmployeeVacations(selectedEmployee) }
@@ -368,7 +399,7 @@ export default function VacationManagementPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Urlaubsplanung</h1>
-          <p className="text-gray-600 dark:text-gray-400">Klicken Sie Tage im Kalender an, um Schließzeiten einzutragen. Einzeltage und Zeiträume werden unterstützt.</p>
+          <p className="text-gray-600 dark:text-gray-400">Klicken Sie Tage im Kalender an. Einzeltage und Zeiträume werden unterstützt.</p>
         </div>
 
         {/* Calendar status banner */}
@@ -399,11 +430,11 @@ export default function VacationManagementPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`grid grid-cols-1 gap-8 ${hasCalendar ? 'lg:grid-cols-2' : 'max-w-2xl'}`}>
           {/* Workshop Calendar */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               Betriebsurlaub
@@ -417,53 +448,52 @@ export default function VacationManagementPage() {
             />
           </div>
 
-          {/* Employee Calendar */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Mitarbeiter-Urlaub
-            </h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitarbeiter auswählen</label>
-              <select
-                value={selectedEmployee}
-                onChange={e => {
-                  setSelectedEmployee(e.target.value)
-                  if (e.target.value) fetchEmployeeVacations(e.target.value)
-                  else setEmployeeVacations([])
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">-- Mitarbeiter wählen --</option>
-                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
-            </div>
-
-            {selectedEmployee ? (
-              <VacationCalendar
-                vacations={employeeVacations}
-                onAdd={handleAddEmployeeVacation}
-                onDelete={handleDeleteEmployeeVacation}
-                submitting={submitting}
-                accentColor="purple"
-              />
-            ) : (
-              <div className="text-center py-16 text-gray-400 dark:text-gray-500">
-                {employees.length === 0 ? (
-                  <>
-                    <p className="text-sm mb-1">Keine Mitarbeiter vorhanden</p>
-                    <a href="/dashboard/workshop/settings" className="text-sm text-primary-600 hover:text-primary-700 underline">
-                      Mitarbeiter hinzufügen
-                    </a>
-                  </>
-                ) : (
-                  <p className="text-sm">Wählen Sie einen Mitarbeiter aus</p>
-                )}
+          {/* Employee Calendar  only shown when calendar is connected */}
+          {hasCalendar && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Mitarbeiter-Urlaub
+              </h2>
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Mitarbeiter auswählen</label>
+                <select
+                  value={selectedEmployee}
+                  onChange={e => {
+                    setSelectedEmployee(e.target.value)
+                    if (e.target.value) fetchEmployeeVacations(e.target.value)
+                    else setEmployeeVacations([])
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">-- Mitarbeiter wählen --</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
               </div>
-            )}
-          </div>
+              {selectedEmployee ? (
+                <VacationCalendar
+                  vacations={employeeVacations}
+                  onAdd={handleAddEmployeeVacation}
+                  onDelete={handleDeleteEmployeeVacation}
+                  submitting={submitting}
+                  accentColor="purple"
+                />
+              ) : (
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  {employees.length === 0 ? (
+                    <>
+                      <p className="text-sm mb-1">Keine Mitarbeiter vorhanden</p>
+                      <a href="/dashboard/workshop/settings" className="text-sm text-primary-600 hover:text-primary-700 underline">Mitarbeiter hinzufügen</a>
+                    </>
+                  ) : (
+                    <p className="text-sm">Wählen Sie einen Mitarbeiter aus</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

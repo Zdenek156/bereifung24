@@ -2051,7 +2051,7 @@ export default function NewHomePage({
               </div>
             )}
 
-            {(!useServiceCards || !!selectedService) && (
+            {!useServiceCards && (
             <div ref={serviceDetailsRef} className="bg-white rounded-2xl shadow-2xl p-4">
               <div className="flex flex-col md:flex-row gap-4">
 
@@ -2359,6 +2359,47 @@ export default function NewHomePage({
                       {/* === TIRE-CHANGE SPECIFIC FILTERS (only for Reifenwechsel) === */}
                       {selectedService === 'TIRE_CHANGE' && (
                         <>
+                          {/* Saison (only if includeTires) */}
+                          {includeTires && (
+                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
+                              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                ❄️ Saison
+                              </h4>
+                              <div className="space-y-1">
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 's'}
+                                    onChange={() => handleSeasonChange('s')}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">☀️ Sommerreifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 'w'}
+                                    onChange={() => handleSeasonChange('w')}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">❄️ Winterreifen</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                  <input
+                                    type="radio"
+                                    name="tireSeason"
+                                    checked={selectedSeason === 'g'}
+                                    onChange={() => handleSeasonChange('g')}
+                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm">🔄 Ganzjahresreifen</span>
+                                </label>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Service-Optionen (Service-Art, Anzahl Reifen, Zusatzleistungen) */}
                           <div className="p-5 border-b border-gray-200 lg:border-b-0">
                             <ServiceFilters
@@ -2439,47 +2480,6 @@ export default function NewHomePage({
                                   <div className="text-xs text-gray-600 mt-0.5">Nur Kombinationen mit identischer Marke vorne und hinten anzeigen</div>
                                 </div>
                               </label>
-                            </div>
-                          )}
-
-                          {/* Saison (only if includeTires) */}
-                          {includeTires && (
-                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                ❄️ Saison
-                              </h4>
-                              <div className="space-y-1">
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireSeason"
-                                    checked={selectedSeason === 's'}
-                                    onChange={() => handleSeasonChange('s')}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">☀️ Sommerreifen</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireSeason"
-                                    checked={selectedSeason === 'w'}
-                                    onChange={() => handleSeasonChange('w')}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">❄️ Winterreifen</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <input
-                                    type="radio"
-                                    name="tireSeason"
-                                    checked={selectedSeason === 'g'}
-                                    onChange={() => handleSeasonChange('g')}
-                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                                  />
-                                  <span className="text-sm">🔄 Ganzjahresreifen</span>
-                                </label>
-                              </div>
                             </div>
                           )}
 

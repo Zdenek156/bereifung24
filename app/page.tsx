@@ -2053,11 +2053,6 @@ export default function NewHomePage({
 
             {(!useServiceCards || !!selectedService) && (
             <div ref={serviceDetailsRef} className="bg-white rounded-2xl shadow-2xl p-4">
-              {isWorkshopFixed && fixedWorkshopContext && (
-                <div className="mb-3 px-4 py-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-900 text-sm font-semibold">
-                  Du buchst direkt bei {fixedWorkshopContext.workshopName}
-                </div>
-              )}
               <div className="flex flex-col md:flex-row gap-4">
 
                 {/* Location Input with Label and Integrated GPS */}
@@ -2197,8 +2192,8 @@ export default function NewHomePage({
       {/* Search Results Section */}
       {hasSearched && (!useServiceCards || workshops.length > 0) && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-4">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto flex flex-col gap-4">
               {/* Horizontal Filter Bar */}
               {workshops.length > 0 && (
                 <div className="w-full">

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -23,10 +22,31 @@ export default function EmployeeAdminTiles() {
   const router = useRouter()
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
+  const [favorites, setFavorites] = useState<string[]>([])
 
   useEffect(() => {
     fetchApplications()
   }, [])
+
+  // Load favorites from localStorage once session is known
+  useEffect(() => {
+    if (!session?.user?.email) return
+    const key = `emp_favorites_${session.user.email}`
+    const saved = localStorage.getItem(key)
+    if (saved) {
+      try { setFavorites(JSON.parse(saved)) } catch {}
+    }
+  }, [session?.user?.email])
+
+  const toggleFavorite = (e: React.MouseEvent, appId: string) => {
+    e.stopPropagation()
+    const key = `emp_favorites_${session?.user?.email}`
+    setFavorites(prev => {
+      const next = prev.includes(appId) ? prev.filter(f => f !== appId) : [...prev, appId]
+      localStorage.setItem(key, JSON.stringify(next))
+      return next
+    })
+  }
 
   const fetchApplications = async () => {
     try {
@@ -120,25 +140,73 @@ export default function EmployeeAdminTiles() {
     router.push(href)
   }
 
+  const pinnedApps = applications.filter(a => favorites.includes(a.id))
+  const unpinnedApps = applications.filter(a => !favorites.includes(a.id))
+
+  const AppCard = ({ app, compact = false }: { app: Application; compact?: boolean }) => {
+    const colors = getColorClasses(app.color)
+    const isFav = favorites.includes(app.id)
+    return (
+      <div className="relative group">
+        <button
+          onClick={() => handleNavigation(app.adminRoute)}
+          className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow text-left w-full ${compact ? 'p-4' : 'p-6'}`}
+        >
+          <div className={`flex items-center justify-center ${compact ? 'w-10 h-10 mb-3' : 'w-12 h-12 mb-4'} ${colors.bg} rounded-lg`}>
+            <span className={colors.text}>{getIcon(app.icon)}</span>
+          </div>
+          <h3 className={`font-semibold text-gray-900 ${compact ? 'text-sm mb-1' : 'text-lg mb-2'}`}>{app.name}</h3>
+          {!compact && <p className="text-sm text-gray-600">{app.description}</p>}
+        </button>
+        {/* Star button */}
+        <button
+          onClick={(e) => toggleFavorite(e, app.id)}
+          title={isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+          className={`absolute top-2 right-2 p-1 rounded-full transition-all ${
+            isFav
+              ? 'text-yellow-400 opacity-100'
+              : 'text-gray-300 opacity-0 group-hover:opacity-100 hover:text-yellow-400'
+          }`}
+        >
+          <svg className="w-4 h-4" fill={isFav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {applications.map((app) => {
-        const colors = getColorClasses(app.color)
-        
-        return (
-          <button
-            key={app.id}
-            onClick={() => handleNavigation(app.adminRoute)}
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow text-left w-full"
-          >
-            <div className={`flex items-center justify-center w-12 h-12 ${colors.bg} rounded-lg mb-4`}>
-              <span className={colors.text}>{getIcon(app.icon)}</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{app.name}</h3>
-            <p className="text-sm text-gray-600">{app.description}</p>
-          </button>
-        )
-      })}
+    <div>
+      {/* Favorites strip */}
+      {pinnedApps.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5 mb-3">
+            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+            <span className="text-sm font-semibold text-gray-700">Favoriten</span>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {pinnedApps.map(app => (
+              <div key={app.id} className="w-36">
+                <AppCard app={app} compact />
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-gray-100 mt-5 mb-5" />
+        </div>
+      )}
+
+      {/* All apps grid */}
+      {unpinnedApps.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {unpinnedApps.map(app => <AppCard key={app.id} app={app} />)}
+        </div>
+      )}
+      {unpinnedApps.length === 0 && pinnedApps.length > 0 && (
+        <p className="text-sm text-gray-400 text-center py-2">Alle Anwendungen sind als Favorit gespeichert</p>
+      )}
     </div>
   )
 }

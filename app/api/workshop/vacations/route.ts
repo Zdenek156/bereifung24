@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ 
       vacations: workshop.workshopVacations,
-      hasCalendar
+      hasCalendar,
+      hasEmployeeCalendar
     })
   } catch (error) {
     console.error('Error fetching vacations:', error)

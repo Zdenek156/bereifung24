@@ -457,7 +457,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Opening Hours + Reviews above footer */
+        {/* Opening Hours + Reviews above footer */}
         {((!landingPage.showMap && landingPage.showOpeningHours) || landingPage.showReviews) && (
           <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100`}>
             <div className="max-w-7xl mx-auto">

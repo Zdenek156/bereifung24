@@ -147,7 +147,7 @@ export default function WorkshopSetupChecklist() {
       {/* Footer */}
       <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <p className="text-xs text-gray-400 text-center">
-          Erledige alle Schritte, damit Kunden bei dir buchen können.
+          Erledigen Sie alle Schritte, damit Kunden bei Ihnen buchen können.
         </p>
       </div>
     </div>

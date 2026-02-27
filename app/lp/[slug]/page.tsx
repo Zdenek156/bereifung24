@@ -324,9 +324,9 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-gray-600">
             <span>✓ Geprüfte Werkstatt</span>
             <span>•</span>
-            <span>✓ Direkte Buchung ohne Umkreissuche</span>
+            <span>✓ Sichere Bezahlung</span>
             <span>•</span>
-            <span>✓ Buchung nur bei {landingPage.workshop.companyName}</span>
+            <span>✓ 24/7 Buchung</span>
           </div>
         </section>
 

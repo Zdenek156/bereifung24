@@ -1,3 +1,4 @@
+import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -201,6 +202,16 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     }
   })
 
+  // Fetch workshop reviews if needed
+  const workshopReviews = landingPage.showReviews
+    ? await prisma.review.findMany({
+        where: { workshopId: landingPage.workshopId, rating: { gte: 4 } },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: { include: { user: { select: { firstName: true, lastName: true } } } } }
+      })
+    : []
+
   const primaryColor = landingPage.primaryColor || '#7C3AED'
   const accentColor = landingPage.accentColor || '#EC4899'
   const displayHeadline = landingPage.heroHeadline || `Willkommen bei ${landingPage.workshop.companyName}`
@@ -212,6 +223,82 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     : []
   const activeServiceTypes = workshopServiceList.map((service) => service.serviceType)
   const allowedServiceTypes = activeServiceTypes
+
+  // Template-based visual config
+  const template = landingPage.template || 'modern'
+  const tmpl = {
+    modern: {
+      heroClass: 'py-14 sm:py-20',
+      sectionBg: 'bg-gray-50',
+      cardRound: 'rounded-2xl',
+      shadow: 'shadow-xl',
+      headingStyle: 'font-bold',
+    },
+    classic: {
+      heroClass: 'py-12 sm:py-16',
+      sectionBg: 'bg-white border-b border-gray-200',
+      cardRound: 'rounded-lg',
+      shadow: 'shadow-md border border-gray-200',
+      headingStyle: 'font-semibold tracking-wide',
+    },
+    minimal: {
+      heroClass: 'py-10 sm:py-14',
+      sectionBg: 'bg-white',
+      cardRound: 'rounded',
+      shadow: 'shadow-sm border border-gray-100',
+      headingStyle: 'font-medium',
+    },
+    professional: {
+      heroClass: 'py-16 sm:py-24',
+      sectionBg: 'bg-gray-100',
+      cardRound: 'rounded-xl',
+      shadow: 'shadow-lg',
+      headingStyle: 'font-bold uppercase tracking-widest text-sm',
+    },
+  }[template] ?? {
+    heroClass: 'py-14 sm:py-20',
+    sectionBg: 'bg-gray-50',
+    cardRound: 'rounded-2xl',
+    shadow: 'shadow-xl',
+    headingStyle: 'font-bold',
+  }
+
+  // Hero background based on template
+  const heroBackground: React.CSSProperties = landingPage.heroImage
+    ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,${template === 'classic' ? '0.6' : template === 'professional' ? '0.65' : '0.55'}), rgba(0,0,0,0.45)), url(https://www.bereifung24.de${landingPage.heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : template === 'classic'
+    ? { background: primaryColor }
+    : template === 'minimal'
+    ? { background: `linear-gradient(160deg, ${primaryColor}22 0%, ${primaryColor}44 100%)` }
+    : template === 'professional'
+    ? { background: `linear-gradient(160deg, #1f2937 0%, #374151 100%)` }
+    : { backgroundImage: `linear-gradient(160deg, ${primaryColor} 0%, ${accentColor} 100%)` }
+
+  // Opening hours
+  const openingHoursList = parseOpeningHours(landingPage.workshop.user?.openingHours)
+
+  const heroTextColor = template === 'minimal' ? 'text-gray-900' : 'text-white'
+  const heroSubTextColor = template === 'minimal' ? 'text-gray-600' : 'text-white/90'
+  const heroDimTextColor = template === 'minimal' ? 'text-gray-500' : 'text-white/85'
+  const heroBadgeBg = template === 'minimal' ? `bg-gray-100 text-gray-700` : 'bg-white/20 text-white/90'
+
+  // Map embed URL
+  const workshopLat = landingPage.workshop.latitude
+  const workshopLon = landingPage.workshop.longitude
+  const workshopAddress = [
+    landingPage.workshop.user?.street,
+    landingPage.workshop.user?.zipCode,
+    landingPage.workshop.user?.city,
+  ].filter(Boolean).join(', ')
+  const mapEmbedUrl = workshopLat && workshopLon
+    ? `https://maps.google.com/maps?q=${workshopLat},${workshopLon}&z=15&output=embed`
+    : workshopAddress
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(workshopAddress)}&z=15&output=embed`
+    : null
   const initialFixedWorkshopContext: FixedWorkshopContext | null =
     landingPage.workshop.latitude != null && landingPage.workshop.longitude != null
       ? {
@@ -277,31 +364,25 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         </header>
 
         <section
-          className="relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
-          style={{
-            backgroundImage: landingPage.heroImage
-              ? `linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.45)), url(https://www.bereifung24.de${landingPage.heroImage})`
-              : `linear-gradient(160deg, ${primaryColor} 0%, ${accentColor} 100%)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
+          className={`relative overflow-hidden px-4 ${tmpl.heroClass} sm:px-6 lg:px-8`}
+          style={heroBackground}
         >
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:text-5xl">{displayHeadline}</h1>
-              <p className="mb-6 max-w-2xl text-base text-white/90 sm:text-lg">{displaySubline}</p>
-              <p className="mb-8 text-sm text-white/85">
+              <h1 className={`mb-4 text-3xl font-bold leading-tight sm:text-5xl ${heroTextColor}`}>{displayHeadline}</h1>
+              <p className={`mb-6 max-w-2xl text-base sm:text-lg ${heroSubTextColor}`}>{displaySubline}</p>
+              <p className={`mb-8 text-sm ${heroDimTextColor}`}>
                 📍 {landingPage.workshop.user.street || ''} {landingPage.workshop.user.zipCode || ''}{' '}
                 {landingPage.workshop.user.city || ''}
               </p>
-              <div className="flex flex-wrap gap-2 text-xs font-medium text-white/90">
-                <span className="rounded-full bg-white/20 px-3 py-1">🔍 Online Reifen finden</span>
-                <span className="rounded-full bg-white/20 px-3 py-1">📅 Online Termin buchen</span>
-                <span className="rounded-full bg-white/20 px-3 py-1">💳 Online bezahlen</span>
+              <div className="flex flex-wrap gap-2 text-xs font-medium">
+                <span className={`rounded-full px-3 py-1 ${heroBadgeBg}`}>🔍 Online Reifen finden</span>
+                <span className={`rounded-full px-3 py-1 ${heroBadgeBg}`}>📅 Online Termin buchen</span>
+                <span className={`rounded-full px-3 py-1 ${heroBadgeBg}`}>💳 Online bezahlen</span>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-xl">
+            <div className={`bg-white p-6 ${tmpl.cardRound} ${tmpl.shadow}`}>
               <p className="text-lg font-bold text-gray-900">Termin buchen</p>
               <p className="mb-4 mt-1 text-sm text-gray-600">Direkt bei {landingPage.workshop.companyName}</p>
               <div className="space-y-2 text-sm text-gray-700">
@@ -359,6 +440,114 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
             />
           </div>
         </section>
+
+        {/* Über Uns Section */}
+        {landingPage.aboutText && (
+          <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${tmpl.sectionBg}`}>
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
+                Über uns
+              </h2>
+              <div className={`bg-white ${tmpl.cardRound} ${tmpl.shadow} p-6 sm:p-8`}>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
+                  {landingPage.aboutText}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Opening Hours + Reviews above footer */}
+        {(landingPage.showOpeningHours || landingPage.showReviews) && (
+          <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100`}>
+            <div className="max-w-7xl mx-auto">
+              <div className={`grid gap-8 ${landingPage.showOpeningHours && landingPage.showReviews ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                {/* Opening Hours */}
+                {landingPage.showOpeningHours && openingHoursList.length > 0 && (
+                  <div className={`bg-gray-50 ${tmpl.cardRound} p-6`}>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      🕐 Öffnungszeiten
+                    </h3>
+                    <div className="space-y-2">
+                      {openingHoursList.map(({ day, time }) => {
+                        const isClosed = time === 'Geschlossen'
+                        const today = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][new Date().getDay()]
+                        const isToday = day === today
+                        return (
+                          <div key={day} className={`flex justify-between items-center py-1.5 px-3 rounded-lg ${isToday ? 'bg-white border border-gray-200 font-semibold' : ''}`}>
+                            <span className={`text-sm ${isClosed ? 'text-gray-400' : 'text-gray-700'} ${isToday ? 'font-semibold text-gray-900' : ''}`}>
+                              {day}{isToday && <span className="ml-2 text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: primaryColor + '22', color: primaryColor }}>Heute</span>}
+                            </span>
+                            <span className={`text-sm ${isClosed ? 'text-gray-400 italic' : 'text-gray-800 font-medium'}`}>
+                              {time}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviews */}
+                {landingPage.showReviews && workshopReviews.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      ⭐ Kundenbewertungen
+                    </h3>
+                    <div className="space-y-3">
+                      {workshopReviews.map((review) => (
+                        <div key={review.id} className={`bg-gray-50 ${tmpl.cardRound} p-4`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-gray-900 text-sm">
+                              {review.customer.user?.firstName || 'Kunde'} {review.customer.user?.lastName ? review.customer.user.lastName[0] + '.' : ''}
+                            </span>
+                            <span className="text-yellow-400 text-sm">
+                              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                            </span>
+                          </div>
+                          {review.comment && (
+                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{review.comment}</p>
+                          )}
+                          <p className="text-gray-400 text-xs mt-1">
+                            {new Date(review.createdAt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Map Section */}
+        {landingPage.showMap && mapEmbedUrl && (
+          <section className={`px-4 sm:px-6 lg:px-8 pb-12 bg-white`}>
+            <div className="max-w-7xl mx-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                📍 Standort
+              </h3>
+              <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200`} style={{ height: '360px' }}>
+                <iframe
+                  src={mapEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={`Standort ${landingPage.workshop.companyName}`}
+                />
+              </div>
+              {workshopAddress && (
+                <p className="mt-3 text-sm text-gray-500 text-center">
+                  📍 {workshopAddress}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">

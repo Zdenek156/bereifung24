@@ -258,7 +258,7 @@ function VacationCalendar({ vacations, onAdd, onDelete, submitting, accentColor 
             </button>
             <button onClick={() => { setSelStart(null); setSelEnd(null); setReason('') }}
               className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-              
+              Abbrechen
             </button>
           </div>
         </div>
@@ -315,6 +315,7 @@ export default function VacationManagementPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('')
   const [employeeVacations, setEmployeeVacations] = useState<Vacation[]>([])
   const [hasCalendar, setHasCalendar] = useState(false)
+  const [hasEmployeeCalendar, setHasEmployeeCalendar] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -335,6 +336,7 @@ export default function VacationManagementPage() {
         const d = await vacRes.json()
         setWorkshopVacations(d.vacations || [])
         setHasCalendar(d.hasCalendar || false)
+        setHasEmployeeCalendar(d.hasEmployeeCalendar || false)
       }
       if (empRes.ok) {
         const d = await empRes.json()
@@ -430,7 +432,7 @@ export default function VacationManagementPage() {
           )}
         </div>
 
-        <div className={`grid grid-cols-1 gap-8 ${hasCalendar ? 'lg:grid-cols-2' : 'max-w-2xl'}`}>
+        <div className={`grid grid-cols-1 gap-8 ${hasEmployeeCalendar ? 'lg:grid-cols-2' : 'max-w-2xl'}`}>
           {/* Workshop Calendar */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -448,8 +450,8 @@ export default function VacationManagementPage() {
             />
           </div>
 
-          {/* Employee Calendar  only shown when calendar is connected */}
-          {hasCalendar && (
+          {/* Employee Calendar — only shown when an employee calendar is connected */}
+          {hasEmployeeCalendar && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <svg className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

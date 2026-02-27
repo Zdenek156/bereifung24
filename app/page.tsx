@@ -2654,7 +2654,8 @@ export default function NewHomePage({
                         </div>
                       )}
 
-                      {/* Payment Methods Filter */}
+                      {/* Payment Methods Filter - hidden on landing pages */}
+                      {!useServiceCards && (
                       <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <CreditCard className="w-4 h-4" />
@@ -2687,8 +2688,10 @@ export default function NewHomePage({
                           ))}
                         </div>
                       </div>
+                      )}
 
-                      {/* Opening Hours Filter */}
+                      {/* Opening Hours Filter - hidden on landing pages */}
+                      {!useServiceCards && (
                       <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
@@ -2722,8 +2725,10 @@ export default function NewHomePage({
                           ))}
                         </div>
                       </div>
+                      )}
 
-                      {/* Multiple Services Filter */}
+                      {/* Multiple Services Filter - hidden on landing pages */}
+                      {!useServiceCards && (
                       <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Wrench className="w-4 h-4" />
@@ -2739,6 +2744,7 @@ export default function NewHomePage({
                           <span className="text-sm">Nur Werkstätten mit weiteren Services</span>
                         </label>
                       </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2777,7 +2783,8 @@ export default function NewHomePage({
                 {/* Results */}
                 {!loading && workshops.length > 0 && (
                   <div className="space-y-4 w-full">
-                    {/* Sort Bar */}
+                    {/* Sort Bar - hidden on landing pages */}
+                    {!useServiceCards && (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
                       <p className="text-sm text-gray-600">
                         <span className="font-semibold text-gray-900">{sortedWorkshops.length}</span> Werkstätten gefunden
@@ -2795,6 +2802,7 @@ export default function NewHomePage({
                         </select>
                       </div>
                     </div>
+                    )}
 
                     {/* Workshop Cards */}
                     {sortedWorkshops.map((workshop) => {

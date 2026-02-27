@@ -88,8 +88,8 @@ export async function POST(
     const start = new Date(startDate)
     const end = new Date(endDate)
 
-    if (start >= end) {
-      return NextResponse.json({ error: 'Enddatum muss nach Startdatum liegen' }, { status: 400 })
+    if (start > end) {
+      return NextResponse.json({ error: 'Enddatum darf nicht vor Startdatum liegen' }, { status: 400 })
     }
 
     const vacation = await prisma.employeeVacation.create({

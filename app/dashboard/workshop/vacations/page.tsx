@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
@@ -16,6 +16,264 @@ interface Employee {
   name: string
 }
 
+const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
+
+function toDateStr(d: Date) {
+  return d.toISOString().split('T')[0]
+}
+
+function isBetween(day: string, start: string, end: string) {
+  return day >= start && day <= end
+}
+
+function buildMonthGrid(year: number, month: number): { dateStr: string; currentMonth: boolean }[] {
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startDow = (firstDay.getDay() + 6) % 7
+  const days: { dateStr: string; currentMonth: boolean }[] = []
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i)
+    days.push({ dateStr: toDateStr(d), currentMonth: false })
+  }
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    days.push({ dateStr: toDateStr(new Date(year, month, d)), currentMonth: true })
+  }
+  const remaining = 42 - days.length
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(year, month + 1, i)
+    days.push({ dateStr: toDateStr(d), currentMonth: false })
+  }
+  return days
+}
+
+interface VacationCalendarProps {
+  vacations: Vacation[]
+  onAdd: (start: string, end: string, reason: string) => Promise<void>
+  onDelete: (id: string) => void
+  submitting: boolean
+  accentColor?: 'blue' | 'purple'
+}
+
+function VacationCalendar({ vacations, onAdd, onDelete, submitting, accentColor = 'blue' }: VacationCalendarProps) {
+  const today = toDateStr(new Date())
+  const [calYear, setCalYear] = useState(new Date().getFullYear())
+  const [calMonth, setCalMonth] = useState(new Date().getMonth())
+  const [selStart, setSelStart] = useState<string | null>(null)
+  const [selEnd, setSelEnd] = useState<string | null>(null)
+  const [hoverDay, setHoverDay] = useState<string | null>(null)
+  const [reason, setReason] = useState('')
+
+  const days = buildMonthGrid(calYear, calMonth)
+
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
+    else setCalMonth(m => m - 1)
+  }
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0) }
+    else setCalMonth(m => m + 1)
+  }
+
+  const getVacationForDay = (dateStr: string) =>
+    vacations.find(v => isBetween(dateStr, toDateStr(new Date(v.startDate)), toDateStr(new Date(v.endDate))))
+
+  const effectiveEnd = selEnd ?? (selStart && hoverDay && hoverDay >= selStart ? hoverDay : null)
+
+  const isSelected = (dateStr: string) => {
+    if (!selStart) return false
+    const end = effectiveEnd ?? selStart
+    return isBetween(dateStr, selStart, end)
+  }
+  const isRangeEdge = (dateStr: string) =>
+    dateStr === selStart || dateStr === (effectiveEnd ?? selStart)
+
+  const handleDayClick = (dateStr: string) => {
+    if (!selStart) {
+      setSelStart(dateStr); setSelEnd(null); return
+    }
+    if (!selEnd) {
+      if (dateStr < selStart) { setSelStart(dateStr); setSelEnd(null); return }
+      setSelEnd(dateStr); return
+    }
+    setSelStart(dateStr); setSelEnd(null)
+  }
+
+  const handleAdd = async () => {
+    if (!selStart) return
+    const end = selEnd ?? selStart
+    await onAdd(selStart, end, reason)
+    setSelStart(null); setSelEnd(null); setReason('')
+  }
+
+  const accentBg      = accentColor === 'blue' ? 'bg-blue-500'            : 'bg-purple-500'
+  const accentLight   = accentColor === 'blue' ? 'bg-blue-100 dark:bg-blue-900/40'   : 'bg-purple-100 dark:bg-purple-900/40'
+  const accentBorderC = accentColor === 'blue' ? 'border-blue-400'         : 'border-purple-400'
+  const accentTextC   = accentColor === 'blue' ? 'text-blue-700 dark:text-blue-300'   : 'text-purple-700 dark:text-purple-300'
+
+  return (
+    <div>
+      {/* Month navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="font-semibold text-gray-900 dark:text-white">{MONTHS[calMonth]} {calYear}</span>
+        <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {WEEKDAYS.map(d => (
+          <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{d}</div>
+        ))}
+      </div>
+
+      {/* Day grid */}
+      <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-600 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
+        {days.map(({ dateStr, currentMonth }) => {
+          const vacation = getVacationForDay(dateStr)
+          const selected = isSelected(dateStr)
+          const edge = isRangeEdge(dateStr)
+          const isToday = dateStr === today
+
+          let cellBg = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
+          let textClass = currentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-300 dark:text-gray-600'
+
+          if (selected && currentMonth) {
+            cellBg = accentLight
+            textClass = `${accentTextC} font-semibold`
+          } else if (vacation && currentMonth) {
+            cellBg = 'bg-red-50 dark:bg-red-900/20'
+            textClass = 'text-red-600 dark:text-red-400 font-semibold'
+          }
+
+          return (
+            <div
+              key={dateStr}
+              onClick={() => currentMonth && handleDayClick(dateStr)}
+              onMouseEnter={() => selStart && !selEnd && currentMonth && setHoverDay(dateStr)}
+              onMouseLeave={() => setHoverDay(null)}
+              className={`${cellBg} relative aspect-square flex flex-col items-center justify-center text-xs cursor-pointer transition-colors`}
+            >
+              {edge && selected && (
+                <div className={`absolute inset-1 rounded-full ${accentBg} opacity-30`} />
+              )}
+              {isToday && !selected && (
+                <div className="absolute inset-1 rounded-full border-2 border-gray-300 dark:border-gray-500" />
+              )}
+              {vacation && !selected && currentMonth && (
+                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-400" />
+              )}
+              <span className={`relative z-10 leading-none select-none ${textClass}`}>
+                {new Date(dateStr + 'T12:00:00').getDate()}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700" />
+          Geschlossen
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className={`inline-block w-3 h-3 rounded ${accentLight} border ${accentBorderC}`} />
+          Auswahl
+        </span>
+      </div>
+
+      {/* Selection hint / form */}
+      {selStart && !selEnd && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center bg-gray-50 dark:bg-gray-700 rounded-lg py-2 px-3">
+          <strong>{new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit'})}</strong> ausgewählt  klicken Sie ein zweites Datum für einen Zeitraum, oder dasselbe Datum nochmal für einen einzelnen Tag
+        </p>
+      )}
+
+      {selStart && selEnd !== null && (
+        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {selEnd === selStart
+              ? `1 Tag: ${new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })}`
+              : `Zeitraum: ${new Date(selStart + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}  ${new Date(selEnd + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}`
+            }
+          </p>
+          <input
+            type="text"
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="Grund (optional, z.B. Betriebsurlaub, Feiertag...)"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleAdd}
+              disabled={submitting}
+              className="flex-1 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              {submitting ? 'Wird gespeichert...' : 'Hinzufügen'}
+            </button>
+            <button
+              onClick={() => { setSelStart(null); setSelEnd(null); setReason('') }}
+              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!selStart && (
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
+          Einzelnen Tag oder Zeitraum anklicken (1. Klick = Start, 2. Klick = Ende)
+        </p>
+      )}
+
+      {/* Vacation list */}
+      <div className="mt-5 space-y-2">
+        {vacations.length === 0 ? (
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">Noch keine Auszeiten eingetragen</p>
+        ) : (
+          <>
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Eingetragene Auszeiten</h4>
+            {vacations.map(v => {
+              const s = new Date(v.startDate)
+              const e = new Date(v.endDate)
+              const isSingle = toDateStr(s) === toDateStr(e)
+              return (
+                <div key={v.id} className="flex items-center justify-between p-2.5 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                      {isSingle
+                        ? s.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })
+                        : `${s.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}  ${e.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })}`
+                      }
+                    </p>
+                    {v.reason && <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{v.reason}</p>}
+                  </div>
+                  <button onClick={() => onDelete(v.id)} className="p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function VacationManagementPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -27,207 +285,80 @@ export default function VacationManagementPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
-  // Workshop vacation form
-  const [workshopStartDate, setWorkshopStartDate] = useState('')
-  const [workshopEndDate, setWorkshopEndDate] = useState('')
-  const [workshopReason, setWorkshopReason] = useState('')
-
-  // Employee vacation form
-  const [employeeStartDate, setEmployeeStartDate] = useState('')
-  const [employeeEndDate, setEmployeeEndDate] = useState('')
-  const [employeeReason, setEmployeeReason] = useState('')
-
   useEffect(() => {
     if (status === 'loading') return
-
-    if (!session || session.user.role !== 'WORKSHOP') {
-      router.push('/login')
-      return
-    }
-
+    if (!session || session.user.role !== 'WORKSHOP') { router.push('/login'); return }
     fetchData()
   }, [session, status, router])
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [vacationsRes, employeesRes] = await Promise.all([
+      const [vacRes, empRes] = await Promise.all([
         fetch('/api/workshop/vacations'),
         fetch('/api/workshop/employees')
       ])
-
-      if (vacationsRes.ok) {
-        const data = await vacationsRes.json()
-        setWorkshopVacations(data.vacations || [])
-        setHasCalendar(data.hasCalendar || false)
+      if (vacRes.ok) {
+        const d = await vacRes.json()
+        setWorkshopVacations(d.vacations || [])
+        setHasCalendar(d.hasCalendar || false)
       }
-
-      if (employeesRes.ok) {
-        const data = await employeesRes.json()
-        setEmployees(data.employees || [])
+      if (empRes.ok) {
+        const d = await empRes.json()
+        setEmployees(d.employees || [])
       }
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
   }
 
-  const fetchEmployeeVacations = async (employeeId: string) => {
-    try {
-      const response = await fetch(`/api/workshop/employees/${employeeId}/vacations`)
-      if (response.ok) {
-        const data = await response.json()
-        setEmployeeVacations(data.vacations || [])
-      }
-    } catch (error) {
-      console.error('Error fetching employee vacations:', error)
-    }
+  const fetchEmployeeVacations = async (id: string) => {
+    const res = await fetch(`/api/workshop/employees/${id}/vacations`)
+    if (res.ok) { const d = await res.json(); setEmployeeVacations(d.vacations || []) }
   }
 
-  const handleEmployeeChange = (employeeId: string) => {
-    setSelectedEmployee(employeeId)
-    if (employeeId) {
-      fetchEmployeeVacations(employeeId)
-    } else {
-      setEmployeeVacations([])
-    }
-  }
-
-  const handleAddWorkshopVacation = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!workshopStartDate || !workshopEndDate) {
-      alert('Bitte Start- und Enddatum auswählen')
-      return
-    }
-
+  const handleAddWorkshopVacation = async (start: string, end: string, reason: string) => {
     setSubmitting(true)
     try {
-      const response = await fetch('/api/workshop/vacations', {
+      const res = await fetch('/api/workshop/vacations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startDate: workshopStartDate,
-          endDate: workshopEndDate,
-          reason: workshopReason
-        })
+        body: JSON.stringify({ startDate: start, endDate: end, reason })
       })
-
-      if (response.ok) {
-        setWorkshopStartDate('')
-        setWorkshopEndDate('')
-        setWorkshopReason('')
-        fetchData()
-        alert('Urlaubszeit erfolgreich hinzugefügt')
-      } else {
-        const data = await response.json()
-        alert(data.error || 'Fehler beim Hinzufügen der Urlaubszeit')
-      }
-    } catch (error) {
-      console.error('Error adding vacation:', error)
-      alert('Fehler beim Hinzufügen der Urlaubszeit')
-    } finally {
-      setSubmitting(false)
-    }
+      if (res.ok) { fetchData() }
+      else { const d = await res.json(); alert(d.error || 'Fehler beim Speichern') }
+    } finally { setSubmitting(false) }
   }
 
-  const handleDeleteWorkshopVacation = async (vacationId: string) => {
-    if (!confirm('Möchten Sie diese Urlaubszeit wirklich löschen?')) return
-
-    try {
-      const response = await fetch(`/api/workshop/vacations?id=${vacationId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        fetchData()
-        alert('Urlaubszeit erfolgreich gelöscht')
-      } else {
-        alert('Fehler beim Löschen der Urlaubszeit')
-      }
-    } catch (error) {
-      console.error('Error deleting vacation:', error)
-      alert('Fehler beim Löschen der Urlaubszeit')
-    }
+  const handleDeleteWorkshopVacation = async (id: string) => {
+    if (!confirm('Wirklich löschen?')) return
+    const res = await fetch(`/api/workshop/vacations?id=${id}`, { method: 'DELETE' })
+    if (res.ok) fetchData()
   }
 
-  const handleAddEmployeeVacation = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!selectedEmployee) {
-      alert('Bitte Mitarbeiter auswählen')
-      return
-    }
-
-    if (!employeeStartDate || !employeeEndDate) {
-      alert('Bitte Start- und Enddatum auswählen')
-      return
-    }
-
+  const handleAddEmployeeVacation = async (start: string, end: string, reason: string) => {
+    if (!selectedEmployee) return
     setSubmitting(true)
     try {
-      const response = await fetch(`/api/workshop/employees/${selectedEmployee}/vacations`, {
+      const res = await fetch(`/api/workshop/employees/${selectedEmployee}/vacations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startDate: employeeStartDate,
-          endDate: employeeEndDate,
-          reason: employeeReason
-        })
+        body: JSON.stringify({ startDate: start, endDate: end, reason })
       })
-
-      if (response.ok) {
-        setEmployeeStartDate('')
-        setEmployeeEndDate('')
-        setEmployeeReason('')
-        fetchEmployeeVacations(selectedEmployee)
-        alert('Urlaubszeit erfolgreich hinzugefügt')
-      } else {
-        const data = await response.json()
-        alert(data.error || 'Fehler beim Hinzufügen der Urlaubszeit')
-      }
-    } catch (error) {
-      console.error('Error adding employee vacation:', error)
-      alert('Fehler beim Hinzufügen der Urlaubszeit')
-    } finally {
-      setSubmitting(false)
-    }
+      if (res.ok) { fetchEmployeeVacations(selectedEmployee) }
+      else { const d = await res.json(); alert(d.error || 'Fehler beim Speichern') }
+    } finally { setSubmitting(false) }
   }
 
-  const handleDeleteEmployeeVacation = async (vacationId: string) => {
-    if (!confirm('Möchten Sie diese Urlaubszeit wirklich löschen?')) return
-
-    try {
-      const response = await fetch(
-        `/api/workshop/employees/${selectedEmployee}/vacations?vacationId=${vacationId}`,
-        { method: 'DELETE' }
-      )
-
-      if (response.ok) {
-        fetchEmployeeVacations(selectedEmployee)
-        alert('Urlaubszeit erfolgreich gelöscht')
-      } else {
-        alert('Fehler beim Löschen der Urlaubszeit')
-      }
-    } catch (error) {
-      console.error('Error deleting employee vacation:', error)
-      alert('Fehler beim Löschen der Urlaubszeit')
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
+  const handleDeleteEmployeeVacation = async (id: string) => {
+    if (!confirm('Wirklich löschen?')) return
+    const res = await fetch(`/api/workshop/employees/${selectedEmployee}/vacations?vacationId=${id}`, { method: 'DELETE' })
+    if (res.ok) fetchEmployeeVacations(selectedEmployee)
   }
 
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
       </div>
     )
   }
@@ -235,260 +366,101 @@ export default function VacationManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Urlaubsplanung</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Verwalten Sie Betriebsurlaube und Mitarbeiter-Abwesenheiten
-          </p>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Urlaubsplanung</h1>
+          <p className="text-gray-600 dark:text-gray-400">Klicken Sie Tage im Kalender an, um Schließzeiten einzutragen. Einzeltage und Zeiträume werden unterstützt.</p>
         </div>
 
-        {/* Calendar Status */}
-        <div className={`mb-6 p-4 rounded-lg border-2 ${hasCalendar ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-          <div className="flex items-center">
-            {hasCalendar ? (
-              <>
-                <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <p className="font-semibold text-green-900">Google Kalender verbunden</p>
-                  <p className="text-sm text-green-700">Urlaubszeiten werden automatisch bei der Terminvergabe berücksichtigt</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <svg className="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div>
-                  <p className="font-semibold text-yellow-900">Kein Kalender verbunden</p>
-                  <p className="text-sm text-yellow-700">
-                    Verbinden Sie Ihren Google Kalender in den{' '}
-                    <a href="/dashboard/workshop/settings" className="underline hover:text-yellow-900">Einstellungen</a>
-                    {' '}für automatische Terminverwaltung
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
+        {/* Calendar status banner */}
+        <div className={`mb-6 p-4 rounded-lg border-2 flex items-start gap-3 ${hasCalendar ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'}`}>
+          {hasCalendar ? (
+            <>
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-green-900 dark:text-green-300">Google Kalender verbunden</p>
+                <p className="text-sm text-green-700 dark:text-green-400">Urlaubszeiten werden automatisch bei der Terminvergabe berücksichtigt</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-yellow-900 dark:text-yellow-300">Kein Kalender verbunden</p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                  Verbinden Sie Ihren Google Kalender in den{' '}
+                  <a href="/dashboard/workshop/settings" className="underline">Einstellungen</a>
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Workshop Vacations */}
+          {/* Workshop Calendar */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               Betriebsurlaub
             </h2>
-
-            <form onSubmit={handleAddWorkshopVacation} className="mb-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Von
-                  </label>
-                  <input
-                    type="date"
-                    value={workshopStartDate}
-                    onChange={(e) => setWorkshopStartDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Bis
-                  </label>
-                  <input
-                    type="date"
-                    value={workshopEndDate}
-                    onChange={(e) => setWorkshopEndDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Grund (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={workshopReason}
-                    onChange={(e) => setWorkshopReason(e.target.value)}
-                    placeholder="z.B. Betriebsferien, Umbau, Feiertage"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Wird hinzugefügt...' : 'Urlaubszeit hinzufügen'}
-                </button>
-              </div>
-            </form>
-
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Geplante Betriebsurlaube</h3>
-              {workshopVacations.length === 0 ? (
-                <p className="text-gray-500 text-sm">Keine Betriebsurlaube eingetragen</p>
-              ) : (
-                workshopVacations.map((vacation) => (
-                  <div
-                    key={vacation.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}
-                      </p>
-                      {vacation.reason && (
-                        <p className="text-sm text-gray-600">{vacation.reason}</p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteWorkshopVacation(vacation.id)}
-                      className="text-red-600 hover:text-red-800 p-2"
-                      title="Löschen"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+            <VacationCalendar
+              vacations={workshopVacations}
+              onAdd={handleAddWorkshopVacation}
+              onDelete={handleDeleteWorkshopVacation}
+              submitting={submitting}
+              accentColor="blue"
+            />
           </div>
 
-          {/* Employee Vacations */}
+          {/* Employee Calendar */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Mitarbeiter-Urlaub
             </h2>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Mitarbeiter auswählen
-              </label>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitarbeiter auswählen</label>
               <select
                 value={selectedEmployee}
-                onChange={(e) => handleEmployeeChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                onChange={e => {
+                  setSelectedEmployee(e.target.value)
+                  if (e.target.value) fetchEmployeeVacations(e.target.value)
+                  else setEmployeeVacations([])
+                }}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">-- Mitarbeiter wählen --</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </option>
-                ))}
+                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             </div>
 
-            {selectedEmployee && (
-              <>
-                <form onSubmit={handleAddEmployeeVacation} className="mb-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Von
-                      </label>
-                      <input
-                        type="date"
-                        value={employeeStartDate}
-                        onChange={(e) => setEmployeeStartDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Bis
-                      </label>
-                      <input
-                        type="date"
-                        value={employeeEndDate}
-                        onChange={(e) => setEmployeeEndDate(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Grund (optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={employeeReason}
-                        onChange={(e) => setEmployeeReason(e.target.value)}
-                        placeholder="z.B. Urlaub, Krankheit, Fortbildung"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? 'Wird hinzugefügt...' : 'Urlaubszeit hinzufügen'}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Geplante Urlaube</h3>
-                  {employeeVacations.length === 0 ? (
-                    <p className="text-gray-500 text-sm">Keine Urlaube eingetragen</p>
-                  ) : (
-                    employeeVacations.map((vacation) => (
-                      <div
-                        key={vacation.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}
-                          </p>
-                          {vacation.reason && (
-                            <p className="text-sm text-gray-600">{vacation.reason}</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleDeleteEmployeeVacation(vacation.id)}
-                          className="text-red-600 hover:text-red-800 p-2"
-                          title="Löschen"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
-            )}
-
-            {!selectedEmployee && employees.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <p>Keine Mitarbeiter vorhanden</p>
-                <p className="text-sm mt-2">
-                  <a href="/dashboard/workshop/settings" className="text-primary-600 hover:text-primary-700 underline">
-                    Mitarbeiter in den Einstellungen hinzufügen
-                  </a>
-                </p>
+            {selectedEmployee ? (
+              <VacationCalendar
+                vacations={employeeVacations}
+                onAdd={handleAddEmployeeVacation}
+                onDelete={handleDeleteEmployeeVacation}
+                submitting={submitting}
+                accentColor="purple"
+              />
+            ) : (
+              <div className="text-center py-16 text-gray-400 dark:text-gray-500">
+                {employees.length === 0 ? (
+                  <>
+                    <p className="text-sm mb-1">Keine Mitarbeiter vorhanden</p>
+                    <a href="/dashboard/workshop/settings" className="text-sm text-primary-600 hover:text-primary-700 underline">
+                      Mitarbeiter hinzufügen
+                    </a>
+                  </>
+                ) : (
+                  <p className="text-sm">Wählen Sie einen Mitarbeiter aus</p>
+                )}
               </div>
             )}
           </div>

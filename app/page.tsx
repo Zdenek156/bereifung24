@@ -168,6 +168,7 @@ export default function NewHomePage({
     }
   })
   const isWorkshopFixed = !!fixedWorkshopContext
+  const [userDistanceToFixed, setUserDistanceToFixed] = useState<number | null>(null)
   
   // Search state
   const [workshops, setWorkshops] = useState<any[]>([])
@@ -712,6 +713,29 @@ export default function NewHomePage({
       return null
     }
   }
+
+  // Silently calculate distance from user to fixed workshop on LP pages
+  useEffect(() => {
+    if (isWorkshopFixed && fixedWorkshopContext && typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const toRad = (deg: number) => deg * (Math.PI / 180)
+          const R = 6371
+          const dLat = toRad(fixedWorkshopContext.latitude - position.coords.latitude)
+          const dLon = toRad(fixedWorkshopContext.longitude - position.coords.longitude)
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(position.coords.latitude)) *
+              Math.cos(toRad(fixedWorkshopContext.latitude)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2)
+          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+          setUserDistanceToFixed(Math.round(dist * 10) / 10)
+        },
+        () => { /* permission denied – keep null */ },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+      )
+    }
+  }, [isWorkshopFixed, fixedWorkshopContext?.workshopId])
 
   // Geolocation handling
   const requestGeolocation = () => {
@@ -2963,7 +2987,9 @@ export default function NewHomePage({
                                 ) : null}
                                 <span className="flex items-center gap-1 text-gray-600">
                                   <MapPin className="w-3.5 h-3.5 text-red-400" />
-                                  {isWorkshopFixed ? 'Deine Werkstatt' : `${workshop.distance.toFixed(1)} km`}
+                                  {isWorkshopFixed
+                                    ? (userDistanceToFixed !== null ? `${userDistanceToFixed.toFixed(1)} km` : 'Deine Werkstatt')
+                                    : `${workshop.distance.toFixed(1)} km`}
                                 </span>
                               </div>
 

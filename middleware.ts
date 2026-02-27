@@ -11,7 +11,7 @@ const STATIC_ROUTES = [
   '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
   '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/app-download', '/demo',
-  '/smart-tire-advisor', '/invoices'
+  '/smart-tire-advisor', '/invoices', '/workshop'
 ]
 
 // Map admin routes to application keys for permission checking

@@ -294,10 +294,10 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     landingPage.workshop.user?.zipCode,
     landingPage.workshop.user?.city,
   ].filter(Boolean).join(', ')
-  const mapEmbedUrl = workshopLat && workshopLon
-    ? `https://maps.google.com/maps?q=${workshopLat},${workshopLon}&z=15&output=embed`
-    : workshopAddress
+  const mapEmbedUrl = workshopAddress
     ? `https://maps.google.com/maps?q=${encodeURIComponent(workshopAddress)}&z=15&output=embed`
+    : workshopLat && workshopLon
+    ? `https://maps.google.com/maps?q=${workshopLat},${workshopLon}&z=15&output=embed`
     : null
   const initialFixedWorkshopContext: FixedWorkshopContext | null =
     landingPage.workshop.latitude != null && landingPage.workshop.longitude != null
@@ -460,7 +460,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         {/* Map Section */}
         {landingPage.showMap && mapEmbedUrl && (
           <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100`}>
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 📍 Standort
               </h3>
@@ -525,7 +525,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
         {/* Opening Hours + Reviews below map */}
         {((!landingPage.showMap && landingPage.showOpeningHours) || landingPage.showReviews) && (
           <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100`}>
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               <div className={`grid gap-8 ${(!landingPage.showMap && landingPage.showOpeningHours) && landingPage.showReviews ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
                 {/* Opening Hours (nur wenn Karte deaktiviert) */}
                 {!landingPage.showMap && landingPage.showOpeningHours && openingHoursList.length > 0 && (

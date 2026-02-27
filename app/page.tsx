@@ -2198,13 +2198,13 @@ export default function NewHomePage({
       {hasSearched && (!useServiceCards || workshops.length > 0) && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Left Sidebar - Filters */}
+            <div className="flex flex-col gap-4">
+              {/* Horizontal Filter Bar */}
               {workshops.length > 0 && (
-                <aside className="lg:w-80 flex-shrink-0">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-24 z-40">
-                    {/* Filter Header */}
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="w-full">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    {/* Filter Header - mobile only */}
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between lg:hidden">
                       <h3 className="font-bold text-lg flex items-center gap-2">
                         <SlidersHorizontal className="w-5 h-5" />
                         Filtern nach:
@@ -2218,12 +2218,12 @@ export default function NewHomePage({
                     </div>
 
                     {/* Filters */}
-                    <div className={`${showFilters ? 'block' : 'hidden lg:block'}`}>
+                    <div className={`${showFilters ? 'block' : 'hidden lg:block'} lg:flex lg:flex-wrap lg:items-start`}>
 
                       {/* === GENERAL FILTERS (for all services) === */}
 
                       {/* Fahrzeug wählen (for all services) */}
-                      <div className="p-4 border-b border-gray-200">
+                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           {selectedService === 'MOTORCYCLE_TIRE' ? '🏍️ Motorrad wählen' : '🚙 Fahrzeug wählen'}
                         </h4>
@@ -2365,7 +2365,7 @@ export default function NewHomePage({
                       {selectedService === 'TIRE_CHANGE' && (
                         <>
                           {/* Service-Optionen (Service-Art, Anzahl Reifen, Zusatzleistungen) */}
-                          <div className="p-4 border-b border-gray-200">
+                          <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
                             <ServiceFilters
                               key={`${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}-${selectedPackages.join(',')}`}
                               selectedService={selectedService}
@@ -2423,7 +2423,7 @@ export default function NewHomePage({
 
                           {/* Same Brand filter - only for mixed 4 tires */}
                           {includeTires && hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
-                            <div className="p-4 border-b border-gray-200">
+                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
                               <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors bg-blue-50/50 border border-blue-200">
                                 <input
                                   type="checkbox"
@@ -2449,7 +2449,7 @@ export default function NewHomePage({
 
                           {/* Saison (only if includeTires) */}
                           {includeTires && (
-                            <div className="p-4 border-b border-gray-200">
+                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 ❄️ Saison
                               </h4>
@@ -2490,7 +2490,7 @@ export default function NewHomePage({
 
                           {/* Reifen-Budget (only if includeTires) */}
                           {includeTires && (
-                            <div className="p-4 border-b border-gray-200">
+                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[200px]">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 💶 Reifen-Budget (pro Stück)
                               </h4>
@@ -2550,7 +2550,7 @@ export default function NewHomePage({
 
                       {/* Service-Specific Package Filters (for non-TIRE_CHANGE services) */}
                       {selectedService !== 'TIRE_CHANGE' && (
-                        <div className="p-4 border-b border-gray-200">
+                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
                           <ServiceFilters
                             key={`other-service-${selectedService}`}
                             selectedService={selectedService}
@@ -2562,7 +2562,7 @@ export default function NewHomePage({
 
                       {/* EU Labels (only for TIRE_CHANGE with tires) */}
                       {selectedService === 'TIRE_CHANGE' && includeTires && (
-                        <div className="p-4 border-b border-gray-200">
+                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                           <h4 className="font-semibold mb-3 flex items-center gap-2">
                             🇪🇺 EU-Label
                           </h4>
@@ -2615,7 +2615,7 @@ export default function NewHomePage({
 
                       {/* Zusatzmerkmale (only for TIRE_CHANGE with tires) */}
                       {selectedService === 'TIRE_CHANGE' && includeTires && (
-                        <div className="p-4 border-b border-gray-200">
+                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                           <h4 className="font-semibold mb-3 flex items-center gap-2">
                             ✨ Zusatzmerkmale
                           </h4>
@@ -2655,7 +2655,7 @@ export default function NewHomePage({
                       )}
 
                       {/* Payment Methods Filter */}
-                      <div className="p-4 border-b border-gray-200">
+                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <CreditCard className="w-4 h-4" />
                           Zahlungsmethoden
@@ -2689,7 +2689,7 @@ export default function NewHomePage({
                       </div>
 
                       {/* Opening Hours Filter */}
-                      <div className="p-4 border-b border-gray-200">
+                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           Öffnungszeiten
@@ -2724,7 +2724,7 @@ export default function NewHomePage({
                       </div>
 
                       {/* Multiple Services Filter */}
-                      <div className="p-4 border-b border-gray-200">
+                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:flex-1 lg:min-w-[160px]">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Wrench className="w-4 h-4" />
                           Weitere Services
@@ -2741,11 +2741,11 @@ export default function NewHomePage({
                       </div>
                     </div>
                   </div>
-                </aside>
+                </div>
               )}
 
               {/* Main Content - Workshop Results */}
-              <main className="flex-1">
+              <main className="w-full">
                 {/* Loading State */}
                 {loading && (
                   <div className="text-center py-12">

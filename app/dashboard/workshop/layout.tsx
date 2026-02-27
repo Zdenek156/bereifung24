@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import WorkshopSidebar from '@/components/WorkshopSidebar'
+import WorkshopSetupChecklist from '@/components/WorkshopSetupChecklist'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function WorkshopLayout({
@@ -45,6 +46,9 @@ export default function WorkshopLayout({
         <div className="lg:ml-64">
           {children}
         </div>
+
+        {/* Setup checklist widget */}
+        <WorkshopSetupChecklist />
       </div>
     </ThemeProvider>
   )

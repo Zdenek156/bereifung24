@@ -28,7 +28,7 @@ export default function WorkshopSetupChecklist() {
     const savedMinimized = localStorage.getItem('setupChecklistMinimized')
     if (savedMinimized === 'true') setMinimized(true)
 
-    fetch('/api/workshop/setup-status')
+    fetch('/api/workshop/setup-status', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data: SetupStatus) => {
         if (!data?.steps) return

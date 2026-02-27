@@ -2197,7 +2197,7 @@ export default function NewHomePage({
       {/* Search Results Section */}
       {hasSearched && (!useServiceCards || workshops.length > 0) && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4">
               {/* Horizontal Filter Bar */}
               {workshops.length > 0 && (
@@ -2218,12 +2218,12 @@ export default function NewHomePage({
                     </div>
 
                     {/* Filters */}
-                    <div className={`${showFilters ? 'block' : 'hidden lg:block'} lg:flex lg:flex-wrap lg:items-start`}>
+                    <div className={`${showFilters ? 'block' : 'hidden lg:block'} lg:grid lg:grid-cols-2 lg:divide-x lg:divide-y divide-gray-200`}>
 
                       {/* === GENERAL FILTERS (for all services) === */}
 
                       {/* Fahrzeug wählen (for all services) */}
-                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
+                      <div className="p-5 border-b border-gray-200 lg:border-b-0">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           {selectedService === 'MOTORCYCLE_TIRE' ? '🏍️ Motorrad wählen' : '🚙 Fahrzeug wählen'}
                         </h4>
@@ -2365,7 +2365,7 @@ export default function NewHomePage({
                       {selectedService === 'TIRE_CHANGE' && (
                         <>
                           {/* Service-Optionen (Service-Art, Anzahl Reifen, Zusatzleistungen) */}
-                          <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
+                          <div className="p-5 border-b border-gray-200 lg:border-b-0">
                             <ServiceFilters
                               key={`${selectedService}-${hasMixedTires ? 'mixed' : 'standard'}-${selectedPackages.join(',')}`}
                               selectedService={selectedService}
@@ -2423,7 +2423,7 @@ export default function NewHomePage({
 
                           {/* Same Brand filter - only for mixed 4 tires */}
                           {includeTires && hasMixedTires && selectedPackages.includes('mixed_four_tires') && (
-                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
+                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
                               <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors bg-blue-50/50 border border-blue-200">
                                 <input
                                   type="checkbox"
@@ -2449,7 +2449,7 @@ export default function NewHomePage({
 
                           {/* Saison (only if includeTires) */}
                           {includeTires && (
-                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
+                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 ❄️ Saison
                               </h4>
@@ -2490,7 +2490,7 @@ export default function NewHomePage({
 
                           {/* Reifen-Budget (only if includeTires) */}
                           {includeTires && (
-                            <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[200px]">
+                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 💶 Reifen-Budget (pro Stück)
                               </h4>
@@ -2550,7 +2550,7 @@ export default function NewHomePage({
 
                       {/* Service-Specific Package Filters (for non-TIRE_CHANGE services) */}
                       {selectedService !== 'TIRE_CHANGE' && (
-                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[190px]">
+                        <div className="p-5 border-b border-gray-200 lg:border-b-0">
                           <ServiceFilters
                             key={`other-service-${selectedService}`}
                             selectedService={selectedService}
@@ -2562,7 +2562,7 @@ export default function NewHomePage({
 
                       {/* EU Labels (only for TIRE_CHANGE with tires) */}
                       {selectedService === 'TIRE_CHANGE' && includeTires && (
-                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
+                        <div className="p-5 border-b border-gray-200 lg:border-b-0">
                           <h4 className="font-semibold mb-3 flex items-center gap-2">
                             🇪🇺 EU-Label
                           </h4>
@@ -2615,7 +2615,7 @@ export default function NewHomePage({
 
                       {/* Zusatzmerkmale (only for TIRE_CHANGE with tires) */}
                       {selectedService === 'TIRE_CHANGE' && includeTires && (
-                        <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
+                        <div className="p-5 border-b border-gray-200 lg:border-b-0">
                           <h4 className="font-semibold mb-3 flex items-center gap-2">
                             ✨ Zusatzmerkmale
                           </h4>
@@ -2729,7 +2729,7 @@ export default function NewHomePage({
 
                       {/* Multiple Services Filter - hidden on landing pages */}
                       {!useServiceCards && (
-                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:flex-1 lg:min-w-[160px]">
+                      <div className="p-5 border-b border-gray-200 lg:border-b-0">
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                           <Wrench className="w-4 h-4" />
                           Weitere Services

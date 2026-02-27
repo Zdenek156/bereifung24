@@ -35,6 +35,22 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   TIRE_CHANGE: {
     groups: [
       {
+        label: 'Service-Art',
+        multiSelect: false, // Radio buttons - nur eine Auswahl
+        options: [
+          { 
+            packageType: 'with_tire_purchase', 
+            label: 'Mit Reifenkauf', 
+            info: 'Neue Reifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.'
+          },
+          { 
+            packageType: 'tire_installation_only', 
+            label: 'Nur Montage', 
+            info: 'Nur die Montage-Dienstleistung. Sie bringen Ihre eigenen Reifen mit zur Werkstatt.'
+          }
+        ]
+      },
+      {
         label: 'Anzahl Reifen',
         multiSelect: false, // Radio buttons - nur eine Auswahl
         options: [
@@ -168,23 +184,50 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   MOTORCYCLE_TIRE: {
     groups: [
       {
-        label: 'Position',
+        label: 'Service-Art',
+        multiSelect: false, // Radio buttons - nur eine Auswahl
+        options: [
+          { 
+            packageType: 'motorcycle_with_tire_purchase', 
+            label: 'Mit Reifenkauf', 
+            info: 'Neue Motorradreifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.'
+          },
+          { 
+            packageType: 'motorcycle_tire_installation_only', 
+            label: 'Nur Montage', 
+            info: 'Nur die Montage-Dienstleistung. Sie bringen Ihre eigenen Motorradreifen (bereits ausgebaut) mit zur Werkstatt.'
+          }
+        ]
+      },
+      {
+        label: 'Anzahl Reifen',
         multiSelect: false, // Radio buttons
         options: [
           { 
             packageType: 'front', 
-            label: 'Vorderrad', 
-            info: 'Reifenwechsel am Vorderrad des Motorrads'
+            label: 'Vorderreifen', 
+            info: 'Nur Vorderreifen wechseln (1 ausgebautes Rad)'
           },
           { 
             packageType: 'rear', 
-            label: 'Hinterrad', 
-            info: 'Reifenwechsel am Hinterrad des Motorrads'
+            label: 'Hinterreifen', 
+            info: 'Nur Hinterreifen wechseln (1 ausgebautes Rad)'
           },
           { 
             packageType: 'both', 
-            label: 'Beide Räder', 
-            info: 'Kompletter Reifenwechsel vorne und hinten für optimale Fahreigenschaften'
+            label: 'Beide Reifen', 
+            info: 'Kompletter Reifenwechsel vorne und hinten (beide ausgebauten Räder)'
+          }
+        ]
+      },
+      {
+        label: 'Zusatzleistung',
+        multiSelect: false, // Checkbox-Style
+        options: [
+          { 
+            packageType: 'with_disposal', 
+            label: 'Altreifenentsorgung', 
+            info: 'Umweltgerechte Entsorgung Ihrer alten Reifen (+3,50 € pro Reifen)'
           }
         ]
       }
@@ -271,9 +314,9 @@ export default function ServiceFilters({
   }
 
   return (
-    <div>
+    <div className={config.groups.length >= 3 ? 'grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2' : config.groups.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2' : ''}>
       {config.groups.map((group, groupIndex) => (
-        <div key={groupIndex} className={groupIndex > 0 ? 'mt-4' : ''}>
+        <div key={groupIndex}>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
             {group.label}
           </h4>

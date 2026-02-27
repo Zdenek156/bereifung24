@@ -569,11 +569,11 @@ export default function WorkshopAppointments() {
         ) : (
           <div className="space-y-4">
             {sortedFilteredAppointments.map((apt) => (
-              <div key={apt.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex justify-between items-start mb-4">
+              <div key={apt.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
+                <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                         {new Date(apt.appointmentDate).toLocaleDateString('de-DE', { 
                           weekday: 'long', 
                           year: 'numeric', 
@@ -618,10 +618,10 @@ export default function WorkshopAppointments() {
                       if (apt.isDirectBooking && apt.totalPrice) {
                         return (
                           <>
-                            <p className="text-2xl font-bold text-primary-600">
+                            <p className="text-xl font-bold text-primary-600">
                               {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(apt.totalPrice)}
                             </p>
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 mt-1">
                               ✓ Bezahlt (PayPal)
                             </span>
                           </>
@@ -633,11 +633,11 @@ export default function WorkshopAppointments() {
                         return (
                           <>
                             {manualPrice ? (
-                              <p className="text-2xl font-bold text-primary-600">
+                              <p className="text-xl font-bold text-primary-600">
                                 {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(manualPrice)}
                               </p>
                             ) : null}
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 mt-1">
                               Manueller Termin
                             </span>
                           </>
@@ -648,7 +648,7 @@ export default function WorkshopAppointments() {
                       if (apt.offer) {
                         return (
                           <>
-                            <p className="text-2xl font-bold text-primary-600">
+                            <p className="text-xl font-bold text-primary-600">
                               {apt.offer.price.toFixed(2)} €
                             </p>
                             <p className={`text-sm ${
@@ -665,9 +665,9 @@ export default function WorkshopAppointments() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kunde</h4>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Kunde</h4>
                     {(() => {
                       // Prüfe zuerst customerNotes (für manuelle Termine)
                       if (apt.customerNotes) {
@@ -988,9 +988,9 @@ export default function WorkshopAppointments() {
                   </div>
                 )}
 
-                {/* Stornieren Button - für ausstehende und bestätigte Termine */}
-                {(apt.status === 'CONFIRMED' || apt.status === 'PENDING') && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                {/* Stornieren Button - nur für zukünftige ausstehende/bestätigte Termine */}
+                {(apt.status === 'CONFIRMED' || apt.status === 'PENDING') && isUpcoming(apt.appointmentDate) && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
                     <button
                       onClick={() => handleCancelAppointment(apt.id)}
                       className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"

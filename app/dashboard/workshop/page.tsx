@@ -212,7 +212,7 @@ export default function WorkshopDashboard() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-          {/* Heute's Buchungen */}
+          {/* Anstehende Buchungen */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -221,14 +221,14 @@ export default function WorkshopDashboard() {
                 </svg>
               </div>
               <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                Heute
+                Nächste 7 Tage
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.todaysBookings}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Bestätigte Termine</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.upcomingBookings}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Anstehende Buchungen</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/appointments" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                Zu heutigen Buchungen →
+                Zu anstehenden Terminen →
               </Link>
             </div>
           </div>
@@ -248,9 +248,7 @@ export default function WorkshopDashboard() {
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               €{stats.totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Ihre Auszahlung: €{stats.workshopPayout.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Gesamtumsatz</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <Link href="/dashboard/workshop/bookings" className="text-xs text-green-600 hover:text-green-700 font-medium">
                 Zu allen Buchungen →
@@ -258,7 +256,7 @@ export default function WorkshopDashboard() {
             </div>
           </div>
 
-          {/* Kommende Termine (7 Tage) */}
+          {/* Neue Buchungen 7 Tage */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -270,11 +268,11 @@ export default function WorkshopDashboard() {
                 7 Tage
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.upcomingBookings}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Kommende Termine</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stats.bookingsCount7Days}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Neue Buchungen eingegangen</p>
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <Link href="/dashboard/workshop/appointments" className="text-xs text-purple-600 hover:text-purple-700 font-medium">
-                Kalender öffnen →
+              <Link href="/dashboard/workshop/bookings" className="text-xs text-purple-600 hover:text-purple-700 font-medium">
+                Alle Buchungen ansehen →
               </Link>
             </div>
           </div>
@@ -353,12 +351,6 @@ export default function WorkshopDashboard() {
                   <span className="text-sm text-gray-600 dark:text-gray-400">Gesamtumsatz</span>
                   <span className="text-xl font-bold text-gray-900 dark:text-white">
                     €{stats.totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-xs">
-                  <span className="text-gray-500">Ihre Auszahlung</span>
-                  <span className="text-primary-600 font-semibold">
-                    €{stats.workshopPayout.toLocaleString('de-DE', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

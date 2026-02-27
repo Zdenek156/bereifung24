@@ -31,6 +31,7 @@ export default function WorkshopSetupChecklist() {
     fetch('/api/workshop/setup-status')
       .then((r) => r.json())
       .then((data: SetupStatus) => {
+        if (!data?.steps) return
         setStatus(data)
         if (data.allDone) {
           // Hide permanently once everything is done

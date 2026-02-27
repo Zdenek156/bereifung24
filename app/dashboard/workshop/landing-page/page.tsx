@@ -325,6 +325,57 @@ export default function LandingPageOverview() {
               </div>
             </div>
 
+            {/* Info: Warum den Link teilen */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-300 mb-1">
+                    💡 Mehr Umsatz durch Ihren persönlichen Link
+                  </h3>
+                  <p className="text-sm text-emerald-800 dark:text-emerald-400 mb-4">
+                    Kunden, die Ihre Landing Page besuchen, sehen <strong>ausschließlich Ihr Angebot</strong> – keine andere Werkstatt wird angezeigt, keine Vergleichssuche, kein Wettbewerb. Die Buchung läuft direkt und vollautomatisch bei Ihnen ab.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="flex items-start space-x-2 bg-white dark:bg-emerald-900/30 rounded-lg p-3">
+                      <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Keine Angebote mehr</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Reifenpreise & Montagekosten werden automatisch berechnet</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-2 bg-white dark:bg-emerald-900/30 rounded-lg p-3">
+                      <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Termine ohne Rückfragen</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Kunden wählen selbst – Sie erhalten eine fertige Buchung</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-2 bg-white dark:bg-emerald-900/30 rounded-lg p-3">
+                      <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Bestellungen automatisch</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Reifen werden über das System bestellt – kein manueller Aufwand</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-3 font-medium">
+                    → Teilen Sie Ihren Link auf WhatsApp, per E-Mail oder auf Ihrer Website – und sparen Sie Zeit bei jeder Buchung.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Actions */}
             <div className="grid md:grid-cols-2 gap-6">
               <Link

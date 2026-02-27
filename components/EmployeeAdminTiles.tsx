@@ -147,10 +147,10 @@ export default function EmployeeAdminTiles() {
     const colors = getColorClasses(app.color)
     const isFav = favorites.includes(app.id)
     return (
-      <div className="relative group">
+      <div className={`relative group ${compact ? '' : 'h-full'}`}>
         <button
           onClick={() => handleNavigation(app.adminRoute)}
-          className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow text-left w-full ${compact ? 'p-3 h-24 flex flex-col' : 'p-6'}`}
+          className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow text-left w-full ${compact ? 'p-3 h-24 flex flex-col' : 'p-6 h-full flex flex-col'}`}
         >
           <div className={`flex items-center justify-center flex-shrink-0 ${compact ? 'w-8 h-8 mb-2' : 'w-12 h-12 mb-4'} ${colors.bg} rounded-lg`}>
             <span className={`${colors.text} ${compact ? '[&>svg]:w-4 [&>svg]:h-4' : ''}`}>{getIcon(app.icon)}</span>
@@ -201,7 +201,11 @@ export default function EmployeeAdminTiles() {
       {/* All apps grid */}
       {unpinnedApps.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {unpinnedApps.map(app => <AppCard key={app.id} app={app} />)}
+          {unpinnedApps.map(app => (
+            <div key={app.id} className="h-44">
+              <AppCard app={app} />
+            </div>
+          ))}
         </div>
       )}
       {unpinnedApps.length === 0 && pinnedApps.length > 0 && (

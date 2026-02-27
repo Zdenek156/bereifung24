@@ -530,8 +530,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 📍 Standort
               </h3>
-              <div className="flex justify-center">
-                <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200 grid grid-cols-1 sm:grid-cols-[260px_300px] w-full max-w-[580px]`}>
+              <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200 grid grid-cols-1 sm:grid-cols-[300px_1fr] max-w-3xl`}>
                   {/* Left: Opening Hours + Button */}
                   <div className="p-5 bg-gray-50 flex flex-col justify-between border-b border-gray-200 sm:border-b-0 sm:border-r">
                     <div>
@@ -585,7 +584,6 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                     />
                   </div>
                 </div>
-              </div>
             </div>
           </section>
         )}

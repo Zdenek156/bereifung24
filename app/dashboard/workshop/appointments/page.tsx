@@ -219,10 +219,10 @@ export default function WorkshopAppointments() {
   const filteredAppointments = appointments.filter(apt => {
     if (filter === 'all') return true
     if (filter === 'upcoming') {
-      // Show all upcoming appointments except COMPLETED and CANCELLED
-      return apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
+      // Only show future (or today) appointments that are not COMPLETED or CANCELLED
+      return apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED' && isUpcoming(apt.appointmentDate)
     }
-    if (filter === 'completed') return apt.status === 'COMPLETED'
+    if (filter === 'completed') return apt.status === 'COMPLETED' || (apt.status !== 'CANCELLED' && !isUpcoming(apt.appointmentDate))
     if (filter === 'cancelled') return apt.status === 'CANCELLED'
     return true
   }).filter(apt => {
@@ -280,8 +280,8 @@ export default function WorkshopAppointments() {
 
   const stats = {
     total: appointments.length,
-    upcoming: appointments.filter(a => a.status !== 'COMPLETED' && a.status !== 'CANCELLED').length,
-    completed: appointments.filter(a => a.status === 'COMPLETED').length,
+    upcoming: appointments.filter(a => a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && isUpcoming(a.appointmentDate)).length,
+    completed: appointments.filter(a => a.status === 'COMPLETED' || (a.status !== 'CANCELLED' && !isUpcoming(a.appointmentDate))).length,
     cancelled: appointments.filter(a => a.status === 'CANCELLED').length,
   }
 

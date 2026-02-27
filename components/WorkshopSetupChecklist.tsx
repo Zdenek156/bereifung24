@@ -58,7 +58,7 @@ export default function WorkshopSetupChecklist() {
     return (
       <button
         onClick={toggleMinimize}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-white border border-gray-200 shadow-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:shadow-xl transition-all"
+        className="fixed bottom-24 right-6 z-50 flex items-center gap-2 rounded-full bg-white border border-gray-200 shadow-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:shadow-xl transition-all"
       >
         <span className="text-base">⚙️</span>
         <span>Einrichtung</span>
@@ -73,7 +73,7 @@ export default function WorkshopSetupChecklist() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 rounded-2xl bg-white border border-gray-200 shadow-2xl overflow-hidden">
+    <div className="fixed bottom-24 right-6 z-50 w-80 rounded-2xl bg-white border border-gray-200 shadow-2xl overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-4 py-3 flex items-center justify-between">
         <div>

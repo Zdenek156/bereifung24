@@ -48,7 +48,7 @@ export async function GET() {
     const calendarConnected = workshopCalendarConnected || employeeCalendarConnected
 
     // 2. Stripe
-    const stripeConnected = !!(w.stripeAccountId && w.stripeEnabled)
+    const stripeConnected = !!(w.stripeAccountId)
 
     // 3. Services
     const hasServices = w.workshopServices.length > 0
@@ -68,14 +68,14 @@ export async function GET() {
         label: 'Google Kalender verbinden',
         description: 'Verbinden Sie Ihren Google Kalender, damit Termine automatisch eingetragen werden.',
         done: calendarConnected,
-        href: '/dashboard/workshop/settings#calendar',
+        href: '/dashboard/workshop/settings?tab=terminplanung',
       },
       {
         id: 'stripe',
         label: 'Stripe Konto verbinden',
         description: 'Verbinden Sie Stripe, um Online-Zahlungen von Kunden zu empfangen.',
         done: stripeConnected,
-        href: '/dashboard/workshop/settings#stripe',
+        href: '/dashboard/workshop/settings?tab=payment',
       },
       {
         id: 'services',

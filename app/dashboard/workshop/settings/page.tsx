@@ -832,6 +832,12 @@ export default function WorkshopSettings() {
 
     if (tab === 'terminplanung') {
       setActiveTab('terminplanung')
+    } else if (tab === 'payment') {
+      setActiveTab('payment')
+    } else if (tab === 'suppliers') {
+      setActiveTab('suppliers')
+    } else if (tab === 'hours') {
+      setActiveTab('hours')
     }
 
     if (success === 'calendar_connected') {

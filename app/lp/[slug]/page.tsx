@@ -464,9 +464,9 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 📍 Standort
               </h3>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Left: Address + Opening Hours */}
-                <div className={`bg-gray-50 ${tmpl.cardRound} border border-gray-200 p-5 sm:w-[280px] shrink-0`}>
+                <div className={`bg-gray-50 ${tmpl.cardRound} border border-gray-200 p-5 flex flex-col`}>
                   <p className="font-bold text-gray-900 text-sm mb-0.5">{landingPage.workshop.companyName}</p>
                   {workshopAddress && (
                     <p className="text-xs text-gray-500 mb-4">📍 {workshopAddress}</p>
@@ -496,7 +496,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       href={`https://maps.google.com/?q=${encodeURIComponent(workshopAddress)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                      className="mt-auto pt-4 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
                       style={{ background: primaryColor }}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -505,7 +505,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                   )}
                 </div>
                 {/* Right: Map fills remaining width */}
-                <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200 flex-1`} style={{ height: '320px' }}>
+                <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200`} style={{ minHeight: '320px' }}>
                   <iframe
                     src={mapEmbedUrl}
                     width="100%"

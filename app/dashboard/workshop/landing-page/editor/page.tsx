@@ -21,7 +21,6 @@ interface LandingPage {
   heroImage: string | null
   
   // About
-  aboutTitle: string | null
   aboutText: string | null
   
   // Gallery
@@ -66,7 +65,6 @@ export default function LandingPageEditor() {
     keywords: '',
     heroHeadline: '',
     heroSubline: '',
-    aboutTitle: '',
     aboutText: '',
     showLogo: true,
     showReviews: true,
@@ -104,7 +102,6 @@ export default function LandingPageEditor() {
             keywords: data.landingPage.keywords || '',
             heroHeadline: data.landingPage.heroHeadline || '',
             heroSubline: data.landingPage.heroSubline || '',
-            aboutTitle: data.landingPage.aboutTitle || '',
             aboutText: data.landingPage.aboutText || '',
             showLogo: data.landingPage.showLogo,
             showReviews: data.landingPage.showReviews,
@@ -489,19 +486,6 @@ export default function LandingPageEditor() {
                 <p className="text-gray-600 mb-6">
                   Erzählen Sie Ihre Geschichte und was Sie besonders macht.
                 </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Abschnitts-Titel
-                </label>
-                <input
-                  type="text"
-                  value={formData.aboutTitle}
-                  onChange={(e) => handleInputChange('aboutTitle', e.target.value)}
-                  placeholder="z.B. Über unsere Werkstatt"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
               </div>
 
               <div>

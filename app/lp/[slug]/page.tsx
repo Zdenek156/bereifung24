@@ -279,7 +279,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     : { backgroundImage: `linear-gradient(160deg, ${primaryColor} 0%, ${accentColor} 100%)` }
 
   // Opening hours
-  const openingHoursList = parseOpeningHours(landingPage.workshop.user?.openingHours)
+  const openingHoursList = parseOpeningHours(landingPage.workshop.openingHours)
 
   const heroTextColor = template === 'minimal' ? 'text-gray-900' : 'text-white'
   const heroSubTextColor = template === 'minimal' ? 'text-gray-600' : 'text-white/90'

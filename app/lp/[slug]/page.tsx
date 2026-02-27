@@ -411,6 +411,22 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* Über Uns Section - direkt nach Trust-Badges */}
+        {landingPage.aboutText && (
+          <section className={`py-10 px-4 sm:px-6 lg:px-8 bg-white`}>
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 text-center">
+                Über uns
+              </h2>
+              <div className={`inline-block w-full text-center bg-gray-50 ${tmpl.cardRound} ${tmpl.shadow} px-8 py-6`}>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base inline-block text-left max-w-3xl">
+                  {landingPage.aboutText}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section id="direkt-buchen" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
@@ -441,29 +457,13 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Über Uns Section */}
-        {landingPage.aboutText && (
-          <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${tmpl.sectionBg}`}>
-            <div className="max-w-7xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
-                Über uns
-              </h2>
-              <div className={`bg-white ${tmpl.cardRound} ${tmpl.shadow} p-6 sm:p-8`}>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
-                  {landingPage.aboutText}
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Opening Hours + Reviews above footer */}
-        {(landingPage.showOpeningHours || landingPage.showReviews) && (
+        {/* Opening Hours + Reviews above footer */
+        {((!landingPage.showMap && landingPage.showOpeningHours) || landingPage.showReviews) && (
           <section className={`py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100`}>
             <div className="max-w-7xl mx-auto">
-              <div className={`grid gap-8 ${landingPage.showOpeningHours && landingPage.showReviews ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
-                {/* Opening Hours */}
-                {landingPage.showOpeningHours && openingHoursList.length > 0 && (
+              <div className={`grid gap-8 ${(!landingPage.showMap && landingPage.showOpeningHours) && landingPage.showReviews ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                {/* Opening Hours (nur wenn Karte deaktiviert) */}
+                {!landingPage.showMap && landingPage.showOpeningHours && openingHoursList.length > 0 && (
                   <div className={`bg-gray-50 ${tmpl.cardRound} p-6`}>
                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                       🕐 Öffnungszeiten
@@ -488,28 +488,30 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Reviews */}
+                {/* Reviews – 5 quadratische Cards nebeneinander */}
                 {landingPage.showReviews && workshopReviews.length > 0 && (
-                  <div>
+                  <div className={(!landingPage.showMap && landingPage.showOpeningHours && openingHoursList.length > 0) ? '' : 'lg:col-span-2'}>
                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                       ⭐ Kundenbewertungen
                     </h3>
-                    <div className="space-y-3">
-                      {workshopReviews.map((review) => (
-                        <div key={review.id} className={`bg-gray-50 ${tmpl.cardRound} p-4`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-gray-900 text-sm">
-                              {review.customer.user?.firstName || 'Kunde'} {review.customer.user?.lastName ? review.customer.user.lastName[0] + '.' : ''}
-                            </span>
-                            <span className="text-yellow-400 text-sm">
+                    <div className={`grid gap-3 ${(!landingPage.showMap && landingPage.showOpeningHours && openingHoursList.length > 0) ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'}`}>
+                      {workshopReviews.slice(0, 5).map((review) => (
+                        <div key={review.id} className={`bg-gray-50 ${tmpl.cardRound} p-4 flex flex-col justify-between`}>
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-gray-900 text-sm">
+                                {review.customer.user?.firstName || 'Kunde'} {review.customer.user?.lastName ? review.customer.user.lastName[0] + '.' : ''}
+                              </span>
+                            </div>
+                            <div className="text-yellow-400 text-sm mb-2">
                               {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                            </span>
+                            </div>
+                            {review.comment && (
+                              <p className="text-gray-600 text-xs leading-relaxed line-clamp-4">{review.comment}</p>
+                            )}
                           </div>
-                          {review.comment && (
-                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{review.comment}</p>
-                          )}
-                          <p className="text-gray-400 text-xs mt-1">
-                            {new Date(review.createdAt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                          <p className="text-gray-400 text-xs mt-3">
+                            {new Date(review.createdAt).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })}
                           </p>
                         </div>
                       ))}
@@ -528,23 +530,60 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 📍 Standort
               </h3>
-              <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200`} style={{ height: '360px' }}>
-                <iframe
-                  src={mapEmbedUrl}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title={`Standort ${landingPage.workshop.companyName}`}
-                />
+              <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200 grid grid-cols-1 lg:grid-cols-[340px_1fr]`}>
+                {/* Left: Address + Opening Hours */}
+                <div className="p-6 bg-gray-50 flex flex-col justify-between border-b border-gray-200 lg:border-b-0 lg:border-r">
+                  <div>
+                    <p className="font-bold text-gray-900 text-base mb-1">{landingPage.workshop.companyName}</p>
+                    {workshopAddress && (
+                      <p className="text-sm text-gray-600 mb-4">📍 {workshopAddress}</p>
+                    )}
+                    {openingHoursList.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Öffnungszeiten</p>
+                        {openingHoursList.map(({ day, time }) => {
+                          const isClosed = time === 'Geschlossen'
+                          const today = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][new Date().getDay()]
+                          const isToday = day === today
+                          return (
+                            <div key={day} className={`flex justify-between text-xs py-0.5 ${isToday ? 'font-semibold' : ''}`}>
+                              <span className={isClosed ? 'text-gray-400' : isToday ? 'text-gray-900' : 'text-gray-600'}>
+                                {day}{isToday && <span className="ml-1.5 text-xs px-1 py-0.5 rounded" style={{ backgroundColor: primaryColor + '22', color: primaryColor }}>Heute</span>}
+                              </span>
+                              <span className={isClosed ? 'text-gray-400 italic' : isToday ? 'text-gray-900' : 'text-gray-700'}>{time}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  {workshopAddress && (
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(workshopAddress)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                      style={{ background: primaryColor }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      In Google Maps öffnen
+                    </a>
+                  )}
+                </div>
+                {/* Right: Map */}
+                <div style={{ height: '420px' }}>
+                  <iframe
+                    src={mapEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, display: 'block' }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title={`Standort ${landingPage.workshop.companyName}`}
+                  />
+                </div>
               </div>
-              {workshopAddress && (
-                <p className="mt-3 text-sm text-gray-500 text-center">
-                  📍 {workshopAddress}
-                </p>
-              )}
             </div>
           </section>
         )}

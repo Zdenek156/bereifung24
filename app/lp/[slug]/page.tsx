@@ -530,37 +530,37 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 📍 Standort
               </h3>
-              <div className="max-w-3xl">
-                <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200 grid grid-cols-1 sm:grid-cols-[1fr_300px]`}>
-                  {/* Left: Address + Opening Hours */}
-                  <div className="p-5 bg-gray-50 flex flex-col border-b border-gray-200 sm:border-b-0 sm:border-r">
-                    <p className="font-bold text-gray-900 text-sm mb-0.5">{landingPage.workshop.companyName}</p>
-                    {workshopAddress && (
-                      <p className="text-xs text-gray-500 mb-4">📍 {workshopAddress}</p>
-                    )}
-                    {openingHoursList.length > 0 ? (
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Öffnungszeiten</p>
-                        {openingHoursList.map(({ day, time }) => {
-                          const isClosed = time === 'Geschlossen'
-                          const today = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][new Date().getDay()]
-                          const isToday = day === today
-                          return (
-                            <div key={day} className={`flex justify-between text-xs py-0.5 ${isToday ? 'font-semibold' : ''}`}>
-                              <span className={isClosed ? 'text-gray-400' : isToday ? 'text-gray-900' : 'text-gray-600'}>
-                                {day}{isToday && <span className="ml-1 text-xs px-1 py-0.5 rounded" style={{ backgroundColor: primaryColor + '22', color: primaryColor }}>Heute</span>}
-                              </span>
-                              <span className={isClosed ? 'text-gray-400 italic' : isToday ? 'text-gray-900' : 'text-gray-700'}>{time}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-400 italic">Öffnungszeiten nicht hinterlegt</p>
-                    )}
-                  </div>
-                  {/* Right: Map */}
-                  <div style={{ height: '300px' }}>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-3xl">
+                {/* Left: Address + Opening Hours */}
+                <div className={`bg-gray-50 ${tmpl.cardRound} border border-gray-200 p-5 sm:w-[260px] shrink-0`}>
+                  <p className="font-bold text-gray-900 text-sm mb-0.5">{landingPage.workshop.companyName}</p>
+                  {workshopAddress && (
+                    <p className="text-xs text-gray-500 mb-4">📍 {workshopAddress}</p>
+                  )}
+                  {openingHoursList.length > 0 ? (
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Öffnungszeiten</p>
+                      {openingHoursList.map(({ day, time }) => {
+                        const isClosed = time === 'Geschlossen'
+                        const today = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][new Date().getDay()]
+                        const isToday = day === today
+                        return (
+                          <div key={day} className={`flex justify-between text-xs py-0.5 ${isToday ? 'font-semibold' : ''}`}>
+                            <span className={isClosed ? 'text-gray-400' : isToday ? 'text-gray-900' : 'text-gray-600'}>
+                              {day}{isToday && <span className="ml-1 text-xs px-1 py-0.5 rounded" style={{ backgroundColor: primaryColor + '22', color: primaryColor }}>Heute</span>}
+                            </span>
+                            <span className={isClosed ? 'text-gray-400 italic' : isToday ? 'text-gray-900' : 'text-gray-700'}>{time}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">Öffnungszeiten nicht hinterlegt</p>
+                  )}
+                </div>
+                {/* Right: Map card + button below */}
+                <div className="flex flex-col gap-2 flex-1">
+                  <div className={`overflow-hidden ${tmpl.cardRound} border border-gray-200`} style={{ height: '300px' }}>
                     <iframe
                       src={mapEmbedUrl}
                       width="100%"
@@ -572,20 +572,19 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                       title={`Standort ${landingPage.workshop.companyName}`}
                     />
                   </div>
+                  {workshopAddress && (
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(workshopAddress)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 self-start"
+                      style={{ background: primaryColor }}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      In Google Maps öffnen
+                    </a>
+                  )}
                 </div>
-                {/* Button below card */}
-                {workshopAddress && (
-                  <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(workshopAddress)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                    style={{ background: primaryColor }}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    In Google Maps öffnen
-                  </a>
-                )}
               </div>
             </div>
           </section>

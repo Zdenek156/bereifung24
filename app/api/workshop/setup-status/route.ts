@@ -19,7 +19,7 @@ export async function GET() {
           include: {
             workshopServices: { where: { isActive: true }, select: { id: true } },
             landingPage: { select: { isActive: true } },
-            tirePricingBySizes: { select: { id: true }, take: 1 },
+            pricingSettings: { select: { id: true } },
             employees: {
               select: { googleCalendarId: true, googleAccessToken: true },
             },
@@ -54,7 +54,7 @@ export async function GET() {
     const hasServices = w.workshopServices.length > 0
 
     // 4. Tire pricing
-    const hasPricing = w.tirePricingBySizes.length > 0
+    const hasPricing = !!w.pricingSettings
 
     // 5. Supplier connected
     const hasSupplier = w.suppliers.length > 0

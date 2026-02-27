@@ -150,12 +150,12 @@ export default function EmployeeAdminTiles() {
       <div className="relative group">
         <button
           onClick={() => handleNavigation(app.adminRoute)}
-          className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow text-left w-full ${compact ? 'p-4' : 'p-6'}`}
+          className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow text-left w-full ${compact ? 'p-3 h-24 flex flex-col' : 'p-6'}`}
         >
-          <div className={`flex items-center justify-center ${compact ? 'w-10 h-10 mb-3' : 'w-12 h-12 mb-4'} ${colors.bg} rounded-lg`}>
-            <span className={colors.text}>{getIcon(app.icon)}</span>
+          <div className={`flex items-center justify-center flex-shrink-0 ${compact ? 'w-8 h-8 mb-2' : 'w-12 h-12 mb-4'} ${colors.bg} rounded-lg`}>
+            <span className={`${colors.text} ${compact ? '[&>svg]:w-4 [&>svg]:h-4' : ''}`}>{getIcon(app.icon)}</span>
           </div>
-          <h3 className={`font-semibold text-gray-900 ${compact ? 'text-sm mb-1' : 'text-lg mb-2'}`}>{app.name}</h3>
+          <h3 className={`font-semibold text-gray-900 ${compact ? 'text-xs leading-tight line-clamp-2' : 'text-lg mb-2'}`}>{app.name}</h3>
           {!compact && <p className="text-sm text-gray-600">{app.description}</p>}
         </button>
         {/* Star button */}
@@ -189,7 +189,7 @@ export default function EmployeeAdminTiles() {
           </div>
           <div className="flex gap-3 flex-wrap">
             {pinnedApps.map(app => (
-              <div key={app.id} className="w-36">
+              <div key={app.id} className="w-32">
                 <AppCard app={app} compact />
               </div>
             ))}

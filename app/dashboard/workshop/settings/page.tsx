@@ -930,7 +930,7 @@ export default function WorkshopSettings() {
               bankTransferIban: parsed.bankTransferIban || '',
               paypal: parsed.paypal ?? false,
               paypalEmail: parsed.paypalEmail || '',
-              stripe: data.stripeEnabled ?? parsed.stripe ?? false, // Use stripeEnabled from profile
+              stripe: !!(data.stripeAccountId) || data.stripeEnabled ?? parsed.stripe ?? false,
               stripeAccountId: data.stripeAccountId || parsed.stripeAccountId || '',
             })
           } catch (e) {
@@ -940,7 +940,7 @@ export default function WorkshopSettings() {
           // If no payment methods JSON, use direct values from profile
           setPaymentMethods(prev => ({
             ...prev,
-            stripe: data.stripeEnabled ?? false,
+            stripe: !!(data.stripeAccountId) || data.stripeEnabled ?? false,
             stripeAccountId: data.stripeAccountId || '',
           }))
         }
@@ -1803,7 +1803,7 @@ export default function WorkshopSettings() {
                     </p>
                   </div>
                 </div>
-                {paymentMethods.stripe && (
+                {(paymentMethods.stripe || !!paymentMethods.stripeAccountId) && (
                   <div className="ml-7 mt-3 space-y-3">
                     {/* Show connected status if account ID exists */}
                     {paymentMethods.stripeAccountId ? (

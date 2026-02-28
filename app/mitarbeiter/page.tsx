@@ -255,7 +255,7 @@ export default function MitarbeiterDashboard() {
             <div className="ml-3 flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-600 truncate">Provision</p>
               <p className="text-xl font-bold text-gray-900 truncate">{stats.totalCommissions.toFixed(2)} €</p>
-              <p className="text-xs text-gray-500 truncate">Eingezogen</p>
+              <p className="text-xs text-gray-500 truncate">Aktueller Monat</p>
             </div>
           </div>
         </Link>

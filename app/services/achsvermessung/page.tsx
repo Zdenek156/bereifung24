@@ -17,7 +17,7 @@ export default function AchsvermessungPage() {
               <span className="text-sm font-medium hidden sm:inline">Zurück</span>
             </Link>
             <Link href="/" className="absolute left-1/2 transform -translate-x-1/2">
-              <img src="/logos/B24_Logo_wei%C3%9F.png" alt="Bereifung24" className="h-10 w-auto object-contain" />
+              <img src="/logos/B24_Logo_weiss.png" alt="Bereifung24" className="h-10 w-auto object-contain" />
             </Link>
             <div className="w-20"></div>
           </div>

@@ -144,7 +144,7 @@ export default function CustomerNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img
-              src="/logos/B24_Logo_wei%C3%9F.png"
+              src="/logos/B24_Logo_weiss.png"
               alt="Bereifung24"
               className="h-10 w-auto object-contain"
             />

@@ -48,6 +48,13 @@ export async function GET(
             name: true,
             email: true
           }
+        },
+        workshopVacations: {
+          where: {
+            startDate: { lte: new Date(endDate) },
+            endDate:   { gte: new Date(startDate) },
+          },
+          select: { startDate: true, endDate: true }
         }
       }
     })
@@ -233,12 +240,24 @@ export async function GET(
       }
     }
 
-    // Return busy slots grouped by date + opening hours
+    // Build vacation dates list (individual YYYY-MM-DD strings)
+    const vacationDates: string[] = []
+    for (const vac of workshop.workshopVacations || []) {
+      const cur = new Date(vac.startDate)
+      const vacEnd = new Date(vac.endDate)
+      while (cur <= vacEnd) {
+        vacationDates.push(cur.toISOString().split('T')[0])
+        cur.setDate(cur.getDate() + 1)
+      }
+    }
+
+    // Return busy slots grouped by date + opening hours + vacation dates
     return NextResponse.json({
       success: true,
       availableSlots: [], // Client generates based on workshop hours
       busySlots: busySlotsByDate,
-      openingHours: workshop.openingHours // Send opening hours to client
+      openingHours: workshop.openingHours, // Send opening hours to client
+      vacationDates,
     })
   } catch (error) {
     console.error('Error fetching slots:', error)

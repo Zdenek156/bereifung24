@@ -2212,13 +2212,13 @@ export default function NewHomePage({
       {hasSearched && (!useServiceCards || workshops.length > 0) && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl mx-auto flex flex-col gap-4">
-              {/* Horizontal Filter Bar */}
+            <div className={isWorkshopFixed ? 'max-w-5xl mx-auto flex flex-col gap-4' : 'flex flex-col lg:flex-row gap-6'}>
+              {/* Filter: Sidebar (homepage) or Horizontal Bar (LP) */}
               {workshops.length > 0 && (
-                <div className="w-full">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    {/* Filter Header - mobile only */}
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between lg:hidden">
+                <div className={isWorkshopFixed ? 'w-full' : 'lg:w-80 flex-shrink-0'}>
+                  <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${!isWorkshopFixed ? 'sticky top-24 z-40' : ''}`}>
+                    {/* Filter Header */}
+                    <div className={`p-4 border-b border-gray-200 flex items-center justify-between ${isWorkshopFixed ? 'lg:hidden' : ''}`}>
                       <h3 className="font-bold text-lg flex items-center gap-2">
                         <SlidersHorizontal className="w-5 h-5" />
                         Filtern nach:
@@ -2232,7 +2232,7 @@ export default function NewHomePage({
                     </div>
 
                     {/* Filters */}
-                    <div className={`${showFilters ? 'block' : 'hidden lg:block'} lg:grid lg:grid-cols-2 lg:divide-x lg:divide-y divide-gray-200`}>
+                    <div className={`${showFilters ? 'block' : 'hidden lg:block'} ${isWorkshopFixed ? 'lg:grid lg:grid-cols-2 lg:divide-x lg:divide-y' : 'divide-y'} divide-gray-200`}>
 
                       {/* === GENERAL FILTERS (for all services) === */}
 
@@ -2785,7 +2785,7 @@ export default function NewHomePage({
               )}
 
               {/* Main Content - Workshop Results */}
-              <main className="w-full">
+              <main className={isWorkshopFixed ? 'w-full' : 'flex-1'}>
                 {/* Loading State */}
                 {loading && (
                   <div className="text-center py-12">

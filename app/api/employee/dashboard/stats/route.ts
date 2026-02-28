@@ -110,10 +110,10 @@ export async function GET(request: NextRequest) {
     // Get total registered workshops count (all workshops, not just active)
     const totalWorkshops = await prisma.workshop.count()
 
-    // Get pending (ausstehende) commissions - same as in commissions overview
+    // Get collected (eingezogene) commissions - total earned
     const commissions = await prisma.commission.findMany({
       where: {
-        status: 'PENDING',
+        status: 'COLLECTED',
       },
       select: {
         commissionAmount: true,

@@ -53,6 +53,7 @@ export default function WorkshopDetailPage() {
   const [selectedSlot, setSelectedSlot] = useState<any>(null)
   const [availableSlots, setAvailableSlots] = useState<any[]>([])
   const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
+  const [vacationDates, setVacationDates] = useState<string[]>([])
   const [openingHours, setOpeningHours] = useState<any>(null)
   const [serviceType, setServiceType] = useState<string>('WHEEL_CHANGE')
   
@@ -89,6 +90,7 @@ export default function WorkshopDetailPage() {
         const data = await response.json()
         setAvailableSlots(data.availableSlots || [])
         setBusySlots(data.busySlots || {})
+        setVacationDates(data.vacationDates || [])
         if (data.openingHours) {
           try {
             setOpeningHours(JSON.parse(data.openingHours))
@@ -128,7 +130,10 @@ export default function WorkshopDetailPage() {
     if (!date) return false
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return date >= today
+    if (date < today) return false
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    if (vacationDates.includes(dateStr)) return false
+    return true
   }
 
   const isDatePast = (date: Date | null) => {

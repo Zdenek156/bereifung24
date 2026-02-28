@@ -110,31 +110,28 @@ export async function GET(request: NextRequest) {
     // Get total registered workshops count (all workshops, not just active)
     const totalWorkshops = await prisma.workshop.count()
 
-    // Get commissions for the current month:
-    // - COLLECTED: use collectedAt (collected this month, may have been created earlier)
-    // - PENDING: use createdAt (not yet collected, created this month)
+    // Get commissions from DirectBookings paid in current month (same source as /admin/commissions page)
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-    const commissions = await prisma.commission.findMany({
+    const paidBookings = await prisma.directBooking.findMany({
       where: {
-        OR: [
-          {
-            status: 'COLLECTED',
-            collectedAt: { gte: startOfMonth, lte: endOfMonth },
-          },
-          {
-            status: 'PENDING',
-            createdAt: { gte: startOfMonth, lte: endOfMonth },
-          },
-        ],
+        paymentStatus: 'PAID',
+        paidAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
       },
       select: {
-        commissionAmount: true,
+        platformCommission: true,
+        totalPrice: true,
       },
     })
 
-    const totalCommissions = commissions.reduce((sum, c) => sum + c.commissionAmount, 0)
+    const totalCommissions = paidBookings.reduce((sum, b) => {
+      const commission = b.platformCommission ? Number(b.platformCommission) : Number(b.totalPrice) * 0.069
+      return sum + commission
+    }, 0)
 
     // Get count of not-verified workshops (nicht freigeschaltete Werkstätten)
     const notActivatedWorkshops = await prisma.workshop.count({

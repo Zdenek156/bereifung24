@@ -110,17 +110,24 @@ export async function GET(request: NextRequest) {
     // Get total registered workshops count (all workshops, not just active)
     const totalWorkshops = await prisma.workshop.count()
 
-    // Get commissions created in the current month (PENDING + COLLECTED, not FAILED)
+    // Get commissions for the current month:
+    // - COLLECTED: use collectedAt (collected this month, may have been created earlier)
+    // - PENDING: use createdAt (not yet collected, created this month)
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
     const commissions = await prisma.commission.findMany({
       where: {
-        status: { in: ['PENDING', 'COLLECTED'] },
-        createdAt: {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        },
+        OR: [
+          {
+            status: 'COLLECTED',
+            collectedAt: { gte: startOfMonth, lte: endOfMonth },
+          },
+          {
+            status: 'PENDING',
+            createdAt: { gte: startOfMonth, lte: endOfMonth },
+          },
+        ],
       },
       select: {
         commissionAmount: true,

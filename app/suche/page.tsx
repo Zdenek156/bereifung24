@@ -342,7 +342,7 @@ export default function SuchePage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center">
               <img
-                src="/logos/B24_Logo_wei%C3%9F.png"
+                src="/logos/B24_Logo_weiss.png"
                 alt="Bereifung24"
                 className="h-10 w-auto object-contain"
               />

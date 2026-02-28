@@ -204,8 +204,17 @@ export default function WorkshopSidebar() {
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-primary-600 dark:text-primary-400">Bereifung24</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Werkstatt-Portal</p>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logos/bereifung24-logo-b24.png"
+                alt="B24"
+                className="h-10 w-10 object-contain flex-shrink-0"
+              />
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white text-base leading-tight">Bereifung24</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Werkstatt-Portal</p>
+              </div>
+            </div>
           </div>
 
           {/* Navigation */}

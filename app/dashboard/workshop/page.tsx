@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import WorkshopNotificationBell from '@/components/WorkshopNotificationBell'
 
 interface DashboardStats {
   todaysBookings: number
@@ -198,16 +197,13 @@ export default function WorkshopDashboard() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-              {getGreeting()}, {session?.user?.firstName || 'Werkstatt'}!
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Hier ist Ihre Geschäftsübersicht für heute
-            </p>
-          </div>
-          <WorkshopNotificationBell />
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+            {getGreeting()}, {session?.user?.firstName || 'Werkstatt'}!
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Hier ist Ihre Geschäftsübersicht für heute
+          </p>
         </div>
 
         {/* KPI Cards */}

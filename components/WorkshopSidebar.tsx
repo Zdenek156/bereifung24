@@ -206,9 +206,9 @@ export default function WorkshopSidebar() {
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <img
-                src="/logos/bereifung24-logo-b24.png"
+                src="/logos/B24_Logo_blau.png"
                 alt="B24"
-                className="h-10 w-10 object-contain flex-shrink-0"
+                className="h-12 w-auto object-contain flex-shrink-0"
               />
               <div>
                 <p className="font-bold text-gray-900 dark:text-white text-base leading-tight">Bereifung24</p>

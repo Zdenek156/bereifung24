@@ -150,7 +150,11 @@ export default function CustomerSidebar() {
         <div className="flex flex-col h-full">
           {/* Logo/Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Bereifung24</h1>
+            <img
+              src="/logos/B24_Logo_blau.png"
+              alt="Bereifung24"
+              className="h-14 w-auto object-contain mb-2"
+            />
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Kunden-Dashboard</p>
           </div>
 

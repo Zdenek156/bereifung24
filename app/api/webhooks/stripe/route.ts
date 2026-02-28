@@ -14,6 +14,7 @@ import Stripe from 'stripe'
  * - checkout.session.completed
  * - payment_intent.succeeded
  * - payment_intent.payment_failed
+ * - charge.updated  (for stripeFee backfill)
  * - charge.refunded
  * - account.updated (for Stripe Connect)
  */
@@ -63,6 +64,10 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
+        break
+
+      case 'charge.updated':
+        await handleChargeUpdated(event.data.object as Stripe.Charge, stripe)
         break
 
       case 'charge.refunded':
@@ -710,5 +715,47 @@ async function handleAccountUpdated(account: Stripe.Account) {
     }
   } catch (error) {
     console.error('❌ Error handling account update:', error)
+  }
+}
+
+/**
+ * Handle charge.updated event
+ * Stripe fires this when balance_transaction becomes available (after checkout.session.completed)
+ * We use this to backfill the real stripeFee on the booking.
+ */
+async function handleChargeUpdated(charge: Stripe.Charge, stripe: Stripe) {
+  try {
+    if (!charge.balance_transaction) return // not yet available
+    if (!charge.payment_intent) return // no payment intent linked
+
+    const paymentIntentId = typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent.id
+
+    // Find the booking by stripePaymentId
+    const booking = await prisma.directBooking.findFirst({
+      where: { stripePaymentId: paymentIntentId, paymentStatus: 'PAID' },
+      select: { id: true, stripeFee: true },
+    })
+
+    if (!booking) return
+    if (booking.stripeFee !== null) return // already captured
+
+    // Fetch balance transaction to get the real fee
+    const balanceTransactionId = typeof charge.balance_transaction === 'string'
+      ? charge.balance_transaction
+      : charge.balance_transaction.id
+
+    const balanceTx = await stripe.balanceTransactions.retrieve(balanceTransactionId)
+    const feeInEuros = balanceTx.fee / 100
+
+    await prisma.directBooking.update({
+      where: { id: booking.id },
+      data: { stripeFee: feeInEuros },
+    })
+
+    console.log(`✅ stripeFee updated for booking ${booking.id}: ${feeInEuros} €`)
+  } catch (error) {
+    console.error('❌ Error handling charge.updated:', error)
   }
 }

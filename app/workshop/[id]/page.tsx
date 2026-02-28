@@ -887,9 +887,9 @@ export default function WorkshopDetailPage() {
             
             <Link href="/" className="absolute left-1/2 transform -translate-x-1/2">
               <img
-                src="/logos/bereifung24-logo-b24.png"
+                src="/logos/B24_Logo_wei%C3%9F.png"
                 alt="Bereifung24"
-                className="h-12 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
             </Link>
 

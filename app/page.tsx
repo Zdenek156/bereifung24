@@ -1740,13 +1740,8 @@ export default function NewHomePage({
       <nav className="bg-primary-600 sticky top-0 z-50 backdrop-blur-sm shadow-lg">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary-600 text-xl font-bold">B24</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Bereifung24</h1>
-              </div>
+            <div className="flex items-center">
+              <img src="/logos/B24_Logo_wei%C3%9F.png" alt="Bereifung24" className="h-10 w-auto object-contain" />
             </div>
             
             {/* User Menu */}

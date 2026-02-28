@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { 
   User, 
@@ -141,12 +142,13 @@ export default function CustomerNavbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-primary-600 text-xl shadow-md">
-              B24
-            </div>
-            <span className="text-xl font-bold text-white">Bereifung24</span>
-          </div>
+          <Link href="/" className="flex items-center">
+            <img
+              src="/logos/B24_Logo_wei%C3%9F.png"
+              alt="Bereifung24"
+              className="h-10 w-auto object-contain"
+            />
+          </Link>
 
           {/* Profile Button */}
           <div className="relative" ref={dropdownRef}>

@@ -15,6 +15,7 @@ interface Ticket {
   email: string
   message: string
   subject: string | null
+  ticketNumber: number | null
   status: string
   priority: string
   assignedToId: string | null
@@ -235,6 +236,11 @@ export default function SupportTicketsPage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
+                    {ticket.ticketNumber && (
+                      <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                        T-{String(ticket.ticketNumber).padStart(4, '0')}
+                      </span>
+                    )}
                     <span className="font-semibold text-gray-900 text-sm">{ticket.name}</span>
                     <span className="text-gray-400 text-xs">{ticket.email}</span>
                     {ticket.status === 'NEW' && (

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   LifeBuoy, Search, Filter, RefreshCw, ChevronRight,
   Mail, Clock, AlertTriangle, CheckCircle, XCircle, Inbox,
-  User, ArrowLeft
+  User, ArrowLeft, Settings, Eye, EyeOff, X, Save
 } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 
@@ -78,6 +78,55 @@ export default function SupportTicketsPage() {
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
 
+  // Email settings modal
+  const [showSettings, setShowSettings] = useState(false)
+  const [settingsLoading, setSettingsLoading] = useState(false)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsMsg, setSettingsMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [emailSettings, setEmailSettings] = useState({ supportEmail: '', supportPassword: '', hasPassword: false })
+
+  const openSettings = async () => {
+    setShowSettings(true)
+    setSettingsLoading(true)
+    setSettingsMsg(null)
+    try {
+      const res = await fetch('/api/admin/support/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setEmailSettings(data)
+      }
+    } catch {
+      setSettingsMsg({ type: 'error', text: 'Fehler beim Laden der Einstellungen' })
+    } finally {
+      setSettingsLoading(false)
+    }
+  }
+
+  const saveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSettingsSaving(true)
+    setSettingsMsg(null)
+    try {
+      const res = await fetch('/api/admin/support/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supportEmail: emailSettings.supportEmail, supportPassword: emailSettings.supportPassword }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSettingsMsg({ type: 'success', text: 'Einstellungen gespeichert!' })
+        setEmailSettings(prev => ({ ...prev, hasPassword: !!prev.supportPassword && prev.supportPassword !== '••••••••' }))
+      } else {
+        setSettingsMsg({ type: 'error', text: data.error || 'Fehler beim Speichern' })
+      }
+    } catch {
+      setSettingsMsg({ type: 'error', text: 'Netzwerkfehler' })
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
   const fetchTickets = useCallback(async () => {
     setLoading(true)
     try {
@@ -114,6 +163,99 @@ export default function SupportTicketsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Support-Email konfigurieren</h2>
+              </div>
+              <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-500 mb-4">
+                Diese Email-Adresse wird für das Versenden von Antworten an Kunden verwendet.<br />
+                <span className="font-medium text-gray-700">z.B. support@bereifung24.de</span>
+              </p>
+
+              {settingsLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <form onSubmit={saveSettings} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email-Adresse *
+                    </label>
+                    <input
+                      type="email"
+                      value={emailSettings.supportEmail}
+                      onChange={(e) => setEmailSettings(prev => ({ ...prev, supportEmail: e.target.value }))}
+                      placeholder="support@bereifung24.de"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Passwort {emailSettings.hasPassword ? '(leer lassen um beizubehalten)' : '*'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={emailSettings.supportPassword}
+                        onChange={(e) => setEmailSettings(prev => ({ ...prev, supportPassword: e.target.value }))}
+                        placeholder={emailSettings.hasPassword ? '••••••••' : 'Email-Passwort eingeben'}
+                        required={!emailSettings.hasPassword}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Die SMTP-Server-Einstellungen werden aus den allgemeinen <a href="/admin/email-settings" className="text-blue-600 hover:underline">Email-Einstellungen</a> übernommen.</p>
+                  </div>
+
+                  {settingsMsg && (
+                    <div className={`p-3 rounded-lg text-sm ${settingsMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                      {settingsMsg.text}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowSettings(false)}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      Schließen
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={settingsSaving}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />
+                      {settingsSaving ? 'Speichern...' : 'Speichern'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto">
@@ -135,13 +277,23 @@ export default function SupportTicketsPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={fetchTickets}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Aktualisieren
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openSettings}
+                title="Support-Email konfigurieren"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Email konfigurieren</span>
+              </button>
+              <button
+                onClick={fetchTickets}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">Aktualisieren</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -1014,8 +1014,8 @@ export default function BrowseRequestsPage() {
       selectedRequest?.quantity === 4 ? 'ALL_FOUR' : 'FRONT_TWO'
     
     if (isMotorcycle) {
-      // Default to BOTH for additional tire options
-      defaultTireType = 'BOTH'
+      // Default to FRONT (1 Reifen) für Motorrad
+      defaultTireType = 'FRONT'
     }
     
     // For brake service: determine montagePrice based on carTireType
@@ -1185,28 +1185,16 @@ export default function BrowseRequestsPage() {
         let duration = 60
         
         if (service.servicePackages && service.servicePackages.length > 0) {
-          // Finde passendes Paket
-          let selectedPackage
+          // Suche "per_tire" Paket
+          const perTirePackage = service.servicePackages.find((p: any) => 
+            p.packageType === 'per_tire' || p.name.toLowerCase().includes('pro reifen')
+          )
           
-          if (newMotorcycleTireType === 'BOTH') {
-            // Beide Reifen - suche "Beide" Paket
-            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('beide'))
-          } else if (newMotorcycleTireType === 'FRONT') {
-            // Nur Vorderrad
-            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('vorderrad'))
-          } else if (newMotorcycleTireType === 'REAR') {
-            // Nur Hinterrad
-            selectedPackage = service.servicePackages.find((p: any) => p.name.toLowerCase().includes('hinterrad'))
-          }
-          
-          // Fallback auf erstes Paket wenn nichts gefunden
-          if (!selectedPackage && service.servicePackages.length > 0) {
-            selectedPackage = service.servicePackages[0]
-          }
-          
-          if (selectedPackage) {
-            installation = selectedPackage.price
-            duration = selectedPackage.durationMinutes
+          if (perTirePackage) {
+            // Bei BOTH (2 Reifen): Preis und Dauer verdoppeln
+            const multiplier = newMotorcycleTireType === 'BOTH' ? 2 : 1
+            installation = perTirePackage.price * multiplier
+            duration = perTirePackage.durationMinutes * multiplier
           }
         }
         
@@ -2076,30 +2064,31 @@ export default function BrowseRequestsPage() {
                           </div>
                         </div>
 
-                        {/* Motorcycle Tire Type Selection - per tire option */}
-                        {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (() => {
-                          const needsFront = selectedRequest.additionalNotes?.includes('✓ Vorderreifen')
-                          const needsRear = selectedRequest.additionalNotes?.includes('✓ Hinterreifen')
-                          const hasBoth = needsFront && needsRear
-                          
-                          return (
-                            <div className="mt-3">
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Angebot für *
-                              </label>
-                              <select
-                                value={option.motorcycleTireType || (hasBoth ? 'BOTH' : needsFront ? 'FRONT' : 'REAR')}
-                                onChange={(e) => updateTireOption(index, 'motorcycleTireType', e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                required
-                              >
-                                {hasBoth && <option value="BOTH">🏍️ Beide Reifen (Vorne + Hinten)</option>}
-                                {needsFront && <option value="FRONT">🏍️ Nur Vorderreifen</option>}
-                                {needsRear && <option value="REAR">🏍️ Nur Hinterreifen</option>}
-                              </select>
-                            </div>
-                          )
-                        })()}
+                        {/* Motorcycle Tire Count Selection - simplified */}
+                        {selectedRequest.additionalNotes?.includes('🏍️ MOTORRADREIFEN') && (
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Anzahl Reifen *
+                            </label>
+                            <select
+                              value={option.motorcycleTireType === 'BOTH' ? '2' : '1'}
+                              onChange={(e) => {
+                                const count = e.target.value
+                                // Map count to motorcycleTireType (1 = FRONT or REAR, 2 = BOTH)
+                                const tireType = count === '2' ? 'BOTH' : 'FRONT'
+                                updateTireOption(index, 'motorcycleTireType', tireType)
+                              }}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              required
+                            >
+                              <option value="1">🏍️ 1 Reifen (Vorderrad oder Hinterrad)</option>
+                              <option value="2">🏍️ 2 Reifen (Beide Räder)</option>
+                            </select>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Der Preis wird automatisch bei 2 Reifen verdoppelt
+                            </p>
+                          </div>
+                        )}
 
                         {/* Brake Axle Selection */}
                         {selectedRequest.additionalNotes?.includes('BREMSEN-SERVICE') && (

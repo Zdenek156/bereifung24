@@ -249,6 +249,15 @@ export async function POST(request: Request) {
       }
     })
 
+    // Auto-activate workshop if PENDING and has active packages
+    if (user.workshop.status === 'PENDING' && packages && packages.length > 0) {
+      await prisma.workshop.update({
+        where: { id: user.workshop.id },
+        data: { status: 'ACTIVE' }
+      })
+      console.log(`✅ Workshop ${user.workshop.companyName} auto-activated after adding service`)
+    }
+
     return NextResponse.json(service, { status: 201 })
   } catch (error) {
     console.error('Service creation error:', error)

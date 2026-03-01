@@ -1,0 +1,397 @@
+================================================================================
+              BEREIFUNG24 ADMIN-MODULE ÜBERSICHT
+                        Stand: 23.02.2026
+================================================================================
+
+Das Admin-Dashboard von Bereifung24 besteht aus 45 verschiedenen Modulen,
+die alle Aspekte der Unternehmensführung und -verwaltung abdecken.
+
+
+================================================================================
+📊 BUCHHALTUNG & FINANZEN
+================================================================================
+
+1. BUCHHALTUNG (buchhaltung/)
+   - Vollständiges HGB-konformes Buchhaltungssystem für GmbH
+   - SKR04-Kontenplan mit 66+ vorkonfigurierten Konten
+   - Untermodule:
+     • Journal: Buchungsjournal mit allen Geschäftsvorfällen
+     • Kontenplan: Verwaltung aller Konten nach SKR04
+     • Belege: Upload und Verwaltung von Buchungsbelegen
+     • Bilanz: Jahresbilanz mit Aktiva/Passiva
+     • GuV: Gewinn- und Verlustrechnung
+     • BWA: Betriebswirtschaftliche Auswertung
+     • Abschreibungen: Anlagenvermögen und AfA-Verwaltung
+     • Rückstellungen: Verwaltung von Verbindlichkeiten
+     • Eigenkapital: Stammkapital und Geschäftsführer-Konten
+     • Jahresabschluss: Jahresendabschluss-Funktion
+     • Steuerberater: Export-Funktion und E-Mail-Versand
+     • Manuelle Buchung: Direktes Buchen mit Vorlagen
+
+2. INVOICES (invoices/)
+   - Rechnungsverwaltung und -erstellung
+   - Automatische Rechnungsnummerierung
+   - PDF-Generierung und Versand
+   - Zahlungsverfolgung und Mahnwesen
+
+3. BILLING (billing/)
+   - Abrechnungssystem für Werkstätten und Partner
+   - Provisionsverwaltung
+   - Zahlungsabwicklung
+
+4. COMMISSIONS (commissions/)
+   - Provisionsabrechnung für Partner und Affiliates
+   - Automatische Berechnung nach Buchungen
+   - Auszahlungsverwaltung
+
+
+================================================================================
+👥 PERSONALWESEN (HR)
+================================================================================
+
+5. HR / MITARBEITERVERWALTUNG (hr/)
+   - Zentrale Mitarbeiterverwaltung mit Hierarchien
+   - Personalakten (verschlüsselt nach DSGVO)
+   - Vertragsverwaltung
+   - Untermodule:
+     • Mitarbeiter: Alle Mitarbeiter-Profile
+     • Verträge: Arbeitsverträge und Dokumente
+     • Hierarchie: Organisationsstruktur und Vorgesetzte
+     • Anwendungen: Berechtigungsverwaltung pro Mitarbeiter
+     • Urlaubsanträge: Urlaubsverwaltung mit Freigabe-Workflow
+     • Spesen: Spesenabrechnung mit mehrstufiger Freigabe
+
+6. PAYROLL (payroll/) [In Entwicklung]
+   - Gehaltsabrechnung (Lohnbuchhaltung)
+   - Sozialversicherungen und Steuern
+   - Elektronische Lohnsteuerbescheinigung
+   - Status: Datenbank-Modell vorhanden, Logik in Planung
+
+7. RECRUITMENT (recruitment/) [In Entwicklung]
+   - Bewerbermanagement
+   - Stellenausschreibungen
+   - Bewerbungsprozess-Tracking
+   - Online-Bewerbungsformular auf Homepage
+
+8. APPLICATIONS (applications/)
+   - Verwaltung aller Admin-Anwendungen
+   - Rollenbasierte Zugriffskontrolle
+   - Berechtigungsvergabe an Mitarbeiter
+
+
+================================================================================
+🚗 KUNDEN & ANFRAGEN
+================================================================================
+
+9. CUSTOMERS (customers/)
+   - Kundenverwaltung
+   - Kundenhistorie und Notizen
+   - Segmentierung und Filterung
+
+10. TIRE-REQUESTS (tire-requests/)
+    - Zentrale Verwaltung aller Kundenanfragen
+    - Status-Tracking (Neu, In Bearbeitung, Abgeschlossen)
+    - Werkstatt-Zuordnung
+    - E-Mail und Telefon-Integration
+    - Notizen und Follow-ups
+
+11. VEHICLES (vehicles/)
+    - Firmenfahrzeugverwaltung
+    - TÜV-Erinnerungen (automatischer Cron-Job)
+    - Fahrzeughistorie und Wartung
+    - Kilometerstand-Tracking
+
+
+================================================================================
+🏭 WERKSTATT-MANAGEMENT
+================================================================================
+
+12. WORKSHOPS (workshops/)
+    - Werkstattverwaltung und -verifizierung
+    - Freischaltung/Sperrung von Werkstätten
+    - Leistungskatalog und Preise
+    - Standortverwaltung
+
+13. TERRITORIES (territories/)
+    - Geografische Gebietsverwaltung
+    - Zuordnung von Werkstätten zu Regionen
+    - PLZ-Bereichsverwaltung
+
+
+================================================================================
+💼 VERTRIEB & AKQUISE
+================================================================================
+
+14. SALES (sales/)
+    - Werkstatt-Akquise und Lead-Management
+    - Lead-Scoring-System
+    - Aufgabenverwaltung (Tasks)
+    - Pipeline-Übersicht
+    - Conversion-Tracking
+
+15. SALES-V2 (sales-v2/)
+    - Erweiterte Sales-Dashboard-Version
+    - Geografische Lead-Übersicht
+    - Performance-Metriken
+    - Report-Funktionen
+
+16. PROCUREMENT (procurement/)
+    - Beschaffungsmanagement
+    - Lieferantenverwaltung (Suppliers)
+    - Lieferantenbewertung
+    - Bestellverwaltung
+
+
+================================================================================
+📝 CONTENT-MANAGEMENT
+================================================================================
+
+17. BLOG (blog/)
+    - Blog-Verwaltung mit SEO-Optimierung
+    - Untermodule:
+      • Artikel: Alle Blog-Posts (CRUD)
+      • Kategorien: Themen-Verwaltung mit Icons
+      • Tags: Schlagwörter für bessere Auffindbarkeit
+    - Status-System: Draft, Published, Review, Archived
+    - View-Tracking und Statistiken
+    - Meta-Daten für Google (Title, Description, Keywords)
+
+18. KNOWLEDGE (knowledge/)
+    - Wissensdatenbank / FAQ-System
+    - Interne Dokumentation
+    - How-To-Guides für Mitarbeiter
+
+19. FILES (files/)
+    - Zentrale Dateiverwaltung
+    - Upload, Download, Umbenennen, Löschen
+    - Unterstützung für PDF, Bilder, Dokumente
+    - Rechteverwaltung
+
+
+================================================================================
+📧 KOMMUNIKATION & MARKETING
+================================================================================
+
+20. EMAIL-TEMPLATES (email-templates/)
+    - Verwaltung aller E-Mail-Vorlagen
+    - Handlebars-Template-System
+    - Vorlagen für: Buchungsbestätigung, Rechnung, Erinnerungen, etc.
+    - Test-Funktion vor Versand
+
+21. EMAIL-SETTINGS (email-settings/)
+    - SMTP-Konfiguration
+    - Absender-Einstellungen
+    - E-Mail-Signatur
+
+22. EMAIL-BLACKLIST (email-blacklist/)
+    - Verwaltung von gesperrten E-Mail-Adressen
+    - Spam-Schutz
+    - Bounce-Management
+
+23. NEWSLETTER (newsletter/)
+    - Newsletter-Kampagnen
+    - Abonnenten-Verwaltung
+    - Versandstatistiken
+
+24. NOTIFICATIONS (notifications/)
+    - Push-Benachrichtigungen
+    - System-Benachrichtigungen
+    - Benachrichtigungseinstellungen
+
+
+================================================================================
+🤝 PARTNER & INFLUENCER
+================================================================================
+
+25. AFFILIATES (affiliates/)
+    - Affiliate-Partner-Verwaltung
+    - Tracking-Links und Codes
+    - Provisionsabrechnung
+
+26. INFLUENCER-APPLICATIONS (influencer-applications/)
+    - Bewerbungen von Influencern
+    - Freigabe-Prozess
+    - Vertragsmanagement
+
+27. INFLUENCER-MANAGEMENT (influencer-management/)
+    - Verwaltung aktiver Influencer
+    - Kampagnen-Tracking
+    - Performance-Metriken
+
+28. INFLUENCER-PAYMENTS (influencer-payments/)
+    - Auszahlungsverwaltung für Influencer
+    - Zahlungshistorie
+    - Rechnungsstellung
+
+
+================================================================================
+💳 ZAHLUNG & FINANZEN
+================================================================================
+
+29. PAYMENT-METHODS (payment-methods/)
+    - Verwaltung von Zahlungsmethoden
+    - Stripe-Integration
+    - PayPal, Kreditkarte, SEPA
+
+30. SEPA-MANDATES (sepa-mandates/)
+    - SEPA-Lastschriftmandate
+    - GoCardless-Integration
+    - Webhook-Verwaltung
+    - Mandate-Status-Tracking
+
+
+================================================================================
+📈 ANALYTICS & TRACKING
+================================================================================
+
+31. ANALYTICS (analytics/)
+    - Website-Besucherstatistiken
+    - Seitenaufrufe und Unique Visitors
+    - Top-Seiten und Referrer
+    - Zeitraum-Filter (7d, 30d, 90d, Jahr)
+
+32. CO2-TRACKING (co2-tracking/)
+    - CO2-Emissionsdaten von Reifen
+    - EU-Energielabel (EPREL)
+    - Umweltfreundlichkeits-Tracking
+
+
+================================================================================
+🔧 SYSTEM & TECHNIK
+================================================================================
+
+33. API-SETTINGS (api-settings/)
+    - API-Key-Verwaltung
+    - Webhooks und Integrationen
+    - Rate-Limiting
+
+34. EPREL (eprel/)
+    - EU-Produktdatenbank für Reifen-Labels
+    - Automatischer Datenabgleich
+    - API-Integration
+
+35. SERVER-INFO (server-info/)
+    - Server-Status und -Überwachung
+    - CPU, RAM, Speicher
+    - PM2-Prozess-Manager
+    - System-Logs
+
+36. SECURITY (security/)
+    - Sicherheitseinstellungen
+    - Account-Verwaltung
+    - Passwort-Richtlinien
+    - 2FA-Verwaltung
+
+37. SETTINGS (settings/)
+    - Allgemeine Systemeinstellungen
+    - Unternehmensangaben
+    - Währung und Sprache
+
+
+================================================================================
+🔒 DATENSCHUTZ & COMPLIANCE
+================================================================================
+
+38. GDPR (gdpr/)
+    - DSGVO-Compliance-Tools
+    - Datenauskunft und -löschung
+    - Einwilligungsverwaltung
+    - Audit-Logs
+
+39. CLEANUP (cleanup/)
+    - Bereinigung alter Daten
+    - Datenbankwartung
+    - Abgelaufene Anfragen löschen
+
+
+================================================================================
+💡 INNOVATION & QUALITÄT
+================================================================================
+
+40. KVP (kvp/)
+    - Kontinuierlicher Verbesserungsprozess
+    - Mitarbeiter-Verbesserungsvorschläge
+    - Status-Tracking und Bewertung
+    - Prämien-System
+
+41. ROADMAP (roadmap/)
+    - Produkt-Roadmap und Feature-Planung
+    - Version-Management
+    - Entwicklungs-Prioritäten
+
+
+================================================================================
+🛠️ ENTWICKLUNG & TESTING
+================================================================================
+
+42. TEST-REIFEN-VISUELL (test-reifen-visuell/)
+    - Test-Umgebung für Reifen-Visualisierung
+    - Produkt-Preview vor Live-Schaltung
+
+
+================================================================================
+🚢 LOGISTIK & PROZESSE
+================================================================================
+
+43. FLEET (fleet/)
+    - Fuhrparkverwaltung
+    - Fahrzeugdisposition
+    - Wartungsplanung
+
+
+================================================================================
+📊 DASHBOARD & ÜBERSICHT
+================================================================================
+
+44. ADMIN DASHBOARD (/)
+    - Zentrale Übersicht über alle KPIs
+    - Schnellzugriff auf alle Module
+    - Statistiken: Kunden, Werkstätten, Angebote, Umsatz
+    - Mitarbeiter-spezifische Ansichten (ADMIN vs. B24_EMPLOYEE)
+
+
+================================================================================
+🔐 ZUGRIFFSRECHTE & ROLLEN
+================================================================================
+
+45. PERMISSIONS & ROLES
+    - Rollenbasiertes Berechtigungssystem
+    - Rollen: ADMIN, B24_EMPLOYEE, WORKSHOP, USER, CUSTOMER
+    - Granulare App-Berechtigungen pro Mitarbeiter
+    - Hierarchie-basierte Freigabe-Workflows
+
+
+================================================================================
+💎 BESONDERE FEATURES
+================================================================================
+
+✅ Vollständig TypeScript-basiert (Type Safety)
+✅ Next.js 14 mit App Router
+✅ Prisma ORM mit 135 Datenbank-Modellen
+✅ 392 REST-API-Endpunkte
+✅ Verschlüsselte Speicherung sensibler Daten (IBAN, Steuernummer)
+✅ Automatische Cron-Jobs (TÜV-Erinnerungen, CO2-Updates)
+✅ PDF-Generierung (Rechnungen, Bilanzen, Lohnabrechnungen)
+✅ E-Mail-Versand mit Handlebars-Templates
+✅ SEO-optimierte Blog-Engine
+✅ DSGVO-konforme Datenverwaltung
+✅ Lock/Approve-Workflows für kritische Dokumente
+
+
+================================================================================
+📈 PROJEKT-STATISTIK
+================================================================================
+
+Gesamtgröße:            43,76 MB (ohne node_modules)
+Codezeilen:             206.671 (davon 86% TypeScript)
+Komponenten:            291 React-Komponenten (.tsx)
+API-Endpunkte:          392 Route-Handler
+Datenbank-Modelle:      135 Prisma-Modelle
+SQL-Migrationen:        119 SQL-Dateien
+
+
+================================================================================
+Dokumentiert am: 23. Februar 2026
+System: Bereifung24 Admin-Dashboard
+Framework: Next.js 14 + TypeScript + Prisma + PostgreSQL
+================================================================================

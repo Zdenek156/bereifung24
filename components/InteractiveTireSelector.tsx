@@ -2,23 +2,30 @@
 
 import { useState } from 'react'
 
-const TIRE_WIDTHS = [135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395]
-const ASPECT_RATIOS = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
-const DIAMETERS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+// Auto-Reifengrößen (erweitert)
+const CAR_TIRE_WIDTHS = [125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425]
+const CAR_ASPECT_RATIOS = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+const CAR_DIAMETERS = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
 
-// Load Index mit Tragfähigkeit in kg
+// Motorrad-Reifengrößen (erweitert)
+const MOTORCYCLE_TIRE_WIDTHS = [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220]
+const MOTORCYCLE_ASPECT_RATIOS = [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100]
+const MOTORCYCLE_DIAMETERS = [8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23]
+
+// Load Index mit Tragfähigkeit in kg (erweitert für Motorräder)
 const LOAD_INDEX_MAP: Record<number, number> = {
-  50: 190, 55: 218, 60: 250, 65: 290, 70: 335, 75: 387, 80: 450, 82: 475, 84: 500, 85: 515, 86: 530, 87: 545, 88: 560, 89: 580, 90: 600,
-  91: 615, 92: 630, 93: 650, 94: 670, 95: 690, 96: 710, 97: 730, 98: 750, 99: 775, 100: 800, 101: 825, 102: 850, 103: 875, 104: 900, 105: 925,
+  42: 150, 43: 155, 44: 160, 45: 165, 46: 170, 47: 175, 48: 180, 49: 185,
+  50: 190, 51: 195, 52: 200, 53: 206, 54: 212, 55: 218, 56: 224, 57: 230, 58: 236, 59: 243,
+  60: 250, 61: 257, 62: 265, 63: 272, 64: 280, 65: 290, 66: 300, 67: 307, 68: 315, 69: 325, 70: 335, 71: 345, 72: 355, 73: 365, 74: 375,
+  75: 387, 76: 400, 77: 412, 78: 425, 79: 437, 80: 450, 81: 462, 82: 475, 83: 487, 84: 500, 85: 515, 86: 530, 87: 545, 88: 560, 89: 580,
+  90: 600, 91: 615, 92: 630, 93: 650, 94: 670, 95: 690, 96: 710, 97: 730, 98: 750, 99: 775, 100: 800, 101: 825, 102: 850, 103: 875, 104: 900, 105: 925,
   106: 950, 107: 975, 108: 1000, 109: 1030, 110: 1060, 111: 1090, 112: 1120, 113: 1150, 114: 1180, 115: 1215, 116: 1250, 117: 1285, 118: 1320, 119: 1360, 120: 1400
 }
-const LOAD_INDICES = Object.keys(LOAD_INDEX_MAP).map(Number)
 
 // Speed Rating mit Geschwindigkeit in km/h
 const SPEED_RATING_MAP: Record<string, number> = {
-  L: 120, M: 130, N: 140, P: 150, Q: 160, R: 170, S: 180, T: 190, U: 200, H: 210, V: 240, W: 270, Y: 300, ZR: 240
+  J: 100, K: 110, L: 120, M: 130, N: 140, P: 150, Q: 160, R: 170, S: 180, T: 190, U: 200, H: 210, V: 240, W: 270, Y: 300, ZR: 240
 }
-const SPEED_RATINGS = Object.keys(SPEED_RATING_MAP)
 
 interface TireData {
   width: string
@@ -33,14 +40,28 @@ interface InteractiveTireSelectorProps {
   onChange: (field: keyof TireData, value: string) => void
   label?: string
   pathIdPrefix?: string
+  vehicleType?: 'CAR' | 'MOTORCYCLE' | 'TRAILER'
 }
 
 export default function InteractiveTireSelector({
   tireData,
   onChange,
   label = 'Reifengröße',
-  pathIdPrefix = 'tire'
+  pathIdPrefix = 'tire',
+  vehicleType = 'CAR'
 }: InteractiveTireSelectorProps) {
+  // Dynamische Größen basierend auf Fahrzeugtyp
+  const TIRE_WIDTHS = vehicleType === 'MOTORCYCLE' ? MOTORCYCLE_TIRE_WIDTHS : CAR_TIRE_WIDTHS
+  const ASPECT_RATIOS = vehicleType === 'MOTORCYCLE' ? MOTORCYCLE_ASPECT_RATIOS : CAR_ASPECT_RATIOS
+  const DIAMETERS = vehicleType === 'MOTORCYCLE' ? MOTORCYCLE_DIAMETERS : CAR_DIAMETERS
+  
+  // Load Indices: Motorräder typisch 42-90, Autos 75-120
+  const LOAD_INDICES = vehicleType === 'MOTORCYCLE' 
+    ? Array.from({ length: 49 }, (_, i) => i + 42) // 42-90
+    : Array.from({ length: 46 }, (_, i) => i + 75) // 75-120
+  
+  const SPEED_RATINGS = Object.keys(SPEED_RATING_MAP)
+
   const handleChange = (field: keyof TireData, value: string) => {
     onChange(field, value)
   }

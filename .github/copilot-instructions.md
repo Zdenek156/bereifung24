@@ -137,3 +137,63 @@
 - API-Anbindung für Lohnsteuerberechnung
 - Soli und Kirchensteuer
 - Steuerklassen-Verwaltung
+
+## Tire Catalog System (Central Multi-Supplier)
+
+### ✅ Implemented Features (Februar 2026)
+
+**Datenbank-Schema:**
+- [x] **SupplierConfig**: Lieferanten-Konfiguration mit CSV-Download-URLs
+- [x] **TireCatalog**: Zentraler Reifenkatalog (multi-supplier)
+- [x] **TirePriceCache**: 15min TTL Cache für Live-Preise mit Hit-Tracking
+
+**API-Endpoints:**
+- [x] `GET/POST /api/admin/suppliers` - Lieferantenverwaltung
+- [x] `GET/PUT/DELETE /api/admin/suppliers/[id]` - CRUD für Lieferanten
+- [x] `POST /api/admin/tire-catalog/import` - CSV-Import mit Statistiken
+- [x] `POST /api/cron/update-tire-catalogs` - Automatische CSV-Aktualisierung
+
+**Admin UI:**
+- [x] `/admin/tire-catalog` - Reifenkatalog-Verwaltung mit Tabs
+  - Tab 1: Lieferanten (CRUD, CSV-Upload, Import-Statistiken)
+  - Tab 2: Katalog (Übersicht aller Reifen)
+- [x] CSV-Upload Dialog mit Drag & Drop
+- [x] Import-Statistiken (Total, Imported, Updated, Skipped, Errors)
+- [x] CSV-Download-Link Feld für automatische Updates
+
+**Caching-System:**
+- [x] Cache-First Strategie (15 Minuten TTL)
+- [x] Hit/Miss Tracking pro Workshop
+- [x] Cache-Hit-Rate Logging
+- [x] Automatische Preis-Aktualisierung bei Cache-Miss
+
+**Integration:**
+- [x] TyreSystem API vollständig integriert
+- [x] Tire Search Service nutzt TireCatalog statt WorkshopInventory
+- [x] Middleware-Registrierung (`/admin/tire-catalog` → `reifenkatalog`)
+- [x] Application-Permissions konfiguriert
+
+**Automatisierung:**
+- [x] Cronjob für automatische CSV-Updates
+- [x] CRON_SECRET Authorization
+- [x] Health Check Endpoint (`GET /api/cron/update-tire-catalogs`)
+- [x] Logging & Error Handling
+- [x] Dokumentation: `TIRE_CATALOG_CRONJOB_SETUP.md`
+
+**Empfohlene Cronjob-Konfiguration:**
+```bash
+# Wöchentlich (Sonntags 3 Uhr)
+0 3 * * 0 curl -X POST -H "Authorization: Bearer CRON_SECRET" \
+  https://bereifung24.de/api/cron/update-tire-catalogs
+
+# Monatlich (1. Tag des Monats 3 Uhr)
+0 3 1 * * curl -X POST -H "Authorization: Bearer CRON_SECRET" \
+  https://bereifung24.de/api/cron/update-tire-catalogs
+```
+
+**Next Steps:**
+- [ ] Admin-Dashboard Tile für Reifenkatalog (optional)
+- [ ] Katalog-Übersicht Tab mit Filter & Suche
+- [ ] Preis-Historie und Trends
+- [ ] Multi-Supplier Preis-Vergleich
+- [ ] Benachrichtigungen bei Import-Fehlern

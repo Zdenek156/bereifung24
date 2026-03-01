@@ -2754,3 +2754,132 @@ export function influencerPaymentConfirmationEmailTemplate(data: {
   `
   }
 }
+
+/**
+ * TÜV Reminder Email Template
+ * Friendly reminder about upcoming vehicle inspection with tire check recommendation
+ */
+export function tuevReminderEmailTemplate(data: {
+  customerName: string
+  vehicleName: string // z.B. "BMW 320d (2018)"
+  licensePlate?: string
+  tuevDate: string // formatted "März 2026"
+  daysRemaining: number
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f3f4f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: white; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header-icon { font-size: 64px; margin-bottom: 10px; }
+        .content { padding: 40px 30px; }
+        .vehicle-card { background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #667eea; }
+        .vehicle-card h2 { margin: 0 0 10px 0; color: #1f2937; font-size: 22px; }
+        .vehicle-info { color: #4b5563; font-size: 16px; }
+        .tuev-date { background: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; border: 2px dashed #f59e0b; }
+        .tuev-date-label { color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .tuev-date-value { color: #f59e0b; font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .tuev-countdown { color: #dc2626; font-size: 18px; font-weight: bold; }
+        .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 6px; margin: 25px 0; }
+        .info-box-title { color: #92400e; font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+        .checklist { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 25px 0; }
+        .checklist h3 { color: #065f46; margin-top: 0; }
+        .checklist ul { margin: 10px 0; padding-left: 25px; }
+        .checklist li { margin: 8px 0; color: #064e3b; }
+        .button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .button:hover { box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+        .button-container { text-align: center; margin: 30px 0; }
+        .footer { background: #f9fafb; color: #6b7280; text-align: center; padding: 30px; font-size: 14px; }
+        .emoji { font-size: 24px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="header-icon">🚗💨</div>
+          <h1>TÜV-Erinnerung</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Bald ist es wieder soweit!</p>
+        </div>
+
+        <div class="content">
+          <p style="font-size: 18px;">Hallo ${data.customerName},</p>
+          
+          <p style="font-size: 16px; line-height: 1.8;">
+            wir möchten Sie daran erinnern, dass für Ihr Fahrzeug bald die nächste 
+            <strong>Hauptuntersuchung (TÜV/HU)</strong> ansteht. 🔍
+          </p>
+
+          <div class="vehicle-card">
+            <h2>🚙 ${data.vehicleName}</h2>
+            <div class="vehicle-info">
+              ${data.licensePlate ? `<strong>Kennzeichen:</strong> ${data.licensePlate}` : ''}
+            </div>
+          </div>
+
+          <div class="tuev-date">
+            <div class="tuev-date-label">Nächster TÜV-Termin</div>
+            <div class="tuev-date-value">📅 ${data.tuevDate}</div>
+            <div class="tuev-countdown">Noch ${data.daysRemaining} Tage</div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title">⚠️ Wichtig für die TÜV-Abnahme</div>
+            <p style="margin: 10px 0 0 0; color: #78350f; line-height: 1.8;">
+              Bei der Hauptuntersuchung werden auch die <strong>Reifen</strong> genau geprüft. 
+              Stellen Sie sicher, dass Ihre Reifen die gesetzliche Mindestprofiltiefe von 
+              <strong>1,6 mm</strong> haben (empfohlen: mindestens 3 mm).
+            </p>
+          </div>
+
+          <div class="checklist">
+            <h3>✅ Unsere TÜV-Checkliste für Sie:</h3>
+            <ul>
+              <li><strong>Reifenprofil prüfen</strong> – Mindestens 1,6 mm (besser 3+ mm)</li>
+              <li><strong>Reifenschäden kontrollieren</strong> – Risse, Beulen, ungleicher Verschleiß</li>
+              <li><strong>Reifenalter beachten</strong> – Reifen älter als 6-8 Jahre sollten gewechselt werden</li>
+              <li><strong>Reifendruck prüfen</strong> – Korrekter Druck verlängert Lebensdauer</li>
+              <li><strong>Beleuchtung testen</strong> – Alle Lichter müssen funktionieren</li>
+              <li><strong>Bremsen checken</strong> – Bei Unsicherheit Werkstatt aufsuchen</li>
+            </ul>
+          </div>
+
+          <p style="font-size: 16px; line-height: 1.8; color: #1f2937;">
+            <strong>💡 Unser Tipp:</strong> Sorgen Sie rechtzeitig vor! Wenn Ihre Reifen nicht mehr 
+            den Anforderungen entsprechen, können wir Ihnen helfen.
+          </p>
+
+          <div class="button-container">
+            <a href="${process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'}/dashboard/customer" class="button">
+              🔍 Jetzt Reifen prüfen & Angebot anfordern
+            </a>
+          </div>
+
+          <p style="font-size: 14px; color: #6b7280; line-height: 1.6; margin-top: 30px;">
+            Mit der richtigen Vorbereitung klappt die TÜV-Abnahme problemlos! Wir unterstützen 
+            Sie gerne bei allen Fragen rund um Ihre Reifen. 😊
+          </p>
+
+          <p style="font-size: 16px; margin-top: 30px;">
+            Viel Erfolg bei der Hauptuntersuchung!<br>
+            Ihr <strong>Bereifung24-Team</strong> 🙌
+          </p>
+        </div>
+
+        <div class="footer">
+          <p><strong>Bereifung24</strong> – Ihre Plattform für Reifenwechsel und mehr</p>
+          <p style="margin: 10px 0;">📧 Bei Fragen: support@bereifung24.de</p>
+          <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
+            Sie erhalten diese E-Mail, weil Sie eine TÜV-Erinnerung für Ihr Fahrzeug aktiviert haben.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+

@@ -52,15 +52,15 @@ export async function GET() {
       isVerified: user.workshop.isVerified,
       verifiedAt: user.workshop.verifiedAt,
       
-      // Banking
-      iban: user.workshop.iban,
-      accountHolder: user.workshop.accountHolder,
-      sepaMandateRef: user.workshop.sepaMandateRef,
-      sepaMandateDate: user.workshop.sepaMandateDate,
+      // Banking - Not stored in Workshop model currently
+      iban: null,
+      accountHolder: null,
+      sepaMandateRef: null,
+      sepaMandateDate: null,
       
       // Payment Methods
       paymentMethods: user.workshop.paymentMethods,
-      paypalEmail: user.workshop.paypalEmail,
+      paypalEmail: null, // Extracted from paymentMethods JSON if needed
       stripeAccountId: user.workshop.stripeAccountId,
       stripeEnabled: user.workshop.stripeEnabled,
       
@@ -122,13 +122,8 @@ export async function PATCH(request: Request) {
       description,
       openingHours,
       
-      // Banking fields
-      iban,
-      accountHolder,
-      
       // Payment Methods
       paymentMethods,
-      paypalEmail,
       stripeAccountId,
       stripeEnabled,
       
@@ -180,10 +175,7 @@ export async function PATCH(request: Request) {
         website,
         description,
         openingHours,
-        iban,
-        accountHolder,
         paymentMethods,
-        paypalEmail,
         stripeAccountId,
         stripeEnabled,
         emailNotifyRequests,
@@ -192,8 +184,7 @@ export async function PATCH(request: Request) {
         emailNotifyReviews,
         emailNotifyReminders,
         emailNotifyCommissions,
-        // Update SEPA mandate date if IBAN changed
-        ...(iban && iban !== body.oldIban ? { sepaMandateDate: new Date() } : {}),
+        ...(latitude !== null && longitude !== null ? { latitude, longitude } : {}),
       },
     })
 

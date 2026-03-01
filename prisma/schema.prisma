@@ -299,6 +299,7 @@ model Workshop {
   tirePricingBySizes TirePricingBySize[] @relation("WorkshopTirePricing")
   suppliers          WorkshopSupplier[]  @relation("WorkshopSuppliers")
   inventory          WorkshopInventory[] @relation("WorkshopInventory")
+  tirePriceCache     TirePriceCache[]    @relation("WorkshopTirePriceCache")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -345,6 +346,35 @@ model PricingSettings {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("pricing_settings")
+}
+
+// ============================================
+// SUPPLIER CONFIGURATION (Global Admin Settings)
+// ============================================
+
+model SupplierConfig {
+  id   String @id @default(cuid())
+  code String @unique // 'TYRESYSTEM', 'REIFEN_COM', 'DELTICOM'
+  name String // Display name: "TyreSystem GmbH"
+
+  // CSV Import Settings
+  csvDownloadUrl String? @map("csv_download_url") // Download-Link für CSV-Katalog
+  csvFormat      String? @map("csv_format") // 'TYRESYSTEM' | 'CUSTOM' (für Parser-Auswahl)
+  lastCsvImport  DateTime? @map("last_csv_import") // Letzter erfolgreicher Import
+  csvImportedBy  String? @map("csv_imported_by") // Admin User ID
+
+  // API Settings (optional, für spätere API-Integration)
+  apiEndpoint String? @map("api_endpoint") // z.B. "https://api.tyresystem.de/Rest"
+  apiEnabled  Boolean @default(false) @map("api_enabled")
+
+  // Status
+  isActive    Boolean @default(true) @map("is_active")
+  description String? // Notizen für Admins
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_configs")
 }
 
 // ============================================
@@ -415,6 +445,95 @@ model WorkshopSupplier {
 
   @@unique([workshopId, supplier])
   @@map("workshop_suppliers")
+}
+
+// TireCatalog: Zentraler Reifenkatalog (Admin-verwaltet, Multi-Supplier)
+model TireCatalog {
+  id       String @id @default(cuid())
+  supplier String // 'TYRESYSTEM', 'REIFEN_COM', 'DELTICOM', etc.
+
+  // Supplier Article Reference
+  articleId String  @map("article_id") // Lieferanten-Artikel-ID
+  ean       String? // EAN-Code (Barcode)
+
+  // Tire Dimensions
+  brand    String // Marke (z.B. "Continental")
+  model    String // Modell (z.B. "PremiumContact 6")
+  width    String // Breite (z.B. "205")
+  height   String // Höhe (z.B. "55")
+  diameter String // Durchmesser (z.B. "16")
+  season   String // s=Sommer, w=Winter, g=Ganzjahr
+
+  // Vehicle Type
+  vehicleType String @default("PKW") @map("vehicle_type") // PKW, MOTO, LKW, TRANSPORTER
+
+  // Tire Specifications
+  loadIndex  String? @map("load_index") // z.B. "91", "95"
+  speedIndex String? @map("speed_index") // z.B. "V", "H", "W", "Y"
+  runFlat    Boolean @default(false) @map("run_flat")
+  threePMSF  Boolean @default(false) @map("three_pmsf") // 3PMSF Schneeflocke
+
+  // EU Tire Label
+  labelFuelEfficiency String? @map("label_fuel_efficiency") // A-G (A=best)
+  labelWetGrip        String? @map("label_wet_grip") // A-G (A=best)
+  labelNoise          Int?    @map("label_noise") // dB Wert
+  labelNoiseClass     String? @map("label_noise_class") // A, B, C
+  eprelUrl            String? @map("eprel_url") // EU Product Registry Link
+
+  // Management
+  isActive   Boolean   @default(true) @map("is_active") // Reifen aktiv/verfügbar
+  lastSync   DateTime? @map("last_sync") // Letzter CSV-Import
+  importedBy String?   @map("imported_by") // Admin User ID
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  priceCache TirePriceCache[]
+
+  @@unique([supplier, articleId]) // Ein Artikel pro Supplier
+  @@index([supplier, isActive])
+  @@index([width, height, diameter, season]) // Hauptsuche nach Dimensionen
+  @@index([brand])
+  @@index([season])
+  @@index([vehicleType])
+  @@map("tire_catalog")
+}
+
+// TirePriceCache: Cache für Live-Preise (pro Werkstatt)
+model TirePriceCache {
+  id            String      @id @default(cuid())
+  workshopId    String      @map("workshop_id")
+  workshop      Workshop    @relation("WorkshopTirePriceCache", fields: [workshopId], references: [id], onDelete: Cascade)
+  tireCatalogId String      @map("tire_catalog_id")
+  tireCatalog   TireCatalog @relation(fields: [tireCatalogId], references: [id], onDelete: Cascade)
+
+  // Supplier Reference
+  supplier  String // 'TYRESYSTEM', etc.
+  articleId String @map("article_id") // Für API-Abfrage
+
+  // Pricing (von API)
+  purchasePrice Decimal @map("purchase_price") @db.Decimal(10, 2) // EK vom Lieferanten
+  sellingPrice  Decimal @map("selling_price") @db.Decimal(10, 2) // VK mit Werkstatt-Markup
+  stock         Int // Verfügbare Menge
+
+  // Markup Details (für Transparenz)
+  markupFixed   Decimal @map("markup_fixed") @db.Decimal(10, 2) // Fixed Markup in €
+  markupPercent Decimal @map("markup_percent") @db.Decimal(5, 2) // Percent Markup
+  includeVat    Boolean @map("include_vat") // VAT included in selling price
+
+  // Cache Management
+  cachedAt   DateTime @default(now()) @map("cached_at")
+  expiresAt  DateTime @map("expires_at") // cachedAt + TTL (z.B. 60 min)
+  hitCount   Int      @default(0) @map("hit_count") // Wie oft wurde dieser Cache genutzt
+  apiVersion String?  @map("api_version") // API Version für Kompatibilität
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, tireCatalogId]) // Ein Cache-Eintrag pro Werkstatt + Reifen
+  @@index([workshopId, expiresAt]) // Cleanup abgelaufener Einträge
+  @@index([supplier, articleId]) // API-Lookup
+  @@map("tire_price_cache")
 }
 
 model WorkshopInventory {
@@ -1089,7 +1208,7 @@ model ServicePackage {
   // TIRE_CHANGE: two_tires, four_tires, two_tires_disposal, four_tires_disposal
   // WHEEL_CHANGE: basic, with_balancing, with_storage, complete
   // TIRE_REPAIR: small, large, emergency
-  // MOTORCYCLE_TIRE: front, rear, both
+  // MOTORCYCLE_TIRE: front, rear, disposal
   // ALIGNMENT_BOTH: measurement_only, with_adjustment, with_adjustment_inspection
   // CLIMATE_SERVICE: check, basic, comfort, premium
   // BRAKE_SERVICE: front_pads, front_pads_discs, rear_pads, rear_pads_discs, rear_pads_discs_handbrake
@@ -5643,8 +5762,14 @@ model ChatMessage {
   email   String
   message String @db.Text
   
+  // Ticket fields
+  subject       String?  @db.VarChar(255)
+  priority      String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  assignedToId  String?  @map("assigned_to_id") // User ID of assigned B24 employee
+  internalNotes String?  @db.Text @map("internal_notes")
+  
   // Status
-  status    String   @default("NEW") // NEW, READ, REPLIED, CLOSED
+  status    String    @default("NEW") // NEW, READ, IN_PROGRESS, REPLIED, CLOSED
   repliedAt DateTime? @map("replied_at")
   repliedBy String?   @map("replied_by") // User ID who replied
   reply     String?   @db.Text
@@ -5654,6 +5779,8 @@ model ChatMessage {
   updatedAt DateTime @updatedAt @map("updated_at")
   
   @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
   @@index([createdAt])
   @@map("chat_messages")
 }

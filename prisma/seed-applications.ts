@@ -219,6 +219,16 @@ const defaultApplications = [
     category: 'SUPPORT',
     sortOrder: 55
   },
+  {
+    key: 'support',
+    name: 'Support-Tickets',
+    description: 'Chat-Nachrichten und Support-Anfragen bearbeiten',
+    icon: 'LifeBuoy',
+    adminRoute: '/admin/support',
+    color: 'blue',
+    category: 'SUPPORT',
+    sortOrder: 56
+  },
 
   // SYSTEM & ADMIN
   {

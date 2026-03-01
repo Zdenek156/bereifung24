@@ -2446,6 +2446,7 @@ export default function NewHomePage({
                               selectedService={selectedService}
                               selectedPackages={selectedPackages}
                               onFiltersChange={(packages) => setSelectedPackages(packages)}
+                              stackGroups={!isWorkshopFixed}
                               customConfig={
                                 hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
                                   ? {
@@ -2590,6 +2591,7 @@ export default function NewHomePage({
                             selectedService={selectedService}
                             selectedPackages={selectedPackages}
                             onFiltersChange={(packages) => setSelectedPackages(packages)}
+                            stackGroups={!isWorkshopFixed}
                           />
                         </div>
                       )}
@@ -2688,41 +2690,7 @@ export default function NewHomePage({
                         </div>
                       )}
 
-                      {/* Payment Methods Filter - hidden on landing pages */}
-                      {!useServiceCards && (
-                      <div className="p-4 border-b border-gray-200 lg:border-b-0 lg:border-r lg:flex-1 lg:min-w-[160px]">
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          Zahlungsmethoden
-                        </h4>
-                        <div className="space-y-1">
-                          {[
-                            { id: 'CREDIT_CARD', label: 'Kreditkarte' },
-                            { id: 'PAYPAL', label: 'PayPal' },
-                            { id: 'INSTALLMENT', label: 'Ratenzahlung' }
-                          ].map((method) => (
-                            <label
-                              key={method.id}
-                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={paymentMethods.includes(method.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setPaymentMethods([...paymentMethods, method.id])
-                                  } else {
-                                    setPaymentMethods(paymentMethods.filter(m => m !== method.id))
-                                  }
-                                }}
-                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                              />
-                              <span className="text-sm">{method.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      )}
+
 
                       {/* Opening Hours Filter - hidden on landing pages */}
                       {!useServiceCards && (

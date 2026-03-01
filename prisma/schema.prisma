@@ -5762,6 +5762,9 @@ model ChatMessage {
   email   String
   message String @db.Text
   
+  // Ticket number (auto-incremented by DB sequence)
+  ticketNumber Int? @unique @map("ticket_number")
+
   // Ticket fields
   subject       String?  @db.VarChar(255)
   priority      String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT

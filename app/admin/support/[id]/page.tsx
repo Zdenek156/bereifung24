@@ -13,6 +13,7 @@ interface Ticket {
   email: string
   message: string
   subject: string | null
+  ticketNumber: number | null
   status: string
   priority: string
   assignedToId: string | null
@@ -193,7 +194,7 @@ export default function SupportTicketDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex items-center justify-between">
           <button
             onClick={() => router.push('/admin/support')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm"
@@ -202,6 +203,11 @@ export default function SupportTicketDetailPage() {
             Alle Tickets
           </button>
           <div className="flex items-center gap-2">
+            {ticket.ticketNumber && (
+              <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                T-{String(ticket.ticketNumber).padStart(4, '0')}
+              </span>
+            )}
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[ticket.status] || 'bg-gray-100 text-gray-600'}`}>
               {STATUS_OPTIONS.find(s => s.value === ticket.status)?.label || ticket.status}
             </span>
@@ -382,7 +388,7 @@ export default function SupportTicketDetailPage() {
                   <option value="">— Nicht zugewiesen —</option>
                   {agents.map(a => (
                     <option key={a.id} value={a.id}>
-                      {agentName(a)}{a.role === 'ADMIN' ? ' (Admin)' : ''}
+                      {agentName(a)}
                     </option>
                   ))}
                 </select>
@@ -420,6 +426,12 @@ export default function SupportTicketDetailPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">Info</h3>
             <div className="space-y-2 text-xs text-gray-500">
+              {ticket.ticketNumber && (
+                <div className="flex justify-between">
+                  <span>Ticket-Nr.</span>
+                  <span className="font-mono font-bold text-blue-700">T-{String(ticket.ticketNumber).padStart(4, '0')}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Erstellt</span>
                 <span className="text-gray-700">{new Date(ticket.createdAt).toLocaleDateString('de-DE')}</span>

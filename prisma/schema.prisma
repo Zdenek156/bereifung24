@@ -4963,8 +4963,8 @@ model InvoiceSettings {
   invoicePassword String? // Passwort für Rechnungsversand (verschlüsselt)
 
   // Email-Zugangsdaten für Support
-  supportEmail    String? // Email-Adresse für Support-Antworten (z.B. support@bereifung24.de)
-  supportPassword String? // Passwort für Support-Versand (verschlüsselt)
+  supportEmail    String? @map("supportemail")   // Email-Adresse für Support-Antworten (z.B. support@bereifung24.de)
+  supportPassword String? @map("supportpassword") // Passwort für Support-Versand (verschlüsselt)
 
   // Banking
   bankName String? // z.B. "Deutsche Bank"

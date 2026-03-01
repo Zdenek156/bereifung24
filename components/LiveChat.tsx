@@ -87,17 +87,17 @@ export default function LiveChat() {
       {isOpen && (
         <div
           ref={chatRef}
-          className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300"
+          className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-5 duration-300 flex flex-col"
         >
           {/* Header */}
-          <div className="bg-primary-600 text-white p-4">
+          <div className="bg-primary-600 text-white px-4 py-3 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Bereifung24 Support</h3>
+                  <h3 className="font-semibold text-base">Bereifung24 Support</h3>
                   <div className="flex items-center gap-2 text-sm text-primary-100">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -118,7 +118,7 @@ export default function LiveChat() {
           </div>
 
           {/* Chat Body */}
-          <div className="p-4 flex flex-col max-h-[500px]">
+          <div className="p-4 flex flex-col overflow-y-auto flex-1">
             {!sent ? (
               <>
                 {/* Offline Message */}
@@ -177,7 +177,7 @@ export default function LiveChat() {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         required
-                        rows={4}
+                        rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-none"
                         placeholder="Wie können wir Ihnen helfen?"
                       />

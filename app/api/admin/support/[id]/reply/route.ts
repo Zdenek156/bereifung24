@@ -35,21 +35,37 @@ export async function POST(
 
     const senderName = session.user.name || session.user.email || 'Bereifung24 Support'
 
+    // Load support email credentials from DB (fallback to global SMTP)
+    const invoiceSettings = await prisma.invoiceSettings.findUnique({
+      where: { id: 'default-settings' },
+      select: { supportEmail: true, supportPassword: true },
+    })
+
+    const smtpUser = invoiceSettings?.supportEmail || process.env.SMTP_USER
+    const smtpPass = invoiceSettings?.supportPassword || process.env.SMTP_PASS
+
+    if (!smtpUser || !smtpPass) {
+      return NextResponse.json(
+        { error: 'Support-Email nicht konfiguriert. Bitte unter Einstellungen (Zahnrad) die Email-Zugangsdaten hinterlegen.' },
+        { status: 500 }
+      )
+    }
+
     // Send email to customer
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      host: process.env.SMTP_HOST || 'smtp.hetzner.de',
+      port: parseInt(process.env.SMTP_PORT || '465'),
+      secure: parseInt(process.env.SMTP_PORT || '465') === 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: smtpUser,
+        pass: smtpPass,
       },
     })
 
     await transporter.sendMail({
-      from: `"Bereifung24 Support" <${process.env.SMTP_USER}>`,
+      from: `"Bereifung24 Support" <${smtpUser}>`,
       to: ticket.email,
-      replyTo: process.env.SMTP_USER,
+      replyTo: smtpUser,
       subject: `Re: Ihre Anfrage bei Bereifung24`,
       html: `
         <!DOCTYPE html>

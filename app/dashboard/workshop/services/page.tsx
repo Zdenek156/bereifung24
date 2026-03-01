@@ -72,10 +72,7 @@ const packageConfigurations: { [key: string]: { type: string; name: string; desc
   MOTORCYCLE_TIRE: [
     { type: 'front', name: 'Vorderrad', description: 'Reifenwechsel am ausgebauten Vorderrad (nur Felge)' },
     { type: 'rear', name: 'Hinterrad', description: 'Reifenwechsel am ausgebauten Hinterrad (nur Felge)' },
-    { type: 'both', name: 'Beide Räder', description: 'Reifenwechsel an beiden ausgebauten Rädern (nur Felgen)' },
-    { type: 'front_disposal', name: 'Vorderrad + Entsorgung', description: 'Vorderrad mit Altreifenentsorgung' },
-    { type: 'rear_disposal', name: 'Hinterrad + Entsorgung', description: 'Hinterrad mit Altreifenentsorgung' },
-    { type: 'both_disposal', name: 'Beide + Entsorgung', description: 'Beide Räder mit Altreifenentsorgung' }
+    { type: 'disposal', name: 'Altreifenentsorgung', description: 'Umweltgerechte Entsorgung pro Reifen (wird bei 2 Reifen automatisch verdoppelt)' }
   ],
   ALIGNMENT_BOTH: [
     { type: 'measurement_front', name: 'Vermessung Vorderachse', description: 'Achsvermessung nur Vorderachse' },
@@ -863,7 +860,10 @@ export default function WorkshopServicesPage() {
                     Servicepakete konfigurieren
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Legen Sie für jedes Paket Preis und Dauer fest. Aktivierte Pakete können von Kunden gewählt werden.
+                    {selectedServiceType === 'MOTORCYCLE_TIRE' 
+                      ? 'Legen Sie den Preis pro Motorradreifen-Montage fest. Bei 2 Reifen wird der Preis automatisch verdoppelt.'
+                      : 'Legen Sie für jedes Paket Preis und Dauer fest. Aktivierte Pakete können von Kunden gewählt werden.'
+                    }
                   </p>
 
                   <div className="space-y-6">
@@ -916,6 +916,35 @@ export default function WorkshopServicesPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Motorcycle Disposal Fee */}
+              {selectedServiceType === 'MOTORCYCLE_TIRE' && (
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    ♻️ Altreifenentsorgung (Motorrad)
+                  </h3>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Geben Sie die Kosten für die Entsorgung pro Motorradreifen an. Diese werden automatisch multipliziert (1x oder 2x).
+                  </p>
+                  <div className="max-w-xs">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Entsorgungsgebühr pro Reifen (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={disposalFee}
+                      onChange={(e) => setDisposalFee(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="z.B. 1.50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Dieser Betrag wird pro zu entsorgendem Motorradreifen berechnet (optional)
+                    </p>
                   </div>
                 </div>
               )}

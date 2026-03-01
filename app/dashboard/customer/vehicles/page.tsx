@@ -250,28 +250,26 @@ export default function VehiclesPage() {
                       <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (
                           <>
-                            <span className="block mb-1">
+                            <span className="block">
                               {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
-                              {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
+                                {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
+                              </span>
                             </span>
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.summerTires.rearWidth}/{vehicle.summerTires.rearAspectRatio} R{vehicle.summerTires.rearDiameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.summerTires.rearLoadIndex && ` ${vehicle.summerTires.rearLoadIndex}`}
-                              {vehicle.summerTires.rearSpeedRating && vehicle.summerTires.rearSpeedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.summerTires.rearLoadIndex && `${vehicle.summerTires.rearLoadIndex}`}
+                                {vehicle.summerTires.rearSpeedRating && vehicle.summerTires.rearSpeedRating}
+                              </span>
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="block mb-1">
-                              {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
+                            {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
+                            <span className="text-lg font-normal text-gray-700 ml-1">
                               {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
                               {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
                             </span>
@@ -290,28 +288,26 @@ export default function VehiclesPage() {
                       <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.winterTires.hasDifferentSizes ? (
                           <>
-                            <span className="block mb-1">
+                            <span className="block">
                               {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
-                              {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
+                                {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
+                              </span>
                             </span>
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.winterTires.rearWidth}/{vehicle.winterTires.rearAspectRatio} R{vehicle.winterTires.rearDiameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.winterTires.rearLoadIndex && ` ${vehicle.winterTires.rearLoadIndex}`}
-                              {vehicle.winterTires.rearSpeedRating && vehicle.winterTires.rearSpeedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.winterTires.rearLoadIndex && `${vehicle.winterTires.rearLoadIndex}`}
+                                {vehicle.winterTires.rearSpeedRating && vehicle.winterTires.rearSpeedRating}
+                              </span>
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="block mb-1">
-                              {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
+                            {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
+                            <span className="text-lg font-normal text-gray-700 ml-1">
                               {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
                               {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
                             </span>
@@ -330,28 +326,26 @@ export default function VehiclesPage() {
                       <p className="text-2xl font-bold font-mono text-gray-900">
                         {vehicle.allSeasonTires.hasDifferentSizes ? (
                           <>
-                            <span className="block mb-1">
+                            <span className="block">
                               {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
-                              {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
+                                {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
+                              </span>
                             </span>
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.allSeasonTires.rearWidth}/{vehicle.allSeasonTires.rearAspectRatio} R{vehicle.allSeasonTires.rearDiameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
-                              {vehicle.allSeasonTires.rearLoadIndex && ` ${vehicle.allSeasonTires.rearLoadIndex}`}
-                              {vehicle.allSeasonTires.rearSpeedRating && vehicle.allSeasonTires.rearSpeedRating}
+                              <span className="text-lg font-normal text-gray-700 ml-1">
+                                {vehicle.allSeasonTires.rearLoadIndex && `${vehicle.allSeasonTires.rearLoadIndex}`}
+                                {vehicle.allSeasonTires.rearSpeedRating && vehicle.allSeasonTires.rearSpeedRating}
+                              </span>
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="block mb-1">
-                              {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                            </span>
-                            <span className="text-lg font-normal text-gray-700">
+                            {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
+                            <span className="text-lg font-normal text-gray-700 ml-1">
                               {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
                               {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
                             </span>
@@ -786,57 +780,68 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
-                  <select
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Hersteller wählen...</option>
-                    <option value="Alfa Romeo">Alfa Romeo</option>
-                    <option value="Audi">Audi</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Chevrolet">Chevrolet</option>
-                    <option value="Chrysler">Chrysler</option>
-                    <option value="Citroen">Citroen</option>
-                    <option value="Dacia">Dacia</option>
-                    <option value="Fiat">Fiat</option>
-                    <option value="Ford">Ford</option>
-                    <option value="Honda">Honda</option>
-                    <option value="Hyundai">Hyundai</option>
-                    <option value="Jaguar">Jaguar</option>
-                    <option value="Jeep">Jeep</option>
-                    <option value="Kia">Kia</option>
-                    <option value="Land Rover">Land Rover</option>
-                    <option value="Lexus">Lexus</option>
-                    <option value="Mazda">Mazda</option>
-                    <option value="Mercedes-Benz">Mercedes-Benz</option>
-                    <option value="Mini">Mini</option>
-                    <option value="Mitsubishi">Mitsubishi</option>
-                    <option value="Nissan">Nissan</option>
-                    <option value="Opel">Opel</option>
-                    <option value="Peugeot">Peugeot</option>
-                    <option value="Porsche">Porsche</option>
-                    <option value="Renault">Renault</option>
-                    <option value="Seat">Seat</option>
-                    <option value="Skoda">Skoda</option>
-                    <option value="Smart">Smart</option>
-                    <option value="Subaru">Subaru</option>
-                    <option value="Suzuki">Suzuki</option>
-                    <option value="Tesla">Tesla</option>
-                    <option value="Toyota">Toyota</option>
-                    <option value="Volkswagen">Volkswagen</option>
-                    <option value="Volvo">Volvo</option>
-                    <option value="Yamaha">Yamaha</option>
-                    <option value="Kawasaki">Kawasaki</option>
-                    <option value="Ducati">Ducati</option>
-                    <option value="Harley-Davidson">Harley-Davidson</option>
-                    <option value="KTM">KTM</option>
-                    <option value="Triumph">Triumph</option>
-                    <option value="Humbaur">Humbaur</option>
-                    <option value="Böckmann">Böckmann</option>
-                    <option value="Sonstige">Sonstige</option>
-                  </select>
+                  {formData.vehicleType === 'MOTORCYCLE' ? (
+                    <input
+                      type="text"
+                      name="make"
+                      value={formData.make}
+                      onChange={handleChange}
+                      placeholder="z.B. Honda, Yamaha, Kawasaki, Ducati"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  ) : (
+                    <select
+                      name="make"
+                      value={formData.make}
+                      onChange={handleChange}
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Hersteller wählen...</option>
+                      <option value="Alfa Romeo">Alfa Romeo</option>
+                      <option value="Audi">Audi</option>
+                      <option value="BMW">BMW</option>
+                      <option value="Chevrolet">Chevrolet</option>
+                      <option value="Chrysler">Chrysler</option>
+                      <option value="Citroen">Citroen</option>
+                      <option value="Dacia">Dacia</option>
+                      <option value="Fiat">Fiat</option>
+                      <option value="Ford">Ford</option>
+                      <option value="Honda">Honda</option>
+                      <option value="Hyundai">Hyundai</option>
+                      <option value="Jaguar">Jaguar</option>
+                      <option value="Jeep">Jeep</option>
+                      <option value="Kia">Kia</option>
+                      <option value="Land Rover">Land Rover</option>
+                      <option value="Lexus">Lexus</option>
+                      <option value="Mazda">Mazda</option>
+                      <option value="Mercedes-Benz">Mercedes-Benz</option>
+                      <option value="Mini">Mini</option>
+                      <option value="Mitsubishi">Mitsubishi</option>
+                      <option value="Nissan">Nissan</option>
+                      <option value="Opel">Opel</option>
+                      <option value="Peugeot">Peugeot</option>
+                      <option value="Porsche">Porsche</option>
+                      <option value="Renault">Renault</option>
+                      <option value="Seat">Seat</option>
+                      <option value="Skoda">Skoda</option>
+                      <option value="Smart">Smart</option>
+                      <option value="Subaru">Subaru</option>
+                      <option value="Suzuki">Suzuki</option>
+                      <option value="Tesla">Tesla</option>
+                      <option value="Toyota">Toyota</option>
+                      <option value="Volkswagen">Volkswagen</option>
+                      <option value="Volvo">Volvo</option>
+                      <option value="Yamaha">Yamaha</option>
+                      <option value="Kawasaki">Kawasaki</option>
+                      <option value="Ducati">Ducati</option>
+                      <option value="Harley-Davidson">Harley-Davidson</option>
+                      <option value="KTM">KTM</option>
+                      <option value="Triumph">Triumph</option>
+                      <option value="Humbaur">Humbaur</option>
+                      <option value="Böckmann">Böckmann</option>
+                      <option value="Sonstige">Sonstige</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>
@@ -941,9 +946,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                           className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           <option value="7">7 Tage vorher</option>
-                          <option value="14">14 Tage vorher</option>
-                          <option value="30">30 Tage vorher</option>
-                          <option value="60">60 Tage vorher</option>
+                          <option value="30">1 Monat vorher (30 Tage)</option>
                         </select>
                       </div>
                     )}
@@ -1080,6 +1083,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     }}
                     label={formData.summerDifferentSizes ? "Vorderreifen" : undefined}
                     pathIdPrefix="summerFront"
+                    vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                   />
 
                   {/* Rear Tire for mixed sizes */}
@@ -1098,6 +1102,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="summerRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}
@@ -1154,6 +1159,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       }}
                       label={formData.winterDifferentSizes ? "Vorderreifen" : undefined}
                       pathIdPrefix="winterFront"
+                      vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                     />
                   </div>
 
@@ -1172,6 +1178,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="winterRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}
@@ -1229,6 +1236,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       }}
                       label={formData.allSeasonDifferentSizes ? "Vorderreifen" : undefined}
                       pathIdPrefix="allSeasonFront"
+                      vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                     />
                   </div>
 
@@ -1247,6 +1255,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="allSeasonRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}
@@ -1602,57 +1611,68 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
-                  <select
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Hersteller wählen...</option>
-                    <option value="Alfa Romeo">Alfa Romeo</option>
-                    <option value="Audi">Audi</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Chevrolet">Chevrolet</option>
-                    <option value="Chrysler">Chrysler</option>
-                    <option value="Citroen">Citroen</option>
-                    <option value="Dacia">Dacia</option>
-                    <option value="Fiat">Fiat</option>
-                    <option value="Ford">Ford</option>
-                    <option value="Honda">Honda</option>
-                    <option value="Hyundai">Hyundai</option>
-                    <option value="Jaguar">Jaguar</option>
-                    <option value="Jeep">Jeep</option>
-                    <option value="Kia">Kia</option>
-                    <option value="Land Rover">Land Rover</option>
-                    <option value="Lexus">Lexus</option>
-                    <option value="Mazda">Mazda</option>
-                    <option value="Mercedes-Benz">Mercedes-Benz</option>
-                    <option value="Mini">Mini</option>
-                    <option value="Mitsubishi">Mitsubishi</option>
-                    <option value="Nissan">Nissan</option>
-                    <option value="Opel">Opel</option>
-                    <option value="Peugeot">Peugeot</option>
-                    <option value="Porsche">Porsche</option>
-                    <option value="Renault">Renault</option>
-                    <option value="Seat">Seat</option>
-                    <option value="Skoda">Skoda</option>
-                    <option value="Smart">Smart</option>
-                    <option value="Subaru">Subaru</option>
-                    <option value="Suzuki">Suzuki</option>
-                    <option value="Tesla">Tesla</option>
-                    <option value="Toyota">Toyota</option>
-                    <option value="Volkswagen">Volkswagen</option>
-                    <option value="Volvo">Volvo</option>
-                    <option value="Yamaha">Yamaha</option>
-                    <option value="Kawasaki">Kawasaki</option>
-                    <option value="Ducati">Ducati</option>
-                    <option value="Harley-Davidson">Harley-Davidson</option>
-                    <option value="KTM">KTM</option>
-                    <option value="Triumph">Triumph</option>
-                    <option value="Humbaur">Humbaur</option>
-                    <option value="Böckmann">Böckmann</option>
-                    <option value="Sonstige">Sonstige</option>
-                  </select>
+                  {formData.vehicleType === 'MOTORCYCLE' ? (
+                    <input
+                      type="text"
+                      name="make"
+                      value={formData.make}
+                      onChange={handleChange}
+                      placeholder="z.B. Honda, Yamaha, Kawasaki, Ducati"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  ) : (
+                    <select
+                      name="make"
+                      value={formData.make}
+                      onChange={handleChange}
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Hersteller wählen...</option>
+                      <option value="Alfa Romeo">Alfa Romeo</option>
+                      <option value="Audi">Audi</option>
+                      <option value="BMW">BMW</option>
+                      <option value="Chevrolet">Chevrolet</option>
+                      <option value="Chrysler">Chrysler</option>
+                      <option value="Citroen">Citroen</option>
+                      <option value="Dacia">Dacia</option>
+                      <option value="Fiat">Fiat</option>
+                      <option value="Ford">Ford</option>
+                      <option value="Honda">Honda</option>
+                      <option value="Hyundai">Hyundai</option>
+                      <option value="Jaguar">Jaguar</option>
+                      <option value="Jeep">Jeep</option>
+                      <option value="Kia">Kia</option>
+                      <option value="Land Rover">Land Rover</option>
+                      <option value="Lexus">Lexus</option>
+                      <option value="Mazda">Mazda</option>
+                      <option value="Mercedes-Benz">Mercedes-Benz</option>
+                      <option value="Mini">Mini</option>
+                      <option value="Mitsubishi">Mitsubishi</option>
+                      <option value="Nissan">Nissan</option>
+                      <option value="Opel">Opel</option>
+                      <option value="Peugeot">Peugeot</option>
+                      <option value="Porsche">Porsche</option>
+                      <option value="Renault">Renault</option>
+                      <option value="Seat">Seat</option>
+                      <option value="Skoda">Skoda</option>
+                      <option value="Smart">Smart</option>
+                      <option value="Subaru">Subaru</option>
+                      <option value="Suzuki">Suzuki</option>
+                      <option value="Tesla">Tesla</option>
+                      <option value="Toyota">Toyota</option>
+                      <option value="Volkswagen">Volkswagen</option>
+                      <option value="Volvo">Volvo</option>
+                      <option value="Yamaha">Yamaha</option>
+                      <option value="Kawasaki">Kawasaki</option>
+                      <option value="Ducati">Ducati</option>
+                      <option value="Harley-Davidson">Harley-Davidson</option>
+                      <option value="KTM">KTM</option>
+                      <option value="Triumph">Triumph</option>
+                      <option value="Humbaur">Humbaur</option>
+                      <option value="Böckmann">Böckmann</option>
+                      <option value="Sonstige">Sonstige</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>
@@ -1757,9 +1777,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           <option value="7">7 Tage vorher</option>
-                          <option value="14">14 Tage vorher</option>
-                          <option value="30">30 Tage vorher</option>
-                          <option value="60">60 Tage vorher</option>
+                          <option value="30">1 Monat vorher (30 Tage)</option>
                         </select>
                       </div>
                     )}
@@ -1896,6 +1914,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       }}
                       label={formData.summerDifferentSizes ? "Vorderreifen" : undefined}
                       pathIdPrefix="addSummerFront"
+                      vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                     />
                   </div>
 
@@ -1914,6 +1933,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="addSummerRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}
@@ -1971,6 +1991,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       }}
                       label={formData.winterDifferentSizes ? "Vorderreifen" : undefined}
                       pathIdPrefix="addWinterFront"
+                      vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                     />
                   </div>
 
@@ -1989,6 +2010,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="addWinterRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}
@@ -2047,6 +2069,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       }}
                       label={formData.allSeasonDifferentSizes ? "Vorderreifen" : undefined}
                       pathIdPrefix="addAllSeasonFront"
+                      vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                     />
                   </div>
 
@@ -2065,6 +2088,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                         }}
                         label="Hinterreifen"
                         pathIdPrefix="addAllSeasonRear"
+                        vehicleType={formData.vehicleType as 'CAR' | 'MOTORCYCLE' | 'TRAILER'}
                       />
                     </div>
                   )}

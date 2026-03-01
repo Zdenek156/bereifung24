@@ -437,6 +437,8 @@ export async function POST(req: NextRequest) {
           
           const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
           const eventSummary = selectedTireOption?.brand || `${offer.tireBrand} ${offer.tireModel}`
+          const eventTireBrand = selectedTireOption?.brand || offer.tireBrand
+          const eventTireModel = selectedTireOption?.model || offer.tireModel
           
           await updateCalendarEvent(
             offer.workshop.googleAccessToken!,
@@ -533,8 +535,8 @@ export async function POST(req: NextRequest) {
                 serviceDetails = 'Bremsenwechsel'
               }
             } else {
-              serviceDetails = offer.tireBrand && offer.tireModel 
-                ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
+              serviceDetails = eventTireBrand && eventTireModel 
+                ? `Reifen: ${eventTireBrand} ${eventTireModel}` 
                 : 'Reifenwechsel'
             }
             
@@ -617,6 +619,11 @@ export async function POST(req: NextRequest) {
                       // Event summary: Only service type
                       const eventSummary = serviceType === 'BRAKE_SERVICE' ? 'Bremsenwechsel' : 'Reifenwechsel'
                       
+                      // Use selected tire option or fallback to main offer data
+                      const selectedTireOption = offer.tireOptions?.find(opt => opt.id === selectedTireOptionId)
+                      const eventTireBrand = selectedTireOption?.brand || offer.tireBrand
+                      const eventTireModel = selectedTireOption?.model || offer.tireModel
+                      
                       // Build vehicle info if available
                       let vehicleInfo = ''
                       if (offer.tireRequest.vehicle) {
@@ -655,8 +662,8 @@ export async function POST(req: NextRequest) {
                           serviceDetails = 'Bremsenwechsel'
                         }
                       } else {
-                        serviceDetails = offer.tireBrand && offer.tireModel 
-                          ? `Reifen: ${offer.tireBrand} ${offer.tireModel}` 
+                        serviceDetails = eventTireBrand && eventTireModel 
+                          ? `Reifen: ${eventTireBrand} ${eventTireModel}` 
                           : 'Reifenwechsel'
                       }
                       
@@ -1152,12 +1159,16 @@ export async function POST(req: NextRequest) {
       ? 'Klimaservice'
       : 'Reifenwechsel'
 
+    // Use selected tire option or fallback to main offer data
+    const customerEmailTireBrand = selectedTireOption?.brand || completeOffer.tireBrand
+    const customerEmailTireModel = selectedTireOption?.model || completeOffer.tireModel
+
     // Create ICS file for customer
     const customerICS = createICSFile({
       start: emailAppointmentStart,
       end: emailAppointmentEnd,
       summary: `${emailServiceType} - ${completeOffer.workshop.companyName}`,
-      description: `${emailServiceType} bei ${completeOffer.workshop.companyName}\\n\\nReifen: ${completeOffer.tireBrand} ${completeOffer.tireModel}\\nGröße: ${tireSize}\\nPreis: ${completeOffer.price.toFixed(2)} €\\n\\nBuchungsnummer: #${booking.id.substring(0, 8).toUpperCase()}${customerMessage ? `\\n\\nIhre Nachricht: ${customerMessage}` : ''}`,
+      description: `${emailServiceType} bei ${completeOffer.workshop.companyName}${customerEmailTireBrand && customerEmailTireModel ? `\\n\\nReifen: ${customerEmailTireBrand} ${customerEmailTireModel}\\nGröße: ${tireSize}` : ''}\\nPreis: ${completeOffer.price.toFixed(2)} €\\n\\nBuchungsnummer: #${booking.id.substring(0, 8).toUpperCase()}${customerMessage ? `\\n\\nIhre Nachricht: ${customerMessage}` : ''}`,
       location: `${completeOffer.workshop.companyName}, ${completeOffer.workshop.user.street}, ${completeOffer.workshop.user.zipCode} ${completeOffer.workshop.user.city}`,
       organizerEmail: completeOffer.workshop.user.email,
       attendeeEmail: completeOffer.tireRequest.customer.user.email
@@ -1173,8 +1184,8 @@ export async function POST(req: NextRequest) {
         workshopEmail: completeOffer.workshop.user.email,
         appointmentDate: appointmentDateFormatted,
         appointmentTime: appointmentTimeFormatted,
-        tireBrand: completeOffer.tireBrand,
-        tireModel: completeOffer.tireModel,
+        tireBrand: customerEmailTireBrand,
+        tireModel: customerEmailTireModel,
         tireSize: tireSize,
         totalPrice: completeOffer.price,
         paymentMethod: paymentMethod || 'PAY_ONSITE',
@@ -1182,7 +1193,9 @@ export async function POST(req: NextRequest) {
         customerNotes: customerMessage,
         appointmentStart: emailAppointmentStart,
         appointmentEnd: emailAppointmentEnd,
-        serviceType: emailServiceType
+        serviceType: emailServiceType,
+        pricePerTire: selectedTireOption?.pricePerTire || undefined,
+        quantity: completeOffer.tireRequest.quantity
       })
 
       await sendEmail({
@@ -1314,7 +1327,12 @@ export async function POST(req: NextRequest) {
         serviceDetails = 'Bremsenwechsel'
       }
     } else {
-      serviceDetails = `Reifen: ${tireBrand} ${tireModel}\nGröße: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}`
+      // Only show tire details if brand and model are available
+      if (tireBrand && tireModel) {
+        serviceDetails = `Reifen: ${tireBrand} ${tireModel}\nGröße: ${tireSize}\nMenge: ${completeOffer.tireRequest.quantity}`
+      } else {
+        serviceDetails = 'Reifenwechsel (Details folgen)'
+      }
     }
     
     const eventDescription = `${customerInfo}\n\n${serviceDetails}\nGesamtpreis: ${calculatedPrice.toFixed(2)} €${customerMessage ? `\n\nHinweise vom Kunden:\n${customerMessage}` : ''}`

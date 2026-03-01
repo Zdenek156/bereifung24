@@ -5,5 +5,15 @@
   "github": {
     "enabled": false,
     "silent": true
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/tuev-reminders",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/tuev-reminders",
+      "schedule": "0 9 1 * *"
+    }
+  ]
 }

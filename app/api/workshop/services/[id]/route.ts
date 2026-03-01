@@ -114,6 +114,15 @@ export async function PATCH(
       }
     })
 
+    // Auto-activate workshop if PENDING and has active packages
+    if (user.workshop.status === 'PENDING' && packages && packages.length > 0) {
+      await prisma.workshop.update({
+        where: { id: user.workshop.id },
+        data: { status: 'ACTIVE' }
+      })
+      console.log(`✅ Workshop ${user.workshop.companyName} auto-activated after updating service`)
+    }
+
     return NextResponse.json(updatedService)
   } catch (error) {
     console.error('Service update error:', error)

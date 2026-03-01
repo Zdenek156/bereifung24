@@ -406,26 +406,11 @@ export default function MotorcycleTiresPage() {
             </div>
           </div>
 
-          {/* Welche Reifen benötigt */}
+          {/* Anzahl Reifen */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Welche Reifen benötigen Sie?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.quantity === 'BOTH' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-              }`}>
-                <input
-                  type="radio"
-                  name="quantity"
-                  value="BOTH"
-                  checked={formData.quantity === 'BOTH'}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value as any })}
-                  className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
-                />
-                <p className="font-semibold text-gray-900">Beide Reifen</p>
-                <p className="text-sm text-gray-600 text-center">Vorder- & Hinterreifen</p>
-              </label>
-
-              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Wie viele Reifen benötigen Sie?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className={`flex flex-col items-center p-6 border-2 rounded-lg cursor-pointer transition-colors ${
                 formData.quantity === 'FRONT' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
@@ -436,25 +421,28 @@ export default function MotorcycleTiresPage() {
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Nur Vorderreifen</p>
-                <p className="text-sm text-gray-600 text-center">1 Reifen vorne</p>
+                <p className="text-2xl font-bold text-gray-900 mb-1">1 Reifen</p>
+                <p className="text-sm text-gray-600 text-center">Vorderrad oder Hinterrad</p>
               </label>
 
-              <label className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                formData.quantity === 'REAR' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+              <label className={`flex flex-col items-center p-6 border-2 rounded-lg cursor-pointer transition-colors ${
+                formData.quantity === 'BOTH' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
               }`}>
                 <input
                   type="radio"
                   name="quantity"
-                  value="REAR"
-                  checked={formData.quantity === 'REAR'}
+                  value="BOTH"
+                  checked={formData.quantity === 'BOTH'}
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value as any })}
                   className="mb-2 h-4 w-4 text-primary-600 focus:ring-primary-500"
                 />
-                <p className="font-semibold text-gray-900">Nur Hinterreifen</p>
-                <p className="text-sm text-gray-600 text-center">1 Reifen hinten</p>
+                <p className="text-2xl font-bold text-gray-900 mb-1">2 Reifen</p>
+                <p className="text-sm text-gray-600 text-center">Beide Räder (vorne & hinten)</p>
               </label>
             </div>
+            <p className="text-sm text-gray-500 mt-3">
+              💡 Der Preis wird bei 2 Reifen automatisch berechnet
+            </p>
           </div>
 
           {/* Vorderreifen Dimensionen */}

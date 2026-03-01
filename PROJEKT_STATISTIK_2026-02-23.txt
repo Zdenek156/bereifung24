@@ -1,0 +1,56 @@
+================================================================================
+                    BEREIFUNG24 PROJEKT-STATISTIK
+                          Stand: 23.02.2026
+================================================================================
+
+📁 GESAMTÜBERSICHT
+--------------------------------------------------------------------------------
+Gesamt Code-Dateien:        1.180 Dateien (ts, tsx, js, css, prisma, sql, json, md)
+Gesamt Codezeilen:          206.671 Zeilen
+Repo-Größe (ohne build):    43,76 MB
+
+
+📝 AUFSCHLÜSSELUNG NACH DATEITYP
+--------------------------------------------------------------------------------
+Dateityp    |  Anzahl Dateien  |  Anzahl Zeilen
+------------|------------------|----------------
+.tsx        |       291        |     107.410
+.ts         |       460        |      70.235
+.js         |       235        |      18.968
+.sql        |       119        |       5.150
+.prisma     |         1        |       4.513
+.css        |         2        |         395
+.json       |         6        |           -
+.md         |        66        |           -
+------------|------------------|----------------
+GESAMT      |     1.180        |     206.671
+
+
+🔌 BACKEND-ARCHITEKTUR
+--------------------------------------------------------------------------------
+API-Endpunkte (route.ts):      392 Route-Dateien
+Prisma-Modelle (schema):        135 Datenbank-Modelle
+
+
+💡 ZUSAMMENFASSUNG
+--------------------------------------------------------------------------------
+Hauptsprache:           TypeScript/TSX mit 177.645 Zeilen (86% des Codes)
+React-Komponenten:      291 TSX-Dateien
+Backend-Services:       460 TypeScript-Dateien
+Datenbank-Migrations:   119 SQL-Dateien
+Dokumentation:          66 Markdown-Dateien
+
+
+📊 PROJEKTUMFANG
+--------------------------------------------------------------------------------
+Dies ist ein sehr umfangreiches Full-Stack-Projekt mit:
+  ✓ Robuster Datenbank-Architektur (135 Prisma-Modelle)
+  ✓ Großer API-Oberfläche (392 REST-Endpunkte)
+  ✓ Umfangreicher React-Frontend (291 Komponenten)
+  ✓ Professioneller TypeScript-Codebase (86% Typsicherheit)
+
+
+================================================================================
+Generiert am: 23. Februar 2026
+Repository: Bereifung24 Workspace
+================================================================================

@@ -1,0 +1,644 @@
+================================================================================
+           BEREIFUNG24 WERKSTATT-DASHBOARD ÜBERSICHT
+                        Stand: 23.02.2026
+================================================================================
+
+Das Werkstatt-Dashboard ist die zentrale Verwaltungsoberfläche für alle
+Partner-Werkstätten auf der Bereifung24-Plattform. Es ermöglicht die
+vollständige Abwicklung von Reifenservice-Aufträgen, Kundenverwaltung
+und Geschäftsanalyse.
+
+
+================================================================================
+📊 HAUPTDASHBOARD
+================================================================================
+
+1. DASHBOARD STARTSEITE (/)
+   - Zentrale Übersicht aller relevanten KPIs
+   - Kennzahlen:
+     • Heutige Termine (mit Detailliste)
+     • Umsatz gesamt
+     • Werkstatt-Auszahlung
+     • Buchungen (letzte 7 Tage)
+     • Anstehende Termine
+     • Durchschnittliche Bewertung
+     • Anzahl Bewertungen
+   - Schnellzugriffe:
+     • Termin manuell erstellen
+     • Kalender öffnen
+     • Buchungen anzeigen
+     • Bewertungen verwalten
+   - Aktivitäten-Feed:
+     • Neue Buchungen
+     • Eingegangene Zahlungen
+     • Neue Bewertungen
+   - Benachrichtigungssystem (Bell-Icon)
+
+
+================================================================================
+📅 TERMINVERWALTUNG
+================================================================================
+
+2. APPOINTMENTS (appointments/)
+   - Vollständiger Termin-Kalender
+   - Status-Verwaltung:
+     • Pending (ausstehend)
+     • Confirmed (bestätigt)
+     • Completed (abgeschlossen)
+     • Cancelled (storniert)
+     • No-Show (nicht erschienen)
+   - Funktionen:
+     • Tages-, Wochen-, Monatsansicht
+     • Termin-Status ändern
+     • Kundendaten einsehen
+     • Fahrzeuginformationen
+     • Notizen hinzufügen (Werkstatt + Kunde)
+     • Zahlungsstatus anzeigen
+     • Rechnungs-Upload
+     • Vollständige Service-Details
+   - Integration:
+     • Google Calendar Sync
+     • Mitarbeiter-Kalender
+     • Automatische Terminblockierung
+
+3. CREATE-APPOINTMENT (create-appointment/)
+   - Manuelles Erstellen von Terminen
+   - Funktionen:
+     • Kundenauswahl (Bestand/Neu)
+     • Datum & Uhrzeit
+     • Service-Typ wählen
+     • Fahrzeugdaten erfassen
+     • Preiskalkulation
+     • Reifendetails eingeben
+     • Zusatzleistungen:
+       - Auswuchten
+       - Einlagerung
+       - Altreifenentsorgung
+       - Run-Flat-Reifen
+     • Notizen hinzufügen
+   - Automatische Dauer-Berechnung
+
+
+================================================================================
+💰 BUCHUNGEN & ABRECHNUNGEN
+================================================================================
+
+4. BOOKINGS (bookings/)
+   - Übersicht aller Online-Buchungen
+   - Detaillierte Informationen:
+     • Service-Typ
+     • Datum & Uhrzeit
+     • Kunde und Kontaktdaten
+     • Fahrzeugdaten
+     • Reifendetails (Marke, Modell, Größe)
+     • Preisaufschlüsselung:
+       - Basispreis
+       - Auswuchten
+       - Einlagerung
+       - Entsorgung
+       - Run-Flat-Zuschlag
+       - Reifeneinkaufspreis
+     • Werkstatt-Auszahlung
+     • Plattform-Provision
+   - Status-Tracking:
+     • Buchungsstatus (pending, confirmed, completed, cancelled)
+     • Zahlungsstatus (pending, paid, refunded)
+   - Zahlungsmethoden:
+     • Kreditkarte (Stripe)
+     • PayPal
+     • SEPA-Lastschrift
+     • Bar vor Ort
+   - Rechnungsverwaltung:
+     • Rechnung hochladen
+     • Rechnungs-URL speichern
+     • Upload-Datum erfasst
+
+5. COMMISSIONS (commissions/)
+   - Provisionsübersicht für Bereifung24
+   - Status-Kategorien:
+     • Pending: Ausstehende Provisionen
+     • Billed: Abgerechnet
+     • Collected: Eingezogen
+   - Informationen pro Provision:
+     • Auftragssumme
+     • Provisionssatz (%)
+     • Provisionsbetrag
+     • SEPA-Referenz
+     • Abrechnungsdatum
+     • Einzugsdatum
+     • Zugehörige Buchung
+     • Kundenname
+     • Reifendaten
+   - Zusammenfassung:
+     • Summe ausstehend
+     • Summe abgerechnet
+     • Summe eingezogen
+     • Gesamtsumme
+
+
+================================================================================
+🛍️ ANGEBOTS- & ANFRAGEVERWALTUNG
+================================================================================
+
+6. BROWSE-REQUESTS (browse-requests/)
+   - Durchsuchen aller Kundenanfragen im Umkreis
+   - Filter- und Suchfunktionen:
+     • Nach Saison (Sommer, Winter, Ganzjahr)
+     • Nach Reifengröße
+     • Nach Distanz (Umkreis in km)
+     • Nach Status
+     • Nach Benötigungsdatum
+   - Anfrageinformationen:
+     • Reifenspezifikationen (Breite, Höhe, Durchmesser)
+     • Load-Index & Speed-Rating
+     • Run-Flat ja/nein
+     • Anzahl Reifen
+     • Bevorzugte Marken
+     • Zusatznotizen des Kunden
+     • PLZ & Stadt
+     • Entfernung zur Werkstatt
+     • Fahrzeuginformationen
+   - Funktionen:
+     • Anfrage anzeigen/verbergen
+     • Angebot erstellen
+     • Mehrere Reifenoptionen vorschlagen
+     • Preis pro Reifen + Montage
+     • Gültigkeitsdatum setzen
+     • Status verfolgen
+   - Anzahl vorhandener Angebote einsehen
+
+7. OFFERS (offers/)
+   - Verwaltung aller erstellten Angebote
+   - Status-Übersicht:
+     • Pending: Ausstehend
+     • Accepted: Angenommen
+     • Declined: Abgelehnt
+     • Expired: Abgelaufen
+   - Angebots-Details:
+     • Reifenmarke & Modell
+     • Preis pro Reifen
+     • Montagepreis
+     • Gesamtpreis
+     • Gültig bis Datum
+     • Mehrere Reifenoptionen pro Angebot
+     • Kundeninformationen
+     • Anfrage-Details
+   - Aktionen:
+     • Angebot bearbeiten
+     • Angebot zurückziehen
+     • Kunde kontaktieren (E-Mail/Telefon)
+     • Status aktualisieren
+
+
+================================================================================
+👥 KUNDENVERWALTUNG
+================================================================================
+
+8. CUSTOMERS (customers/)
+   - Zentrale Kundendatenbank der Werkstatt
+   - Kundentypen:
+     • Privatkunde
+     • Geschäftskunde
+   - Kundeninformationen:
+     • Vor- und Nachname
+     • Firmenname (bei B2B)
+     • E-Mail-Adresse
+     • Telefonnummer
+     • Adresse (Straße, PLZ, Stadt)
+   - Geschäftsmetriken:
+     • Gesamtanzahl Buchungen
+     • Gesamtumsatz
+     • Letztes Buchungsdatum
+     • Kundenquelle (Online-Plattform, Direkt, Telefon, etc.)
+     • Registrierungsdatum
+   - Funktionen:
+     • Kunden filtern nach Quelle
+     • Suche nach Name/E-Mail
+     • Export-Funktion (CSV/Excel)
+     • Neuen Kunden anlegen
+     • Kundenprofil bearbeiten
+     • Buchungshistorie anzeigen
+
+
+================================================================================
+⚙️ LEISTUNGEN & PREISE
+================================================================================
+
+9. SERVICES (services/)
+   - Verwaltung aller angebotenen Services
+   - Service-Typen:
+     • Reifenwechsel (Sommer ↔ Winter)
+     • Reifenmontage (neue Reifen)
+     • Reifeneinlagerung
+     • Auswuchten
+     • Reparatur (Flicken)
+     • Run-Flat Service
+     • Notdienst
+   - Service-Details:
+     • Name & Beschreibung
+     • Dauer in Minuten
+     • Basispreis
+     • Kategorie
+     • Icon
+     • Aktiv/Inaktiv Status
+     • Online buchbar ja/nein
+   - Zusatzleistungen:
+     • Auswuchten (Preis)
+     • Altreifenentsorgung (Preis)
+     • Einlagerung pro Saison (Preis)
+   - Funktionen:
+     • Services aktivieren/deaktivieren
+     • Preise anpassen
+     • Dauer ändern
+     • Online-Buchbarkeit steuern
+     • Sichtbarkeit auf Plattform
+
+10. PRICING (pricing/)
+    - Erweiterte Preisverwaltung
+    - Preiskategorien:
+      • Nach Fahrzeugtyp (PKW, SUV, Transporter, LKW)
+      • Nach Reifengröße (13"-22"+)
+      • Nach Reifentyp (Standard, Run-Flat, XL)
+    - Dynamische Preisgestaltung:
+      • Basis-Montagepreis
+      • Größenzuschläge
+      • Typ-Zuschläge
+      • Run-Flat-Zuschläge
+      • Saison-Preise
+    - Spezialpreise:
+      • Geschäftskunden (B2B)
+      • Stammkunden-Rabatte
+      • Aktionspreise
+    - Preisvorschau und -kalkulator
+
+
+================================================================================
+🏢 WERKSTATT-EINSTELLUNGEN
+================================================================================
+
+11. SETTINGS (settings/)
+    - Vollständige Werkstatt-Konfiguration
+    - Grunddaten:
+      • Werkstattname
+      • Beschreibung
+      • Logo-Upload
+      • Kontaktdaten (Telefon, E-Mail, Website)
+      • Adresse (Straße, PLZ, Stadt)
+      • Koordinaten (Latitude, Longitude)
+    
+    - Öffnungszeiten:
+      • Montag - Sonntag individuell
+      • Von/Bis Uhrzeit
+      • Geschlossen-Tage markieren
+      • Mittagspausen definieren
+    
+    - Leistungskatalog:
+      • Services aktivieren/deaktivieren
+      • Spezialisierungen festlegen
+      • Zertifizierungen hochladen
+    
+    - Zahlungseinstellungen:
+      • Stripe Connect Integration
+      • Kontoverbindung
+      • Zahlungsmethoden aktivieren
+      • Rechnungsvorlage
+    
+    - Kalender-Integration:
+      • Google Calendar OAuth
+      • Mitarbeiter-Kalender
+      • Automatische Terminblockierung
+      • Doppelbuchungs-Schutz
+    
+    - Benachrichtigungen:
+      • E-Mail-Benachrichtigungen
+      • SMS-Benachrichtigungen
+      • Push-Benachrichtigungen
+      • Erinnerungen
+    
+    - Mitarbeiter-Verwaltung:
+      • Mitarbeiter hinzufügen
+      • Rollen zuweisen
+      • Kalender verknüpfen
+      • Arbeitszeitplanung
+    
+    - Sichtbarkeit:
+      • In Werkstatt-Suche anzeigen
+      • Online-Buchungen zulassen
+      • Review-System aktivieren
+      • Profil verifiziert
+
+
+================================================================================
+🚗 LIEFERANTEN & PARTNER
+================================================================================
+
+12. SUPPLIERS (suppliers/)
+    - Verwaltung von Reifenlieferanten
+    - Lieferanten-Informationen:
+      • Name & Beschreibung
+      • Kontaktdaten (E-Mail, Telefon)
+      • Adresse
+      • Website
+      • Ansprechpartner
+    - Konditionen:
+      • Zahlungsbedingungen
+      • Lieferzeiten
+      • Rabattstaffeln
+      • Mindestbestellmenge
+      • Liefer-/Versandkosten
+    - Produkte:
+      • Verfügbare Marken
+      • Produktkatalog
+      • Lagerbestand
+      • Preisliste
+    - Bewertung & Performance:
+      • Liefertreue
+      • Qualitätsbewertung
+      • Kommunikationsbewertung
+      • Preis-Leistungs-Verhältnis
+      • Notizen
+    - Funktionen:
+      • Bestellverlauf
+      • Favoriten markieren
+      • Lieferanten vergleichen
+      • Kontakt aufnehmen
+
+
+================================================================================
+🗓️ URLAUBSVERWALTUNG
+================================================================================
+
+13. VACATIONS (vacations/)
+    - Betriebs- und Mitarbeiterurlaubsverwaltung
+    - Betriebsurlaub:
+      • Von/Bis Datum
+      • Grund (Urlaub, Feiertag, Wartung, etc.)
+      • Automatische Terminsperre
+      • Kundenbenachrichtigung
+      • Wiederkehrende Ereignisse
+    - Mitarbeiter-Abwesenheiten:
+      • Urlaub
+      • Krankheit
+      • Fortbildung
+      • Sonstige Abwesenheit
+    - Integration:
+      • Automatische Kalender-Blockierung
+      • Google Calendar Sync
+      • Buchungsanfragen automatisch ablehnen
+      • Alternative Terminvorschläge
+    - Planung:
+      • Jahresübersicht
+      • Team-Kalender
+      • Urlaubsanträge
+      • Genehmigungsworkflow
+
+
+================================================================================
+⭐ BEWERTUNGSVERWALTUNG
+================================================================================
+
+14. REVIEWS (reviews/)
+    - Kundenbewertungen und Feedback
+    - Bewertungs-Details:
+      • Sternebewertung (1-5)
+      • Kommentar des Kunden
+      • Bewertungsdatum
+      • Kundenname
+      • Service-Typ
+      • Buchungsdatum
+    - Antwort-Funktion:
+      • Auf Bewertungen antworten
+      • Danke für positives Feedback
+      • Probleme klären bei negativen Reviews
+    - Statistiken:
+      • Durchschnittliche Bewertung
+      • Anzahl Bewertungen gesamt
+      • Bewertungs-Verteilung (1-5 Sterne)
+      • Trend (letzte 30 Tage)
+    - Funktionen:
+      • Bewertungen sortieren (Datum, Rating)
+      • Nach Sternen filtern
+      • Review-Link für Kunden generieren
+      • Unangemessene Bewertungen melden
+    - SEO-Integration:
+      • Google My Business
+      • Schema.org Markup
+      • Review Snippets
+
+
+================================================================================
+📍 LANDING PAGE & ÖFFENTLICHES PROFIL
+================================================================================
+
+15. LANDING-PAGE (landing-page/)
+    - Öffentliche Werkstatt-Profilseite
+    - Vorschau und Bearbeitung:
+      • Live-Vorschau der Kundensicht
+      • SEO-Optimierung
+      • Social Media Links
+    - Inhalt:
+      • Header mit Logo & Bild
+      • Über uns Text
+      • Leistungsübersicht mit Icons
+      • Öffnungszeiten
+      • Kontaktformular
+      • Google Maps Integration
+      • Kundenbewertungen
+      • FAQ-Bereich
+      • Galerie/Fotos
+    - Buchungs-Widget:
+      • Direktbuchung auf eigener Seite
+      • Verfügbare Termine anzeigen
+      • Preiskalkulator
+    - Tracking:
+      • Seitenaufrufe
+      • Conversion Rate
+      • Buchungsquelle
+
+
+================================================================================
+🔔 BENACHRICHTIGUNGSSYSTEM
+================================================================================
+
+BENACHRICHTIGUNGEN (über alle Module)
+- Real-Time Notifications:
+  • Neue Buchung eingegangen
+  • Anfrage im Umkreis verfügbar
+  • Angebot angenommen
+  • Angebot abgelehnt
+  • Zahlung eingegangen
+  • Neue Bewertung erhalten
+  • Termin-Erinnerungen
+  • Stornierungen
+  • Zahlungsprobleme
+
+- Benachrichtigungs-Kanäle:
+  • In-App (Bell-Icon)
+  • E-Mail
+  • SMS (optional)
+  • Push-Benachrichtigungen (Mobile)
+
+- Einstellungen:
+  • Benachrichtigungstypen aktivieren/deaktivieren
+  • Frequenz festlegen
+  • Stille Zeiten definieren
+
+
+================================================================================
+💳 ZAHLUNGSINTEGRATION
+================================================================================
+
+STRIPE CONNECT
+- Automatische Auszahlungen
+- Online-Zahlungen empfangen:
+  • Kreditkarte
+  • Debitkarte
+  • SEPA-Lastschrift
+  • PayPal
+- Provisionsabzug automatisch
+- Tägliche/wöchentliche Auszahlung
+- Transaktionshistorie
+- Rechnungsstellung
+
+SEPA-LASTSCHRIFT
+- GoCardless Integration
+- Mandate-Verwaltung
+- Automatischer Einzug
+- Retry bei fehlgeschlagenen Zahlungen
+
+
+================================================================================
+📊 STATISTIKEN & ANALYSEN
+================================================================================
+
+DASHBOARD-KPIs
+- Umsatz:
+  • Tagesumsatz
+  • Wochenumsatz
+  • Monatsumsatz
+  • Jahresumsatz
+  • Werkstatt-Auszahlung
+  • Platform-Provision
+
+- Buchungen:
+  • Anzahl Buchungen (heute, 7 Tage, 30 Tage)
+  • Anstehende Termine
+  • Abgeschlossene Aufträge
+  • Stornierungsrate
+  • No-Show Rate
+
+- Kunden:
+  • Neue Kunden
+  • Wiederkehrende Kunden
+  • Kundenzufriedenheit (Reviews)
+  • Durchschnittlicher Auftragswert
+
+- Angebote:
+  • Erstellte Angebote
+  • Angenommene Angebote
+  • Conversion Rate
+  • Durchschnittliche Antwortzeit
+
+
+================================================================================
+🔐 ZUGRIFFSRECHTE & SICHERHEIT
+================================================================================
+
+ROLLEN-SYSTEM
+- Workshop Owner: Vollzugriff
+- Workshop Manager: Management-Funktionen
+- Workshop Employee: Eingeschränkter Zugriff
+  • Termine ansehen
+  • Status ändern
+  • Notizen hinzufügen
+  • Keine Preisänderungen
+  • Keine Auszahlungen
+
+DATENSCHUTZ (DSGVO)
+- Verschlüsselte Kundendaten
+- DSGVO-konforme Speicherung
+- Recht auf Vergessenwerden
+- Datenauskunft-Funktion
+- Zwei-Faktor-Authentifizierung
+
+
+================================================================================
+📱 MOBILE OPTIMIERUNG
+================================================================================
+
+RESPONSIVE DESIGN
+- Vollständig mobil-optimiert
+- Touch-freundliche Bedienung
+- Mobile App (geplant)
+- Offline-Funktionen (geplant)
+- Push-Benachrichtigungen
+
+
+================================================================================
+🔗 INTEGRATIONEN & API
+================================================================================
+
+EXTERNE SYSTEME
+- Google Calendar (OAuth 2.0)
+- Stripe Connect (Zahlungen)
+- GoCardless (SEPA)
+- Google Maps (Standort)
+- E-Mail-Service (SendGrid/SMTP)
+- SMS-Gateway (optional)
+
+API-ZUGRIFF
+- REST API für Drittsysteme
+- Webhook-Benachrichtigungen
+- OAuth 2.0 Authentifizierung
+
+
+================================================================================
+💎 BESONDERE FEATURES
+================================================================================
+
+✅ Echtzeit-Verfügbarkeitsanzeige
+✅ Automatische Termin-Synchronisation
+✅ Intelligentes Angebots-Matching (Umkreis + Verfügbarkeit)
+✅ Multi-Reifenoption pro Angebot (Budget/Premium)
+✅ Automatische Preiskalkulation
+✅ Rechnungs-Upload-System
+✅ Provisions-Tracking (transparent)
+✅ Kunden-CRM integriert
+✅ Review-Management mit Antwort-Funktion
+✅ Lieferanten-Bewertungssystem
+✅ Urlaubsplanung mit Auto-Blockierung
+✅ White-Label Landing Page
+✅ Google Maps Integration
+✅ SEO-optimiertes Werkstattprofil
+✅ Mehrsprachigkeit (DE/EN)
+
+
+================================================================================
+📈 PROJEKT-STATISTIK (WERKSTATT-DASHBOARD)
+================================================================================
+
+Module:                 15 Hauptmodule
+API-Endpunkte:          ~80 spezifische Werkstatt-Routen
+Seiten:                 ~30 verschiedene Ansichten
+Code-Dateien:           ~50 TypeScript/React-Komponenten
+Datenbank-Modelle:      ~25 Prisma-Modelle
+
+
+================================================================================
+🎯 ZIELGRUPPE
+================================================================================
+
+Das Werkstatt-Dashboard richtet sich an:
+- KFZ-Werkstätten
+- Reifenhändler mit Montagebetrieb
+- Mobile Reifenservice-Anbieter
+- Autohäuser mit Service-Abteilung
+- Fuhrpark-Dienstleister
+
+
+================================================================================
+Dokumentiert am: 23. Februar 2026
+System: Bereifung24 Werkstatt-Dashboard
+Framework: Next.js 14 + TypeScript + Prisma + PostgreSQL
+URL: https://www.bereifung24.de/dashboard/workshop
+================================================================================

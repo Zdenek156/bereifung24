@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { decrypt } from '@/lib/encryption'
 
 /**
  * TyreSystem REST API Test Endpoint
@@ -11,13 +15,39 @@ import { NextRequest, NextResponse } from 'next/server'
 // TyreSystem API Configuration
 const TYRESYSTEM_API_BASE = 'https://api.tyresystem.de/Rest'
 
-// TODO: Replace with actual credentials from RSU GmbH
-const TYRESYSTEM_USERNAME = 'YOUR_USERNAME_HERE'
-const TYRESYSTEM_PASSWORD = 'YOUR_PASSWORD_HERE'
+// Get credentials from database for logged-in workshop
+async function getWorkshopCredentials(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { workshop: true }
+  })
+
+  if (!user?.workshop) {
+    throw new Error('Workshop not found')
+  }
+
+  const supplier = await prisma.workshopSupplier.findFirst({
+    where: {
+      workshopId: user.workshop.id,
+      supplier: 'TYRESYSTEM',
+      isActive: true,
+      connectionType: 'API'
+    }
+  })
+
+  if (!supplier || !supplier.usernameEncrypted || !supplier.passwordEncrypted) {
+    throw new Error('TyreSystem API credentials not configured. Please add them in Settings → Lieferanten.')
+  }
+
+  const username = decrypt(supplier.usernameEncrypted)
+  const password = decrypt(supplier.passwordEncrypted)
+
+  return { username, password, supplierId: supplier.id }
+}
 
 // Create Basic Auth header
-const createAuthHeader = () => {
-  const credentials = Buffer.from(`${TYRESYSTEM_USERNAME}:${TYRESYSTEM_PASSWORD}`).toString('base64')
+const createAuthHeader = (username: string, password: string) => {
+  const credentials = Buffer.from(`${username}:${password}`).toString('base64')
   return `Basic ${credentials}`
 }
 
@@ -25,7 +55,7 @@ const createAuthHeader = () => {
  * Test Artikelanfrage (Product Inquiry)
  * GET https://api.tyresystem.de/Rest/Inquiry/{idArticle}/{amount}
  */
-async function testInquiry() {
+async function testInquiry(username: string, password: string) {
   try {
     // Test with article ID 222 (from documentation example)
     const idArticle = '222'
@@ -39,7 +69,7 @@ async function testInquiry() {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': createAuthHeader(),
+        'Authorization': createAuthHeader(username, password),
         'Accept': 'application/json',
       },
     })
@@ -81,7 +111,7 @@ async function testInquiry() {
  * Test Bestellung (Order)
  * POST https://api.tyresystem.de/Rest/Order
  */
-async function testOrder() {
+async function testOrder(username: string, password: string) {
   try {
     const url = `${TYRESYSTEM_API_BASE}/Order`
     
@@ -129,7 +159,7 @@ async function testOrder() {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': createAuthHeader(),
+        'Authorization': createAuthHeader(username, password),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -173,7 +203,7 @@ async function testOrder() {
 /**
  * Test multiple article inquiries
  */
-async function testMultipleInquiries() {
+async function testMultipleInquiries(username: string, password: string) {
   const testArticles = [
     { id: '222', amount: 1, description: 'From documentation example' },
     { id: '102355', amount: 1, description: 'Test article 1' },
@@ -189,7 +219,7 @@ async function testMultipleInquiries() {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': createAuthHeader(),
+          'Authorization': createAuthHeader(username, password),
           'Accept': 'application/json',
         },
       })
@@ -225,43 +255,60 @@ async function testMultipleInquiries() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized. Please log in as a workshop.' 
+      }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'inquiry'
 
-    // Check if credentials are configured
-    if (TYRESYSTEM_USERNAME === 'YOUR_USERNAME_HERE' || TYRESYSTEM_PASSWORD === 'YOUR_PASSWORD_HERE') {
+    // Get credentials from database
+    let username: string
+    let password: string
+    let supplierId: string
+
+    try {
+      const creds = await getWorkshopCredentials(session.user.id)
+      username = creds.username
+      password = creds.password
+      supplierId = creds.supplierId
+    } catch (error) {
       return NextResponse.json({
         success: false,
-        error: 'TyreSystem API credentials not configured',
-        message: 'Please update TYRESYSTEM_USERNAME and TYRESYSTEM_PASSWORD in the API route',
+        error: error instanceof Error ? error.message : 'Failed to load credentials',
         instructions: [
-          '1. Contact RSU GmbH to get your test credentials',
-          '2. Update credentials in app/api/admin/tyresystem/test/route.ts',
-          '3. Start in test mode (Testmodus)',
-          '4. After successful testing, request live mode activation',
+          '1. Go to Dashboard → Settings → Lieferanten',
+          '2. Add TyreSystem as supplier',
+          '3. Enter your API credentials (will be encrypted)',
+          '4. Test the connection',
         ],
-      }, { status: 500 })
+      }, { status: 400 })
     }
 
     let result
 
     switch (action) {
       case 'inquiry':
-        result = await testInquiry()
+        result = await testInquiry(username, password)
         break
       
       case 'order':
-        result = await testOrder()
+        result = await testOrder(username, password)
         break
       
       case 'multiple':
-        result = await testMultipleInquiries()
+        result = await testMultipleInquiries(username, password)
         break
       
       case 'all':
-        const inquiryResult = await testInquiry()
+        const inquiryResult = await testInquiry(username, password)
         await new Promise(resolve => setTimeout(resolve, 1000)) // 1s delay between requests
-        const orderResult = await testOrder()
+        const orderResult = await testOrder(username, password)
         
         result = {
           inquiry: inquiryResult,
@@ -276,6 +323,16 @@ export async function GET(request: NextRequest) {
           validActions: ['inquiry', 'order', 'multiple', 'all'],
         }, { status: 400 })
     }
+
+    // Update supplier with successful API check
+    await prisma.workshopSupplier.update({
+      where: { id: supplierId },
+      data: {
+        lastApiCheck: new Date(),
+        lastApiError: null,
+        apiCallsToday: { increment: 1 }
+      }
+    })
 
     return NextResponse.json({
       success: true,

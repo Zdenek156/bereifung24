@@ -168,23 +168,18 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
   MOTORCYCLE_TIRE: {
     groups: [
       {
-        label: 'Position',
+        label: 'Anzahl Reifen',
         multiSelect: false, // Radio buttons
         options: [
           { 
-            packageType: 'front', 
-            label: 'Vorderrad', 
-            info: 'Reifenwechsel am Vorderrad des Motorrads'
+            packageType: 'one_tire', 
+            label: '1 Reifen', 
+            info: 'Reifenwechsel an einem ausgebauten Rad (Vorderrad oder Hinterrad)'
           },
           { 
-            packageType: 'rear', 
-            label: 'Hinterrad', 
-            info: 'Reifenwechsel am Hinterrad des Motorrads'
-          },
-          { 
-            packageType: 'both', 
-            label: 'Beide Räder', 
-            info: 'Kompletter Reifenwechsel vorne und hinten für optimale Fahreigenschaften'
+            packageType: 'two_tires', 
+            label: '2 Reifen', 
+            info: 'Kompletter Reifenwechsel vorne und hinten (beide ausgebauten Räder)'
           }
         ]
       }

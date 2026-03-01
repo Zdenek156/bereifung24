@@ -32,15 +32,13 @@ interface Commission {
   }
 }
 
-type FilterType = 'all' | 'pending' | 'billed' | 'collected' | 'failed'
+type TimePeriod = 'today' | 'week' | 'month' | 'year'
 
 export default function AdminCommissionsPage() {
   const [commissions, setCommissions] = useState<Commission[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<FilterType>('all')
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null)
-  const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [billing, setBilling] = useState(false)
   const [billingResult, setBillingResult] = useState<any>(null)
 
@@ -62,12 +60,36 @@ export default function AdminCommissionsPage() {
     }
   }
 
+  // Calculate date range based on time period
+  const getDateRange = () => {
+    const now = new Date()
+    const start = new Date()
+    
+    switch (timePeriod) {
+      case 'today':
+        start.setHours(0, 0, 0, 0)
+        break
+      case 'week':
+        start.setDate(now.getDate() - 7)
+        break
+      case 'month':
+        start.setMonth(now.getMonth() - 1)
+        break
+      case 'year':
+        start.setFullYear(now.getFullYear() - 1)
+        break
+    }
+    return start
+  }
+
   const filteredCommissions = commissions
     .filter(commission => {
-      if (filter === 'all') return true
-      return commission.status.toLowerCase() === filter
-    })
-    .filter(commission => {
+      // Filter by time period
+      const commissionDate = new Date(commission.createdAt)
+      const startDate = getDateRange()
+      if (commissionDate < startDate) return false
+      
+      // Filter by search term
       if (!searchTerm) return true
       const term = searchTerm.toLowerCase()
       return (
@@ -78,9 +100,9 @@ export default function AdminCommissionsPage() {
     })
 
   const totalCommissions = filteredCommissions.reduce((sum, c) => sum + c.commissionAmount, 0)
-  const pendingCommissions = commissions.filter(c => c.status === 'PENDING')
-  const collectedCommissions = commissions.filter(c => c.status === 'COLLECTED')
-  const failedCommissions = commissions.filter(c => c.status === 'FAILED')
+  const totalStripeFees = filteredCommissions.reduce((sum, c) => sum + (c.stripeFee || 0), 0)
+  const pendingCommissions = filteredCommissions.filter(c => c.status === 'PENDING')
+  const collectedCommissions = filteredCommissions.filter(c => c.status === 'COLLECTED')
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,29 +121,6 @@ export default function AdminCommissionsPage() {
       case 'COLLECTED': return 'Eingezogen'
       case 'FAILED': return 'Fehlgeschlagen'
       default: return status
-    }
-  }
-
-  const handleUpdateStatus = async (commissionId: string, newStatus: string, sepaStatus?: string, notes?: string) => {
-    try {
-      const response = await fetch('/api/admin/commissions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commissionId,
-          status: newStatus,
-          sepaStatus,
-          notes
-        })
-      })
-
-      if (response.ok) {
-        fetchCommissions()
-        setShowUpdateModal(false)
-        setSelectedCommission(null)
-      }
-    } catch (error) {
-      console.error('Error updating commission:', error)
     }
   }
 
@@ -254,47 +253,41 @@ export default function AdminCommissionsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Gesamt Provisionen</div>
+            <div className="text-sm font-medium text-gray-600">Buchungen (Zeitraum)</div>
             <div className="text-3xl font-bold text-gray-900 mt-2">
-              {commissions.length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Ausstehend</div>
-            <div className="text-3xl font-bold text-yellow-600 mt-2">
-              {pendingCommissions.length}
+              {filteredCommissions.length}
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              {pendingCommissions.reduce((sum, c) => sum + c.commissionAmount, 0).toLocaleString('de-DE', {
+              {totalCommissions.toLocaleString('de-DE', {
                 style: 'currency',
                 currency: 'EUR'
               })}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Eingezogen</div>
-            <div className="text-3xl font-bold text-green-600 mt-2">
-              {collectedCommissions.length}
-            </div>
-            <div className="text-sm text-gray-500 mt-1">
-              {collectedCommissions.reduce((sum, c) => sum + c.commissionAmount, 0).toLocaleString('de-DE', {
-                style: 'currency',
-                currency: 'EUR'
-              })}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Fehlgeschlagen</div>
+            <div className="text-sm font-medium text-gray-600">Stripe-Gebühren</div>
             <div className="text-3xl font-bold text-red-600 mt-2">
-              {failedCommissions.length}
-            </div>
-            <div className="text-sm text-gray-500 mt-1">
-              {failedCommissions.reduce((sum, c) => sum + c.commissionAmount, 0).toLocaleString('de-DE', {
+              {totalStripeFees.toLocaleString('de-DE', {
                 style: 'currency',
                 currency: 'EUR'
               })}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              Durchschnitt: {filteredCommissions.length > 0 ? (totalStripeFees / filteredCommissions.length).toFixed(2) : '0.00'}€
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm font-medium text-gray-600">Provisionen (Zeitraum)</div>
+            <div className="text-3xl font-bold text-green-600 mt-2">
+              {totalCommissions.toLocaleString('de-DE', {
+                style: 'currency',
+                currency: 'EUR'
+              })}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              Durchschnitt: {filteredCommissions.length > 0 ? (totalCommissions / filteredCommissions.length).toFixed(2) : '0.00'}€
             </div>
           </div>
         </div>
@@ -313,28 +306,28 @@ export default function AdminCommissionsPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setTimePeriod('today')}
+                className={`px-4 py-2 rounded-lg ${timePeriod === 'today' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                Alle
+                Heute
               </button>
               <button
-                onClick={() => setFilter('pending')}
-                className={`px-4 py-2 rounded-lg ${filter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setTimePeriod('week')}
+                className={`px-4 py-2 rounded-lg ${timePeriod === 'week' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                Ausstehend
+                Woche
               </button>
               <button
-                onClick={() => setFilter('collected')}
-                className={`px-4 py-2 rounded-lg ${filter === 'collected' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setTimePeriod('month')}
+                className={`px-4 py-2 rounded-lg ${timePeriod === 'month' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                Eingezogen
+                Monat
               </button>
               <button
-                onClick={() => setFilter('failed')}
-                className={`px-4 py-2 rounded-lg ${filter === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setTimePeriod('year')}
+                className={`px-4 py-2 rounded-lg ${timePeriod === 'year' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                Fehlgeschlagen
+                Jahr
               </button>
             </div>
           </div>
@@ -379,9 +372,6 @@ export default function AdminCommissionsPage() {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Datum
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Aktionen
                     </th>
                   </tr>
                 </thead>
@@ -435,47 +425,31 @@ export default function AdminCommissionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {commission.paymentMethodDetail === 'google_pay' && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
-                              </svg>
-                              <span>Google Pay</span>
+                          {commission.paymentMethodDetail ? (
+                            <div className="flex items-center gap-2">
+                              {commission.paymentMethodDetail.toUpperCase() === 'VISA' && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">VISA</span>
+                              )}
+                              {commission.paymentMethodDetail.toUpperCase() === 'MASTERCARD' && (
+                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">Mastercard</span>
+                              )}
+                              {commission.paymentMethodDetail.toUpperCase() === 'AMEX' && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">Amex</span>
+                              )}
+                              {['google_pay', 'GOOGLE_PAY'].includes(commission.paymentMethodDetail) && (
+                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded">Google Pay</span>
+                              )}
+                              {['apple_pay', 'APPLE_PAY'].includes(commission.paymentMethodDetail) && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded">Apple Pay</span>
+                              )}
+                              {commission.paymentMethodDetail.toLowerCase() === 'paypal' && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">PayPal</span>
+                              )}
+                              {!['visa', 'mastercard', 'amex', 'google_pay', 'apple_pay', 'paypal'].includes(commission.paymentMethodDetail.toLowerCase()) && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded">{commission.paymentMethodDetail.toUpperCase()}</span>
+                              )}
                             </div>
-                          )}
-                          {commission.paymentMethodDetail === 'apple_pay' && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                              </svg>
-                              <span>Apple Pay</span>
-                            </div>
-                          )}
-                          {commission.paymentMethodDetail === 'card' && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M20 8H4V6h16m0 12H4v-6h16m0-8H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-                              </svg>
-                              <span>Kreditkarte</span>
-                            </div>
-                          )}
-                          {commission.paymentMethodDetail === 'paypal' && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.76-4.852a.932.932 0 0 1 .922-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.78-4.461z"/>
-                              </svg>
-                              <span>PayPal</span>
-                            </div>
-                          )}
-                          {commission.paymentMethod === 'STRIPE' && !commission.paymentMethodDetail && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
-                              </svg>
-                              <span>Stripe</span>
-                            </div>
-                          )}
-                          {!commission.paymentMethod && (
+                          ) : (
                             <span className="text-gray-400">-</span>
                           )}
                         </div>
@@ -507,17 +481,6 @@ export default function AdminCommissionsPage() {
                             Abgerechnet: {new Date(commission.billedAt).toLocaleDateString('de-DE')}
                           </div>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            setSelectedCommission(commission)
-                            setShowUpdateModal(true)
-                          }}
-                          className="text-primary-600 hover:text-primary-900"
-                        >
-                          Bearbeiten
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -558,42 +521,7 @@ export default function AdminCommissionsPage() {
           </div>
         )}
 
-        {/* Update Modal */}
-        {showUpdateModal && selectedCommission && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-md w-full">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Provision aktualisieren</h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  defaultValue={selectedCommission.status}
-                  onChange={(e) => {
-                    if (confirm('Status wirklich ändern?')) {
-                      handleUpdateStatus(selectedCommission.id, e.target.value)
-                    }
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="PENDING">Ausstehend</option>
-                  <option value="BILLED">Abgerechnet</option>
-                  <option value="COLLECTED">Eingezogen</option>
-                  <option value="FAILED">Fehlgeschlagen</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setShowUpdateModal(false)
-                    setSelectedCommission(null)
-                  }}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                >
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   )

@@ -47,9 +47,19 @@ export async function GET(
     }
 
     // Decrypt bank account from profile if it exists
+    let decryptedIban = null
+    if (employee.profile?.bankAccount) {
+      try {
+        decryptedIban = decrypt(employee.profile.bankAccount)
+      } catch (decryptError) {
+        console.error(`Failed to decrypt IBAN for employee ${employeeId}:`, decryptError)
+        // Leave as null if decryption fails
+      }
+    }
+
     const responseData = {
       ...employee,
-      iban: employee.profile?.bankAccount ? decrypt(employee.profile.bankAccount) : null,
+      iban: decryptedIban,
       bic: employee.profile?.bic || null,
       bankName: employee.profile?.bankName || null,
     }

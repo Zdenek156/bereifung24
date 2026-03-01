@@ -927,12 +927,9 @@ export default function PaymentPage() {
                           <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedPaymentMethod === 'card' && (
-                          <Check className="w-5 h-5 text-primary-600" />
-                        )}
-                        <CreditCard className="w-5 h-5 text-gray-400" />
-                      </div>
+                      {selectedPaymentMethod === 'card' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                   </button>
 
@@ -948,19 +945,22 @@ export default function PaymentPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
+                        <div className="h-8 flex items-center">
+                          <Image
+                            src="/payment-logos/amazonpay-logo.png"
+                            alt="Amazon Pay"
+                            width={120}
+                            height={32}
+                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
+                          />
+                        </div>
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">Amazon Pay <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-2">⚡ Sofort</span></p>
                           <p className="text-xs text-gray-500">Zahlen mit Amazon-Konto</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedPaymentMethod === 'amazon_pay' && (
-                          <Check className="w-5 h-5 text-primary-600" />
-                        )}
-                        <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.72-2.53 1.23-3.86 1.53-1.33.3-2.68.45-4.05.45-2.27 0-4.46-.35-6.57-1.05-2.11-.7-3.93-1.7-5.46-3-1.53-1.3-2.73-2.82-3.6-4.56-.87-1.74-1.3-3.6-1.3-5.58 0-1.98.43-3.84 1.3-5.58.87-1.74 2.07-3.26 3.6-4.56 1.53-1.3 3.35-2.3 5.46-3C13.54.35 15.73 0 18 0c2.27 0 4.46.35 6.57 1.05 2.11.7 3.93 1.7 5.46 3 1.53 1.3 2.73 2.82 3.6 4.56.87 1.74 1.3 3.6 1.3 5.58 0 1.98-.43 3.84-1.3 5.58-.87 1.74-2.07 3.26-3.6 4.56-1.53 1.3-3.35 2.3-5.46 3-2.11.7-4.3 1.05-6.57 1.05-2.27 0-4.46-.35-6.57-1.05-2.11-.7-3.93-1.7-5.46-3-1.53-1.3-2.73-2.82-3.6-4.56-.435-.87-.74-1.77-.915-2.71 7.563 1.07 13.045.582 16.463-1.435 1.622-1.016 2.145-2.045 1.566-3.065-.276-.505-.82-.857-1.632-.857-1.19 0-2.38.462-3.57 1.386l-.415.315c-.116.096-.232.084-.348-.022-.115-.116-.104-.23.022-.348l.415-.315c1.19-.924 2.49-1.386 3.89-1.386 1.4 0 2.38.462 2.94 1.386.56 1.02-.038 2.045-1.566 3.065-3.418 2.017-8.9 2.506-16.463 1.435-.174-.023-.174-.115 0-.27z"/>
-                        </svg>
-                      </div>
+                      {selectedPaymentMethod === 'amazon_pay' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                   </button>
 
@@ -977,32 +977,25 @@ export default function PaymentPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-2 flex-1">
+                        <div className="h-10 flex items-center">
+                          <Image
+                            src="/payment-logos/klarna-logo.png"
+                            alt="Klarna"
+                            width={120}
+                            height={40}
+                            style={{ width: 'auto', height: '100%', maxHeight: '2.5rem' }}
+                          />
+                        </div>
                         <div className="text-left">
-                          <p className="font-semibold text-gray-900">Klarna</p>
                           <p className="text-xs text-gray-500">Jetzt kaufen, später bezahlen</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedPaymentMethod === 'klarna' && (
-                          <Check className="w-5 h-5 text-primary-600" />
-                        )}
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                        </svg>
-                      </div>
+                      {selectedPaymentMethod === 'klarna' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                   </button>
                   )}
-
-                  {/* Divider */}
-                  <div className="relative py-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-gray-500">oder</span>
-                    </div>
-                  </div>
 
                   {/* PayPal */}
                   <button

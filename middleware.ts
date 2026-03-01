@@ -44,6 +44,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/eprel': 'eprel',
   '/admin/gdpr': 'gdpr',
   '/admin/payment-methods': 'payment-methods',
+  '/admin/support': 'support',
 }
 
 // API routes to application mapping
@@ -66,6 +67,7 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/payment-methods': 'payment-methods',
   '/api/admin/suppliers': 'reifenkatalog',
   '/api/admin/tire-catalog': 'reifenkatalog',
+  '/api/admin/support': 'support',
 }
 
 /**

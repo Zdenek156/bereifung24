@@ -29,6 +29,8 @@ interface ServiceFiltersProps {
   // Mixed tire dimensions (if front ≠ rear) - for logging only
   tireDimensionsFront?: string
   tireDimensionsRear?: string
+  // Stack groups vertically (for sidebar layout)
+  stackGroups?: boolean
 }
 
 const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
@@ -256,7 +258,8 @@ export default function ServiceFilters({
   onFiltersChange,
   customConfig,
   tireDimensionsFront = '',
-  tireDimensionsRear = ''
+  tireDimensionsRear = '',
+  stackGroups = false
 }: ServiceFiltersProps) {
   // Use customConfig if provided (for mixed tires), otherwise use default
   const config = customConfig || FILTER_CONFIG[selectedService]
@@ -298,7 +301,7 @@ export default function ServiceFilters({
   }
 
   return (
-    <div className={config.groups.length >= 3 ? 'grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2' : config.groups.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2' : ''}>
+    <div className={stackGroups ? 'grid grid-cols-1 gap-y-4' : config.groups.length >= 3 ? 'grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2' : config.groups.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2' : ''}>
       {config.groups.map((group, groupIndex) => (
         <div key={groupIndex}>
           <h4 className="font-semibold mb-3 flex items-center gap-2">

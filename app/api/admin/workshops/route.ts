@@ -32,6 +32,17 @@ export async function GET(req: NextRequest) {
             longitude: true
           }
         },
+        freelancer: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        },
         offers: true,
         commissions: {
           select: {
@@ -73,6 +84,10 @@ export async function GET(req: NextRequest) {
         distance,
         offersCount,
         revenue,
+        freelancer: workshop.freelancer ? {
+          id: workshop.freelancer.id,
+          name: `${workshop.freelancer.user.firstName} ${workshop.freelancer.user.lastName}`
+        } : null,
         user: {
           email: workshop.user.email,
           firstName: workshop.user.firstName,

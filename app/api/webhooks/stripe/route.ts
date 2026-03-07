@@ -113,6 +113,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       return
     }
 
+    // Track created/updated booking ID for post-processing (emails, commissions)
+    let resolvedBookingId: string | undefined
+
     // Check if DirectBooking already exists
     const existingBooking = await prisma.directBooking.findFirst({
       where: {
@@ -222,6 +225,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       })
       console.log('✅ DirectBooking updated:', existingBooking.id)
+      resolvedBookingId = existingBooking.id
     } else {
       // Calculate commission breakdown (6.9% platform commission)
       const PLATFORM_COMMISSION_RATE = 0.069
@@ -332,10 +336,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       })
 
       console.log('✅ DirectBooking created:', booking.id)
+      resolvedBookingId = booking.id
     }
 
     // Load complete booking data with relations for email
-    const bookingId = existingBooking?.id || undefined
+    const bookingId = resolvedBookingId
     if (!bookingId) {
       console.error('❌ No booking ID found after create/update')
       return
@@ -525,6 +530,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.error('❌ Error sending workshop email:', error)
     }
 
+    // Create freelancer commission if workshop belongs to a freelancer
+    try {
+      const { createFreelancerCommission } = await import('@/lib/freelancer/commissionService')
+      const commissionResult = await createFreelancerCommission(bookingId)
+      if (commissionResult.created) {
+        console.log(`💰 Freelancer commission created: ${commissionResult.freelancerAmount}€`)
+      } else if (commissionResult.error) {
+        console.log(`ℹ️ No freelancer commission: ${commissionResult.error}`)
+      }
+    } catch (commissionError) {
+      console.error('⚠️ Error creating freelancer commission:', commissionError)
+    }
+
   } catch (error) {
     console.error('❌ Error handling checkout completion:', error)
     throw error
@@ -679,40 +697,61 @@ async function handleAccountUpdated(account: Stripe.Account) {
       where: { stripeAccountId: account.id }
     })
 
-    if (!workshop) {
-      console.log('⚠️  No workshop found for Stripe account:', account.id)
+    if (workshop) {
+      // Update workshop status based on account verification
+      if (isVerified && !hasRequirements) {
+        if (!workshop.stripeEnabled) {
+          await prisma.workshop.update({
+            where: { id: workshop.id },
+            data: { stripeEnabled: true }
+          })
+          console.log('✅ Stripe activated for workshop:', workshop.companyName)
+        } else {
+          console.log('ℹ️  Stripe already enabled for workshop:', workshop.companyName)
+        }
+      } else {
+        if (workshop.stripeEnabled) {
+          await prisma.workshop.update({
+            where: { id: workshop.id },
+            data: { stripeEnabled: false }
+          })
+          console.log('⚠️  Stripe disabled for workshop:', workshop.companyName)
+        } else {
+          console.log('ℹ️  Workshop still pending verification:', workshop.companyName)
+          if (hasRequirements) {
+            console.log('   Pending requirements:', requirementsCurrentlyDue.join(', '))
+          }
+        }
+      }
       return
     }
 
-    // Update workshop status based on account verification
-    if (isVerified && !hasRequirements) {
-      // Account is fully verified - enable Stripe payments
-      if (!workshop.stripeEnabled) {
-        await prisma.workshop.update({
-          where: { id: workshop.id },
+    // Check if this is a freelancer Stripe account
+    const freelancer = await prisma.freelancer.findFirst({
+      where: { stripeAccountId: account.id }
+    })
+
+    if (freelancer) {
+      const freelancerVerified = account.payouts_enabled
+      if (freelancerVerified && !freelancer.stripeEnabled) {
+        await prisma.freelancer.update({
+          where: { id: freelancer.id },
           data: { stripeEnabled: true }
         })
-        console.log('✅ Stripe activated for workshop:', workshop.companyName)
-        console.log('   Klarna, Card, and Bank Transfer payments are now available!')
-      } else {
-        console.log('ℹ️  Stripe already enabled for workshop:', workshop.companyName)
-      }
-    } else {
-      // Account not yet verified or has pending requirements
-      if (workshop.stripeEnabled) {
-        await prisma.workshop.update({
-          where: { id: workshop.id },
+        console.log('✅ Stripe payouts activated for freelancer:', freelancer.id)
+      } else if (!freelancerVerified && freelancer.stripeEnabled) {
+        await prisma.freelancer.update({
+          where: { id: freelancer.id },
           data: { stripeEnabled: false }
         })
-        console.log('⚠️  Stripe disabled for workshop:', workshop.companyName)
-        console.log('   Reason: Account not fully verified or has pending requirements')
+        console.log('⚠️  Stripe payouts disabled for freelancer:', freelancer.id)
       } else {
-        console.log('ℹ️  Workshop still pending verification:', workshop.companyName)
-        if (hasRequirements) {
-          console.log('   Pending requirements:', requirementsCurrentlyDue.join(', '))
-        }
+        console.log('ℹ️  Freelancer Stripe status unchanged:', freelancer.id)
       }
+      return
     }
+
+    console.log('⚠️  No workshop or freelancer found for Stripe account:', account.id)
   } catch (error) {
     console.error('❌ Error handling account update:', error)
   }
@@ -735,11 +774,11 @@ async function handleChargeUpdated(charge: Stripe.Charge, stripe: Stripe) {
     // Find the booking by stripePaymentId
     const booking = await prisma.directBooking.findFirst({
       where: { stripePaymentId: paymentIntentId, paymentStatus: 'PAID' },
-      select: { id: true, stripeFee: true },
+      select: { id: true, stripeFee: true, paymentMethodDetail: true },
     })
 
     if (!booking) return
-    if (booking.stripeFee !== null) return // already captured
+    if (booking.stripeFee !== null && booking.paymentMethodDetail !== null) return // already captured
 
     // Fetch balance transaction to get the real fee
     const balanceTransactionId = typeof charge.balance_transaction === 'string'
@@ -748,13 +787,17 @@ async function handleChargeUpdated(charge: Stripe.Charge, stripe: Stripe) {
 
     const balanceTx = await stripe.balanceTransactions.retrieve(balanceTransactionId)
     const feeInEuros = balanceTx.fee / 100
+    const paymentMethodDetail = charge.payment_method_details?.type || null
 
     await prisma.directBooking.update({
       where: { id: booking.id },
-      data: { stripeFee: feeInEuros },
+      data: {
+        ...(booking.stripeFee === null && { stripeFee: feeInEuros }),
+        ...(booking.paymentMethodDetail === null && paymentMethodDetail && { paymentMethodDetail }),
+      },
     })
 
-    console.log(`✅ stripeFee updated for booking ${booking.id}: ${feeInEuros} €`)
+    console.log(`✅ charge.updated → booking ${booking.id}: stripeFee=${feeInEuros}€, method=${paymentMethodDetail}`)
   } catch (error) {
     console.error('❌ Error handling charge.updated:', error)
   }

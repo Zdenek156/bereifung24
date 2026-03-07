@@ -8,6 +8,12 @@ import NewsFeed from '@/components/NewsFeed'
 import AnnouncementsFeed from '@/components/AnnouncementsFeed'
 import EmployeeAdminTiles from '@/components/EmployeeAdminTiles'
 
+interface TimeSession {
+  id: string
+  startTime: string
+  breaks: { id: string; startTime: string; endTime: string | null }[]
+}
+
 interface DashboardStats {
   leaveBalance?: {
     remaining: number
@@ -18,6 +24,7 @@ interface DashboardStats {
   pendingTasks: number
   overtimeHours?: number
   unreadEmails: number
+  newSupportRequests: number
   totalCustomers: number
   totalWorkshops: number
   totalCommissions: number
@@ -32,6 +39,7 @@ export default function MitarbeiterDashboard() {
     newDocuments: 0,
     pendingTasks: 0,
     unreadEmails: 0,
+    newSupportRequests: 0,
     totalCustomers: 0,
     totalWorkshops: 0,
     totalCommissions: 0,
@@ -40,6 +48,11 @@ export default function MitarbeiterDashboard() {
   const [loading, setLoading] = useState(true)
   const [showNewsfeed, setShowNewsfeed] = useState(true)
   const [permissionError, setPermissionError] = useState<string | null>(null)
+
+  // Time tracking state
+  const [activeSession, setActiveSession] = useState<TimeSession | null>(null)
+  const [timeLoading, setTimeLoading] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
     // Check for permission error from URL params
@@ -72,6 +85,12 @@ export default function MitarbeiterDashboard() {
     localStorage.setItem('mitarbeiter_show_newsfeed', String(newValue))
   }
 
+  // Live clock tick
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     if (status === 'loading') return
 
@@ -79,8 +98,58 @@ export default function MitarbeiterDashboard() {
       router.push('/login')
     } else if (session?.user) {
       fetchStats()
+      fetchTimeData()
     }
   }, [status, session, router])
+
+  const fetchTimeData = async () => {
+    try {
+      const res = await fetch('/api/employee/time')
+      if (res.ok) {
+        const data = await res.json()
+        setActiveSession(data.activeSession || null)
+      }
+    } catch (e) {
+      console.error('Time fetch error:', e)
+    }
+  }
+
+  const handleTimeAction = async (action: 'start' | 'stop' | 'break-start' | 'break-end') => {
+    setTimeLoading(true)
+    try {
+      const res = await fetch('/api/employee/time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      })
+      if (res.ok) {
+        await fetchTimeData()
+      }
+    } catch (e) {
+      console.error('Time action error:', e)
+    } finally {
+      setTimeLoading(false)
+    }
+  }
+
+  const getActiveTime = (): string => {
+    if (!activeSession) return '0:00:00'
+    let totalMs = currentTime.getTime() - new Date(activeSession.startTime).getTime()
+    // Subtract break time
+    for (const b of activeSession.breaks) {
+      const breakStart = new Date(b.startTime).getTime()
+      const breakEnd = b.endTime ? new Date(b.endTime).getTime() : currentTime.getTime()
+      totalMs -= (breakEnd - breakStart)
+    }
+    if (totalMs < 0) totalMs = 0
+    const totalSec = Math.floor(totalMs / 1000)
+    const h = Math.floor(totalSec / 3600)
+    const m = Math.floor((totalSec % 3600) / 60)
+    const s = totalSec % 60
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
+  const isOnBreak = activeSession?.breaks.some(b => !b.endTime) ?? false
 
   const fetchStats = async () => {
     try {
@@ -152,18 +221,87 @@ export default function MitarbeiterDashboard() {
       )}
 
       {/* Dashboard Header */}
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Willkommen im Mitarbeiter-Portal!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Hallo {session?.user?.email}, schön dass Sie da sind.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Willkommen im Mitarbeiter-Portal!
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Hallo {(`${(session?.user as any)?.firstName || ''} ${(session?.user as any)?.lastName || ''}`).trim() || session?.user?.email}, schön dass Sie da sind.
+          </p>
+        </div>
+
+        {/* Compact Time Tracking Widget */}
+        <div className="bg-white rounded-xl shadow border border-gray-200 px-4 py-3 flex items-center gap-4 min-w-[260px]">
+          <div className="flex flex-col items-center">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Arbeitszeit</span>
+            <span className="text-2xl font-mono font-bold text-gray-800 leading-tight">
+              {activeSession ? getActiveTime() : '--:--:--'}
+            </span>
+            {isOnBreak && (
+              <span className="text-xs text-yellow-600 font-medium">Pause läuft</span>
+            )}
+            {activeSession && !isOnBreak && (
+              <span className="text-xs text-green-600 font-medium">Aktiv</span>
+            )}
+            {!activeSession && (
+              <span className="text-xs text-gray-400">Nicht gestartet</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!activeSession && (
+              <button
+                onClick={() => handleTimeAction('start')}
+                disabled={timeLoading}
+                className="w-9 h-9 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 flex items-center justify-center text-white shadow transition-colors"
+                title="Arbeit starten"
+              >
+                <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            )}
+            {activeSession && !isOnBreak && (
+              <>
+                <button
+                  onClick={() => handleTimeAction('break-start')}
+                  disabled={timeLoading}
+                  className="w-9 h-9 rounded-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 flex items-center justify-center text-white shadow transition-colors"
+                  title="Pause starten"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <button
+                  onClick={() => handleTimeAction('stop')}
+                  disabled={timeLoading}
+                  className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 disabled:opacity-50 flex items-center justify-center text-white shadow transition-colors"
+                  title="Feierabend"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                </button>
+              </>
+            )}
+            {activeSession && isOnBreak && (
+              <button
+                onClick={() => handleTimeAction('break-end')}
+                disabled={timeLoading}
+                className="w-9 h-9 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 flex items-center justify-center text-white shadow transition-colors"
+                title="Pause beenden"
+              >
+                <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            )}
+            <Link
+              href="/mitarbeiter/zeit"
+              className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shadow transition-colors"
+              title="Zeiterfassung öffnen"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-7 gap-4 mb-8">
         {/* Neue E-Mails */}
         <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
@@ -176,6 +314,22 @@ export default function MitarbeiterDashboard() {
               <p className="text-xs font-medium text-gray-600 truncate">Neue E-Mails</p>
               <p className="text-xl font-bold text-gray-900">{stats.unreadEmails}</p>
               <p className="text-xs text-gray-500 truncate">Ungelesen</p>
+            </div>
+          </div>
+        </Link>
+
+        {/* Neue Support-Anfragen */}
+        <Link href="/admin/support?status=NEW" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl">🎫</span>
+              </div>
+            </div>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-600 truncate">Neue Support-Anfragen</p>
+              <p className="text-xl font-bold text-gray-900">{stats.newSupportRequests}</p>
+              <p className="text-xs text-gray-500 truncate">Neu</p>
             </div>
           </div>
         </Link>

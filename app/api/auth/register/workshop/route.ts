@@ -20,6 +20,7 @@ const workshopSchema = z.object({
   city: z.string().min(2, 'Stadt erforderlich'),
   website: z.string().optional(),
   description: z.string().optional(),
+  referralCode: z.string().optional(),
 })
 
 export async function POST(request: Request) {
@@ -77,9 +78,6 @@ export async function POST(request: Request) {
       console.warn('Failed to geocode workshop address during registration')
     }
 
-    // SEPA-Mandatsreferenz generieren
-    const sepaMandateRef = `B24-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
-
     // Kundennummer generieren (KD-YYYYMMDD-XXX)
     const today = new Date()
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '')
@@ -101,6 +99,25 @@ export async function POST(request: Request) {
     const counter = (workshopsToday + 1).toString().padStart(3, '0')
     const customerNumber = `KD-${dateStr}-${counter}`
 
+    // Freelancer-Referral prüfen
+    let freelancerId: string | null = null
+    if (validatedData.referralCode) {
+      try {
+        const freelancer = await prisma.freelancer.findUnique({
+          where: { affiliateCode: validatedData.referralCode },
+          select: { id: true, userId: true }
+        })
+        if (freelancer) {
+          freelancerId = freelancer.id
+          console.log(`🤝 Workshop registriert über Freelancer-Referral: ${validatedData.referralCode} → Freelancer ${freelancer.id}`)
+        } else {
+          console.warn(`⚠️ Ungültiger Freelancer-Referral-Code: ${validatedData.referralCode}`)
+        }
+      } catch (refErr) {
+        console.error('Fehler bei Freelancer-Referral-Lookup:', refErr)
+      }
+    }
+
     // User und Workshop erstellen
     const user = await prisma.user.create({
       data: {
@@ -121,13 +138,16 @@ export async function POST(request: Request) {
             companyName: validatedData.companyName,
             website: validatedData.website,
             description: validatedData.description,
-            sepaMandateRef: sepaMandateRef,
             isVerified: false, // Admin muss verifizieren
             latitude: latitude,
             longitude: longitude,
             serviceRadius: 25, // Default 25km service radius
             status: 'PENDING', // Wartet auf Admin-Freischaltung
             approved: false,
+            ...(freelancerId ? {
+              freelancerId: freelancerId,
+              freelancerAcquiredAt: new Date(),
+            } : {}),
           }
         }
       },
@@ -184,7 +204,9 @@ export async function POST(request: Request) {
               companyName: validatedData.companyName,
               email: user.email,
               phone: user.phone || undefined,
-              city: user.city || undefined,
+              street: validatedData.street || undefined,
+              zipCode: validatedData.zipCode || undefined,
+              city: validatedData.city || undefined,
               registrationDate: registrationDate,
               workshopId: user.workshop?.id || ''
             })

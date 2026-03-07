@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, directBookingNotificationWorkshopEmail } from '@/lib/email'
 import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 import { createBerlinDate, isDSTInBerlin } from '@/lib/timezone-utils'
+import { autoOrderTires } from '@/lib/services/autoOrderService'
 
 /**
  * POST /api/bookings/direct
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
       totalPrice = pricingData.price || pricingData.basePrice || 0
     }
 
-    const estimatedDuration = 60 // Default 60 minutes
+    let estimatedDuration = 60 // Default, will be overridden by stored durationMinutes from DB
 
     // Check if slot is still available in DirectBooking (double-check to prevent race conditions)
     const dateOnly = date // Already in YYYY-MM-DD format
@@ -248,8 +249,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Use stored durationMinutes from DB (set by reserve route with correct base + additionalServices)
+    if (completeBooking.durationMinutes && completeBooking.durationMinutes > 0) {
+      estimatedDuration = completeBooking.durationMinutes
+    } else {
+      // Fallback: recalculate from additional services
+      const additionalSvcs = (completeBooking as any).additionalServicesData as any[] | null
+      if (additionalSvcs && Array.isArray(additionalSvcs)) {
+        for (const svc of additionalSvcs) {
+          estimatedDuration += (svc.duration || 0)
+        }
+      }
+    }
+
     console.log('[DIRECT BOOKING] Complete booking loaded with tire data:', {
       id: completeBooking.id,
+      estimatedDuration,
       hasTireData: !!(completeBooking.tireBrand && completeBooking.tireModel),
       tireData: completeBooking.tireData,
       tireDataType: typeof completeBooking.tireData,
@@ -287,6 +302,39 @@ export async function POST(req: NextRequest) {
 
     let calendarEventId: string | null = null
 
+    // Build serviceName (needed in calendar, emails, AND response)
+    const globalServiceLabels: Record<string, string> = {
+      'WHEEL_CHANGE': 'Räderwechsel',
+      'TIRE_CHANGE': 'Reifenwechsel',
+      'TIRE_REPAIR': 'Reifenreparatur',
+      'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+      'ALIGNMENT_BOTH': 'Achsvermessung',
+      'CLIMATE_SERVICE': 'Klimaservice'
+    }
+    const globalSubtypeLabels: Record<string, string> = {
+      'foreign_object': 'Fremdkörper-Entfernung',
+      'valve_damage': 'Ventilschaden',
+      'basic': 'Basis',
+      'comfort': 'Komfort',
+      'premium': 'Premium',
+      'check': 'Prüfung',
+      'front': 'Vorderachse',
+      'rear': 'Hinterachse',
+      'both': 'Beide Achsen',
+      'measurement_front': 'Vermessung Vorderachse',
+      'measurement_rear': 'Vermessung Hinterachse',
+      'measurement_both': 'Vermessung beide Achsen',
+      'adjustment_front': 'Einstellung Vorderachse',
+      'adjustment_rear': 'Einstellung Hinterachse',
+      'adjustment_both': 'Einstellung beide Achsen',
+      'full_service': 'Komplett-Service'
+    }
+    const globalBookingSubtype = (completeBooking as any).serviceSubtype
+    const globalSubtypeLabel = globalBookingSubtype ? globalSubtypeLabels[globalBookingSubtype] : null
+    const serviceName = globalSubtypeLabel
+      ? `${globalServiceLabels[serviceType] || serviceType} - ${globalSubtypeLabel}`
+      : (globalServiceLabels[serviceType] || serviceType)
+
     // Create Google Calendar Event if requested
     if (shouldCreateCalendarEvent) {
       console.log('[CALENDAR] Creating Google Calendar event...')
@@ -298,38 +346,96 @@ export async function POST(req: NextRequest) {
         'WHEEL_CHANGE': 'Räderwechsel',
         'TIRE_CHANGE': 'Reifenwechsel',
         'TIRE_REPAIR': 'Reifenreparatur',
-        'MOTORCYCLE_TIRE': 'Motorradreifen',
-        'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+        'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
         'CLIMATE_SERVICE': 'Klimaservice'
       }
 
-      const serviceName = serviceLabels[serviceType] || serviceType
+      // Build detailed service name using subtype (e.g. "Reifenreparatur - Fremdkörper-Entfernung")
+      const subtypeLabels: Record<string, string> = {
+        'foreign_object': 'Fremdkörper-Entfernung',
+        'valve_damage': 'Ventilschaden',
+        'basic': 'Basis',
+        'comfort': 'Komfort',
+        'premium': 'Premium',
+        'check': 'Prüfung',
+        'front': 'Vorderachse',
+        'rear': 'Hinterachse',
+        'both': 'Beide Achsen',
+        'measurement_front': 'Vermessung Vorderachse',
+        'measurement_rear': 'Vermessung Hinterachse',
+        'measurement_both': 'Vermessung beide Achsen',
+        'adjustment_front': 'Einstellung Vorderachse',
+        'adjustment_rear': 'Einstellung Hinterachse',
+        'adjustment_both': 'Einstellung beide Achsen',
+        'full_service': 'Komplett-Service'
+      }
+      const bookingSubtype = (completeBooking as any).serviceSubtype
+      const subtypeLabel = bookingSubtype ? subtypeLabels[bookingSubtype] : null
+      // Use global serviceName (already defined above)
       const customerInfo = `${customer.user.firstName} ${customer.user.lastName}\n${customer.user.email}\nTelefon: ${customer.user.phone || 'Nicht angegeben'}`
       const vehicleInfo = `${vehicle.make} ${vehicle.model}${vehicle.year ? ` (${vehicle.year})` : ''}${vehicle.licensePlate ? ` - ${vehicle.licensePlate}` : ''}`
       
+      // Helper: construct tire size string from tireData fields
+      const buildTireSizeStr = (td: any) => {
+        if (!td) return ''
+        // Use size as-is if available (it may already include loadIndex+speedIndex)
+        if (td.size) return td.size
+        // Fallback to loadIndex+speedIndex if no size
+        return `${td.loadIndex || ''}${td.speedIndex || ''}`
+      }
+
       // Build detailed description with tire info if available
       let calendarDescription = `${customerInfo}\n\nFahrzeug: ${vehicleInfo}\nService: ${serviceName}`
       
-      if (completeBooking.tireBrand && completeBooking.tireModel) {
+      const tireDataJson = completeBooking.tireData as any
+      if (tireDataJson?.isMixedTires && tireDataJson.front && tireDataJson.rear) {
+        // Mixed tires (motorcycle front/rear)
+        calendarDescription += `\n\n🛞 Reifen Vorne: ${tireDataJson.front.brand} ${tireDataJson.front.model}`
+        const frontSize = buildTireSizeStr(tireDataJson.front)
+        if (frontSize) calendarDescription += ` (${frontSize})`
+        calendarDescription += ` - ${tireDataJson.front.quantity || 1}x`
+        if (tireDataJson.front.ean) calendarDescription += `\nEAN: ${tireDataJson.front.ean}`
+        
+        calendarDescription += `\n\n🛞 Reifen Hinten: ${tireDataJson.rear.brand} ${tireDataJson.rear.model}`
+        const rearSize = buildTireSizeStr(tireDataJson.rear)
+        if (rearSize) calendarDescription += ` (${rearSize})`
+        calendarDescription += ` - ${tireDataJson.rear.quantity || 1}x`
+        if (tireDataJson.rear.ean) calendarDescription += `\nEAN: ${tireDataJson.rear.ean}`
+      } else if (completeBooking.tireBrand && completeBooking.tireModel) {
         calendarDescription += `\n\n🛞 Reifen: ${completeBooking.tireBrand} ${completeBooking.tireModel}`
         if (completeBooking.tireSize) calendarDescription += ` ${completeBooking.tireSize}`
+        if (completeBooking.tireLoadIndex || completeBooking.tireSpeedIndex) calendarDescription += ` ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`
         calendarDescription += ` (${completeBooking.tireQuantity || 4}x)`
         if (completeBooking.tireEAN) calendarDescription += `\nEAN: ${completeBooking.tireEAN}`
       }
       
-      // Add additional services
+      // Add additional services (standard: balancing, storage, disposal)
       if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
         calendarDescription += `\n\nZusatzleistungen:`
         if (completeBooking.hasBalancing) calendarDescription += `\n✅ Auswuchtung (+${Number(completeBooking.balancingPrice || 0).toFixed(2)}€)`
         if (completeBooking.hasStorage) calendarDescription += `\n✅ Einlagerung (+${Number(completeBooking.storagePrice || 0).toFixed(2)}€)`
-        if (completeBooking.hasDisposal) calendarDescription += `\n✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`
+        if (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) calendarDescription += `\n✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`
         if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) calendarDescription += `\n✅ RunFlat-Aufschlag (+${Number(completeBooking.runFlatSurcharge).toFixed(2)}€)`
+      }
+      
+      // Add custom additional services (Klimaservice, Achsvermessung, etc.)
+      const additionalServicesJson = (completeBooking as any).additionalServicesData as any[] | null
+      if (additionalServicesJson && additionalServicesJson.length > 0) {
+        if (!completeBooking.hasBalancing && !completeBooking.hasStorage && !completeBooking.hasDisposal) {
+          calendarDescription += `\n\nZusatzleistungen:`
+        }
+        for (const svc of additionalServicesJson) {
+          const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+          const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+          calendarDescription += `\n✅ ${svcName} (+${Number(svc.price || 0).toFixed(2)}€)`
+        }
       }
       
       calendarDescription += `\n\nGesamtpreis: ${Number(completeBooking.totalPrice || 0).toFixed(2)} €`
       
       const eventDetails = {
-        summary: `${serviceName}${completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}`,
+        summary: `${serviceName}${tireDataJson?.isMixedTires ? ` - ${tireDataJson.front?.brand || ''} / ${tireDataJson.rear?.brand || ''}` : completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}`,
         description: calendarDescription,
         start: appointmentStart.toISOString(),
         end: appointmentEnd.toISOString(),
@@ -378,6 +484,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // === AUTO-ORDER: Try to order tires automatically if workshop has autoOrder enabled ===
+    let autoOrderResult: { success: boolean; orderNumber?: string; error?: string } | null = null
+    const isTireServiceType = ['TIRE_CHANGE', 'TIRE_MOUNT', 'MOTORCYCLE_TIRE'].includes(serviceType)
+    
+    if (isTireServiceType) {
+      console.log('[AUTO-ORDER] Checking auto-order for tire service booking...')
+      try {
+        autoOrderResult = await autoOrderTires(completeBooking.id)
+        console.log('[AUTO-ORDER] Result:', JSON.stringify(autoOrderResult))
+      } catch (error) {
+        console.error('[AUTO-ORDER] Error:', error)
+        autoOrderResult = { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+      }
+    }
+
+    // === Look up workshop supplier config from WorkshopSupplier table ===
+    const workshopSupplier = await prisma.workshopSupplier.findFirst({
+      where: {
+        workshopId: completeBooking.workshopId,
+        isActive: true,
+      },
+      select: {
+        supplier: true,
+        name: true,
+        connectionType: true,
+        autoOrder: true,
+      }
+    })
+    console.log('[SUPPLIER] Workshop supplier config:', workshopSupplier)
+
     // Send emails if requested
     if (sendEmails) {
       console.log('[EMAIL] Sending confirmation emails...')
@@ -386,12 +522,33 @@ export async function POST(req: NextRequest) {
         'WHEEL_CHANGE': 'Räderwechsel',
         'TIRE_CHANGE': 'Reifenwechsel',
         'TIRE_REPAIR': 'Reifenreparatur',
-        'MOTORCYCLE_TIRE': 'Motorradreifen',
-        'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+        'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
         'CLIMATE_SERVICE': 'Klimaservice'
       }
 
-      const serviceName = serviceLabels[serviceType] || serviceType
+      // Build detailed service name using subtype
+      const emailSubtypeLabels: Record<string, string> = {
+        'foreign_object': 'Fremdkörper-Entfernung',
+        'valve_damage': 'Ventilschaden',
+        'basic': 'Basis',
+        'comfort': 'Komfort',
+        'premium': 'Premium',
+        'check': 'Prüfung',
+        'front': 'Vorderachse',
+        'rear': 'Hinterachse',
+        'both': 'Beide Achsen',
+        'measurement_front': 'Vermessung Vorderachse',
+        'measurement_rear': 'Vermessung Hinterachse',
+        'measurement_both': 'Vermessung beide Achsen',
+        'adjustment_front': 'Einstellung Vorderachse',
+        'adjustment_rear': 'Einstellung Hinterachse',
+        'adjustment_both': 'Einstellung beide Achsen',
+        'full_service': 'Komplett-Service'
+      }
+      const emailBookingSubtype = (completeBooking as any).serviceSubtype
+      const emailSubtypeLabel = emailBookingSubtype ? emailSubtypeLabels[emailBookingSubtype] : null
+      // Use global serviceName (already defined above)
       const formattedDate = appointmentDateTime.toLocaleDateString('de-DE', {
         weekday: 'long',
         day: 'numeric',
@@ -415,23 +572,55 @@ export async function POST(req: NextRequest) {
       ]
       
       // Add tire info if available
-      if (completeBooking.tireBrand && completeBooking.tireModel) {
+      const icsTireData = completeBooking.tireData as any
+      if (icsTireData?.isMixedTires && icsTireData.front && icsTireData.rear) {
+        // Mixed tires (motorcycle front/rear)
+        icsDescriptionParts.push('')
+        icsDescriptionParts.push(`🛞 Reifen Vorne: ${icsTireData.front.brand} ${icsTireData.front.model}`)
+        const frontSizeIcs = icsTireData.front.size || `${icsTireData.front.loadIndex || ''}${icsTireData.front.speedIndex || ''}`
+        if (frontSizeIcs) icsDescriptionParts.push(`Größe: ${frontSizeIcs}`)
+        icsDescriptionParts.push(`Menge: ${icsTireData.front.quantity || 1}x`)
+        if (icsTireData.front.ean) icsDescriptionParts.push(`EAN: ${icsTireData.front.ean}`)
+        
+        icsDescriptionParts.push('')
+        icsDescriptionParts.push(`🛞 Reifen Hinten: ${icsTireData.rear.brand} ${icsTireData.rear.model}`)
+        const rearSizeIcs = icsTireData.rear.size || `${icsTireData.rear.loadIndex || ''}${icsTireData.rear.speedIndex || ''}`
+        if (rearSizeIcs) icsDescriptionParts.push(`Größe: ${rearSizeIcs}`)
+        icsDescriptionParts.push(`Menge: ${icsTireData.rear.quantity || 1}x`)
+        if (icsTireData.rear.ean) icsDescriptionParts.push(`EAN: ${icsTireData.rear.ean}`)
+      } else if (completeBooking.tireBrand && completeBooking.tireModel) {
         icsDescriptionParts.push('')
         icsDescriptionParts.push(`🛞 Reifen: ${completeBooking.tireBrand} ${completeBooking.tireModel}`)
-        if (completeBooking.tireSize) icsDescriptionParts.push(`Größe: ${completeBooking.tireSize}`)
+        const stdSize = completeBooking.tireSize || `${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`
+        if (stdSize) icsDescriptionParts.push(`Größe: ${stdSize}`)
         icsDescriptionParts.push(`Menge: ${completeBooking.tireQuantity || 4}x`)
         if (completeBooking.tireEAN) icsDescriptionParts.push(`EAN: ${completeBooking.tireEAN}`)
       }
       
-      // Add additional services
-      if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
+      // Add additional services to ICS
+      const showDisposalInIcs = completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')
+      if (completeBooking.hasBalancing || completeBooking.hasStorage || showDisposalInIcs || completeBooking.runFlatSurcharge) {
         icsDescriptionParts.push('')
         icsDescriptionParts.push('Zusatzleistungen:')
         if (completeBooking.hasBalancing) icsDescriptionParts.push(`✅ Auswuchtung (+${Number(completeBooking.balancingPrice || 0).toFixed(2)}€)`)
         if (completeBooking.hasStorage) icsDescriptionParts.push(`✅ Einlagerung (+${Number(completeBooking.storagePrice || 0).toFixed(2)}€)`)
-        if (completeBooking.hasDisposal) icsDescriptionParts.push(`✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`)
+        if (showDisposalInIcs) icsDescriptionParts.push(`✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`)
         if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) {
           icsDescriptionParts.push(`✅ RunFlat-Aufschlag (+${Number(completeBooking.runFlatSurcharge).toFixed(2)}€)`)
+        }
+      }
+      
+      // Add custom additional services (Klimaservice, Achsvermessung, etc.) to ICS
+      const icsAdditionalServices = (completeBooking as any).additionalServicesData as any[] | null
+      if (icsAdditionalServices && icsAdditionalServices.length > 0) {
+        if (!completeBooking.hasBalancing && !completeBooking.hasStorage && !completeBooking.hasDisposal) {
+          icsDescriptionParts.push('')
+          icsDescriptionParts.push('Zusatzleistungen:')
+        }
+        for (const svc of icsAdditionalServices) {
+          const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+          const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+          icsDescriptionParts.push(`✅ ${svcName} (+${Number(svc.price || 0).toFixed(2)}€)`)
         }
       }
       
@@ -475,10 +664,13 @@ export async function POST(req: NextRequest) {
       const runFlatSurcharge = completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : 0
       const totalPrice = completeBooking.totalPrice ? Number(completeBooking.totalPrice) : 0
 
-      // Tire data for emails
-      const tireSize = completeBooking.tireSize 
-        ? `${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim()
-        : undefined
+      // Tire data for emails - include loadIndex/speedIndex if not already in tireSize
+      const rawTireSize = completeBooking.tireSize || ''
+      const loadSpeedSuffix = `${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`
+      const sizeAlreadyHasLoadSpeed = loadSpeedSuffix && rawTireSize.includes(loadSpeedSuffix)
+      const tireSize = rawTireSize
+        ? (sizeAlreadyHasLoadSpeed ? rawTireSize : `${rawTireSize} ${loadSpeedSuffix}`.trim())
+        : (loadSpeedSuffix || undefined)
 
       // Send customer email with rich tire data
       const customerEmailData = directBookingConfirmationCustomerEmail({
@@ -488,7 +680,11 @@ export async function POST(req: NextRequest) {
         workshopAddress,
         workshopPhone: completeBooking.workshop.user.phone || 'Nicht angegeben',
         workshopEmail: completeBooking.workshop.user.email,
-        workshopLogoUrl: completeBooking.workshop.logoUrl || undefined,
+        workshopLogoUrl: completeBooking.workshop.logoUrl 
+          ? (completeBooking.workshop.logoUrl.startsWith('http') 
+              ? completeBooking.workshop.logoUrl 
+              : `${process.env.NEXTAUTH_URL || 'https://bereifung24.de'}${completeBooking.workshop.logoUrl}`)
+          : undefined,
         serviceType: serviceType as any,
         serviceName,
         appointmentDate: formattedDate,
@@ -516,7 +712,8 @@ export async function POST(req: NextRequest) {
         tireData: completeBooking.tireData as any, // Mixed tires data
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
-        hasDisposal: completeBooking.hasDisposal || undefined
+        hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
+        additionalServicesData: (completeBooking as any).additionalServicesData || undefined
       })
 
       console.log('[DIRECT BOOKING] Customer email data prepared:', {
@@ -547,19 +744,15 @@ export async function POST(req: NextRequest) {
         ? `${completeBooking.customer.user.street}, ${completeBooking.customer.user.zipCode} ${completeBooking.customer.user.city}`
         : undefined
 
-      // Check if workshop has supplier integration
-      const supplier = completeBooking.workshop.supplierId 
-        ? await prisma.tireSupplier.findUnique({ 
-            where: { id: completeBooking.workshop.supplierId },
-            select: { name: true, type: true }
-          })
-        : null
       console.log('[EMAIL] Tire data for workshop email:', {
         tireBrand: completeBooking.tireBrand,
         tireModel: completeBooking.tireModel,
         tireArticleId: completeBooking.tireArticleId,
         tireEAN: completeBooking.tireEAN,
-        supplierName: supplier?.name,
+        supplierName: workshopSupplier?.name,
+        supplierConnectionType: workshopSupplier?.connectionType,
+        autoOrder: workshopSupplier?.autoOrder,
+        autoOrderResult: autoOrderResult,
         hasTireArticleId: !!completeBooking.tireArticleId
       })
       const workshopEmailData = directBookingNotificationWorkshopEmail({
@@ -588,7 +781,7 @@ export async function POST(req: NextRequest) {
         workshopPayout: completeBooking.workshopPayout ? Number(completeBooking.workshopPayout) : totalPrice,
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
-        hasDisposal: completeBooking.hasDisposal || undefined,
+        hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
         tireBrand: completeBooking.tireBrand || undefined,
         tireModel: completeBooking.tireModel || undefined,
         tireSize,
@@ -599,9 +792,13 @@ export async function POST(req: NextRequest) {
         totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         tireRunFlat: completeBooking.tireRunFlat || undefined,
         tire3PMSF: completeBooking.tire3PMSF || undefined,
-        tireData: completeBooking.tireData as any, // Mixed tires data
-        supplierConnectionType: supplier?.type as 'API' | 'CSV' | undefined,
-        supplierName: supplier?.name
+        tireData: completeBooking.tireData as any,
+        supplierConnectionType: workshopSupplier?.connectionType as 'API' | 'CSV' | undefined,
+        supplierName: workshopSupplier?.name,
+        autoOrderSuccess: autoOrderResult?.success || false,
+        autoOrderNumber: autoOrderResult?.orderNumber,
+        autoOrderError: autoOrderResult?.error,
+        additionalServicesData: (completeBooking as any).additionalServicesData || undefined
       })
 
       console.log('[DIRECT BOOKING] Workshop email data prepared:', {
@@ -643,13 +840,20 @@ export async function POST(req: NextRequest) {
         tireQuantity: completeBooking.tireQuantity,
         tireRunFlat: completeBooking.tireRunFlat,
         tire3PMSF: completeBooking.tire3PMSF,
+        // Mixed tire data (JSON field with front/rear details)
+        tireData: completeBooking.tireData || null,
         // Pricing details
         basePrice: completeBooking.basePrice,
         balancingPrice: completeBooking.balancingPrice,
         storagePrice: completeBooking.storagePrice,
         disposalFee: completeBooking.disposalFee,
         runFlatSurcharge: completeBooking.runFlatSurcharge,
-        totalPrice: completeBooking.totalPrice
+        totalPrice: completeBooking.totalPrice,
+        // Additional services data
+        additionalServicesData: (completeBooking as any).additionalServicesData || null,
+        serviceSubtype: (completeBooking as any).serviceSubtype || null,
+        // Service labels for display
+        serviceName: serviceName
       }
     })
 

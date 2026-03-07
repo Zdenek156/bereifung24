@@ -7,6 +7,7 @@ interface FilterOption {
   packageType: string
   label: string
   info: string
+  hint?: string // Optional hint text shown below selected option
 }
 
 interface FilterGroup {
@@ -18,6 +19,7 @@ interface FilterGroup {
 
 export interface ServiceFilterConfig {
   groups: FilterGroup[]
+  singleSelection?: boolean // If true, only one option across ALL groups can be selected (radio across groups)
 }
 
 interface ServiceFiltersProps {
@@ -91,10 +93,11 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
     ]
   },
   ALIGNMENT_BOTH: {
+    singleSelection: true, // Nur eine Auswahl über alle Gruppen hinweg
     groups: [
       {
         label: 'Nur Messung',
-        multiSelect: false, // Radio buttons innerhalb der Gruppe
+        multiSelect: false,
         options: [
           { 
             packageType: 'measurement_front', 
@@ -115,7 +118,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
       },
       {
         label: 'Mit Einstellung',
-        multiSelect: false, // Radio buttons innerhalb der Gruppe
+        multiSelect: false,
         options: [
           { 
             packageType: 'adjustment_front', 
@@ -136,7 +139,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
       },
       {
         label: 'Komplett-Service',
-        multiSelect: false, // Radio button
+        multiSelect: false,
         options: [
           { 
             packageType: 'full_service', 
@@ -176,12 +179,14 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
           { 
             packageType: 'motorcycle_with_tire_purchase', 
             label: 'Mit Reifenkauf', 
-            info: 'Neue Motorradreifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.'
+            info: 'Neue Motorradreifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.',
+            hint: 'Räder müssen ausgebaut zur Werkstatt gebracht werden'
           },
           { 
             packageType: 'motorcycle_tire_installation_only', 
             label: 'Nur Montage', 
-            info: 'Nur die Montage-Dienstleistung. Sie bringen Ihre eigenen Motorradreifen (bereits ausgebaut) mit zur Werkstatt.'
+            info: 'Nur die Montage-Dienstleistung. Sie bringen Ihre eigenen Motorradreifen (bereits ausgebaut) mit zur Werkstatt.',
+            hint: 'Sie bringen Ihre eigenen Reifen mit'
           }
         ]
       },
@@ -208,7 +213,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
       },
       {
         label: 'Zusatzleistung',
-        multiSelect: false, // Checkbox-Style
+        multiSelect: true, // Checkbox - kann an/abgewählt werden
         options: [
           { 
             packageType: 'with_disposal', 
@@ -280,7 +285,10 @@ export default function ServiceFilters({
   const togglePackage = (packageType: string, group: FilterGroup) => {
     let newSelection: string[]
     
-    if (group.multiSelect) {
+    if (config?.singleSelection) {
+      // Single selection across ALL groups: clear everything, set only selected
+      newSelection = [packageType]
+    } else if (group.multiSelect) {
       // Checkboxes: Toggle on/off
       newSelection = selectedPackages.includes(packageType)
         ? selectedPackages.filter(p => p !== packageType)
@@ -316,7 +324,7 @@ export default function ServiceFilters({
               >
                 <input
                   type={group.multiSelect ? 'checkbox' : 'radio'}
-                  name={group.multiSelect ? undefined : `${selectedService}-filter-${groupIndex}`}
+                  name={group.multiSelect ? undefined : config?.singleSelection ? `${selectedService}-filter-global` : `${selectedService}-filter-${groupIndex}`}
                   checked={selectedPackages.includes(option.packageType)}
                   onChange={() => togglePackage(option.packageType, group)}
                   className={`w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500${group.multiSelect ? ' rounded' : ''}`}
@@ -325,6 +333,9 @@ export default function ServiceFilters({
                   {option.label}
                   <InfoTooltip content={option.info} />
                 </span>
+                {option.hint && selectedPackages.includes(option.packageType) && (
+                  <p className="text-xs text-gray-500 ml-7 -mt-1 mb-1">💡 {option.hint}</p>
+                )}
               </label>
             ))}
           </div>

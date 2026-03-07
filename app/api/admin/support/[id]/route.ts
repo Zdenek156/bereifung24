@@ -44,9 +44,18 @@ export async function GET(
         where: { id: ticketAny.assignedToId },
         select: { firstName: true, lastName: true, email: true },
       })
-      assignedToName = assignedUser
-        ? `${assignedUser.firstName} ${assignedUser.lastName}`.trim() || assignedUser.email
-        : null
+
+      if (assignedUser) {
+        assignedToName = `${assignedUser.firstName} ${assignedUser.lastName}`.trim() || assignedUser.email
+      } else {
+        const assignedEmployee = await prisma.b24Employee.findUnique({
+          where: { id: ticketAny.assignedToId },
+          select: { firstName: true, lastName: true, email: true },
+        })
+        assignedToName = assignedEmployee
+          ? `${assignedEmployee.firstName} ${assignedEmployee.lastName}`.trim() || assignedEmployee.email
+          : null
+      }
     }
 
     // Fetch repliedBy user name if set
@@ -56,9 +65,18 @@ export async function GET(
         where: { id: ticket.repliedBy },
         select: { firstName: true, lastName: true, email: true },
       })
-      repliedByName = repliedUser
-        ? `${repliedUser.firstName} ${repliedUser.lastName}`.trim() || repliedUser.email
-        : null
+
+      if (repliedUser) {
+        repliedByName = `${repliedUser.firstName} ${repliedUser.lastName}`.trim() || repliedUser.email
+      } else {
+        const repliedEmployee = await prisma.b24Employee.findUnique({
+          where: { id: ticket.repliedBy },
+          select: { firstName: true, lastName: true, email: true },
+        })
+        repliedByName = repliedEmployee
+          ? `${repliedEmployee.firstName} ${repliedEmployee.lastName}`.trim() || repliedEmployee.email
+          : null
+      }
     }
 
     return NextResponse.json({

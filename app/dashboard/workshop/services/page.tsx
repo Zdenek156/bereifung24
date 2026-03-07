@@ -200,7 +200,7 @@ export default function WorkshopServicesPage() {
       const packagesData = selectedServiceType === 'WHEEL_CHANGE' 
         ? [] 
         : Object.entries(packages)
-            .filter(([_, pkg]) => pkg.active && pkg.price && pkg.duration)
+            .filter(([type, pkg]) => pkg.active && pkg.price && (pkg.duration || type === 'disposal'))
             .map(([type, pkg]) => {
               const config = packageConfigurations[selectedServiceType]?.find(p => p.type === type)
               return {
@@ -208,7 +208,7 @@ export default function WorkshopServicesPage() {
                 name: config?.name || type,
                 description: config?.description || null,
                 price: parseFloat(pkg.price),
-                durationMinutes: parseInt(pkg.duration),
+                durationMinutes: type === 'disposal' ? 0 : parseInt(pkg.duration),
                 isActive: pkg.active
               }
             })
@@ -867,7 +867,7 @@ export default function WorkshopServicesPage() {
                   </p>
 
                   <div className="space-y-6">
-                    {packageConfig.map(pkg => (
+                    {packageConfig.filter(pkg => !(selectedServiceType === 'MOTORCYCLE_TIRE' && pkg.type === 'disposal')).map(pkg => (
                       <div key={pkg.type} className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div className="flex items-start gap-4">
                           <input
@@ -920,14 +920,14 @@ export default function WorkshopServicesPage() {
                 </div>
               )}
 
-              {/* Motorcycle Disposal Fee */}
+              {/* Motorcycle Disposal - nice green box like TIRE_CHANGE */}
               {selectedServiceType === 'MOTORCYCLE_TIRE' && (
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    ♻️ Altreifenentsorgung (Motorrad)
+                    ♻️ Altreifenentsorgung
                   </h3>
                   <p className="text-sm text-gray-700 mb-3">
-                    Geben Sie die Kosten für die Entsorgung pro Motorradreifen an. Diese werden automatisch multipliziert (1x oder 2x).
+                    Geben Sie die Kosten für die Entsorgung pro Motorradreifen an. Bei 2 Reifen wird der Betrag automatisch verdoppelt.
                   </p>
                   <div className="max-w-xs">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -937,13 +937,17 @@ export default function WorkshopServicesPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={disposalFee}
-                      onChange={(e) => setDisposalFee(e.target.value)}
+                      value={packages['disposal']?.price || ''}
+                      onChange={(e) => {
+                        handlePackageChange('disposal', 'price', e.target.value)
+                        // Auto-activate when price is entered (no checkbox in green box)
+                        if (e.target.value) handlePackageChange('disposal', 'active', true)
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      placeholder="z.B. 1.50"
+                      placeholder="z.B. 3.50"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Dieser Betrag wird pro zu entsorgendem Motorradreifen berechnet (optional)
+                      Dieser Betrag wird pro zu entsorgendem Reifen berechnet (optional)
                     </p>
                   </div>
                 </div>

@@ -29,6 +29,7 @@ export interface TireSearchFilters {
   runFlat?: boolean
   threePMSF?: boolean
   showDOTTires?: boolean // Default false = hide DOT tires (models with "DOT" in name)
+  construction?: 'radial' | 'diagonal' // Filter by construction type (radial = R/ZR, diagonal = -/B/D)
   // Sorting
   sortBy?: 'price' | 'brand' | 'fuel' | 'wetGrip' | 'noise'
   sortOrder?: 'asc' | 'desc'
@@ -250,7 +251,7 @@ async function searchTiresViaAPI(
     sortOrder = 'asc',
   } = filters
 
-  console.log(`🌐 [API Mode] Searching TireCatalog for ${width}/${height}R${diameter}`)
+  console.log(`🌐 [API Mode] Searching TireCatalog for ${width}/${height}R${diameter} | construction filter: ${JSON.stringify(filters.construction)}`)
 
   // Quality category brand mapping
   const PREMIUM_BRANDS = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
@@ -314,6 +315,15 @@ async function searchTiresViaAPI(
     where.threePMSF = threePMSF
   }
 
+  // Construction type filter (radial vs diagonal)
+  if (filters.construction) {
+    if (filters.construction === 'radial') {
+      where.construction = { in: ['R', 'ZR'] }
+    } else if (filters.construction === 'diagonal') {
+      where.construction = { in: ['-', 'B', 'D'] }
+    }
+  }
+
   // Model exclusions (DEMO, DOT)
   const modelExclusions: any[] = [
     { NOT: { model: { contains: 'DEMO', mode: 'insensitive' } } }
@@ -327,26 +337,34 @@ async function searchTiresViaAPI(
   
   where.AND = modelExclusions
 
-  // Fetch from TireCatalog
+  // Fetch from TireCatalog (no artificial limit - cached API calls handle performance)
   const catalogTires = await prisma.tireCatalog.findMany({
     where,
     orderBy: { brand: 'asc' },
-    take: 100, // Limit for performance
   })
 
-  console.log(`📊 [API Mode] Found ${catalogTires.length} tires in catalog`)
+  console.log(`📊 [API Mode] Found ${catalogTires.length} tires in catalog | construction where: ${JSON.stringify(where.construction)} | constructions found: ${[...new Set(catalogTires.map(t => t.construction))].join(',')}`)
 
-  // Query API for live prices + stock
+  // Query API for live prices + stock (parallel batches for performance)
+  // Most calls will be Redis cache hits (15min TTL) after first search
   const { inquireArticle } = await import('@/lib/services/tyreSystemService')
   const results: TireSearchResult[] = []
 
-  for (const tire of catalogTires.slice(0, 50)) { // Further limit API calls
-    try {
-      // Query TyreSystem API
-      const apiResult = await inquireArticle(workshopId, tire.articleId, minStock)
-      
+  const BATCH_SIZE = 10
+  for (let i = 0; i < catalogTires.length; i += BATCH_SIZE) {
+    const batch = catalogTires.slice(i, i + BATCH_SIZE)
+    const batchResults = await Promise.allSettled(
+      batch.map(async (tire) => {
+        const apiResult = await inquireArticle(workshopId, tire.articleId, minStock)
+        return { tire, apiResult }
+      })
+    )
+
+    for (const batchResult of batchResults) {
+      if (batchResult.status !== 'fulfilled') continue
+      const { tire, apiResult } = batchResult.value
+
       if (!apiResult || apiResult.inquiryResponse.offerData.errorCode !== 0) {
-        console.log(`⚠️ [API] Skipping ${tire.brand} ${tire.model} - API error`)
         continue
       }
 
@@ -411,8 +429,6 @@ async function searchTiresViaAPI(
         stock,
         supplier: workshopSupplier.supplier,
       })
-    } catch (error) {
-      console.error(`❌ [API] Error processing tire ${tire.articleId}:`, error)
     }
   }
 
@@ -524,6 +540,13 @@ async function searchTiresViaDatabase(
   }
   if (threePMSF !== undefined) {
     where.threePMSF = threePMSF
+  }
+
+  // Construction type filter - SKIP for WorkshopInventory (CSV mode)
+  // WorkshopInventory does not have a 'construction' column.
+  // TireCatalog (API mode) supports it, but CSV-imported tires don't store construction info.
+  if (filters.construction) {
+    console.log(`⚠️ [Database Mode] Skipping construction filter '${filters.construction}' - WorkshopInventory has no construction column`)
   }
 
   // Model exclusions
@@ -708,7 +731,8 @@ export async function findCheapestTire(
 /**
  * Find 3 tire recommendations: Günstigster, Testsieger (Premium), Beliebt (Quality)
  */
-const PREMIUM_BRANDS = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
+const PREMIUM_BRANDS_PKW = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']
+const PREMIUM_BRANDS_MOTORRAD = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Dunlop', 'Metzeler', 'Heidenau']
 const QUALITY_BRANDS = ['Hankook', 'Kumho', 'Yokohama', 'Toyo', 'Falken', 'BFGoodrich', 'Cooper', 'Nokian']
 
 export async function findTireRecommendations(
@@ -758,6 +782,7 @@ export async function findTireRecommendations(
   })
 
   // 2. Testsieger (best premium brand tire - cheapest of premium brands)
+  const PREMIUM_BRANDS = vehicleType === 'Motorrad' ? PREMIUM_BRANDS_MOTORRAD : PREMIUM_BRANDS_PKW
   const premiumTire = allTires.find(t => 
     PREMIUM_BRANDS.some(b => t.brand.toLowerCase().includes(b.toLowerCase()))
   )

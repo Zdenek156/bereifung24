@@ -19,6 +19,13 @@ interface Commission {
   stripePaymentId: string | null
   notes: string | null
   createdAt: string
+  freelancer: {
+    id: string
+    name: string
+    tier: string
+    amount: number | null
+    percentage: number | null
+  } | null
   workshop: {
     id: string
     companyName: string
@@ -41,6 +48,7 @@ export default function AdminCommissionsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [billing, setBilling] = useState(false)
   const [billingResult, setBillingResult] = useState<any>(null)
+  const [backfilling, setBackfilling] = useState(false)
 
   useEffect(() => {
     fetchCommissions()
@@ -101,6 +109,8 @@ export default function AdminCommissionsPage() {
 
   const totalCommissions = filteredCommissions.reduce((sum, c) => sum + c.commissionAmount, 0)
   const totalStripeFees = filteredCommissions.reduce((sum, c) => sum + (c.stripeFee || 0), 0)
+  const totalFreelancerPayouts = filteredCommissions.reduce((sum, c) => sum + (c.freelancer?.amount || 0), 0)
+  const freelancerBookings = filteredCommissions.filter(c => c.freelancer?.amount)
   const pendingCommissions = filteredCommissions.filter(c => c.status === 'PENDING')
   const collectedCommissions = filteredCommissions.filter(c => c.status === 'COLLECTED')
 
@@ -203,6 +213,29 @@ export default function AdminCommissionsPage() {
     }
   }
 
+  const handleBackfill = async () => {
+    if (!confirm('Fehlende Stripe-Gebühren, Zahlungsmethoden und Freelancer-Provisionen für bestehende Buchungen nachträglich laden?\n\nDies ist sicher und kann mehrfach ausgeführt werden.')) {
+      return
+    }
+    setBackfilling(true)
+    try {
+      const response = await fetch('/api/admin/commissions/backfill', { method: 'POST' })
+      const result = await response.json()
+      if (result.success) {
+        const s = result.summary
+        alert(`✅ Backfill abgeschlossen!\n\nStripe-Gebühren aktualisiert: ${s.stripeFeesUpdated}\nZahlungsmethoden aktualisiert: ${s.paymentMethodsUpdated}\nFL-Provisionen erstellt: ${s.freelancerCommissionsCreated}`)
+        fetchCommissions()
+      } else {
+        alert(`❌ Fehler: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Backfill error:', error)
+      alert('❌ Backfill fehlgeschlagen')
+    } finally {
+      setBackfilling(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -218,6 +251,13 @@ export default function AdminCommissionsPage() {
             </button>
             <button onClick={() => handleTest(3)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
               3️⃣ Buchhaltung
+            </button>
+            <button
+              onClick={handleBackfill}
+              disabled={backfilling}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm disabled:bg-gray-400"
+            >
+              {backfilling ? '⏳ Backfill läuft...' : '🔄 Backfill (Stripe + FL-Provisionen)'}
             </button>
           </div>
         </div>
@@ -253,7 +293,7 @@ export default function AdminCommissionsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-600">Buchungen (Zeitraum)</div>
             <div className="text-3xl font-bold text-gray-900 mt-2">
@@ -288,6 +328,18 @@ export default function AdminCommissionsPage() {
             </div>
             <div className="text-sm text-gray-500 mt-1">
               Durchschnitt: {filteredCommissions.length > 0 ? (totalCommissions / filteredCommissions.length).toFixed(2) : '0.00'}€
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm font-medium text-gray-600">Freelancer-Auszahlungen</div>
+            <div className="text-3xl font-bold text-purple-600 mt-2">
+              {totalFreelancerPayouts.toLocaleString('de-DE', {
+                style: 'currency',
+                currency: 'EUR'
+              })}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              {freelancerBookings.length} Buchungen mit FL-Anteil
             </div>
           </div>
         </div>
@@ -365,6 +417,9 @@ export default function AdminCommissionsPage() {
                       Stripe-Gebühren
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Freelancer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Zahlungsmethode
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -421,6 +476,21 @@ export default function AdminCommissionsPage() {
                           <div className="text-xs text-gray-400">
                             Noch nicht erfasst
                           </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {commission.freelancer?.amount ? (
+                          <>
+                            <div className="text-sm font-medium text-purple-600">
+                              -{commission.freelancer.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                            </div>
+                            <div className="text-xs text-gray-500">{commission.freelancer.name}</div>
+                            <div className="text-xs text-gray-400">{commission.freelancer.tier} ({commission.freelancer.percentage}%)</div>
+                          </>
+                        ) : commission.freelancer ? (
+                          <div className="text-xs text-gray-400">{commission.freelancer.name} (ausstehend)</div>
+                        ) : (
+                          <div className="text-xs text-gray-300">—</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -494,7 +564,7 @@ export default function AdminCommissionsPage() {
         {filteredCommissions.length > 0 && (
           <div className="mt-8 bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Zusammenfassung</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <div className="text-sm text-gray-600">Anzahl Provisionen</div>
                 <div className="text-2xl font-bold text-gray-900">{filteredCommissions.length}</div>
@@ -509,12 +579,24 @@ export default function AdminCommissionsPage() {
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Gesamt Provisionen</div>
+                <div className="text-sm text-gray-600">Gesamt Provisionen (B24)</div>
                 <div className="text-2xl font-bold text-primary-600">
                   {totalCommissions.toLocaleString('de-DE', {
                     style: 'currency',
                     currency: 'EUR'
                   })}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Davon Freelancer-Anteil</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {totalFreelancerPayouts.toLocaleString('de-DE', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  B24-Netto nach FL: {(totalCommissions - totalStripeFees - totalFreelancerPayouts).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                 </div>
               </div>
             </div>

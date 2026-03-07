@@ -74,7 +74,11 @@ const serviceTypeLabels: Record<string, string> = {
   WHEEL_CHANGE: 'Räderwechsel',
   TIRE_CHANGE: 'Reifenwechsel',
   TIRE_STORAGE: 'Reifeneinlagerung',
-  TIRE_HOTEL: 'Reifen-Hotel'
+  TIRE_HOTEL: 'Reifen-Hotel',
+  TIRE_REPAIR: 'Reifenreparatur',
+  MOTORCYCLE_TIRE: 'Motorradreifen',
+  ALIGNMENT_BOTH: 'Achsvermessung',
+  CLIMATE_SERVICE: 'Klimaservice'
 }
 
 const statusLabels: Record<string, string> = {

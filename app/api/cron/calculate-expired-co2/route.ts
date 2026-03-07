@@ -10,8 +10,15 @@ import { calculateCO2ForRequest } from '@/lib/co2Calculator';
  * - status = 'OPEN' (keine Angebote angenommen)
  * - savedCO2Grams = null (noch nicht berechnet)
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Security: Check for cron secret
+    const authHeader = request.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

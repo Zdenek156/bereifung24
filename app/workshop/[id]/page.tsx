@@ -71,6 +71,7 @@ export default function WorkshopDetailPage() {
   
   const [tireBookingData, setTireBookingData] = useState<any>(null)
   const [availableServices, setAvailableServices] = useState<any[]>([])
+  const [selectedPackageName, setSelectedPackageName] = useState<string>('')
   const [isSmallBusiness, setIsSmallBusiness] = useState(false)
   const [isBusinessCustomer, setIsBusinessCustomer] = useState(false)
   const [lastLoadTimestamp, setLastLoadTimestamp] = useState<number>(0)
@@ -136,7 +137,15 @@ export default function WorkshopDetailPage() {
     if (!date) return false
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    if (date < today) return false
+    // Block today and all past dates — same-day bookings are not allowed
+    if (date <= today) return false
+    // Block next 7 days for tire services with tire purchase (delivery time)
+    const hasTirePurchase = isTireService && tireBookingData?.hasTires && (tireBookingData?.selectedTire || tireBookingData?.selectedFrontTire)
+    if (hasTirePurchase) {
+      const minDeliveryDate = new Date(today)
+      minDeliveryDate.setDate(minDeliveryDate.getDate() + 7)
+      if (date <= minDeliveryDate) return false
+    }
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     if (vacationDates.includes(dateStr)) return false
     return true
@@ -146,7 +155,8 @@ export default function WorkshopDetailPage() {
     if (!date) return false
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return date < today
+    // Today counts as "past" for booking purposes (no same-day bookings)
+    return date <= today
   }
 
   const getSlotsForDate = (date: Date) => {
@@ -183,9 +193,17 @@ export default function WorkshopDetailPage() {
       for (let minute of [0, 30]) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
         const slotMinutes = hour * 60 + minute
+        const endMinutes = endHour * 60 // opening hours end in minutes
+        
+        const totalDur = calculateTotalDuration()
+        
+        // Check if entire service fits within opening hours
+        if (slotMinutes + totalDur > endMinutes) {
+          continue // Service would run past closing time
+        }
         
         let isFullServicePeriodFree = true
-        for (let offset = 0; offset < baseDuration; offset += 30) {
+        for (let offset = 0; offset < totalDur; offset += 30) {
           const checkMinutes = slotMinutes + offset
           const checkHour = Math.floor(checkMinutes / 60)
           const checkMinute = checkMinutes % 60
@@ -223,6 +241,23 @@ export default function WorkshopDetailPage() {
     }
   }
 
+  // Helper: Does this service involve tire purchase?
+  const isTireService = serviceType === 'TIRE_CHANGE' || serviceType === 'MOTORCYCLE_TIRE'
+
+  // Get the selected service subtype from sessionStorage (e.g. 'valve_damage', 'foreign_object')
+  const getServiceSubtype = (): string | null => {
+    try {
+      if (typeof window === 'undefined') return null
+      const svcData = sessionStorage.getItem('serviceBookingData')
+      if (svcData) {
+        const parsed = JSON.parse(svcData)
+        const subtypes = ['foreign_object', 'valve_damage']
+        return parsed.selectedPackages?.find((p: string) => subtypes.includes(p)) || null
+      }
+    } catch (e) {}
+    return null
+  }
+
   // Get service icon and name
   const getServiceInfo = (serviceType: string) => {
     const serviceMap: Record<string, { icon: JSX.Element, name: string }> = {
@@ -231,7 +266,18 @@ export default function WorkshopDetailPage() {
       'ALIGNMENT_BOTH': { icon: <SlidersHorizontal className="w-5 h-5" />, name: 'Achsvermessung' },
       'TIRE_REPAIR': { icon: <Wrench className="w-5 h-5" />, name: 'Reifenreparatur' },
       'CLIMATE_SERVICE': { icon: <Cloud className="w-5 h-5" />, name: 'Klimaservice' },
-      'MOTORCYCLE_TIRE': { icon: <Wrench className="w-5 h-5" />, name: 'Motorradreifen' },
+      'MOTORCYCLE_TIRE': { icon: <Wrench className="w-5 h-5" />, name: 'Motorradreifenmontage' },
+    }
+    // For TIRE_REPAIR, show specific subtype name
+    if (serviceType === 'TIRE_REPAIR') {
+      const subtype = getServiceSubtype()
+      const subtypeLabels: Record<string, string> = {
+        'foreign_object': 'Fremdkörper-Entfernung',
+        'valve_damage': 'Ventilschaden-Reparatur',
+      }
+      if (subtype && subtypeLabels[subtype]) {
+        return { icon: <Wrench className="w-5 h-5" />, name: subtypeLabels[subtype] }
+      }
     }
     return serviceMap[serviceType] || { icon: <Wrench className="w-5 h-5" />, name: serviceType }
   }
@@ -314,13 +360,31 @@ export default function WorkshopDetailPage() {
             const userVehicles = data.vehicles || []
             setVehicles(userVehicles)
             
-            // Auto-select first vehicle if none selected yet and no vehicle in tireBookingData
-            if (userVehicles.length > 0) {
-              // Check if vehicle was already selected from tireBookingData
+            // Auto-select vehicle from sessionStorage (set by search page)
+            // Do NOT blindly auto-select first vehicle - user must explicitly choose
+            if (userVehicles.length > 0 && !selectedVehicle) {
+              // Check if vehicle was selected from tireBookingData
               const hasTireVehicle = sessionStorage.getItem('tireBookingData')
-              if (!hasTireVehicle) {
-                console.log('🚗 [WORKSHOP] Auto-selecting first vehicle:', userVehicles[0].make, userVehicles[0].model)
-                setSelectedVehicle(userVehicles[0].id)
+              if (hasTireVehicle) {
+                try {
+                  const tireData = JSON.parse(hasTireVehicle)
+                  if (tireData.selectedVehicle?.id) {
+                    console.log('🚗 [WORKSHOP] Using vehicle from tireBookingData:', tireData.selectedVehicle.id)
+                    setSelectedVehicle(tireData.selectedVehicle.id)
+                  }
+                } catch (e) { /* ignore */ }
+              } else {
+                // Check serviceBookingData for vehicle selection
+                const savedServiceData = sessionStorage.getItem('serviceBookingData')
+                if (savedServiceData) {
+                  try {
+                    const svcData = JSON.parse(savedServiceData)
+                    if (svcData.selectedVehicleId) {
+                      console.log('🚗 [WORKSHOP] Using vehicle from serviceBookingData:', svcData.selectedVehicleId)
+                      setSelectedVehicle(svcData.selectedVehicleId)
+                    }
+                  } catch (e) { /* ignore */ }
+                }
               }
             }
           }
@@ -381,9 +445,11 @@ export default function WorkshopDetailPage() {
                 let selectedPackage = null
                 
                 const savedTireData = sessionStorage.getItem('tireBookingData')
+                let isMotoMixed = false
                 if (savedTireData) {
                   try {
                     const tireData = JSON.parse(savedTireData)
+                    isMotoMixed = tireData.isMixedTires || false
                     if (tireData.selectedPackages && tireData.selectedPackages.length > 0) {
                       const packageType = tireData.selectedPackages[0]
                       selectedPackage = serviceData.servicePackages.find((p: any) => p.packageType === packageType)
@@ -396,10 +462,55 @@ export default function WorkshopDetailPage() {
                     console.error('Error parsing tire booking data:', e)
                   }
                 }
+
+                // Also check serviceBookingData for correct package selection (e.g., TIRE_REPAIR: foreign_object vs valve_damage)
+                if (!selectedPackage) {
+                  const savedServiceBooking = sessionStorage.getItem('serviceBookingData')
+                  if (savedServiceBooking) {
+                    try {
+                      const svcData = JSON.parse(savedServiceBooking)
+                      if (svcData.selectedPackages && svcData.selectedPackages.length > 0) {
+                        for (const pkgType of svcData.selectedPackages) {
+                          const found = serviceData.servicePackages.find((p: any) => p.packageType === pkgType)
+                          if (found) {
+                            selectedPackage = found
+                            console.log(`📦 [WORKSHOP] Selected package from serviceBookingData: ${pkgType}`, found)
+                            break
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      console.error('Error parsing service booking data:', e)
+                    }
+                  }
+                }
                 
-                const packageToUse = selectedPackage || serviceData.servicePackages[0]
-                workshopData.totalPrice = packageToUse.price || 0
-                workshopData.estimatedDuration = packageToUse.durationMinutes || 60
+                // Store the selected package name for display (e.g., "Einstellung beide Achsen" for ALIGNMENT_BOTH)
+                if (selectedPackage && selectedPackage.name) {
+                  setSelectedPackageName(selectedPackage.name)
+                  console.log(`📦 [WORKSHOP] Selected package name: ${selectedPackage.name}`)
+                }
+                
+                // Motorcycle with both tires: sum front + rear package prices
+                // Also handle case when no tire data is saved (e.g., "Nur Montage" or sessionStorage empty)
+                if (!selectedPackage && (isMotoMixed || service === 'MOTORCYCLE_TIRE') && service === 'MOTORCYCLE_TIRE') {
+                  const frontPkg = serviceData.servicePackages.find((p: any) => p.packageType === 'front')
+                  const rearPkg = serviceData.servicePackages.find((p: any) => p.packageType === 'rear')
+                  if (frontPkg && rearPkg) {
+                    const combinedPrice = (frontPkg.price || 0) + (rearPkg.price || 0)
+                    const maxDuration = Math.max(frontPkg.durationMinutes || 60, rearPkg.durationMinutes || 60)
+                    workshopData.totalPrice = combinedPrice
+                    workshopData.estimatedDuration = maxDuration
+                  } else {
+                    const packageToUse = frontPkg || rearPkg || serviceData.servicePackages[0]
+                    workshopData.totalPrice = packageToUse.price || 0
+                    workshopData.estimatedDuration = packageToUse.durationMinutes || 60
+                  }
+                } else {
+                  const packageToUse = selectedPackage || serviceData.servicePackages[0]
+                  workshopData.totalPrice = packageToUse.price || 0
+                  workshopData.estimatedDuration = packageToUse.durationMinutes || 60
+                }
               } else if (serviceData) {
                 workshopData.totalPrice = serviceData.basePrice || 0
                 workshopData.estimatedDuration = serviceData.durationMinutes || 60
@@ -464,18 +575,75 @@ export default function WorkshopDetailPage() {
           const serviceData = JSON.parse(savedServiceData)
           console.log('📦 [WORKSHOP] Loaded service booking data:', serviceData)
           
+          // If no vehicle set from tireBookingData, try serviceBookingData
+          if (!savedData && serviceData.selectedVehicleId) {
+            console.log('🚗 [WORKSHOP] Setting vehicle from serviceBookingData:', serviceData.selectedVehicleId)
+            setSelectedVehicle(serviceData.selectedVehicleId)
+          }
+          
           if (serviceData.selectedPackages && serviceData.selectedPackages.length > 0) {
             // Convert selectedPackages (e.g. ['with_balancing', 'with_storage']) to additionalServices
             const servicesFromFilters: any[] = []
             
             // IMPORTANT: Exclude main service packages (two_tires, four_tires, etc.)
             // These are NOT additional services, they define the main service type
-            const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+            const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service', 'foreign_object', 'valve_damage', 'front', 'rear', 'both', 'check', 'comfort', 'premium', 'front_two_tires', 'rear_two_tires', 'mixed_four_tires', 'motorcycle_tire_installation_only', 'with_tire_purchase', 'tire_installation_only']
+            
+            // For WHEEL_CHANGE, find the basic package price to calculate surcharges
+            let wheelChangeBasicPrice = 0
+            const currentServiceType = serviceData.serviceName || new URLSearchParams(window.location.search).get('service') || 'WHEEL_CHANGE'
+            if (currentServiceType === 'WHEEL_CHANGE') {
+              for (const service of availableServices) {
+                if (service.serviceType === 'WHEEL_CHANGE') {
+                  const basicPkg = service.servicePackages?.find((p: any) => p.packageType === 'basic')
+                  if (basicPkg) {
+                    wheelChangeBasicPrice = Number(basicPkg.price) || 0
+                    console.log('💰 [WORKSHOP] WHEEL_CHANGE basic price for surcharge calc:', wheelChangeBasicPrice)
+                  }
+                  break
+                }
+              }
+            }
             
             for (const packageType of serviceData.selectedPackages) {
               // Skip main service packages
               if (mainServicePackages.includes(packageType)) {
                 console.log(`⏭️ [WORKSHOP] Skipping main service package: ${packageType}`)
+                continue
+              }
+              
+              // Handle disposal and runflat as tireBookingData flags (not additional services)
+              // Disposal only applies to TIRE_CHANGE and MOTORCYCLE_TIRE, NOT WHEEL_CHANGE
+              if (packageType === 'with_disposal' || packageType === 'runflat') {
+                if (packageType === 'with_disposal' && currentServiceType !== 'TIRE_CHANGE' && currentServiceType !== 'MOTORCYCLE_TIRE') {
+                  console.log(`⏭️ [WORKSHOP] Skipping disposal for non-tire service: ${currentServiceType}`)
+                  continue
+                }
+                console.log(`🔧 [WORKSHOP] Setting tire flag from package: ${packageType}`)
+                setTireBookingData((prev: any) => {
+                  const updated = { ...(prev || {}), }
+                  if (packageType === 'with_disposal') {
+                    updated.hasDisposal = true
+                    // Find disposal price from workshop services
+                    for (const service of availableServices) {
+                      if (service.serviceType === currentServiceType && service.disposalFee) {
+                        updated.disposalPrice = Number(service.disposalFee) || 0
+                        break
+                      }
+                    }
+                  }
+                  if (packageType === 'runflat') {
+                    updated.hasRunflat = true
+                    // Find runflat price from workshop services
+                    for (const service of availableServices) {
+                      if (service.serviceType === currentServiceType && service.runflatSurcharge) {
+                        updated.runflatPrice = Number(service.runflatSurcharge) || 0
+                        break
+                      }
+                    }
+                  }
+                  return updated
+                })
                 continue
               }
               
@@ -488,7 +656,15 @@ export default function WorkshopDetailPage() {
                 const pkg = service.servicePackages?.find((p: any) => p.packageType === packageType)
                 if (pkg) {
                   serviceName = pkg.name
-                  servicePrice = pkg.price
+                  // For WHEEL_CHANGE: use surcharge (package price - basic price)
+                  // because the base price already covers the basic service
+                  if (currentServiceType === 'WHEEL_CHANGE' && wheelChangeBasicPrice > 0 && 
+                      (packageType === 'with_balancing' || packageType === 'with_storage')) {
+                    servicePrice = Math.max(0, Number(pkg.price) - wheelChangeBasicPrice)
+                    console.log(`💰 [WORKSHOP] WHEEL_CHANGE surcharge for ${packageType}: ${pkg.price} - ${wheelChangeBasicPrice} = ${servicePrice}`)
+                  } else {
+                    servicePrice = pkg.price
+                  }
                   break
                 }
               }
@@ -505,12 +681,19 @@ export default function WorkshopDetailPage() {
               }
               
               if (serviceName) {
+                // Map packageType to type for payment page detection
+                let serviceTypeTag = ''
+                if (packageType === 'with_balancing') serviceTypeTag = 'BALANCING'
+                else if (packageType === 'with_storage') serviceTypeTag = 'STORAGE'
+                
                 servicesFromFilters.push({
                   serviceName,
-                  packageName: serviceName,
+                  packageName: '',
                   name: serviceName,
                   price: servicePrice,
-                  duration: 0
+                  duration: 0,
+                  type: serviceTypeTag,
+                  packageType: packageType
                 })
               }
             }
@@ -587,15 +770,69 @@ export default function WorkshopDetailPage() {
               const serviceData = JSON.parse(savedServiceData)
               console.log('📦 [WORKSHOP] Reloaded service booking data:', serviceData)
               
+              // If no vehicle from tireBookingData, try serviceBookingData
+              if (!savedTireData && serviceData.selectedVehicleId) {
+                console.log('🚗 [WORKSHOP] Setting vehicle from serviceBookingData (reload):', serviceData.selectedVehicleId)
+                setSelectedVehicle(serviceData.selectedVehicleId)
+              }
+              
               if (serviceData.selectedPackages && serviceData.selectedPackages.length > 0) {
                 // Convert selectedPackages to additionalServices
                 const servicesFromFilters: any[] = []
                 
-                const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+                const mainServicePackages = ['two_tires', 'four_tires', 'basic', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service', 'foreign_object', 'valve_damage', 'front', 'rear', 'both', 'check', 'comfort', 'premium', 'front_two_tires', 'rear_two_tires', 'mixed_four_tires', 'motorcycle_tire_installation_only', 'with_tire_purchase', 'tire_installation_only']
+                
+                // For WHEEL_CHANGE, find the basic package price to calculate surcharges
+                let wheelChangeBasicPrice = 0
+                const currentServiceType = serviceData.serviceName || new URLSearchParams(window.location.search).get('service') || 'WHEEL_CHANGE'
+                if (currentServiceType === 'WHEEL_CHANGE') {
+                  for (const service of availableServices) {
+                    if (service.serviceType === 'WHEEL_CHANGE') {
+                      const basicPkg = service.servicePackages?.find((p: any) => p.packageType === 'basic')
+                      if (basicPkg) {
+                        wheelChangeBasicPrice = Number(basicPkg.price) || 0
+                      }
+                      break
+                    }
+                  }
+                }
                 
                 for (const packageType of serviceData.selectedPackages) {
                   if (mainServicePackages.includes(packageType)) {
                     console.log(`⏭️ [WORKSHOP] Skipping main service package: ${packageType}`)
+                    continue
+                  }
+                  
+                  // Handle disposal and runflat as tireBookingData flags (not additional services)
+                  // Disposal only applies to TIRE_CHANGE and MOTORCYCLE_TIRE, NOT WHEEL_CHANGE
+                  if (packageType === 'with_disposal' || packageType === 'runflat') {
+                    if (packageType === 'with_disposal' && currentServiceType !== 'TIRE_CHANGE' && currentServiceType !== 'MOTORCYCLE_TIRE') {
+                      console.log(`⏭️ [WORKSHOP] Skipping disposal for non-tire service (reload): ${currentServiceType}`)
+                      continue
+                    }
+                    console.log(`🔧 [WORKSHOP] Setting tire flag from package (reload): ${packageType}`)
+                    setTireBookingData((prev: any) => {
+                      const updated = { ...(prev || {}), }
+                      if (packageType === 'with_disposal') {
+                        updated.hasDisposal = true
+                        for (const service of availableServices) {
+                          if (service.serviceType === currentServiceType && service.disposalFee) {
+                            updated.disposalPrice = Number(service.disposalFee) || 0
+                            break
+                          }
+                        }
+                      }
+                      if (packageType === 'runflat') {
+                        updated.hasRunflat = true
+                        for (const service of availableServices) {
+                          if (service.serviceType === currentServiceType && service.runflatSurcharge) {
+                            updated.runflatPrice = Number(service.runflatSurcharge) || 0
+                            break
+                          }
+                        }
+                      }
+                      return updated
+                    })
                     continue
                   }
                   
@@ -606,7 +843,13 @@ export default function WorkshopDetailPage() {
                     const pkg = service.servicePackages?.find((p: any) => p.packageType === packageType)
                     if (pkg) {
                       serviceName = pkg.name
-                      servicePrice = pkg.price
+                      // For WHEEL_CHANGE: use surcharge (package price - basic price)
+                      if (currentServiceType === 'WHEEL_CHANGE' && wheelChangeBasicPrice > 0 && 
+                          (packageType === 'with_balancing' || packageType === 'with_storage')) {
+                        servicePrice = Math.max(0, Number(pkg.price) - wheelChangeBasicPrice)
+                      } else {
+                        servicePrice = pkg.price
+                      }
                       break
                     }
                   }
@@ -622,12 +865,19 @@ export default function WorkshopDetailPage() {
                   }
                   
                   if (serviceName) {
+                    // Map packageType to type for payment page detection
+                    let serviceTypeTag = ''
+                    if (packageType === 'with_balancing') serviceTypeTag = 'BALANCING'
+                    else if (packageType === 'with_storage') serviceTypeTag = 'STORAGE'
+                    
                     servicesFromFilters.push({
                       serviceName,
-                      packageName: serviceName,
+                      packageName: '',
                       name: serviceName,
                       price: servicePrice,
-                      duration: 0
+                      duration: 0,
+                      type: serviceTypeTag,
+                      packageType: packageType
                     })
                   }
                 }
@@ -699,16 +949,28 @@ export default function WorkshopDetailPage() {
   }, [showUserMenu])
 
   const handleAdditionalServicesSelected = (services: any[]) => {
-    setAdditionalServices(services)
+    // Keep existing BALANCING and STORAGE services (from package filters)
+    // Only replace non-BALANCING/STORAGE services (from the modal)
+    const existingCoreServices = additionalServices.filter(
+      s => s.type === 'BALANCING' || s.type === 'STORAGE'
+    )
+    const merged = [...existingCoreServices, ...services]
+    setAdditionalServices(merged)
+    // Reset date/time selection since duration changed
+    setSelectedDate(null)
+    setSelectedSlot(null)
     // Save to sessionStorage
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('additionalServices', JSON.stringify(services))
+      sessionStorage.setItem('additionalServices', JSON.stringify(merged))
     }
   }
 
   const removeAdditionalService = (index: number) => {
     const updated = additionalServices.filter((_, i) => i !== index)
     setAdditionalServices(updated)
+    // Reset date/time selection since duration changed
+    setSelectedDate(null)
+    setSelectedSlot(null)
     // Update sessionStorage
     if (typeof window !== 'undefined') {
       if (updated.length > 0) {
@@ -827,6 +1089,18 @@ export default function WorkshopDetailPage() {
         type: serviceType,
         basePrice: basePrice,
         baseDuration: baseDuration,
+        // Include service subtype from serviceBookingData (e.g. 'foreign_object', 'valve_damage' for TIRE_REPAIR)
+        subtype: (() => {
+          try {
+            const svcData = sessionStorage.getItem('serviceBookingData')
+            if (svcData) {
+              const parsed = JSON.parse(svcData)
+              const mainPkgs = ['foreign_object', 'valve_damage', 'basic', 'comfort', 'premium', 'check', 'front', 'rear', 'both', 'two_tires', 'four_tires', 'with_tire_purchase', 'tire_installation_only', 'measurement_front', 'measurement_rear', 'measurement_both', 'adjustment_front', 'adjustment_rear', 'adjustment_both', 'full_service']
+              return parsed.selectedPackages?.find((p: string) => mainPkgs.includes(p)) || null
+            }
+          } catch (e) {}
+          return null
+        })(),
       },
       additionalServices: additionalServices,
       tireBooking: tireBookingData || null,
@@ -1066,7 +1340,7 @@ export default function WorkshopDetailPage() {
             )}
 
             {/* Selected Service Info */}
-            {(tireBookingData || additionalServices.length > 0) && (
+            {(tireBookingData || additionalServices.length > 0 || serviceType) && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 Gewählter Service</h2>
                 
@@ -1075,14 +1349,22 @@ export default function WorkshopDetailPage() {
                   <div className="pb-4 border-b border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Serviceart</p>
                     <p className="text-base font-semibold text-gray-900">
-                      {serviceType === 'TIRE_CHANGE' && tireBookingData?.tireCount
+                      {serviceType === 'MOTORCYCLE_TIRE' && tireBookingData?.isMixedTires
+                        ? `Motorradreifenmontage${tireBookingData?.selectedFrontTire && tireBookingData?.selectedRearTire ? ' (Vorder- & Hinterreifen)' : tireBookingData?.selectedFrontTire ? ' (Vorderreifen)' : ' (Hinterreifen)'}`
+                        : serviceType === 'TIRE_CHANGE' && tireBookingData?.tireCount
                         ? `Reifenwechsel für ${tireBookingData.tireCount} Reifen`
                         : getServiceInfo(serviceType).name
                       }
                     </p>
+                    {/* Show selected package name for ALIGNMENT_BOTH, CLIMATE_SERVICE etc. */}
+                    {selectedPackageName && (
+                      <p className="text-sm text-primary-600 font-medium mt-1">
+                        {selectedPackageName}
+                      </p>
+                    )}
                     
-                    {/* Additional services for TIRE_CHANGE */}
-                    {serviceType === 'TIRE_CHANGE' && (tireBookingData?.hasDisposal || tireBookingData?.hasRunflat) && (
+                    {/* Additional services for tire services */}
+                    {isTireService && (tireBookingData?.hasDisposal || tireBookingData?.hasRunflat) && (
                       <div className="mt-3 space-y-1">
                         {tireBookingData?.hasDisposal && (
                           <p className="text-sm text-gray-600">+ Reifenentsorgung</p>
@@ -1098,15 +1380,15 @@ export default function WorkshopDetailPage() {
                       <div className="mt-3 space-y-1">
                         {additionalServices.map((service, idx) => (
                           <p key={idx} className="text-sm text-gray-600">
-                            + {removeEmojis(service.serviceName || service.name)}
+                            + {removeEmojis(service.serviceName || service.name)}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}
                           </p>
                         ))}
                       </div>
                     )}
                   </div>
 
-                  {/* Tire Details - Only show for TIRE_CHANGE service */}
-                  {serviceType === 'TIRE_CHANGE' && (tireBookingData?.selectedTire || tireBookingData?.isMixedTires) && (
+                  {/* Tire Details - Show for tire services */}
+                  {isTireService && (tireBookingData?.selectedTire || tireBookingData?.isMixedTires) && (
                     <>
                       {/* Mixed Tires: Show Front and Rear separately */}
                       {tireBookingData?.isMixedTires && (tireBookingData?.selectedFrontTire || tireBookingData?.selectedRearTire) ? (
@@ -1116,19 +1398,23 @@ export default function WorkshopDetailPage() {
                             <div className="pb-4 border-b border-gray-200 mb-4">
                               <p className="text-sm text-gray-600 mb-2">🔹 Vorderachse</p>
                               <p className="text-base font-semibold text-gray-900">
-                                {tireBookingData.selectedFrontTire.quantity}x {tireBookingData.selectedFrontTire.tire?.brand || tireBookingData.selectedFrontTire.brand}
+                                {tireBookingData.selectedFrontTire.quantity || 1}x {tireBookingData.selectedFrontTire.tire?.brand || tireBookingData.selectedFrontTire.brand}
                                 {(tireBookingData.selectedFrontTire.tire?.model || tireBookingData.selectedFrontTire.model) && ` ${tireBookingData.selectedFrontTire.tire?.model || tireBookingData.selectedFrontTire.model}`}
-                                {tireBookingData.tireDimensionsFront && (
+                                {' '}
+                                {tireBookingData.tireDimensionsFront
+                                  ? (typeof tireBookingData.tireDimensionsFront === 'string'
+                                      ? tireBookingData.tireDimensionsFront
+                                      : `${tireBookingData.tireDimensionsFront.width}/${tireBookingData.tireDimensionsFront.height} R${tireBookingData.tireDimensionsFront.diameter}`)
+                                  : null
+                                }
+                                {(tireBookingData.selectedFrontTire.tire?.loadIndex || tireBookingData.selectedFrontTire.tire?.speedIndex) && (
                                   <span>
-                                    {' '}
-                                    {tireBookingData.tireDimensionsFront.width}/{tireBookingData.tireDimensionsFront.height} R{tireBookingData.tireDimensionsFront.diameter}
-                                    {' '}
-                                    {tireBookingData.tireDimensionsFront.loadIndex || ''}{tireBookingData.tireDimensionsFront.speedIndex || ''}
+                                    {' '}{tireBookingData.selectedFrontTire.tire?.loadIndex || ''}{tireBookingData.selectedFrontTire.tire?.speedIndex || ''}
                                   </span>
                                 )}
                               </p>
                               <p className="text-sm text-primary-600 font-semibold mt-2">
-                                {formatEUR(tireBookingData.selectedFrontTire.totalPrice || (tireBookingData.selectedFrontTire.pricePerTire * tireBookingData.selectedFrontTire.quantity))}
+                                {formatEUR(tireBookingData.selectedFrontTire.totalPrice || (tireBookingData.selectedFrontTire.pricePerTire * (tireBookingData.selectedFrontTire.quantity || 1)))}
                               </p>
                             </div>
                           )}
@@ -1138,19 +1424,23 @@ export default function WorkshopDetailPage() {
                             <div className="pb-4 border-b border-gray-200">
                               <p className="text-sm text-gray-600 mb-2">🔸 Hinterachse</p>
                               <p className="text-base font-semibold text-gray-900">
-                                {tireBookingData.selectedRearTire.quantity}x {tireBookingData.selectedRearTire.tire?.brand || tireBookingData.selectedRearTire.brand}
+                                {tireBookingData.selectedRearTire.quantity || 1}x {tireBookingData.selectedRearTire.tire?.brand || tireBookingData.selectedRearTire.brand}
                                 {(tireBookingData.selectedRearTire.tire?.model || tireBookingData.selectedRearTire.model) && ` ${tireBookingData.selectedRearTire.tire?.model || tireBookingData.selectedRearTire.model}`}
-                                {tireBookingData.tireDimensionsRear && (
+                                {' '}
+                                {tireBookingData.tireDimensionsRear
+                                  ? (typeof tireBookingData.tireDimensionsRear === 'string'
+                                      ? tireBookingData.tireDimensionsRear
+                                      : `${tireBookingData.tireDimensionsRear.width}/${tireBookingData.tireDimensionsRear.height} R${tireBookingData.tireDimensionsRear.diameter}`)
+                                  : null
+                                }
+                                {(tireBookingData.selectedRearTire.tire?.loadIndex || tireBookingData.selectedRearTire.tire?.speedIndex) && (
                                   <span>
-                                    {' '}
-                                    {tireBookingData.tireDimensionsRear.width}/{tireBookingData.tireDimensionsRear.height} R{tireBookingData.tireDimensionsRear.diameter}
-                                    {' '}
-                                    {tireBookingData.tireDimensionsRear.loadIndex || ''}{tireBookingData.tireDimensionsRear.speedIndex || ''}
+                                    {' '}{tireBookingData.selectedRearTire.tire?.loadIndex || ''}{tireBookingData.selectedRearTire.tire?.speedIndex || ''}
                                   </span>
                                 )}
                               </p>
                               <p className="text-sm text-primary-600 font-semibold mt-2">
-                                {formatEUR(tireBookingData.selectedRearTire.totalPrice || (tireBookingData.selectedRearTire.pricePerTire * tireBookingData.selectedRearTire.quantity))}
+                                {formatEUR(tireBookingData.selectedRearTire.totalPrice || (tireBookingData.selectedRearTire.pricePerTire * (tireBookingData.selectedRearTire.quantity || 1)))}
                               </p>
                             </div>
                           )}
@@ -1239,11 +1529,21 @@ export default function WorkshopDetailPage() {
               <h2 className="text-lg font-bold text-gray-900 mb-4">➕ Zusätzliche Services</h2>
               <button
                 onClick={() => setShowServicesModal(true)}
-                className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all text-sm font-medium"
+                disabled={!!selectedDate}
+                className={`w-full px-4 py-3 border-2 border-dashed rounded-lg transition-all text-sm font-medium ${
+                  selectedDate
+                    ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+                    : 'border-gray-300 text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50'
+                }`}
               >
                 <Plus className="w-5 h-5 inline-block mr-2" />
                 Services auswählen
               </button>
+              {selectedDate && (
+                <p className="text-xs text-amber-600 mt-2">
+                  ⚠️ Bitte zuerst den Termin zurücksetzen, um weitere Services hinzuzufügen. Die Gesamtdauer beeinflusst die verfügbaren Zeitfenster.
+                </p>
+              )}
               
               {additionalServices.filter(service => {
                 // For WHEEL_CHANGE, exclude balancing and storage (they're additional LEISTUNGEN, not SERVICES)
@@ -1267,7 +1567,7 @@ export default function WorkshopDetailPage() {
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
                         <span className="text-sm font-medium text-gray-900">{removeEmojis(service.serviceName || service.name)}</span>
-                        {service.packageName && (
+                        {service.packageName && service.packageName !== (service.serviceName || service.name) && (
                           <span className="text-xs text-gray-500 ml-2">({service.packageName})</span>
                         )}
                       </div>
@@ -1429,10 +1729,10 @@ export default function WorkshopDetailPage() {
 
                 {/* Service Summary */}
                 <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
-                  {/* Service Price - Only show label for TIRE_CHANGE */}
-                  {serviceType === 'TIRE_CHANGE' ? (
+                  {/* Service Price */}
+                  {isTireService ? (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Service</span>
+                      <span className="text-gray-600">{serviceType === 'MOTORCYCLE_TIRE' ? 'Montage' : 'Service'}</span>
                       <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
                     </div>
                   ) : (
@@ -1441,8 +1741,8 @@ export default function WorkshopDetailPage() {
                       <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
                     </div>
                   )}
-                  {/* Tire Price - Only for TIRE_CHANGE */}
-                  {serviceType === 'TIRE_CHANGE' && (tireBookingData?.selectedTire || tireBookingData?.isMixedTires) && (
+                  {/* Tire Price */}
+                  {isTireService && (tireBookingData?.selectedTire || tireBookingData?.isMixedTires) && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">{tireBookingData.tireCount || 4}× Reifen</span>
                       <span className="font-medium text-gray-900">
@@ -1455,14 +1755,14 @@ export default function WorkshopDetailPage() {
                       </span>
                     </div>
                   )}
-                  {/* Disposal Fee - Only for TIRE_CHANGE */}
+                  {/* Disposal Fee */}
                   {tireBookingData?.hasDisposal && tireBookingData?.disposalPrice > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Reifenentsorgung</span>
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.disposalPrice)}</span>
                     </div>
                   )}
-                  {/* Runflat Surcharge - Only for TIRE_CHANGE */}
+                  {/* Runflat Surcharge */}
                   {tireBookingData?.hasRunflat && tireBookingData?.runflatPrice > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Runflat-Zuschlag</span>
@@ -1589,6 +1889,8 @@ export default function WorkshopDetailPage() {
                     ? 'Räderwechsel buchen'
                     : serviceType === 'TIRE_CHANGE'
                     ? 'Reifen & Montage buchen'
+                    : serviceType === 'MOTORCYCLE_TIRE'
+                    ? 'Montage buchen'
                     : serviceType === 'TIRE_REPAIR'
                     ? 'Reparatur buchen'
                     : serviceType === 'TIRE_STORAGE'
@@ -1706,15 +2008,15 @@ export default function WorkshopDetailPage() {
                 router.push('/')
               }}
               className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                serviceType === 'TIRE_CHANGE'
+                isTireService
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Wrench className={`w-5 h-5 ${serviceType === 'TIRE_CHANGE' ? 'text-primary-600' : 'text-gray-400'}`} />
+                <Wrench className={`w-5 h-5 ${isTireService ? 'text-primary-600' : 'text-gray-400'}`} />
                 <div>
-                  <p className={`font-semibold text-sm ${serviceType === 'TIRE_CHANGE' ? 'text-gray-900' : 'text-gray-700'}`}>
+                  <p className={`font-semibold text-sm ${isTireService ? 'text-gray-900' : 'text-gray-700'}`}>
                     Mit Reifenkauf
                   </p>
                   <p className="text-xs text-gray-600">Reifen auswählen und montieren lassen</p>
@@ -1723,7 +2025,7 @@ export default function WorkshopDetailPage() {
             </button>
           </div>
           
-          {serviceType === 'TIRE_CHANGE' && !tireBookingData?.selectedTire && !tireBookingData?.selectedFrontTire && (
+          {isTireService && !tireBookingData?.selectedTire && !tireBookingData?.selectedFrontTire && (
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-xs text-yellow-800">
                 ⚠️ Bitte wählen Sie zuerst Ihre Reifen aus, um fortzufahren.
@@ -1893,6 +2195,8 @@ export default function WorkshopDetailPage() {
               ? 'Räderwechsel'
               : serviceType === 'TIRE_CHANGE'
               ? 'Reifen & Montage'
+              : serviceType === 'MOTORCYCLE_TIRE'
+              ? 'Montage buchen'
               : serviceType === 'TIRE_REPAIR'
               ? 'Reparatur'
               : serviceType === 'TIRE_STORAGE'

@@ -82,9 +82,13 @@ export default function AddServicesModal({
             if (service.serviceType === 'WHEEL_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') {
               return false
             }
-            // If main service is TIRE_CHANGE or WHEEL_CHANGE, only show CLIMATE_SERVICE and ALIGNMENT_BOTH
-            if (selectedServiceType === 'TIRE_CHANGE' || selectedServiceType === 'WHEEL_CHANGE') {
+            // If main service is TIRE_CHANGE, WHEEL_CHANGE, or TIRE_REPAIR, only show CLIMATE_SERVICE and ALIGNMENT_BOTH
+            if (selectedServiceType === 'TIRE_CHANGE' || selectedServiceType === 'WHEEL_CHANGE' || selectedServiceType === 'TIRE_REPAIR') {
               return service.serviceType === 'CLIMATE_SERVICE' || service.serviceType === 'ALIGNMENT_BOTH'
+            }
+            // If main service is ALIGNMENT_BOTH or CLIMATE_SERVICE, exclude TIRE_CHANGE (not useful as add-on)
+            if (selectedServiceType === 'ALIGNMENT_BOTH' || selectedServiceType === 'CLIMATE_SERVICE') {
+              return service.serviceType !== 'TIRE_CHANGE'
             }
             return true
           })

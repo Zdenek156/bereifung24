@@ -1,6 +1,6 @@
 'use client' // v5.0 Cache Bust 2026-02-14
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
@@ -41,6 +41,7 @@ import ServiceFilters from './components/ServiceFilters'
 import AffiliateTracker from '@/components/AffiliateTracker'
 import LiveChat from '@/components/LiveChat'
 import LoginModal from '@/components/LoginModal'
+import { useScrollReveal, useCountUp } from './hooks/useAnimations'
 
 const SERVICES = [
   { id: 'TIRE_CHANGE', label: 'Reifenwechsel', icon: RefreshCw, description: 'Reifen montieren/demontieren' },
@@ -135,7 +136,7 @@ export default function NewHomePage({
     return initialState?.selectedService || 'TIRE_CHANGE'
   })
   const [postalCode, setPostalCode] = useState(initialState?.postalCode || '')
-  const [radiusKm, setRadiusKm] = useState(initialState?.radiusKm || 25)
+  const [radiusKm, setRadiusKm] = useState(initialState?.radiusKm || 10)
   const [useGeolocation, setUseGeolocation] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -188,8 +189,18 @@ export default function NewHomePage({
     bookingCount: 0
   })
   
-  // Service-specific package filters - Set sensible defaults
-  const [selectedPackages, setSelectedPackages] = useState<string[]>(['tire_installation_only', 'four_tires'])
+  // Service-specific package filters - Set sensible defaults based on service
+  const [selectedPackages, setSelectedPackages] = useState<string[]>(() => {
+    if (initialState?.selectedPackages && initialState.selectedPackages.length > 0) {
+      return initialState.selectedPackages
+    }
+    // Set defaults based on service type
+    const service = initialState?.selectedService || 'TIRE_CHANGE'
+    if (service === 'TIRE_REPAIR') return ['foreign_object']
+    if (service === 'ALIGNMENT_BOTH') return ['measurement_both']
+    if (service === 'MOTORCYCLE_TIRE') return ['motorcycle_tire_installation_only', 'both', 'with_disposal']
+    return ['tire_installation_only', 'four_tires', 'with_disposal']
+  })
   
   // Handler to change service and set default packages
   const handleServiceChange = (newService: string) => {
@@ -226,11 +237,17 @@ export default function NewHomePage({
     
     // Immediately set packages for TIRE_CHANGE
     if (newService === 'TIRE_CHANGE') {
-      console.log('✅ [page.tsx] Setting default: with_tire_purchase + four_tires')
-      setSelectedPackages(['with_tire_purchase', 'four_tires'])
+      console.log('✅ [page.tsx] Setting default: with_tire_purchase + four_tires + with_disposal')
+      setSelectedPackages(['with_tire_purchase', 'four_tires', 'with_disposal'])
     } else if (newService === 'MOTORCYCLE_TIRE') {
-      console.log('✅ [page.tsx] Setting default for MOTORCYCLE_TIRE: motorcycle_tire_installation_only + both')
-      setSelectedPackages(['motorcycle_tire_installation_only', 'both']) // Default: Nur Montage + Beide Reifen
+      console.log('✅ [page.tsx] Setting default for MOTORCYCLE_TIRE: motorcycle_tire_installation_only + both + with_disposal')
+      setSelectedPackages(['motorcycle_tire_installation_only', 'both', 'with_disposal']) // Default: Nur Montage + Beide Reifen
+    } else if (newService === 'TIRE_REPAIR') {
+      console.log('✅ [page.tsx] Setting default for TIRE_REPAIR: foreign_object')
+      setSelectedPackages(['foreign_object']) // Default: Fremdkörper-Reparatur
+    } else if (newService === 'ALIGNMENT_BOTH') {
+      console.log('✅ [page.tsx] Setting default for ALIGNMENT_BOTH: measurement_both')
+      setSelectedPackages(['measurement_both']) // Default: Vermessung beider Achsen
     } else {
       console.log('🔄 [page.tsx] Clearing packages for:', newService)
       setSelectedPackages([])
@@ -244,12 +261,22 @@ export default function NewHomePage({
       console.log('🔧 [page.tsx] Auto-setting default for TIRE_CHANGE')
       // Use setTimeout to ensure state update happens after render
       setTimeout(() => {
-        setSelectedPackages(['with_tire_purchase', 'four_tires'])
+        setSelectedPackages(['with_tire_purchase', 'four_tires', 'with_disposal'])
       }, 0)
     } else if (selectedService === 'MOTORCYCLE_TIRE' && selectedPackages.length === 0) {
       console.log('🔧 [page.tsx] Auto-setting default for MOTORCYCLE_TIRE: Nur Montage')
       setTimeout(() => {
-        setSelectedPackages(['motorcycle_tire_installation_only', 'both'])
+        setSelectedPackages(['motorcycle_tire_installation_only', 'both', 'with_disposal'])
+      }, 0)
+    } else if (selectedService === 'TIRE_REPAIR' && selectedPackages.length === 0) {
+      console.log('🔧 [page.tsx] Auto-setting default for TIRE_REPAIR: foreign_object')
+      setTimeout(() => {
+        setSelectedPackages(['foreign_object'])
+      }, 0)
+    } else if (selectedService === 'ALIGNMENT_BOTH' && selectedPackages.length === 0) {
+      console.log('🔧 [page.tsx] Auto-setting default for ALIGNMENT_BOTH: measurement_both')
+      setTimeout(() => {
+        setSelectedPackages(['measurement_both'])
       }, 0)
     }
   }, [selectedService])
@@ -275,7 +302,9 @@ export default function NewHomePage({
   const [wetGrip, setWetGrip] = useState<string>('') // A-G or ''
   const [require3PMSF, setRequire3PMSF] = useState(false)
   const [showDOTTires, setShowDOTTires] = useState(false) // Default: DOT tires hidden
+  const [tireConstruction, setTireConstruction] = useState<'radial' | 'diagonal' | ''>('radial') // Default: Radial for motorcycle
   const [requireSameBrand, setRequireSameBrand] = useState(false) // For mixed 4 tires: same brand
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>('') // Global brand filter for tire recommendations
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialState?.selectedVehicleId || '')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
   const [selectedTireIndices, setSelectedTireIndices] = useState<Record<string, number>>({}) // workshopId -> tire index
@@ -319,6 +348,10 @@ export default function NewHomePage({
   // Ref for scrolling to search results
   const searchResultsRef = useRef<HTMLElement>(null)
   const serviceDetailsRef = useRef<HTMLDivElement>(null)
+  // Shared debounce ref to prevent stale closure race conditions between effects
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  // Track if filters changed during loading — triggers re-search after loading completes
+  const pendingSearchRef = useRef(false)
   
   // Load reviews on page load
   useEffect(() => {
@@ -362,6 +395,13 @@ export default function NewHomePage({
   // This ensures prices update immediately when switching between "Mit Reifenkauf" and "Nur Montage"
   useEffect(() => {
     if (hasSearched && customerLocation && !loading) {
+      // CRITICAL: Clear any pending debounced search from [selectedPackages] effect
+      // to prevent stale closure from overwriting correct results
+      if (searchDebounceRef.current) {
+        console.log('🚫 [includeTires Changed] Clearing pending debounced search')
+        clearTimeout(searchDebounceRef.current)
+        searchDebounceRef.current = null
+      }
       console.log('🔄 [includeTires Changed] Re-searching with includeTires:', includeTires)
       searchWorkshops(customerLocation)
     }
@@ -448,10 +488,46 @@ export default function NewHomePage({
           }
         }
         
-        // Now search workshops with the new tire dimensions
-        // Only search if user has searched before (hasSearched) and has location
+        // Build override data to avoid stale state issues
+        const newTireDims = {
+          width: data.dimensions.width.toString(),
+          height: data.dimensions.height.toString(),
+          diameter: data.dimensions.diameter.toString(),
+          loadIndex: data.dimensions.loadIndex || '',
+          speedIndex: data.dimensions.speedIndex || ''
+        }
+        
+        let newMixedTires: { hasMixed: boolean; front?: string; rear?: string }
+        if (selectedService === 'MOTORCYCLE_TIRE') {
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            newMixedTires = { hasMixed: true, front: data.dimensionsFront.formatted, rear: data.dimensionsRear.formatted }
+          } else {
+            const formatted = `${data.dimensions.width}/${data.dimensions.height} R${data.dimensions.diameter}${data.dimensions.loadIndex && data.dimensions.speedIndex ? ' ' + data.dimensions.loadIndex + data.dimensions.speedIndex : ''}`
+            newMixedTires = { hasMixed: true, front: formatted, rear: formatted }
+          }
+        } else if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+          newMixedTires = { hasMixed: true, front: data.dimensionsFront.formatted, rear: data.dimensionsRear.formatted }
+        } else {
+          newMixedTires = { hasMixed: false }
+        }
+        
+        // Now search workshops with the new tire dimensions passed as overrides
+        // CRITICAL: Pass dimensions directly to avoid React stale state
         if (hasSearched && customerLocation) {
-          searchWorkshops(customerLocation, newSeason)
+          searchWorkshops(
+            customerLocation, 
+            newSeason, 
+            newMixedTires,
+            undefined, // overrideSameBrand
+            undefined, // overrideQuality
+            undefined, // overrideFuelEfficiency
+            undefined, // overrideWetGrip
+            undefined, // overrideShowDOTTires
+            undefined, // overrideThreePMSF
+            undefined, // overrideTireBudgetMin
+            undefined, // overrideTireBudgetMax
+            newTireDims // overrideTireDimensions
+          )
         }
       }
     } catch (error) {
@@ -478,22 +554,38 @@ export default function NewHomePage({
     // Only trigger if:
     // 1. User has searched before (hasSearched = true)
     // 2. Location is available (customerLocation not null)
-    // 3. Service is TIRE_CHANGE with tires included
+    // 3. Service is TIRE_CHANGE or MOTORCYCLE_TIRE with tires included
     // 4. We have valid tire dimensions
     if (
       hasSearched && 
       customerLocation && 
-      selectedService === 'TIRE_CHANGE' && 
       includeTires && 
-      selectedVehicleId &&
-      tireDimensions.width && 
-      tireDimensions.diameter
+      selectedVehicleId
     ) {
-      console.log('🔄 [Auto-Search] Triggering search after vehicle change')
+      if (selectedService === 'TIRE_CHANGE' && tireDimensions.width && tireDimensions.diameter) {
+        console.log('🔄 [Auto-Search] Triggering search after vehicle change (TIRE_CHANGE)')
+        searchWorkshops(customerLocation)
+      } else if (selectedService === 'MOTORCYCLE_TIRE' && tireDimensionsFront && tireDimensionsRear) {
+        console.log('🔄 [Auto-Search] Triggering search after vehicle change (MOTORCYCLE_TIRE)')
+        searchWorkshops(customerLocation)
+      }
+    }
+  }, [selectedVehicleId, tireDimensions.width, tireDimensions.diameter, tireDimensionsFront, tireDimensionsRear])
+  
+  // Auto-search when motorcycle tire construction filter changes
+  useEffect(() => {
+    if (
+      hasSearched &&
+      customerLocation &&
+      selectedService === 'MOTORCYCLE_TIRE' &&
+      tireDimensionsFront &&
+      tireDimensionsRear
+    ) {
+      console.log('🔄 [Auto-Search] Construction filter changed to:', tireConstruction)
       searchWorkshops(customerLocation)
     }
-  }, [selectedVehicleId, tireDimensions.width, tireDimensions.diameter])
-  
+  }, [tireConstruction])
+
   // Restore search from URL on page load (for browser back button)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -533,6 +625,9 @@ export default function NewHomePage({
             // selectedService, postalCode, radiusKm, selectedVehicleId, hasMixedTires, selectedPackages are already restored in initial state
             setCustomerLocation(searchState.customerLocation || null)
             setTireDimensions(searchState.tireDimensions || { width: '', height: '', diameter: '', loadIndex: '', speedIndex: '' })
+            if (searchState.tireDimensionsFront) setTireDimensionsFront(searchState.tireDimensionsFront)
+            if (searchState.tireDimensionsRear) setTireDimensionsRear(searchState.tireDimensionsRear)
+            if (searchState.hasMixedTires !== undefined) setHasMixedTires(searchState.hasMixedTires)
             setIncludeTires(searchState.includeTires !== undefined ? searchState.includeTires : true)
             if (searchState.fixedWorkshopContext) {
               setFixedWorkshopContext(searchState.fixedWorkshopContext)
@@ -958,7 +1053,9 @@ export default function NewHomePage({
             console.log('🏍️ [handleVehicleSelect] Motorcycle with SAME front/rear dimensions:', formatted)
           }
           console.log('✅ [handleVehicleSelect] Motorcycle: keeping existing packages (both/front/rear)')
-        } else {
+        } else if (selectedService === 'TIRE_CHANGE') {
+          // CRITICAL: Only modify packages for TIRE_CHANGE service
+          // Other services (TIRE_REPAIR, WHEEL_CHANGE, ALIGNMENT, etc.) keep their own packages
           // Set mixed tire dimensions if available (PKW only)
           if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
             console.log('🔄 [handleVehicleSelect] Mixed tires detected:', {
@@ -972,9 +1069,14 @@ export default function NewHomePage({
             setTireDimensionsRear(data.dimensionsRear.formatted)
             
             // CRITICAL: Only change packages for PKW vehicles
+            // Keep existing service-art marker (with_tire_purchase/tire_installation_only) and with_disposal
             if (vehicle.vehicleType !== 'MOTORCYCLE') {
-              console.log('🧹 [handleVehicleSelect] PKW mixed tires: setting mixed_four_tires')
-              setSelectedPackages(['mixed_four_tires'])
+              const serviceArtMarker = selectedPackages.find(p => ['with_tire_purchase', 'tire_installation_only'].includes(p)) || 'tire_installation_only'
+              const hasDisposal = selectedPackages.includes('with_disposal')
+              const newPackages = [serviceArtMarker, 'mixed_four_tires']
+              if (hasDisposal) newPackages.push('with_disposal')
+              console.log('🧹 [handleVehicleSelect] PKW mixed tires: setting', newPackages)
+              setSelectedPackages(newPackages)
             }
           } else {
             console.log('✅ [handleVehicleSelect] Standard tires (no mixed)')
@@ -984,9 +1086,25 @@ export default function NewHomePage({
             
             // Set standard package if none selected (PKW only)
             if (vehicle.vehicleType !== 'MOTORCYCLE' && !selectedPackages.some(p => ['two_tires', 'four_tires', 'with_tire_purchase', 'tire_installation_only'].includes(p))) {
-              console.log('🧹 [handleVehicleSelect] PKW standard: setting with_tire_purchase + four_tires')
-              setSelectedPackages(['with_tire_purchase', 'four_tires'])
+              const hasDisposal = selectedPackages.includes('with_disposal')
+              const newPackages = ['with_tire_purchase', 'four_tires']
+              if (hasDisposal) newPackages.push('with_disposal')
+              console.log('🧹 [handleVehicleSelect] PKW standard: setting', newPackages)
+              setSelectedPackages(newPackages)
             }
+          }
+        } else {
+          // For non-TIRE_CHANGE services (TIRE_REPAIR, WHEEL_CHANGE, ALIGNMENT, etc.)
+          // Only update tire dimension state, do NOT modify selectedPackages
+          console.log(`✅ [handleVehicleSelect] Service ${selectedService}: keeping existing packages`, selectedPackages)
+          if (data.hasMixedTires && data.dimensionsFront && data.dimensionsRear) {
+            setHasMixedTires(true)
+            setTireDimensionsFront(data.dimensionsFront.formatted)
+            setTireDimensionsRear(data.dimensionsRear.formatted)
+          } else {
+            setHasMixedTires(false)
+            setTireDimensionsFront('')
+            setTireDimensionsRear('')
           }
         }
         
@@ -1017,10 +1135,16 @@ export default function NewHomePage({
     overrideShowDOTTires?: boolean,
     overrideThreePMSF?: boolean,
     overrideTireBudgetMin?: number,
-    overrideTireBudgetMax?: number
+    overrideTireBudgetMax?: number,
+    // Override for standard (non-mixed) tire dimensions to avoid stale state
+    overrideTireDimensions?: { width: string; height: string; diameter: string; loadIndex?: string; speedIndex?: string }
   ) => {
+    // Set loading state immediately so UI shows spinner instead of stale data
+    setLoading(true)
+    
     const seasonToUse = overrideSeason !== undefined ? overrideSeason : selectedSeason
     const mixedTiresData = overrideMixedTires || { hasMixed: hasMixedTires, front: tireDimensionsFront, rear: tireDimensionsRear }
+    const tireDimsToUse = overrideTireDimensions || tireDimensions
     const sameBrandValue = overrideSameBrand !== undefined ? overrideSameBrand : requireSameBrand
     const qualityValue = overrideQuality !== undefined ? overrideQuality : tireQuality
     const fuelEfficiencyValue = overrideFuelEfficiency !== undefined ? overrideFuelEfficiency : fuelEfficiency
@@ -1030,22 +1154,9 @@ export default function NewHomePage({
     const tireBudgetMinValue = overrideTireBudgetMin !== undefined ? overrideTireBudgetMin : tireBudgetMin
     const tireBudgetMaxValue = overrideTireBudgetMax !== undefined ? overrideTireBudgetMax : tireBudgetMax
     
-    // CRITICAL: Motorcycles with "Mit Reifenkauf" REQUIRE vehicle selection (for front/rear dimensions for tire search)
-    // For "Nur Montage": No dimensions needed - user can search without vehicle, select later in filter
-    const needsMotorcycleDimensions = selectedService === 'MOTORCYCLE_TIRE' && 
-                                      selectedPackages.includes('motorcycle_with_tire_purchase')
-    
-    if (needsMotorcycleDimensions && (!mixedTiresData.front || !mixedTiresData.rear)) {
-      console.log('⚠️ [searchWorkshops] Motorcycle search with tire purchase requires vehicle selection', {
-        front: mixedTiresData.front,
-        rear: mixedTiresData.rear,
-        hasMixed: mixedTiresData.hasMixed
-      })
-      // Don't show error - just silently wait for vehicle selection
-      setWorkshops([])
-      setLoading(false)
-      return
-    }
+    // Motorcycles with "Mit Reifenkauf" but no vehicle selected: proceed without tires
+    // API auto-corrects includeTires to false when dimensions are missing
+    // Frontend shows yellow hint on workshop cards to select motorcycle
     
     console.log('🎯 [sameBrand] Using value:', {
       override: overrideSameBrand,
@@ -1059,7 +1170,7 @@ export default function NewHomePage({
       packageTypes: selectedPackages,
       includeTires,
       mixedTiresData,
-      tireDimensions,
+      tireDimensions: tireDimsToUse,
       season: seasonToUse
     })
     
@@ -1127,7 +1238,8 @@ export default function NewHomePage({
             minFuelEfficiency: fuelEfficiency || undefined,
             minWetGrip: wetGrip || undefined,
             threePMSF: require3PMSF || undefined,
-            showDOTTires: showDOTTires
+            showDOTTires: showDOTTires,
+            construction: tireConstruction || undefined
           } : undefined
         }
         
@@ -1162,7 +1274,7 @@ export default function NewHomePage({
           forcedWorkshopSlug: fixedWorkshopContext?.landingPageSlug,
           // Tire search parameters (only for TIRE_CHANGE service)
           includeTires: selectedService === 'TIRE_CHANGE' ? includeTires : false,
-          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !mixedTiresData.hasMixed) ? tireDimensions : undefined,
+          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !mixedTiresData.hasMixed) ? tireDimsToUse : undefined,
           // Mixed tire dimensions (if vehicle has different front/rear sizes)
           tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.front) ? 
             (() => {
@@ -1234,6 +1346,9 @@ export default function NewHomePage({
         setWorkshops(workshops)
         setError(null)
         
+        // Reset brand filter when new search results arrive (available brands may have changed)
+        setSelectedBrandFilter('')
+        
         // Auto-adjust price range to include all workshops
         if (workshops.length > 0) {
           const maxWorkshopPrice = Math.max(...workshops.map(w => w.totalPrice))
@@ -1260,6 +1375,14 @@ export default function NewHomePage({
       setError('Fehler bei der Suche')
     } finally {
       setLoading(false)
+      // If filters changed during loading, trigger a re-search
+      if (pendingSearchRef.current) {
+        pendingSearchRef.current = false
+        console.log('🔄 [searchWorkshops] Filters changed during loading — triggering re-search')
+        setTimeout(() => {
+          searchWorkshops(location)
+        }, 100)
+      }
     }
   }
 
@@ -1270,17 +1393,8 @@ export default function NewHomePage({
       return
     }
     
-    // For MOTORCYCLE_TIRE with "Mit Reifenkauf": Validate that vehicle is selected (need dimensions for tire search)
-    // For "Nur Montage": No validation needed - user selects motorcycle in filter after search
-    const needsMotorcycleForSearch = selectedService === 'MOTORCYCLE_TIRE' && 
-                                     selectedPackages.includes('motorcycle_with_tire_purchase')
-    
-    if (needsMotorcycleForSearch && (!tireDimensionsFront || !tireDimensionsRear)) {
-      alert('Bitte wählen Sie zuerst Ihr Motorrad in der linken Filterleiste aus (für Reifengröße).')
-      return
-    }
-    
-    // No tire dimension validation for other services - user can search first, then select vehicle in filter
+    // No tire dimension validation - user can search first, then select vehicle in filter
+    // Motorcycle + "Mit Reifenkauf" without vehicle: search proceeds, shows workshops with hint to select motorcycle
     
     setLoading(true)
     setError(null)
@@ -1365,18 +1479,32 @@ export default function NewHomePage({
     
     // Don't trigger search if already loading or haven't searched yet
     if (loading || !hasSearched || !customerLocation) {
-      console.log('⏭️  [useEffect] Skipping search:', { loading, hasSearched, customerLocation: !!customerLocation })
+      // If loading, mark that a re-search is needed once loading finishes
+      if (loading && hasSearched && customerLocation) {
+        console.log('⏳ [useEffect] Filter changed during loading — will re-search after load')
+        pendingSearchRef.current = true
+      } else {
+        console.log('⏭️  [useEffect] Skipping search:', { loading, hasSearched, customerLocation: !!customerLocation })
+      }
       return
     }
     
     console.log('⏱️  [useEffect] Debouncing search for 300ms...')
-    const debounce = setTimeout(() => {
+    // Use shared ref so [includeTires] effect can cancel this if it fires first
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      searchDebounceRef.current = null
       console.log('🔎 [useEffect] Executing re-search with packages:', selectedPackages)
       searchWorkshops(customerLocation)
     }, 300)
     return () => {
       console.log('🚫 [useEffect] Debounce cleared')
-      clearTimeout(debounce)
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+        searchDebounceRef.current = null
+      }
     }
   }, [selectedPackages])
 
@@ -1394,6 +1522,8 @@ export default function NewHomePage({
         customerLocation,
         selectedVehicleId,
         tireDimensions,
+        tireDimensionsFront,
+        tireDimensionsRear,
         selectedPackages,
         includeTires,
         hasMixedTires,
@@ -1537,29 +1667,36 @@ export default function NewHomePage({
       serviceName: selectedService,
       servicePrice: workshop.basePrice || 0,
       // Additional services with prices
-      hasDisposal: selectedPackages.includes('with_disposal'),
-      disposalPrice: workshop.disposalFeeApplied || 0,
+      hasDisposal: (selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE') && selectedPackages.includes('with_disposal'),
+      disposalPrice: (selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE') ? (workshop.disposalFeeApplied || 0) : 0,
       hasRunflat: selectedPackages.includes('runflat'),
       runflatPrice: workshop.runflatSurcharge || 0,
       // Tire count for per-tire calculations
-      tireCount: workshop.isMixedTires ? 4 : (
-        selectedPackages.includes('two_tires') ? 2 :
-        selectedPackages.includes('four_tires') ? 4 : 0
-      ),
+      tireCount: workshop.isMixedTires
+        ? ((selectedFrontRec ? 1 : 0) + (selectedRearRec ? 1 : 0))
+        : (selectedPackages.includes('two_tires') ? 2 :
+           selectedPackages.includes('four_tires') ? 4 : 0),
       // Selected vehicle
       selectedVehicle: customerVehicles.find(v => v.id === selectedVehicleId) || null
     }
     
     // Save tire and service data to sessionStorage for workshop page
-    if (tireBookingData.hasTires) {
+    // Save if has tires OR has disposal/runflat flags (needed for pricing on workshop page)
+    if (tireBookingData.hasTires || tireBookingData.hasDisposal || tireBookingData.hasRunflat) {
       sessionStorage.setItem('tireBookingData', JSON.stringify(tireBookingData))
+    } else {
+      // Clear stale tire data for non-tire services (WHEEL_CHANGE, etc.)
+      // Prevents old disposal/runflat flags from TIRE_CHANGE being carried over
+      sessionStorage.removeItem('tireBookingData')
     }
     
     // Also save service data separately for non-tire services
     const serviceData = {
       serviceName: selectedService,
       selectedPackages: selectedPackages,
-      servicePrice: workshop.totalPrice || 0
+      servicePrice: workshop.totalPrice || 0,
+      selectedVehicleId: selectedVehicleId || null,
+      wheelChangeBreakdown: workshop.wheelChangeBreakdown || null
     }
     sessionStorage.setItem('serviceBookingData', JSON.stringify(serviceData))
     
@@ -1585,9 +1722,9 @@ export default function NewHomePage({
     const params = new URLSearchParams({
       name: workshop.name,
       city: workshop.city || '',
-      distance: workshop.distance.toString(),
-      rating: workshop.rating.toString(),
-      reviewCount: workshop.reviewCount.toString(),
+      distance: (workshop.distance ?? 0).toString(),
+      rating: (workshop.rating ?? 0).toString(),
+      reviewCount: (workshop.reviewCount ?? 0).toString(),
       duration: workshop.estimatedDuration?.toString() || '60',
       service: selectedService,
       t: Date.now().toString(), // Force page reload on filter change
@@ -1645,7 +1782,9 @@ export default function NewHomePage({
       const tireBrand = tire.brand || tire.tire?.brand || ''
       
       // 1. Premium brands are always Premium (for category display)
-      const premiumBrands = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
+      const premiumBrandsPKW = ['Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop']
+      const premiumBrandsMotorrad = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Dunlop', 'Metzeler', 'Heidenau']
+      const premiumBrands = selectedService === 'MOTORCYCLE_TIRE' ? premiumBrandsMotorrad : premiumBrandsPKW
       if (premiumBrands.some(brand => tireBrand.toLowerCase().includes(brand.toLowerCase()))) {
         console.log(`  ⭐ ${tireBrand}: Premium (brand)`)
         return 'premium'
@@ -1674,6 +1813,15 @@ export default function NewHomePage({
     
     // Start with all tires
     let filtered = [...tires]
+    
+    // Filter by brand if selected
+    if (selectedBrandFilter) {
+      filtered = filtered.filter((tire: any) => {
+        const tireBrand = tire.brand || tire.tire?.brand || ''
+        return tireBrand.toLowerCase() === selectedBrandFilter.toLowerCase()
+      })
+      console.log(`🏷️ [Filter ${workshopId}] Brand filter "${selectedBrandFilter}": ${filtered.length} tires`)
+    }
     
     // Filter by category if not 'all'
     if (qualityFilter !== 'all') {
@@ -1726,6 +1874,33 @@ export default function NewHomePage({
     return filtered
   }
 
+  // Compute available brands from all workshops' tire recommendations
+  const availableBrands = useMemo(() => {
+    const brandSet = new Set<string>()
+    workshops.forEach((w: any) => {
+      // Standard tire recommendations
+      w.tireRecommendations?.forEach((t: any) => {
+        const brand = t.brand || t.tire?.brand
+        if (brand) brandSet.add(brand)
+      })
+      // Mixed/Motorcycle front recommendations
+      w.tireFrontRecommendations?.forEach((t: any) => {
+        const brand = t.brand || t.tire?.brand
+        if (brand) brandSet.add(brand)
+      })
+      // Mixed/Motorcycle rear recommendations
+      w.tireRearRecommendations?.forEach((t: any) => {
+        const brand = t.brand || t.tire?.brand
+        if (brand) brandSet.add(brand)
+      })
+      // Brand options (for mixed same-brand)
+      w.brandOptions?.forEach((opt: any) => {
+        if (opt.brand) brandSet.add(opt.brand)
+      })
+    })
+    return Array.from(brandSet).sort((a, b) => a.localeCompare(b))
+  }, [workshops])
+
   return (
     <div className={useServiceCards ? 'bg-transparent' : 'min-h-screen bg-white'}>
       <Suspense fallback={null}>
@@ -1774,6 +1949,28 @@ export default function NewHomePage({
                         ) : /* Employee users - only Abmelden (work in /mitarbeiter) */
                         (session.user?.role === 'EMPLOYEE' || session.user?.role === 'B24_EMPLOYEE') ? (
                           <></>
+                        ) : /* Freelancer users - Startseite, Dashboard, Abmelden */
+                        session.user?.role === 'FREELANCER' ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setShowUserMenu(false)
+                                window.location.href = '/'
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                            >
+                              <Star className="w-4 h-4" />
+                              Startseite
+                            </button>
+                            <Link
+                              href="/freelancer"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <LayoutDashboard className="w-4 h-4" />
+                              Dashboard
+                            </Link>
+                          </>
                         ) : /* Workshop users - Dashboard, Einstellungen, Abmelden */
                         session.user?.role === 'WORKSHOP' ? (
                           <>
@@ -1955,14 +2152,22 @@ export default function NewHomePage({
       />
 
       {/* Hero Section - Booking.com Style */}
-      <section className={`relative ${useServiceCards ? 'bg-transparent text-gray-900 pt-0 pb-0' : hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white pt-12 pb-32'}`}>
-        {/* Background Pattern */}
+      <section className={`relative overflow-hidden ${useServiceCards ? 'bg-transparent text-gray-900 pt-0 pb-0' : hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-primary-800 text-white pt-12 pb-32'}`}>
+        {/* Hero Background Image */}
         {!hideHeroHeader && (
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-              backgroundSize: '40px 40px'
-            }}></div>
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/bereifung24-hero-bg.webp"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADwAgCdASoUAAkAPzmEuVO0qKWisAgCkCcJYgCw7C5JAAD+3/fktUurN2tah969dPeAalnjL+g1troAAAA="
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-700/50 via-primary-800/40 to-primary-900/60" />
           </div>
         )}
 
@@ -2071,7 +2276,7 @@ export default function NewHomePage({
             )}
 
             {!useServiceCards && (
-            <div ref={serviceDetailsRef} className="bg-white rounded-2xl shadow-2xl p-4">
+            <div ref={serviceDetailsRef} className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
               <div className="flex flex-col md:flex-row gap-4">
 
                 {/* Location Input with Label and Integrated GPS */}
@@ -2153,7 +2358,8 @@ export default function NewHomePage({
                 <div className="w-full md:w-auto md:pt-6">
                   <button
                     onClick={handleSearch}
-                    className="w-full md:w-auto h-14 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                    className="shimmer-btn w-full md:w-auto h-14 px-8 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    style={{ boxShadow: '0 8px 25px rgba(0,112,186,0.3)' }}
                   >
                     <Search className="w-5 h-5" />
                     <span className="hidden lg:inline">{isWorkshopFixed ? 'Jetzt bei dieser Werkstatt buchen' : 'Jetzt Festpreise vergleichen'}</span>
@@ -2398,9 +2604,9 @@ export default function NewHomePage({
                       {/* === TIRE-CHANGE SPECIFIC FILTERS (only for Reifenwechsel) === */}
                       {selectedService === 'TIRE_CHANGE' && (
                         <>
-                          {/* Saison (only if includeTires) */}
+                          {/* Saison - nur bei "Mit Reifenkauf" */}
                           {includeTires && (
-                            <div className="p-5 border-b border-gray-200 lg:border-b-0">
+                          <div className="p-5 border-b border-gray-200 lg:border-b-0">
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 ❄️ Saison
                               </h4>
@@ -2451,6 +2657,22 @@ export default function NewHomePage({
                                 hasMixedTires && tireDimensionsFront && tireDimensionsRear && tireDimensionsFront !== tireDimensionsRear
                                   ? {
                                       groups: [
+                                        {
+                                          label: 'Service-Art',
+                                          multiSelect: false,
+                                          options: [
+                                            { 
+                                              packageType: 'with_tire_purchase', 
+                                              label: 'Mit Reifenkauf', 
+                                              info: 'Neue Reifen bei der Werkstatt kaufen und montieren lassen.'
+                                            },
+                                            { 
+                                              packageType: 'tire_installation_only', 
+                                              label: 'Nur Montage', 
+                                              info: 'Nur die Montage-Dienstleistung. Sie bringen Ihre eigenen Reifen mit.'
+                                            }
+                                          ]
+                                        },
                                         {
                                           label: 'Anzahl Reifen',
                                           multiSelect: false,
@@ -2593,6 +2815,43 @@ export default function NewHomePage({
                             onFiltersChange={(packages) => setSelectedPackages(packages)}
                             stackGroups={!isWorkshopFixed}
                           />
+                        </div>
+                      )}
+
+                      {/* Reifenbauart Filter (only for MOTORCYCLE_TIRE) */}
+                      {selectedService === 'MOTORCYCLE_TIRE' && (
+                        <div className="p-5 border-b border-gray-200 lg:border-b-0">
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            🏍️ Reifenbauart
+                          </h4>
+                          <div className="space-y-1">
+                            <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                              <input
+                                type="radio"
+                                name="tireConstruction"
+                                checked={tireConstruction === 'radial'}
+                                onChange={() => setTireConstruction('radial')}
+                                className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                              />
+                              <div>
+                                <span className="text-sm font-medium">Radial</span>
+                                <p className="text-xs text-gray-500">Standard für moderne Motorräder</p>
+                              </div>
+                            </label>
+                            <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                              <input
+                                type="radio"
+                                name="tireConstruction"
+                                checked={tireConstruction === 'diagonal'}
+                                onChange={() => setTireConstruction('diagonal')}
+                                className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                              />
+                              <div>
+                                <span className="text-sm font-medium">Diagonal</span>
+                                <p className="text-xs text-gray-500">Für Chopper, Enduro & Oldtimer</p>
+                              </div>
+                            </label>
+                          </div>
                         </div>
                       )}
 
@@ -2757,8 +3016,24 @@ export default function NewHomePage({
                 {/* Loading State */}
                 {loading && (
                   <div className="text-center py-12">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Suche Werkstätten...</p>
+                    <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+                      <svg className="animate-spin w-14 h-14 text-primary-600" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {/* Outer tire */}
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" strokeOpacity="0.2" />
+                        <path d="M32 4a28 28 0 0 1 28 28" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+                        {/* Inner hub */}
+                        <circle cx="32" cy="32" r="8" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="2" />
+                        {/* Spokes */}
+                        <line x1="32" y1="12" x2="32" y2="24" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                        <line x1="44" y1="32" x2="40" y2="32" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                        <line x1="32" y1="52" x2="32" y2="40" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                        <line x1="20" y1="32" x2="24" y2="32" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-700 font-medium text-lg">
+                      {includeTires ? 'Werkstätten & Reifenpreise werden abgerufen...' : 'Werkstätten & Preise werden abgerufen...'}
+                    </p>
+                    <p className="text-gray-400 text-sm mt-1">Einen Moment bitte</p>
                   </div>
                 )}
 
@@ -2791,7 +3066,20 @@ export default function NewHomePage({
                       <p className="text-sm text-gray-600">
                         <span className="font-semibold text-gray-900">{sortedWorkshops.length}</span> Werkstätten gefunden
                       </p>
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                        {/* Brand Filter - only when tires are included and brands available */}
+                        {includeTires && availableBrands.length > 0 && (
+                          <select
+                            value={selectedBrandFilter}
+                            onChange={(e) => setSelectedBrandFilter(e.target.value)}
+                            className="flex-1 sm:flex-initial px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                          >
+                            <option value="">Alle Hersteller</option>
+                            {availableBrands.map((brand) => (
+                              <option key={brand} value={brand}>{brand}</option>
+                            ))}
+                          </select>
+                        )}
                         <span className="text-sm text-gray-600 whitespace-nowrap">Sortieren:</span>
                         <select
                           value={sortBy}
@@ -3198,6 +3486,7 @@ export default function NewHomePage({
                                         >
                                           💰 Günstige
                                         </button>
+                                        {selectedService !== 'MOTORCYCLE_TIRE' && (
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'best'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
@@ -3206,6 +3495,7 @@ export default function NewHomePage({
                                         >
                                           🏆 Beste Eigenschaften
                                         </button>
+                                        )}
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
@@ -3339,6 +3629,7 @@ export default function NewHomePage({
                                         >
                                           💰 Günstige
                                         </button>
+                                        {selectedService !== 'MOTORCYCLE_TIRE' && (
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'best'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
@@ -3347,6 +3638,7 @@ export default function NewHomePage({
                                         >
                                           🏆 Beste Eigenschaften
                                         </button>
+                                        )}
                                         <button
                                           onClick={() => setTireQualityFilter(prev => ({...prev, [workshopKey]: 'premium'}))}
                                           className={`px-2 py-1 text-xs rounded-md transition ${
@@ -3441,13 +3733,34 @@ export default function NewHomePage({
                                 )
                               })()}
 
-                              {/* Tire not available warning - only for TIRE_CHANGE service */}
-                              {selectedService === 'TIRE_CHANGE' && showTires && !workshop.tireAvailable && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                                  {!selectedVehicleId ? (
+                              {/* Tire not available warning / loading indicator - for TIRE_CHANGE and MOTORCYCLE_TIRE */}
+                              {(selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE') && showTires && !workshop.tireAvailable && (
+                                <div className={`rounded-lg p-3 mb-3 ${loading ? 'bg-blue-50 border border-blue-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                                  {loading ? (
+                                    <div className="flex items-center gap-3">
+                                      <svg className="animate-spin h-5 w-5 text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 0110 10h-4a6 6 0 00-6-6V2z"></path>
+                                      </svg>
+                                      <p className="text-sm text-blue-700 font-medium">Reifenpreise werden abgerufen...</p>
+                                    </div>
+                                  ) : !selectedVehicleId ? (
                                     <div>
-                                      <p className="text-sm text-yellow-800 font-semibold mb-1">⚠️ Fahrzeug auswählen</p>
-                                      <p className="text-xs text-yellow-700">Bitte wählen Sie links unter "Fahrzeug wählen" Ihr Fahrzeug aus, um passende Reifen anzuzeigen.</p>
+                                      <p className="text-sm text-yellow-800 font-semibold mb-1">⚠️ {selectedService === 'MOTORCYCLE_TIRE' ? 'Motorrad auswählen' : 'Fahrzeug auswählen'}</p>
+                                      <p className="text-xs text-yellow-700">
+                                        {selectedService === 'MOTORCYCLE_TIRE' 
+                                          ? 'Bitte wählen Sie links unter "Fahrzeug wählen" Ihr Motorrad aus, um passende Reifen anzuzeigen.'
+                                          : 'Bitte wählen Sie links unter "Fahrzeug wählen" Ihr Fahrzeug aus, um passende Reifen anzuzeigen.'
+                                        }
+                                      </p>
+                                    </div>
+                                  ) : workshop.tirePartiallyAvailable && workshop.unavailableDimensions?.length > 0 ? (
+                                    <div>
+                                      <p className="text-sm text-yellow-800 font-semibold mb-1">⚠️ Teilweise keine Reifen verfügbar</p>
+                                      <p className="text-xs text-yellow-700">
+                                        Für folgende Größe(n) sind aktuell keine Reifen verfügbar: {workshop.unavailableDimensions.join(', ')}
+                                      </p>
+                                      <p className="text-xs text-yellow-600 mt-1">Der angezeigte Preis enthält nur den Montageservice.</p>
                                     </div>
                                   ) : (
                                     <p className="text-sm text-yellow-800">⚠️ Keine passenden Reifen verfügbar</p>
@@ -3466,26 +3779,16 @@ export default function NewHomePage({
                                           <>
                                             {/* Mixed tires: Show selected front and rear */}
                                             {selectedFrontRec && (
-                                              <>
-                                                <div className="flex justify-between gap-4">
-                                                  <span className="text-xs">🔹 Vorderachse ({workshop.tireFront?.dimensions})</span>
-                                                </div>
-                                                <div className="flex justify-between gap-4 ml-3">
-                                                  <span>{selectedFrontRec.quantity}× {selectedFrontRec.tire.brand} {selectedFrontRec.tire.model} à {formatEUR(selectedFrontRec.pricePerTire)}</span>
-                                                  <span className="font-medium">{formatEUR(selectedFrontRec.totalPrice)}</span>
-                                                </div>
-                                              </>
+                                              <div className="flex justify-between gap-4">
+                                                <span>{selectedFrontRec.quantity}× {selectedFrontRec.tire.brand} {selectedFrontRec.tire.model} à {formatEUR(selectedFrontRec.pricePerTire)}</span>
+                                                <span className="font-medium">{formatEUR(selectedFrontRec.totalPrice)}</span>
+                                              </div>
                                             )}
                                             {selectedRearRec && (
-                                              <>
-                                                <div className="flex justify-between gap-4 mt-1">
-                                                  <span className="text-xs">🔸 Hinterachse ({workshop.tireRear?.dimensions})</span>
-                                                </div>
-                                                <div className="flex justify-between gap-4 ml-3">
-                                                  <span>{selectedRearRec.quantity}× {selectedRearRec.tire.brand} {selectedRearRec.tire.model} à {formatEUR(selectedRearRec.pricePerTire)}</span>
-                                                  <span className="font-medium">{formatEUR(selectedRearRec.totalPrice)}</span>
-                                                </div>
-                                              </>
+                                              <div className="flex justify-between gap-4">
+                                                <span>{selectedRearRec.quantity}× {selectedRearRec.tire.brand} {selectedRearRec.tire.model} à {formatEUR(selectedRearRec.pricePerTire)}</span>
+                                                <span className="font-medium">{formatEUR(selectedRearRec.totalPrice)}</span>
+                                              </div>
                                             )}
                                           </>
                                         ) : selectedRec ? (
@@ -3506,16 +3809,15 @@ export default function NewHomePage({
                                         {((workshop.disposalFeeApplied || 0) > 0) && (selectedRec || workshop.isMixedTires || selectedFrontRec || selectedRearRec) && (() => {
                                           // Calculate tire count based on service type
                                           let tireCount = 0
-                                          if (workshop.isMixedTires) {
+                                          if (selectedService === 'MOTORCYCLE_TIRE') {
+                                            // Motorcycle: 1 or 2 tires
+                                            if (selectedFrontRec && selectedRearRec) tireCount = 2
+                                            else if (selectedFrontRec || selectedRearRec) tireCount = 1
+                                            else tireCount = selectedPackages.includes('both') ? 2 : 1
+                                          } else if (workshop.isMixedTires) {
                                             tireCount = 4
                                           } else if (selectedRec) {
                                             tireCount = selectedRec.quantity || 0
-                                          } else if (selectedFrontRec && selectedRearRec) {
-                                            // Motorcycle: both tires selected
-                                            tireCount = 2
-                                          } else if (selectedFrontRec || selectedRearRec) {
-                                            // Motorcycle: single tire selected
-                                            tireCount = 1
                                           }
                                           // Only show disposal fee if there are actually tires selected
                                           if (tireCount > 0) {
@@ -3538,20 +3840,94 @@ export default function NewHomePage({
                                         </span>
                                       </div>
                                     </>
-                                  ) : !includeTires ? (
-                                    <div className="flex items-baseline gap-2">
-                                      <span className="text-xs text-gray-500">Gesamtpreis</span>
+                                  ) : selectedService === 'WHEEL_CHANGE' ? (
+                                    <>
+                                      {/* Price breakdown for Räderwechsel */}
                                       {workshop.totalPrice > 0 ? (
-                                        <span className="text-2xl sm:text-3xl font-bold text-primary-600">
-                                          ab {formatEUR(workshop.totalPrice)}
-                                        </span>
+                                        <>
+                                          <div className="text-sm text-gray-600 space-y-0.5 mb-1">
+                                            <div className="flex justify-between gap-4">
+                                              <span>Räderwechsel</span>
+                                              <span className="font-medium">{formatEUR(workshop.wheelChangeBreakdown?.basePrice || workshop.basePrice)}</span>
+                                            </div>
+                                            {workshop.wheelChangeBreakdown?.balancingSurcharge > 0 && (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Auswuchten</span>
+                                                <span className="font-medium">+ {formatEUR(workshop.wheelChangeBreakdown.balancingSurcharge)}</span>
+                                              </div>
+                                            )}
+                                            {workshop.wheelChangeBreakdown?.storageSurcharge > 0 && (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Einlagerung</span>
+                                                <span className="font-medium">+ {formatEUR(workshop.wheelChangeBreakdown.storageSurcharge)}</span>
+                                              </div>
+                                            )}
+                                            <div className="border-t border-gray-200 pt-1 mt-1"></div>
+                                          </div>
+                                          <div className="flex items-baseline gap-2">
+                                            <span className="text-xs text-gray-500">Gesamtpreis</span>
+                                            <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                              ab {formatEUR(workshop.totalPrice)}
+                                            </span>
+                                          </div>
+                                        </>
                                       ) : (
                                         <span className="text-lg font-semibold text-gray-500">Preis auf Anfrage</span>
                                       )}
-                                    </div>
+                                    </>
+                                  ) : !includeTires ? (
+                                    <>
+                                      {/* Price breakdown for Nur Montage */}
+                                      {workshop.totalPrice > 0 ? (
+                                        <>
+                                          <div className="text-sm text-gray-600 space-y-0.5 mb-1">
+                                            {workshop.basePrice > 0 && (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Montage</span>
+                                                <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
+                                              </div>
+                                            )}
+                                            {((workshop.disposalFeeApplied || 0) > 0) && (() => {
+                                              // Determine tire count based on service type
+                                              let tireCount = 4
+                                              if (selectedService === 'MOTORCYCLE_TIRE') {
+                                                tireCount = selectedPackages.includes('both') ? 2 : 1
+                                              } else {
+                                                tireCount = selectedPackages.includes('two_tires') ? 2 : 4
+                                              }
+                                              const perTire = (workshop.disposalFeeApplied || 0) / tireCount
+                                              return (
+                                                <div className="flex justify-between gap-4">
+                                                  <span>Entsorgung ({tireCount}× {formatEUR(perTire)})</span>
+                                                  <span className="font-medium">{formatEUR(workshop.disposalFeeApplied)}</span>
+                                                </div>
+                                              )
+                                            })()}
+                                            {((workshop.basePrice > 0) || ((workshop.disposalFeeApplied || 0) > 0)) && (
+                                              <div className="border-t border-gray-200 pt-1 mt-1"></div>
+                                            )}
+                                          </div>
+                                          <div className="flex items-baseline gap-2">
+                                            <span className="text-xs text-gray-500">Gesamtpreis</span>
+                                            <span className="text-2xl sm:text-3xl font-bold text-primary-600">
+                                              ab {formatEUR(workshop.totalPrice)}
+                                            </span>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="text-lg font-semibold text-gray-500">Preis auf Anfrage</span>
+                                      )}
+                                    </>
                                   ) : (
                                     <div>
-                                      <p className="text-sm text-gray-600">Nur Montage</p>
+                                      <p className="text-sm text-gray-600">
+                                        {selectedService === 'TIRE_REPAIR' 
+                                          ? (selectedPackages.includes('valve_damage') ? 'Ventilschaden' : 'Fremdkörper-Reparatur')
+                                          : selectedService === 'ALIGNMENT_BOTH'
+                                          ? 'Achsvermessung'
+                                          : 'Nur Montage'
+                                        }
+                                      </p>
                                       <span className="text-2xl font-bold text-primary-600">ab {formatEUR(workshop.basePrice || workshop.totalPrice)}</span>
                                     </div>
                                   )}
@@ -3559,20 +3935,31 @@ export default function NewHomePage({
                                     {workshop.estimatedDuration && (
                                       <span>~ {workshop.estimatedDuration} Min.</span>
                                     )}
-                                    {workshop.estimatedDuration && selectedPackages.includes('with_balancing') && (
+                                    {selectedService !== 'WHEEL_CHANGE' && workshop.estimatedDuration && selectedPackages.includes('with_balancing') && (
                                       <span>·</span>
                                     )}
-                                    {selectedPackages.includes('with_balancing') && (
+                                    {selectedService !== 'WHEEL_CHANGE' && selectedPackages.includes('with_balancing') && (
                                       <span>inkl. Wuchten</span>
                                     )}
                                   </div>
                                 </div>
                                 <button
                                   onClick={() => handleBooking(workshop)}
-                                  className="flex-shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md"
+                                  disabled={session && !selectedVehicleId}
+                                  className={`flex-shrink-0 px-6 py-3 font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md ${
+                                    session && !selectedVehicleId
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                      : 'bg-primary-600 hover:bg-primary-700 text-white'
+                                  }`}
                                 >
-                                  {selectedService === 'WHEEL_CHANGE' 
+                                  {session && !selectedVehicleId
+                                    ? 'Bitte Fahrzeug wählen'
+                                    : selectedService === 'WHEEL_CHANGE' 
                                     ? 'Räderwechsel buchen →'
+                                    : selectedService === 'TIRE_REPAIR'
+                                    ? 'Reparatur buchen →'
+                                    : selectedService === 'ALIGNMENT_BOTH'
+                                    ? 'Vermessung buchen →'
                                     : selectedService === 'TIRE_CHANGE' && includeTires 
                                     ? 'Reifen & Montage buchen →'
                                     : 'Montage buchen →'
@@ -3595,257 +3982,78 @@ export default function NewHomePage({
       {/* Stats Section - Only show when not searched */}
       {!hasSearched && (
         <>
-          <section className="py-12 bg-gray-50 border-b border-gray-200">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    100%
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Geprüfte Werkstätten
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    {stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}★` : '4.9★'}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Durchschnittsbewertung
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    24/7
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Online Buchung
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                    <Clock className="w-8 h-8 md:w-10 md:h-10 mx-auto text-primary-600" />
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Schneller Termin
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <StatsCountUp avgRating={stats.avgRating} />
 
           {/* Reviews Section - Real reviews from database */}
           {reviews.length > 0 && <ReviewsCarousel reviews={reviews} />}
 
       {/* How It Works - Ablauf */}
-      <section className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">
+      <section id="how-it-works" className="py-20 bg-gradient-to-br from-primary-50 to-primary-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              So einfach geht's
+              So einfach geht&apos;s
             </h2>
             <p className="text-xl text-gray-600">
               In 3 Schritten zum Wunschtermin
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Step 1 */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                  1
-                </div>
-                <div className="mb-6 mt-4">
-                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto">
-                    <Search className="w-10 h-10 text-primary-600" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Werkstatt finden
-                </h3>
-                <p className="text-gray-600">
-                  Service wählen, Standort eingeben und passende Werkstätten mit Festpreisen vergleichen
-                </p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                  2
-                </div>
-                <div className="mb-6 mt-4">
-                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <Calendar className="w-10 h-10 text-green-600" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Online buchen & bezahlen
-                </h3>
-                <p className="text-gray-600">
-                  Wunschtermin wählen, sicher online bezahlen und Bestätigung per E-Mail erhalten
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center relative">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                  3
-                </div>
-                <div className="mb-6 mt-4">
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                    <Check className="w-10 h-10 text-blue-600" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  Zur Werkstatt fahren
-                </h3>
-                <p className="text-gray-600">
-                  Einfach zum vereinbarten Termin erscheinen - alles ist vorbereitet und erledigt
-                </p>
-              </div>
-            </div>
+          <StepsSection />
 
             {/* CTA Button */}
             <div className="text-center mt-12">
               <button
                 onClick={() => document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                className="px-8 py-4 bg-primary-600 text-white rounded-xl font-bold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-xl inline-flex items-center gap-2"
+                className="shimmer-btn px-8 py-4 bg-primary-600 text-white rounded-xl font-bold text-lg hover:bg-primary-700 transition-all hover:-translate-y-0.5 shadow-xl inline-flex items-center gap-2"
+                style={{ boxShadow: '0 8px 25px rgba(0,112,186,0.3)' }}
               >
                 <Search className="w-5 h-5" />
                 Jetzt Werkstatt finden
               </button>
             </div>
-          </div>
         </div>
       </section>
 
       {/* Popular Services */}
-      <section className="py-16">
+      <section id="services" className="py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">
             Beliebte Services
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Räderwechsel */}
-            <Link
-              href="/services/raederwechsel"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                🔧
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Räderwechsel
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Kompletter Radwechsel vom Winter- auf Sommerreifen oder umgekehrt
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* Reifenwechsel */}
-            <Link
-              href="/services/reifenwechsel"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                🔄
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Reifenwechsel
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Reifen von Felge ab- und aufziehen mit professioneller Montage
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* Reifenreparatur */}
-            <Link
-              href="/services/reifenreparatur"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                🔨
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Reifenreparatur
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Professionelle Reparatur von Reifenschäden mit Vulkanisierung
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* Motorradreifen */}
-            <Link
-              href="/services/motorradreifen"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                🏍️
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Motorradreifen
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Spezialisierte Montage für Motorrad-Vorder- und Hinterreifen
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* Achsvermessung */}
-            <Link
-              href="/services/achsvermessung"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                📏
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Achsvermessung
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                3D-Vermessung und Einstellung für optimalen Geradeauslauf
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* Klimaservice */}
-            <Link
-              href="/services/klimaservice"
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-100 hover:border-primary-200 group block"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                ❄️
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">
-                Klimaservice
-              </h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Wartung, Desinfektion und Befüllung der Auto-Klimaanlage
-              </p>
-              <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
-                <span>Mehr erfahren</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
+            {[
+              { href: '/services/raederwechsel', emoji: '🔧', title: 'Räderwechsel', desc: 'Kompletter Radwechsel vom Winter- auf Sommerreifen oder umgekehrt', price: 'ab 19,90 €' },
+              { href: '/services/reifenwechsel', emoji: '🔄', title: 'Reifenwechsel', desc: 'Reifen von Felge ab- und aufziehen mit professioneller Montage', price: 'ab 39,90 €' },
+              { href: '/services/reifenreparatur', emoji: '🔨', title: 'Reifenreparatur', desc: 'Professionelle Reparatur von Reifenschäden mit Vulkanisierung', price: 'ab 29,90 €' },
+              { href: '/services/motorradreifen', emoji: '🏍️', title: 'Motorradreifen', desc: 'Spezialisierte Montage für Motorrad-Vorder- und Hinterreifen', price: 'ab 24,90 €' },
+              { href: '/services/achsvermessung', emoji: '📏', title: 'Achsvermessung', desc: '3D-Vermessung und Einstellung für optimalen Geradeauslauf', price: 'ab 49,90 €' },
+              { href: '/services/klimaservice', emoji: '❄️', title: 'Klimaservice', desc: 'Wartung, Desinfektion und Befüllung der Auto-Klimaanlage', price: 'ab 59,90 €' },
+            ].map((service, index) => (
+              <Link
+                key={service.href}
+                href={service.href}
+                className="relative bg-white rounded-xl shadow-lg transition-all duration-300 p-6 border border-gray-100 hover:border-primary-400 group block hover:-translate-y-1.5"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,112,186,0.15)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
+              >
+                <span className="price-badge">{service.price}</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                  {service.emoji}
+                </div>
+                <h4 className="text-xl font-bold text-gray-900 mb-2">
+                  {service.title}
+                </h4>
+                <p className="text-gray-600 text-sm mb-4">
+                  {service.desc}
+                </p>
+                <div className="flex items-center text-primary-600 font-semibold text-sm group-hover:gap-3 gap-2 transition-all">
+                  <span>Mehr erfahren</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -3907,7 +4115,7 @@ export default function NewHomePage({
           </p>
           <button
             onClick={() => document.querySelector('input[type="text"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            className="px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-2xl"
+            className="shimmer-btn pulse-cta px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all hover:-translate-y-0.5 shadow-2xl"
           >
             Jetzt Werkstatt finden
           </button>
@@ -3944,23 +4152,24 @@ export default function NewHomePage({
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xl font-bold">B24</span>
-                </div>
-                <h3 className="text-2xl font-bold">Bereifung24</h3>
+                <img
+                  src="/logos/B24_Logo_weiss.png"
+                  alt="Bereifung24"
+                  className="h-10 w-auto object-contain"
+                />
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
                 Deutschlands erste digitale Plattform für Reifenservice. Transparent, fair und einfach.
               </p>
-              <div className="flex gap-4">
-                <Link href="/app-download" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Mobile App">
-                  <span className="text-xl">📱</span>
-                </Link>
-                <Link href="/karriere" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Karriere">
-                  <span className="text-xl">💼</span>
-                </Link>
-                <a href="mailto:info@bereifung24.de" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors" title="Kontakt">
-                  <span className="text-xl">📧</span>
+              <div className="flex gap-3">
+                <a href="https://facebook.com/bereifung24" target="_blank" rel="noopener noreferrer" className="social-icon" title="Facebook">
+                  <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                <a href="https://instagram.com/bereifung24" target="_blank" rel="noopener noreferrer" className="social-icon" title="Instagram">
+                  <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                </a>
+                <a href="https://linkedin.com/company/bereifung24" target="_blank" rel="noopener noreferrer" className="social-icon" title="LinkedIn">
+                  <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                 </a>
               </div>
             </div>
@@ -3971,8 +4180,8 @@ export default function NewHomePage({
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/register/customer" className="hover:text-white transition-colors">Kostenlos registrieren</Link></li>
                 <li><button onClick={() => setShowLoginModal(true)} className="hover:text-white transition-colors">Anmelden</button></li>
-                <li><Link href="/dashboard/customer/select-service" className="hover:text-white transition-colors">Alle Services</Link></li>
-                <li><Link href="#how-it-works" className="hover:text-white transition-colors">So funktioniert's</Link></li>
+                <li><Link href="/#services" className="hover:text-white transition-colors">Alle Services</Link></li>
+                <li><Link href="/#how-it-works" className="hover:text-white transition-colors">So funktioniert&apos;s</Link></li>
                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>
             </div>
@@ -4033,94 +4242,105 @@ export default function NewHomePage({
               </div>
               
               {/* Payment Methods & Trust Badges */}
-              <div className="flex flex-col items-center md:items-end gap-3">
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  <span>Sichere Zahlungsmethoden:</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {/* VISA */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/visa.png" 
-                      alt="VISA" 
-                      width={50} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* Mastercard */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/mastercard.png" 
-                      alt="Mastercard" 
-                      width={50} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* PayPal */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/paypal.png" 
-                      alt="PayPal" 
-                      width={80} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* PayPal Ratenzahlung */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/paypal-ratenzahlung.png" 
-                      alt="PayPal Ratenzahlung" 
-                      width={100} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* American Express */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/amex.png" 
-                      alt="American Express" 
-                      width={50} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* Apple Pay */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/apple-pay.svg" 
-                      alt="Apple Pay" 
-                      width={50} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* Google Pay */}
-                  <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
-                    <Image 
-                      src="/logos/google-pay.png" 
-                      alt="Google Pay" 
-                      width={60} 
-                      height={32}
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  {/* SSL Badge */}
-                  <div className="bg-gray-800 px-3 py-2 rounded flex items-center gap-1.5 h-10 border border-gray-700">
-                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-xs font-medium text-gray-300">SSL</span>
+              <div className="flex flex-col items-center gap-4">
+                <div className="payment-container">
+                  <p className="text-center text-xs uppercase tracking-widest text-gray-500 opacity-60 mb-3 font-medium">
+                    Sichere Zahlungsmethoden
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    {/* VISA */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/visa.png" 
+                        alt="VISA" 
+                        width={50} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* Mastercard */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/mastercard.png" 
+                        alt="Mastercard" 
+                        width={50} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* PayPal */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/paypal.png" 
+                        alt="PayPal" 
+                        width={80} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* PayPal Ratenzahlung */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/paypal-ratenzahlung.png" 
+                        alt="PayPal Ratenzahlung" 
+                        width={100} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* American Express */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/amex.png" 
+                        alt="American Express" 
+                        width={50} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* Apple Pay */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/apple-pay.svg" 
+                        alt="Apple Pay" 
+                        width={50} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* Google Pay */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <Image 
+                        src="/logos/google-pay.png" 
+                        alt="Google Pay" 
+                        width={60} 
+                        height={32}
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    {/* Klarna */}
+                    <div className="bg-white px-3 py-2 rounded flex items-center justify-center h-10">
+                      <img 
+                        src="/payment-logos/klarna-logo.png" 
+                        alt="Klarna" 
+                        className="h-6 w-auto object-contain"
+                      />
+                    </div>
+                    
+                    {/* SSL Badge */}
+                    <div className="bg-gray-800 px-3 py-2 rounded flex items-center gap-1.5 h-10 border border-gray-700">
+                      <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-xs font-medium text-gray-300">SSL</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4133,50 +4353,162 @@ export default function NewHomePage({
   )
 }
 
-// Reviews Carousel Component - Shows 5 reviews at once
+// Steps Section Component with SVG paths and hover effects
+function StepsSection() {
+  const [sectionRef, isVisible] = useScrollReveal(0.15)
+
+  const steps = [
+    {
+      num: 1,
+      icon: <Search className="w-10 h-10 text-primary-600" />,
+      iconBg: 'bg-primary-100',
+      title: 'Werkstatt finden',
+      desc: 'Service wählen, Standort eingeben und passende Werkstätten mit Festpreisen vergleichen',
+      extra: 'Über 100+ Werkstätten deutschlandweit',
+      extraColor: 'text-primary-600',
+    },
+    {
+      num: 2,
+      icon: <Calendar className="w-10 h-10 text-green-600" />,
+      iconBg: 'bg-green-100',
+      title: 'Online buchen & bezahlen',
+      desc: 'Wunschtermin wählen, sicher online bezahlen und Bestätigung per E-Mail erhalten',
+      extra: 'Sichere Zahlung mit allen gängigen Methoden',
+      extraColor: 'text-green-600',
+    },
+    {
+      num: 3,
+      icon: <Check className="w-10 h-10 text-blue-600" />,
+      iconBg: 'bg-blue-100',
+      title: 'Zur Werkstatt fahren',
+      desc: 'Einfach zum vereinbarten Termin erscheinen - alles ist vorbereitet und erledigt',
+      extra: 'Keine Wartezeit, alles vorbereitet',
+      extraColor: 'text-blue-600',
+    },
+  ]
+
+  return (
+    <div ref={sectionRef as React.RefObject<HTMLDivElement>} className="max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        {/* SVG Connection Paths - Desktop only, percentage-based for symmetry */}
+        <svg className="hidden md:block absolute top-24 left-0 w-full h-12 pointer-events-none" viewBox="0 0 900 40" preserveAspectRatio="none" style={{ zIndex: 1 }}>
+          {/* Path 1→2 */}
+          <path
+            d="M 200 25 Q 300 0 400 25"
+            fill="none"
+            stroke="#0070ba"
+            strokeWidth="2"
+            strokeOpacity="0.3"
+            className={`step-path-line ${isVisible ? 'draw' : ''}`}
+            style={{ transitionDelay: '0.5s' }}
+            markerEnd="url(#arrowhead)"
+          />
+          {/* Path 2→3 */}
+          <path
+            d="M 500 25 Q 600 0 700 25"
+            fill="none"
+            stroke="#0070ba"
+            strokeWidth="2"
+            strokeOpacity="0.3"
+            className={`step-path-line ${isVisible ? 'draw' : ''}`}
+            style={{ transitionDelay: '0.9s' }}
+            markerEnd="url(#arrowhead)"
+          />
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#0070ba" opacity="0.4" />
+            </marker>
+          </defs>
+        </svg>
+
+        {steps.map((step, index) => (
+          <div
+            key={step.num}
+            className={`step-card bg-white rounded-2xl shadow-lg p-8 text-center relative transition-all duration-300 hover:-translate-y-1 cursor-default scroll-reveal ${isVisible ? 'visible' : ''}`}
+            style={{
+              transitionDelay: `${index * 0.15}s`,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
+          >
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+              {step.num}
+            </div>
+            <div className="mb-6 mt-4">
+              <div className={`w-20 h-20 ${step.iconBg} rounded-full flex items-center justify-center mx-auto`}>
+                {step.icon}
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              {step.title}
+            </h3>
+            <p className="text-gray-600">
+              {step.desc}
+            </p>
+            {/* Extra text on hover */}
+            <div className={`step-extra-text text-sm font-semibold ${step.extraColor}`}>
+              {step.extra}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Stats Count-Up Component
+function StatsCountUp({ avgRating }: { avgRating: number }) {
+  const [sectionRef, isVisible] = useScrollReveal(0.15)
+  const count100 = useCountUp(100, isVisible, 2000, 0)
+  const ratingTarget = avgRating > 0 ? avgRating : 4.9
+  const countRating = useCountUp(ratingTarget, isVisible, 2000, 1)
+  const count24 = useCountUp(24, isVisible, 2000, 0)
+  const count24h = useCountUp(24, isVisible, 2000, 0)
+
+  const cards = [
+    { value: `${count100}%`, label: 'Geprüfte Werkstätten' },
+    { value: `${countRating}★`, label: 'Durchschnittsbewertung' },
+    { value: `${count24}/7`, label: 'Online Buchung' },
+    { value: `< ${count24h}h`, label: 'Schneller Termin' },
+  ]
+
+  return (
+    <section ref={sectionRef as React.RefObject<HTMLElement>} className="py-12 bg-gray-50 border-b border-gray-200">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className={`text-center stat-card ${isVisible ? 'animate-in' : ''}`}
+              style={{ transitionDelay: `${index * 0.15}s` }}
+            >
+              <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
+                {card.value}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                {card.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Reviews Grid Component - Shows newest 5 reviews with star animations
 function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
-  const REVIEWS_PER_PAGE = 5
-  const [currentPage, setCurrentPage] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
-
-  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE)
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!isAutoPlaying || totalPages <= 1) return
-
-    const interval = setInterval(() => {
-      setCurrentPage((prev) => (prev + 1) % totalPages)
-    }, 8000) // Change page every 8 seconds
-
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, totalPages])
-
-  const goToPrevious = () => {
-    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages)
-    setIsAutoPlaying(false)
-  }
-
-  const goToNext = () => {
-    setCurrentPage((prev) => (prev + 1) % totalPages)
-    setIsAutoPlaying(false)
-  }
-
-  const goToPage = (page: number) => {
-    setCurrentPage(page)
-    setIsAutoPlaying(false)
-  }
+  const [sectionRef, isVisible] = useScrollReveal(0.1)
 
   if (reviews.length === 0) return null
 
-  // Get reviews for current page
-  const startIndex = currentPage * REVIEWS_PER_PAGE
-  const currentReviews = reviews.slice(startIndex, startIndex + REVIEWS_PER_PAGE)
+  // Show only the 5 newest reviews
+  const displayedReviews = reviews.slice(0, 5)
 
   return (
-    <section className="py-16 bg-white">
+    <section ref={sectionRef as React.RefObject<HTMLElement>} className="py-16 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className={`text-center mb-12 scroll-reveal ${isVisible ? 'visible' : ''}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Das sagen unsere Kunden
           </h2>
@@ -4185,24 +4517,31 @@ function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
           </p>
         </div>
 
-        <div className="max-w-7xl mx-auto relative">
-          {/* Reviews Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {currentReviews.map((review) => (
+        <div className="max-w-7xl mx-auto">
+          {/* Reviews Grid - 5 newest reviews */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {displayedReviews.map((review, cardIndex) => (
               <div
                 key={review.id}
-                className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 hover:shadow-xl transition-shadow flex flex-col"
+                className={`bg-white rounded-xl shadow-lg border border-gray-200 p-5 flex flex-col transition-all duration-300 hover:-translate-y-1 scroll-reveal ${isVisible ? 'visible' : ''}`}
+                style={{
+                  transitionDelay: isVisible ? `${0.15 + cardIndex * 0.1}s` : '0s',
+                  boxShadow: undefined,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
               >
-                {/* Rating */}
+                {/* Rating - Star Pop Animation */}
                 <div className="flex items-center justify-center gap-0.5 mb-3">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${
+                      className={`w-4 h-4 star-animate ${isVisible ? 'pop' : ''} ${
                         i < review.rating
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'fill-gray-200 text-gray-200'
                       }`}
+                      style={{ animationDelay: `${cardIndex * 0.15 + i * 0.1}s` }}
                     />
                   ))}
                 </div>
@@ -4210,7 +4549,7 @@ function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
                 {/* Comment */}
                 {review.comment && (
                   <p className="text-sm text-gray-700 mb-4 line-clamp-4 flex-grow">
-                    "{review.comment}"
+                    &quot;{review.comment}&quot;
                   </p>
                 )}
 
@@ -4232,45 +4571,6 @@ function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
               </div>
             ))}
           </div>
-
-          {/* Navigation Buttons */}
-          {totalPages > 1 && (
-            <>
-              <button
-                onClick={goToPrevious}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110 z-10"
-                aria-label="Vorherige Bewertungen"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              
-              <button
-                onClick={goToNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 bg-white hover:bg-gray-50 text-gray-800 rounded-full p-3 shadow-lg border border-gray-200 transition-all hover:scale-110 z-10"
-                aria-label="Nächste Bewertungen"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </>
-          )}
-
-          {/* Dots Navigation */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToPage(index)}
-                  className={`transition-all ${
-                    index === currentPage
-                      ? 'w-8 h-3 bg-primary-600'
-                      : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
-                  } rounded-full`}
-                  aria-label={`Zur Seite ${index + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </section>

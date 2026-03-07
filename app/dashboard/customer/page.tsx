@@ -3,16 +3,27 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import NotificationBell from '@/components/NotificationBell'
-import WeatherWidget from '@/components/WeatherWidget'
-import CO2SavingsWidget from './components/CO2SavingsWidget'
+import WeatherWidgetCompact from './components/WeatherWidgetCompact'
+import CO2CompactBar from './components/CO2CompactBar'
 import TireAdvisorWidget from './components/TireAdvisorWidget'
+import NextAppointmentCard from './components/NextAppointmentCard'
+import TireStorageCard from './components/TireStorageCard'
+import SeasonalRecommendation from './components/SeasonalRecommendation'
+
+interface DashboardSummary {
+  nextAppointment: any | null
+  recentBookings: any[]
+  tireStorage: any[]
+  totalCompletedBookings: number
+}
 
 export default function CustomerDashboard() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(true)
 
   // Check URL parameters for success message
   useEffect(() => {
@@ -42,20 +53,51 @@ export default function CustomerDashboard() {
     }
   }, [searchParams])
 
+  // Fetch dashboard summary data
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch('/api/customer/dashboard-summary')
+        if (res.ok) {
+          const data = await res.json()
+          setSummary(data)
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard summary:', error)
+      } finally {
+        setSummaryLoading(false)
+      }
+    }
+    fetchSummary()
+  }, [])
+
+  // Seasonal CTA text
+  const getCtaText = () => {
+    const month = new Date().getMonth() + 1
+    if (month >= 3 && month <= 4) return 'Reifenwechsel-Saison – Jetzt Termin sichern'
+    if (month >= 9 && month <= 10) return 'Reifenwechsel-Saison – Jetzt Termin sichern'
+    return 'Service direkt buchen'
+  }
+
+  const getCtaSubtext = () => {
+    const month = new Date().getMonth() + 1
+    if (month >= 3 && month <= 4) return 'Sommerreifen-Wechsel steht an – Werkstatt finden, Preise vergleichen & direkt buchen!'
+    if (month >= 9 && month <= 10) return 'Winterreifen-Wechsel steht an – Werkstatt finden, Preise vergleichen & direkt buchen!'
+    return 'Werkstatt finden, Preise vergleichen, Termin wählen & sicher bezahlen - alles in einem Schritt!'
+  }
+
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Willkommen, {session?.user?.name || 'Kunde'}!
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
-          </p>
-        </div>
-        <NotificationBell />
+      {/* Header (no notification bell) */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Willkommen, {session?.user?.name || 'Kunde'}!
+        </h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
+        </p>
       </div>
+
       {/* Success Message */}
       {successMessage && (
         <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg shadow-md">
@@ -82,27 +124,29 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* Call-to-Action Card */}
-      <div className="mb-8">
-        {/* Direct Booking - Full Width */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-700 dark:from-green-500 dark:to-emerald-600 rounded-lg shadow-xl p-6">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+      {/* CTA Banner – improved with gradient, pulse icon, shadow button, seasonal text */}
+      <div className="mb-4">
+        <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-500 dark:from-green-600 dark:via-green-500 dark:to-emerald-400 rounded-xl shadow-xl p-6 relative overflow-hidden">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyem0wLTMwVjBoLTEydjRoMTJ6TTI0IDI0aDF2LTFoLTF2MXoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 relative z-10">
             <div className="flex items-start gap-4 flex-1">
-              <div className="w-14 h-14 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Pulse animation on lightning icon */}
+              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse-soft">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div className="text-white flex-1">
-                <h2 className="text-xl lg:text-2xl font-bold mb-2">Service direkt buchen</h2>
+                <h2 className="text-xl lg:text-2xl font-bold mb-1">{getCtaText()}</h2>
                 <p className="text-green-100 text-sm lg:text-base">
-                  Werkstatt finden, Preise vergleichen, Termin wählen & sicher bezahlen - alles in einem Schritt!
+                  {getCtaSubtext()}
                 </p>
               </div>
             </div>
             <button
               onClick={() => router.push('/home')}
-              className="px-8 py-3 bg-white text-green-700 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
+              className="px-8 py-3 bg-white text-green-700 rounded-lg hover:bg-green-50 hover:shadow-xl transition-all duration-200 font-bold text-lg shadow-lg flex items-center justify-center gap-2 whitespace-nowrap transform hover:scale-[1.02]"
             >
               Jetzt buchen
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,124 +157,56 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Widgets Grid - All three side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8 items-stretch">
-        {/* Weather Widget */}
+      {/* CO₂ Compact Bar (full width, only when bookings exist) */}
+      <div className="mb-6">
+        <CO2CompactBar totalCompletedBookings={summary?.totalCompletedBookings || 0} />
+      </div>
+
+      {/* Three-column widget grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Left: Weather Widget (compact) */}
         <div className="flex w-full">
-          <WeatherWidget />
+          <div className="w-full">
+            <WeatherWidgetCompact />
+          </div>
         </div>
 
-        {/* CO2 Savings Widget */}
+        {/* Middle: Next Appointment / Bookings */}
         <div className="flex w-full">
-          <CO2SavingsWidget />
+          <div className="w-full">
+            <NextAppointmentCard
+              nextAppointment={summary?.nextAppointment || null}
+              recentBookings={summary?.recentBookings || []}
+              loading={summaryLoading}
+            />
+          </div>
         </div>
 
-        {/* Tire Advisor Widget */}
+        {/* Right: Smart Tire Advisor */}
         <div className="flex w-full">
           <TireAdvisorWidget />
         </div>
       </div>
 
-      {/* Welcome & Instructions Section */}
-      <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/30 dark:to-blue-900/30 rounded-lg shadow-md p-6 border border-primary-100 dark:border-primary-800">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-blue-500 dark:bg-blue-500/60 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-              So funktioniert Bereifung24
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
-              Mit unserem Service erhalten Sie schnell und unkompliziert die besten Angebote von Werkstätten in Ihrer Nähe. 
-              Buchen Sie Ihren Termin direkt online und bezahlen Sie bequem per Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna oder SEPA-Lastschrift.
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-3">
-              <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-                <div className="flex items-start gap-2">
-                  <div className="flex-shrink-0 w-7 h-7 bg-blue-500 dark:bg-blue-500/60 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                    1
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Fahrzeug anlegen</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Speichern Sie Ihr Fahrzeug inkl. Reifengröße. Das spart Zeit beim Preisvergleich und bei zukünftigen Buchungen.
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Tire Storage Cards (only shown when active storage exists) */}
+      <TireStorageCard
+        tireStorage={summary?.tireStorage || []}
+        loading={summaryLoading}
+      />
 
-              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-500/60 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Preise vergleichen</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Vergleichen Sie in Echtzeit Preise von Werkstätten in Ihrer Nähe inkl. Reifenpreisen und Zusatzleistungen.
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Seasonal Recommendation (full width, replaces "So funktioniert Bereifung24") */}
+      <SeasonalRecommendation />
 
-              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-500/60 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Termin buchen</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Wählen Sie einen passenden Termin bei der Werkstatt Ihrer Wahl und buchen Sie direkt online.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 dark:bg-blue-500/60 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    4
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">Bequem bezahlen</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Zahlen Sie sicher online: Kreditkarte, Apple Pay, Google Pay, PayPal, Klarna oder Banküberweisung. Ihr Termin ist sofort bestätigt!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Sofort buchbar</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Transparente Preise</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-primary-700 dark:text-primary-300 bg-white dark:bg-gray-700 rounded-lg px-3 py-1.5">
-                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium">Sichere Zahlung</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Custom CSS for pulse animation */}
+      <style jsx global>{`
+        @keyframes pulse-soft {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.85; transform: scale(1.05); }
+        }
+        .animate-pulse-soft {
+          animation: pulse-soft 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
     </div>
   )
 }

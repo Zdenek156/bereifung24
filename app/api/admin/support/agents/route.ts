@@ -15,19 +15,48 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const agents = await prisma.user.findMany({
-      where: {
+    const [internalUsers, activeEmployees] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          isActive: true,
+          role: { in: ['ADMIN', 'B24_EMPLOYEE'] },
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+        },
+      }),
+      prisma.b24Employee.findMany({
+        where: {
+          isActive: true,
+          status: { in: ['ACTIVE', 'PROBATION'] },
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      }),
+    ])
+
+    const internalUserEmails = new Set(internalUsers.map(user => user.email.toLowerCase()))
+
+    const employeeOnlyAgents = activeEmployees
+      .filter(employee => !internalUserEmails.has(employee.email.toLowerCase()))
+      .map(employee => ({
+        ...employee,
         role: 'B24_EMPLOYEE',
-        isActive: true,
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-      },
-      orderBy: [{ role: 'asc' }, { firstName: 'asc' }],
+      }))
+
+    const agents = [...internalUsers, ...employeeOnlyAgents].sort((a, b) => {
+      const roleOrder = (role: string) => (role === 'ADMIN' ? 0 : 1)
+      const roleDiff = roleOrder(a.role) - roleOrder(b.role)
+      if (roleDiff !== 0) return roleDiff
+      return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'de')
     })
 
     return NextResponse.json({ agents })

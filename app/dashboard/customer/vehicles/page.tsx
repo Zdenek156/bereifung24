@@ -902,18 +902,67 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   />
                 </div>
 
-                <div>
+                <div className="col-span-2">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Nächster TÜV-Termin (optional)
                   </label>
-                  <input
-                    type="month"
-                    name="nextInspectionDate"
-                    value={formData.nextInspectionDate}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Monat und Jahr des nächsten TÜV-Termins</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] sm:text-xs text-gray-500 mb-1">Monat</label>
+                    <select
+                      value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] || '' : ''}
+                      onChange={(e) => {
+                        const month = e.target.value;
+                        const year = formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] : '';
+                        if (month && year) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-${month}` }));
+                        } else if (month && !year) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${new Date().getFullYear()}-${month}` }));
+                        } else {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
+                        }
+                      }}
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Monat wählen...</option>
+                      <option value="01">Januar</option>
+                      <option value="02">Februar</option>
+                      <option value="03">März</option>
+                      <option value="04">April</option>
+                      <option value="05">Mai</option>
+                      <option value="06">Juni</option>
+                      <option value="07">Juli</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">Oktober</option>
+                      <option value="11">November</option>
+                      <option value="12">Dezember</option>
+                    </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] sm:text-xs text-gray-500 mb-1">Jahr</label>
+                    <select
+                      value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] || '' : ''}
+                      onChange={(e) => {
+                        const year = e.target.value;
+                        const month = formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] : '';
+                        if (year && month) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-${month}` }));
+                        } else if (year && !month) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-01` }));
+                        } else {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
+                        }
+                      }}
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Jahr wählen...</option>
+                      {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + i).map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                    </div>
+                  </div>
                 </div>
 
                 {formData.nextInspectionDate && (
@@ -959,7 +1008,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
             <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
                 <span className="text-xl sm:text-2xl mr-2">⛽</span>
-                Kraftstoff & Verbrauch
+                Kraftstoff & Verbrauch (optional)
               </h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
@@ -968,7 +1017,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
               <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Kraftstoffart *
+                    Kraftstoffart
                   </label>
                   <select
                     name="fuelType"
@@ -1388,7 +1437,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
@@ -1402,6 +1451,13 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
       
       if (!formData.year || formData.year < 1980 || formData.year > new Date().getFullYear() + 1) {
         alert('Bitte ein gültiges Baujahr angeben')
+        setLoading(false)
+        return
+      }
+
+      // Kennzeichen Pflicht für Auto und Anhänger
+      if ((formData.vehicleType === 'CAR' || formData.vehicleType === 'TRAILER') && !formData.licensePlate) {
+        alert('Bitte Kennzeichen angeben')
         setLoading(false)
         return
       }
@@ -1571,7 +1627,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmitAdd}>
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Fahrzeug hinzufügen</h2>
@@ -1611,13 +1667,13 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
-                  {formData.vehicleType === 'MOTORCYCLE' ? (
+                  {(formData.vehicleType === 'MOTORCYCLE' || formData.vehicleType === 'TRAILER') ? (
                     <input
                       type="text"
                       name="make"
                       value={formData.make}
                       onChange={handleChange}
-                      placeholder="z.B. Honda, Yamaha, Kawasaki, Ducati"
+                      placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Honda, Yamaha, Kawasaki, Ducati' : 'z.B. Humbaur, Böckmann, Saris'}
                       className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   ) : (
@@ -1662,14 +1718,6 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       <option value="Toyota">Toyota</option>
                       <option value="Volkswagen">Volkswagen</option>
                       <option value="Volvo">Volvo</option>
-                      <option value="Yamaha">Yamaha</option>
-                      <option value="Kawasaki">Kawasaki</option>
-                      <option value="Ducati">Ducati</option>
-                      <option value="Harley-Davidson">Harley-Davidson</option>
-                      <option value="KTM">KTM</option>
-                      <option value="Triumph">Triumph</option>
-                      <option value="Humbaur">Humbaur</option>
-                      <option value="Böckmann">Böckmann</option>
                       <option value="Sonstige">Sonstige</option>
                     </select>
                   )}
@@ -1706,7 +1754,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Kennzeichen (optional)
+                    Kennzeichen {(formData.vehicleType === 'CAR' || formData.vehicleType === 'TRAILER') ? '*' : '(optional)'}
                   </label>
                   <input
                     type="text"
@@ -1733,18 +1781,67 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   />
                 </div>
 
-                <div>
+                <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nächster TÜV-Termin (optional)
                   </label>
-                  <input
-                    type="month"
-                    name="nextInspectionDate"
-                    value={formData.nextInspectionDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Monat und Jahr des nächsten TÜV-Termins</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Monat</label>
+                    <select
+                      value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] || '' : ''}
+                      onChange={(e) => {
+                        const month = e.target.value;
+                        const year = formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] : '';
+                        if (month && year) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-${month}` }));
+                        } else if (month && !year) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${new Date().getFullYear()}-${month}` }));
+                        } else {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Monat wählen...</option>
+                      <option value="01">Januar</option>
+                      <option value="02">Februar</option>
+                      <option value="03">März</option>
+                      <option value="04">April</option>
+                      <option value="05">Mai</option>
+                      <option value="06">Juni</option>
+                      <option value="07">Juli</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">Oktober</option>
+                      <option value="11">November</option>
+                      <option value="12">Dezember</option>
+                    </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Jahr</label>
+                    <select
+                      value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] || '' : ''}
+                      onChange={(e) => {
+                        const year = e.target.value;
+                        const month = formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] : '';
+                        if (year && month) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-${month}` }));
+                        } else if (year && !month) {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: `${year}-01` }));
+                        } else {
+                          setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Jahr wählen...</option>
+                      {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + i).map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                    </div>
+                  </div>
                 </div>
 
                 {formData.nextInspectionDate && (
@@ -1790,7 +1887,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span className="text-2xl mr-2">⛽</span>
-                Kraftstoff & Verbrauch
+                Kraftstoff & Verbrauch (optional)
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
@@ -1799,7 +1896,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kraftstoffart *
+                    Kraftstoffart
                   </label>
                   <select
                     name="fuelType"

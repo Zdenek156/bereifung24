@@ -104,6 +104,12 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
     notFound()
   }
 
+  // Block landing page for unverified/deactivated workshops
+  if (landingPage.workshop && !landingPage.workshop.isVerified) {
+    console.log('Workshop not verified, blocking landing page')
+    notFound()
+  }
+
   // Increment view count
   await prisma.workshopLandingPage.update({
     where: { id: landingPage.id },

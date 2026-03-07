@@ -49,9 +49,47 @@ export default function PaymentPage() {
     'WHEEL_CHANGE': 'Räderwechsel',
     'TIRE_CHANGE': 'Reifenwechsel',
     'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorradreifen',
-    'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+    'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+    'ALIGNMENT_BOTH': 'Achsvermessung',
     'CLIMATE_SERVICE': 'Klimaservice'
+  }
+
+  // Alignment package subtype labels
+  const alignmentSubtypeLabels: Record<string, string> = {
+    'measurement_front': 'Vermessung Vorderachse',
+    'measurement_rear': 'Vermessung Hinterachse',
+    'measurement_both': 'Vermessung beide Achsen',
+    'adjustment_front': 'Einstellung Vorderachse',
+    'adjustment_rear': 'Einstellung Hinterachse',
+    'adjustment_both': 'Einstellung beide Achsen',
+    'full_service': 'Komplett-Service',
+  }
+
+  // Get service display name (with subtype for TIRE_REPAIR, ALIGNMENT_BOTH, CLIMATE_SERVICE)
+  const getServiceDisplayName = () => {
+    if (!bookingData) return ''
+    const type = bookingData.service?.type
+    const subtype = bookingData.service?.subtype
+    if (type === 'TIRE_REPAIR' && subtype) {
+      const subtypeLabels: Record<string, string> = {
+        'foreign_object': 'Fremdkörper-Entfernung',
+        'valve_damage': 'Ventilschaden-Reparatur',
+      }
+      return subtypeLabels[subtype] || serviceLabels[type] || type
+    }
+    if (type === 'ALIGNMENT_BOTH' && subtype && alignmentSubtypeLabels[subtype]) {
+      return `Achsvermessung (${alignmentSubtypeLabels[subtype]})`
+    }
+    if (type === 'CLIMATE_SERVICE' && subtype) {
+      const climateLabels: Record<string, string> = {
+        'check': 'Klimacheck',
+        'basic': 'Basic Service',
+        'comfort': 'Comfort Service',
+        'premium': 'Premium Service',
+      }
+      if (climateLabels[subtype]) return `Klimaservice (${climateLabels[subtype]})`
+    }
+    return serviceLabels[type] || type
   }
 
   // Redirect if not authenticated
@@ -178,8 +216,21 @@ export default function PaymentPage() {
           runFlatSurcharge: bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0,
           hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
           hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
-          hasDisposal: bookingData.tireBooking?.hasDisposal || false,
+          hasDisposal: (bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') ? (bookingData.tireBooking?.hasDisposal || false) : false,
           totalPrice: bookingData.pricing.totalPrice,
+          // Base service duration from workshop (actual package duration, NOT hardcoded 60)
+          baseDuration: bookingData.service?.baseDuration || 60,
+          // Additional services data (Klimaservice, Achsvermessung, etc.) - excluding BALANCING/STORAGE which have dedicated fields
+          additionalServicesData: bookingData.additionalServices?.filter((s: any) => s.type !== 'BALANCING' && s.type !== 'STORAGE').map((s: any) => ({
+            name: s.serviceName || s.name,
+            packageName: s.packageName || '',
+            price: s.price || 0,
+            duration: s.duration || 0,
+            type: s.type || '',
+            packageType: s.packageType || ''
+          })) || [],
+          // Service subtype (e.g. 'foreign_object', 'valve_damage' for TIRE_REPAIR)
+          serviceSubtype: bookingData.service?.subtype || null,
           // TIRE DATA - Standard tires OR mixed tires
           ...(bookingData.tireBooking?.selectedTire && {
             tireBrand: bookingData.tireBooking.selectedTire.brand || '',
@@ -204,13 +255,17 @@ export default function PaymentPage() {
             tireBrandFront: bookingData.tireBooking.selectedFrontTire.tire?.brand || '',
             tireModelFront: bookingData.tireBooking.selectedFrontTire.tire?.model || '',
             tireSizeFront: bookingData.tireBooking.tireDimensionsFront
-              ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
-              : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || ''),
-            tireLoadIndexFront: bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
-            tireSpeedIndexFront: bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
+              ? (typeof bookingData.tireBooking.tireDimensionsFront === 'string'
+                  ? bookingData.tireBooking.tireDimensionsFront
+                  : `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`)
+              : (bookingData.tireBooking.selectedFrontTire.tire?.width && bookingData.tireBooking.selectedFrontTire.tire?.diameter
+                  ? `${bookingData.tireBooking.selectedFrontTire.tire.width}/${bookingData.tireBooking.selectedFrontTire.tire.height || '00'} ${bookingData.tireBooking.selectedFrontTire.tire.construction || 'R'}${bookingData.tireBooking.selectedFrontTire.tire.diameter}`
+                  : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || '')),
+            tireLoadIndexFront: (typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.loadIndex) || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
+            tireSpeedIndexFront: (typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.speedIndex) || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
             tireEANFront: bookingData.tireBooking.selectedFrontTire.tire?.ean || '',
             tireArticleIdFront: bookingData.tireBooking.selectedFrontTire.tire?.articleId || bookingData.tireBooking.selectedFrontTire.tire?.article_id || bookingData.tireBooking.selectedFrontTire.tire?.articleNumber || '',
-            tireQuantityFront: bookingData.tireBooking.selectedFrontTire.quantity || 2,
+            tireQuantityFront: bookingData.tireBooking.selectedFrontTire.quantity || (bookingData.service?.type === 'MOTORCYCLE_TIRE' ? 1 : 2),
             tirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.pricePerTire || 0, // VK-Preis (für Kunde)
             totalTirePurchasePriceFront: bookingData.tireBooking.selectedFrontTire.totalPrice || 0, // Gesamt-VK
             supplierPurchasePriceFront: bookingData.tireBooking.selectedFrontTire.tire?.purchasePrice || bookingData.tireBooking.selectedFrontTire.tire?.price || 0, // Echter EK vom Lieferanten
@@ -223,13 +278,17 @@ export default function PaymentPage() {
             tireBrandRear: bookingData.tireBooking.selectedRearTire.tire?.brand || '',
             tireModelRear: bookingData.tireBooking.selectedRearTire.tire?.model || '',
             tireSizeRear: bookingData.tireBooking.tireDimensionsRear
-              ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
-              : (bookingData.tireBooking.selectedRearTire.tire?.dimension || ''),
-            tireLoadIndexRear: bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
-            tireSpeedIndexRear: bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
+              ? (typeof bookingData.tireBooking.tireDimensionsRear === 'string'
+                  ? bookingData.tireBooking.tireDimensionsRear
+                  : `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`)
+              : (bookingData.tireBooking.selectedRearTire.tire?.width && bookingData.tireBooking.selectedRearTire.tire?.diameter
+                  ? `${bookingData.tireBooking.selectedRearTire.tire.width}/${bookingData.tireBooking.selectedRearTire.tire.height || '00'} ${bookingData.tireBooking.selectedRearTire.tire.construction || 'R'}${bookingData.tireBooking.selectedRearTire.tire.diameter}`
+                  : (bookingData.tireBooking.selectedRearTire.tire?.dimension || '')),
+            tireLoadIndexRear: (typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.loadIndex) || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
+            tireSpeedIndexRear: (typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.speedIndex) || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
             tireEANRear: bookingData.tireBooking.selectedRearTire.tire?.ean || '',
             tireArticleIdRear: bookingData.tireBooking.selectedRearTire.tire?.articleId || bookingData.tireBooking.selectedRearTire.tire?.article_id || bookingData.tireBooking.selectedRearTire.tire?.articleNumber || '',
-            tireQuantityRear: bookingData.tireBooking.selectedRearTire.quantity || 2,
+            tireQuantityRear: bookingData.tireBooking.selectedRearTire.quantity || (bookingData.service?.type === 'MOTORCYCLE_TIRE' ? 1 : 2),
             tirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.pricePerTire || 0, // VK-Preis (für Kunde)
             totalTirePurchasePriceRear: bookingData.tireBooking.selectedRearTire.totalPrice || 0, // Gesamt-VK
             supplierPurchasePriceRear: bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0, // Echter EK vom Lieferanten
@@ -271,9 +330,9 @@ export default function PaymentPage() {
             runFlatSurcharge: bookingData.pricing.runflatPrice || bookingData.pricing.runFlatSurcharge || 0,
             hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
             hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
-            hasDisposal: bookingData.tireBooking?.hasDisposal || bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false,
+            hasDisposal: (bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') ? (bookingData.tireBooking?.hasDisposal || bookingData.additionalServices?.some((s: any) => s.type === 'DISPOSAL') || false) : false,
             workshopName: workshop.name,
-            serviceName: serviceLabels[bookingData.service.type] || bookingData.service.type,
+            serviceName: getServiceDisplayName(),
           vehicleInfo: `${bookingData.vehicle.make} ${bookingData.vehicle.model}`,
             // TIRE DATA - Standard tires
             ...(bookingData.tireBooking?.selectedTire && {
@@ -299,10 +358,14 @@ export default function PaymentPage() {
               tireBrandFront: bookingData.tireBooking.selectedFrontTire.tire?.brand || '',
               tireModelFront: bookingData.tireBooking.selectedFrontTire.tire?.model || '',
               tireSizeFront: bookingData.tireBooking.tireDimensionsFront
-                ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
-                : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || ''),
-              tireLoadIndexFront: bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
-              tireSpeedIndexFront: bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
+                ? (typeof bookingData.tireBooking.tireDimensionsFront === 'string'
+                    ? bookingData.tireBooking.tireDimensionsFront
+                    : `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`)
+                : (bookingData.tireBooking.selectedFrontTire.tire?.width && bookingData.tireBooking.selectedFrontTire.tire?.diameter
+                    ? `${bookingData.tireBooking.selectedFrontTire.tire.width}/${bookingData.tireBooking.selectedFrontTire.tire.height || '00'} ${bookingData.tireBooking.selectedFrontTire.tire.construction || 'R'}${bookingData.tireBooking.selectedFrontTire.tire.diameter}`
+                    : (bookingData.tireBooking.selectedFrontTire.tire?.dimension || '')),
+              tireLoadIndexFront: (typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.loadIndex) || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || '',
+              tireSpeedIndexFront: (typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.speedIndex) || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || '',
               tireEANFront: bookingData.tireBooking.selectedFrontTire.tire?.ean || '',
               tireArticleIdFront: bookingData.tireBooking.selectedFrontTire.tire?.articleId || bookingData.tireBooking.selectedFrontTire.tire?.article_id || bookingData.tireBooking.selectedFrontTire.tire?.articleNumber || '',
               tireQuantityFront: bookingData.tireBooking.selectedFrontTire.quantity || 2,
@@ -318,10 +381,14 @@ export default function PaymentPage() {
               tireBrandRear: bookingData.tireBooking.selectedRearTire.tire?.brand || '',
               tireModelRear: bookingData.tireBooking.selectedRearTire.tire?.model || '',
               tireSizeRear: bookingData.tireBooking.tireDimensionsRear
-                ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
-                : (bookingData.tireBooking.selectedRearTire.tire?.dimension || ''),
-              tireLoadIndexRear: bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
-              tireSpeedIndexRear: bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
+                ? (typeof bookingData.tireBooking.tireDimensionsRear === 'string'
+                    ? bookingData.tireBooking.tireDimensionsRear
+                    : `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`)
+                : (bookingData.tireBooking.selectedRearTire.tire?.width && bookingData.tireBooking.selectedRearTire.tire?.diameter
+                    ? `${bookingData.tireBooking.selectedRearTire.tire.width}/${bookingData.tireBooking.selectedRearTire.tire.height || '00'} ${bookingData.tireBooking.selectedRearTire.tire.construction || 'R'}${bookingData.tireBooking.selectedRearTire.tire.diameter}`
+                    : (bookingData.tireBooking.selectedRearTire.tire?.dimension || '')),
+              tireLoadIndexRear: (typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.loadIndex) || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || '',
+              tireSpeedIndexRear: (typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.speedIndex) || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || '',
               tireEANRear: bookingData.tireBooking.selectedRearTire.tire?.ean || '',
               tireArticleIdRear: bookingData.tireBooking.selectedRearTire.tire?.articleId || bookingData.tireBooking.selectedRearTire.tire?.article_id || bookingData.tireBooking.selectedRearTire.tire?.articleNumber || '',
               tireQuantityRear: bookingData.tireBooking.selectedRearTire.quantity || 2,
@@ -478,10 +545,7 @@ export default function PaymentPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary-600 text-2xl font-bold">B24</span>
-              </div>
-              <h1 className="text-2xl font-bold text-white">Bereifung24</h1>
+              <img src="/logos/B24_Logo_weiss.png" alt="Bereifung24" className="h-10 w-auto object-contain" />
             </Link>
             
             <div className="flex items-center gap-4">
@@ -541,9 +605,11 @@ export default function PaymentPage() {
                 <div className="bg-primary-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-bold text-lg text-primary-900">
-                      {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
-                        ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
-                        : serviceLabels[bookingData.service.type] || bookingData.service.type
+                      {bookingData.service.type === 'MOTORCYCLE_TIRE'
+                        ? `Motorradreifenmontage${bookingData.tireBooking?.isMixedTires ? ' (Vorder- & Hinterreifen)' : ''}`
+                        : bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
+                          ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
+                          : getServiceDisplayName()
                       }
                     </p>
                     <p className="font-semibold text-primary-900">
@@ -557,7 +623,7 @@ export default function PaymentPage() {
                       <p className="text-sm font-medium text-primary-800 mb-2">Zusatzleistungen:</p>
                       {bookingData.additionalServices.map((service: any, index: number) => (
                         <div key={index} className="flex items-center justify-between text-sm text-primary-700 mb-1">
-                          <span>+ {service.serviceName || service.name || service.packageName}</span>
+                          <span>+ {service.serviceName || service.name || service.packageName}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}</span>
                           <span className="font-medium">{formatPrice(service.price)}</span>
                         </div>
                       ))}
@@ -566,8 +632,8 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* Tire Info (only for TIRE_CHANGE service, including mixed tires) */}
-              {bookingData.service.type === 'TIRE_CHANGE' && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && (
+              {/* Tire Info (for TIRE_CHANGE and MOTORCYCLE_TIRE services, including mixed tires) */}
+              {(bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && (
                 <div className="mb-6 pb-6 border-b border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Reifen</h3>
                   
@@ -583,30 +649,32 @@ export default function PaymentPage() {
                                 🔹 Vorderachse
                               </p>
                               <p className="font-bold text-gray-900">
-                                {bookingData.tireBooking.selectedFrontTire.quantity || 2}× {bookingData.tireBooking.selectedFrontTire.tire?.brand || bookingData.tireBooking.selectedFrontTire.brand}
+                                {bookingData.tireBooking.selectedFrontTire.quantity || (bookingData.service.type === 'MOTORCYCLE_TIRE' ? 1 : 2)}× {bookingData.tireBooking.selectedFrontTire.tire?.brand || bookingData.tireBooking.selectedFrontTire.brand}
                                 {(bookingData.tireBooking.selectedFrontTire.tire?.model || bookingData.tireBooking.selectedFrontTire.model) && ` ${bookingData.tireBooking.selectedFrontTire.tire?.model || bookingData.tireBooking.selectedFrontTire.model}`}
                                 {/* Dimension */}
                                 {(bookingData.tireBooking.tireDimensionsFront || bookingData.tireBooking.selectedFrontTire.dimension) && (
                                   <span>
                                     {' '}
                                     {bookingData.tireBooking.tireDimensionsFront 
-                                      ? `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`
+                                      ? (typeof bookingData.tireBooking.tireDimensionsFront === 'string'
+                                          ? bookingData.tireBooking.tireDimensionsFront
+                                          : `${bookingData.tireBooking.tireDimensionsFront.width}/${bookingData.tireBooking.tireDimensionsFront.height} R${bookingData.tireBooking.tireDimensionsFront.diameter}`)
                                       : bookingData.tireBooking.selectedFrontTire.dimension
                                     }
                                   </span>
                                 )}
                                 {/* Load and Speed Index */}
-                                {((bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex) ||
-                                  (bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex)) && (
+                                {((typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.loadIndex) || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex ||
+                                  (typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.speedIndex) || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex) && (
                                   <span>
                                     {' '}
-                                    {bookingData.tireBooking.tireDimensionsFront?.loadIndex || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex || ''}
-                                    {bookingData.tireBooking.tireDimensionsFront?.speedIndex || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex || ''}
+                                    {(typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.loadIndex) || bookingData.tireBooking.selectedFrontTire.tire?.loadIndex || bookingData.tireBooking.selectedFrontTire.loadIndex || ''}
+                                    {(typeof bookingData.tireBooking.tireDimensionsFront !== 'string' && bookingData.tireBooking.tireDimensionsFront?.speedIndex) || bookingData.tireBooking.selectedFrontTire.tire?.speedIndex || bookingData.tireBooking.selectedFrontTire.speedIndex || ''}
                                   </span>
                                 )}
                               </p>
                               <p className="text-xs text-gray-500 mt-2">
-                                {bookingData.tireBooking.selectedFrontTire.quantity || 2}× à {formatPrice(bookingData.tireBooking.selectedFrontTire.pricePerTire || 0)}
+                                {bookingData.tireBooking.selectedFrontTire.quantity || (bookingData.service.type === 'MOTORCYCLE_TIRE' ? 1 : 2)}× à {formatPrice(bookingData.tireBooking.selectedFrontTire.pricePerTire || 0)}
                               </p>
                             </div>
                           </div>
@@ -622,30 +690,32 @@ export default function PaymentPage() {
                                 🔸 Hinterachse
                               </p>
                               <p className="font-bold text-gray-900">
-                                {bookingData.tireBooking.selectedRearTire.quantity || 2}× {bookingData.tireBooking.selectedRearTire.tire?.brand || bookingData.tireBooking.selectedRearTire.brand}
+                                {bookingData.tireBooking.selectedRearTire.quantity || (bookingData.service.type === 'MOTORCYCLE_TIRE' ? 1 : 2)}× {bookingData.tireBooking.selectedRearTire.tire?.brand || bookingData.tireBooking.selectedRearTire.brand}
                                 {(bookingData.tireBooking.selectedRearTire.tire?.model || bookingData.tireBooking.selectedRearTire.model) && ` ${bookingData.tireBooking.selectedRearTire.tire?.model || bookingData.tireBooking.selectedRearTire.model}`}
                                 {/* Dimension */}
                                 {(bookingData.tireBooking.tireDimensionsRear || bookingData.tireBooking.selectedRearTire.dimension) && (
                                   <span>
                                     {' '}
                                     {bookingData.tireBooking.tireDimensionsRear 
-                                      ? `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`
+                                      ? (typeof bookingData.tireBooking.tireDimensionsRear === 'string'
+                                          ? bookingData.tireBooking.tireDimensionsRear
+                                          : `${bookingData.tireBooking.tireDimensionsRear.width}/${bookingData.tireBooking.tireDimensionsRear.height} R${bookingData.tireBooking.tireDimensionsRear.diameter}`)
                                       : bookingData.tireBooking.selectedRearTire.dimension
                                     }
                                   </span>
                                 )}
                                 {/* Load and Speed Index */}
-                                {((bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex) ||
-                                  (bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex)) && (
+                                {((typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.loadIndex) || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex ||
+                                  (typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.speedIndex) || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex) && (
                                   <span>
                                     {' '}
-                                    {bookingData.tireBooking.tireDimensionsRear?.loadIndex || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex || ''}
-                                    {bookingData.tireBooking.tireDimensionsRear?.speedIndex || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex || ''}
+                                    {(typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.loadIndex) || bookingData.tireBooking.selectedRearTire.tire?.loadIndex || bookingData.tireBooking.selectedRearTire.loadIndex || ''}
+                                    {(typeof bookingData.tireBooking.tireDimensionsRear !== 'string' && bookingData.tireBooking.tireDimensionsRear?.speedIndex) || bookingData.tireBooking.selectedRearTire.tire?.speedIndex || bookingData.tireBooking.selectedRearTire.speedIndex || ''}
                                   </span>
                                 )}
                               </p>
                               <p className="text-xs text-gray-500 mt-2">
-                                {bookingData.tireBooking.selectedRearTire.quantity || 2}× à {formatPrice(bookingData.tireBooking.selectedRearTire.pricePerTire || 0)}
+                                {bookingData.tireBooking.selectedRearTire.quantity || (bookingData.service.type === 'MOTORCYCLE_TIRE' ? 1 : 2)}× à {formatPrice(bookingData.tireBooking.selectedRearTire.pricePerTire || 0)}
                               </p>
                             </div>
                           </div>
@@ -757,9 +827,11 @@ export default function PaymentPage() {
                   {/* Service Price */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">
-                      {bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
-                        ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
-                        : serviceLabels[bookingData.service.type] || bookingData.service.type
+                      {bookingData.service.type === 'MOTORCYCLE_TIRE'
+                        ? 'Motorradreifenmontage'
+                        : bookingData.service.type === 'TIRE_CHANGE' && bookingData.tireBooking?.tireCount
+                          ? `Reifenwechsel für ${bookingData.tireBooking.tireCount} Reifen`
+                          : getServiceDisplayName()
                       }
                     </span>
                     <span className="font-semibold">{formatPrice(bookingData.pricing.servicePrice)}</span>
@@ -769,14 +841,14 @@ export default function PaymentPage() {
                   {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
                     bookingData.additionalServices.map((service: any, index: number) => (
                       <div key={index} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">+ {service.serviceName || service.name || service.packageName}</span>
+                        <span className="text-gray-600">+ {(() => { const sn = service.serviceName || service.name; const pn = service.packageName; return pn && pn !== sn ? `${sn} (${pn})` : sn; })()}</span>
                         <span className="font-medium">{formatPrice(service.price)}</span>
                       </div>
                     ))
                   )}
                   
-                  {/* Tire Price - Only for TIRE_CHANGE (including mixed tires) */}
-                  {bookingData.service.type === 'TIRE_CHANGE' && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && bookingData.pricing.tirePrice > 0 && (
+                  {/* Tire Price - For TIRE_CHANGE and MOTORCYCLE_TIRE (including mixed tires) */}
+                  {(bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') && (bookingData.tireBooking?.selectedTire || bookingData.tireBooking?.selectedFrontTire || bookingData.tireBooking?.selectedRearTire) && bookingData.pricing.tirePrice > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
                         {bookingData.tireBooking.tireCount || bookingData.tireBooking.selectedTire?.quantity || 4}× Reifen

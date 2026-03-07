@@ -24,12 +24,23 @@ interface Booking {
   hasStorage: boolean
   hasDisposal: boolean
   tireRunFlat: boolean
+  tireData: any | null
   durationMinutes: number
   paymentMethod: string
   createdAt: string
   // Invoice
   invoiceUrl: string | null
   invoiceRequestedAt: string | null
+  // Service subtype and additional services
+  serviceSubtype: string | null
+  additionalServicesData: Array<{
+    name: string
+    packageName?: string
+    price: number
+    duration: number
+    type: string
+    packageType?: string
+  }> | null
   // Tire Details
   tireBrand: string | null
   tireModel: string | null
@@ -62,7 +73,40 @@ const serviceTypeLabels: Record<string, string> = {
   WHEEL_CHANGE: 'Räderwechsel',
   TIRE_CHANGE: 'Reifenwechsel',
   TIRE_STORAGE: 'Reifeneinlagerung',
-  TIRE_HOTEL: 'Reifen-Hotel'
+  TIRE_HOTEL: 'Reifen-Hotel',
+  NEW_TIRES: 'Neue Reifen',
+  MOTORCYCLE_TIRE: 'Motorradreifenmontage',
+  ALIGNMENT_BOTH: 'Achsvermessung',
+  CLIMATE_SERVICE: 'Klimaservice',
+  WHEEL_ALIGNMENT: 'Achsvermessung',
+  TIRE_REPAIR: 'Reifenreparatur'
+}
+
+const subtypeLabels: Record<string, string> = {
+  'foreign_object': 'Fremdkörper-Entfernung',
+  'valve_damage': 'Ventilschaden',
+  'basic': 'Basis',
+  'comfort': 'Komfort',
+  'premium': 'Premium',
+  'check': 'Prüfung',
+  'front': 'Vorderachse',
+  'rear': 'Hinterachse',
+  'both': 'Beide Achsen',
+  'measurement_front': 'Vermessung Vorderachse',
+  'measurement_rear': 'Vermessung Hinterachse',
+  'measurement_both': 'Vermessung beide Achsen',
+  'adjustment_front': 'Einstellung Vorderachse',
+  'adjustment_rear': 'Einstellung Hinterachse',
+  'adjustment_both': 'Einstellung beide Achsen',
+  'full_service': 'Komplett-Service'
+}
+
+function getServiceDisplayName(serviceType: string, serviceSubtype: string | null): string {
+  const base = serviceTypeLabels[serviceType] || serviceType
+  if (serviceSubtype && subtypeLabels[serviceSubtype]) {
+    return `${base} - ${subtypeLabels[serviceSubtype]}`
+  }
+  return base
 }
 
 export default function BookingDetailsPage() {
@@ -276,7 +320,7 @@ export default function BookingDetailsPage() {
         <div className="space-y-4">
           <div className="flex items-start">
             <div className="flex-shrink-0 w-32 text-gray-600">Service:</div>
-            <div className="font-semibold">{serviceTypeLabels[booking.serviceType] || booking.serviceType}</div>
+            <div className="font-semibold">{getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}</div>
           </div>
           <div className="flex items-start">
             <div className="flex-shrink-0 w-32 text-gray-600">Datum:</div>
@@ -290,16 +334,29 @@ export default function BookingDetailsPage() {
             <div className="flex-shrink-0 w-32 text-gray-600">Dauer:</div>
             <div className="font-semibold">{booking.durationMinutes} Minuten</div>
           </div>
-          {booking.hasBalancing && (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Mit Auswuchten
-            </div>
-          )}
-          {booking.hasStorage && (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Mit Einlagerung
+          {/* Additional Services (Auswuchten, Einlagerung, Klimaservice, Achsvermessung, etc.) */}
+          {(booking.hasBalancing || booking.hasStorage || (booking.additionalServicesData && booking.additionalServicesData.length > 0)) && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="text-sm font-semibold text-gray-700 mb-2">Zusatzleistungen:</div>
+              {booking.hasBalancing && (
+                <div className="flex items-center text-green-600 mb-1">
+                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span>Mit Auswuchten</span>
+                </div>
+              )}
+              {booking.hasStorage && (
+                <div className="flex items-center text-green-600 mb-1">
+                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span>Mit Einlagerung</span>
+                </div>
+              )}
+              {booking.additionalServicesData && booking.additionalServicesData.map((svc, idx) => (
+                <div key={idx} className="flex items-center text-green-600 mb-1">
+                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span>{svc.name}{svc.packageName && svc.packageName !== svc.name ? ` (${svc.packageName})` : ''}</span>
+                  {svc.duration > 0 && <span className="ml-auto text-gray-600 text-sm">+{svc.duration} Min.</span>}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -348,66 +405,161 @@ export default function BookingDetailsPage() {
       </Card>
 
       {/* Tire Details - Only show if tires were purchased */}
-      {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
+      {(booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0) || booking.tireData?.isMixedTires ? (
         <Card className="p-6 mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
           <h2 className="text-xl font-bold mb-4">Gekaufte Reifen</h2>
-          <div className="space-y-3">
-            {booking.tireBrand && booking.tireModel && (
-              <div>
-                <div className="font-semibold text-lg text-blue-900">
-                  {booking.tireBrand} {booking.tireModel}
+          {booking.tireData?.isMixedTires ? (
+            <div className="space-y-4">
+              {/* Front tire */}
+              {booking.tireData.front && (
+                <div className="bg-white/60 rounded-lg p-4">
+                  <p className="text-xs text-primary-600 font-semibold mb-2">🔹 Vorderachse</p>
+                  <div className="font-semibold text-lg text-blue-900">
+                    {booking.tireData.front.brand} {booking.tireData.front.model}
+                  </div>
+                  {(booking.tireData.front.size || booking.tireData.front.loadIndex) && (
+                    <div className="flex items-start mt-2">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
+                      <div className="font-semibold">{booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}</div>
+                    </div>
+                  )}
+                  {(booking.tireData.front.loadIndex || booking.tireData.front.speedIndex) && (
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
+                      <div className="font-semibold">{booking.tireData.front.loadIndex || '-'} / {booking.tireData.front.speedIndex || '-'}</div>
+                    </div>
+                  )}
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
+                    <div className="font-semibold">{booking.tireData.front.quantity || 1} Stück</div>
+                  </div>
+                  {booking.tireData.front.purchasePrice && (
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
+                      <div className="font-semibold">{booking.tireData.front.purchasePrice.toFixed(2)} €</div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            {booking.tireSize && (
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
-                <div className="font-semibold">{booking.tireSize}</div>
-              </div>
-            )}
-            {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
-                <div className="font-semibold">
-                  {booking.tireLoadIndex || '-'} / {booking.tireSpeedIndex || '-'}
+              )}
+              {/* Rear tire */}
+              {booking.tireData.rear && (
+                <div className="bg-white/60 rounded-lg p-4">
+                  <p className="text-xs text-orange-600 font-semibold mb-2">🔸 Hinterachse</p>
+                  <div className="font-semibold text-lg text-blue-900">
+                    {booking.tireData.rear.brand} {booking.tireData.rear.model}
+                  </div>
+                  {(booking.tireData.rear.size || booking.tireData.rear.loadIndex) && (
+                    <div className="flex items-start mt-2">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
+                      <div className="font-semibold">{booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}</div>
+                    </div>
+                  )}
+                  {(booking.tireData.rear.loadIndex || booking.tireData.rear.speedIndex) && (
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
+                      <div className="font-semibold">{booking.tireData.rear.loadIndex || '-'} / {booking.tireData.rear.speedIndex || '-'}</div>
+                    </div>
+                  )}
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
+                    <div className="font-semibold">{booking.tireData.rear.quantity || 1} Stück</div>
+                  </div>
+                  {booking.tireData.rear.purchasePrice && (
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
+                      <div className="font-semibold">{booking.tireData.rear.purchasePrice.toFixed(2)} €</div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            {booking.tireQuantity && (
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
-                <div className="font-semibold">{booking.tireQuantity} Stück</div>
-              </div>
-            )}
-            {booking.tirePurchasePrice && (
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
-                <div className="font-semibold">{booking.tirePurchasePrice.toFixed(2)} €</div>
-              </div>
-            )}
-            {booking.tireRunFlat && (
-              <div className="flex items-center text-blue-600 mt-2">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Runflat-Reifen
-              </div>
-            )}
-            <div className="pt-3 mt-3 border-t border-blue-300">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
-                <span className="text-xl font-bold text-blue-700">
-                  {booking.totalTirePurchasePrice.toFixed(2)} €
-                </span>
+              )}
+              {/* Total */}
+              <div className="pt-3 mt-3 border-t border-blue-300">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
+                  <span className="text-xl font-bold text-blue-700">
+                    {((booking.tireData.front?.totalPrice || 0) + (booking.tireData.rear?.totalPrice || 0)).toFixed(2)} €
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              {booking.tireBrand && booking.tireModel && (
+                <div>
+                  <div className="font-semibold text-lg text-blue-900">
+                    {booking.tireBrand} {booking.tireModel}
+                  </div>
+                </div>
+              )}
+              {(booking.tireSize || booking.tireLoadIndex) && (
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
+                  <div className="font-semibold">{booking.tireSize || `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}`}</div>
+                </div>
+              )}
+              {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
+                  <div className="font-semibold">
+                    {booking.tireLoadIndex || '-'} / {booking.tireSpeedIndex || '-'}
+                  </div>
+                </div>
+              )}
+              {booking.tireQuantity && (
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
+                  <div className="font-semibold">{booking.tireQuantity} Stück</div>
+                </div>
+              )}
+              {booking.tirePurchasePrice && (
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
+                  <div className="font-semibold">{booking.tirePurchasePrice.toFixed(2)} €</div>
+                </div>
+              )}
+              {booking.tireRunFlat && (
+                <div className="flex items-center text-blue-600 mt-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Runflat-Reifen
+                </div>
+              )}
+              <div className="pt-3 mt-3 border-t border-blue-300">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
+                  <span className="text-xl font-bold text-blue-700">
+                    {booking.totalTirePurchasePrice?.toFixed(2) || '0.00'} €
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
-      )}
+      ) : null}
 
       {/* Payment Details */}
       <Card className="p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
         <div className="space-y-3">
-          {booking.tireQuantity && booking.tireQuantity > 0 && (() => {
+          {booking.tireData?.isMixedTires ? (
+            <>
+              {booking.tireData.front && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {booking.tireData.front.quantity || 1}x {booking.tireData.front.brand} {booking.tireData.front.model} {booking.tireData.front.size || ''}
+                  </span>
+                  <span className="font-semibold">{(booking.tireData.front.totalPrice || 0).toFixed(2)} €</span>
+                </div>
+              )}
+              {booking.tireData.rear && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {booking.tireData.rear.quantity || 1}x {booking.tireData.rear.brand} {booking.tireData.rear.model} {booking.tireData.rear.size || ''}
+                  </span>
+                  <span className="font-semibold">{(booking.tireData.rear.totalPrice || 0).toFixed(2)} €</span>
+                </div>
+              )}
+            </>
+          ) : booking.tireQuantity && booking.tireQuantity > 0 ? (() => {
             // Calculate tire price if not stored in DB (for old bookings)
             let tirePrice = booking.totalTirePurchasePrice;
             if (!tirePrice || tirePrice === 0) {
@@ -425,14 +577,13 @@ export default function BookingDetailsPage() {
                   {booking.tireBrand && `${booking.tireBrand} `}
                   {booking.tireModel && `${booking.tireModel} `}
                   {booking.tireSize}
-                  {booking.tireLoadIndex && booking.tireSpeedIndex && ` ${booking.tireLoadIndex}${booking.tireSpeedIndex}`}
                 </span>
                 <span className="font-semibold">{tirePrice.toFixed(2)} €</span>
               </div>
             );
-          })()}
+          })() : null}
           <div className="flex justify-between">
-            <span className="text-gray-600">Reifenwechsel:</span>
+            <span className="text-gray-600">{getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}:</span>
             <span className="font-semibold">{booking.basePrice.toFixed(2)} €</span>
           </div>
           {booking.hasBalancing && booking.balancingPrice && (
@@ -459,6 +610,13 @@ export default function BookingDetailsPage() {
               <span className="font-semibold">{booking.runFlatSurcharge.toFixed(2)} €</span>
             </div>
           )}
+          {/* Additional Services pricing */}
+          {booking.additionalServicesData && booking.additionalServicesData.length > 0 && booking.additionalServicesData.map((svc, idx) => (
+            <div key={idx} className="flex justify-between">
+              <span className="text-gray-600">{svc.name}{svc.packageName && svc.packageName !== svc.name ? ` (${svc.packageName})` : ''}:</span>
+              <span className="font-semibold">{svc.price.toFixed(2)} €</span>
+            </div>
+          ))}
           <div className="pt-3 border-t-2 border-gray-300">
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold">Gesamtbetrag:</span>

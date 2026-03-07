@@ -97,7 +97,7 @@ export async function GET() {
         label: 'Lieferant verbinden',
         description: 'Verbinden Sie mindestens einen Reifenlieferanten (API oder CSV).',
         done: hasSupplier,
-        href: '/dashboard/workshop/suppliers',
+        href: '/dashboard/workshop/settings?tab=suppliers',
       },
       {
         id: 'landingPage',

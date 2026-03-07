@@ -67,6 +67,13 @@ export default function LandingPageHeaderActions() {
               <p className="text-xs text-gray-500">{session.user?.email}</p>
             </div>
 
+            {role === 'FREELANCER' && (
+              <>
+                <Link href="/freelancer" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" onClick={() => setShowUserMenu(false)}>
+                  <LayoutDashboard className="w-4 h-4" />Dashboard
+                </Link>
+              </>
+            )}
             {(!role || role === 'CUSTOMER') && (
               <>
                 <Link href="/dashboard/customer" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors" onClick={() => setShowUserMenu(false)}>

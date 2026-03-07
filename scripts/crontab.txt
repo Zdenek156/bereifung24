@@ -1,0 +1,22 @@
+# === Bereifung24 Cron Jobs ===
+
+# Tägliches Datenbank-Backup um 3 Uhr
+0 3 * * * /var/www/bereifung24/scripts/backup-database.sh
+
+# Provisionsrechnungen am 1. des Monats um 9 Uhr
+0 9 1 * * curl -s -X POST -H "Authorization: Bearer ***REMOVED***" http://localhost:3000/api/cron/generate-commission-invoices >> /var/log/bereifung24/commission-cron.log 2>&1
+
+# CSV-Sync Lieferanten (stündlich)
+0 * * * * curl -s -X GET -H "Authorization: Bearer ***REMOVED***" http://localhost:3000/api/cron/sync-supplier-csv >> /var/log/bereifung24/csv-sync-cron.log 2>&1
+
+# Reifenkatalog-Update (sonntags 3 Uhr)
+0 3 * * 0 curl -s -X POST -H "Authorization: Bearer ***REMOVED***" http://localhost:3000/api/cron/update-tire-catalogs >> /var/log/tire-catalog-cron.log 2>&1
+
+# TÜV-Erinnerungen per Email (montags 9 Uhr)
+0 9 * * 1 curl -s -X GET -H "Authorization: Bearer ***REMOVED***" http://localhost:3000/api/cron/tuev-reminders >> /var/log/bereifung24/tuev-reminders-cron.log 2>&1
+
+# Google Calendar Token-Refresh (stündlich, Minute 30)
+30 * * * * curl -s -X GET http://localhost:3000/api/cron/refresh-tokens >> /var/log/bereifung24/token-refresh-cron.log 2>&1
+
+# EPREL EU-Reifenlabel Update (monatlich, 1. um 3:30 Uhr)
+30 3 1 * * curl -s -X POST -H "Authorization: Bearer ***REMOVED***" http://localhost:3000/api/cron/eprel-weekly-update >> /var/log/bereifung24/eprel-cron.log 2>&1

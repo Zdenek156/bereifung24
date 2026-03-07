@@ -147,10 +147,15 @@ export async function placeOrder(
       throw new Error('TyreSystem credentials not found for workshop')
     }
 
-    const url = `${TYRESYSTEM_API_BASE}/Order`
-
     console.log(`📦 TyreSystem Order: ${orderData.order.ordernumber_customer}`)
     console.log(`   Items: ${orderData.order.items.item.length}`)
+    console.log(`   Username: ${credentials.username ? credentials.username.substring(0, 3) + '***' : 'EMPTY'}`)
+    console.log(`   Request body: ${JSON.stringify(orderData).substring(0, 500)}`)
+
+    const url = `${TYRESYSTEM_API_BASE}/Order`
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout
 
     const response = await fetch(url, {
       method: 'POST',
@@ -160,40 +165,73 @@ export async function placeOrder(
         Accept: 'application/json',
       },
       body: JSON.stringify(orderData),
+      signal: controller.signal,
     })
 
+    clearTimeout(timeout)
+
+    console.log(`   Response status: ${response.status} ${response.statusText}`)
+
+    const responseText = await response.text()
+    console.log(`   Response body: ${responseText.substring(0, 500)}`)
+
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`TyreSystem Order API error: ${response.status} - ${errorText}`)
+      throw new Error(`TyreSystem Order API error: ${response.status} - ${responseText}`)
     }
 
-    const data: TyreSystemOrderResponse = await response.json()
+    // Parse JSON from text
+    let data: any
+    try {
+      data = JSON.parse(responseText)
+    } catch (parseError) {
+      throw new Error(`TyreSystem Order: Invalid JSON response - ${responseText.substring(0, 200)}`)
+    }
 
     // Track API call
     await incrementApiCallCounter(workshopId, 'TYRESYSTEM')
 
+    // Normalize: position can be a single object or an array
+    const rawPosition = data.orderResponse?.positions?.position
+    const positions: Array<any> = Array.isArray(rawPosition) ? rawPosition : rawPosition ? [rawPosition] : []
+
+    // Normalize response into our expected format (TyreSystem uses OrderStatus with capital O)
+    const normalizedData: TyreSystemOrderResponse = {
+      orderResponse: {
+        positions: {
+          position: positions.map(pos => ({
+            ordernumber: pos.ordernumber || '',
+            orderStatus: pos.OrderStatus ?? pos.orderStatus ?? false,
+            error: pos.error ?? 0,
+            errorMessage: pos.errorMessage || null,
+            pos: pos.pos ?? 0,
+          }))
+        }
+      }
+    }
+
     // Check for errors in response
-    const hasErrors = data.orderResponse.positions.position.some(
+    const hasErrors = normalizedData.orderResponse.positions.position.some(
       (pos) => pos.error !== 0 || !pos.orderStatus
     )
 
     if (hasErrors) {
       console.warn('⚠️ TyreSystem Order completed with errors:')
-      data.orderResponse.positions.position.forEach((pos) => {
+      normalizedData.orderResponse.positions.position.forEach((pos) => {
         if (pos.error !== 0) {
           console.warn(`   Pos ${pos.pos}: ${pos.errorMessage}`)
         }
       })
     } else {
       console.log(`✅ TyreSystem Order successful`)
-      data.orderResponse.positions.position.forEach((pos) => {
+      normalizedData.orderResponse.positions.position.forEach((pos) => {
         console.log(`   Pos ${pos.pos}: Order #${pos.ordernumber}`)
       })
     }
 
-    return data
+    return normalizedData
   } catch (error) {
-    console.error('❌ TyreSystem Order error:', error)
+    console.error('❌ TyreSystem Order error:', error instanceof Error ? error.message : error)
+    console.error('❌ TyreSystem Order stack:', error instanceof Error ? error.stack : '')
     return null
   }
 }

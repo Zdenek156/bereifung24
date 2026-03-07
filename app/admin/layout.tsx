@@ -35,6 +35,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
       router.push('/dashboard/customer')
     } else if (session.user.role === 'WORKSHOP') {
       router.push('/dashboard/workshop')
+    } else if (session.user.role === 'FREELANCER') {
+      router.push('/freelancer')
     } else {
       router.push('/dashboard')
     }

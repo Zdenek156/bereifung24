@@ -1,11 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function WorkshopRegisterPage() {
+function WorkshopRegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) {
+      setReferralCode(ref)
+      // Store in sessionStorage so it persists during form filling
+      sessionStorage.setItem('workshopReferralCode', ref)
+    } else {
+      const stored = sessionStorage.getItem('workshopReferralCode')
+      if (stored) setReferralCode(stored)
+    }
+  }, [searchParams])
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -91,6 +105,7 @@ export default function WorkshopRegisterPage() {
           city: formData.city,
           taxId: formData.taxId || undefined,
           description: formData.description || undefined,
+          referralCode: referralCode || undefined,
         }),
       })
 
@@ -125,6 +140,9 @@ export default function WorkshopRegisterPage() {
         'Ihre Werkstatt wird nun von unserem Team geprüft.\n' +
         'Sie erhalten eine E-Mail, sobald Ihr Account freigeschaltet wurde.'
       )
+      // Clear referral code from sessionStorage after successful registration
+      sessionStorage.removeItem('workshopReferralCode')
+
       router.push('/login')
     } catch (err) {
       setError('Ein Fehler ist aufgetreten')
@@ -448,5 +466,13 @@ export default function WorkshopRegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function WorkshopRegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
+      <WorkshopRegisterForm />
+    </Suspense>
   )
 }

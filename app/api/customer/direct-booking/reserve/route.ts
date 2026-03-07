@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
       hasStorage,
       hasDisposal,
       totalPrice,
+      // Additional services data (Klimaservice, Achsvermessung, etc.)
+      additionalServicesData,
+      // Service subtype (e.g. 'foreign_object', 'valve_damage' for TIRE_REPAIR)
+      serviceSubtype,
+      // Base service duration from workshop service package
+      baseDuration,
       // Standard Tire data
       tireBrand,
       tireModel,
@@ -231,9 +237,19 @@ export async function POST(request: NextRequest) {
         workshopId,
         vehicleId,
         serviceType,
+        serviceSubtype: serviceSubtype || null,
+        additionalServicesData: additionalServicesData && additionalServicesData.length > 0 ? additionalServicesData : null,
         date: berlinMidnight,
         time,
-        durationMinutes: 60, // Default 60 minutes for wheel change
+        durationMinutes: (() => {
+          let dur = baseDuration || 60 // Use actual workshop service duration
+          if (additionalServicesData && Array.isArray(additionalServicesData)) {
+            for (const svc of additionalServicesData) {
+              dur += (svc.duration || 0)
+            }
+          }
+          return dur
+        })(),
         basePrice: basePrice || 0,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,
@@ -241,7 +257,7 @@ export async function POST(request: NextRequest) {
         runFlatSurcharge: runFlatSurcharge || 0,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,
-        hasDisposal: hasDisposal || false,
+        hasDisposal: (hasDisposal && (serviceType === 'TIRE_CHANGE' || serviceType === 'MOTORCYCLE_TIRE')) || false,
         totalPrice,
         // Save tire data in standard fields (works for standard tires AND front tire of mixed tires)
         tireBrand: hasMixedTires ? (tireBrandFront || null) : (tireBrand || null),

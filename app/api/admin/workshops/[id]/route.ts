@@ -78,7 +78,9 @@ export async function PATCH(
       },
       data: {
         isVerified,
-        verifiedAt: isVerified ? new Date() : null
+        verifiedAt: isVerified ? new Date() : null,
+        status: isVerified ? 'ACTIVE' : 'PENDING',
+        approved: isVerified,
       },
       include: {
         user: true

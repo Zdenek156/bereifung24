@@ -36,6 +36,19 @@ export async function GET() {
             id: true,
             companyName: true,
             stripeAccountId: true,
+            freelancerId: true,
+            freelancer: {
+              select: {
+                id: true,
+                tier: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  }
+                }
+              }
+            },
             user: {
               select: {
                 firstName: true,
@@ -51,6 +64,19 @@ export async function GET() {
       }
     })
 
+    // Load all freelancer commissions for these booking IDs
+    const bookingIds = directBookings.map(b => b.id)
+    const freelancerCommissions = await prisma.freelancerCommission.findMany({
+      where: { bookingId: { in: bookingIds } },
+      select: {
+        bookingId: true,
+        freelancerAmount: true,
+        freelancerPercentage: true,
+        freelancerId: true,
+      },
+    })
+    const flCommissionMap = new Map(freelancerCommissions.map(fc => [fc.bookingId, fc]))
+
     // Format as commissions for frontend compatibility
     const formattedCommissions = directBookings.map(booking => {
       // Calculate commission (6.9% of total price)
@@ -59,6 +85,16 @@ export async function GET() {
       const netCommission = booking.platformNetCommission ? Number(booking.platformNetCommission) : commissionAmount * 0.81 // Estimated after tax
       const stripeFee = booking.stripeFee ? Number(booking.stripeFee) : null // Actual fee from Stripe
       
+      // Freelancer commission info
+      const flCommission = flCommissionMap.get(booking.id)
+      const freelancerInfo = booking.workshop.freelancer ? {
+        id: booking.workshop.freelancer.id,
+        name: `${booking.workshop.freelancer.user.firstName} ${booking.workshop.freelancer.user.lastName}`,
+        tier: booking.workshop.freelancer.tier,
+        amount: flCommission ? Number(flCommission.freelancerAmount) : null,
+        percentage: flCommission ? Number(flCommission.freelancerPercentage) : null,
+      } : null
+
       return {
         id: booking.id,
         bookingId: booking.id,
@@ -69,6 +105,7 @@ export async function GET() {
         stripeFee: stripeFee, // NEW: Actual Stripe fee
         stripeFeesEstimate: booking.stripeFeesEstimate ? Number(booking.stripeFeesEstimate) : 0,
         workshopPayout: booking.workshopPayout ? Number(booking.workshopPayout) : totalPrice * 0.931,
+        freelancer: freelancerInfo,
         status: booking.paymentStatus === 'PAID' ? 'COLLECTED' : booking.paymentStatus === 'PENDING' ? 'PENDING' : 'FAILED',
         billedAt: booking.paidAt,
         collectedAt: booking.paymentStatus === 'PAID' ? booking.paidAt : null,

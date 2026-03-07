@@ -14,7 +14,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const settings = await prisma.invoiceSettings.findUnique({
+    const invoiceSettings = prisma.invoiceSettings as any
+    const settings = await invoiceSettings.findUnique({
       where: { id: 'default-settings' },
       select: { supportEmail: true, supportPassword: true },
     })
@@ -53,7 +54,8 @@ export async function PUT(request: NextRequest) {
       updateData.supportPassword = supportPassword
     }
 
-    await prisma.invoiceSettings.upsert({
+    const invoiceSettings = prisma.invoiceSettings as any
+    await invoiceSettings.upsert({
       where: { id: 'default-settings' },
       update: updateData,
       create: {

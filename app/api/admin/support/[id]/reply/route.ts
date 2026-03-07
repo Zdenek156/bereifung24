@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, getEmailSettings } from '@/lib/email'
+import { getEmailSettings } from '@/lib/email'
 import nodemailer from 'nodemailer'
 
 /**
@@ -34,7 +34,9 @@ export async function POST(
       return NextResponse.json({ error: 'Ticket nicht gefunden' }, { status: 404 })
     }
 
-    const senderName = session.user.name || session.user.email || 'Bereifung24 Support'
+    const sessionUser = session.user as any
+    const senderFullName = `${sessionUser.firstName || ''} ${sessionUser.lastName || ''}`.trim()
+    const senderName = senderFullName || session.user.name || session.user.email || 'Bereifung24 Support'
 
     const htmlBody = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
@@ -62,41 +64,46 @@ body{font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;padding:0}
 
     const textBody = `Hallo ${ticket.name},\n\n${replyText}\n\n---\nIhre ursprüngliche Nachricht:\n${ticket.message}\n\nMit freundlichen Grüßen,\n${senderName}\nBereifung24 Support-Team`
 
-    // Load support-specific credentials if configured
-    const invoiceSettings = await prisma.invoiceSettings.findUnique({
+    const invoiceSettings = prisma.invoiceSettings as any
+    const supportSettings = await invoiceSettings.findUnique({
       where: { id: 'default-settings' },
       select: { supportEmail: true, supportPassword: true },
     })
 
-    if (invoiceSettings?.supportEmail && invoiceSettings?.supportPassword) {
-      // Use dedicated support credentials with global SMTP server settings
-      const globalConfig = await getEmailSettings()
-      const transporter = nodemailer.createTransport({
-        host: globalConfig.host,
-        port: globalConfig.port,
-        secure: globalConfig.port === 465,
-        auth: {
-          user: invoiceSettings.supportEmail,
-          pass: invoiceSettings.supportPassword,
-        },
-      })
-      await transporter.sendMail({
-        from: `"Bereifung24 Support" <${invoiceSettings.supportEmail}>`,
-        to: ticket.email,
-        replyTo: invoiceSettings.supportEmail,
-        subject: `Re: Ihre Anfrage bei Bereifung24`,
-        html: htmlBody,
-        text: textBody,
-      })
-    } else {
-      // Fallback: use globally configured sendEmail (reads from email_settings table)
-      await sendEmail({
-        to: ticket.email,
-        subject: `Re: Ihre Anfrage bei Bereifung24`,
-        html: htmlBody,
-        text: textBody,
-      })
+    if (!supportSettings?.supportEmail || !supportSettings?.supportPassword) {
+      return NextResponse.json(
+        { error: 'Support-Email nicht konfiguriert. Bitte unter Support → Email konfigurieren hinterlegen.' },
+        { status: 400 }
+      )
     }
+
+    const smtpConfig = await getEmailSettings()
+
+    if (!smtpConfig.host || !smtpConfig.port) {
+      return NextResponse.json(
+        { error: 'SMTP-Einstellungen fehlen. Bitte unter Admin → Email-Einstellungen konfigurieren.' },
+        { status: 400 }
+      )
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.port === 465,
+      auth: {
+        user: supportSettings.supportEmail,
+        pass: supportSettings.supportPassword,
+      },
+    })
+
+    await transporter.sendMail({
+      from: `"Bereifung24 Support" <${supportSettings.supportEmail}>`,
+      to: ticket.email,
+      replyTo: supportSettings.supportEmail,
+      subject: `Re: Ihre Anfrage bei Bereifung24`,
+      html: htmlBody,
+      text: textBody,
+    })
 
     // Update ticket in DB
     const updatedTicket = await prisma.chatMessage.update({

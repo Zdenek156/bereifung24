@@ -77,7 +77,7 @@ model User {
   id       String @id @default(cuid())
   email    String @unique
   password String
-  role     String @default("CUSTOMER") // CUSTOMER, WORKSHOP, ADMIN
+  role     String @default("CUSTOMER") // CUSTOMER, WORKSHOP, ADMIN, B24_EMPLOYEE, FREELANCER
 
   // Profile
   firstName String
@@ -145,6 +145,9 @@ model User {
 
   // Customer Reminders
   createdReminders CustomerReminder[] @relation("ReminderCreatedBy")
+
+  // Freelancer
+  freelancer Freelancer?
 
   @@map("users")
 }
@@ -288,6 +291,12 @@ model Workshop {
 
   // Sales CRM - Converted from Prospect
   prospectSource ProspectWorkshop? @relation("ConvertedFromProspect")
+
+  // Freelancer Assignment (Lifetime)
+  freelancerId         String?      @map("freelancer_id")
+  freelancer           Freelancer?  @relation("FreelancerWorkshops", fields: [freelancerId], references: [id])
+  freelancerAcquiredAt DateTime?    @map("freelancer_acquired_at")
+  freelancerLead       FreelancerLead? @relation("FreelancerLeadWorkshop")
 
   // Track viewed tire requests
   viewedRequests TireRequestView[]
@@ -436,9 +445,10 @@ model WorkshopSupplier {
   priority            Int     @default(1) // Priorität (1 = höchste, für Multi-Supplier später)
 
   // Status Tracking
-  lastApiCheck   DateTime? @map("last_api_check") // Letzte erfolgreiche API-Verbindung
-  lastApiError   String?   @map("last_api_error") // Letzter API-Fehler
-  apiCallsToday  Int       @default(0) @map("api_calls_today") // Rate limiting tracking
+  connectionStatus String    @default("LIVE") @map("connection_status") // ANGEFRAGT, TEST, LIVE, ABGELEHNT
+  lastApiCheck     DateTime? @map("last_api_check") // Letzte erfolgreiche API-Verbindung
+  lastApiError     String?   @map("last_api_error") // Letzter API-Fehler
+  apiCallsToday    Int       @default(0) @map("api_calls_today") // Rate limiting tracking
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -472,6 +482,7 @@ model TireCatalog {
   speedIndex String? @map("speed_index") // z.B. "V", "H", "W", "Y"
   runFlat    Boolean @default(false) @map("run_flat")
   threePMSF  Boolean @default(false) @map("three_pmsf") // 3PMSF Schneeflocke
+  construction String? @map("construction") // R=Radial, ZR=Z-Radial, -=Diagonal, B=Bias-Belted, D=Diagonal
 
   // EU Tire Label
   labelFuelEfficiency String? @map("label_fuel_efficiency") // A-G (A=best)
@@ -5663,6 +5674,11 @@ model DirectBooking {
   vehicleId   String  @map("vehicle_id")
   vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
 
+  // Service subtype (e.g. 'foreign_object', 'valve_damage' for TIRE_REPAIR)
+  serviceSubtype         String? @map("service_subtype")
+  // Additional services JSON (Klimaservice, Achsvermessung, etc.)
+  additionalServicesData Json?   @map("additional_services_data")
+
   // Options (for wheel change)
   hasBalancing Boolean @default(false) @map("has_balancing")
   hasStorage   Boolean @default(false) @map("has_storage")
@@ -5682,6 +5698,12 @@ model DirectBooking {
   tireRunFlat           Boolean  @default(false) @map("tire_runflat")
   tire3PMSF             Boolean  @default(false) @map("tire_3pmsf")
   tireData              Json?    @map("tire_data")
+
+  // Supplier Auto-Order Tracking
+  supplierOrderNumber   String?   @map("supplier_order_number")
+  supplierOrderedAt     DateTime? @map("supplier_ordered_at")
+  supplierOrderStatus   String?   @map("supplier_order_status") // ORDERED, SHIPPED, DELIVERED, ERROR
+  supplierOrderError    String?   @map("supplier_order_error")
 
   // Pricing
   basePrice       Decimal  @map("base_price") @db.Decimal(10, 2)
@@ -5815,6 +5837,371 @@ model Account {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("accounts")
+}
+
+// ============================================
+// SUPPLIER MANAGEMENT (Lieferantenverwaltung)
+// ============================================
+
+model SupplierManagement {
+  id          String  @id @default(cuid())
+  code        String  @unique // 'TYRESYSTEM', 'REIFEN_COM', etc.
+  companyName String  @map("company_name") // "TyreSystem GmbH"
+  legalForm   String? @map("legal_form") // GmbH, AG, etc.
+  category    String  @default("SONSTIGES") // REIFENGROSSHANDEL, RDKS, FELGEN, SONSTIGES
+
+  // Address
+  website String?
+  street  String?
+  zipCode String? @map("zip_code")
+  city    String?
+  country String @default("Deutschland")
+  phone   String?
+  email   String?
+
+  // Business
+  taxId          String? @map("tax_id") // USt-IdNr
+  customerNumber String? @map("customer_number") // Our number at this supplier
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+  notes    String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contacts        SupplierContact[]
+  apiConfig       SupplierApiConfig?
+  referralProgram SupplierReferralProgram?
+  emailTemplates  SupplierEmailTemplate[]
+
+  @@map("supplier_management")
+}
+
+model SupplierContact {
+  id         String             @id @default(cuid())
+  supplierId String             @map("supplier_id")
+  supplier   SupplierManagement @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  email     String?
+  phone     String?
+  position  String? // "Vertriebsleiter", "API Support"
+  purposes  String[] // ['API', 'VERTRIEB', 'SUPPORT', 'BUCHHALTUNG', 'ALLGEMEIN']
+  isPrimary Boolean @default(false) @map("is_primary")
+  notes     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_contacts")
+}
+
+model SupplierApiConfig {
+  id         String             @id @default(cuid())
+  supplierId String             @unique @map("supplier_id")
+  supplier   SupplierManagement @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  // API Settings
+  apiMode         String  @default("NONE") @map("api_mode") // NONE, TEST, LIVE
+  apiEndpoint     String? @map("api_endpoint")
+  apiTestEndpoint String? @map("api_test_endpoint")
+  authType        String? @map("auth_type") // BASIC, BEARER, API_KEY, OAUTH2
+
+  // Credentials
+  apiUsername String? @map("api_username")
+  apiPassword String? @map("api_password")
+  apiKey      String? @map("api_key")
+
+  // CSV Settings
+  csvDownloadUrl    String?  @map("csv_download_url")
+  csvFormat         String?  @map("csv_format") // TYRESYSTEM, CUSTOM
+  csvAutoUpdate     Boolean  @default(false) @map("csv_auto_update")
+  csvUpdateSchedule String?  @map("csv_update_schedule") // DAILY, WEEKLY, MONTHLY
+
+  // Status
+  lastApiCheck  DateTime? @map("last_api_check")
+  lastApiError  String?   @map("last_api_error")
+  lastCsvImport DateTime? @map("last_csv_import")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_api_configs")
+}
+
+model SupplierReferralProgram {
+  id         String             @id @default(cuid())
+  supplierId String             @unique @map("supplier_id")
+  supplier   SupplierManagement @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  isActive            Boolean   @default(false) @map("is_active")
+  referralCode        String?   @map("referral_code")
+  registrationLink    String?   @map("registration_link") // can contain {referral_code}
+  bonusPerNewCustomer Float?    @map("bonus_per_new_customer") // €
+  bonusForReferred    Float?    @map("bonus_for_referred") // €
+  conditions          String?   @db.Text
+  validFrom           DateTime? @map("valid_from")
+  validUntil          DateTime? @map("valid_until")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_referral_programs")
+}
+
+model SupplierEmailTemplate {
+  id         String             @id @default(cuid())
+  supplierId String             @map("supplier_id")
+  supplier   SupplierManagement @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  name        String
+  subject     String
+  bodyHtml    String  @map("body_html") @db.Text
+  description String?
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_email_templates")
+}
+
+// ============================================
+// FREELANCER SYSTEM
+// ============================================
+
+enum FreelancerTier {
+  STARTER
+  BRONZE
+  SILVER
+  GOLD
+}
+
+enum FreelancerStatus {
+  ACTIVE
+  PAUSED
+  TERMINATED
+}
+
+enum FreelancerLeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  INTRODUCTION
+  REGISTERED
+  ONBOARDED
+  LOST
+}
+
+enum FreelancerLeadActivityType {
+  CALL
+  EMAIL
+  VISIT
+  DEMO
+  NOTE
+  STATUS_CHANGE
+}
+
+enum FreelancerPayoutStatus {
+  CALCULATED
+  APPROVED
+  PAID
+  REJECTED
+}
+
+model Freelancer {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Business Info
+  companyName    String?
+  taxNumber      String?  // Steuernummer
+  vatId          String?  // USt-IdNr.
+  tradeRegNumber String?  // Gewerbeanmeldung-Nr.
+
+  // Bank Details
+  iban          String?
+  bic           String?
+  accountHolder String?
+  bankName      String?
+
+  // Stripe Connect (for payout)
+  stripeAccountId String? @map("stripe_account_id") // Stripe Connected Account ID
+  stripeEnabled   Boolean @default(false) @map("stripe_enabled")  // Stripe payouts active
+
+  // Contact
+  phone  String?
+  street String?
+  zip    String?
+  city   String?
+
+  // Affiliate
+  affiliateCode String @unique // Persönlicher Code (z.B. FL-XXXX)
+
+  // Tier System
+  tier FreelancerTier @default(STARTER)
+
+  // Region
+  region String? // Zugewiesener PLZ-Bereich / Region
+
+  // Contract
+  contractStartDate DateTime  @default(now())
+  contractEndDate   DateTime? // null = aktiv
+  status            FreelancerStatus @default(ACTIVE)
+
+  // Notification Preferences
+  notifyNewBooking     Boolean @default(true)
+  notifyLeadReminder   Boolean @default(true)
+  notifyBillingReady   Boolean @default(true)
+  notifyWorkshopWarning Boolean @default(true)
+
+  // Relations
+  leads       FreelancerLead[]
+  commissions FreelancerCommission[]
+  payouts     FreelancerPayout[]
+  workshops   Workshop[]             @relation("FreelancerWorkshops")
+  materials   FreelancerMaterialDownload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("freelancers")
+}
+
+model FreelancerLead {
+  id           String     @id @default(cuid())
+  freelancerId String
+  freelancer   Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  // Workshop Info
+  workshopName  String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  zipCode       String?
+  city          String?
+
+  // Pipeline
+  status       FreelancerLeadStatus @default(NEW)
+  lostReason   String?              // Verlustgrund
+  nextFollowUp DateTime?            // Nächste Wiedervorlage
+  notes        String?  @db.Text    // Freitext-Notizen
+
+  // Link to Workshop (when registered)
+  workshopId String?   @unique
+  workshop   Workshop? @relation("FreelancerLeadWorkshop", fields: [workshopId], references: [id])
+
+  // Relations
+  activities FreelancerLeadActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([freelancerId])
+  @@index([status])
+  @@map("freelancer_leads")
+}
+
+model FreelancerLeadActivity {
+  id     String         @id @default(cuid())
+  leadId String
+  lead   FreelancerLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type        FreelancerLeadActivityType
+  description String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@map("freelancer_lead_activities")
+}
+
+model FreelancerCommission {
+  id           String     @id @default(cuid())
+  freelancerId String
+  freelancer   Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  bookingId  String
+  workshopId String
+
+  // Amounts
+  bookingAmount      Decimal @db.Decimal(10, 2) // Buchungswert in €
+  b24GrossCommission Decimal @db.Decimal(10, 2) // B24-Brutto (6,9%)
+  stripeFee          Decimal @db.Decimal(10, 2) // Stripe-Gebühr
+  b24NetCommission   Decimal @db.Decimal(10, 2) // B24-Netto nach Stripe
+
+  freelancerPercentage Decimal @db.Decimal(5, 2) // Freelancer-% (20/25/30)
+  freelancerAmount     Decimal @db.Decimal(10, 2) // Freelancer-Betrag in €
+
+  // Period
+  period String // YYYY-MM
+
+  createdAt DateTime @default(now())
+
+  @@index([freelancerId])
+  @@index([period])
+  @@index([workshopId])
+  @@map("freelancer_commissions")
+}
+
+model FreelancerPayout {
+  id           String     @id @default(cuid())
+  freelancerId String
+  freelancer   Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  period          String // YYYY-MM
+  totalBookings   Int
+  totalVolume     Decimal @db.Decimal(12, 2)
+  totalCommission Decimal @db.Decimal(10, 2)
+  tier            FreelancerTier
+
+  status       FreelancerPayoutStatus @default(CALCULATED)
+  invoiceUrl   String?   // Hochgeladene Rechnung
+  paidAt       DateTime?
+  statementUrl String?   // Generierte Provisionsabrechnung PDF
+
+  createdAt DateTime @default(now())
+
+  @@unique([freelancerId, period])
+  @@index([freelancerId])
+  @@map("freelancer_payouts")
+}
+
+model FreelancerMaterial {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  category    String  // PRESENTATION, ONE_PAGER, BROCHURE, EMAIL_TEMPLATE, FAQ
+  fileUrl     String
+  fileName    String
+  fileSize    Int?
+  version     String  @default("1.0")
+  isActive    Boolean @default(true)
+
+  downloads FreelancerMaterialDownload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("freelancer_materials")
+}
+
+model FreelancerMaterialDownload {
+  id           String             @id @default(cuid())
+  materialId   String
+  material     FreelancerMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   Freelancer         @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  downloadedAt DateTime @default(now())
+
+  @@index([freelancerId])
+  @@map("freelancer_material_downloads")
 }
 
 model Session {

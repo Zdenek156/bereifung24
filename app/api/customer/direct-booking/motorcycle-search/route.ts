@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
       forcedWorkshopSlug,
     } = body
 
+    console.log('🏍️ [MOTORCYCLE-SEARCH] tireFilters received:', JSON.stringify(tireFilters))
+    console.log('🏍️ [MOTORCYCLE-SEARCH] tireFilters?.construction:', tireFilters?.construction)
+    console.log('🏍️ [MOTORCYCLE-SEARCH] includeTires:', includeTires)
+
     const isWorkshopFixedMode = !!forcedWorkshopId || !!forcedWorkshopSlug
 
     let effectiveCustomerLat = customerLat
@@ -145,12 +149,22 @@ export async function POST(request: NextRequest) {
     const workshops = await prisma.workshop.findMany({
       where: {
         ...(forcedWorkshopId ? { id: forcedWorkshopId } : {}),
+        isVerified: true,
+        // Nur Werkstätten mit Stripe-Konto anzeigen (Zahlungsabwicklung)
+        stripeEnabled: true,
+        stripeAccountId: { not: null },
         workshopServices: {
           some: {
             serviceType: 'MOTORCYCLE_TIRE',
             isActive: true
           }
-        }
+        },
+        // Nur Werkstätten mit Kalender-Anbindung anzeigen (verhindert Doppelbuchungen)
+        // Entweder Werkstatt-Kalender ODER mindestens ein Mitarbeiter-Kalender verbunden
+        OR: [
+          { googleCalendarId: { not: null } },
+          { employees: { some: { googleCalendarId: { not: null } } } },
+        ],
       },
       include: {
         workshopServices: {
@@ -239,26 +253,31 @@ export async function POST(request: NextRequest) {
         // Determine tire count
         const tireCount = tirePositions.includes('both') ? 2 : 1
         
-        // Calculate base price (front/rear should be same price, use front or rear or fallback)
-        let basePrice = 0
-        if (tirePositions.includes('front') && frontPackage) {
-          basePrice = Number(frontPackage.price)
+        // Calculate montage price based on selected positions
+        let montagePrice = 0
+        if (tirePositions.includes('both')) {
+          // Both tires: sum front + rear package prices (they may differ)
+          const frontPrice = frontPackage ? Number(frontPackage.price) : 0
+          const rearPrice = rearPackage ? Number(rearPackage.price) : 0
+          montagePrice = frontPrice + rearPrice
+          baseDuration = Math.max(frontPackage?.durationMinutes || 30, rearPackage?.durationMinutes || 30) * 2
+          // Fallback: if one package missing, double the other
+          if (montagePrice <= 0) {
+            montagePrice = (frontPrice || rearPrice) * 2
+          }
+        } else if (tirePositions.includes('front') && frontPackage) {
+          montagePrice = Number(frontPackage.price)
           baseDuration = frontPackage.durationMinutes
         } else if (tirePositions.includes('rear') && rearPackage) {
-          basePrice = Number(rearPackage.price)
+          montagePrice = Number(rearPackage.price)
           baseDuration = rearPackage.durationMinutes
-        } else if (tirePositions.includes('both') && (frontPackage || rearPackage)) {
-          basePrice = Number(frontPackage?.price || rearPackage?.price || 0)
-          baseDuration = (frontPackage?.durationMinutes || rearPackage?.durationMinutes || 30)
         }
         
         // Fallback to service basePrice if no package found
-        if (basePrice <= 0) {
-          basePrice = service.basePrice ? Number(service.basePrice) : 0
+        if (montagePrice <= 0) {
+          const fallbackBase = service.basePrice ? Number(service.basePrice) : 0
+          montagePrice = fallbackBase * tireCount
         }
-        
-        // Calculate total montage price (multiply by tire count)
-        const montagePrice = basePrice * tireCount
         
         // Calculate disposal fee (if requested)
         let disposalPrice = 0
@@ -269,15 +288,11 @@ export async function POST(request: NextRequest) {
         // Total price
         totalPrice = montagePrice + disposalPrice
         
-        // Adjust duration for both tires
-        if (tireCount === 2) {
-          baseDuration = baseDuration * 2
-        }
+        // Duration already calculated above per position
         
         console.log(`✅ [MOTORCYCLE-SEARCH] Workshop ${workshop.id} pricing:`, { 
-          basePrice,
-          tireCount,
           montagePrice,
+          tireCount,
           disposalPrice: disposalPrice,
           totalPrice,
           duration: baseDuration,
@@ -313,6 +328,7 @@ export async function POST(request: NextRequest) {
         return {
           id: workshop.id,
           name: workshop.companyName || 'Unbekannte Werkstatt',
+          logoUrl: workshop.logoUrl || null,
           address: workshop.user.street || '',
           city: workshop.user.city || '',
           zipCode: workshop.user.zipCode || '',
@@ -322,13 +338,14 @@ export async function POST(request: NextRequest) {
           rating: avgRating > 0 ? Math.round(avgRating * 10) / 10 : null,
           reviewCount: reviews.length,
           openingHours: workshop.openingHours || '',
-          basePrice: parseFloat(totalPrice.toFixed(2)), // Package price (includes disposal if selected)
+          basePrice: parseFloat(montagePrice.toFixed(2)), // Pure montage price without disposal
           totalPrice: parseFloat(totalPrice.toFixed(2)),
+          disposalFeeApplied: parseFloat(disposalPrice.toFixed(2)),
           estimatedDuration: baseDuration,
           tireCount: tireCount,
           includedDisposal: includeDisposal && disposalPrice > 0,
           serviceData: {
-            disposalFee: Number(service.disposalFee || 0),
+            disposalFee: Number(disposalPackage?.price || service.disposalFee || 0),
             runFlatSurcharge: Number(service.runFlatSurcharge || 0),
           },
         }
@@ -384,6 +401,7 @@ export async function POST(request: NextRequest) {
                   maxPrice: tireFilters?.maxPrice,
                   quality: tireFilters?.quality,
                   showDOTTires: tireFilters?.showDOTTires,
+                  construction: tireFilters?.construction,
                   minLoadIndex: loadIndex,
                   minSpeedIndex: speedIndex,
                 },
@@ -406,6 +424,7 @@ export async function POST(request: NextRequest) {
                 maxPrice: tireFilters?.maxPrice,
                 quality: tireFilters?.quality,
                 showDOTTires: tireFilters?.showDOTTires,
+                construction: tireFilters?.construction,
                 minLoadIndex: loadIndex,
                 minSpeedIndex: speedIndex,
               })
@@ -439,6 +458,7 @@ export async function POST(request: NextRequest) {
                   maxPrice: tireFilters?.maxPrice,
                   quality: tireFilters?.quality,
                   showDOTTires: tireFilters?.showDOTTires,
+                  construction: tireFilters?.construction,
                   minLoadIndex: loadIndex,
                   minSpeedIndex: speedIndex,
                 },
@@ -461,6 +481,7 @@ export async function POST(request: NextRequest) {
                 maxPrice: tireFilters?.maxPrice,
                 quality: tireFilters?.quality,
                 showDOTTires: tireFilters?.showDOTTires,
+                construction: tireFilters?.construction,
                 minLoadIndex: loadIndex,
                 minSpeedIndex: speedIndex,
               })
@@ -507,6 +528,7 @@ export async function POST(request: NextRequest) {
                   maxPrice: tireFilters?.maxPrice,
                   quality: tireFilters?.quality,
                   showDOTTires: tireFilters?.showDOTTires,
+                  construction: tireFilters?.construction,
                   minLoadIndex: tireDimensionsFront.loadIndex,
                   minSpeedIndex: tireDimensionsFront.speedIndex,
                 },
@@ -531,6 +553,7 @@ export async function POST(request: NextRequest) {
                   maxPrice: tireFilters?.maxPrice,
                   quality: tireFilters?.quality,
                   showDOTTires: tireFilters?.showDOTTires,
+                  construction: tireFilters?.construction,
                   minLoadIndex: tireDimensionsRear.loadIndex,
                   minSpeedIndex: tireDimensionsRear.speedIndex,
                 },
@@ -543,6 +566,7 @@ export async function POST(request: NextRequest) {
             return {
               ...workshop,
               tireAvailable: true,
+              isMixedTires: true,
               tirePrice: totalTirePrice,
               ...(frontRec && frontRecsResult && {
                 tireFront: {

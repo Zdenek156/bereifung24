@@ -19,8 +19,18 @@ interface DirectBooking {
   totalPrice: number
   hasBalancing: boolean
   hasStorage: boolean
+  hasDisposal: boolean
   durationMinutes: number
   createdAt: string
+  // Tire fields (standard)
+  tireBrand: string | null
+  tireModel: string | null
+  tireSize: string | null
+  tireQuantity: number | null
+  tireLoadIndex: string | null
+  tireSpeedIndex: string | null
+  // Mixed tires
+  tireData: any | null
   workshop: {
     id: string
     companyName: string
@@ -47,7 +57,10 @@ const serviceTypeLabels: Record<string, string> = {
   TIRE_HOTEL: 'Reifenhotel',
   WHEEL_ALIGNMENT: 'Achsvermessung',
   TIRE_REPAIR: 'Reifenreparatur',
-  NEW_TIRES: 'Neue Reifen'
+  NEW_TIRES: 'Neue Reifen',
+  MOTORCYCLE_TIRE: 'Motorradreifenmontage',
+  ALIGNMENT_BOTH: 'Achsvermessung',
+  CLIMATE_SERVICE: 'Klimaservice'
 }
 
 const statusLabels: Record<string, { label: string, color: string, icon: JSX.Element }> = {
@@ -306,8 +319,13 @@ export default function BookingsPage() {
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {booking.workshop.companyName}
                         </p>
+                        {booking.workshop.user?.street && (
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            {booking.workshop.user.street}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {booking.workshop.city}
+                          {booking.workshop.user?.zipCode || ''} {booking.workshop.user?.city || ''}
                         </p>
                       </div>
                     </div>
@@ -318,7 +336,7 @@ export default function BookingsPage() {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fahrzeug</p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {booking.vehicle.brand} {booking.vehicle.model}
+                          {booking.vehicle.make} {booking.vehicle.model}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
                           {booking.vehicle.licensePlate}
@@ -343,6 +361,54 @@ export default function BookingsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Tire Info (if applicable) */}
+                  {(booking.tireBrand || booking.tireData?.isMixedTires) && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">🛡 Gewählte Reifen</p>
+                      {booking.tireData?.isMixedTires ? (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          {booking.tireData.front && (
+                            <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                              <p className="text-xs text-primary-600 font-medium mb-1">🔹 Vorderachse</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {booking.tireData.front.quantity || 1}× {booking.tireData.front.brand} {booking.tireData.front.model}
+                              </p>
+                              {(booking.tireData.front.size || booking.tireData.front.loadIndex) && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {booking.tireData.rear && (
+                            <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                              <p className="text-xs text-primary-600 font-medium mb-1">🔸 Hinterachse</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {booking.tireData.rear.quantity || 1}× {booking.tireData.rear.brand} {booking.tireData.rear.model}
+                              </p>
+                              {(booking.tireData.rear.size || booking.tireData.rear.loadIndex) && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : booking.tireBrand && (
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {booking.tireQuantity || 4}× {booking.tireBrand} {booking.tireModel}
+                          </p>
+                          {(booking.tireSize || booking.tireLoadIndex) && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {booking.tireSize || ''}{booking.tireLoadIndex && !booking.tireSize?.includes(booking.tireLoadIndex) ? ` ${booking.tireLoadIndex}${booking.tireSpeedIndex || ''}` : (!booking.tireSize ? `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}` : '')}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}

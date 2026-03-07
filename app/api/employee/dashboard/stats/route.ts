@@ -100,6 +100,13 @@ export async function GET(request: NextRequest) {
       // Continue without email stats
     }
 
+    // Get new support requests count (nur neue Anfragen)
+    const newSupportRequests = await prisma.chatMessage.count({
+      where: {
+        status: 'NEW',
+      },
+    })
+
     // Get total registered customers count
     const totalCustomers = await prisma.user.count({
       where: {
@@ -152,6 +159,7 @@ export async function GET(request: NextRequest) {
       pendingTasks,
       overtimeHours,
       unreadEmails,
+      newSupportRequests,
       totalCustomers,
       totalWorkshops,
       totalCommissions,

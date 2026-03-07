@@ -34,8 +34,8 @@ export default function PaymentSuccessPage() {
     'WHEEL_CHANGE': 'Räderwechsel',
     'TIRE_CHANGE': 'Reifenwechsel',
     'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorradreifen',
-    'ALIGNMENT_BOTH': 'Achsvermessung + Einstellung',
+    'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+    'ALIGNMENT_BOTH': 'Achsvermessung',
     'CLIMATE_SERVICE': 'Klimaservice'
   }
 
@@ -319,7 +319,26 @@ export default function PaymentSuccessPage() {
               </svg>
               <div>
                 <p className="font-semibold text-gray-900">Service</p>
-                <p className="text-sm text-gray-600">{serviceLabels[serviceType] || serviceType}</p>
+                <p className="text-sm text-gray-600">
+                  {booking?.serviceName || serviceLabels[serviceType] || serviceType}
+                  {booking?.serviceSubtype && !booking?.serviceName && (() => {
+                    const subtypeMap: Record<string, string> = {
+                      'foreign_object': 'Fremdkörper-Entfernung',
+                      'valve_damage': 'Ventilschaden',
+                      'basic': 'Basis',
+                      'comfort': 'Komfort',
+                      'premium': 'Premium',
+                      'measurement_front': 'Vermessung Vorderachse',
+                      'measurement_rear': 'Vermessung Hinterachse',
+                      'measurement_both': 'Vermessung beide Achsen',
+                      'adjustment_front': 'Einstellung Vorderachse',
+                      'adjustment_rear': 'Einstellung Hinterachse',
+                      'adjustment_both': 'Einstellung beide Achsen',
+                      'full_service': 'Komplett-Service',
+                    }
+                    return subtypeMap[booking.serviceSubtype] ? ` - ${subtypeMap[booking.serviceSubtype]}` : ''
+                  })()}
+                </p>
               </div>
             </div>
 
@@ -414,6 +433,27 @@ export default function PaymentSuccessPage() {
                     {booking.tireRunFlat && <><br /><span className="text-red-600 font-semibold">⚡ RunFlat-Reifen</span></>}
                     {booking.tire3PMSF && <><br /><span className="text-blue-600 font-semibold">❄️ Winterreifen (3PMSF)</span></>}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Additional Services (Klimaservice, Achsvermessung, etc.) */}
+            {booking?.additionalServicesData && booking.additionalServicesData.length > 0 && (
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900">Zusatzleistungen</p>
+                  <ul className="text-sm text-gray-600 list-none">
+                    {booking.additionalServicesData.map((svc: any, idx: number) => {
+                      const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+                      const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+                      return (
+                        <li key={idx}>✅ {svcName} (+{Number(svc.price || 0).toFixed(2)}€)</li>
+                      )
+                    })}
+                  </ul>
                 </div>
               </div>
             )}

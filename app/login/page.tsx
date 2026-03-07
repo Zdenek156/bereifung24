@@ -54,6 +54,9 @@ export default function LoginPage() {
         } else if (session?.user?.role === 'ADMIN') {
           console.log('Redirecting ADMIN to /admin')
           window.location.href = '/admin'
+        } else if (session?.user?.role === 'FREELANCER') {
+          console.log('Redirecting FREELANCER to /freelancer')
+          window.location.href = '/freelancer'
         } else {
           // CUSTOMER: return to landing page if returnUrl set
           window.location.href = returnUrl || '/dashboard'

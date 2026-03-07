@@ -77,7 +77,7 @@ export async function sendTemplateEmail(
 }
 
 // Email Settings aus Datenbank holen
-async function getEmailSettings() {
+export async function getEmailSettings() {
   try {
     const settings = await prisma.adminApiSetting.findMany({
       where: {
@@ -138,6 +138,7 @@ export async function sendEmail({ to, subject, text, html, attachments }: EmailO
   try {
     // Hole Email-Settings aus Datenbank
     const config = await getEmailSettings()
+    const invalidHosts = new Set(['smtp.hetzner.de'])  // mail.your-server.de is valid for Hetzner webhosting
 
     console.log('[EMAIL] Config loaded:', {
       host: config.host,
@@ -146,6 +147,10 @@ export async function sendEmail({ to, subject, text, html, attachments }: EmailO
       passwordSet: !!config.password,
       from: config.from
     })
+
+    if (config.host && invalidHosts.has(config.host)) {
+      throw new Error(`SMTP host is invalid placeholder: ${config.host}. Bitte EMAIL_HOST korrekt in den Admin-API-Settings setzen.`)
+    }
 
     // Wenn Email nicht konfiguriert ist, logge nur
     if (!config.host || !config.user) {
@@ -971,6 +976,8 @@ export function adminWorkshopRegistrationEmailTemplate(data: {
   companyName: string
   email: string
   phone?: string
+  street?: string
+  zipCode?: string
   city?: string
   registrationDate: string
   workshopId: string
@@ -1010,7 +1017,8 @@ export function adminWorkshopRegistrationEmailTemplate(data: {
             <p><strong>Ansprechpartner:</strong> ${data.workshopName}</p>
             <p><strong>E-Mail:</strong> ${data.email}</p>
             ${data.phone ? `<p><strong>Telefon:</strong> ${data.phone}</p>` : ''}
-            ${data.city ? `<p><strong>Stadt:</strong> ${data.city}</p>` : ''}
+            ${data.street ? `<p><strong>Straße:</strong> ${data.street}</p>` : ''}
+            ${data.zipCode || data.city ? `<p><strong>PLZ / Ort:</strong> ${[data.zipCode, data.city].filter(Boolean).join(' ')}</p>` : ''}
             <p><strong>Registriert am:</strong> ${data.registrationDate}</p>
           </div>
           
@@ -1537,33 +1545,46 @@ export function directBookingConfirmationCustomerEmail(data: {
   hasStorage?: boolean
   hasDisposal?: boolean
   customerNotes?: string
+  additionalServicesData?: any[] // Additional services (Klimaservice, Achsvermessung, etc.)
 }) {
   const serviceLabels: Record<string, string> = {
     'WHEEL_CHANGE': 'Räderwechsel',
     'TIRE_CHANGE': 'Reifenwechsel',
-    'TIRE_MOUNT': 'Reifenmontage'
+    'TIRE_MOUNT': 'Reifenmontage',
+    'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+    'ALIGNMENT_BOTH': 'Achsvermessung',
+    'CLIMATE_SERVICE': 'Klimaservice'
   }
 
-  const serviceLabel = serviceLabels[data.serviceType] || data.serviceName
+  // Use the passed serviceName if it contains a subtype (e.g. "Reifenreparatur - Fremdkörper-Entfernung"), 
+  // otherwise fall back to the serviceLabels map
+  const serviceLabel = data.serviceName.includes(' - ') ? data.serviceName : (serviceLabels[data.serviceType] || data.serviceName)
 
   return {
     subject: `✅ Buchung bestätigt - ${serviceLabel} am ${data.appointmentDate}`,
     html: `
     <!DOCTYPE html>
-    <html>
+    <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!--[if gte mso 9]>
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG/>
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+      </xml>
+      <![endif]-->
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb; }
-        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .logo { max-height: 60px; max-width: 180px; margin-bottom: 15px; }
         .content { background: white; padding: 30px; }
         .success-badge { background: #10b981; color: white; display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }
         .section { margin: 25px 0; padding: 20px; background: #f9fafb; border-radius: 8px; }
         .section-header { font-size: 18px; font-weight: bold; color: #059669; margin-bottom: 15px; }
-        .detail-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
-        .detail-row:last-child { border-bottom: none; }
+        .detail-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
         .detail-label { font-weight: 600; color: #6b7280; }
         .detail-value { color: #111827; font-weight: 500; }
         .price-total { background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
@@ -1573,13 +1594,20 @@ export function directBookingConfirmationCustomerEmail(data: {
         .footer { text-align: center; margin-top: 30px; padding: 20px; font-size: 12px; color: #6b7280; }
       </style>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          ${data.workshopLogoUrl ? `<img src="${data.workshopLogoUrl}" alt="${data.workshopName}" class="logo">` : ''}
-          <h1 style="margin: 10px 0;">✅ Buchung bestätigt!</h1>
-          <div class="success-badge">BEZAHLT</div>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb;">
+      <div class="container" style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+        <!--[if gte mso 9]>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td align="center" bgcolor="#059669" style="padding: 30px; border-radius: 10px 10px 0 0;">
+        <![endif]-->
+        <div style="background-color: #059669; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          ${data.workshopLogoUrl ? `<img src="${data.workshopLogoUrl}" alt="${data.workshopName}" style="max-height: 60px; max-width: 180px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;" class="logo">` : ''}
+          <h1 style="margin: 10px 0; color: white; font-size: 24px;">&#x2705; Buchung bestätigt!</h1>
+          <div style="background: #10b981; color: white; display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; font-size: 14px;">BEZAHLT</div>
         </div>
+        <!--[if gte mso 9]>
+        </td></tr></table>
+        <![endif]-->
         
         <div class="content">
           <p style="font-size: 16px;"><strong>Hallo ${data.customerName},</strong></p>
@@ -1635,7 +1663,7 @@ export function directBookingConfirmationCustomerEmail(data: {
               <div style="background: #f3f4f6; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
                 <strong>Vorderachse:</strong><br>
                 ${data.tireData.front.brand} ${data.tireData.front.model}<br>
-                Größe: ${data.tireData.front.size}<br>
+                Größe: ${data.tireData.front.size || ((data.tireData.front.loadIndex || '') + (data.tireData.front.speedIndex || '')) || 'nicht angegeben'}<br>
                 Menge: ${data.tireData.front.quantity} Stück<br>
                 ${data.tireData.front.purchasePrice ? `Preis pro Reifen: ${data.tireData.front.purchasePrice.toFixed(2)}€<br>` : ''}
                 ${data.tireData.front.totalPrice ? `<strong>Gesamt: ${data.tireData.front.totalPrice.toFixed(2)}€</strong>` : ''}
@@ -1645,7 +1673,7 @@ export function directBookingConfirmationCustomerEmail(data: {
               <div style="background: #f3f4f6; padding: 12px; border-radius: 6px;">
                 <strong>Hinterachse:</strong><br>
                 ${data.tireData.rear.brand} ${data.tireData.rear.model}<br>
-                Größe: ${data.tireData.rear.size}<br>
+                Größe: ${data.tireData.rear.size || ((data.tireData.rear.loadIndex || '') + (data.tireData.rear.speedIndex || '')) || 'nicht angegeben'}<br>
                 Menge: ${data.tireData.rear.quantity} Stück<br>
                 ${data.tireData.rear.purchasePrice ? `Preis pro Reifen: ${data.tireData.rear.purchasePrice.toFixed(2)}€<br>` : ''}
                 ${data.tireData.rear.totalPrice ? `<strong>Gesamt: ${data.tireData.rear.totalPrice.toFixed(2)}€</strong>` : ''}
@@ -1664,7 +1692,7 @@ export function directBookingConfirmationCustomerEmail(data: {
             </div>
             ` : ''}
 
-            ${data.hasBalancing || data.hasStorage || data.hasDisposal ? `
+            ${data.hasBalancing || data.hasStorage || data.hasDisposal || (data.additionalServicesData && data.additionalServicesData.length > 0) ? `
             <div style="margin-top: 15px;">
               <strong>Zusatzleistungen:</strong>
               <ul style="margin: 5px 0; padding-left: 20px;">
@@ -1672,6 +1700,11 @@ export function directBookingConfirmationCustomerEmail(data: {
                 ${data.hasStorage ? `<li>✅ Einlagerung (+${data.storagePrice?.toFixed(2) || '0.00'}€)</li>` : ''}
                 ${data.hasDisposal ? `<li>✅ Reifenentsorgung (+${data.disposalFee?.toFixed(2) || '0.00'}€)</li>` : ''}
                 ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<li>✅ RunFlat-Aufschlag (+${data.runFlatSurcharge.toFixed(2)}€)</li>` : ''}
+                ${data.additionalServicesData ? data.additionalServicesData.map((svc: any) => {
+                  const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+                  const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+                  return `<li>✅ ${svcName} (+${Number(svc.price || 0).toFixed(2)}€)</li>`
+                }).join('') : ''}
               </ul>
             </div>
             ` : ''}
@@ -1714,6 +1747,15 @@ export function directBookingConfirmationCustomerEmail(data: {
               <span class="detail-value">+${data.runFlatSurcharge.toFixed(2)}€</span>
             </div>
             ` : ''}
+            ${data.additionalServicesData ? data.additionalServicesData.map((svc: any) => {
+              const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+              const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+              return `
+            <div class="detail-row">
+              <span class="detail-label">${svcName}:</span>
+              <span class="detail-value">+${Number(svc.price || 0).toFixed(2)}€</span>
+            </div>`
+            }).join('') : ''}
           </div>
 
           <div class="price-total">
@@ -1820,10 +1862,16 @@ export function directBookingNotificationWorkshopEmail(data: {
   hasBalancing?: boolean
   hasStorage?: boolean
   hasDisposal?: boolean
+  additionalServicesData?: any[] // Additional services (Klimaservice, Achsvermessung, etc.)
+  // Auto-order result
+  autoOrderSuccess?: boolean
+  autoOrderNumber?: string
+  autoOrderError?: string
 }) {
-  const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT'
+  const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT' || data.serviceType === 'MOTORCYCLE_TIRE'
   const isAPISupplier = data.supplierConnectionType === 'API'
   const isCSVSupplier = data.supplierConnectionType === 'CSV'
+  const isAutoOrdered = data.autoOrderSuccess === true && !!data.autoOrderNumber
 
   return {
     subject: `🔔 Neue BEZAHLTE Buchung: ${data.serviceName} am ${data.appointmentDate}`,
@@ -1846,7 +1894,7 @@ export function directBookingNotificationWorkshopEmail(data: {
         .detail-row:last-child { border-bottom: none; }
         .detail-label { font-weight: 600; color: #6b7280; flex: 1; }
         .detail-value { color: #111827; font-weight: 500; flex: 1; text-align: right; }
-        .order-box { background: ${isAPISupplier ? '#d1fae5' : '#fef3c7'}; border: 2px solid ${isAPISupplier ? '#10b981' : '#f59e0b'}; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .order-box { background: ${isAutoOrdered ? '#d1fae5' : '#fef3c7'}; border: 2px solid ${isAutoOrdered ? '#10b981' : '#f59e0b'}; padding: 20px; margin: 20px 0; border-radius: 8px; }
         .price-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         .price-table td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
         .price-table tr:last-child td { border-bottom: 2px solid #059669; font-weight: bold; font-size: 18px; }
@@ -1860,8 +1908,9 @@ export function directBookingNotificationWorkshopEmail(data: {
           <h1 style="margin: 10px 0;">🔔 Neue Buchung!</h1>
           <div>
             <span class="badge badge-success">✅ BEZAHLT</span>
-            ${isTireService && isAPISupplier ? '<span class="badge badge-success">🛞 REIFEN BESTELLT</span>' : ''}
-            ${isTireService && isCSVSupplier ? '<span class="badge badge-warning">⚠️ REIFEN MANUELL BESTELLEN</span>' : ''}
+            ${isTireService && isAutoOrdered ? '<span class="badge badge-success">🛞 REIFEN AUTOMATISCH BESTELLT</span>' : ''}
+            ${isTireService && !isAutoOrdered && isCSVSupplier ? '<span class="badge badge-warning">⚠️ REIFEN MANUELL BESTELLEN</span>' : ''}
+            ${isTireService && !isAutoOrdered && isAPISupplier && !data.autoOrderSuccess ? '<span class="badge badge-warning">⚠️ REIFEN MANUELL BESTELLEN</span>' : ''}
           </div>
         </div>
         
@@ -1946,6 +1995,11 @@ export function directBookingNotificationWorkshopEmail(data: {
             ${data.hasStorage ? '<div class="detail-row"><span class="detail-label">Einlagerung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
             ${data.hasDisposal ? `<div class="detail-row"><span class="detail-label">Reifenentsorgung:</span><span class="detail-value">✅ Ja (+${data.disposalFee?.toFixed(2) || '0.00'}€)</span></div>` : ''}
             ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<div class="detail-row"><span class="detail-label">RunFlat-Aufschlag:</span><span class="detail-value">+${data.runFlatSurcharge.toFixed(2)}€</span></div>` : ''}
+            ${data.additionalServicesData ? data.additionalServicesData.map((svc: any) => {
+              const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()
+              const svcName = svc.packageName ? `${rawName} (${svc.packageName})` : rawName
+              return `<div class="detail-row"><span class="detail-label">${svcName}:</span><span class="detail-value">✅ Ja (+${Number(svc.price || 0).toFixed(2)}€)</span></div>`
+            }).join('') : ''}
           </div>
 
           ${data.tireData?.isMixedTires ? `
@@ -1961,7 +2015,7 @@ export function directBookingNotificationWorkshopEmail(data: {
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Größe:</td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${data.tireData.front.size}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${data.tireData.front.size || ((data.tireData.front.loadIndex || '') + (data.tireData.front.speedIndex || '')) || '-'}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Menge:</td>
@@ -1992,7 +2046,7 @@ export function directBookingNotificationWorkshopEmail(data: {
               </tr>
               ` : ''}
             </table>
-            ${data.tireData.front.articleId ? `
+            ${data.tireData.front.articleId && !isAutoOrdered ? `
             <div style="text-align: center; margin: 10px 0;">
               <a href="https://www.tyresystem.de/s?suche=id${data.tireData.front.articleId}" target="_blank" style="display: inline-block; background: #10b981; color: white !important; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 🛒 Vorne bei Tyresystem bestellen
@@ -2008,7 +2062,7 @@ export function directBookingNotificationWorkshopEmail(data: {
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Größe:</td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${data.tireData.rear.size}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${data.tireData.rear.size || ((data.tireData.rear.loadIndex || '') + (data.tireData.rear.speedIndex || '')) || '-'}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Menge:</td>
@@ -2039,7 +2093,7 @@ export function directBookingNotificationWorkshopEmail(data: {
               </tr>
               ` : ''}
             </table>
-            ${data.tireData.rear.articleId ? `
+            ${data.tireData.rear.articleId && !isAutoOrdered ? `
             <div style="text-align: center; margin: 10px 0;">
               <a href="https://www.tyresystem.de/s?suche=id${data.tireData.rear.articleId}" target="_blank" style="display: inline-block; background: #10b981; color: white !important; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 🛒 Hinten bei Tyresystem bestellen
@@ -2099,7 +2153,7 @@ export function directBookingNotificationWorkshopEmail(data: {
               </tr>
               ` : ''}
             </table>
-            ${data.tireArticleId ? `
+            ${data.tireArticleId && !isAutoOrdered ? `
             <div style="text-align: center; margin: 15px 0;">
               <a href="https://www.tyresystem.de/s?suche=id${data.tireArticleId}" target="_blank" style="display: inline-block; background: #10b981; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 🛒 Bei Tyresystem bestellen
@@ -2108,93 +2162,35 @@ export function directBookingNotificationWorkshopEmail(data: {
             ` : ''}
           </div>
           ` : ''}
-          ${isTireService && isAPISupplier ? `
-          <!-- API Supplier: Tires Automatically Ordered -->
+          ${isTireService && isAutoOrdered ? `
+          <!-- AUTO-ORDER SUCCESS: Tires Automatically Ordered -->
           <div class="order-box">
-            <h3 style="margin-top: 0; color: #059669;">✅ Reifen automatisch bestellt</h3>
-            <p style="margin: 10px 0;">Die Reifen wurden automatisch über <strong>${data.supplierName}</strong> bestellt:</p>
+            <h3 style="margin-top: 0; color: #059669;">✅ Reifen automatisch bestellt!</h3>
+            <p style="margin: 10px 0;">Die Reifen wurden automatisch über <strong>${data.supplierName || 'TyreSystem'}</strong> bestellt und werden direkt an Ihre Werkstatt geliefert.</p>
             
-            <table style="width: 100%; margin: 15px 0; background: white; border-radius: 8px; overflow: hidden;">
-              <tr style="background: #f3f4f6;">
-                <th style="padding: 12px; text-align: left;">Artikel</th>
-                <th style="padding: 12px; text-align: center;">Menge</th>
-                <th style="padding: 12px; text-align: center;">EAN</th>
-                <th style="padding: 12px; text-align: center;">Artikel-Nr.</th>
-                <th style="padding: 12px; text-align: right;">EK-Preis</th>
-              </tr>
-              <tr>
-                <td style="padding: 12px;">
-                  <strong>${data.tireBrand} ${data.tireModel}</strong><br>
-                  <small style="color: #6b7280;">${data.tireSize || ''}</small>
-                  ${data.tireRunFlat ? '<br><span style="color: #dc2626; font-size: 12px;">⚡ RunFlat</span>' : ''}
-                  ${data.tire3PMSF ? '<br><span style="color: #2563eb; font-size: 12px;">❄️ Winter</span>' : ''}
-                </td>
-                <td style="padding: 12px; text-align: center;"><strong>${data.tireQuantity || 4} Stk.</strong></td>
-                <td style="padding: 12px; text-align: center;"><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${data.tireEAN || 'N/A'}</code></td>
-                <td style="padding: 12px; text-align: center;"><code style="background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #1e40af;">${data.tireArticleId || 'N/A'}</code></td>
-                <td style="padding: 12px; text-align: right;"><strong>${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong></td>
-              </tr>
-              <tr style="background: #f3f4f6; font-weight: bold;">
-                <td colspan="4" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
-                <td style="padding: 12px; text-align: right;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
-              </tr>
-            </table>
-
-            ${data.tireArticleId ? `
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="https://www.tyresystem.de/s?suche=id${data.tireArticleId}" target="_blank" style="display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                🛒 Direkt bei Tyresystem bestellen
-              </a>
+            <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+              <strong>📦 Bestelldetails:</strong><br>
+              Bestellnummer: <strong>${data.autoOrderNumber}</strong><br>
+              Lieferadresse: <strong>Ihre Werkstatt</strong><br>
+              Status: <span style="color: #059669; font-weight: bold;">✅ Bestellt</span>
             </div>
-            ` : ''}
 
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
-              <strong>📦 Lieferung:</strong><br>
-              ${data.supplierOrderId ? `Bestellnummer: <strong>${data.supplierOrderId}</strong><br>` : ''}
-              ${data.estimatedDeliveryDate ? `Voraussichtlich: <strong>${data.estimatedDeliveryDate}</strong>` : 'Liefertermin wird vom Lieferanten bestätigt'}
-            </div>
+            <p style="margin: 10px 0; font-size: 14px; color: #6b7280;">
+              💡 <em>Die Reifen werden rechtzeitig vor dem Kundentermin am <strong>${data.appointmentDate}</strong> um <strong>${data.appointmentTime} Uhr</strong> geliefert. Sie können den Lieferstatus in Ihrem TyreSystem-Konto verfolgen.</em>
+            </p>
           </div>
           ` : ''}
 
-          ${isTireService && isCSVSupplier ? `
-          <!-- CSV Supplier: Manual Tire Order Required -->
+          ${isTireService && !isAutoOrdered && (isCSVSupplier || isAPISupplier) ? `
+          <!-- MANUAL ORDER REQUIRED: CSV Supplier or API without auto-order -->
           <div class="order-box">
             <h3 style="margin-top: 0; color: #d97706;">⚠️ BITTE REIFEN BESTELLEN</h3>
-            <p style="margin: 10px 0; font-weight: bold;">Sie müssen folgende Reifen SELBST beim Lieferanten bestellen:</p>
-            
-            <table style="width: 100%; margin: 15px 0; background: white; border-radius: 8px; overflow: hidden;">
-              <tr style="background: #fef3c7;">
-                <th style="padding: 12px; text-align: left;">Artikel</th>
-                <th style="padding: 12px; text-align: center;">Menge</th>
-                <th style="padding: 12px; text-align: center;">EAN</th>
-                <th style="padding: 12px; text-align: center;">Artikel-Nr.</th>
-                <th style="padding: 12px; text-align: right;">EK-Preis</th>
-              </tr>
-              <tr>
-                <td style="padding: 12px;">
-                  <strong style="font-size: 16px;">${data.tireBrand} ${data.tireModel}</strong><br>
-                  <span style="color: #6b7280;">Größe: ${data.tireSize || 'nicht angegeben'}</span>
-                  ${data.tireRunFlat ? '<br><span style="color: #dc2626;">⚡ RunFlat-Reifen</span>' : ''}
-                  ${data.tire3PMSF ? '<br><span style="color: #2563eb;">❄️ Winterreifen (3PMSF)</span>' : ''}
-                </td>
-                <td style="padding: 12px; text-align: center;">
-                  <strong style="font-size: 20px; color: #d97706;">${data.tireQuantity || 4} Stück</strong>
-                </td>
-                <td style="padding: 12px; text-align: center;">
-                  <code style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold;">${data.tireEAN || 'N/A'}</code>
-                </td>
-                <td style="padding: 12px; text-align: center;">
-                  <code style="background: #dbeafe; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #1e40af;">${data.tireArticleId || 'N/A'}</code>
-                </td>
-                <td style="padding: 12px; text-align: right;">
-                  <strong style="font-size: 16px;">${data.tirePurchasePrice?.toFixed(2) || '0.00'}€</strong>
-                </td>
-              </tr>
-              <tr style="background: #fef3c7; font-weight: bold; font-size: 16px;">
-                <td colspan="4" style="padding: 12px; text-align: right;">Gesamt-EK:</td>
-                <td style="padding: 12px; text-align: right; color: #d97706;">${data.totalPurchasePrice?.toFixed(2) || '0.00'}€</td>
-              </tr>
-            </table>
+            <p style="margin: 10px 0; font-weight: bold;">Sie müssen die Reifen für diese Buchung SELBST beim Lieferanten bestellen (Details siehe oben).</p>
+            ${data.autoOrderError ? `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 6px; margin: 10px 0;">
+              <strong style="color: #dc2626;">⚠️ Automatische Bestellung fehlgeschlagen:</strong> ${data.autoOrderError}
+            </div>
+            ` : ''}
 
             ${data.tireArticleId ? `
             <div style="text-align: center; margin: 20px 0;">
@@ -2207,10 +2203,7 @@ export function directBookingNotificationWorkshopEmail(data: {
 
             <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
               <strong style="font-size: 16px;">📞 Ihr Lieferant:</strong><br>
-              <strong style="font-size: 18px; color: #059669;">${data.supplierName || 'Kein Lieferant konfiguriert'}</strong><br>
-              ${data.supplierPhone ? `Telefon: ${data.supplierPhone}<br>` : ''}
-              ${data.supplierEmail ? `Email: ${data.supplierEmail}<br>` : ''}
-              ${data.supplierWebsite ? `Website: <a href="${data.supplierWebsite}" style="color: #10b981;">${data.supplierWebsite}</a>` : ''}
+              <strong style="font-size: 18px; color: #059669;">${data.supplierName || 'Kein Lieferant konfiguriert'}</strong>
             </div>
           </div>
           ` : ''}
@@ -2272,8 +2265,9 @@ export function directBookingNotificationWorkshopEmail(data: {
           <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
             <h3 style="margin-top: 0;">✅ Ihre nächsten Schritte:</h3>
             <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
-              ${isTireService && isCSVSupplier ? `<li><strong style="color: #d97706;">🛒 REIFEN BESTELLEN</strong> beim Lieferanten ${data.supplierName || ''}<br><small style="color: #6b7280;">EAN: ${data.tireEAN || 'siehe oben'}, Menge: ${data.tireQuantity || 4} Stück</small></li>` : ''}
-              ${isTireService && isAPISupplier ? `<li>✅ Reifen sind bestellt - keine Aktion erforderlich</li>` : ''}
+              ${isTireService && !isAutoOrdered && isCSVSupplier ? `<li><strong style="color: #d97706;">🛒 REIFEN BESTELLEN</strong> beim Lieferanten ${data.supplierName || ''}<br><small style="color: #6b7280;">EAN: ${data.tireEAN || 'siehe oben'}, Menge: ${data.tireQuantity || 4} Stück</small></li>` : ''}
+              ${isTireService && isAutoOrdered ? `<li>✅ Reifen sind automatisch bestellt (${data.autoOrderNumber || 'siehe oben'}) - keine Aktion erforderlich</li>` : ''}
+              ${isTireService && !isAutoOrdered && isAPISupplier ? `<li><strong style="color: #d97706;">⚠️ REIFEN MANUELL BESTELLEN</strong> - Automatische Bestellung fehlgeschlagen</li>` : ''}
               ${isTireService ? `<li>📦 Liefertermin${isAPISupplier ? ' abwarten' : ' bestätigen lassen'}</li>` : ''}
               <li>📞 Bei Änderungen Kunden kontaktieren: ${data.customerPhone}</li>
               <li>🔧 Termin ausführen am ${data.appointmentDate} um ${data.appointmentTime} Uhr</li>

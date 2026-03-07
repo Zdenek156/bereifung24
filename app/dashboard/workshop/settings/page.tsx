@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, XCircle, Loader2, Eye, EyeOff, Mail, Info, Key, ExternalLink } from 'lucide-react'
 
 interface WorkshopProfile {
   email: string
@@ -73,6 +73,13 @@ function SuppliersTab() {
   const [saving, setSaving] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+  // Zugangsdaten anfordern state
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [requestCustomerNumber, setRequestCustomerNumber] = useState('')
+  const [requestSending, setRequestSending] = useState(false)
+  const [requestSuccess, setRequestSuccess] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
+
   // Form state
   const [formData, setFormData] = useState({
     supplier: 'TYRESYSTEM',
@@ -99,6 +106,35 @@ function SuppliersTab() {
       console.error('Error fetching suppliers:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRequestCredentials = async () => {
+    if (!requestCustomerNumber.trim()) {
+      setRequestError('Bitte Kundennummer eingeben')
+      return
+    }
+    setRequestSending(true)
+    setRequestError(null)
+    try {
+      const res = await fetch('/api/workshop/request-supplier-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          supplier: formData.supplier,
+          customerNumber: requestCustomerNumber.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setRequestSuccess(true)
+      } else {
+        setRequestError(data.error || 'Fehler beim Senden der Anfrage')
+      }
+    } catch (error) {
+      setRequestError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
+    } finally {
+      setRequestSending(false)
     }
   }
 
@@ -405,6 +441,49 @@ function SuppliersTab() {
             {/* API-Felder (nur wenn API gewählt) */}
             {formData.connectionType === 'API' && (
               <>
+                {/* Info-Box: Zugangsdaten anfordern */}
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                        Noch keine Zugangsdaten?
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                        Sie können die API-Zugangsdaten direkt bei {formData.name || 'Ihrem Lieferanten'} anfordern. 
+                        Die Zugangsdaten werden an die bei {formData.name || 'Ihrem Lieferanten'} hinterlegte E-Mail-Adresse gesendet.
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                        Noch kein Kunde bei TyreSystem? Mit dem Referenz-Code <strong>5856465</strong> sparen Sie 10&nbsp;€ bei Ihrer ersten Bestellung, wenn Sie sich über uns registrieren.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRequestSuccess(false)
+                            setRequestError(null)
+                            setRequestCustomerNumber('')
+                            setShowRequestModal(true)
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <Key className="w-4 h-4" />
+                          Zugangsdaten anfordern
+                        </button>
+                        <a
+                          href="https://www.tyresystem.de/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 text-sm font-medium rounded-lg transition-colors dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-blue-300 dark:border-blue-600"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Jetzt bei TyreSystem registrieren
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2">Benutzername</label>
                   <input
@@ -469,6 +548,16 @@ function SuppliersTab() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Direkter Download-Link zur Lieferanten-CSV-Datei
                   </p>
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">📋 So finden Sie den CSV-Link bei TyreSystem:</p>
+                    <ol className="text-xs text-blue-700 dark:text-blue-300 space-y-1 list-decimal list-inside">
+                      <li>Bei <strong>TyreSystem</strong> anmelden</li>
+                      <li>Auf <strong>Konto</strong> klicken</li>
+                      <li><strong>Einstellungen</strong> öffnen</li>
+                      <li>Unter <strong>Schnittstellen</strong> → <strong>Export Preise &amp; Bestände</strong> auswählen</li>
+                      <li>Die URL unter <strong>Variante 1: Download über HTTP</strong> kopieren und hier einfügen</li>
+                    </ol>
+                  </div>
                 </div>
 
                 {/* CSV Warning Box */}
@@ -519,15 +608,6 @@ function SuppliersTab() {
       {/* Suppliers List */}
       {suppliers.length > 0 && (
         <div className="space-y-4">
-          {!showAddForm && (
-            <div className="flex justify-end mb-4">
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Weiteren Lieferanten hinzufügen
-              </Button>
-            </div>
-          )}
-
           {suppliers.map((supplier) => (
             <Card key={supplier.id} className="p-6">
               <div className="flex items-start justify-between gap-4">
@@ -705,6 +785,103 @@ function SuppliersTab() {
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Modal: Zugangsdaten anfordern */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full p-6">
+            {requestSuccess ? (
+              <div className="text-center py-4">
+                <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-7 h-7 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Anfrage gesendet!</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Ihre Anfrage wurde an {formData.name || 'den Lieferanten'} übermittelt.
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                  Die Zugangsdaten werden an Ihre bei {formData.name || 'dem Lieferanten'} hinterlegte E-Mail-Adresse gesendet.
+                </p>
+                <button
+                  onClick={() => setShowRequestModal(false)}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Schließen
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Zugangsdaten anfordern</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">bei {formData.name || 'Lieferant'}</p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Geben Sie Ihre {formData.name || 'Lieferanten'} Kundennummer ein. 
+                  Die Zugangsdaten werden an die bei {formData.name || 'dem Lieferanten'} hinterlegte E-Mail-Adresse Ihrer Werkstatt gesendet.
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                    Ihre {formData.name || 'Lieferanten'} Kundennummer *
+                  </label>
+                  <input
+                    type="text"
+                    value={requestCustomerNumber}
+                    onChange={(e) => setRequestCustomerNumber(e.target.value)}
+                    className="w-full px-4 py-3 border-2 rounded-lg text-lg font-mono dark:bg-gray-800 dark:border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    placeholder="z.B. 12345"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg mb-4">
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    <strong>Hinweis:</strong> Die Kundennummer finden Sie auf Ihren Rechnungen oder in Ihrem {formData.name || 'Lieferanten'} Kundenkonto.
+                  </p>
+                </div>
+
+                {requestError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-4">
+                    <p className="text-sm text-red-700 dark:text-red-400">{requestError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleRequestCredentials}
+                    disabled={requestSending || !requestCustomerNumber.trim()}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                  >
+                    {requestSending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Wird gesendet...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4" />
+                        Anfrage senden
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowRequestModal(false)}
+                    className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1887,13 +2064,26 @@ export default function WorkshopSettings() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 if (confirm('Möchten Sie die Stripe-Verbindung wirklich trennen? Sie können sich jederzeit neu verbinden.')) {
                                   setPaymentMethods({
                                     ...paymentMethods,
                                     stripeAccountId: '',
                                     stripe: false
                                   })
+                                  // Sofort in DB speichern
+                                  try {
+                                    await fetch('/api/workshop/profile', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        stripeAccountId: null,
+                                        stripeEnabled: false,
+                                      }),
+                                    })
+                                  } catch (err) {
+                                    console.error('Fehler beim Trennen der Stripe-Verbindung:', err)
+                                  }
                                 }
                               }}
                               className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-sm rounded-lg transition-colors"

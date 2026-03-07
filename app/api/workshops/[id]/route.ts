@@ -49,7 +49,7 @@ export async function GET(
             }
           },
           where: {
-            allowsDirectBooking: true
+            isActive: true
           }
         },
         _count: {

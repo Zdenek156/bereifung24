@@ -142,6 +142,9 @@ export function mapTyreSystemCSV(row: Record<string, string>): TireCatalogData |
     // Detect RunFlat from 'Bauart' column (R = Radial, RF = RunFlat)
     const bauart = row['Bauart'] || row['ConstructionType'] || '';
     const runFlat = bauart.toUpperCase().includes('RF') || bauart.toUpperCase() === 'RUNFLAT';
+    
+    // Store construction type (R, ZR, -, B, D)
+    const construction = bauart.trim() || undefined;
 
     // 3PMSF (3-Peak Mountain Snowflake)
     const threePMSF = parseBoolean(row['3PMSF'] || row['three_pmsf'] || row['ThreePMSF']);
@@ -167,6 +170,7 @@ export function mapTyreSystemCSV(row: Record<string, string>): TireCatalogData |
       speedIndex: row['Speedindex'] || row['SpeedIndex'] || undefined,
       runFlat,
       threePMSF,
+      construction,
       labelFuelEfficiency,
       labelWetGrip,
       labelNoise,

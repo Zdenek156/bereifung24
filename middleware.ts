@@ -11,7 +11,7 @@ const STATIC_ROUTES = [
   '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
   '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/app-download', '/demo',
-  '/smart-tire-advisor', '/invoices', '/workshop'
+  '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer'
 ]
 
 // Map admin routes to application keys for permission checking
@@ -45,6 +45,8 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/gdpr': 'gdpr',
   '/admin/payment-methods': 'payment-methods',
   '/admin/support': 'support',
+  '/admin/supplier-management': 'lieferanten',
+  '/admin/freelancers': 'freelancers',
 }
 
 // API routes to application mapping
@@ -67,7 +69,9 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/payment-methods': 'payment-methods',
   '/api/admin/suppliers': 'reifenkatalog',
   '/api/admin/tire-catalog': 'reifenkatalog',
+  '/api/admin/supplier-management': 'lieferanten',
   '/api/admin/support': 'support',
+  '/api/admin/freelancers': 'freelancers',
 }
 
 /**
@@ -166,7 +170,7 @@ export async function middleware(request: NextRequest) {
   })
 
   // Check if user is authenticated for protected routes
-  if (!token && (url.pathname.startsWith('/admin') || url.pathname.startsWith('/mitarbeiter'))) {
+  if (!token && (url.pathname.startsWith('/admin') || url.pathname.startsWith('/mitarbeiter') || url.pathname.startsWith('/freelancer'))) {
     const loginUrl = url.clone()
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('callbackUrl', url.pathname)
@@ -205,6 +209,40 @@ export async function middleware(request: NextRequest) {
     if (url.pathname.startsWith('/sales')) {
       // Allow access - permission checking is done on the page level
       console.log(`[MIDDLEWARE] Allowing authenticated access to /sales`)
+      return NextResponse.next()
+    }
+
+    // Check /freelancer/* routes
+    if (url.pathname.startsWith('/freelancer')) {
+      if (userRole !== 'FREELANCER' && userRole !== 'ADMIN') {
+        console.log(`[MIDDLEWARE] Access denied to ${url.pathname} for role ${userRole}`)
+        const dashboardUrl = url.clone()
+        if (userRole === 'CUSTOMER') dashboardUrl.pathname = '/dashboard/customer'
+        else if (userRole === 'WORKSHOP') dashboardUrl.pathname = '/dashboard/workshop'
+        else dashboardUrl.pathname = '/dashboard'
+        return NextResponse.redirect(dashboardUrl)
+      }
+      console.log(`[MIDDLEWARE] Allowing FREELANCER access to ${url.pathname}`)
+      return NextResponse.next()
+    }
+
+    // Redirect FREELANCER from generic routes to /freelancer
+    if (userRole === 'FREELANCER' && (url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/'))) {
+      console.log(`[MIDDLEWARE] Redirecting FREELANCER from ${url.pathname} to /freelancer`)
+      const freelancerUrl = url.clone()
+      freelancerUrl.pathname = '/freelancer'
+      return NextResponse.redirect(freelancerUrl)
+    }
+
+    // Check /api/freelancer/* routes
+    if (url.pathname.startsWith('/api/freelancer/')) {
+      if (userRole !== 'FREELANCER' && userRole !== 'ADMIN') {
+        console.log(`[MIDDLEWARE] API access denied to ${url.pathname} for role ${userRole}`)
+        return NextResponse.json(
+          { error: 'Keine Berechtigung', message: 'Nur für Freelancer zugänglich' },
+          { status: 403 }
+        )
+      }
       return NextResponse.next()
     }
 
@@ -254,6 +292,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
+  // Skip landing page rewrite for static file extensions (public folder assets)
+  const hasFileExtension = /\.(png|jpg|jpeg|svg|gif|webp|ico|css|js|woff2?|ttf|eot|map|json|txt|xml|pdf|mp4|webm)$/i.test(url.pathname)
+  if (hasFileExtension) {
+    console.log('[MIDDLEWARE] Static file, passing through:', url.pathname)
+    return NextResponse.next()
+  }
+
   if (!isRootPath && !url.pathname.startsWith('/lp/')) {
     // This could be a landing page slug, rewrite to /lp/[slug]
     const slug = url.pathname.slice(1) // Remove leading /

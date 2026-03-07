@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import SessionWrapper from './components/SessionWrapper'
 import CookieBanner from '@/components/CookieBanner'
 import Analytics from './components/Analytics'
 import StructuredData from './components/StructuredData'
 
-const inter = Inter({ 
+const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
   display: 'swap',
   preload: true,
@@ -52,12 +52,13 @@ export default function RootLayout({
     <html lang="de" translate="no">
       <head>
         {/* Resource Hints for Performance */}
+        <link rel="preload" href="/bereifung24-hero-bg.webp" as="image" type="image/webp" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.google.com" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
       </head>
-      <body className={`${inter.className} notranslate`}>
+      <body className={`${plusJakartaSans.className} notranslate`}>
         <StructuredData />
         <SessionWrapper>
           <Analytics />

@@ -66,6 +66,10 @@ const nextConfig = {
         source: '/mitarbeiter/:path*',
         destination: '/admin/:path*',
       },
+      {
+        source: '/werkstatt/registrieren',
+        destination: '/register/workshop',
+      },
     ]
   },
 }

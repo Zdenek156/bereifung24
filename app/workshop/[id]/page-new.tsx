@@ -444,6 +444,15 @@ export default function WorkshopDetailPage() {
     if (tireBookingData?.selectedTire?.totalPrice) {
       total += tireBookingData.selectedTire.totalPrice
     }
+    // Motorcycle: front + rear tire prices
+    if (tireBookingData?.isMixedTires) {
+      if (tireBookingData?.selectedFrontTire?.totalPrice) {
+        total += tireBookingData.selectedFrontTire.totalPrice
+      }
+      if (tireBookingData?.selectedRearTire?.totalPrice) {
+        total += tireBookingData.selectedRearTire.totalPrice
+      }
+    }
     // Add disposal fee if selected
     if (tireBookingData?.hasDisposal && tireBookingData?.disposalPrice) {
       total += tireBookingData.disposalPrice
@@ -517,7 +526,9 @@ export default function WorkshopDetailPage() {
       },
       pricing: {
         servicePrice: basePrice,
-        tirePrice: tireBookingData?.selectedTire?.totalPrice || 0,
+        tirePrice: tireBookingData?.isMixedTires
+          ? (tireBookingData?.selectedFrontTire?.totalPrice || 0) + (tireBookingData?.selectedRearTire?.totalPrice || 0)
+          : (tireBookingData?.selectedTire?.totalPrice || 0),
         disposalPrice: tireBookingData?.hasDisposal ? (tireBookingData?.disposalPrice || 0) : 0,
         runflatPrice: tireBookingData?.hasRunflat ? (tireBookingData?.runflatPrice || 0) : 0,
         additionalServicesPrice: additionalServices.reduce((sum, s) => sum + s.price, 0),
@@ -742,14 +753,115 @@ export default function WorkshopDetailPage() {
             )}
 
             {/* Selected Service Info */}
-            {tireBookingData && (
+            {(tireBookingData || additionalServices.length > 0) && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 Gewählter Service</h2>
-                {/* Service details here */}
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p><strong>Service:</strong> {tireBookingData.serviceName}</p>
-                  {tireBookingData.selectedTire && (
-                    <p><strong>Reifen:</strong> {tireBookingData.selectedTire.brand}</p>
+                
+                <div className="space-y-4">
+                  {/* Service Type */}
+                  <div className="pb-4 border-b border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Serviceart</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {tireBookingData?.isMixedTires
+                        ? `Motorradreifen${tireBookingData?.selectedFrontTire && tireBookingData?.selectedRearTire ? ' (Vorder- & Hinterreifen)' : tireBookingData?.selectedFrontTire ? ' (Vorderreifen)' : ' (Hinterreifen)'}`
+                        : serviceType === 'TIRE_CHANGE' && tireBookingData?.tireCount
+                          ? `Reifenwechsel f\u00fcr ${tireBookingData.tireCount} Reifen`
+                          : tireBookingData?.serviceName || 'Service'
+                      }
+                    </p>
+                    
+                    {/* Additional info tags */}
+                    {(tireBookingData?.hasDisposal || tireBookingData?.hasRunflat) && (
+                      <div className="mt-3 space-y-1">
+                        {tireBookingData?.hasDisposal && (
+                          <p className="text-sm text-gray-600">+ Reifenentsorgung</p>
+                        )}
+                        {tireBookingData?.hasRunflat && (
+                          <p className="text-sm text-gray-600">+ Runflatzuschlag</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Additional services from modal */}
+                    {additionalServices.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        {additionalServices.map((service, idx) => (
+                          <p key={idx} className="text-sm text-gray-600">
+                            + {service.serviceName || service.name}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tire Details */}
+                  {(tireBookingData?.selectedTire || tireBookingData?.isMixedTires) && (
+                    <>
+                      {/* Mixed Tires (Motorcycle): Front and Rear separately */}
+                      {tireBookingData?.isMixedTires && (tireBookingData?.selectedFrontTire || tireBookingData?.selectedRearTire) ? (
+                        <>
+                          {tireBookingData?.selectedFrontTire && (
+                            <div className="pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 mb-2">🔹 Vorderreifen</p>
+                              <p className="text-base font-semibold text-gray-900">
+                                {tireBookingData.selectedFrontTire.quantity || 1}x {tireBookingData.selectedFrontTire.tire?.brand || tireBookingData.selectedFrontTire.brand}
+                                {(tireBookingData.selectedFrontTire.tire?.model || tireBookingData.selectedFrontTire.model) && ` ${tireBookingData.selectedFrontTire.tire?.model || tireBookingData.selectedFrontTire.model}`}
+                                {tireBookingData.tireDimensionsFront && (
+                                  <span>
+                                    {' '}
+                                    {tireBookingData.tireDimensionsFront.width}/{tireBookingData.tireDimensionsFront.height} R{tireBookingData.tireDimensionsFront.diameter}
+                                    {' '}
+                                    {tireBookingData.tireDimensionsFront.loadIndex || ''}{tireBookingData.tireDimensionsFront.speedIndex || ''}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-sm text-primary-600 font-semibold mt-2">
+                                {formatEUR(tireBookingData.selectedFrontTire.totalPrice || (tireBookingData.selectedFrontTire.pricePerTire * (tireBookingData.selectedFrontTire.quantity || 1)))}
+                              </p>
+                            </div>
+                          )}
+
+                          {tireBookingData?.selectedRearTire && (
+                            <div className="pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 mb-2">🔸 Hinterreifen</p>
+                              <p className="text-base font-semibold text-gray-900">
+                                {tireBookingData.selectedRearTire.quantity || 1}x {tireBookingData.selectedRearTire.tire?.brand || tireBookingData.selectedRearTire.brand}
+                                {(tireBookingData.selectedRearTire.tire?.model || tireBookingData.selectedRearTire.model) && ` ${tireBookingData.selectedRearTire.tire?.model || tireBookingData.selectedRearTire.model}`}
+                                {tireBookingData.tireDimensionsRear && (
+                                  <span>
+                                    {' '}
+                                    {tireBookingData.tireDimensionsRear.width}/{tireBookingData.tireDimensionsRear.height} R{tireBookingData.tireDimensionsRear.diameter}
+                                    {' '}
+                                    {tireBookingData.tireDimensionsRear.loadIndex || ''}{tireBookingData.tireDimensionsRear.speedIndex || ''}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-sm text-primary-600 font-semibold mt-2">
+                                {formatEUR(tireBookingData.selectedRearTire.totalPrice || (tireBookingData.selectedRearTire.pricePerTire * (tireBookingData.selectedRearTire.quantity || 1)))}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      ) : tireBookingData?.selectedTire && (
+                        /* Standard Tires (PKW non-mixed) */
+                        <div className="pb-4 border-b border-gray-200">
+                          <p className="text-sm text-gray-600 mb-2">Ausgew\u00e4hlte Reifen</p>
+                          <p className="text-base font-semibold text-gray-900">
+                            {tireBookingData?.tireCount && `${tireBookingData.tireCount}x `}
+                            {tireBookingData.selectedTire.tire?.brand || tireBookingData.selectedTire.brand}
+                            {(tireBookingData.selectedTire.tire?.model || tireBookingData.selectedTire.model) && ` ${tireBookingData.selectedTire.tire?.model || tireBookingData.selectedTire.model}`}
+                            {tireBookingData.tireDimensions && (
+                              <span>
+                                {' '}
+                                {tireBookingData.tireDimensions.width}/{tireBookingData.tireDimensions.height} R{tireBookingData.tireDimensions.diameter}
+                                {' '}
+                                {tireBookingData.tireDimensions.loadIndex || ''}{tireBookingData.tireDimensions.speedIndex || ''}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -890,7 +1002,7 @@ export default function WorkshopDetailPage() {
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 mb-1">Gesamtpreis</p>
                   <p className="text-3xl font-bold text-gray-900">{formatEUR(calculateTotalPrice())}</p>
-                  {tireBookingData?.selectedTire && (
+                  {(tireBookingData?.selectedTire || (tireBookingData?.isMixedTires && (tireBookingData?.selectedFrontTire || tireBookingData?.selectedRearTire))) && (
                     <p className="text-xs text-gray-500 mt-1">inkl. Reifen & Service</p>
                   )}
                 </div>
@@ -898,13 +1010,26 @@ export default function WorkshopDetailPage() {
                 {/* Service Summary */}
                 <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Service</span>
+                    <span className="text-gray-600">{tireBookingData?.isMixedTires ? 'Montage' : 'Service'}</span>
                     <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
                   </div>
-                  {tireBookingData?.selectedTire && (
+                  {/* PKW: tire count x price */}
+                  {tireBookingData?.selectedTire && !tireBookingData?.isMixedTires && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Reifen</span>
+                      <span className="text-gray-600">{tireBookingData.tireCount || 4}× Reifen</span>
                       <span className="font-medium text-gray-900">{formatEUR(tireBookingData.selectedTire.totalPrice)}</span>
+                    </div>
+                  )}
+                  {/* Motorcycle: combined tire price */}
+                  {tireBookingData?.isMixedTires && (tireBookingData?.selectedFrontTire || tireBookingData?.selectedRearTire) && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{(tireBookingData?.selectedFrontTire ? 1 : 0) + (tireBookingData?.selectedRearTire ? 1 : 0)}× Reifen</span>
+                      <span className="font-medium text-gray-900">
+                        {formatEUR(
+                          (tireBookingData.selectedFrontTire?.totalPrice || 0) +
+                          (tireBookingData.selectedRearTire?.totalPrice || 0)
+                        )}
+                      </span>
                     </div>
                   )}
                   {tireBookingData?.hasDisposal && tireBookingData?.disposalPrice > 0 && (

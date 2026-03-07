@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
           include: {
             customer: true,
             workshop: true,
+            freelancer: true,
           }
         })
 
@@ -88,12 +89,20 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
+          // Check FREELANCER status
+          if (user.role === 'FREELANCER' && user.freelancer) {
+            if (user.freelancer.status !== 'ACTIVE') {
+              throw new Error('Ihr Freelancer-Account ist nicht aktiv. Bitte kontaktieren Sie den Support.')
+            }
+          }
+
           console.log('[AUTH] User found, returning:', {
             id: user.id,
             email: user.email,
             role: user.role,
             customerId: user.customer?.id,
-            workshopId: user.workshop?.id
+            workshopId: user.workshop?.id,
+            freelancerId: user.freelancer?.id
           })
 
           return {
@@ -105,6 +114,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             customerId: user.customer?.id,
             workshopId: user.workshop?.id,
+            freelancerId: user.freelancer?.id,
             b24EmployeeId,
           } as any
         }
@@ -258,6 +268,7 @@ export const authOptions: NextAuthOptions = {
         token.employeeId = user.employeeId
         token.b24EmployeeId = user.b24EmployeeId
         token.isB24Employee = user.isB24Employee
+        token.freelancerId = user.freelancerId
       }
       
       return token
@@ -275,6 +286,7 @@ export const authOptions: NextAuthOptions = {
         session.user.workshopId = token.workshopId as string | undefined
         session.user.employeeId = token.employeeId as string | undefined
         session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
+        session.user.freelancerId = token.freelancerId as string | undefined
 
         console.log('[AUTH SESSION] Session created:', {
           email: session.user.email,

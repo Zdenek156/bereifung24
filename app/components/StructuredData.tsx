@@ -8,36 +8,41 @@ export default function StructuredData() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
-      // Organization/LocalBusiness Schema
+      // Organization + AutoRepair Platform Schema
       {
-        '@type': 'Organization',
+        '@type': ['Organization', 'AutoRepair'],
         '@id': 'https://bereifung24.de/#organization',
         name: 'Bereifung24',
+        alternateName: 'Bereifung24.de',
         url: 'https://bereifung24.de',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://bereifung24.de/logo.png',
+          url: 'https://bereifung24.de/logos/B24_Logo.png',
           width: 512,
           height: 512
         },
+        image: 'https://bereifung24.de/logos/B24_Logo.png',
         description: 'Deutschlands erste digitale Plattform für Reifenservice. Transparente Festpreise, geprüfte Werkstätten, Online-Buchung.',
+        slogan: 'Reifenservice zum Festpreis – transparent, digital, geprüft.',
         address: {
           '@type': 'PostalAddress',
           addressCountry: 'DE'
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '5.0',
-          bestRating: '5',
-          worstRating: '1',
-          ratingCount: '100'
+        areaServed: {
+          '@type': 'Country',
+          name: 'Deutschland'
         },
+        knowsLanguage: 'de',
         contactPoint: {
           '@type': 'ContactPoint',
           contactType: 'customer service',
           email: 'info@bereifung24.de',
           availableLanguage: ['de']
-        }
+        },
+        sameAs: [
+          'https://www.facebook.com/people/Bereifung24/61552512005883/',
+          'https://www.instagram.com/bereifung24/'
+        ]
       },
       
       // Website Schema

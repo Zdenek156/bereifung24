@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Get workshop and landing page
     const workshop = await prisma.workshop.findUnique({
       where: { userId: session.user.id },
-      include: { landingPage: true }
+      include: { landingPage: true, user: { select: { city: true } } }
     })
 
     if (!workshop || !workshop.landingPage) {
@@ -74,10 +74,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate unique filename
+    // Generate SEO-friendly filename
     const timestamp = Date.now()
     const extension = file.name.split('.').pop()
-    const filename = `hero-${workshop.id}-${timestamp}.${extension}`
+    const slugName = (workshop.companyName || 'werkstatt')
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const slugCity = (workshop.user?.city || '')
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const filename = `werkstatt-${slugName}${slugCity ? `-${slugCity}` : ''}-hero-${timestamp}.${extension}`
     const filepath = join(uploadDir, filename)
 
     // Convert file to buffer and save

@@ -101,7 +101,7 @@ export default function WorkshopServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [selectedServiceType, setSelectedServiceType] = useState('')
-  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [refrigerantPrice, setRefrigerantPrice] = useState<string>('')
   const [runFlatSurcharge, setRunFlatSurcharge] = useState<string>('')
   const [disposalFee, setDisposalFee] = useState<string>('')
@@ -344,18 +344,6 @@ export default function WorkshopServicesPage() {
     }
   }
 
-  const toggleServiceExpand = (serviceId: string) => {
-    setExpandedServices(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(serviceId)) {
-        newSet.delete(serviceId)
-      } else {
-        newSet.add(serviceId)
-      }
-      return newSet
-    })
-  }
-
   const handleEdit = (service: Service) => {
     setEditingService(service)
     setSelectedServiceType(service.serviceType)
@@ -427,8 +415,6 @@ export default function WorkshopServicesPage() {
       initializePackages(service.serviceType)
     }
     
-    // Expand the service when editing
-    setExpandedServices(new Set([service.id]))
     setShowAddForm(true)
     
     setTimeout(() => {
@@ -498,7 +484,6 @@ export default function WorkshopServicesPage() {
     setDisposalFee('')
     setEditingService(null)
     setShowAddForm(false)
-    setExpandedServices(new Set())
   }
 
   const usedServiceTypes = services.map(s => s.serviceType)
@@ -973,10 +958,11 @@ export default function WorkshopServicesPage() {
           </div>
         )}
 
-        {/* Services List */}
-        <div className="space-y-4">
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {services.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+            <div className="md:col-span-2 xl:col-span-3 bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
+              <div className="text-4xl mb-3">📦</div>
               <p className="text-gray-500 dark:text-gray-400 mb-4">Noch keine Services konfiguriert</p>
               {availableTypes.length > 0 && (
                 <button
@@ -988,209 +974,180 @@ export default function WorkshopServicesPage() {
               )}
             </div>
           ) : (
-            services.map(service => (
-              <div key={service.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {serviceTypeLabels[service.serviceType] || service.serviceType}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        service.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {service.isActive ? 'Aktiv' : 'Inaktiv'}
-                      </span>
-                    </div>
-                    
-                    {/* Refrigerant Price Info for Climate Service */}
-                    {service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml && (
-                      <div className="mb-3 text-sm text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
-                        💧 Kältemittel: {service.refrigerantPricePer100ml.toFixed(2)} € / 100ml
-                      </div>
-                    )}
+            services.map(service => {
+              const serviceColors: Record<string, { border: string; bg: string; icon: string; iconBg: string }> = {
+                TIRE_CHANGE: { border: 'border-l-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/10', icon: '🔄', iconBg: 'bg-blue-100 dark:bg-blue-900/30' },
+                WHEEL_CHANGE: { border: 'border-l-green-500', bg: 'bg-green-50 dark:bg-green-900/10', icon: '🔁', iconBg: 'bg-green-100 dark:bg-green-900/30' },
+                TIRE_REPAIR: { border: 'border-l-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/10', icon: '🔧', iconBg: 'bg-orange-100 dark:bg-orange-900/30' },
+                MOTORCYCLE_TIRE: { border: 'border-l-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/10', icon: '🏍️', iconBg: 'bg-purple-100 dark:bg-purple-900/30' },
+                ALIGNMENT_BOTH: { border: 'border-l-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/10', icon: '📐', iconBg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+                CLIMATE_SERVICE: { border: 'border-l-cyan-500', bg: 'bg-cyan-50 dark:bg-cyan-900/10', icon: '❄️', iconBg: 'bg-cyan-100 dark:bg-cyan-900/30' },
+              }
+              const colors = serviceColors[service.serviceType] || { border: 'border-l-gray-400', bg: 'bg-gray-50', icon: '⚙️', iconBg: 'bg-gray-100' }
+              const activePackages = service.servicePackages?.filter(p => p.isActive) || []
+              const cheapest = activePackages.length > 0 ? Math.min(...activePackages.map(p => p.price)) : service.basePrice
+              const isMenuOpen = openMenuId === service.id
 
-                    {/* RunFlat Surcharge and Disposal Fee Info for Tire Change */}
-                    {service.serviceType === 'TIRE_CHANGE' && (
-                      <>
-                        {service.runFlatSurcharge && (
-                          <div className="mb-2 text-sm text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
-                            RunFlat-Aufpreis: +{service.runFlatSurcharge.toFixed(2)} € pro Reifen
-                          </div>
-                        )}
-                        {service.disposalFee && (
-                          <div className="mb-3 text-sm text-gray-700 dark:text-gray-300 bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                            ♻️ Altreifenentsorgung: {service.disposalFee.toFixed(2)} € pro Reifen
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Display Packages Summary or Details */}
-                    {service.servicePackages && service.servicePackages.length > 0 ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {service.servicePackages.filter(p => p.isActive).length} Servicepakete aktiv
-                          </p>
-                          <button
-                            onClick={() => toggleServiceExpand(service.id)}
-                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                          >
-                            {expandedServices.has(service.id) ? '▼ Details ausblenden' : '▶ Details anzeigen'}
-                          </button>
+              return (
+                <div
+                  key={service.id}
+                  className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4 ${colors.border} hover:shadow-md transition-shadow overflow-hidden`}
+                >
+                  {/* Card Header */}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg ${colors.iconBg} flex items-center justify-center text-xl`}>
+                          {colors.icon}
                         </div>
-                        
-                        {expandedServices.has(service.id) && (
-                          <div className="space-y-2 mt-3">
-                            {service.servicePackages.map(pkg => (
-                              <div key={pkg.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg flex items-center justify-between">
-                                <div className="flex-1">
-                                  <p className="font-semibold text-gray-900 dark:text-white">{pkg.name}</p>
-                                  {pkg.description && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">{pkg.description}</p>
-                                  )}
-                                  <div className="flex gap-6 mt-2">
-                                    <span className="text-sm">
-                                      <span className="font-medium">Preis:</span> {pkg.price.toFixed(2)} €
-                                    </span>
-                                    <span className="text-sm">
-                                      <span className="font-medium">Dauer:</span> {pkg.durationMinutes} Min.
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Link
-                                    href={`/services/${{
-                                      WHEEL_CHANGE: 'raederwechsel',
-                                      TIRE_CHANGE: 'reifenwechsel',
-                                      TIRE_REPAIR: 'reifenreparatur',
-                                      MOTORCYCLE_TIRE: 'motorradreifen',
-                                      ALIGNMENT_BOTH: 'achsvermessung',
-                                      CLIMATE_SERVICE: 'klimaservice'
-                                    }[service.serviceType] || '#'}`}
-                                    target="_blank"
-                                    className="px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-200 rounded text-xs font-medium"
-                                    title="Details zu diesem Service anzeigen"
-                                  >
-                                    ℹ️ Info
-                                  </Link>
-                                  <button
-                                    onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
-                                    className={`px-3 py-1 rounded text-xs font-medium ${
-                                      pkg.isActive 
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                    }`}
-                                  >
-                                    {pkg.isActive ? 'Aktiv' : 'Inaktiv'}
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
+                            {serviceTypeLabels[service.serviceType] || service.serviceType}
+                          </h3>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            service.isActive 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                              : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                          }`}>
+                            {service.isActive ? '● Aktiv' : '○ Inaktiv'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 3-Dot Menu */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenMenuId(isMenuOpen ? null : service.id)
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+                        {isMenuOpen && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                            <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-20 py-1">
+                              <button
+                                onClick={() => { handleEdit(service); setOpenMenuId(null) }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                Bearbeiten
+                              </button>
+                              <button
+                                onClick={() => { toggleActive(service); setOpenMenuId(null) }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2"
+                              >
+                                {service.isActive ? (
+                                  <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                    Deaktivieren
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Aktivieren
+                                  </>
+                                )}
+                              </button>
+                              <div className="border-t border-gray-100 dark:border-gray-600 my-1" />
+                              <button
+                                onClick={() => { handleDelete(service.id); setOpenMenuId(null) }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                Löschen
+                              </button>
+                            </div>
+                          </>
                         )}
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Einzelservice
-                          </p>
-                          <button
-                            onClick={() => toggleServiceExpand(service.id)}
-                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    </div>
+                  </div>
+
+                  {/* Card Body — Packages as mini-cards */}
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+                    {service.servicePackages && service.servicePackages.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Pakete</p>
+                        {service.servicePackages.map(pkg => (
+                          <div
+                            key={pkg.id}
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
+                              pkg.isActive
+                                ? `${colors.bg} border border-gray-200 dark:border-gray-600`
+                                : 'bg-gray-50 dark:bg-gray-700/50 border border-dashed border-gray-200 dark:border-gray-600 opacity-60'
+                            }`}
                           >
-                            {expandedServices.has(service.id) ? '▼ Details ausblenden' : '▶ Details anzeigen'}
-                          </button>
-                        </div>
-                        {expandedServices.has(service.id) && (
-                          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Basispreis:</span>
-                                <span className="text-sm">{service.basePrice.toFixed(2)} €</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Dauer:</span>
-                                <span className="text-sm">{service.durationMinutes} Min.</span>
-                              </div>
-                              {service.basePrice4 && (
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                  <span className="text-sm font-medium">Preis (4 Räder):</span>
-                                  <span className="text-sm">{service.basePrice4.toFixed(2)} €</span>
-                                </div>
-                              )}
-                              {service.durationMinutes4 && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">Dauer (4 Räder):</span>
-                                  <span className="text-sm">{service.durationMinutes4} Min.</span>
-                                </div>
-                              )}
-                              {service.balancingPrice && (
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                  <span className="text-sm font-medium">Wuchten:</span>
-                                  <span className="text-sm">{service.balancingPrice.toFixed(2)} € ({service.balancingMinutes} Min.)</span>
-                                </div>
-                              )}
-                              {service.storagePrice && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">Einlagerung:</span>
-                                  <span className="text-sm">{service.storagePrice.toFixed(2)} €</span>
-                                </div>
-                              )}
-                              {service.refrigerantPricePer100ml && (
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                  <span className="text-sm font-medium">Kältemittel:</span>
-                                  <span className="text-sm">{service.refrigerantPricePer100ml.toFixed(2)} € / 100ml</span>
-                                </div>
-                              )}
-                              {service.runFlatSurcharge && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">RunFlat-Aufpreis:</span>
-                                  <span className="text-sm">{service.runFlatSurcharge.toFixed(2)} €</span>
-                                </div>
-                              )}
-                              {service.disposalFee && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">Entsorgungsgebühr:</span>
-                                  <span className="text-sm">{service.disposalFee.toFixed(2)} €</span>
-                                </div>
-                              )}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <button
+                                onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
+                                className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  pkg.isActive
+                                    ? 'border-green-500 bg-green-500'
+                                    : 'border-gray-300 dark:border-gray-500 hover:border-green-400'
+                                }`}
+                                title={pkg.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                              >
+                                {pkg.isActive && (
+                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </button>
+                              <span className={`font-medium truncate ${pkg.isActive ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400 line-through'}`}>
+                                {pkg.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                              <span className="text-[10px] text-gray-400 dark:text-gray-500">{pkg.durationMinutes} Min.</span>
+                              <span className={`font-bold ${pkg.isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'}`}>
+                                {pkg.price.toFixed(2).replace('.', ',')} €
+                              </span>
                             </div>
                           </div>
-                        )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Einzelservice</span>
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
+                          {service.basePrice > 0 ? `${service.basePrice.toFixed(2).replace('.', ',')} €` : 'Auf Anfrage'}
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 ml-4">
-                    <button
-                      onClick={() => toggleActive(service)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                        service.isActive 
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                      }`}
-                    >
-                      {service.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                    </button>
-                    <button
-                      onClick={() => handleEdit(service)}
-                      className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium"
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      onClick={() => handleDelete(service.id)}
-                      className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 text-sm font-medium"
-                    >
-                      Löschen
-                    </button>
-                  </div>
+                  {/* Extra Info Footer */}
+                  {(service.serviceType === 'TIRE_CHANGE' && (service.runFlatSurcharge || service.disposalFee)) || 
+                   (service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml) ? (
+                    <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        {service.runFlatSurcharge && (
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                            RunFlat +{service.runFlatSurcharge.toFixed(2)} €
+                          </span>
+                        )}
+                        {service.disposalFee && (
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                            ♻️ Entsorgung {service.disposalFee.toFixed(2)} €
+                          </span>
+                        )}
+                        {service.refrigerantPricePer100ml && (
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                            💧 Kältemittel {service.refrigerantPricePer100ml.toFixed(2)} €/100ml
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </main>

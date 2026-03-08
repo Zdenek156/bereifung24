@@ -320,7 +320,7 @@ export default function ServiceFilters({
             {group.options.map((option) => (
               <label
                 key={option.packageType}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors min-h-[44px]"
               >
                 <input
                   type={group.multiSelect ? 'checkbox' : 'radio'}

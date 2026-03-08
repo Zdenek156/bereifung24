@@ -1148,8 +1148,96 @@ export default function WorkshopDetailPage() {
     )
   }
 
+  // Build structured data for this workshop (AutoRepair / LocalBusiness)
+  const workshopStructuredData = (() => {
+    const base: any = {
+      '@context': 'https://schema.org',
+      '@type': ['AutoRepair', 'LocalBusiness'],
+      '@id': `https://bereifung24.de/workshop/${workshopId}`,
+      name: workshop.name,
+      url: `https://bereifung24.de/workshop/${workshopId}`,
+      image: workshop.logoUrl || 'https://bereifung24.de/logos/B24_Logo.png',
+      description: workshop.description || `${workshop.name} – Geprüfte Werkstatt auf Bereifung24. Reifenservice mit Festpreisgarantie.`,
+      telephone: workshop.phone || undefined,
+      priceRange: '€€',
+      currenciesAccepted: 'EUR',
+      paymentAccepted: 'Cash, Credit Card, EC Card',
+      isAccessibleForFree: false,
+    }
+
+    // Address
+    if (workshop.city || workshop.street || workshop.postalCode) {
+      base.address = {
+        '@type': 'PostalAddress',
+        streetAddress: workshop.street || undefined,
+        postalCode: workshop.postalCode || undefined,
+        addressLocality: workshop.city || undefined,
+        addressCountry: 'DE',
+      }
+    }
+
+    // Geo coordinates (from Google Maps link if available)
+    if (workshop.latitude && workshop.longitude) {
+      base.geo = {
+        '@type': 'GeoCoordinates',
+        latitude: workshop.latitude,
+        longitude: workshop.longitude,
+      }
+    }
+
+    // AggregateRating from real reviews
+    if (workshop.rating > 0 && workshop.reviewCount > 0) {
+      base.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: workshop.rating.toFixed(1),
+        bestRating: '5',
+        worstRating: '1',
+        ratingCount: String(workshop.reviewCount),
+      }
+    }
+
+    // Services as offers
+    if (availableServices.length > 0) {
+      const allPrices = availableServices
+        .flatMap((s: any) => {
+          const prices = [s.basePrice]
+          if (s.servicePackages) {
+            s.servicePackages.forEach((p: any) => prices.push(p.price))
+          }
+          return prices
+        })
+        .filter((p: number) => p > 0)
+
+      if (allPrices.length > 0) {
+        base.makesOffer = {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'EUR',
+          lowPrice: Math.min(...allPrices).toFixed(2),
+          highPrice: Math.max(...allPrices).toFixed(2),
+          offerCount: String(allPrices.length),
+        }
+      }
+    }
+
+    // Parent organization
+    base.parentOrganization = {
+      '@type': 'Organization',
+      '@id': 'https://bereifung24.de/#organization',
+      name: 'Bereifung24',
+      url: 'https://bereifung24.de',
+    }
+
+    return base
+  })()
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Structured Data: AutoRepair / LocalBusiness */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(workshopStructuredData) }}
+      />
+
       {/* Compact Navigation */}
       <nav className="bg-primary-600 sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1163,6 +1251,8 @@ export default function WorkshopDetailPage() {
               <img
                 src="/logos/B24_Logo_weiss.png"
                 alt="Bereifung24"
+                width={160}
+                height={40}
                 className="h-10 w-auto object-contain"
               />
             </Link>

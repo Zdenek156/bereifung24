@@ -831,7 +831,7 @@ export default function SuchePage() {
                           {workshop.logoUrl ? (
                             <img
                               src={workshop.logoUrl}
-                              alt={workshop.name}
+                              alt={`Werkstatt ${workshop.name} – Reifenservice in der Nähe`}
                               className="w-full h-full object-cover"
                             />
                           ) : (

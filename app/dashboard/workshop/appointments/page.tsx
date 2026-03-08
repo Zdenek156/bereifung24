@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 
 interface Appointment {
   id: string
@@ -98,6 +97,7 @@ export default function WorkshopAppointments() {
   const [cancelReason, setCancelReason] = useState('')
   const [cancelReasonType, setCancelReasonType] = useState('')
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -395,22 +395,10 @@ export default function WorkshopAppointments() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/workshop"
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            >
-              ← Zurück zum Dashboard
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Termine & Kalender</h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Verwalten Sie Ihre Kundentermine
-              </p>
-            </div>
-          </div>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Termine & Kalender</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Verwalten Sie Ihre Kundentermine</p>
         </div>
       </header>
 
@@ -469,87 +457,59 @@ export default function WorkshopAppointments() {
           )}
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+        {/* Statistics - Inline Bar */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-2.5 mb-4 flex items-center gap-4 flex-wrap text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500 dark:text-gray-400">Gesamt</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">{stats.total}</span>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Anstehend</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.upcoming}</p>
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500 dark:text-gray-400">Anstehend</span>
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.upcoming}</span>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Abgeschlossen</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500 dark:text-gray-400">Abgeschlossen</span>
+            <span className="text-lg font-bold text-green-600 dark:text-green-400">{stats.completed}</span>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Storniert</p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</p>
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500 dark:text-gray-400">Storniert</span>
+            <span className="text-lg font-bold text-red-600 dark:text-red-400">{stats.cancelled}</span>
           </div>
         </div>
 
         {/* Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => setFilter('upcoming')}
-                className={`px-4 py-2 rounded-lg ${
-                  filter === 'upcoming'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Anstehend
-              </button>
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-lg ${
-                  filter === 'all'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Alle
-              </button>
-              <button
-                onClick={() => setFilter('completed')}
-                className={`px-4 py-2 rounded-lg ${
-                  filter === 'completed'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Abgeschlossen
-              </button>
-              <button
-                onClick={() => setFilter('cancelled')}
-                className={`px-4 py-2 rounded-lg ${
-                  filter === 'cancelled'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Storniert
-              </button>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 px-3 py-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <div className="flex gap-1.5 flex-wrap">
+              {(['upcoming', 'all', 'completed', 'cancelled'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                    filter === f
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {{ upcoming: 'Anstehend', all: 'Alle', completed: 'Abgeschlossen', cancelled: 'Storniert' }[f]}
+                </button>
+              ))}
             </div>
-
-            {/* Sortier-Dropdown */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="sortBy" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                Sortiert nach:
-              </label>
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="sortBy" className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Sortierung:</label>
               <select
                 id="sortBy"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500"
               >
-                <option value="date-asc">Nächster Termin (aufsteigend)</option>
-                <option value="date-desc">Nächster Termin (absteigend)</option>
-                <option value="price-asc">Preis (aufsteigend)</option>
-                <option value="price-desc">Preis (absteigend)</option>
+                <option value="date-asc">Datum ↑</option>
+                <option value="date-desc">Datum ↓</option>
+                <option value="price-asc">Preis ↑</option>
+                <option value="price-desc">Preis ↓</option>
               </select>
             </div>
           </div>
@@ -567,107 +527,131 @@ export default function WorkshopAppointments() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {sortedFilteredAppointments.map((apt) => (
-              <div key={apt.id} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                        {new Date(apt.appointmentDate).toLocaleDateString('de-DE', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </h3>
-                      {getStatusBadge(apt.status)}
+          <div className="space-y-1.5">
+            {sortedFilteredAppointments.map((apt) => {
+              const isExpanded = expandedId === apt.id
+              const statusColors: Record<string, string> = {
+                RESERVED: 'border-l-yellow-400',
+                CONFIRMED: 'border-l-blue-500',
+                COMPLETED: 'border-l-green-500',
+                CANCELLED: 'border-l-red-500',
+                NO_SHOW: 'border-l-orange-500',
+              }
+              // Resolve price + customer name for compact row
+              let displayPrice: number | null = null
+              let paymentLabel = ''
+              let isManualEntry = false
+              let manualPrice: number | null = null
+              let customerName = ''
+              let serviceName = ''
+              try {
+                if (apt.customerNotes) {
+                  const cd = JSON.parse(apt.customerNotes)
+                  if (cd.manualEntry) {
+                    isManualEntry = true
+                    manualPrice = cd.price || null
+                    customerName = cd.customerName || ''
+                  }
+                }
+              } catch {}
+              if (apt.isDirectBooking && apt.totalPrice) {
+                displayPrice = apt.totalPrice
+                paymentLabel = '✓ PayPal'
+              } else if (isManualEntry && manualPrice) {
+                displayPrice = manualPrice
+                paymentLabel = 'Manuell'
+              } else if (apt.offer) {
+                displayPrice = apt.offer.price
+                paymentLabel = apt.paymentStatus === 'PAID' ? 'Bezahlt' : 'Ausstehend'
+              }
+              if (!customerName && apt.customer) {
+                customerName = `${apt.customer.user.firstName} ${apt.customer.user.lastName}`
+              }
+              if (!customerName && apt.notes) {
+                try { const nd = JSON.parse(apt.notes); customerName = nd.customerName || '' } catch {}
+              }
+              if (apt.isDirectBooking) {
+                serviceName = getServiceTypeName(apt.serviceType || '')
+              } else if (isManualEntry && apt.offer) {
+                serviceName = apt.offer.tireModel || ''
+              } else if (apt.offer) {
+                serviceName = `${apt.offer.tireBrand || ''} ${apt.offer.tireModel || ''}`.trim()
+              }
+
+              return (
+              <div
+                key={apt.id}
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 border-l-4 ${statusColors[apt.status] || 'border-l-gray-300'} overflow-hidden`}
+              >
+                {/* Compact row — always visible */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : apt.id)}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                            {new Date(apt.appointmentDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}, {apt.appointmentTime}
+                          </span>
+                          {getStatusBadge(apt.status)}
+                          {isManualEntry && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">Manuell</span>
+                          )}
+                          {apt.isDirectBooking && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">PayPal</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {customerName && <span className="truncate max-w-[150px]">{customerName}</span>}
+                          {customerName && serviceName && <span>·</span>}
+                          {serviceName && <span className="truncate max-w-[200px]">{serviceName}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Uhrzeit: {apt.appointmentTime} ({apt.estimatedDuration} Minuten)
-                    </p>
-                    {apt.createdAt && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                        Erstellt: {new Date(apt.createdAt).toLocaleDateString('de-DE', {
-                          day: '2-digit',
-                          month: '2-digit', 
-                          year: 'numeric'
-                        })} um {new Date(apt.createdAt).toLocaleTimeString('de-DE', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-3 shrink-0">
+                      {displayPrice !== null && (
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">
+                          {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(displayPrice)}
+                        </span>
+                      )}
+                      <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {(() => {
-                      // Check if manual entry with price in customerNotes
-                      let isManualEntry = false
-                      let manualPrice = null
-                      try {
-                        if (apt.customerNotes) {
-                          const customerData = JSON.parse(apt.customerNotes)
-                          if (customerData.manualEntry) {
-                            isManualEntry = true
-                            manualPrice = customerData.price || null
-                          }
-                        }
-                      } catch {}
+                </button>
 
-                      // DirectBooking (PayPal) - zeige Preis und Badge
-                      if (apt.isDirectBooking && apt.totalPrice) {
-                        return (
-                          <>
-                            <p className="text-xl font-bold text-primary-600">
-                              {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(apt.totalPrice)}
-                            </p>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 mt-1">
-                              ✓ Bezahlt (PayPal)
-                            </span>
-                          </>
-                        )
-                      }
-
-                      // Manueller Termin - zeige Preis und Badge
-                      if (isManualEntry) {
-                        return (
-                          <>
-                            {manualPrice ? (
-                              <p className="text-xl font-bold text-primary-600">
-                                {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(manualPrice)}
-                              </p>
-                            ) : null}
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 mt-1">
-                              Manueller Termin
-                            </span>
-                          </>
-                        )
-                      }
-
-                      // Normaler Termin mit Offer
-                      if (apt.offer) {
-                        return (
-                          <>
-                            <p className="text-xl font-bold text-primary-600">
-                              {apt.offer.price.toFixed(2)} €
-                            </p>
-                            <p className={`text-sm ${
-                              apt.paymentStatus === 'PAID' ? 'text-green-600' : 'text-orange-600'
-                            }`}>
-                              {apt.paymentStatus === 'PAID' ? 'Bezahlt' : 'Ausstehend'}
-                            </p>
-                          </>
-                        )
-                      }
-
-                      return null
-                    })()}
+                {/* Expanded details */}
+                {isExpanded && (
+                <div className="px-3 pb-3 border-t border-gray-100 dark:border-gray-700">
+                  {/* Date/Time details */}
+                  <div className="pt-2 mb-2 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap gap-x-4 gap-y-0.5">
+                    <span>{new Date(apt.appointmentDate).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <span>{apt.appointmentTime} ({apt.estimatedDuration} Min.)</span>
+                    {apt.createdAt && <span>Erstellt: {new Date(apt.createdAt).toLocaleDateString('de-DE')} {new Date(apt.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>}
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                  {/* Payment info */}
+                  {displayPrice !== null && (
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-base font-bold text-primary-600">
+                        {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(displayPrice)}
+                      </span>
+                      {paymentLabel && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                          paymentLabel.includes('Bezahlt') || paymentLabel.includes('PayPal') ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                          paymentLabel === 'Manuell' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200' :
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                        }`}>{paymentLabel}</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                   <div>
-                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Kunde</h4>
+                    <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Kunde</h4>
                     {(() => {
                       // Prüfe zuerst customerNotes (für manuelle Termine)
                       if (apt.customerNotes) {
@@ -767,13 +751,13 @@ export default function WorkshopAppointments() {
                     {/* DirectBooking (PayPal) */}
                     {apt.isDirectBooking ? (
                       <>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
+                        <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Service</h4>
                         <p className="text-sm text-gray-900 font-medium">
                           {getServiceTypeName(apt.serviceType || '')}
                         </p>
                         {apt.vehicle && (
                           <>
-                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">Fahrzeug</h4>
+                            <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5 mt-2">Fahrzeug</h4>
                             <p className="text-sm text-gray-900">
                               {apt.vehicle.make} {apt.vehicle.model} ({apt.vehicle.year})
                             </p>
@@ -786,7 +770,7 @@ export default function WorkshopAppointments() {
                         )}
                         {apt.totalPrice && (
                           <>
-                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">Preis</h4>
+                            <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5 mt-2">Preis</h4>
                             <p className="text-sm text-gray-900 font-semibold">
                               {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(apt.totalPrice)}
                             </p>
@@ -797,7 +781,7 @@ export default function WorkshopAppointments() {
                         )}
                         {apt.tireBrand && apt.tireModel && (
                           <>
-                            <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">🛞 Reifen</h4>
+                            <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5 mt-2">🛞 Reifen</h4>
                             <p className="text-sm text-gray-900 font-medium">
                               {apt.tireBrand} {apt.tireModel}
                             </p>
@@ -834,19 +818,19 @@ export default function WorkshopAppointments() {
                     ) : apt.tireRequest && apt.offer ? (
                       (() => {
                         // Prüfe ob es ein manueller Termin ist (customerNotes als JSON)
-                        let isManualEntry = false
+                        let isManualEntryLocal = false
                         try {
                           if (apt.customerNotes) {
                             const customerData = JSON.parse(apt.customerNotes)
-                            isManualEntry = customerData.manualEntry === true
+                            isManualEntryLocal = customerData.manualEntry === true
                           }
                         } catch {}
 
                         // Wenn es ein manueller Termin ist, zeige Service-Info statt Reifen-Dummy-Daten
-                        if (isManualEntry) {
+                        if (isManualEntryLocal) {
                           return (
                             <>
-                              <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
+                              <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Service</h4>
                               <p className="text-sm text-gray-900 font-medium">
                                 {apt.offer.tireModel}
                               </p>
@@ -862,7 +846,7 @@ export default function WorkshopAppointments() {
                         // Normaler Reifen-Termin
                         return (
                           <>
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">Reifen</h4>
+                            <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Reifen</h4>
                             <p className="text-sm text-gray-900 font-medium">
                               {apt.offer.tireBrand} {apt.offer.tireModel}
                             </p>
@@ -887,13 +871,13 @@ export default function WorkshopAppointments() {
                             <>
                               {notesData.serviceDescription && (
                                 <>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Service</h4>
+                                  <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Service</h4>
                                   <p className="text-sm text-gray-900">{notesData.serviceDescription}</p>
                                 </>
                               )}
                               {notesData.vehicleInfo && (
                                 <>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-2 mt-3">Fahrzeug</h4>
+                                  <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5 mt-2">Fahrzeug</h4>
                                   <p className="text-sm text-gray-900">{notesData.vehicleInfo}</p>
                                 </>
                               )}
@@ -990,17 +974,20 @@ export default function WorkshopAppointments() {
 
                 {/* Stornieren Button - nur für zukünftige ausstehende/bestätigte Termine */}
                 {(apt.status === 'CONFIRMED' || apt.status === 'PENDING') && isUpcoming(apt.appointmentDate) && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <button
-                      onClick={() => handleCancelAppointment(apt.id)}
-                      className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      onClick={(e) => { e.stopPropagation(); handleCancelAppointment(apt.id) }}
+                      className="px-3 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
                     >
                       Termin {apt.status === 'PENDING' ? 'ablehnen' : 'stornieren'}
                     </button>
                   </div>
                 )}
+                </div>
+                )}
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>

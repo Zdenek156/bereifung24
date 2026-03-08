@@ -61,7 +61,8 @@ const VARIANTS: { id: WidgetVariant; label: string; description: string; icon: s
 
 export default function WidgetPage() {
   const { data: session } = useSession()
-  const { isDark } = useTheme()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const [config, setConfig] = useState<WidgetConfig>({
     variant: 'badge',
     theme: 'light',
@@ -141,16 +142,15 @@ export default function WidgetPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          🔌 Website-Widget
-        </h1>
-        <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          Binden Sie ein Widget auf Ihrer Website ein, um Bewertungen zu zeigen und Online-Buchungen zu erhalten.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">🔌 Website-Widget</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Widget auf Ihrer Website einbinden für Bewertungen und Online-Buchungen</p>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Left: Configuration */}
@@ -374,6 +374,7 @@ export default function WidgetPage() {
             </ul>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

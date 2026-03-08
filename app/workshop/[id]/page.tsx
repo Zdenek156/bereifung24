@@ -363,6 +363,12 @@ export default function WorkshopDetailPage() {
             // Auto-select vehicle from sessionStorage (set by search page)
             // Do NOT blindly auto-select first vehicle - user must explicitly choose
             if (userVehicles.length > 0 && !selectedVehicle) {
+              // Check URL param first (from TireStorageCard)
+              const urlVehicleId = new URLSearchParams(window.location.search).get('vehicleId')
+              if (urlVehicleId && userVehicles.find((v: any) => v.id === urlVehicleId)) {
+                console.log('🚗 [WORKSHOP] Using vehicle from URL param:', urlVehicleId)
+                setSelectedVehicle(urlVehicleId)
+              } else {
               // Check if vehicle was selected from tireBookingData
               const hasTireVehicle = sessionStorage.getItem('tireBookingData')
               if (hasTireVehicle) {
@@ -385,6 +391,7 @@ export default function WorkshopDetailPage() {
                     }
                   } catch (e) { /* ignore */ }
                 }
+              }
               }
             }
           }
@@ -535,6 +542,16 @@ export default function WorkshopDetailPage() {
   useEffect(() => {
     const loadBookingData = async () => {
       if (typeof window === 'undefined') return
+      
+      // If coming from TireStorageCard (fromStorageBookingId in URL), clear stale sessionStorage
+      // to prevent old data from overriding the URL params
+      const urlCheck = new URLSearchParams(window.location.search)
+      if (urlCheck.get('fromStorageBookingId')) {
+        sessionStorage.removeItem('additionalServices')
+        sessionStorage.removeItem('serviceBookingData')
+        sessionStorage.removeItem('tireBookingData')
+        console.log('📦 [WORKSHOP] Cleared sessionStorage for TireStorageCard flow')
+      }
       
       // Load tire booking data
       const savedData = sessionStorage.getItem('tireBookingData')
@@ -715,6 +732,50 @@ export default function WorkshopDetailPage() {
           }
         } catch (e) {
           console.error('Error loading service booking data:', e)
+        }
+      }
+
+      // Auto-add balancing/storage from URL params (TireStorageCard flow)
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlBalancing = urlParams.get('balancing') === 'true'
+      const urlStorage = urlParams.get('storage') === 'true'
+      if (urlBalancing || urlStorage) {
+        const servicesFromUrl: any[] = []
+        const currentServiceType = urlParams.get('service') || serviceType || 'WHEEL_CHANGE'
+        let wheelChangeBasicPrice = 0
+        for (const svc of availableServices) {
+          if (svc.serviceType === currentServiceType) {
+            const basicPkg = svc.servicePackages?.find((p: any) => p.packageType === 'basic' || p.packageType === 'four_tires')
+            if (basicPkg) wheelChangeBasicPrice = Number(basicPkg.price) || 0
+            break
+          }
+        }
+        if (urlBalancing) {
+          let name = 'Auswuchten', price = 0
+          for (const svc of availableServices) {
+            const pkg = svc.servicePackages?.find((p: any) => p.packageType === 'with_balancing')
+            if (pkg) { name = pkg.name || 'Auswuchten'; price = wheelChangeBasicPrice > 0 ? Math.max(0, Number(pkg.price) - wheelChangeBasicPrice) : Number(pkg.price); break }
+          }
+          servicesFromUrl.push({ serviceName: name, name, price, duration: 0, type: 'BALANCING', packageType: 'with_balancing', packageName: '' })
+        }
+        if (urlStorage) {
+          let name = 'Einlagerung', price = 0
+          for (const svc of availableServices) {
+            const pkg = svc.servicePackages?.find((p: any) => p.packageType === 'with_storage')
+            if (pkg) { name = pkg.name || 'Einlagerung'; price = wheelChangeBasicPrice > 0 ? Math.max(0, Number(pkg.price) - wheelChangeBasicPrice) : Number(pkg.price); break }
+          }
+          servicesFromUrl.push({ serviceName: name, name, price, duration: 0, type: 'STORAGE', packageType: 'with_storage', packageName: '' })
+        }
+        if (servicesFromUrl.length > 0) {
+          console.log('📦 [WORKSHOP] Auto-added services from URL params:', servicesFromUrl)
+          setAdditionalServices(prev => {
+            const existing = prev.map(s => s.type)
+            const newSvcs = servicesFromUrl.filter(s => !existing.includes(s.type))
+            if (newSvcs.length === 0) return prev
+            const merged = [...prev, ...newSvcs]
+            sessionStorage.setItem('additionalServices', JSON.stringify(merged))
+            return merged
+          })
         }
       }
     }
@@ -1131,7 +1192,10 @@ export default function WorkshopDetailPage() {
     
     sessionStorage.setItem('bookingData', JSON.stringify(bookingData))
     
-    const paymentUrl = `/workshop/${workshopId}/payment?date=${dateStr}&time=${selectedSlot.time}&vehicleId=${selectedVehicle}`
+    // Forward fromStorageBookingId from URL if present (from TireStorageCard)
+    const urlParams = new URLSearchParams(window.location.search)
+    const fsbi = urlParams.get('fromStorageBookingId')
+    const paymentUrl = `/workshop/${workshopId}/payment?date=${dateStr}&time=${selectedSlot.time}&vehicleId=${selectedVehicle}${fsbi ? `&fromStorageBookingId=${fsbi}` : ''}`
     
     if (session) {
       router.push(paymentUrl)

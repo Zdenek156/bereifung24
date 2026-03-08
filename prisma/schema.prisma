@@ -5684,6 +5684,10 @@ model DirectBooking {
   hasStorage   Boolean @default(false) @map("has_storage")
   hasDisposal  Boolean @default(false) @map("has_disposal")
 
+  // Tire Storage
+  storageLocation      String?  @map("storage_location") @db.VarChar(100) // Lagerort z.B. "Regal C-12"
+  fromStorageBookingId String?  @map("from_storage_booking_id") // Ref to original storage booking (Reifen-Rückholung)
+
   // Tire Details (for TIRE_CHANGE, TIRE_MOUNT services)
   tireBrand             String?  @map("tire_brand")
   tireModel             String?  @map("tire_model")

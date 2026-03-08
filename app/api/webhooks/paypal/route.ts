@@ -295,39 +295,43 @@ async function sendPaymentConfirmationEmails(booking: any, payment: any) {
       `
     })
     
-    // Email to workshop
-    await sendEmail({
-      to: booking.workshop.user.email,
-      subject: '💰 Zahlung eingegangen für Termin',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #16a34a;">Zahlung eingegangen</h2>
-          
-          <p>Hallo ${booking.workshop.companyName},</p>
-          
-          <p>Für folgenden Termin ist die Zahlung eingegangen:</p>
-          
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">📅 Termindetails</h3>
-            <p><strong>Datum:</strong> ${formattedDate}</p>
-            <p><strong>Uhrzeit:</strong> ${booking.appointmentTime} Uhr</p>
-            <p><strong>Kunde:</strong> ${booking.customer.user.firstName} ${booking.customer.user.lastName}</p>
-            <p><strong>Telefon:</strong> ${booking.customer.user.phone || '-'}</p>
+    // Email to workshop (if notifications enabled)
+    if (booking.workshop.emailNotifyBookings !== false) {
+      await sendEmail({
+        to: booking.workshop.user.email,
+        subject: '💰 Zahlung eingegangen für Termin',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #16a34a;">Zahlung eingegangen</h2>
+            
+            <p>Hallo ${booking.workshop.companyName},</p>
+            
+            <p>Für folgenden Termin ist die Zahlung eingegangen:</p>
+            
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">📅 Termindetails</h3>
+              <p><strong>Datum:</strong> ${formattedDate}</p>
+              <p><strong>Uhrzeit:</strong> ${booking.appointmentTime} Uhr</p>
+              <p><strong>Kunde:</strong> ${booking.customer.user.firstName} ${booking.customer.user.lastName}</p>
+              <p><strong>Telefon:</strong> ${booking.customer.user.phone || '-'}</p>
+            </div>
+            
+            <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #16a34a;">💳 Zahlungsinformation</h3>
+              <p><strong>Betrag:</strong> ${formattedAmount}</p>
+              <p><strong>Methode:</strong> PayPal</p>
+              <p><strong>Status:</strong> Bezahlt ✅</p>
+            </div>
+            
+            <p><strong>Der Kunde hat bereits bezahlt.</strong> Bitte erbringen Sie den Service wie vereinbart.</p>
+            
+            <p>Mit freundlichen Grüßen<br>Ihr Bereifung24-Team</p>
           </div>
-          
-          <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #16a34a;">💳 Zahlungsinformation</h3>
-            <p><strong>Betrag:</strong> ${formattedAmount}</p>
-            <p><strong>Methode:</strong> PayPal</p>
-            <p><strong>Status:</strong> Bezahlt ✅</p>
-          </div>
-          
-          <p><strong>Der Kunde hat bereits bezahlt.</strong> Bitte erbringen Sie den Service wie vereinbart.</p>
-          
-          <p>Mit freundlichen Grüßen<br>Ihr Bereifung24-Team</p>
-        </div>
-      `
-    })
+        `
+      })
+    } else {
+      console.log(`⏭️  Workshop has disabled booking notifications`)
+    }
     
     console.log('✅ Payment confirmation emails sent')
     

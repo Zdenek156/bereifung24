@@ -503,25 +503,20 @@ export default function WorkshopServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <Link href="/dashboard/workshop" className="text-primary-600 hover:text-primary-700 text-sm mb-2 inline-block">
-                ← Zurück zum Dashboard
-              </Link>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Services verwalten</h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Konfigurieren Sie Ihre Servicepakete mit individuellen Preisen und Dauern</p>
-            </div>
-            {!showAddForm && availableTypes.length > 0 && (
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-              >
-                + Service hinzufügen
-              </button>
-            )}
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Services verwalten</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Servicepakete mit individuellen Preisen und Dauern</p>
           </div>
+          {!showAddForm && availableTypes.length > 0 && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="px-3 py-1.5 text-xs font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              + Service hinzufügen
+            </button>
+          )}
         </div>
       </header>
 
@@ -535,37 +530,38 @@ export default function WorkshopServicesPage() {
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div ref={formRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-bold dark:text-white mb-6">
-              {editingService ? 'Service bearbeiten' : 'Neuer Service'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informationsbox */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">Services konfigurieren für direkte Online-Buchungen</h3>
-                    <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                      <p className="font-medium">Alle Services, die Sie hier hinzufügen, werden automatisch für Direktbuchungen aktiviert. Kunden können diese Services direkt online buchen und bezahlen.</p>
-                      <ul className="list-disc ml-6 mt-2 space-y-1">
-                        <li><strong>Wählen Sie einen Service-Typ:</strong> z.B. Reifenwechsel, Klimaservice, Achsvermessung</li>
-                        <li><strong>Konfigurieren Sie die Pakete:</strong> Legen Sie Preise und Dauern für jedes Paket fest</li>
-                        <li><strong>Aktivieren Sie die gewünschten Pakete:</strong> Nur aktivierte Pakete können von Kunden gebucht werden</li>
-                      </ul>
-                      <p className="mt-3 text-xs"><strong>⚡ Vorteil:</strong> Sofortige Zahlungen, keine Angebotserstellung mehr nötig, höhere Conversion-Rate</p>
-                    </div>
-                  </div>
+          <div ref={formRef} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+            {/* Form Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-primary-600 to-primary-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">
+                    {editingService ? 'Service bearbeiten' : 'Neuer Service'}
+                  </h2>
+                  <p className="text-xs text-primary-100">Kunden können aktivierte Services direkt online buchen</p>
+                </div>
+              </div>
+              <button type="button" onClick={resetForm} className="text-white/70 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Compact Info Banner */}
+              <div className="flex items-start gap-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-4 py-3">
+                <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                  <p className="font-medium">Service-Typ wählen → Pakete & Preise konfigurieren → Für Kunden freischalten</p>
+                  <p className="text-blue-500 dark:text-blue-400">⚡ Sofortige Online-Buchungen ohne Angebotserstellung</p>
                 </div>
               </div>
 
               {/* Service Type Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Service-Typ *
                 </label>
                 <select
@@ -573,7 +569,7 @@ export default function WorkshopServicesPage() {
                   onChange={(e) => handleServiceTypeChange(e.target.value)}
                   required
                   disabled={!!editingService}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm font-medium transition-colors"
                 >
                   <option value="">Bitte wählen...</option>
                   {(editingService ? availableServiceTypes : availableTypes).map(type => (
@@ -586,253 +582,247 @@ export default function WorkshopServicesPage() {
 
               {/* Refrigerant Price for Climate Service */}
               {selectedServiceType === 'CLIMATE_SERVICE' && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    Hinweis zur Kältemittelbefüllung
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-3">
-                    Wenn die Klimaanlage nicht voll ist, können zusätzliche Kosten für die Befüllung entstehen.
-                  </p>
-                  <div className="max-w-xs">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Preis pro 100ml Kältemittel (€) *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={refrigerantPrice}
-                      onChange={(e) => setRefrigerantPrice(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      placeholder="z.B. 5.00"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Dieser Preis wird dem Kunden angezeigt
-                    </p>
+                <div className="rounded-xl border-2 border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/10 overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-yellow-100/60 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+                    <span className="text-base">💧</span>
+                    <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-300">Kältemittel-Nachfüllung</h3>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Zusatzkosten bei unvollständiger Befüllung — wird dem Kunden transparent angezeigt.</p>
+                    <div className="max-w-xs">
+                      <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Preis pro 100ml (€) *</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={refrigerantPrice}
+                          onChange={(e) => setRefrigerantPrice(e.target.value)}
+                          required
+                          className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          placeholder="5.00"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* RunFlat Surcharge and Disposal Fee for Tire Change */}
               {selectedServiceType === 'TIRE_CHANGE' && (
-                <>
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      RunFlat-Reifen Aufpreis
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Geben Sie den Aufpreis pro Reifen für RunFlat-Reifen an. Dieser wird automatisch beim Angebot dazugerechnet, wenn der Kunde RunFlat-Reifen hat.
-                    </p>
-                    <div className="max-w-xs">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Aufpreis pro RunFlat-Reifen (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={runFlatSurcharge}
-                        onChange={(e) => setRunFlatSurcharge(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 5.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Dieser Aufpreis wird pro Reifen berechnet (optional)
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-100/60 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                      <span className="text-base">🛞</span>
+                      <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300">RunFlat-Aufpreis</h3>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Aufpreis pro Reifen — wird automatisch dazugerechnet</p>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Pro Reifen (€)</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={runFlatSurcharge}
+                            onChange={(e) => setRunFlatSurcharge(e.target.value)}
+                            className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            placeholder="5.00"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      ♻️ Altreifenentsorgung
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-3">
-                      Geben Sie die Kosten für die Entsorgung pro Altreifen an. Diese werden automatisch berechnet, wenn der Kunde die Entsorgung wünscht.
-                    </p>
-                    <div className="max-w-xs">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Entsorgungsgebühr pro Reifen (€)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={disposalFee}
-                        onChange={(e) => setDisposalFee(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                        placeholder="z.B. 3.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Dieser Betrag wird pro zu entsorgendem Reifen berechnet (optional)
-                      </p>
+                  <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-green-100/60 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
+                      <span className="text-base">♻️</span>
+                      <h3 className="text-sm font-bold text-green-800 dark:text-green-300">Altreifenentsorgung</h3>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Pro Reifen — wird berechnet wenn Kunde Entsorgung wählt</p>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Pro Reifen (€)</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={disposalFee}
+                            onChange={(e) => setDisposalFee(e.target.value)}
+                            className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            placeholder="3.00"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                      </div>
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
-              {/* Wheel Change Simple Configuration with Checkboxes */}
+              {/* Wheel Change Simple Configuration */}
               {selectedServiceType === 'WHEEL_CHANGE' && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={packages.base?.active !== false}
-                        onChange={(e) => handlePackageChange('base', 'active', e.target.checked)}
-                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          🎡 Räderwechsel Basis-Service
-                        </h3>
-                        <p className="text-sm text-gray-700">
-                          Geben Sie Preis und Dauer für das reine Umstecken der 4 Kompletträder an.
-                        </p>
-                      </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <span className="text-sm">🔁</span>
                     </div>
-                    {packages.base?.active && (
-                      <div className="grid grid-cols-2 gap-4 max-w-md">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Basis-Preis (€) *
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={packages.base?.price || ''}
-                            onChange={(e) => handlePackageChange('base', 'price', e.target.value)}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder="z.B. 55.00"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Dauer (Min.) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={packages.base?.duration || ''}
-                            onChange={(e) => handlePackageChange('base', 'duration', e.target.value)}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder="z.B. 60"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Räderwechsel konfigurieren</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Basis-Service + optionale Add-Ons</p>
+                    </div>
                   </div>
 
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <div className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={packages.balancing?.active !== false}
-                        onChange={(e) => handlePackageChange('balancing', 'active', e.target.checked)}
-                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          ⚖️ Wuchten (optional)
-                        </h3>
-                        <p className="text-sm text-gray-700">
-                          Preis und zusätzliche Dauer pro Rad. Wird automatisch mit 4 multipliziert wenn Kunde Wuchten wählt.
-                        </p>
-                      </div>
-                    </div>
-                    {packages.balancing?.active && (
-                      <div className="grid grid-cols-2 gap-4 max-w-md">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Preis pro Rad (€)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={packages.balancing?.price || ''}
-                            onChange={(e) => handlePackageChange('balancing', 'price', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder="z.B. 10.00"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Basis */}
+                    {(() => {
+                      const baseActive = packages.base?.active !== false
+                      return (
+                        <div className={`rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                          baseActive ? 'border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+                        }`}>
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <span>🎡</span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">Basis</span>
+                            </div>
+                            <button type="button" onClick={() => handlePackageChange('base', 'active', !baseActive)}
+                              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${baseActive ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${baseActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                          <div className="px-4 py-3 space-y-2">
+                            <p className="text-[10px] text-gray-500">4 Kompletträder umstecken</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Preis</label>
+                                <div className="relative">
+                                  <input type="number" step="0.01" min="0" value={packages.base?.price || ''}
+                                    onChange={(e) => handlePackageChange('base', 'price', e.target.value)} required={baseActive} disabled={!baseActive}
+                                    className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="55" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Dauer</label>
+                                <div className="relative">
+                                  <input type="number" min="1" value={packages.base?.duration || ''}
+                                    onChange={(e) => handlePackageChange('base', 'duration', e.target.value)} required={baseActive} disabled={!baseActive}
+                                    className="w-full pl-3 pr-9 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="60" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">Min</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Zeit pro Rad (Min.)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={packages.balancing?.duration || ''}
-                            onChange={(e) => handlePackageChange('balancing', 'duration', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder="z.B. 5"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">Wird × 4 gerechnet</p>
+                      )
+                    })()}
+
+                    {/* Wuchten */}
+                    {(() => {
+                      const balActive = packages.balancing?.active !== false
+                      return (
+                        <div className={`rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                          balActive ? 'border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+                        }`}>
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <span>⚖️</span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">Wuchten</span>
+                            </div>
+                            <button type="button" onClick={() => handlePackageChange('balancing', 'active', !balActive)}
+                              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${balActive ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${balActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                          <div className="px-4 py-3 space-y-2">
+                            <p className="text-[10px] text-gray-500">Pro Rad — wird ×4 multipliziert</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Preis/Rad</label>
+                                <div className="relative">
+                                  <input type="number" step="0.01" min="0" value={packages.balancing?.price || ''}
+                                    onChange={(e) => handlePackageChange('balancing', 'price', e.target.value)} disabled={!balActive}
+                                    className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="10" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Zeit/Rad</label>
+                                <div className="relative">
+                                  <input type="number" min="0" value={packages.balancing?.duration || ''}
+                                    onChange={(e) => handlePackageChange('balancing', 'duration', e.target.value)} disabled={!balActive}
+                                    className="w-full pl-3 pr-9 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="5" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">Min</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )
+                    })()}
+
+                    {/* Einlagerung */}
+                    {(() => {
+                      const storActive = packages.storage?.active !== false
+                      return (
+                        <div className={`rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                          storActive ? 'border-green-300 dark:border-green-600 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+                        }`}>
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <span>📦</span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">Einlagerung</span>
+                            </div>
+                            <button type="button" onClick={() => handlePackageChange('storage', 'active', !storActive)}
+                              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${storActive ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${storActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                          <div className="px-4 py-3 space-y-2">
+                            <p className="text-[10px] text-gray-500">Pro Saison — keine Extra-Dauer</p>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Preis</label>
+                              <div className="relative">
+                                <input type="number" step="0.01" min="0" value={packages.storage?.price || ''}
+                                  onChange={(e) => handlePackageChange('storage', 'price', e.target.value)} disabled={!storActive}
+                                  className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="50" />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
 
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={packages.storage?.active !== false}
-                        onChange={(e) => handlePackageChange('storage', 'active', e.target.checked)}
-                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          📦 Einlagerung (optional)
-                        </h3>
-                        <p className="text-sm text-gray-700">
-                          Preis für die Einlagerung der abmontierten Räder bis zur nächsten Saison.
-                        </p>
-                      </div>
-                    </div>
-                    {packages.storage?.active && (
-                      <div className="max-w-xs">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Einlagerungs-Preis (€)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={packages.storage?.price || ''}
-                          onChange={(e) => handlePackageChange('storage', 'price', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                          placeholder="z.B. 50.00"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Pro Saison (keine Extra-Dauer)</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm text-blue-900 dark:text-blue-200">
-                      <strong>Beispiel-Berechnung:</strong><br/>
-                      Kunde wählt Wuchten + Einlagerung:<br/>
-                      • Basis: {packages.base?.price || '0'} € + {packages.base?.duration || '0'} Min<br/>
+                  {/* Live Calculation */}
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 px-4 py-3">
+                    <p className="text-xs text-gray-600 dark:text-gray-300">
+                      <span className="font-semibold">📊 Beispiel-Buchung:</span> Basis {packages.base?.price || '0'} € / {packages.base?.duration || '0'} Min
                       {packages.balancing?.active && (
-                        <>• Wuchten: 4 × {packages.balancing?.price || '0'} € = {(parseFloat(packages.balancing?.price || '0') * 4).toFixed(2)} € + 4 × {packages.balancing?.duration || '0'} Min = {parseInt(packages.balancing?.duration || '0') * 4} Min<br/></>
+                        <> + Wuchten 4×{packages.balancing?.price || '0'} € = {(parseFloat(packages.balancing?.price || '0') * 4).toFixed(2)} €</>
                       )}
                       {packages.storage?.active && (
-                        <>• Einlagerung: {packages.storage?.price || '0'} €<br/></>
+                        <> + Einlagerung {packages.storage?.price || '0'} €</>
                       )}
-                      <strong>Gesamt: {(
-                        parseFloat(packages.base?.price || '0') +
-                        (packages.balancing?.active ? parseFloat(packages.balancing?.price || '0') * 4 : 0) +
-                        (packages.storage?.active ? parseFloat(packages.storage?.price || '0') : 0)
-                      ).toFixed(2)} € / {
-                        parseInt(packages.base?.duration || '0') +
-                        (packages.balancing?.active ? parseInt(packages.balancing?.duration || '0') * 4 : 0)
-                      } Min</strong>
+                      {' → '}
+                      <span className="font-bold text-primary-600 dark:text-primary-400">
+                        {(
+                          parseFloat(packages.base?.price || '0') +
+                          (packages.balancing?.active ? parseFloat(packages.balancing?.price || '0') * 4 : 0) +
+                          (packages.storage?.active ? parseFloat(packages.storage?.price || '0') : 0)
+                        ).toFixed(2)} € / {
+                          parseInt(packages.base?.duration || '0') +
+                          (packages.balancing?.active ? parseInt(packages.balancing?.duration || '0') * 4 : 0)
+                        } Min
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -840,116 +830,148 @@ export default function WorkshopServicesPage() {
 
               {/* Package Configuration */}
               {hasPackages && selectedServiceType && packageConfig.length > 0 && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Servicepakete konfigurieren
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {selectedServiceType === 'MOTORCYCLE_TIRE' 
-                      ? 'Legen Sie den Preis pro Motorradreifen-Montage fest. Bei 2 Reifen wird der Preis automatisch verdoppelt.'
-                      : 'Legen Sie für jedes Paket Preis und Dauer fest. Aktivierte Pakete können von Kunden gewählt werden.'
-                    }
-                  </p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Servicepakete konfigurieren</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {selectedServiceType === 'MOTORCYCLE_TIRE' 
+                          ? 'Preis pro Reifen — wird bei 2 Reifen automatisch verdoppelt'
+                          : 'Aktivierte Pakete können von Kunden direkt gebucht werden'
+                        }
+                      </p>
+                    </div>
+                  </div>
 
-                  <div className="space-y-6">
-                    {packageConfig.filter(pkg => !(selectedServiceType === 'MOTORCYCLE_TIRE' && pkg.type === 'disposal')).map(pkg => (
-                      <div key={pkg.type} className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div className="flex items-start gap-4">
-                          <input
-                            type="checkbox"
-                            checked={packages[pkg.type]?.active !== false}
-                            onChange={(e) => handlePackageChange(pkg.type, 'active', e.target.checked)}
-                            className="mt-1 h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                          />
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="md:col-span-1">
-                              <p className="font-semibold text-gray-900 dark:text-white">{pkg.name}</p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">{pkg.description}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {packageConfig.filter(pkg => !(selectedServiceType === 'MOTORCYCLE_TIRE' && pkg.type === 'disposal')).map(pkg => {
+                      const isActive = packages[pkg.type]?.active !== false
+                      return (
+                        <div
+                          key={pkg.type}
+                          className={`relative rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                            isActive
+                              ? 'border-primary-300 dark:border-primary-600 bg-white dark:bg-gray-800 shadow-sm'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+                          }`}
+                        >
+                          {/* Package Header */}
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div className="min-w-0">
+                              <p className={`font-semibold text-sm ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {pkg.name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{pkg.description}</p>
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Preis (€) *
-                              </label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={packages[pkg.type]?.price || ''}
-                                onChange={(e) => handlePackageChange(pkg.type, 'price', e.target.value)}
-                                required={packages[pkg.type]?.active !== false}
-                                disabled={packages[pkg.type]?.active === false}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
-                                placeholder="z.B. 89.00"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Dauer (Min.) *
-                              </label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={packages[pkg.type]?.duration || ''}
-                                onChange={(e) => handlePackageChange(pkg.type, 'duration', e.target.value)}
-                                required={packages[pkg.type]?.active !== false}
-                                disabled={packages[pkg.type]?.active === false}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
-                                placeholder="z.B. 60"
-                              />
+                            <button
+                              type="button"
+                              onClick={() => handlePackageChange(pkg.type, 'active', !isActive)}
+                              className={`relative flex-shrink-0 ml-3 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                                isActive ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                            >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                isActive ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
+                            </button>
+                          </div>
+
+                          {/* Price & Duration Inputs */}
+                          <div className="px-4 py-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                                  Preis (€)
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={packages[pkg.type]?.price || ''}
+                                    onChange={(e) => handlePackageChange(pkg.type, 'price', e.target.value)}
+                                    required={isActive}
+                                    disabled={!isActive}
+                                    className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400 transition-colors"
+                                    placeholder="0.00"
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                                  Dauer (Min.)
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={packages[pkg.type]?.duration || ''}
+                                    onChange={(e) => handlePackageChange(pkg.type, 'duration', e.target.value)}
+                                    required={isActive}
+                                    disabled={!isActive}
+                                    className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400 transition-colors"
+                                    placeholder="0"
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Min</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Motorcycle Disposal - nice green box like TIRE_CHANGE */}
+              {/* Motorcycle Disposal */}
               {selectedServiceType === 'MOTORCYCLE_TIRE' && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    ♻️ Altreifenentsorgung
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-3">
-                    Geben Sie die Kosten für die Entsorgung pro Motorradreifen an. Bei 2 Reifen wird der Betrag automatisch verdoppelt.
-                  </p>
-                  <div className="max-w-xs">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Entsorgungsgebühr pro Reifen (€)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={packages['disposal']?.price || ''}
-                      onChange={(e) => {
-                        handlePackageChange('disposal', 'price', e.target.value)
-                        // Auto-activate when price is entered (no checkbox in green box)
-                        if (e.target.value) handlePackageChange('disposal', 'active', true)
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                      placeholder="z.B. 3.50"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Dieser Betrag wird pro zu entsorgendem Reifen berechnet (optional)
-                    </p>
+                <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10 overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-green-100/60 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
+                    <span className="text-base">♻️</span>
+                    <h3 className="text-sm font-bold text-green-800 dark:text-green-300">Altreifenentsorgung</h3>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Pro Reifen — bei 2 Reifen automatisch verdoppelt</p>
+                    <div className="max-w-xs">
+                      <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Pro Reifen (€)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={packages['disposal']?.price || ''}
+                          onChange={(e) => {
+                            handlePackageChange('disposal', 'price', e.target.value)
+                            if (e.target.value) handlePackageChange('disposal', 'active', true)
+                          }}
+                          className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          placeholder="3.50"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                    </div>
                   </div>
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <button
                   type="submit"
                   disabled={!selectedServiceType || (hasPackages && Object.values(packages).filter(p => p.active).length === 0)}
-                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm shadow-sm hover:shadow transition-all"
                 >
-                  {editingService ? 'Aktualisieren' : 'Hinzufügen'}
+                  {editingService ? '✓ Aktualisieren' : '+ Hinzufügen'}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                  className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm transition-colors"
                 >
                   Abbrechen
                 </button>
@@ -1123,7 +1145,7 @@ export default function WorkshopServicesPage() {
                   </div>
 
                   {/* Extra Info Footer */}
-                  {(service.serviceType === 'TIRE_CHANGE' && (service.runFlatSurcharge || service.disposalFee)) || 
+                  {((service.serviceType === 'TIRE_CHANGE' || service.serviceType === 'MOTORCYCLE_TIRE') && (service.runFlatSurcharge || service.disposalFee)) || 
                    (service.serviceType === 'CLIMATE_SERVICE' && service.refrigerantPricePer100ml) ? (
                     <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
                       <div className="flex flex-wrap gap-x-3 gap-y-1">

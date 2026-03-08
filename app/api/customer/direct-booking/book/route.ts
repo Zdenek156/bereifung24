@@ -226,56 +226,60 @@ export async function POST(request: NextRequest) {
         console.error('[BOOK API] Error sending confirmation email:', emailError)
       }
 
-      // Send notification email to workshop
-      try {
-        const workshopTemplateContent = await prisma.emailTemplate.findFirst({
-          where: { key: 'direct_booking_workshop_notification' }
-        })
-        
-        if (workshopTemplateContent) {
-          const compiledWorkshopTemplate = Handlebars.compile(workshopTemplateContent.htmlContent)
+      // Send notification email to workshop (if enabled)
+      if (booking.workshop.emailNotifyBookings) {
+        try {
+          const workshopTemplateContent = await prisma.emailTemplate.findFirst({
+            where: { key: 'direct_booking_workshop_notification' }
+          })
           
-          const serviceTypes: any = {
-            WHEEL_CHANGE: 'Räderwechsel',
-            TIRE_REPAIR: 'Reifenreparatur',
-            WHEEL_ALIGNMENT: 'Achsvermessung',
-            AC_SERVICE: 'Klimaanlagen-Service',
-            OTHER: 'Sonstige Reifendienste'
+          if (workshopTemplateContent) {
+            const compiledWorkshopTemplate = Handlebars.compile(workshopTemplateContent.htmlContent)
+            
+            const serviceTypes: any = {
+              WHEEL_CHANGE: 'Räderwechsel',
+              TIRE_REPAIR: 'Reifenreparatur',
+              WHEEL_ALIGNMENT: 'Achsvermessung',
+              AC_SERVICE: 'Klimaanlagen-Service',
+              OTHER: 'Sonstige Reifendienste'
+            }
+            
+            const workshopEmailHtml = compiledWorkshopTemplate({
+              workshopName: booking.workshop.name,
+              customerName: booking.customer.name || 'Kunde',
+              customerEmail: booking.customer.email,
+              customerPhone: booking.customer.phone || 'Nicht angegeben',
+              bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
+              serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
+              appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }),
+              appointmentTime: booking.time,
+              vehicleBrand: booking.vehicle.brand,
+              vehicleModel: booking.vehicle.model,
+              licensePlate: booking.vehicle.licensePlate,
+              totalPrice: booking.totalPrice.toString(),
+              hasBalancing: booking.hasBalancing,
+              hasStorage: booking.hasStorage,
+              dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings`
+            })
+            
+            await sendEmail({
+              to: booking.workshop.email,
+              subject: `Neue Direktbuchung - ${serviceTypes[booking.serviceType] || booking.serviceType}`,
+              html: workshopEmailHtml
+            })
+            
+            console.log(`✅ Workshop notification sent to ${booking.workshop.email}`)
           }
-          
-          const workshopEmailHtml = compiledWorkshopTemplate({
-            workshopName: booking.workshop.name,
-            customerName: booking.customer.name || 'Kunde',
-            customerEmail: booking.customer.email,
-            customerPhone: booking.customer.phone || 'Nicht angegeben',
-            bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
-            serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
-            appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
-            appointmentTime: booking.time,
-            vehicleBrand: booking.vehicle.brand,
-            vehicleModel: booking.vehicle.model,
-            licensePlate: booking.vehicle.licensePlate,
-            totalPrice: booking.totalPrice.toString(),
-            hasBalancing: booking.hasBalancing,
-            hasStorage: booking.hasStorage,
-            dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings`
-          })
-          
-          await sendEmail({
-            to: booking.workshop.email,
-            subject: `Neue Direktbuchung - ${serviceTypes[booking.serviceType] || booking.serviceType}`,
-            html: workshopEmailHtml
-          })
-          
-          console.log(`✅ Workshop notification sent to ${booking.workshop.email}`)
+        } catch (workshopEmailError) {
+          console.error('[BOOK API] Error sending workshop notification:', workshopEmailError)
         }
-      } catch (workshopEmailError) {
-        console.error('[BOOK API] Error sending workshop notification:', workshopEmailError)
+      } else {
+        console.log(`⏭️  Workshop ${booking.workshopId} has disabled booking notifications`)
       }
 
       return NextResponse.json({

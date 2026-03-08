@@ -96,7 +96,9 @@ export async function POST(request: NextRequest) {
       supplierPurchasePriceRear,    // Echter EK vom Lieferanten
       supplierTotalPurchasePriceRear,  // Gesamt echter EK
       tireRunFlatRear,
-      tire3PMSFRear
+      tire3PMSFRear,
+      // Storage: explicit link from TireStorageCard
+      fromStorageBookingId: explicitFromStorageBookingId
     } = body
 
     // Check if mixed tires
@@ -217,6 +219,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Auto-detect stored tires: If customer books WHEEL_CHANGE at a workshop where they have stored tires
+    // IMPORTANT: Must match vehicleId to prevent cross-vehicle detection
+    // (e.g. Mercedes tires should NOT auto-link when booking for Skoda)
+    let fromStorageBookingId = explicitFromStorageBookingId || null
+    if (!fromStorageBookingId && (serviceType === 'WHEEL_CHANGE' || serviceType === 'TIRE_CHANGE')) {
+      try {
+        const storageBooking = await prisma.directBooking.findFirst({
+          where: {
+            customerId: customer.id,
+            workshopId,
+            vehicleId, // Only match tires stored for the SAME vehicle
+            hasStorage: true,
+            status: { in: ['COMPLETED', 'CONFIRMED'] }
+          },
+          orderBy: { date: 'desc' },
+          select: { id: true }
+        })
+        if (storageBooking) {
+          fromStorageBookingId = storageBooking.id
+          console.log('📦 [RESERVE] Auto-detected stored tires for same vehicle:', fromStorageBookingId)
+        }
+      } catch (err) {
+        console.error('[RESERVE] Error checking stored tires:', err)
+      }
+    }
+
     // Create temporary reservation (expires in 10 minutes)
     // 
     // IMPORTANT: date field stores the booking date as YYYY-MM-DD without timezone conversion
@@ -328,7 +356,8 @@ export async function POST(request: NextRequest) {
         } : null),
         status: 'RESERVED',
         reservedUntil: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
-        paymentStatus: 'PENDING'
+        paymentStatus: 'PENDING',
+        fromStorageBookingId
       }
     })
 

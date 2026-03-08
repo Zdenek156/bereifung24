@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Car, User, Package, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Calendar, Car, User, Package, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface Booking {
   id: string
@@ -62,6 +62,9 @@ interface Booking {
     year: number
     licensePlate: string | null
   }
+  // Storage
+  storageLocation: string | null
+  fromStorageBookingId: string | null
   review: {
     id: string
     rating: number
@@ -88,18 +91,25 @@ const statusLabels: Record<string, string> = {
   CANCELLED: 'Storniert'
 }
 
-const statusColors: Record<string, string> = {
-  RESERVED: 'bg-yellow-100 text-yellow-800',
-  CONFIRMED: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800'
+type TimeFilter = 'all' | 'today' | 'week' | 'month' | 'upcoming' | 'past'
+type SortOption = 'date-asc' | 'date-desc' | 'created-desc' | 'created-asc' | 'price-asc' | 'price-desc'
+
+const timeFilterLabels: Record<TimeFilter, string> = {
+  all: 'Alle',
+  upcoming: 'Kommende',
+  today: 'Heute',
+  week: 'Diese Woche',
+  month: 'Dieser Monat',
+  past: 'Abgelaufen'
 }
 
-const paymentStatusLabels: Record<string, string> = {
-  PENDING: 'Ausstehend',
-  PAID: 'Bezahlt',
-  FAILED: 'Fehlgeschlagen',
-  REFUNDED: 'Erstattet'
+const sortLabels: Record<SortOption, string> = {
+  'date-asc': 'Termin ↑ nächste zuerst',
+  'date-desc': 'Termin ↓ älteste zuerst',
+  'created-desc': 'Buchungsdatum ↓ neueste',
+  'created-asc': 'Buchungsdatum ↑ älteste',
+  'price-desc': 'Preis ↓ höchste zuerst',
+  'price-asc': 'Preis ↑ niedrigste zuerst'
 }
 
 export default function WorkshopBookingsPage() {
@@ -107,9 +117,23 @@ export default function WorkshopBookingsPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'RESERVED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'>('all')
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('workshop-bookings-timeFilter') as TimeFilter) || 'all'
+    }
+    return 'all'
+  })
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('workshop-bookings-sortOption') as SortOption) || 'date-asc'
+    }
+    return 'date-asc'
+  })
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null)
   const [uploadingInvoice, setUploadingInvoice] = useState<string | null>(null)
+  const [editingStorageId, setEditingStorageId] = useState<string | null>(null)
+  const [storageLocationValue, setStorageLocationValue] = useState('')
+  const [savingStorage, setSavingStorage] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -125,16 +149,12 @@ export default function WorkshopBookingsPage() {
     }
 
     fetchBookings()
-  }, [session, status, router, filter])
+  }, [session, status, router])
 
   const fetchBookings = async () => {
     try {
       setLoading(true)
-      const url = filter === 'all' 
-        ? '/api/workshop/bookings' 
-        : `/api/workshop/bookings?status=${filter.toLowerCase()}`
-      
-      const response = await fetch(url)
+      const response = await fetch('/api/workshop/bookings')
       
       if (response.ok) {
         const data = await response.json()
@@ -178,20 +198,104 @@ export default function WorkshopBookingsPage() {
     }
   }
 
-  const filteredBookings = bookings
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return <CheckCircle className="h-5 w-5 text-green-600" />
-      case 'CANCELLED':
-        return <XCircle className="h-5 w-5 text-red-600" />
-      case 'RESERVED':
-        return <AlertCircle className="h-5 w-5 text-yellow-600" />
-      default:
-        return <Clock className="h-5 w-5 text-blue-600" />
+  const handleSaveStorageLocation = async (bookingId: string) => {
+    try {
+      setSavingStorage(true)
+      const response = await fetch(`/api/workshop/bookings/${bookingId}/storage-location`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storageLocation: storageLocationValue.trim() })
+      })
+      if (response.ok) {
+        // Update local state
+        setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, storageLocation: storageLocationValue.trim() || null } : b))
+        setEditingStorageId(null)
+        setStorageLocationValue('')
+      } else {
+        const error = await response.json()
+        alert(`Fehler: ${error.error || 'Speichern fehlgeschlagen'}`)
+      }
+    } catch (error) {
+      console.error('Error saving storage location:', error)
+      alert('Fehler beim Speichern des Lagerorts')
+    } finally {
+      setSavingStorage(false)
     }
   }
+
+  // Time-based filtering
+  const filteredBookings = bookings.filter(b => {
+    if (timeFilter === 'all') return true
+    const bookingDate = new Date(b.date)
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    if (timeFilter === 'upcoming') {
+      return bookingDate >= today
+    }
+    if (timeFilter === 'past') {
+      return bookingDate < today
+    }
+    if (timeFilter === 'today') {
+      return bookingDate >= today && bookingDate < new Date(today.getTime() + 86400000)
+    }
+    if (timeFilter === 'week') {
+      const dayOfWeek = now.getDay() || 7 // Mon=1...Sun=7
+      const weekStart = new Date(today)
+      weekStart.setDate(today.getDate() - (dayOfWeek - 1))
+      const weekEnd = new Date(weekStart)
+      weekEnd.setDate(weekStart.getDate() + 7)
+      return bookingDate >= weekStart && bookingDate < weekEnd
+    }
+    if (timeFilter === 'month') {
+      return bookingDate.getMonth() === now.getMonth() && bookingDate.getFullYear() === now.getFullYear()
+    }
+    return true
+  })
+
+  // Persist filter & sort to localStorage
+  useEffect(() => {
+    localStorage.setItem('workshop-bookings-timeFilter', timeFilter)
+  }, [timeFilter])
+  useEffect(() => {
+    localStorage.setItem('workshop-bookings-sortOption', sortOption)
+  }, [sortOption])
+
+  // Helper: parse booking date + time into timestamp
+  const getBookingTimestamp = (b: Booking) => {
+    const dateStr = b.date.slice(0, 10) // "2026-03-10T00:00:00.000Z" → "2026-03-10"
+    return new Date(`${dateStr}T${b.time}`).getTime()
+  }
+
+  // Sort filtered bookings
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    switch (sortOption) {
+      case 'date-asc': {
+        // "Nächste zuerst": future appointments first (closest upcoming), then past (most recent past first)
+        const now = Date.now()
+        const da = getBookingTimestamp(a)
+        const db = getBookingTimestamp(b)
+        const aFuture = da >= now
+        const bFuture = db >= now
+        if (aFuture && !bFuture) return -1
+        if (!aFuture && bFuture) return 1
+        if (aFuture && bFuture) return da - db
+        return db - da
+      }
+      case 'date-desc': {
+        return getBookingTimestamp(b) - getBookingTimestamp(a)
+      }
+      case 'created-desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'created-asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'price-desc':
+        return b.totalPrice - a.totalPrice
+      case 'price-asc':
+        return a.totalPrice - b.totalPrice
+      default:
+        return 0
+    }
+  })
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -223,190 +327,243 @@ export default function WorkshopBookingsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Buchungen</h1>
-        <p className="text-gray-600">Übersicht aller Direktbuchungen Ihrer Werkstatt</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Buchungen</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Übersicht aller Direktbuchungen Ihrer Werkstatt</p>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+      {/* Time Filter Pills + Sort */}
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        {(Object.keys(timeFilterLabels) as TimeFilter[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setTimeFilter(key)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              timeFilter === key
+                ? 'bg-primary-600 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
+            }`}
+          >
+            {timeFilterLabels[key]}
+          </button>
+        ))}
+        <div className="ml-auto">
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as SortOption)}
+            className="text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
+          >
+            {(Object.keys(sortLabels) as SortOption[]).map((key) => (
+              <option key={key} value={key}>{sortLabels[key]}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          onClick={() => setFilter('all')}
-          size="sm"
-        >
-          Alle ({bookings.length})
-        </Button>
-        <Button
-          variant={filter === 'RESERVED' ? 'default' : 'outline'}
-          onClick={() => setFilter('RESERVED')}
-          size="sm"
-        >
-          Reserviert ({bookings.filter(b => b.status === 'RESERVED').length})
-        </Button>
-        <Button
-          variant={filter === 'CONFIRMED' ? 'default' : 'outline'}
-          onClick={() => setFilter('CONFIRMED')}
-          size="sm"
-        >
-          Bestätigt ({bookings.filter(b => b.status === 'CONFIRMED').length})
-        </Button>
-        <Button
-          variant={filter === 'COMPLETED' ? 'default' : 'outline'}
-          onClick={() => setFilter('COMPLETED')}
-          size="sm"
-        >
-          Abgeschlossen ({bookings.filter(b => b.status === 'COMPLETED').length})
-        </Button>
-        <Button
-          variant={filter === 'CANCELLED' ? 'default' : 'outline'}
-          onClick={() => setFilter('CANCELLED')}
-          size="sm"
-        >
-          Storniert ({bookings.filter(b => b.status === 'CANCELLED').length})
-        </Button>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-sm text-gray-600 mb-1">Gesamt Buchungen</div>
-          <div className="text-2xl font-bold">{bookings.length}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-gray-600 mb-1">Bezahlt</div>
-          <div className="text-2xl font-bold text-green-600">
-            {bookings.filter(b => b.paymentStatus === 'PAID').length}
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-gray-600 mb-1">Gesamtumsatz</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {bookings
+      {/* Statistics Bar */}
+      <div className="flex flex-wrap items-center gap-4 mb-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Buchungen:</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">{sortedBookings.length}</span>
+        </div>
+        <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Umsatz:</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">
+            {sortedBookings
               .filter(b => b.paymentStatus === 'PAID')
               .reduce((sum, b) => sum + b.totalPrice, 0)
               .toFixed(2)} €
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-gray-600 mb-1">Bewertungen</div>
-          <div className="text-2xl font-bold text-yellow-600">
-            {bookings.filter(b => b.review).length}
-          </div>
-        </Card>
+          </span>
+        </div>
+        <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Bewertungen:</span>
+          <span className="text-sm font-bold text-yellow-600">{sortedBookings.filter(b => b.review).length}</span>
+        </div>
       </div>
 
       {/* Bookings List */}
-      {filteredBookings.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-xl font-semibold mb-2">Keine Buchungen gefunden</h3>
-          <p className="text-gray-600">
-            {filter === 'all' 
+      {sortedBookings.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Package className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+          <h3 className="text-sm font-semibold mb-1">Keine Buchungen gefunden</h3>
+          <p className="text-xs text-gray-500">
+            {timeFilter === 'all' 
               ? 'Es wurden noch keine Buchungen getätigt.' 
-              : `Keine Buchungen mit Status "${statusLabels[filter]}".`}
+              : `Keine Buchungen für "${timeFilterLabels[timeFilter]}".`}
           </p>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredBookings.map((booking) => (
-            <Card key={booking.id} className="overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(booking.status)}
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {serviceTypeLabels[booking.serviceType] || booking.serviceType}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Buchung #{booking.id.slice(-8).toUpperCase()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[booking.status]}`}>
-                      {statusLabels[booking.status]}
+        <div className="space-y-2">
+          {sortedBookings.map((booking) => {
+            const isCancelled = booking.status === 'CANCELLED'
+            const borderColor = isCancelled ? 'border-l-red-500' : 'border-l-primary-500'
+
+            return (
+            <div
+              key={booking.id}
+              className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-l-4 ${borderColor} overflow-hidden hover:shadow-md transition-shadow`}
+            >
+              {/* Compact Main Row */}
+              <div
+                className="px-4 py-3 cursor-pointer"
+                onClick={() => setExpandedBooking(expandedBooking === booking.id ? null : booking.id)}
+              >
+                {/* Top row: Service + Status + Price */}
+                <div className="flex items-center justify-between gap-3 mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      {serviceTypeLabels[booking.serviceType] || booking.serviceType}
                     </span>
-                    {booking.paymentStatus === 'PAID' && (
-                      <div className="mt-2 text-sm text-green-600 font-medium">
-                        ✓ Bezahlt
-                      </div>
+                    <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono shrink-0">#{booking.id.slice(-7).toUpperCase()}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{booking.totalPrice.toFixed(2)} €</span>
+                    {isCancelled ? (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Storniert</span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-green-600 dark:text-green-400">✓</span>
                     )}
                   </div>
                 </div>
 
-                {/* Main Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  {/* Date & Time */}
-                  <div className="flex items-start space-x-3">
-                    <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <div className="text-sm text-gray-600">Termin</div>
-                      <div className="font-medium">{formatDate(booking.date)}</div>
-                      <div className="text-sm text-gray-600">{booking.time} Uhr ({booking.durationMinutes} Min.)</div>
-                    </div>
-                  </div>
-
-                  {/* Customer */}
-                  <div className="flex items-start space-x-3">
-                    <User className="h-5 w-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <div className="text-sm text-gray-600">Kunde</div>
-                      <div className="font-medium">
-                        {booking.customer.user.firstName} {booking.customer.user.lastName}
-                      </div>
-                      <div className="text-sm text-gray-600">{booking.customer.user.email}</div>
-                      {booking.customer.user.phone && (
-                        <div className="text-sm text-gray-600">{booking.customer.user.phone}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Vehicle */}
-                  <div className="flex items-start space-x-3">
-                    <Car className="h-5 w-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <div className="text-sm text-gray-600">Fahrzeug</div>
-                      <div className="font-medium">
-                        {booking.vehicle.make} {booking.vehicle.model}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {booking.vehicle.licensePlate || 'Kein Kennzeichen'} • {booking.vehicle.year}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Price Summary */}
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Gesamtpreis:</span>
-                    <span className="text-xl font-bold text-green-600">{booking.totalPrice.toFixed(2)} €</span>
-                  </div>
+                {/* Bottom row: Date | Customer | Vehicle */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}, {booking.time}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {booking.customer.user.firstName} {booking.customer.user.lastName}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Car className="h-3 w-3" />
+                    {booking.vehicle.make} {booking.vehicle.model}
+                    {booking.vehicle.licensePlate && <span className="text-gray-400"> · {booking.vehicle.licensePlate}</span>}
+                  </span>
                   {booking.paymentMethod && (
-                    <div className="text-sm text-gray-600 mt-2">
-                      Zahlungsmethode: {booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod}
-                    </div>
+                    <span className="text-gray-400">
+                      {booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod}
+                    </span>
                   )}
+                  {booking.fromStorageBookingId && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-medium">
+                      📦 Eingelagerte Reifen
+                    </span>
+                  )}
+                  {booking.hasStorage && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-medium">
+                      📦 {booking.storageLocation ? `Lager: ${booking.storageLocation}` : 'Einlagerung'}
+                    </span>
+                  )}
+                  <span className="ml-auto text-[11px] text-gray-400">
+                    {expandedBooking === booking.id ? '▲' : '▼'}
+                  </span>
                 </div>
-
-                {/* Expand/Collapse Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setExpandedBooking(expandedBooking === booking.id ? null : booking.id)}
-                  className="w-full"
-                >
-                  {expandedBooking === booking.id ? 'Weniger anzeigen' : 'Details anzeigen'}
-                </Button>
+              </div>
 
                 {/* Expanded Details */}
                 {expandedBooking === booking.id && (
-                  <div className="mt-4 pt-4 border-t space-y-4">
+                  <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700 space-y-4">
+                    {/* Full info grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Termin</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(booking.date)}</div>
+                        <div className="text-xs text-gray-500">{booking.time} Uhr ({booking.durationMinutes} Min.)</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Kunde</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{booking.customer.user.firstName} {booking.customer.user.lastName}</div>
+                        <div className="text-xs text-gray-500">{booking.customer.user.email}</div>
+                        {booking.customer.user.phone && <div className="text-xs text-gray-500">{booking.customer.user.phone}</div>}
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fahrzeug</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{booking.vehicle.make} {booking.vehicle.model}</div>
+                        <div className="text-xs text-gray-500">{booking.vehicle.licensePlate || 'Kein Kennzeichen'} · {booking.vehicle.year}</div>
+                      </div>
+                    </div>
                     {/* Tire Information */}
+                    {/* Info Banner: Customer has stored tires at this workshop */}
+                    {booking.fromStorageBookingId && (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Package className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                              Reifen aus Einlagerung
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                              Der Kunde hat eingelagerte Reifen bei Ihnen. Bitte die entsprechenden Reifen für den Termin bereitstellen.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Storage Location (Lagerort) for hasStorage bookings */}
+                    {booking.hasStorage && (
+                      <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-base mt-0.5">📦</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-medium text-orange-700 dark:text-orange-400 uppercase tracking-wider mb-1">Lagerort</div>
+                            {editingStorageId === booking.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={storageLocationValue}
+                                  onChange={(e) => setStorageLocationValue(e.target.value)}
+                                  placeholder="z.B. Regal 3, Fach B"
+                                  className="flex-1 text-sm border border-orange-300 dark:border-orange-700 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                  autoFocus
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveStorageLocation(booking.id) }}
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSaveStorageLocation(booking.id)}
+                                  disabled={savingStorage}
+                                  className="text-xs px-2 py-1 h-7 bg-orange-600 hover:bg-orange-700 text-white"
+                                >
+                                  {savingStorage ? '...' : '✓'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => { setEditingStorageId(null); setStorageLocationValue('') }}
+                                  className="text-xs px-2 py-1 h-7"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {booking.storageLocation || <span className="text-gray-400 italic">Noch nicht vergeben</span>}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setEditingStorageId(booking.id)
+                                    setStorageLocationValue(booking.storageLocation || '')
+                                  }}
+                                  className="text-xs text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline"
+                                >
+                                  {booking.storageLocation ? 'Ändern' : 'Eintragen'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0 && (
                       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <h4 className="font-semibold mb-3">Reifeninformationen</h4>
@@ -622,11 +779,12 @@ export default function WorkshopBookingsPage() {
                     </div>
                   </div>
                 )}
-              </div>
-            </Card>
-          ))}
+            </div>
+            )
+          })}
         </div>
       )}
+      </div>
     </div>
   )
 }

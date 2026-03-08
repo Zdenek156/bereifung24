@@ -147,9 +147,13 @@ export async function POST(request: NextRequest) {
         })
         console.log(`📊 Accounting entry created: ${accountingEntryId}`)
 
-        // Send email
-        const emailResult = await sendInvoiceEmail(invoice.id)
-        console.log(`📧 Email sent to ${workshop.user.email}: ${emailResult.success ? 'success' : emailResult.error}`)
+        // Send email (only if workshop has commission notifications enabled)
+        if (workshop.emailNotifyCommissions !== false) {
+          const emailResult = await sendInvoiceEmail(invoice.id)
+          console.log(`📧 Email sent to ${workshop.user.email}: ${emailResult.success ? 'success' : emailResult.error}`)
+        } else {
+          console.log(`⏭️  Workshop ${workshop.companyName} has disabled commission notifications, skipping email`)
+        }
 
         // Note: Commission was already automatically deducted from Stripe payments (6.9%)
         console.log(`✅ Commission already deducted automatically via Stripe`)

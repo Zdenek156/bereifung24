@@ -1867,6 +1867,9 @@ export function directBookingNotificationWorkshopEmail(data: {
   autoOrderSuccess?: boolean
   autoOrderNumber?: string
   autoOrderError?: string
+  // Storage info (Reifen aus Einlagerung)
+  fromStorageBookingId?: string
+  storageLocationFromStorage?: string
 }) {
   const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT' || data.serviceType === 'MOTORCYCLE_TIRE'
   const isAPISupplier = data.supplierConnectionType === 'API'
@@ -1918,6 +1921,19 @@ export function directBookingNotificationWorkshopEmail(data: {
           <p style="font-size: 16px;"><strong>Hallo ${data.workshopName},</strong></p>
           
           <p>Sie haben eine neue, bestätigte Buchung erhalten. Die Zahlung wurde bereits vom Kunden geleistet.</p>
+
+          ${data.fromStorageBookingId ? `
+          <!-- Storage Banner: Customer has stored tires -->
+          <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #d97706;">📦 Reifen aus Einlagerung</h3>
+            <p style="margin: 10px 0; font-size: 15px;">Der Kunde hat <strong>eingelagerte Reifen</strong> bei Ihnen. Bitte die entsprechenden Reifen für den Termin bereitstellen.</p>
+            ${data.storageLocationFromStorage ? `
+            <div style="background: white; padding: 12px 16px; border-radius: 6px; margin-top: 10px; display: inline-block;">
+              <strong style="color: #d97706;">📍 Lagerort:</strong> <span style="font-size: 18px; font-weight: bold;">${data.storageLocationFromStorage}</span>
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
 
           <!-- Appointment Details -->
           <div class="section">
@@ -2265,6 +2281,7 @@ export function directBookingNotificationWorkshopEmail(data: {
           <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
             <h3 style="margin-top: 0;">✅ Ihre nächsten Schritte:</h3>
             <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+              ${data.fromStorageBookingId ? `<li><strong style="color: #d97706;">📦 EINGELAGERTE REIFEN BEREITSTELLEN</strong>${data.storageLocationFromStorage ? ` - Lagerort: <strong>${data.storageLocationFromStorage}</strong>` : ''}</li>` : ''}
               ${isTireService && !isAutoOrdered && isCSVSupplier ? `<li><strong style="color: #d97706;">🛒 REIFEN BESTELLEN</strong> beim Lieferanten ${data.supplierName || ''}<br><small style="color: #6b7280;">EAN: ${data.tireEAN || 'siehe oben'}, Menge: ${data.tireQuantity || 4} Stück</small></li>` : ''}
               ${isTireService && isAutoOrdered ? `<li>✅ Reifen sind automatisch bestellt (${data.autoOrderNumber || 'siehe oben'}) - keine Aktion erforderlich</li>` : ''}
               ${isTireService && !isAutoOrdered && isAPISupplier ? `<li><strong style="color: #d97706;">⚠️ REIFEN MANUELL BESTELLEN</strong> - Automatische Bestellung fehlgeschlagen</li>` : ''}

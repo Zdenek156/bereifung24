@@ -1,0 +1,1 @@
+const{PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.workshop.findMany({where:{landingPageEnabled:true},select:{id:true,name:true,heroImageUrl:true}}).then(w=>{w.forEach(x=>console.log(x.name,':',x.heroImageUrl));p.$disconnect();})

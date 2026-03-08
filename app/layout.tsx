@@ -18,6 +18,14 @@ export const metadata: Metadata = {
   description: 'Deutschlands erste digitale Plattform für Reifenservice. Werkstätten mit Festpreisen vergleichen, Termin wählen und direkt online buchen. ⭐ 5.0 Sterne Durchschnittsbewertung.',
   keywords: 'Reifenwechsel, Räderwechsel, Werkstatt buchen, Reifenservice, Festpreis, Online-Buchung, Achsvermessung, Klimaservice',
   authors: [{ name: 'Bereifung24' }],
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'de_DE',

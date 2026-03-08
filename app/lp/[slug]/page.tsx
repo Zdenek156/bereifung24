@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import NewHomePage, { type FixedWorkshopContext } from '@/app/page'
+import NewHomePage, { type FixedWorkshopContext } from '@/app/HomePage'
 import LandingPageHeaderActions from '@/components/LandingPageHeaderActions'
 
 // Force dynamic rendering to always show latest data

@@ -52,9 +52,17 @@ export async function POST(req: NextRequest) {
       await mkdir(uploadsDir, { recursive: true })
     }
 
-    // Generate unique filename
+    // Generate SEO-friendly filename
     const ext = path.extname(file.name)
-    const filename = `${workshop.id}-${Date.now()}${ext}`
+    const slugName = (workshop.companyName || 'werkstatt')
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const slugCity = (workshop.city || '')
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const filename = `werkstatt-${slugName}${slugCity ? `-${slugCity}` : ''}-logo-${Date.now()}${ext}`
     const filepath = path.join(uploadsDir, filename)
 
     // Delete old logo if exists

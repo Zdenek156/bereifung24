@@ -9,6 +9,17 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        heartBounce: {
+          '0%': { transform: 'scale(1)' },
+          '30%': { transform: 'scale(1.4)' },
+          '60%': { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        heartBounce: 'heartBounce 0.3s ease-in-out',
+      },
       colors: {
         primary: {
           50: '#f0f9ff',

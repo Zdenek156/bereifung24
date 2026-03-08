@@ -545,7 +545,7 @@ export default function PaymentPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <img src="/logos/B24_Logo_weiss.png" alt="Bereifung24" className="h-10 w-auto object-contain" />
+              <img src="/logos/B24_Logo_weiss.png" alt="Bereifung24" width={160} height={40} className="h-10 w-auto object-contain" />
             </Link>
             
             <div className="flex items-center gap-4">
@@ -582,7 +582,7 @@ export default function PaymentPage() {
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                       <Image
                         src={workshop.logoUrl}
-                        alt={bookingData.workshop.name}
+                        alt={`Werkstatt ${bookingData.workshop.name} in ${bookingData.workshop.city}`}
                         width={64}
                         height={64}
                         className="object-cover"

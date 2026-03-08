@@ -141,12 +141,12 @@ export default function PricingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {[
-                { emoji: '🔧', title: 'Räderwechsel', desc: '4 Räder wechseln (auf vorhandenen Felgen)', price: 'ab 19,90 €', popular: true },
-                { emoji: '🔄', title: 'Reifenwechsel', desc: 'Reifen ab- und aufziehen inkl. Wuchten', price: 'ab 39,90 €', popular: true },
-                { emoji: '🔨', title: 'Reifenreparatur', desc: 'Professionelle Reparatur & Vulkanisierung', price: 'ab 29,90 €', popular: false },
-                { emoji: '🏍️', title: 'Motorradreifen', desc: 'Montage Vorder- und/oder Hinterreifen', price: 'ab 24,90 €', popular: false },
-                { emoji: '📏', title: 'Achsvermessung', desc: '3D-Vermessung und Spureinstellung', price: 'ab 49,90 €', popular: false },
-                { emoji: '❄️', title: 'Klimaservice', desc: 'Wartung, Desinfektion & Befüllung', price: 'ab 59,90 €', popular: false },
+                { emoji: '🔧', title: 'Räderwechsel', desc: '4 Räder wechseln (auf vorhandenen Felgen)', price: '19,90 €', popular: true },
+                { emoji: '🔄', title: 'Reifenwechsel', desc: 'Reifen ab- und aufziehen inkl. Wuchten', price: '39,90 €', popular: true },
+                { emoji: '🔨', title: 'Reifenreparatur', desc: 'Professionelle Reparatur & Vulkanisierung', price: '29,90 €', popular: false },
+                { emoji: '🏍️', title: 'Motorradreifen', desc: 'Montage Vorder- und/oder Hinterreifen', price: '24,90 €', popular: false },
+                { emoji: '📏', title: 'Achsvermessung', desc: '3D-Vermessung und Spureinstellung', price: '49,90 €', popular: false },
+                { emoji: '❄️', title: 'Klimaservice', desc: 'Wartung, Desinfektion & Befüllung', price: '59,90 €', popular: false },
               ].map((service) => (
                 <div key={service.title} className={`bg-white rounded-xl p-6 border ${service.popular ? 'border-primary-200 ring-1 ring-primary-100' : 'border-gray-100'} hover:shadow-md transition-all`}>
                   {service.popular && (

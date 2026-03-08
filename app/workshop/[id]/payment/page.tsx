@@ -27,6 +27,7 @@ export default function PaymentPage() {
   const date = searchParams?.get('date') || ''
   const time = searchParams?.get('time') || ''
   const vehicleId = searchParams?.get('vehicleId') || ''
+  const fromStorageBookingId = searchParams?.get('fromStorageBookingId') || ''
 
   const [loading, setLoading] = useState(true)
   const [bookingData, setBookingData] = useState<any>(null)
@@ -218,6 +219,8 @@ export default function PaymentPage() {
           hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
           hasDisposal: (bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') ? (bookingData.tireBooking?.hasDisposal || false) : false,
           totalPrice: bookingData.pricing.totalPrice,
+          // Storage: explicit link from TireStorageCard or bookingData
+          ...(fromStorageBookingId && { fromStorageBookingId }),
           // Base service duration from workshop (actual package duration, NOT hardcoded 60)
           baseDuration: bookingData.service?.baseDuration || 60,
           // Additional services data (Klimaservice, Achsvermessung, etc.) - excluding BALANCING/STORAGE which have dedicated fields

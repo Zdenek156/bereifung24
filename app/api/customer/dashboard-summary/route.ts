@@ -173,6 +173,7 @@ export async function GET() {
         },
         vehicle: {
           select: {
+            id: true,
             make: true,
             model: true,
             licensePlate: true
@@ -203,10 +204,12 @@ export async function GET() {
           workshopName: b.workshop.companyName,
           workshopSlug: null,
           workshopAddress: [b.workshop.user.street, b.workshop.user.zipCode, b.workshop.user.city].filter(Boolean).join(', '),
+          vehicleId: b.vehicle.id,
           vehicleName: `${b.vehicle.make} ${b.vehicle.model}`,
           vehiclePlate: b.vehicle.licensePlate,
           storedTireType,
-          storedSince: b.date.toISOString()
+          storedSince: b.date.toISOString(),
+          storageLocation: (b as any).storageLocation || null
         }
       })
 

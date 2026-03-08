@@ -1,0 +1,1 @@
+SELECT f.phone, f.street, f.zip, f.city, u."firstName", u."lastName", u.email, u.phone as uphone, u.street as ustreet, u."zipCode", u.city as ucity FROM freelancers f JOIN users u ON f."userId" = u.id LIMIT 1;

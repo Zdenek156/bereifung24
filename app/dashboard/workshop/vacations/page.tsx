@@ -400,12 +400,15 @@ export default function VacationManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Urlaubsplanung</h1>
-          <p className="text-gray-600 dark:text-gray-400">Klicken Sie Tage im Kalender an. Einzeltage und Zeiträume werden unterstützt.</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Urlaubsplanung</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Tage im Kalender anklicken · Einzeltage und Zeiträume werden unterstützt</p>
         </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
         {/* Calendar status banner */}
         <div className={`mb-6 p-4 rounded-lg border-2 flex items-start gap-3 ${hasCalendar ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'}`}>

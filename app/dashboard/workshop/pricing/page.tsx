@@ -339,448 +339,257 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center">
-            <Link
-              href="/dashboard/workshop"
-              className="mr-4 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Preiskalkulation</h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Automatische Berechnung von Reifen- und Servicepreisen</p>
-            </div>
-          </div>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Preiskalkulation</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Automatische Berechnung von Reifen- und Servicepreisen</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Informationsbox */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">So funktioniert die Preiskalkulation für Buchungen</h3>
-              <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                <p className="font-medium">Bei Buchungen werden die Einkaufspreise automatisch über Ihre Datenbank oder API-Schnittstelle von Ihrem Großhändler abgerufen. Das System berechnet dann automatisch den Verkaufspreis für Ihre Kunden basierend auf:</p>
-                <ul className="list-disc ml-6 mt-2 space-y-1">
-                  <li><strong>Fester Aufschlag:</strong> Fixer Betrag in € der zum Einkaufspreis addiert wird (z.B. 3 € pro Reifen für Handling und Lagerung)</li>
-                  <li><strong>Prozentualer Aufschlag:</strong> Ihre Gewinnmarge in % auf den Zwischenpreis (z.B. 7% Marge)</li>
-                  <li><strong>MwSt.:</strong> Aktivieren Sie diese Option, wenn Ihr Großhändler die Preise ohne Mehrwertsteuer (netto/EK) bereitstellt, damit 19% MwSt. zum Verkaufspreis hinzugefügt werden</li>
-                </ul>
-                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mt-3 border border-blue-200 dark:border-blue-700">
-                  <p className="font-semibold mb-1">Beispielrechnung:</p>
-                  <p>Einkaufspreis (EK vom Großhändler): <strong>100,00 €</strong></p>
-                  <p>+ Fester Aufschlag: <strong>3,00 €</strong> = 103,00 €</p>
-                  <p>+ Prozentualer Aufschlag 7%: <strong>7,21 €</strong> = 110,21 €</p>
-                  <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">Mit MwSt.: 110,21 € × 1,19 = <strong className="text-primary-600">131,15 €</strong></p>
-                </div>
-                <p className="mt-3 text-xs"><strong>Tipp:</strong> Sie können für jede Zollgröße (13" - 23") individuelle Aufschläge festlegen und bestimmte Größen deaktivieren, die Sie nicht montieren können.</p>
-              </div>
-            </div>
+        {/* Compact Info Banner */}
+        <div className="flex items-start gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-4 py-3 mb-6">
+          <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+            <p className="font-medium">EK vom Großhändler → <strong>+ Fest (€)</strong> → <strong>+ Prozent (%)</strong> → optional <strong>+ 19% MwSt.</strong> = Verkaufspreis</p>
+            <p className="text-blue-500 dark:text-blue-400">Beispiel: 100€ EK + 3€ fest + 7% = 110,21€ · Mit MwSt: 131,15€ · Pro Zollgröße individuell einstellbar</p>
           </div>
         </div>
+
         {/* Tire Pricing by Rim Size */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-              <svg className="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Reifenpreise nach Zollgröße
-            </h2>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Individuelle Aufschläge für verschiedene Felgengrößen (13" - 23")
-            </p>
-          </div>
-          <div className="p-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Hinweis:</strong> Diese Einstellungen überschreiben die allgemeinen PKW/Motorrad-Einstellungen für spezifische Felgengrößen. 
-                    Nutzen Sie "Auf alle anwenden" um schnell alle Größen mit dem gleichen Aufschlag zu konfigurieren.
-                  </p>
-                </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900 dark:text-white">Reifenpreise nach Zollgröße</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Individuelle Aufschläge 13" – 23" · Überschreibt allgemeine Einstellungen</p>
               </div>
             </div>
+            <button
+              onClick={handleSaveTirePricing}
+              disabled={savingTirePricing}
+              className="px-5 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 text-sm font-medium shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingTirePricing ? 'Speichern...' : '💾 Speichern'}
+            </button>
+          </div>
+          <div className="p-6 space-y-8">
 
-            {/* PKW Tire Pricing by Size */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  PKW-Reifen (Auto)
-                </h3>
+            {/* ── PKW Section ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🚗</span>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">PKW-Reifen</h3>
               </div>
 
-              {/* Template for "Apply to All" */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 border-2 border-primary-200 dark:border-primary-800">
-                <div className="flex items-center mb-3">
-                  <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span className="font-medium text-gray-900 dark:text-white">Vorlage für alle PKW-Größen</span>
+              {/* Template Row */}
+              <div className="grid grid-cols-[1fr_100px_100px_80px_auto] gap-2 items-center mb-3 bg-primary-50 dark:bg-primary-900/10 rounded-xl px-4 py-3 border border-primary-200 dark:border-primary-800">
+                <span className="text-xs font-bold text-primary-700 dark:text-primary-300 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Vorlage für alle
+                </span>
+                <div className="relative">
+                  <input type="number" step="0.01" min="0" value={autoTemplate.fixedMarkup || ''}
+                    onChange={(e) => setAutoTemplate({ ...autoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
+                    className="w-full pl-2 pr-6 py-1.5 text-sm border border-primary-200 dark:border-primary-700 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-white" placeholder="0" />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={autoTemplate.fixedMarkup || ''}
-                      onChange={(e) => setAutoTemplate({ ...autoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={autoTemplate.percentMarkup || ''}
-                      onChange={(e) => setAutoTemplate({ ...autoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={autoTemplate.includeVat}
-                        onChange={(e) => setAutoTemplate({ ...autoTemplate, includeVat: e.target.checked })}
-                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                      />
-                      <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
-                    </label>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => applyToAll('AUTO')}
-                      className="w-full px-4 py-2 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                    >
-                      Auf alle anwenden
-                    </button>
-                  </div>
+                <div className="relative">
+                  <input type="number" step="0.1" min="0" max="100" value={autoTemplate.percentMarkup || ''}
+                    onChange={(e) => setAutoTemplate({ ...autoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
+                    className="w-full pl-2 pr-6 py-1.5 text-sm border border-primary-200 dark:border-primary-700 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-white" placeholder="0" />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">%</span>
                 </div>
+                <button type="button" onClick={() => setAutoTemplate({ ...autoTemplate, includeVat: !autoTemplate.includeVat })}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 mx-auto ${autoTemplate.includeVat ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${autoTemplate.includeVat ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+                <button onClick={() => applyToAll('AUTO')}
+                  className="px-3 py-1.5 text-xs bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium whitespace-nowrap">
+                  Alle ▸
+                </button>
               </div>
 
-              {/* List of tire sizes */}
-              <div className="space-y-2">
+              {/* Column Headers */}
+              <div className="grid grid-cols-[1fr_100px_100px_80px_90px] gap-2 px-4 mb-1">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Größe</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fest (€)</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Prozent</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-center">MwSt.</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">VK (100€)</span>
+              </div>
+
+              {/* Size Rows */}
+              <div className="space-y-1">
                 {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
                   const values = getTirePricingValue('AUTO', size)
-                  const isExpanded = expandedAutoSizes.has(size)
                   const hasValue = values.enabled && (values.fixedMarkup > 0 || values.percentMarkup > 0)
+                  const vk = calculateExample(100, false, values.fixedMarkup, values.percentMarkup, values.includeVat)
                   return (
-                    <div key={`auto-${size}`} className={`border rounded-lg ${hasValue ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700' : 'border-gray-200 dark:border-gray-700'} ${!values.enabled ? 'opacity-50' : ''}`}>
-                      {/* Header row with size, enabled checkbox, and expand button */}
-                      <div className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-3">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={values.enabled}
-                              onChange={(e) => updateTirePricingFormValue('AUTO', size, 'enabled', e.target.checked)}
-                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                            />
-                            <span className="ml-2 font-bold text-lg text-gray-900 dark:text-white">{size}"</span>
-                          </label>
-                          {!values.enabled && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">(deaktiviert)</span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => toggleSize('AUTO', size)}
-                          className="flex items-center gap-1 px-3 py-1 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded"
-                        >
-                          {isExpanded ? (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                              </svg>
-                              Einklappen
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                              Konfigurieren
-                            </>
-                          )}
+                    <div key={`auto-${size}`}
+                      className={`grid grid-cols-[1fr_100px_100px_80px_90px] gap-2 items-center px-4 py-2 rounded-lg transition-all ${
+                        !values.enabled ? 'opacity-40 bg-gray-50 dark:bg-gray-800/50' :
+                        hasValue ? 'bg-primary-50/50 dark:bg-primary-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
+                      }`}>
+                      {/* Size + Toggle */}
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => updateTirePricingFormValue('AUTO', size, 'enabled', !values.enabled)}
+                          className={`relative flex-shrink-0 w-9 h-5 rounded-full transition-colors duration-200 ${values.enabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${values.enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                        <span className={`font-bold text-sm ${values.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 line-through'}`}>{size}"</span>
+                      </div>
+                      {/* Fixed */}
+                      <div className="relative">
+                        <input type="number" step="0.01" min="0" value={values.fixedMarkup || ''} disabled={!values.enabled}
+                          onChange={(e) => updateTirePricingFormValue('AUTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
+                          className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400" placeholder="0" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                      </div>
+                      {/* Percent */}
+                      <div className="relative">
+                        <input type="number" step="0.1" min="0" max="100" value={values.percentMarkup || ''} disabled={!values.enabled}
+                          onChange={(e) => updateTirePricingFormValue('AUTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
+                          className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400" placeholder="0" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">%</span>
+                      </div>
+                      {/* VAT Toggle */}
+                      <div className="flex justify-center">
+                        <button type="button" disabled={!values.enabled}
+                          onClick={() => updateTirePricingFormValue('AUTO', size, 'includeVat', !values.includeVat)}
+                          className={`relative w-9 h-5 rounded-full transition-colors duration-200 disabled:opacity-40 ${values.includeVat ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${values.includeVat ? 'translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-
-                      {/* Expanded content */}
-                      {isExpanded && values.enabled && (
-                        <div className="px-3 pb-3 border-t border-gray-200 dark:border-gray-700 pt-3">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={values.fixedMarkup || ''}
-                                onChange={(e) => updateTirePricingFormValue('AUTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                placeholder="0.00"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                max="100"
-                                value={values.percentMarkup || ''}
-                                onChange={(e) => updateTirePricingFormValue('AUTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                placeholder="0"
-                              />
-                            </div>
-                            <div>
-                              <label className="flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={values.includeVat}
-                                  onChange={(e) => updateTirePricingFormValue('AUTO', size, 'includeVat', e.target.checked)}
-                                  className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                                />
-                                <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
-                              </label>
-                            </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
-                              <span className="text-xs">Beispiel (100€):</span>
-                              <div className="font-bold text-primary-600 dark:text-primary-400">
-                                {calculateExample(100, false, values.fixedMarkup, values.percentMarkup, values.includeVat).toFixed(2)} €
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      {/* Calculated Price */}
+                      <div className="text-right">
+                        <span className={`text-sm font-bold ${values.enabled && hasValue ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'}`}>
+                          {values.enabled ? `${vk.toFixed(2)} €` : '—'}
+                        </span>
+                      </div>
                     </div>
                   )
                 })}
               </div>
             </div>
 
-            {/* Motorrad Tire Pricing by Size */}
+            <div className="border-t border-gray-100 dark:border-gray-700" />
+
+            {/* ── Motorrad Section ── */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Motorradreifen
-                </h3>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🏍️</span>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Motorradreifen</h3>
               </div>
 
-              {/* Template for "Apply to All" */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 border-2 border-orange-200 dark:border-orange-800">
-                <div className="flex items-center mb-3">
-                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="font-medium text-gray-900 dark:text-white">Vorlage für alle Motorrad-Größen</span>
+              {/* Template Row */}
+              <div className="grid grid-cols-[1fr_100px_100px_80px_auto] gap-2 items-center mb-3 bg-orange-50 dark:bg-orange-900/10 rounded-xl px-4 py-3 border border-orange-200 dark:border-orange-800">
+                <span className="text-xs font-bold text-orange-700 dark:text-orange-300 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Vorlage für alle
+                </span>
+                <div className="relative">
+                  <input type="number" step="0.01" min="0" value={motoTemplate.fixedMarkup || ''}
+                    onChange={(e) => setMotoTemplate({ ...motoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
+                    className="w-full pl-2 pr-6 py-1.5 text-sm border border-orange-200 dark:border-orange-700 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 dark:text-white" placeholder="0" />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={motoTemplate.fixedMarkup || ''}
-                      onChange={(e) => setMotoTemplate({ ...motoTemplate, fixedMarkup: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={motoTemplate.percentMarkup || ''}
-                      onChange={(e) => setMotoTemplate({ ...motoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={motoTemplate.includeVat}
-                        onChange={(e) => setMotoTemplate({ ...motoTemplate, includeVat: e.target.checked })}
-                        className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                      />
-                      <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
-                    </label>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => applyToAll('MOTO')}
-                      className="w-full px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
-                    >
-                      Auf alle anwenden
-                    </button>
-                  </div>
+                <div className="relative">
+                  <input type="number" step="0.1" min="0" max="100" value={motoTemplate.percentMarkup || ''}
+                    onChange={(e) => setMotoTemplate({ ...motoTemplate, percentMarkup: parseFloat(e.target.value) || 0 })}
+                    className="w-full pl-2 pr-6 py-1.5 text-sm border border-orange-200 dark:border-orange-700 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 dark:text-white" placeholder="0" />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">%</span>
                 </div>
+                <button type="button" onClick={() => setMotoTemplate({ ...motoTemplate, includeVat: !motoTemplate.includeVat })}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 mx-auto ${motoTemplate.includeVat ? 'bg-orange-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${motoTemplate.includeVat ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+                <button onClick={() => applyToAll('MOTO')}
+                  className="px-3 py-1.5 text-xs bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium whitespace-nowrap">
+                  Alle ▸
+                </button>
               </div>
 
-              {/* List of tire sizes */}
-              <div className="space-y-2">
+              {/* Column Headers */}
+              <div className="grid grid-cols-[1fr_100px_100px_80px_90px] gap-2 px-4 mb-1">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Größe</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fest (€)</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Prozent</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-center">MwSt.</span>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">VK (150€)</span>
+              </div>
+
+              {/* Size Rows */}
+              <div className="space-y-1">
                 {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
                   const values = getTirePricingValue('MOTO', size)
-                  const isExpanded = expandedMotoSizes.has(size)
                   const hasValue = values.enabled && (values.fixedMarkup > 0 || values.percentMarkup > 0)
+                  const vk = calculateExample(150, false, values.fixedMarkup, values.percentMarkup, values.includeVat)
                   return (
-                    <div key={`moto-${size}`} className={`border rounded-lg ${hasValue ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700' : 'border-gray-200 dark:border-gray-700'} ${!values.enabled ? 'opacity-50' : ''}`}>
-                      {/* Header row with size, enabled checkbox, and expand button */}
-                      <div className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-3">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={values.enabled}
-                              onChange={(e) => updateTirePricingFormValue('MOTO', size, 'enabled', e.target.checked)}
-                              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                            />
-                            <span className="ml-2 font-bold text-lg text-gray-900 dark:text-white">{size}"</span>
-                          </label>
-                          {!values.enabled && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">(deaktiviert)</span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => toggleSize('MOTO', size)}
-                          className="flex items-center gap-1 px-3 py-1 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded"
-                        >
-                          {isExpanded ? (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                              </svg>
-                              Einklappen
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                              Konfigurieren
-                            </>
-                          )}
+                    <div key={`moto-${size}`}
+                      className={`grid grid-cols-[1fr_100px_100px_80px_90px] gap-2 items-center px-4 py-2 rounded-lg transition-all ${
+                        !values.enabled ? 'opacity-40 bg-gray-50 dark:bg-gray-800/50' :
+                        hasValue ? 'bg-orange-50/50 dark:bg-orange-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
+                      }`}>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => updateTirePricingFormValue('MOTO', size, 'enabled', !values.enabled)}
+                          className={`relative flex-shrink-0 w-9 h-5 rounded-full transition-colors duration-200 ${values.enabled ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${values.enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                        <span className={`font-bold text-sm ${values.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 line-through'}`}>{size}"</span>
+                      </div>
+                      <div className="relative">
+                        <input type="number" step="0.01" min="0" value={values.fixedMarkup || ''} disabled={!values.enabled}
+                          onChange={(e) => updateTirePricingFormValue('MOTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
+                          className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400" placeholder="0" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                      </div>
+                      <div className="relative">
+                        <input type="number" step="0.1" min="0" max="100" value={values.percentMarkup || ''} disabled={!values.enabled}
+                          onChange={(e) => updateTirePricingFormValue('MOTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
+                          className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:text-gray-400" placeholder="0" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">%</span>
+                      </div>
+                      <div className="flex justify-center">
+                        <button type="button" disabled={!values.enabled}
+                          onClick={() => updateTirePricingFormValue('MOTO', size, 'includeVat', !values.includeVat)}
+                          className={`relative w-9 h-5 rounded-full transition-colors duration-200 disabled:opacity-40 ${values.includeVat ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${values.includeVat ? 'translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-
-                      {/* Expanded content */}
-                      {isExpanded && values.enabled && (
-                        <div className="px-3 pb-3 border-t border-gray-200 dark:border-gray-700 pt-3">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fest (€)</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={values.fixedMarkup || ''}
-                                onChange={(e) => updateTirePricingFormValue('MOTO', size, 'fixedMarkup', parseFloat(e.target.value) || 0)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                placeholder="0.00"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prozent (%)</label>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                max="100"
-                                value={values.percentMarkup || ''}
-                                onChange={(e) => updateTirePricingFormValue('MOTO', size, 'percentMarkup', parseFloat(e.target.value) || 0)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                placeholder="0"
-                              />
-                            </div>
-                            <div>
-                              <label className="flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={values.includeVat}
-                                  onChange={(e) => updateTirePricingFormValue('MOTO', size, 'includeVat', e.target.checked)}
-                                  className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                                />
-                                <span className="ml-2 text-xs font-medium text-gray-900 dark:text-white">Mit MwSt.</span>
-                              </label>
-                            </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
-                              <span className="text-xs">Beispiel (150€):</span>
-                              <div className="font-bold text-orange-600 dark:text-orange-400">
-                                {calculateExample(150, false, values.fixedMarkup, values.percentMarkup, values.includeVat).toFixed(2)} €
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      <div className="text-right">
+                        <span className={`text-sm font-bold ${values.enabled && hasValue ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`}>
+                          {values.enabled ? `${vk.toFixed(2)} €` : '—'}
+                        </span>
+                      </div>
                     </div>
                   )
                 })}
               </div>
             </div>
 
-            {/* Save Button for Tire Pricing */}
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleSaveTirePricing}
-                disabled={savingTirePricing}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {savingTirePricing ? 'Speichern...' : 'Reifenpreise speichern'}
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex items-center justify-end gap-3">
           <Link
             href="/dashboard/workshop"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium text-sm transition-colors"
           >
             Abbrechen
           </Link>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Speichern...' : 'Einstellungen speichern'}
+            {saving ? 'Speichern...' : '💾 Einstellungen speichern'}
           </button>
         </div>
       </main>

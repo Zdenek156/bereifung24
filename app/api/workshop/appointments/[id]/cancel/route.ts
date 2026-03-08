@@ -19,7 +19,123 @@ export async function POST(
     const { reason, reasonType } = await request.json()
     const appointmentId = params.id
 
-    // Hole Booking mit allen Beziehungen
+    // Übersetze Stornierungsgrund
+    const reasonTypeLabels: Record<string, string> = {
+      'customer_cancelled': 'Kunde hat abgesagt',
+      'workshop_unavailable': 'Werkstatt nicht verfügbar',
+      'technical_issue': 'Technisches Problem',
+      'parts_unavailable': 'Fahrzeugteile nicht verfügbar',
+      'reschedule_needed': 'Neuer Termin erforderlich',
+      'other': 'Sonstiges'
+    }
+    const reasonLabel = reasonType ? reasonTypeLabels[reasonType] || reasonType : ''
+    const fullReason = reasonLabel + (reason ? `: ${reason}` : '')
+
+    // === Versuche zuerst als DirectBooking (PayPal/Stripe) ===
+    const directBooking = await prisma.directBooking.findUnique({
+      where: { id: appointmentId },
+      include: {
+        workshop: true,
+        customer: { include: { user: true } },
+        vehicle: true,
+      }
+    })
+
+    if (directBooking) {
+      // Prüfe ob Workshop-Owner
+      if (directBooking.workshop.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 403 })
+      }
+
+      console.log('❌ Cancelling DirectBooking:', appointmentId)
+
+      const updatedDirectBooking = await prisma.directBooking.update({
+        where: { id: appointmentId },
+        data: { status: 'CANCELLED' }
+      })
+
+      // Email an Kunden senden
+      if (directBooking.customer?.user?.email) {
+        try {
+          const appointmentDate = new Date(directBooking.date).toLocaleDateString('de-DE', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          })
+          const workshopDisplayName = directBooking.workshop.companyName || directBooking.workshop.name || 'Ihrer Werkstatt'
+
+          // Nächste-Schritte-Box je nach Stornierungsgrund
+          const nextStepsHtml = reasonType === 'reschedule_needed'
+            ? `<div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #1e40af;">📋 Wie geht es weiter?</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">Die Werkstatt möchte einen neuen Termin mit Ihnen vereinbaren. Bitte kontaktieren Sie <strong>${workshopDisplayName}</strong> direkt, um einen passenden Ersatztermin zu finden.</p>
+              </div>`
+            : reasonType === 'parts_unavailable'
+            ? `<div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #92400e;">📋 Wie geht es weiter?</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #78350f;">Da die benötigten Teile derzeit nicht verfügbar sind, wird sich die Werkstatt bei Ihnen melden, sobald ein neuer Termin möglich ist. Sollten Sie Fragen zur Erstattung oder zum weiteren Vorgehen haben, wenden Sie sich bitte direkt an <strong>${workshopDisplayName}</strong>.</p>
+              </div>`
+            : `<div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #1e40af;">📋 Wie geht es weiter?</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">Bitte setzen Sie sich mit <strong>${workshopDisplayName}</strong> in Verbindung, um die nächsten Schritte zu besprechen – ob ein neuer Termin vereinbart werden soll oder ob Sie Informationen zu einer möglichen Rückabwicklung benötigen.</p>
+              </div>`
+
+          await sendTemplateEmail(
+            'appointment_cancelled',
+            directBooking.customer.user.email,
+            {
+              customerFirstName: directBooking.customer.user.firstName,
+              customerLastName: directBooking.customer.user.lastName,
+              workshopName: workshopDisplayName,
+              appointmentDate,
+              appointmentTime: directBooking.time,
+              reasonLabel,
+              additionalMessageBlock: reason 
+                ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` 
+                : '',
+              rescheduleMessage: nextStepsHtml,
+              workshopContactInfo: [
+                directBooking.workshop.phone ? `<p>Tel: ${directBooking.workshop.phone}</p>` : '',
+                directBooking.workshop.email ? `<p>Email: ${directBooking.workshop.email}</p>` : ''
+              ].filter(Boolean).join('\n')
+            },
+            undefined,
+            {
+              subject: `Termin storniert - ${workshopDisplayName}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2 style="color: #dc2626;">Terminabsage</h2>
+                  <p>Sehr geehrte/r ${directBooking.customer.user.firstName} ${directBooking.customer.user.lastName},</p>
+                  <p>leider muss Ihr Termin bei <strong>${workshopDisplayName}</strong> storniert werden.</p>
+                  <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Termin:</strong> ${appointmentDate}, ${directBooking.time} Uhr</p>
+                    <p style="margin: 5px 0;"><strong>Grund:</strong> ${reasonLabel}</p>
+                    ${reason ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` : ''}
+                  </div>
+                  ${nextStepsHtml}
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${workshopDisplayName}</p>
+                    ${directBooking.workshop.phone ? `<p style="margin: 5px 0;">📞 Tel: ${directBooking.workshop.phone}</p>` : ''}
+                    ${directBooking.workshop.email ? `<p style="margin: 5px 0;">📧 Email: ${directBooking.workshop.email}</p>` : ''}
+                  </div>
+                  <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">Mit freundlichen Grüßen<br/>Ihr Bereifung24 Team</p>
+                </div>
+              `
+            }
+          )
+          console.log('✅ Cancellation email sent to DirectBooking customer:', directBooking.customer.user.email)
+        } catch (emailError) {
+          console.error('❌ Error sending DirectBooking cancellation email:', emailError)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'DirectBooking-Termin wurde storniert. Der Kunde wurde per Email benachrichtigt.',
+        cancelled: true,
+        booking: updatedDirectBooking
+      })
+    }
+
+    // === Fallback: Normales Booking ===
     const booking = await prisma.booking.findUnique({
       where: { id: appointmentId },
       include: {
@@ -88,19 +204,6 @@ export async function POST(
       ? 'Manueller Termin storniert'
       : 'Kunden-Termin storniert'
     
-    // Übersetze Stornierungsgrund
-    const reasonTypeLabels: Record<string, string> = {
-      'customer_cancelled': 'Kunde hat abgesagt',
-      'workshop_unavailable': 'Werkstatt nicht verfügbar',
-      'technical_issue': 'Technisches Problem',
-      'parts_unavailable': 'Fahrzeugteile nicht verfügbar',
-      'reschedule_needed': 'Neuer Termin erforderlich',
-      'other': 'Sonstiges'
-    }
-    
-    const reasonLabel = reasonType ? reasonTypeLabels[reasonType] || reasonType : ''
-    const fullReason = reasonLabel + (reason ? `: ${reason}` : '')
-    
     const updatedBooking = await prisma.booking.update({
       where: { id: appointmentId },
       data: {
@@ -140,21 +243,44 @@ export async function POST(
           month: 'long',
           day: 'numeric'
         })
+        const workshopDisplayName = booking.workshop.companyName || booking.workshop.name || 'Ihrer Werkstatt'
+
+        // Nächste-Schritte-Box je nach Stornierungsgrund
+        const nextStepsHtml = reasonType === 'reschedule_needed'
+          ? `<div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+              <p style="margin: 0; font-weight: bold; color: #1e40af;">📋 Wie geht es weiter?</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">Die Werkstatt möchte einen neuen Termin mit Ihnen vereinbaren. Bitte kontaktieren Sie <strong>${workshopDisplayName}</strong> direkt, um einen passenden Ersatztermin zu finden. Alternativ können Sie auch in Ihrem Dashboard einen neuen Wunschtermin auswählen.</p>
+              <a href="https://bereifung24.de/dashboard/customer/requests" 
+                 style="display: inline-block; margin-top: 12px; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Zum Dashboard
+              </a>
+            </div>`
+          : reasonType === 'parts_unavailable'
+          ? `<div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <p style="margin: 0; font-weight: bold; color: #92400e;">📋 Wie geht es weiter?</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #78350f;">Da die benötigten Teile derzeit nicht verfügbar sind, wird sich die Werkstatt bei Ihnen melden, sobald ein neuer Termin möglich ist. Sollten Sie Fragen zur Erstattung oder zum weiteren Vorgehen haben, wenden Sie sich bitte direkt an <strong>${workshopDisplayName}</strong>.</p>
+            </div>`
+          : `<div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+              <p style="margin: 0; font-weight: bold; color: #1e40af;">📋 Wie geht es weiter?</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">Bitte setzen Sie sich mit <strong>${workshopDisplayName}</strong> in Verbindung, um die nächsten Schritte zu besprechen – ob ein neuer Termin vereinbart werden soll oder ob Sie Informationen zu einer möglichen Rückabwicklung benötigen.</p>
+              <a href="https://bereifung24.de/dashboard/customer/requests" 
+                 style="display: inline-block; margin-top: 12px; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Zum Dashboard
+              </a>
+            </div>`
 
         // Template-Daten vorbereiten
         const templateData = {
           customerFirstName: booking.customer.user.firstName,
           customerLastName: booking.customer.user.lastName,
-          workshopName: booking.workshop.name,
+          workshopName: workshopDisplayName,
           appointmentDate,
           appointmentTime: booking.appointmentTime,
           reasonLabel,
           additionalMessageBlock: reason 
             ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` 
             : '',
-          rescheduleMessage: reasonType === 'reschedule_needed'
-            ? '<p>Bitte kontaktieren Sie die Werkstatt, um einen neuen Termin zu vereinbaren.</p>'
-            : '<p>Bei Fragen können Sie sich gerne an die Werkstatt wenden.</p>',
+          rescheduleMessage: nextStepsHtml,
           workshopContactInfo: [
             booking.workshop.phone ? `<p>Tel: ${booking.workshop.phone}</p>` : '',
             booking.workshop.email ? `<p>Email: ${booking.workshop.email}</p>` : ''
@@ -169,13 +295,13 @@ export async function POST(
           undefined, // keine Anhänge
           {
             // Fallback falls Template nicht in DB vorhanden
-            subject: `Termin storniert - ${booking.workshop.name}`,
+            subject: `Termin storniert - ${workshopDisplayName}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #dc2626;">Terminabsage</h2>
                 <p>Sehr geehrte/r ${booking.customer.user.firstName} ${booking.customer.user.lastName},</p>
                 
-                <p>leider muss Ihr Termin bei <strong>${booking.workshop.name}</strong> storniert werden.</p>
+                <p>leider muss Ihr Termin bei <strong>${workshopDisplayName}</strong> storniert werden.</p>
                 
                 <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
                   <p style="margin: 5px 0;"><strong>Termin:</strong> ${appointmentDate}, ${booking.appointmentTime} Uhr</p>
@@ -183,25 +309,10 @@ export async function POST(
                   ${reason ? `<p style="margin: 5px 0;"><strong>Nachricht:</strong> ${reason}</p>` : ''}
                 </div>
 
-                <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
-                  <p style="margin: 0; font-weight: bold; color: #1e40af;">✓ Sie können jetzt einen neuen Termin buchen</p>
-                  <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e3a8a;">
-                    Ihr Termin wurde erfolgreich storniert. Sie können jetzt in Ihrem Dashboard einen neuen Wunschtermin auswählen.
-                  </p>
-                  <a href="https://bereifung24.de/dashboard/customer/requests" 
-                     style="display: inline-block; margin-top: 12px; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                    Zum Dashboard
-                  </a>
-                </div>
-
-                ${reasonType === 'reschedule_needed' ? `
-                  <p>Falls Sie Fragen haben, können Sie sich gerne direkt an die Werkstatt wenden.</p>
-                ` : `
-                  <p>Bei Fragen können Sie sich gerne an die Werkstatt wenden.</p>
-                `}
+                ${nextStepsHtml}
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                  <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${booking.workshop.name}</p>
+                  <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${workshopDisplayName}</p>
                   ${booking.workshop.phone ? `<p style="margin: 5px 0;">📞 Tel: ${booking.workshop.phone}</p>` : ''}
                   ${booking.workshop.email ? `<p style="margin: 5px 0;">📧 Email: ${booking.workshop.email}</p>` : ''}
                 </div>

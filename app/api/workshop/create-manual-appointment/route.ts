@@ -164,7 +164,7 @@ export async function POST(request: Request) {
     // Bestimme Wochentag
     const dayOfWeek = appointmentDateTime.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
     
-    // Finde verfügbare Mitarbeiter
+    // Finde verfügbare Mitarbeiter (optional für manuelle Termine)
     const availableEmployees = workshop.employees.filter(emp => {
       // workingHours ist ein JSON-String mit Objekt
       if (!emp.workingHours) return false
@@ -177,15 +177,8 @@ export async function POST(request: Request) {
       return workingHour && workingHour.working
     })
 
-    if (availableEmployees.length === 0) {
-      return NextResponse.json(
-        { error: 'Keine Mitarbeiter für diesen Tag verfügbar' },
-        { status: 400 }
-      )
-    }
-
-    // Wähle ersten verfügbaren Mitarbeiter
-    const employee = availableEmployees[0]
+    // Wähle ersten verfügbaren Mitarbeiter (oder null wenn keiner verfügbar)
+    const employee = availableEmployees.length > 0 ? availableEmployees[0] : null
 
     // Handle customer - use existing WorkshopCustomer if provided
     let workshopCustomer = null
@@ -245,9 +238,37 @@ export async function POST(request: Request) {
     if (serviceDescription) calendarDescription += `\nService: ${serviceDescription}\n`
     if (notes) calendarDescription += `\nNotizen: ${notes}\n`
 
-    // Google Calendar Event erstellen (wenn Mitarbeiter Calendar hat)
+    // Google Calendar Event erstellen
+    // Prüfe: Workshop-Kalender oder Mitarbeiter-Kalender (gleiche Logik wie available-slots)
     let googleEventId = null
-    if (employee.googleCalendarId && employee.googleRefreshToken) {
+    let gcalCalendarId: string | null = null
+    let gcalAccessToken: string | null = null
+    let gcalRefreshToken: string | null = null
+
+    if (workshop.calendarMode === 'workshop' && workshop.googleCalendarId) {
+      // Workshop-Kalender nutzen
+      gcalCalendarId = workshop.googleCalendarId
+      gcalAccessToken = workshop.googleAccessToken
+      gcalRefreshToken = workshop.googleRefreshToken
+      console.log(`[MANUAL APPT] Using WORKSHOP Google Calendar: ${gcalCalendarId}`)
+    } else if (employee && employee.googleCalendarId && employee.googleRefreshToken) {
+      // Mitarbeiter-Kalender nutzen
+      gcalCalendarId = employee.googleCalendarId
+      gcalAccessToken = employee.googleAccessToken
+      gcalRefreshToken = employee.googleRefreshToken
+      console.log(`[MANUAL APPT] Using EMPLOYEE Google Calendar: ${gcalCalendarId}`)
+    } else if (workshop.employees && workshop.employees.length > 0) {
+      // Fallback: Ersten Mitarbeiter mit Kalender suchen
+      const empWithCal = workshop.employees.find((e: any) => e.googleCalendarId && e.googleRefreshToken)
+      if (empWithCal) {
+        gcalCalendarId = empWithCal.googleCalendarId
+        gcalAccessToken = empWithCal.googleAccessToken
+        gcalRefreshToken = empWithCal.googleRefreshToken
+        console.log(`[MANUAL APPT] Using EMPLOYEE (fallback) Google Calendar: ${gcalCalendarId}`)
+      }
+    }
+
+    if (gcalCalendarId && gcalRefreshToken) {
       try {
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID,
@@ -256,8 +277,8 @@ export async function POST(request: Request) {
         )
 
         oauth2Client.setCredentials({
-          refresh_token: employee.googleRefreshToken,
-          access_token: employee.googleAccessToken,
+          refresh_token: gcalRefreshToken,
+          access_token: gcalAccessToken,
         })
 
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
@@ -266,8 +287,20 @@ export async function POST(request: Request) {
         const endDateTime = new Date(appointmentDateTime)
         endDateTime.setMinutes(endDateTime.getMinutes() + duration)
 
+        // Format datetime WITHOUT Z-suffix so Google Calendar uses timeZone field correctly
+        // toISOString() adds "Z" (UTC) which overrides timeZone and causes wrong time display
+        const formatLocalDateTime = (d: Date) => {
+          const year = d.getUTCFullYear()
+          const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+          const day = String(d.getUTCDate()).padStart(2, '0')
+          const hours = String(d.getUTCHours()).padStart(2, '0')
+          const minutes = String(d.getUTCMinutes()).padStart(2, '0')
+          const seconds = String(d.getUTCSeconds()).padStart(2, '0')
+          return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
+        }
+
         const event = await calendar.events.insert({
-          calendarId: employee.googleCalendarId,
+          calendarId: gcalCalendarId!,
           requestBody: {
             summary: workshopCustomer 
               ? (workshopCustomer.customerType === 'BUSINESS' && workshopCustomer.companyName
@@ -276,11 +309,11 @@ export async function POST(request: Request) {
               : (customerName || 'Werkstatt-Termin'),
             description: calendarDescription,
             start: {
-              dateTime: appointmentDateTime.toISOString(),
+              dateTime: formatLocalDateTime(appointmentDateTime),
               timeZone: 'Europe/Berlin',
             },
             end: {
-              dateTime: endDateTime.toISOString(),
+              dateTime: formatLocalDateTime(endDateTime),
               timeZone: 'Europe/Berlin',
             },
           },
@@ -404,7 +437,7 @@ export async function POST(request: Request) {
         appointmentDate: appointmentDateTime,
         appointmentTime: time,
         status: 'CONFIRMED',
-        employeeId: employee.id,
+        employeeId: employee?.id || null,
         googleEventId: googleEventId,
         // Speichere zusätzliche Infos in customerNotes
         customerNotes: JSON.stringify({

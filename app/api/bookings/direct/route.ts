@@ -302,6 +302,22 @@ export async function POST(req: NextRequest) {
 
     let calendarEventId: string | null = null
 
+    // Look up storage info if this booking references stored tires
+    let fromStorageBookingId: string | null = (completeBooking as any).fromStorageBookingId || null
+    let storageLocationFromStorage: string | null = null
+    if (fromStorageBookingId) {
+      try {
+        const storageBooking = await prisma.directBooking.findUnique({
+          where: { id: fromStorageBookingId },
+          select: { storageLocation: true }
+        })
+        storageLocationFromStorage = (storageBooking as any)?.storageLocation || null
+        console.log('[DIRECT BOOKING] Storage info:', { fromStorageBookingId, storageLocationFromStorage })
+      } catch (e) {
+        console.error('[DIRECT BOOKING] Failed to look up storage booking:', e)
+      }
+    }
+
     // Build serviceName (needed in calendar, emails, AND response)
     const globalServiceLabels: Record<string, string> = {
       'WHEEL_CHANGE': 'Räderwechsel',
@@ -388,6 +404,14 @@ export async function POST(req: NextRequest) {
       // Build detailed description with tire info if available
       let calendarDescription = `${customerInfo}\n\nFahrzeug: ${vehicleInfo}\nService: ${serviceName}`
       
+      // Add storage info if customer has stored tires
+      if (fromStorageBookingId) {
+        calendarDescription += `\n\n📦 REIFEN AUS EINLAGERUNG - Bitte bereitstellen!`
+        if (storageLocationFromStorage) {
+          calendarDescription += `\n📍 Lagerort: ${storageLocationFromStorage}`
+        }
+      }
+      
       const tireDataJson = completeBooking.tireData as any
       if (tireDataJson?.isMixedTires && tireDataJson.front && tireDataJson.rear) {
         // Mixed tires (motorcycle front/rear)
@@ -435,7 +459,7 @@ export async function POST(req: NextRequest) {
       calendarDescription += `\n\nGesamtpreis: ${Number(completeBooking.totalPrice || 0).toFixed(2)} €`
       
       const eventDetails = {
-        summary: `${serviceName}${tireDataJson?.isMixedTires ? ` - ${tireDataJson.front?.brand || ''} / ${tireDataJson.rear?.brand || ''}` : completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}`,
+        summary: `${serviceName}${tireDataJson?.isMixedTires ? ` - ${tireDataJson.front?.brand || ''} / ${tireDataJson.rear?.brand || ''}` : completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''}${fromStorageBookingId ? ' 📦 Einlagerung' : ''}`,
         description: calendarDescription,
         start: appointmentStart.toISOString(),
         end: appointmentEnd.toISOString(),
@@ -798,7 +822,9 @@ export async function POST(req: NextRequest) {
         autoOrderSuccess: autoOrderResult?.success || false,
         autoOrderNumber: autoOrderResult?.orderNumber,
         autoOrderError: autoOrderResult?.error,
-        additionalServicesData: (completeBooking as any).additionalServicesData || undefined
+        additionalServicesData: (completeBooking as any).additionalServicesData || undefined,
+        fromStorageBookingId: fromStorageBookingId || undefined,
+        storageLocationFromStorage: storageLocationFromStorage || undefined
       })
 
       console.log('[DIRECT BOOKING] Workshop email data prepared:', {

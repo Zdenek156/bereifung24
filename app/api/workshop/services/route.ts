@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       }))
     }))
 
-    return NextResponse.json({ services })
+    return NextResponse.json({ services, workshopId: user.workshop.id })
   } catch (error) {
     console.error('Services fetch error:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')

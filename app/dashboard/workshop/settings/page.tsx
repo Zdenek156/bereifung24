@@ -316,14 +316,14 @@ function SuppliersTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Info Box */}
-      <Card className="p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-        <div className="flex gap-3">
-          <div className="text-blue-600 dark:text-blue-400 text-2xl">ℹ️</div>
+      <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <div className="flex gap-2.5">
+          <div className="text-blue-600 dark:text-blue-400 text-base">ℹ️</div>
           <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Wichtige Hinweise:</h3>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Wichtige Hinweise:</h3>
+            <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5">
               <li>• <strong>Automatisch bestellen:</strong> Reifen werden bei Kundenbuchung automatisch beim Lieferanten bestellt</li>
               <li>• <strong>Preisgarantie:</strong> Bei automatischer Bestellung gilt der Preis zum Zeitpunkt der Buchung</li>
               <li>• <strong>Manuelle Bestellung:</strong> Ohne Auto-Order können sich Preise bis zur manuellen Bestellung ändern</li>
@@ -335,10 +335,10 @@ function SuppliersTab() {
 
       {/* Add Button */}
       {!showAddForm && suppliers.length === 0 && (
-        <Card className="p-12 text-center">
-          <div className="text-6xl mb-4">🚚</div>
-          <h2 className="text-2xl font-bold mb-2">Noch keine Lieferanten konfiguriert</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <Card className="p-8 text-center">
+          <div className="text-4xl mb-3">🚚</div>
+          <h3 className="text-base font-semibold mb-1">Noch keine Lieferanten konfiguriert</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Fügen Sie Ihren ersten Lieferanten hinzu, um Reifen direkt über die Plattform zu bestellen
           </p>
           <Button onClick={() => setShowAddForm(true)}>
@@ -351,7 +351,7 @@ function SuppliersTab() {
       {/* Add/Edit Form */}
       {showAddForm && (
         <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Lieferant hinzufügen</h2>
+          <h3 className="text-base font-semibold mb-3">Lieferant hinzufügen</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Lieferant</label>
@@ -609,11 +609,11 @@ function SuppliersTab() {
       {suppliers.length > 0 && (
         <div className="space-y-4">
           {suppliers.map((supplier) => (
-            <Card key={supplier.id} className="p-6">
+            <Card key={supplier.id} className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
-                    <h3 className="text-xl font-bold">{supplier.name}</h3>
+                    <h3 className="text-base font-bold">{supplier.name}</h3>
                     {supplier.isActive ? (
                       <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs font-semibold rounded-full flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
@@ -963,7 +963,7 @@ export default function WorkshopSettings() {
     stripeAccountId: '',
   })
 
-  const [openingHoursData, setOpeningHoursData] = useState({
+  const [openingHoursData, setOpeningHoursData] = useState<Record<string, { from: string; to: string; closed: boolean; breakFrom?: string; breakTo?: string }>>({
     monday: { from: '08:00', to: '18:00', closed: false },
     tuesday: { from: '08:00', to: '18:00', closed: false },
     wednesday: { from: '08:00', to: '18:00', closed: false },
@@ -1414,25 +1414,10 @@ export default function WorkshopSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/workshop"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              ← Zurück zum Dashboard
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Werkstatt-Einstellungen
-              </h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Verwalten Sie Ihr Profil und Ihre Unternehmensdaten
-              </p>
-            </div>
-          </div>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Werkstatt-Einstellungen</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Profil und Unternehmensdaten verwalten</p>
         </div>
       </header>
 
@@ -1450,80 +1435,61 @@ export default function WorkshopSettings() {
           </div>
         )}
 
-        {/* Dark Mode Toggle */}
-        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Darstellung</h2>
-          <label className="flex items-center justify-between cursor-pointer p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? (
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              )}
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">Dark Mode</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {theme === 'dark' ? 'Dunkles Design aktiviert' : 'Helles Design aktiviert'}
-                </div>
-              </div>
-            </div>
+        {/* Dark Mode & Verification - Compact Row */}
+        <div className="mb-4 flex flex-wrap gap-3">
+          {/* Dark Mode Toggle */}
+          <label className="flex items-center gap-3 cursor-pointer bg-white dark:bg-gray-800 rounded-lg shadow px-4 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            {theme === 'dark' ? (
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            )}
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {theme === 'dark' ? 'Dunkel' : 'Hell'}
+            </span>
             <button
               type="button"
               onClick={toggleTheme}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                 theme === 'dark' ? 'bg-primary-600' : 'bg-gray-300'
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-[3px]'
                 }`}
               />
             </button>
           </label>
-        </div>
 
-        {/* Verification Status */}
-        {profile && (
-          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Verifizierungsstatus</h2>
-            {profile.isVerified ? (
-              <div className="flex items-center gap-2 text-green-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+          {/* Verification Badge */}
+          {profile && (
+            profile.isVerified ? (
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-2.5 border border-green-200 dark:border-green-800">
+                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="font-medium">Verifiziert</span>
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">Verifiziert</span>
                 {profile.verifiedAt && (
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-xs text-green-600/70 dark:text-green-500/70">
                     seit {new Date(profile.verifiedAt).toLocaleDateString('de-DE')}
                   </span>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-yellow-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
+              <div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg px-4 py-2.5 border border-yellow-200 dark:border-yellow-800">
+                <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span className="font-medium">Noch nicht verifiziert</span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  (Ihr Profil wird von einem Administrator überprüft)
-                </span>
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Nicht verifiziert</span>
               </div>
-            )}
-          </div>
-        )}
+            )
+          )}
+        </div>
 
         {/* Tabs - Desktop: Horizontal Navigation, Mobile: Dropdown Select */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 transition-colors">
@@ -1621,347 +1587,245 @@ export default function WorkshopSettings() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Tab: Kontakt & Unternehmen */}
           {activeTab === 'contact' && (
-            <>
-              {/* Personal Information */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Ansprechpartner</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Vorname *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nachname *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Telefonnummer *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="z.B. 07145 123456"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  E-Mail
-                </label>
-                <input
-                  type="email"
-                  disabled
-                  value={profile?.email || ''}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-900 dark:text-gray-400"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">E-Mail kann nicht geändert werden</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Logo Upload */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Werkstatt-Logo</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Laden Sie Ihr Firmenlogo hoch. Es wird in Ihren Angeboten und auf Ihrer Landing Page angezeigt.
-            </p>
-            
-            <div className="flex items-start gap-6">
-              {/* Logo Preview */}
-              <div className="flex-shrink-0">
-                {profile?.logoUrl ? (
-                  <div className="relative">
-                    <img 
-                      src={`${profile.logoUrl}?t=${Date.now()}`} 
-                      alt="Werkstatt Logo" 
-                      className="w-32 h-32 object-contain border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
-                      key={profile.logoUrl}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleDeleteLogo}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                      title="Logo löschen"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-32 h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-700">
-                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Button */}
-              <div className="flex-1">
-                <input
-                  type="file"
-                  id="logo-upload"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="logo-upload"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  {profile?.logoUrl ? 'Neues Logo hochladen' : 'Logo hochladen'}
-                </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  JPG, PNG oder WebP. Maximal 5MB. Empfohlen: Quadratisches Format (z.B. 500x500px)
-                </p>
-                {uploadingLogo && (
-                  <div className="mt-2 text-sm text-primary-600">
-                    Wird hochgeladen...
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Company Information */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Unternehmensdaten</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Firmenname *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  placeholder="z.B. Mustermann KFZ-Service GmbH"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Steuernummer / USt-IdNr
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.taxId}
-                    onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-                    placeholder="z.B. DE123456789"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Umsatzsteuer-Status
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="taxMode"
-                        value="STANDARD"
-                        checked={formData.taxMode === 'STANDARD'}
-                        onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-900 dark:text-gray-300">Regelbesteuerung (Preise inkl. MwSt.)</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="taxMode"
-                        value="KLEINUNTERNEHMER"
-                        checked={formData.taxMode === 'KLEINUNTERNEHMER'}
-                        onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-900 dark:text-gray-300">Kleinunternehmer gemäß §19 UStG (ohne MwSt.)</span>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors divide-y divide-gray-200 dark:divide-gray-700">
+              
+              {/* Ansprechpartner + Logo */}
+              <div className="p-5">
+                <div className="flex items-start gap-6">
+                  {/* Logo (links) */}
+                  <div className="flex-shrink-0">
+                    {profile?.logoUrl ? (
+                      <div className="relative">
+                        <img 
+                          src={`${profile.logoUrl}?t=${Date.now()}`} 
+                          alt="Werkstatt Logo" 
+                          className="w-20 h-20 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
+                          key={profile.logoUrl}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleDeleteLogo}
+                          className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                          title="Logo löschen"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-gray-700">
+                        <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                    <input type="file" id="logo-upload" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleLogoUpload} className="hidden" />
+                    <label htmlFor="logo-upload" className="mt-1.5 block text-center text-xs text-primary-600 hover:text-primary-700 cursor-pointer font-medium">
+                      {uploadingLogo ? 'Lädt...' : 'Ändern'}
                     </label>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    placeholder="https://www.ihre-werkstatt.de"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                  />
+                  {/* Ansprechpartner (rechts) */}
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Ansprechpartner</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Vorname *</label>
+                        <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nachname *</label>
+                        <input type="text" required value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Telefon *</label>
+                        <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="07145 123456"
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">E-Mail</label>
+                        <input type="email" disabled value={profile?.email || ''}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Beschreibung
-                </label>
+              {/* Unternehmensdaten */}
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Unternehmensdaten</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Firmenname *</label>
+                    <input type="text" required value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} placeholder="Mustermann KFZ-Service GmbH"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Steuernummer / USt-IdNr</label>
+                    <input type="text" value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} placeholder="DE123456789"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Website</label>
+                    <input type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://www.ihre-werkstatt.de"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-4">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">USt-Status:</span>
+                  <label className="flex items-center gap-1.5">
+                    <input type="radio" name="taxMode" value="STANDARD" checked={formData.taxMode === 'STANDARD'} onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })} className="w-3.5 h-3.5" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300">Regelbesteuerung</span>
+                  </label>
+                  <label className="flex items-center gap-1.5">
+                    <input type="radio" name="taxMode" value="KLEINUNTERNEHMER" checked={formData.taxMode === 'KLEINUNTERNEHMER'} onChange={(e) => setFormData({ ...formData, taxMode: e.target.value })} className="w-3.5 h-3.5" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300">Kleinunternehmer §19 UStG</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Adresse */}
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Adresse</h3>
+                <div className="grid grid-cols-6 gap-3">
+                  <div className="col-span-6 md:col-span-3">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Straße & Hausnummer *</label>
+                    <input type="text" required value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="Hauptstraße 123"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                  <div className="col-span-3 md:col-span-1">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">PLZ *</label>
+                    <input type="text" required value={formData.zipCode} onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })} placeholder="71706"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                  <div className="col-span-3 md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Stadt *</label>
+                    <input type="text" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Markgröningen"
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Beschreibung */}
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Beschreibung</h3>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
                   placeholder="Beschreiben Sie Ihre Werkstatt und Ihre Dienstleistungen..."
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Adresse</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Straße und Hausnummer *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.street}
-                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                  placeholder="z.B. Hauptstraße 123"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    PLZ *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.zipCode}
-                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                    placeholder="71706"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Stadt *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="z.B. Markgröningen"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400"
-                  />
-                </div>
-              </div>
             </div>
-          </div>
-            </>
           )}
 
           {/* Tab: Öffnungszeiten */}
           {activeTab === 'hours' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Öffnungszeiten</h2>
-              <div className="space-y-3">
-                {Object.entries(openingHoursData).map(([day, hours]) => (
-                  <div key={day} className="flex items-center gap-3">
-                    <label className="w-28 text-sm text-gray-700 dark:text-gray-300">{dayLabels[day]}</label>
-                    <input
-                      type="checkbox"
-                      checked={!hours.closed}
-                      onChange={(e) => {
-                        setOpeningHoursData({
-                          ...openingHoursData,
-                          [day]: { ...hours, closed: !e.target.checked }
-                        })
-                      }}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    {!hours.closed ? (
-                      <>
-                        <select
-                          value={hours.from}
-                          onChange={(e) => {
-                            setOpeningHoursData({
-                              ...openingHoursData,
-                              [day]: { ...hours, from: e.target.value }
-                            })
-                          }}
-                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        >
-                          {['06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'].map(time => (
-                            <option key={time} value={time}>{time}</option>
-                          ))}
-                        </select>
-                        <span className="text-gray-500 dark:text-gray-400">bis</span>
-                        <select
-                          value={hours.to}
-                          onChange={(e) => {
-                            setOpeningHoursData({
-                              ...openingHoursData,
-                              [day]: { ...hours, to: e.target.value }
-                            })
-                          }}
-                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        >
-                          {['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'].map(time => (
-                            <option key={time} value={time}>{time}</option>
-                          ))}
-                        </select>
-                      </>
-                    ) : (
-                      <span className="text-sm text-gray-500 dark:text-gray-400 italic">Geschlossen</span>
-                    )}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Öffnungszeiten</h3>
+                <div className="space-y-2">
+                  {/* Header */}
+                  <div className="hidden md:grid md:grid-cols-12 gap-2 text-xs font-medium text-gray-400 dark:text-gray-500 px-1 mb-1">
+                    <div className="col-span-2">Tag</div>
+                    <div className="col-span-1"></div>
+                    <div className="col-span-4">Öffnungszeiten</div>
+                    <div className="col-span-5">Mittagspause</div>
                   </div>
-                ))}
+                  {Object.entries(openingHoursData).map(([day, hours]) => (
+                    <div key={day} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-1.5 border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                      {/* Tag */}
+                      <div className="col-span-2 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!hours.closed}
+                          onChange={(e) => {
+                            setOpeningHoursData({
+                              ...openingHoursData,
+                              [day]: { ...hours, closed: !e.target.checked, breakFrom: undefined, breakTo: undefined }
+                            })
+                          }}
+                          className="h-3.5 w-3.5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <span className={`text-sm font-medium ${hours.closed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>{dayLabels[day]}</span>
+                      </div>
+                      {/* Spacer für mobile */}
+                      <div className="hidden md:block col-span-1"></div>
+                      {/* Öffnungszeiten */}
+                      <div className="col-span-4">
+                        {!hours.closed ? (
+                          <div className="flex items-center gap-1.5">
+                            <select value={hours.from} onChange={(e) => setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, from: e.target.value } })}
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500">
+                              {['06:00','06:30','07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'].map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <span className="text-xs text-gray-400">–</span>
+                            <select value={hours.to} onChange={(e) => setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, to: e.target.value } })}
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-primary-500">
+                              {['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00'].map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">Geschlossen</span>
+                        )}
+                      </div>
+                      {/* Mittagspause */}
+                      <div className="col-span-5">
+                        {!hours.closed && (
+                          <div className="flex items-center gap-1.5">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!(hours.breakFrom && hours.breakTo)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, breakFrom: '12:00', breakTo: '13:00' } })
+                                  } else {
+                                    setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, breakFrom: undefined, breakTo: undefined } })
+                                  }
+                                }}
+                                className="h-3.5 w-3.5 text-orange-500 focus:ring-orange-400 border-gray-300 rounded"
+                              />
+                              <span className="text-xs text-gray-500 dark:text-gray-400">Pause</span>
+                            </label>
+                            {hours.breakFrom && hours.breakTo && (
+                              <>
+                                <select value={hours.breakFrom} onChange={(e) => setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, breakFrom: e.target.value } })}
+                                  className="px-2 py-1 border border-orange-200 dark:border-orange-800 rounded text-xs bg-orange-50 dark:bg-orange-900/20 text-gray-900 dark:text-white focus:ring-1 focus:ring-orange-400">
+                                  {['11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00'].map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                                <span className="text-xs text-gray-400">–</span>
+                                <select value={hours.breakTo} onChange={(e) => setOpeningHoursData({ ...openingHoursData, [day]: { ...hours, breakTo: e.target.value } })}
+                                  className="px-2 py-1 border border-orange-200 dark:border-orange-800 rounded text-xs bg-orange-50 dark:bg-orange-900/20 text-gray-900 dark:text-white focus:ring-1 focus:ring-orange-400">
+                                  {['11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00'].map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* Tab: Stripe-Anbindung */}
           {activeTab === 'payment' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Stripe-Anbindung</h2>
-            
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Verbinden Sie Ihr Stripe-Konto, um Online-Zahlungen von Kunden zu akzeptieren. Alle Buchungen werden über Stripe abgewickelt.
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5 transition-colors">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Stripe-Anbindung</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              Verbinden Sie Ihr Stripe-Konto, um Online-Zahlungen von Kunden zu akzeptieren.
             </p>
 
-            <div className="space-y-4 mb-8">
+            <div className="space-y-4">
               {/* Stripe Payment Option */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <div className="flex items-start gap-3">
@@ -2180,126 +2044,92 @@ export default function WorkshopSettings() {
 
           {/* Tab: Benachrichtigungen */}
           {activeTab === 'notifications' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 break-words">E-Mail-Benachrichtigungen</h2>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 break-words">
-                Verwalten Sie hier, für welche Ereignisse Sie E-Mail-Benachrichtigungen erhalten möchten.
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5 border border-gray-200 dark:border-gray-700 transition-colors">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">E-Mail-Benachrichtigungen</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Wählen Sie, welche E-Mails Sie erhalten möchten. System-E-Mails werden immer versendet.
               </p>
               
-              <div className="space-y-6">
-                {/* Neue Terminbuchungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.emailNotifyBookings}
-                      onChange={(e) => setFormData({ ...formData, emailNotifyBookings: e.target.checked })}
-                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
-                          Neue Terminbuchungen
-                        </span>
+              {/* Alle Benachrichtigungen */}
+              <div className="mb-5">
+                <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                  {/* Neue Terminbuchungen */}
+                  <label className="flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-lg">📅</span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Neue Terminbuchungen</span>
+                        <span className="block text-xs text-gray-500 dark:text-gray-400">Wenn ein Kunde online einen Termin bei Ihnen bucht</span>
                       </div>
-                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
-                        Benachrichtigung erhalten, wenn ein Kunde einen Termin bei Ihnen bucht
-                      </span>
+                    </div>
+                    <div className="relative flex-shrink-0 ml-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.emailNotifyBookings}
+                        onChange={(e) => setFormData({ ...formData, emailNotifyBookings: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-primary-600"></div>
                     </div>
                   </label>
-                </div>
 
-                {/* Neue Bewertungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.emailNotifyReviews}
-                      onChange={(e) => setFormData({ ...formData, emailNotifyReviews: e.target.checked })}
-                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
-                          Neue Bewertungen
-                        </span>
+                  {/* Neue Bewertungen */}
+                  <label className="flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-lg">⭐</span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Neue Bewertungen</span>
+                        <span className="block text-xs text-gray-500 dark:text-gray-400">Wenn ein Kunde eine Bewertung für Ihre Werkstatt abgibt</span>
                       </div>
-                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
-                        Benachrichtigung erhalten, wenn ein Kunde eine Bewertung für Ihre Werkstatt abgibt
-                      </span>
+                    </div>
+                    <div className="relative flex-shrink-0 ml-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.emailNotifyReviews}
+                        onChange={(e) => setFormData({ ...formData, emailNotifyReviews: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-primary-600"></div>
                     </div>
                   </label>
-                </div>
 
-                {/* Terminerinnerungen */}
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.emailNotifyReminders}
-                      onChange={(e) => setFormData({ ...formData, emailNotifyReminders: e.target.checked })}
-                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl sm:text-2xl flex-shrink-0">⏰</span>
-                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
-                          Terminerinnerungen
-                        </span>
+                  {/* Provisionsabrechnungen */}
+                  <label className="flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-lg">💶</span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-900 dark:text-white">Monatliche Provisionsabrechnungen</span>
+                        <span className="block text-xs text-gray-500 dark:text-gray-400">Übersicht über fällige Provisionen und Abrechnungsdetails</span>
                       </div>
-                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
-                        Erinnerung am Tag vor dem Termin erhalten (24 Stunden im Voraus)
-                      </span>
                     </div>
-                  </label>
-                </div>
-
-                {/* Provisionsabrechnungen */}
-                <div className="pb-2">
-                  <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.emailNotifyCommissions}
-                      onChange={(e) => setFormData({ ...formData, emailNotifyCommissions: e.target.checked })}
-                      className="mt-1 h-5 w-5 flex-shrink-0 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white break-words">
-                          Monatliche Provisionsabrechnungen
-                        </span>
-                      </div>
-                      <span className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
-                        Monatliche Übersicht über fällige Provisionen und Abrechnungsdetails erhalten
-                      </span>
+                    <div className="relative flex-shrink-0 ml-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.emailNotifyCommissions}
+                        onChange={(e) => setFormData({ ...formData, emailNotifyCommissions: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-primary-600"></div>
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3 sm:p-4">
-                  <div className="flex gap-2 sm:gap-3">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm text-blue-900 dark:text-blue-300 font-medium break-words">Hinweis zu E-Mail-Benachrichtigungen</p>
-                      <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mt-1 break-words">
-                        Wichtige System-E-Mails (z.B. Passwort-Reset, Sicherheitsmeldungen) werden unabhängig von diesen Einstellungen immer versendet.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              {/* System-Hinweis */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>System-E-Mails (Registrierung, Verifizierung, Passwort-Reset, Zahlungsbestätigungen) werden unabhängig von diesen Einstellungen immer versendet.</span>
               </div>
             </div>
           )}
 
           {/* Tab: Terminplanung */}
           {activeTab === 'terminplanung' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Calendar Status Banner */}
-              <div className={`p-4 rounded-lg border-2 ${
+              <div className={`px-4 py-3 rounded-lg border ${
                 workshopCalendarConnected || employees.some(emp => emp.calendarConnected)
                   ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700'
                   : 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700'
@@ -2334,9 +2164,9 @@ export default function WorkshopSettings() {
               </div>
               
               {/* Calendar Mode Selection */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Google Kalender Integration</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5 border border-gray-200 dark:border-gray-700 transition-colors">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Google Kalender Integration</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                   Verbinden Sie Ihre Google Kalender, um Termine automatisch zu synchronisieren und Doppelbuchungen zu vermeiden.
                 </p>
 
@@ -2401,7 +2231,7 @@ export default function WorkshopSettings() {
 
               {/* Workshop Calendar Mode */}
               {calendarMode === 'workshop' && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {employees.some(emp => emp.calendarConnected) && (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                       <div className="flex items-start gap-3">
@@ -2417,8 +2247,8 @@ export default function WorkshopSettings() {
                       </div>
                     </div>
                   )}
-                  <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Werkstatt-Kalender verbinden</h3>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5 border border-gray-200 dark:border-gray-700">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Werkstatt-Kalender verbinden</h3>
                     
                     {workshopCalendarConnected ? (
                     <div className="space-y-4">
@@ -2470,7 +2300,7 @@ export default function WorkshopSettings() {
 
               {/* Employee Calendar Mode */}
               {calendarMode === 'employees' && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {workshopCalendarConnected && (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                       <div className="flex items-start gap-3">
@@ -2486,9 +2316,9 @@ export default function WorkshopSettings() {
                       </div>
                     </div>
                   )}
-                  <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Mitarbeiter verwalten</h3>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">Mitarbeiter verwalten</h3>
                       <button
                         type="button"
                         onClick={() => setShowAddEmployee(true)}

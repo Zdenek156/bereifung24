@@ -288,6 +288,32 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error('⚠️ Error retrieving Stripe fee:', feeError)
       }
       
+      // Auto-detect stored tires for WHEEL_CHANGE/TIRE_CHANGE
+      // IMPORTANT: Must match vehicleId to prevent cross-vehicle detection
+      let fromStorageBookingId: string | null = null
+      const sType = serviceType || ''
+      if (sType === 'WHEEL_CHANGE' || sType === 'TIRE_CHANGE') {
+        try {
+          const storageBooking = await prisma.directBooking.findFirst({
+            where: {
+              customerId,
+              workshopId,
+              ...(vehicleId ? { vehicleId } : {}), // Only match same vehicle
+              hasStorage: true,
+              status: { in: ['COMPLETED', 'CONFIRMED'] }
+            },
+            orderBy: { date: 'desc' },
+            select: { id: true }
+          })
+          if (storageBooking) {
+            fromStorageBookingId = storageBooking.id
+            console.log('📦 [STRIPE WEBHOOK] Auto-detected stored tires for same vehicle:', fromStorageBookingId)
+          }
+        } catch (err) {
+          console.error('[STRIPE WEBHOOK] Error checking stored tires:', err)
+        }
+      }
+
       // Create DirectBooking record
       const booking = await prisma.directBooking.create({
         data: {
@@ -331,7 +357,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           platformCommissionCents,
           workshopPayout,
           stripeFeesEstimate,
-          platformNetCommission
+          platformNetCommission,
+          fromStorageBookingId
         }
       })
 
@@ -372,6 +399,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const workshopSupplier = await prisma.workshopSupplier.findFirst({
       where: { workshopId: completeBooking.workshopId }
     })
+
+    // Look up storage info if booking references stored tires
+    const webhookFromStorageId = (completeBooking as any).fromStorageBookingId || null
+    let webhookStorageLocation: string | null = null
+    if (webhookFromStorageId) {
+      try {
+        const storageBooking = await prisma.directBooking.findUnique({
+          where: { id: webhookFromStorageId },
+          select: { storageLocation: true }
+        })
+        webhookStorageLocation = (storageBooking as any)?.storageLocation || null
+        console.log('📦 Storage info for webhook booking:', { webhookFromStorageId, webhookStorageLocation })
+      } catch (e) {
+        console.error('Failed to look up storage booking in webhook:', e)
+      }
+    }
 
     // Format date
     const { format } = await import('date-fns')
@@ -464,9 +507,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.error('❌ Error sending customer email:', error)
     }
 
-    // Send workshop notification email
-    try {
-      const { sendTemplateEmail, directBookingNotificationWorkshopEmail } = await import('@/lib/email')
+    // Send workshop notification email (if enabled)
+    if (completeBooking.workshop.emailNotifyBookings) {
+      try {
+        const { sendTemplateEmail, directBookingNotificationWorkshopEmail } = await import('@/lib/email')
       
       const workshopEmailData = directBookingNotificationWorkshopEmail({
         workshopName: completeBooking.workshop.companyName || completeBooking.workshop.user.name || 'Werkstatt',
@@ -515,6 +559,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           : undefined,
         hasBalancing: completeBooking.hasBalancing,
         hasStorage: completeBooking.hasStorage,
+        fromStorageBookingId: webhookFromStorageId || undefined,
+        storageLocationFromStorage: webhookStorageLocation || undefined,
       })
 
       await sendTemplateEmail(
@@ -528,6 +574,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.log('✅ Workshop notification email sent')
     } catch (error) {
       console.error('❌ Error sending workshop email:', error)
+    }
+    } else {
+      console.log(`⏭️  Workshop ${completeBooking.workshopId} has disabled booking notifications`)
     }
 
     // Create freelancer commission if workshop belongs to a freelancer

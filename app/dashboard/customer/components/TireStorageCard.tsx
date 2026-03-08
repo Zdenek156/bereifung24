@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { MapPin, Car, Archive } from 'lucide-react'
 
 interface TireStorageItem {
@@ -9,10 +10,12 @@ interface TireStorageItem {
   workshopName: string
   workshopSlug: string | null
   workshopAddress: string
+  vehicleId: string
   vehicleName: string
   vehiclePlate: string
   storedTireType: string
   storedSince: string
+  storageLocation?: string | null
 }
 
 interface TireStorageCardProps {
@@ -22,14 +25,25 @@ interface TireStorageCardProps {
 
 export default function TireStorageCard({ tireStorage, loading }: TireStorageCardProps) {
   const router = useRouter()
+  const [options, setOptions] = useState<Record<string, { balancing: boolean; storage: boolean }>>({})
 
   if (loading) return null
   if (!tireStorage || tireStorage.length === 0) return null
 
+  const getOptions = (id: string) => options[id] || { balancing: false, storage: false }
+  const toggleOption = (id: string, key: 'balancing' | 'storage') => {
+    setOptions(prev => ({
+      ...prev,
+      [id]: { ...getOptions(id), [key]: !getOptions(id)[key] }
+    }))
+  }
+
   return (
     <div className="mb-6">
       <div className={`grid ${tireStorage.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
-        {tireStorage.map((item) => (
+        {tireStorage.map((item) => {
+          const opts = getOptions(item.id)
+          return (
           <div
             key={item.id}
             className="bg-white dark:bg-gray-800 rounded-lg shadow border dark:border-gray-700 p-5"
@@ -75,6 +89,15 @@ export default function TireStorageCard({ tireStorage, loading }: TireStorageCar
                     </div>
                   )}
 
+                  {/* Storage Location */}
+                  {item.storageLocation && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-base">📦</span>
+                      <span className="text-gray-500 dark:text-gray-400">Lagerort:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{item.storageLocation}</span>
+                    </div>
+                  )}
+
                   {/* Stored since */}
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     Eingelagert seit {new Date(item.storedSince).toLocaleDateString('de-DE', {
@@ -85,12 +108,40 @@ export default function TireStorageCard({ tireStorage, loading }: TireStorageCar
                   </div>
                 </div>
 
+                {/* Options: Auswuchten + Einlagerung */}
+                <div className="space-y-1.5 mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={opts.balancing}
+                      onChange={() => toggleOption(item.id, 'balancing')}
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="text-gray-700 dark:text-gray-300">Auswuchten</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={opts.storage}
+                      onChange={() => toggleOption(item.id, 'storage')}
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="text-gray-700 dark:text-gray-300">Neue Einlagerung (abgenommene Reifen)</span>
+                  </label>
+                </div>
+
                 {/* CTA Button */}
                 <button
                   onClick={() => {
-                    // Navigate to booking flow for this specific workshop
                     const slug = item.workshopSlug || item.workshopId
-                    router.push(`/workshop/${slug}`)
+                    const params = new URLSearchParams({
+                      service: 'WHEEL_CHANGE',
+                      fromStorageBookingId: item.id,
+                      vehicleId: item.vehicleId
+                    })
+                    if (opts.balancing) params.set('balancing', 'true')
+                    if (opts.storage) params.set('storage', 'true')
+                    router.push(`/workshop/${slug}?${params.toString()}`)
                   }}
                   className="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium text-center"
                 >
@@ -99,7 +150,8 @@ export default function TireStorageCard({ tireStorage, loading }: TireStorageCar
               </div>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
